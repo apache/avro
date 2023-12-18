@@ -17,27 +17,27 @@
  */
 package org.apache.avro.tool;
 
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
+import org.apache.avro.file.DataFileStream;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.JsonEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.Schema;
-import org.apache.avro.file.DataFileStream;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.JsonEncoder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Reads a data file and dumps to JSON */
 public class DataFileReadTool implements Tool {
@@ -111,7 +111,8 @@ public class DataFileReadTool implements Tool {
       readerSchema = Util.parseSchemaFromFS(schemaFile);
     } else if (schemaStr != null) {
       LOG.info("Reading schema from string '{}'", schemaStr);
-      readerSchema = new Schema.Parser().parse(schemaStr);
+      SchemaParser parser = new SchemaParser();
+      readerSchema = parser.resolve(parser.parse(schemaStr));
     }
     return readerSchema;
   }

@@ -20,12 +20,16 @@ package org.apache.avro;
 import org.apache.avro.util.SchemaResolver;
 import org.apache.avro.util.Schemas;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Class to define a name context, useful to reference schemata with. This
@@ -33,8 +37,8 @@ import java.util.function.Function;
  *
  * <ul>
  * <li>Find schemata by name, including primitives.</li>
- * <li>Find schemas that do not exist yet. Use with {@link #resolveAllTypes()} to
- * ensure resulting schemas are usable.</li>
+ * <li>Find schemas that do not exist yet. Use with {@link #resolveAllTypes()}
+ * to ensure resulting schemas are usable.</li>
  * <li>Collect new named schemata.</li>
  * </ul>
  *
@@ -70,6 +74,7 @@ public class ParseContext {
   private final Map<String, Schema> newSchemas;
   // Visible for use in JsonSchemaParser
   final NameValidator nameValidator;
+  boolean isResolved;
 
   /**
    * Create a {@code ParseContext} for the default/{@code null} namespace, using
@@ -84,13 +89,14 @@ public class ParseContext {
    * schemata.
    */
   public ParseContext(NameValidator nameValidator) {
-    this(nameValidator, new LinkedHashMap<>(), new LinkedHashMap<>());
+    this(requireNonNull(nameValidator), new LinkedHashMap<>(), new LinkedHashMap<>());
   }
 
   private ParseContext(NameValidator nameValidator, Map<String, Schema> oldSchemas, Map<String, Schema> newSchemas) {
     this.nameValidator = nameValidator;
     this.oldSchemas = oldSchemas;
     this.newSchemas = newSchemas;
+    isResolved = false;
   }
 
   /**
@@ -106,7 +112,7 @@ public class ParseContext {
 
   /**
    * <p>
-   * Resolve a schema by name and namespace.
+   * Find a schema by name and namespace.
    * </p>
    *
    * <p>
@@ -114,8 +120,7 @@ public class ParseContext {
    * </p>
    *
    * <ol>
-   * <li>If {@code name} is a primitive name, return a (new) schema for
-   * it</li>
+   * <li>If {@code name} is a primitive name, return a (new) schema for it</li>
    * <li>Otherwise, determine the full schema name (using the given
    * {@code namespace} if necessary), and find it</li>
    * <li>If no schema was found and {@code name} is a simple name, find the schema
@@ -124,8 +129,8 @@ public class ParseContext {
    * schema name (see step 2)</li>
    * </ol>
    *
-   * @param name the schema name to resolve
-   * @param namespace the namespace to resolve the schema against
+   * @param name      the schema name to find
+   * @param namespace the namespace to find the schema against
    * @return the schema, or an unresolved reference
    */
   public Schema find(String name, String namespace) {
@@ -154,8 +159,8 @@ public class ParseContext {
    * Get a schema by name. Note that the schema might not (yet) be resolved/usable
    * until {@link #resolveAllTypes()} has been called.
    *
-   * @param fullName the full schema name to resolve
-   * @return the schema
+   * @param fullName a full schema name
+   * @return the schema, if known
    */
   public Schema getNamedSchema(String fullName) {
     Schema schema = oldSchemas.get(fullName);
@@ -190,6 +195,7 @@ public class ParseContext {
         throw new SchemaParseException("Can't redefine: " + fullName);
       }
     } else {
+      isResolved = false;
       Schema previouslyAddedSchema = newSchemas.putIfAbsent(fullName, schema);
       if (previouslyAddedSchema != null && !previouslyAddedSchema.equals(schema)) {
         throw new SchemaParseException("Can't redefine: " + fullName);
@@ -226,20 +232,55 @@ public class ParseContext {
     newSchemas.clear();
   }
 
-  public Map<String, Schema> resolveAllTypes() {
+  /**
+   * Resolve all (named) schemas that were parsed. This resolves all forward
+   * references, even if parsed from different files.
+   *
+   * @return all parsed schemas, in the order they were parsed
+   * @throws AvroTypeException if a reference cannot be resolved
+   */
+  public List<Schema> resolveAllTypes() {
     if (hasNewSchemas()) {
-      throw new IllegalStateException("Type cannot be resolved unless the ParseContext is committed.");
+      throw new IllegalStateException("Types cannot be resolved unless the ParseContext is committed.");
     }
 
-    HashMap<String, Schema> result = new HashMap<>(oldSchemas);
-    SchemaResolver.ResolvingVisitor visitor = new SchemaResolver.ResolvingVisitor(null, result::get);
-    Function<Schema, Schema> resolver = schema -> Schemas.visit(schema, visitor.withRoot(schema));
-    for (Map.Entry<String, Schema> entry : result.entrySet()) {
-      entry.setValue(resolver.apply(entry.getValue()));
+    if (!isResolved) {
+      HashMap<String, Schema> result = new LinkedHashMap<>(oldSchemas);
+      SchemaResolver.ResolvingVisitor visitor = new SchemaResolver.ResolvingVisitor(null, result::get, false);
+      Function<Schema, Schema> resolver = schema -> Schemas.visit(schema, visitor.withRoot(schema));
+      for (Map.Entry<String, Schema> entry : result.entrySet()) {
+        entry.setValue(resolver.apply(entry.getValue()));
+      }
+      oldSchemas.putAll(result);
+      isResolved = true;
     }
-    oldSchemas.putAll(result);
 
-    return result;
+    return new ArrayList<>(oldSchemas.values());
+  }
+
+  /**
+   * Try to resolve unresolved references in a schema using the types known to
+   * this context. It is advisable to call {@link #resolveAllTypes()} first if you
+   * want the returned types to be stable.
+   *
+   * @param schema the schema resolve
+   * @return the fully resolved schema if possible, {@code null} otherwise
+   */
+  public Schema tryResolve(Schema schema) {
+    return Schemas.visit(schema, new SchemaResolver.ResolvingVisitor(schema, this::getNamedSchema, false));
+  }
+
+  /**
+   * Resolve unresolved references in a schema using the types known to this
+   * context. It is advisable to call {@link #resolveAllTypes()} first if you want
+   * the returned types to be stable.
+   *
+   * @param schema the schema resolve
+   * @return the fully resolved schema
+   * @throws AvroTypeException if the schema cannot be resolved
+   */
+  public Schema forceResolve(Schema schema) {
+    return Schemas.visit(schema, new SchemaResolver.ResolvingVisitor(schema, this::getNamedSchema, true));
   }
 
   /**

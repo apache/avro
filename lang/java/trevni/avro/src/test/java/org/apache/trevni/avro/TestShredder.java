@@ -17,16 +17,17 @@
  */
 package org.apache.trevni.avro;
 
+import org.apache.avro.JsonSchemaParser;
+import org.apache.avro.Schema;
+import org.apache.avro.util.RandomData;
+import org.apache.trevni.ColumnFileMetaData;
+import org.apache.trevni.ColumnMetaData;
+import org.apache.trevni.ValueType;
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-
-import org.apache.trevni.ValueType;
-import org.apache.trevni.ColumnMetaData;
-import org.apache.trevni.ColumnFileMetaData;
-import org.apache.avro.Schema;
-import org.apache.avro.util.RandomData;
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -61,7 +62,7 @@ public class TestShredder {
 
   @Test
   void simpleRecord() throws Exception {
-    check(new Schema.Parser().parse(SIMPLE_RECORD), new ColumnMetaData("x", ValueType.INT),
+    check(JsonSchemaParser.parseInternal(SIMPLE_RECORD), new ColumnMetaData("x", ValueType.INT),
         new ColumnMetaData("y", ValueType.STRING));
   }
 
@@ -69,15 +70,15 @@ public class TestShredder {
   void defaultValue() throws Exception {
     String s = "{\"type\":\"record\",\"name\":\"R\",\"fields\":[" + SIMPLE_FIELDS + ","
         + "{\"name\":\"z\",\"type\":\"int\"," + "\"default\":1,\"" + RandomData.USE_DEFAULT + "\":true}" + "]}";
-    checkWrite(new Schema.Parser().parse(SIMPLE_RECORD));
-    checkRead(new Schema.Parser().parse(s));
+    checkWrite(JsonSchemaParser.parseInternal(SIMPLE_RECORD));
+    checkRead(JsonSchemaParser.parseInternal(s));
   }
 
   @Test
   void nestedRecord() throws Exception {
     String s = "{\"type\":\"record\",\"name\":\"S\",\"fields\":[" + "{\"name\":\"x\",\"type\":\"int\"},"
         + "{\"name\":\"R\",\"type\":" + SIMPLE_RECORD + "}," + "{\"name\":\"y\",\"type\":\"string\"}" + "]}";
-    check(new Schema.Parser().parse(s), new ColumnMetaData("x", ValueType.INT),
+    check(JsonSchemaParser.parseInternal(s), new ColumnMetaData("x", ValueType.INT),
         new ColumnMetaData("R#x", ValueType.INT), new ColumnMetaData("R#y", ValueType.STRING),
         new ColumnMetaData("y", ValueType.STRING));
   }
@@ -86,7 +87,7 @@ public class TestShredder {
   void namedRecord() throws Exception {
     String s = "{\"type\":\"record\",\"name\":\"S\",\"fields\":[" + "{\"name\":\"R1\",\"type\":" + SIMPLE_RECORD + "},"
         + "{\"name\":\"R2\",\"type\":\"R\"}" + "]}";
-    check(new Schema.Parser().parse(s), new ColumnMetaData("R1#x", ValueType.INT),
+    check(JsonSchemaParser.parseInternal(s), new ColumnMetaData("R1#x", ValueType.INT),
         new ColumnMetaData("R1#y", ValueType.STRING), new ColumnMetaData("R2#x", ValueType.INT),
         new ColumnMetaData("R2#y", ValueType.STRING));
   }
@@ -94,7 +95,7 @@ public class TestShredder {
   @Test
   void simpleArray() throws Exception {
     String s = "{\"type\":\"array\",\"items\":\"long\"}";
-    check(new Schema.Parser().parse(s), new ColumnMetaData("[]", ValueType.LONG).isArray(true));
+    check(JsonSchemaParser.parseInternal(s), new ColumnMetaData("[]", ValueType.LONG).isArray(true));
   }
 
   private static final String RECORD_ARRAY = "{\"type\":\"array\",\"items\":" + SIMPLE_RECORD + "}";
@@ -102,21 +103,21 @@ public class TestShredder {
   @Test
   void array() throws Exception {
     ColumnMetaData p = new ColumnMetaData("[]", ValueType.NULL).isArray(true);
-    check(new Schema.Parser().parse(RECORD_ARRAY), p, new ColumnMetaData("[]#x", ValueType.INT).setParent(p),
+    check(JsonSchemaParser.parseInternal(RECORD_ARRAY), p, new ColumnMetaData("[]#x", ValueType.INT).setParent(p),
         new ColumnMetaData("[]#y", ValueType.STRING).setParent(p));
   }
 
   @Test
   void simpleUnion() throws Exception {
     String s = "[\"int\",\"string\"]";
-    check(new Schema.Parser().parse(s), new ColumnMetaData("int", ValueType.INT).isArray(true),
+    check(JsonSchemaParser.parseInternal(s), new ColumnMetaData("int", ValueType.INT).isArray(true),
         new ColumnMetaData("string", ValueType.STRING).isArray(true));
   }
 
   @Test
   void simpleOptional() throws Exception {
     String s = "[\"null\",\"string\"]";
-    check(new Schema.Parser().parse(s), new ColumnMetaData("string", ValueType.STRING).isArray(true));
+    check(JsonSchemaParser.parseInternal(s), new ColumnMetaData("string", ValueType.STRING).isArray(true));
   }
 
   private static final String UNION = "[\"null\",\"int\"," + SIMPLE_RECORD + "]";
@@ -124,7 +125,7 @@ public class TestShredder {
   @Test
   void union() throws Exception {
     ColumnMetaData p = new ColumnMetaData("R", ValueType.NULL).isArray(true);
-    check(new Schema.Parser().parse(UNION), new ColumnMetaData("int", ValueType.INT).isArray(true), p,
+    check(JsonSchemaParser.parseInternal(UNION), new ColumnMetaData("int", ValueType.INT).isArray(true), p,
         new ColumnMetaData("R#x", ValueType.INT).setParent(p),
         new ColumnMetaData("R#y", ValueType.STRING).setParent(p));
   }
@@ -134,7 +135,7 @@ public class TestShredder {
     String s = "{\"type\":\"record\",\"name\":\"S\",\"fields\":[" + "{\"name\":\"x\",\"type\":\"int\"},"
         + "{\"name\":\"A\",\"type\":" + RECORD_ARRAY + "}," + "{\"name\":\"y\",\"type\":\"string\"}" + "]}";
     ColumnMetaData p = new ColumnMetaData("A[]", ValueType.NULL).isArray(true);
-    check(new Schema.Parser().parse(s), new ColumnMetaData("x", ValueType.INT), p,
+    check(JsonSchemaParser.parseInternal(s), new ColumnMetaData("x", ValueType.INT), p,
         new ColumnMetaData("A[]#x", ValueType.INT).setParent(p),
         new ColumnMetaData("A[]#y", ValueType.STRING).setParent(p), new ColumnMetaData("y", ValueType.STRING));
   }
@@ -144,7 +145,7 @@ public class TestShredder {
     String s = "{\"type\":\"record\",\"name\":\"S\",\"fields\":[" + "{\"name\":\"x\",\"type\":\"int\"},"
         + "{\"name\":\"u\",\"type\":" + UNION + "}," + "{\"name\":\"y\",\"type\":\"string\"}" + "]}";
     ColumnMetaData p = new ColumnMetaData("u/R", ValueType.NULL).isArray(true);
-    check(new Schema.Parser().parse(s), new ColumnMetaData("x", ValueType.INT),
+    check(JsonSchemaParser.parseInternal(s), new ColumnMetaData("x", ValueType.INT),
         new ColumnMetaData("u/int", ValueType.INT).isArray(true), p,
         new ColumnMetaData("u/R#x", ValueType.INT).setParent(p),
         new ColumnMetaData("u/R#y", ValueType.STRING).setParent(p), new ColumnMetaData("y", ValueType.STRING));
@@ -156,8 +157,8 @@ public class TestShredder {
         + "{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":" + UNION + "}}" + "]}";
     ColumnMetaData p = new ColumnMetaData("a[]", ValueType.NULL).isArray(true);
     ColumnMetaData r = new ColumnMetaData("a[]/R", ValueType.NULL).setParent(p).isArray(true);
-    check(new Schema.Parser().parse(s), p, new ColumnMetaData("a[]/int", ValueType.INT).setParent(p).isArray(true), r,
-        new ColumnMetaData("a[]/R#x", ValueType.INT).setParent(r),
+    check(JsonSchemaParser.parseInternal(s), p, new ColumnMetaData("a[]/int", ValueType.INT).setParent(p).isArray(true),
+        r, new ColumnMetaData("a[]/R#x", ValueType.INT).setParent(r),
         new ColumnMetaData("a[]/R#y", ValueType.STRING).setParent(r));
   }
 
@@ -167,7 +168,7 @@ public class TestShredder {
         + "]}]}";
     ColumnMetaData q = new ColumnMetaData("a/array", ValueType.NULL).isArray(true);
     ColumnMetaData r = new ColumnMetaData("a/array[]", ValueType.NULL).setParent(q).isArray(true);
-    check(new Schema.Parser().parse(s), new ColumnMetaData("a/int", ValueType.INT).isArray(true), q, r,
+    check(JsonSchemaParser.parseInternal(s), new ColumnMetaData("a/int", ValueType.INT).isArray(true), q, r,
         new ColumnMetaData("a/array[]#x", ValueType.INT).setParent(r),
         new ColumnMetaData("a/array[]#y", ValueType.STRING).setParent(r));
   }
@@ -176,7 +177,7 @@ public class TestShredder {
   void simpleMap() throws Exception {
     String s = "{\"type\":\"map\",\"values\":\"long\"}";
     ColumnMetaData p = new ColumnMetaData(">", ValueType.NULL).isArray(true);
-    check(new Schema.Parser().parse(s), p, new ColumnMetaData(">key", ValueType.STRING).setParent(p),
+    check(JsonSchemaParser.parseInternal(s), p, new ColumnMetaData(">key", ValueType.STRING).setParent(p),
         new ColumnMetaData(">value", ValueType.LONG).setParent(p));
   }
 
@@ -184,7 +185,7 @@ public class TestShredder {
   void map() throws Exception {
     String s = "{\"type\":\"map\",\"values\":" + SIMPLE_RECORD + "}";
     ColumnMetaData p = new ColumnMetaData(">", ValueType.NULL).isArray(true);
-    check(new Schema.Parser().parse(s), p, new ColumnMetaData(">key", ValueType.STRING).setParent(p),
+    check(JsonSchemaParser.parseInternal(s), p, new ColumnMetaData(">key", ValueType.STRING).setParent(p),
         new ColumnMetaData(">value#x", ValueType.INT).setParent(p),
         new ColumnMetaData(">value#y", ValueType.STRING).setParent(p));
   }
@@ -200,9 +201,7 @@ public class TestShredder {
 
   private void checkWrite(Schema schema) throws IOException {
     AvroColumnWriter<Object> writer = new AvroColumnWriter<>(schema, new ColumnFileMetaData());
-    int count = 0;
     for (Object datum : new RandomData(schema, COUNT, SEED)) {
-      // System.out.println("datum="+datum);
       writer.write(datum);
     }
     writer.writeTo(FILE);

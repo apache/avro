@@ -319,7 +319,11 @@ public class Protocol extends JsonProperties {
 
   /** Returns the named type. */
   public Schema getType(String name) {
-    return context.getNamedSchema(name);
+    Schema namedSchema = context.getNamedSchema(name);
+    if (namedSchema == null && !name.contains(".")) {
+      return context.getNamedSchema(namespace + "." + name);
+    }
+    return namedSchema;
   }
 
   /** Set the types of this protocol. */
@@ -374,13 +378,13 @@ public class Protocol extends JsonProperties {
 
   /** Create a two-way message. */
   public Message createMessage(String name, String doc, JsonProperties propMap, Schema request, Schema response,
-                               Schema errors) {
+      Schema errors) {
     return new TwoWayMessage(name, doc, propMap, request, response, errors);
   }
 
   /** Create a two-way message. */
   public Message createMessage(String name, String doc, Map<String, ?> propMap, Schema request, Schema response,
-                               Schema errors) {
+      Schema errors) {
     return new TwoWayMessage(name, doc, propMap, request, response, errors);
   }
 

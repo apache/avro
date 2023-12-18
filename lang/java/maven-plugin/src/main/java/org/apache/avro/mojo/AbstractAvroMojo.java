@@ -387,16 +387,19 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   protected void doCompile(File sourceFileForModificationDetection, Collection<Schema> schemas, File outputDirectory)
       throws IOException {
-    doCompile(sourceFileForModificationDetection, new SpecificCompiler(schemas), outputDirectory);
+    doCompile(getLastModified(sourceFileForModificationDetection), new SpecificCompiler(schemas), outputDirectory);
+  }
+
+  private static Long getLastModified(File file) {
+    return file == null ? null : file.lastModified();
   }
 
   protected void doCompile(File sourceFileForModificationDetection, Protocol protocol, File outputDirectory)
       throws IOException {
-    doCompile(sourceFileForModificationDetection, new SpecificCompiler(protocol), outputDirectory);
+    doCompile(getLastModified(sourceFileForModificationDetection), new SpecificCompiler(protocol), outputDirectory);
   }
 
-  private void doCompile(File sourceFileForModificationDetection, SpecificCompiler compiler, File outputDirectory)
-      throws IOException {
+  private void doCompile(Long lastModified, SpecificCompiler compiler, File outputDirectory) throws IOException {
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(GenericData.StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());
@@ -417,7 +420,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
     compiler.setRecordSpecificClass(this.recordSpecificClass);
     compiler.setErrorSpecificClass(this.errorSpecificClass);
-    compiler.compileToDestination(sourceFileForModificationDetection, outputDirectory);
+    compiler.compileToDestination(lastModified, outputDirectory);
   }
 
   protected List<URL> findClasspath() throws DependencyResolutionRequiredException, MalformedURLException {

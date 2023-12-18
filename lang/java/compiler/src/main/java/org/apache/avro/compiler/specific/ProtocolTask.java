@@ -17,19 +17,18 @@
  */
 package org.apache.avro.compiler.specific;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.generic.GenericData.StringType;
-
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 
 /** Ant task to generate Java interface and classes for a protocol. */
 public class ProtocolTask extends Task {
@@ -88,7 +87,7 @@ public class ProtocolTask extends Task {
     Protocol protocol = Protocol.parse(src);
     SpecificCompiler compiler = new SpecificCompiler(protocol);
     compiler.setStringType(getStringType());
-    compiler.compileToDestination(src, dest);
+    compiler.compileToDestination(src.lastModified(), dest);
   }
 
   private void compile(File file) {

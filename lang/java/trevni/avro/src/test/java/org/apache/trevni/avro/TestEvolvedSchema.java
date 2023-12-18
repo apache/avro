@@ -17,9 +17,7 @@
  */
 package org.apache.trevni.avro;
 
-import java.io.File;
-import java.io.IOException;
-
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
@@ -32,6 +30,9 @@ import org.apache.trevni.ColumnFileMetaData;
 import org.apache.trevni.avro.AvroColumnReader.Params;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.io.File;
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -54,9 +55,9 @@ public class TestEvolvedSchema {
   GenericData.Record evolvedRecord;
   GenericData.Record innerRecord;
 
-  private static final Schema writer = new Schema.Parser().parse(writerSchema);
-  private static final Schema evolved = new Schema.Parser().parse(evolvedSchema2);
-  private static final Schema inner = new Schema.Parser().parse(innerSchema);
+  private static final Schema writer = JsonSchemaParser.parseInternal(writerSchema);
+  private static final Schema evolved = JsonSchemaParser.parseInternal(evolvedSchema2);
+  private static final Schema inner = JsonSchemaParser.parseInternal(innerSchema);
 
   @BeforeEach
   public void setUp() {

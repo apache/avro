@@ -17,6 +17,7 @@
  */
 package org.apache.avro.io;
 
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaNormalization;
 import org.apache.avro.generic.GenericDatumReader;
@@ -32,7 +33,9 @@ import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class TestBlockingDirectBinaryEncoder {
 
@@ -81,7 +84,7 @@ public class TestBlockingDirectBinaryEncoder {
   @Test
   void testSkippingUsingBlocks() throws IOException, NoSuchAlgorithmException {
     // Create an empty schema for read, so we skip over all the fields
-    Schema emptySchema = new Schema.Parser().parse(
+    Schema emptySchema = JsonSchemaParser.parseInternal(
         "{\"type\":\"record\",\"name\":\"TestRecordWithMapsAndArrays\",\"namespace\":\"org.apache.avro.specific\",\"fields\":[]}");
 
     GenericDatumReader<?> in = new GenericDatumReader<>(TestRecordWithMapsAndArrays.SCHEMA$, emptySchema);

@@ -1287,6 +1287,8 @@ Schema ImportSchema() : {
   <SCHEMA> importFile = JsonString() ";"
     {
       try (InputStream stream=findFile(importFile).openStream()){
+        // This usage of Schema.Parser should not be changed.
+        // Remove this whole (old) IDL parser instead.
         Parser parser = new Schema.Parser();
         parser.addTypes(names.values());          // inherit names
         Schema value = parser.parse(stream);

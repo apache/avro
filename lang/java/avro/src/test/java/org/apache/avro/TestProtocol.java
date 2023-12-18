@@ -73,22 +73,19 @@ public class TestProtocol {
    * defined schema before it is used.
    */
   /*
-  @Test
-  void normalization() {
-    final String schema = "{\n" + " \"type\":\"record\",  \"name\": \"Main\", " + " \"fields\":[\n"
-        + "    {  \"name\":\"f1\", \"type\":\"Sub\"  },\n" // use Sub
-        + "    {  \"name\":\"f2\", " + "       \"type\":{\n" + "         \"type\":\"enum\",  \"name\":\"Sub\",\n" // define
-                                                                                                                  // Sub
-        + "         \"symbols\":[\"OPEN\",\"CLOSE\"]\n" + "        }\n" + "    }\n" + " ]\n" + "}";
-    Schema s = new Schema.Parser().parse(schema);
-    assertNotNull(s);
-
-    String parsingForm = SchemaNormalization.toParsingForm(s);
-    assertEquals(
-        "{\"name\":\"Main\",\"type\":\"record\",\"fields\":[{\"name\":\"f1\",\"type\":{\"name\":\"Sub\",\"type\":\"enum\",\"symbols\":[\"OPEN\",\"CLOSE\"]}},{\"name\":\"f2\",\"type\":\"Sub\"}]}",
-        parsingForm);
-  }
-  */
+   * @Test void normalization() { final String schema = "{\n" +
+   * " \"type\":\"record\",  \"name\": \"Main\", " + " \"fields\":[\n" +
+   * "    {  \"name\":\"f1\", \"type\":\"Sub\"  },\n" // use Sub +
+   * "    {  \"name\":\"f2\", " + "       \"type\":{\n" +
+   * "         \"type\":\"enum\",  \"name\":\"Sub\",\n" // define // Sub +
+   * "         \"symbols\":[\"OPEN\",\"CLOSE\"]\n" + "        }\n" + "    }\n" +
+   * " ]\n" + "}"; Schema s = JsonSchemaParser.parseInternal(schema);
+   * assertNotNull(s);
+   * 
+   * String parsingForm = SchemaNormalization.toParsingForm(s); assertEquals(
+   * "{\"name\":\"Main\",\"type\":\"record\",\"fields\":[{\"name\":\"f1\",\"type\":{\"name\":\"Sub\",\"type\":\"enum\",\"symbols\":[\"OPEN\",\"CLOSE\"]}},{\"name\":\"f2\",\"type\":\"Sub\"}]}",
+   * parsingForm); }
+   */
 
   @Test
   void namespaceAndNameRules() {

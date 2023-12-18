@@ -18,26 +18,26 @@
 
 package org.apache.avro.mapred.tether;
 
-import java.io.IOException;
-import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
-import java.net.InetSocketAddress;
-import java.net.URL;
-
+import org.apache.avro.JsonSchemaParser;
+import org.apache.avro.Schema;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.ipc.HttpTransceiver;
+import org.apache.avro.ipc.SaslSocketTransceiver;
+import org.apache.avro.ipc.Transceiver;
+import org.apache.avro.ipc.specific.SpecificRequestor;
+import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.specific.SpecificDatumWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.avro.Schema;
-import org.apache.avro.ipc.HttpTransceiver;
-import org.apache.avro.ipc.Transceiver;
-import org.apache.avro.ipc.SaslSocketTransceiver;
-import org.apache.avro.ipc.specific.SpecificRequestor;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.avro.specific.SpecificDatumWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.URL;
+import java.nio.ByteBuffer;
 
 /**
  * Base class for Java tether mapreduce programs. Useless except for testing,
@@ -139,8 +139,8 @@ public abstract class TetherTask<IN, MID, OUT> {
   void configure(TaskType taskType, CharSequence inSchemaText, CharSequence outSchemaText) {
     this.taskType = taskType;
     try {
-      Schema inSchema = new Schema.Parser().parse(inSchemaText.toString());
-      Schema outSchema = new Schema.Parser().parse(outSchemaText.toString());
+      Schema inSchema = JsonSchemaParser.parseInternal(inSchemaText.toString());
+      Schema outSchema = JsonSchemaParser.parseInternal(outSchemaText.toString());
       switch (taskType) {
       case MAP:
         this.inReader = new SpecificDatumReader<>(inSchema);

@@ -17,7 +17,6 @@
  */
 package org.apache.avro;
 
-import org.apache.avro.util.SchemaResolver;
 import org.apache.avro.util.UtfTextUtils;
 
 import java.io.File;
@@ -135,7 +134,25 @@ public class SchemaParser {
     URI inputDir = file.getParent().toUri();
     try (InputStream stream = Files.newInputStream(file)) {
       String formattedSchema = UtfTextUtils.readAllBytes(stream, charset);
-      return resolvedOrNull(parse(inputDir, formattedSchema));
+      return parse(inputDir, formattedSchema);
+    }
+  }
+
+  /**
+   * Parse an Avro schema from a file written with a specific character set.
+   *
+   * @param location the location of the schema resource
+   * @param charset  the character set of the schema resource
+   * @return the schema
+   * @throws IOException          when the schema cannot be read
+   * @throws SchemaParseException if parsing the schema failed; contains
+   *                              suppressed underlying parse exceptions if
+   *                              available
+   */
+  public Schema parse(URI location, Charset charset) throws IOException, SchemaParseException {
+    try (InputStream stream = location.toURL().openStream()) {
+      String formattedSchema = UtfTextUtils.readAllBytes(stream, charset);
+      return parse(location, formattedSchema);
     }
   }
 
@@ -196,7 +213,7 @@ public class SchemaParser {
    */
   public Schema parse(CharSequence text) throws SchemaParseException {
     try {
-      return resolvedOrNull(parse(null, text));
+      return parse(null, text);
     } catch (IOException e) {
       // This can only happen if parser implementations try to read other (related)
       // schemata from somewhere.
@@ -226,7 +243,7 @@ public class SchemaParser {
     for (FormattedSchemaParser formattedSchemaParser : formattedSchemaParsers) {
       try {
         Schema schema = formattedSchemaParser.parse(parseContext, baseUri, formattedSchema);
-        if (parseContext.hasNewSchemas()) {
+        if (parseContext.hasNewSchemas() || schema != null) {
           // Parsing succeeded: return the result.
           parseContext.commit();
           return schema;
@@ -248,7 +265,38 @@ public class SchemaParser {
     throw parseException;
   }
 
-  private Schema resolvedOrNull(Schema schema) {
-      return SchemaResolver.isFullyResolvedSchema(schema) ? schema : null;
+  public List<Schema> getParseResult() {
+    return parseContext.resolveAllTypes();
+  }
+
+  /**
+   * Resolve the given schema if possible, return {@code null} otherwise.
+   *
+   * <p>
+   * Note: calling this method with anything other than a parse result of this
+   * parser is undefined.
+   * </p>
+   *
+   * @param schema the parse result to resolve
+   * @return the resolved result, or {@code null}
+   */
+  public Schema tryResolve(Schema schema) {
+    return parseContext.tryResolve(schema);
+  }
+
+  /**
+   * Resolve the given schema if possible, throw otherwise.
+   *
+   * <p>
+   * Note: calling this method with anything other than a parse result of this
+   * parser is undefined.
+   * </p>
+   *
+   * @param schema the parse result to resolve
+   * @return the resolved result
+   * @throws AvroTypeException if the schema cannot be resolved
+   */
+  public Schema resolve(Schema schema) {
+    return parseContext.forceResolve(schema);
   }
 }

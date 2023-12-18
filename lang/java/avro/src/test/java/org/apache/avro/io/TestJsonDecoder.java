@@ -17,21 +17,21 @@
  */
 package org.apache.avro.io;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestJsonDecoder {
 
@@ -57,7 +57,7 @@ public class TestJsonDecoder {
 
   private void checkNumeric(String type, Object value) throws Exception {
     String def = "{\"type\":\"record\",\"name\":\"X\",\"fields\":" + "[{\"type\":\"" + type + "\",\"name\":\"n\"}]}";
-    Schema schema = new Schema.Parser().parse(def);
+    Schema schema = JsonSchemaParser.parseInternal(def);
     DatumReader<GenericRecord> reader = new GenericDatumReader<>(schema);
 
     String[] records = { "{\"n\":1}", "{\"n\":1.0}" };
@@ -72,7 +72,7 @@ public class TestJsonDecoder {
   @Test
   void testFloatPrecision() throws Exception {
     String def = "{\"type\":\"record\",\"name\":\"X\",\"fields\":" + "[{\"type\":\"float\",\"name\":\"n\"}]}";
-    Schema schema = new Schema.Parser().parse(def);
+    Schema schema = JsonSchemaParser.parseInternal(def);
     DatumReader<GenericRecord> reader = new GenericDatumReader<>(schema);
 
     float value = 33.33000183105469f;
@@ -99,7 +99,7 @@ public class TestJsonDecoder {
   void reorderFields() throws Exception {
     String w = "{\"type\":\"record\",\"name\":\"R\",\"fields\":" + "[{\"type\":\"long\",\"name\":\"l\"},"
         + "{\"type\":{\"type\":\"array\",\"items\":\"int\"},\"name\":\"a\"}" + "]}";
-    Schema ws = new Schema.Parser().parse(w);
+    Schema ws = JsonSchemaParser.parseInternal(w);
     DecoderFactory df = DecoderFactory.get();
     String data = "{\"a\":[1,2],\"l\":100}{\"l\": 200, \"a\":[1,2]}";
     JsonDecoder in = df.jsonDecoder(ws, data);

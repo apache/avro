@@ -26,6 +26,7 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaNormalization;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericFixed;
@@ -689,7 +690,7 @@ public class ReflectData extends SpecificData {
       }
       AvroSchema explicit = c.getAnnotation(AvroSchema.class);
       if (explicit != null) // explicit schema
-        return new Schema.Parser().parse(explicit.value());
+        return parseExplicitSchema(explicit.value());
       if (CharSequence.class.isAssignableFrom(c)) // String
         return Schema.create(Schema.Type.STRING);
       if (ByteBuffer.class.isAssignableFrom(c)) // bytes
@@ -783,6 +784,12 @@ public class ReflectData extends SpecificData {
       return schema;
     }
     return super.createSchema(type, names);
+  }
+
+  private static Schema parseExplicitSchema(String explicitSchemaText) {
+    SchemaParser schemaParser = new SchemaParser();
+    Schema explicitSchema = schemaParser.parse(explicitSchemaText);
+    return schemaParser.resolve(explicitSchema);
   }
 
   @Override
@@ -881,7 +888,7 @@ public class ReflectData extends SpecificData {
 
     AvroSchema explicit = field.getAnnotation(AvroSchema.class);
     if (explicit != null) // explicit schema
-      return new Schema.Parser().parse(explicit.value());
+      return parseExplicitSchema(explicit.value());
 
     Union union = field.getAnnotation(Union.class);
     if (union != null)
@@ -934,7 +941,7 @@ public class ReflectData extends SpecificData {
           names);
       for (Annotation annotation : parameter.getAnnotations()) {
         if (annotation instanceof AvroSchema) // explicit schema
-          paramSchema = new Schema.Parser().parse(((AvroSchema) annotation).value());
+          paramSchema = parseExplicitSchema(((AvroSchema) annotation).value());
         else if (annotation instanceof Union) // union
           paramSchema = getAnnotatedUnion(((Union) annotation), names);
         else if (annotation instanceof Nullable) // nullable
@@ -954,7 +961,7 @@ public class ReflectData extends SpecificData {
 
     AvroSchema explicit = method.getAnnotation(AvroSchema.class);
     if (explicit != null) // explicit schema
-      response = new Schema.Parser().parse(explicit.value());
+      response = parseExplicitSchema(explicit.value());
 
     List<Schema> errs = new ArrayList<>();
     errs.add(Protocol.SYSTEM_ERROR); // every method can throw

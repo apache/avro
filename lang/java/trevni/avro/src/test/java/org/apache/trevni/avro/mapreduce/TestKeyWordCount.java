@@ -18,16 +18,14 @@
 
 package org.apache.trevni.avro.mapreduce;
 
-import java.io.IOException;
-import java.util.StringTokenizer;
-
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.Record;
-import org.apache.avro.mapreduce.AvroJob;
-import org.apache.avro.mapreduce.AvroKeyInputFormat;
 import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.Pair;
+import org.apache.avro.mapreduce.AvroJob;
+import org.apache.avro.mapreduce.AvroKeyInputFormat;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -40,6 +38,9 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.apache.trevni.avro.WordCountUtil;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.util.StringTokenizer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -153,8 +154,8 @@ public class TestKeyWordCount {
 
     job.setMapperClass(Counter.class);
 
-    Schema subSchema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"PairValue\"," + "\"fields\": [ "
-        + "{\"name\":\"value\", \"type\":\"long\"}" + "]}");
+    Schema subSchema = JsonSchemaParser.parseInternal("{\"type\":\"record\"," + "\"name\":\"PairValue\","
+        + "\"fields\": [ " + "{\"name\":\"value\", \"type\":\"long\"}" + "]}");
     AvroJob.setInputKeySchema(job, subSchema);
 
     FileInputFormat.setInputPaths(job, new Path(wordCountUtil.getDir().toString() + "/out/*"));

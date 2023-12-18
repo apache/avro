@@ -17,17 +17,6 @@
  */
 package org.apache.avro;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import com.sun.management.UnixOperatingSystemMXBean;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
@@ -39,6 +28,20 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import java.io.EOFException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @SuppressWarnings("restriction")
 public class TestDataFileReader {
@@ -90,9 +93,8 @@ public class TestDataFileReader {
     // magic header check. This happens with throttled input stream,
     // where we read into buffer less bytes than requested.
 
-    Schema legacySchema = new Schema.Parser(NameValidator.NO_VALIDATION).setValidateDefaults(false)
-        .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
-            + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
+    Schema legacySchema = JsonSchemaParser.parseInternal("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
+        + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
     File f = dataDir.resolve("testThrottledInputStream.avro").toFile();
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
       w.create(legacySchema, f);
@@ -149,8 +151,8 @@ public class TestDataFileReader {
       // AVRO-2944 describes hanging/failure in reading Avro file with performing
       // magic header check. This potentially happens with a defective input stream
       // where a -1 value is unexpectedly returned from a read.
-      Schema legacySchema = new Schema.Parser(NameValidator.NO_VALIDATION).setValidateDefaults(false)
-          .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
+      Schema legacySchema = JsonSchemaParser
+          .parseInternal("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
               + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
       File f = dataDir.resolve("testInputStreamEOF.avro").toFile();
       try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
@@ -198,8 +200,8 @@ public class TestDataFileReader {
     // This schema has an accent in the name and the default for the field doesn't
     // match the first type in the union. A Java SDK in the past could create a file
     // containing this schema.
-    Schema legacySchema = new Schema.Parser(NameValidator.NO_VALIDATION).setValidateDefaults(false)
-        .parse("{\"type\": \"record\", \"name\": \"InvalidAccëntWithInvalidNull\", \"fields\": "
+    Schema legacySchema = JsonSchemaParser
+        .parseInternal("{\"type\": \"record\", \"name\": \"InvalidAccëntWithInvalidNull\", \"fields\": "
             + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
 
     // Create a file with the legacy schema.

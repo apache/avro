@@ -19,6 +19,7 @@
 package org.apache.avro.reflect;
 
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.util.internal.JacksonUtils;
@@ -35,8 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestReflectData {
   @Test
-  @SuppressWarnings("unchecked")
-  void weakSchemaCaching() throws Exception {
+  void weakSchemaCaching() {
     int numSchemas = 1000000;
     for (int i = 0; i < numSchemas; i++) {
       // Create schema
@@ -122,25 +122,23 @@ public class TestReflectData {
 
     final String schemaString = schema.toString(true);
 
-    Schema.Parser parser = new Schema.Parser();
-    Schema cloneSchema = parser.parse(schemaString);
+    Schema cloneSchema = JsonSchemaParser.parseInternal(schemaString);
 
-    Map testCases = JacksonUtils.objectToMap(meta);
+    Map<?, ?> testCases = JacksonUtils.objectToMap(meta);
 
     for (Schema.Field field : cloneSchema.getFields()) {
       assertEquals(field.defaultVal(), testCases.get(field.name()), "Invalid field " + field.name());
     }
   }
 
+  @SuppressWarnings("InnerClassMayBeStatic")
   public class Definition {
     public Map<String, String> tokens;
   }
 
   @Test
   void nonStaticInnerClasses() {
-    assertThrows(AvroTypeException.class, () -> {
-      ReflectData.get().getSchema(Definition.class);
-    });
+    assertThrows(AvroTypeException.class, () -> ReflectData.get().getSchema(Definition.class));
   }
 
   @Test

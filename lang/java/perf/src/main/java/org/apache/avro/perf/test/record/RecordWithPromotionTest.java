@@ -18,9 +18,7 @@
 
 package org.apache.avro.perf.test.record;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.Decoder;
@@ -35,6 +33,9 @@ import org.openjdk.jmh.annotations.OperationsPerInvocation;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 public class RecordWithPromotionTest {
 
@@ -84,8 +85,8 @@ public class RecordWithPromotionTest {
 
     public TestStateDecode() {
       super();
-      this.writerSchema = new Schema.Parser().parse(RECORD_SCHEMA);
-      this.readerSchema = new Schema.Parser().parse(RECORD_SCHEMA_WITH_PROMOTION);
+      this.writerSchema = JsonSchemaParser.parseInternal(RECORD_SCHEMA);
+      this.readerSchema = JsonSchemaParser.parseInternal(RECORD_SCHEMA_WITH_PROMOTION);
     }
 
     /**

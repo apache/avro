@@ -15,8 +15,10 @@
  */
 package org.apache.avro.compiler.schema;
 
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaCompatibility;
+import org.apache.avro.SchemaParser;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,7 +48,7 @@ public class TestSchemas {
 
   @Test
   void textCloning() {
-    Schema recSchema = new Schema.Parser().parse(SCHEMA);
+    Schema recSchema = JsonSchemaParser.parseInternal(SCHEMA);
 
     CloningVisitor cv = new CloningVisitor(recSchema);
     Schema trimmed = Schemas.visit(recSchema, cv);
@@ -63,7 +65,7 @@ public class TestSchemas {
 
   @Test
   void textCloningCopyDocs() {
-    Schema recSchema = new Schema.Parser().parse(SCHEMA);
+    Schema recSchema = JsonSchemaParser.parseInternal(SCHEMA);
 
     Schema trimmed = Schemas.visit(recSchema, new CloningVisitor(new CloningVisitor.PropertyCopier() {
       @Override
@@ -91,7 +93,7 @@ public class TestSchemas {
   void cloningError1() {
     assertThrows(IllegalStateException.class, () -> {
       // Visit Terminal with union
-      Schema recordSchema = new Schema.Parser().parse(
+      Schema recordSchema = JsonSchemaParser.parseInternal(
           "{\"type\": \"record\", \"name\": \"R\", \"fields\":[{\"name\": \"f1\", \"type\": [\"int\", \"long\"]}]}");
       new CloningVisitor(recordSchema).visitTerminal(recordSchema.getField("f1").schema());
     });
@@ -101,8 +103,8 @@ public class TestSchemas {
   void cloningError2() {
     assertThrows(IllegalStateException.class, () -> {
       // After visit Non-terminal with int
-      Schema recordSchema = new Schema.Parser()
-          .parse("{\"type\": \"record\", \"name\": \"R\", \"fields\":[{\"name\": \"f1\", \"type\": \"int\"}]}");
+      Schema recordSchema = JsonSchemaParser
+          .parseInternal("{\"type\": \"record\", \"name\": \"R\", \"fields\":[{\"name\": \"f1\", \"type\": \"int\"}]}");
       new CloningVisitor(recordSchema).afterVisitNonTerminal(recordSchema.getField("f1").schema());
     });
   }
@@ -110,18 +112,18 @@ public class TestSchemas {
   @Test
   void hasGeneratedJavaClass() {
     assertTrue(Schemas
-        .hasGeneratedJavaClass(new Schema.Parser().parse("{\"type\": \"fixed\", \"name\": \"N\", \"size\": 10}")));
-    assertFalse(Schemas.hasGeneratedJavaClass(new Schema.Parser().parse("{\"type\": \"int\"}")));
+        .hasGeneratedJavaClass(JsonSchemaParser.parseInternal("{\"type\": \"fixed\", \"name\": \"N\", \"size\": 10}")));
+    assertFalse(Schemas.hasGeneratedJavaClass(JsonSchemaParser.parseInternal("{\"type\": \"int\"}")));
   }
 
   @Test
   void getJavaClassName() {
-    assertEquals("N",
-        Schemas.getJavaClassName(new Schema.Parser().parse("{\"type\": \"fixed\", \"name\": \"N\", \"size\": 10}")));
+    assertEquals("N", Schemas
+        .getJavaClassName(JsonSchemaParser.parseInternal("{\"type\": \"fixed\", \"name\": \"N\", \"size\": 10}")));
     assertEquals("N", Schemas.getJavaClassName(
-        new Schema.Parser().parse("{\"type\": \"fixed\", \"name\": \"N\", \"size\": 10, \"namespace\": \"\"}")));
-    assertEquals("com.example.N", Schemas.getJavaClassName(new Schema.Parser()
-        .parse("{\"type\": \"fixed\", \"name\": \"N\", \"size\": 10, \"namespace\": \"com.example\"}")));
+        JsonSchemaParser.parseInternal("{\"type\": \"fixed\", \"name\": \"N\", \"size\": 10, \"namespace\": \"\"}")));
+    assertEquals("com.example.N", Schemas.getJavaClassName(JsonSchemaParser
+        .parseInternal("{\"type\": \"fixed\", \"name\": \"N\", \"size\": 10, \"namespace\": \"com.example\"}")));
   }
 
   private static class TestVisitor implements SchemaVisitor<String> {
@@ -173,14 +175,14 @@ public class TestSchemas {
   void visit1() {
     String s1 = "{\"type\": \"record\", \"name\": \"t1\", \"fields\": [" + "{\"name\": \"f1\", \"type\": \"int\"}"
         + "]}";
-    assertEquals("t1.", Schemas.visit(new Schema.Parser().parse(s1), new TestVisitor()));
+    assertEquals("t1.", Schemas.visit(JsonSchemaParser.parseInternal(s1), new TestVisitor()));
   }
 
   @Test
   void visit2() {
     String s2 = "{\"type\": \"record\", \"name\": \"c1\", \"fields\": [" + "{\"name\": \"f1\", \"type\": \"int\"}"
         + "]}";
-    assertEquals("c1.\"int\"!", Schemas.visit(new Schema.Parser().parse(s2), new TestVisitor()));
+    assertEquals("c1.\"int\"!", Schemas.visit(JsonSchemaParser.parseInternal(s2), new TestVisitor()));
 
   }
 
@@ -188,7 +190,7 @@ public class TestSchemas {
   void visit3() {
     String s3 = "{\"type\": \"record\", \"name\": \"ss1\", \"fields\": [" + "{\"name\": \"f1\", \"type\": \"int\"}"
         + "]}";
-    assertEquals("ss1.", Schemas.visit(new Schema.Parser().parse(s3), new TestVisitor()));
+    assertEquals("ss1.", Schemas.visit(JsonSchemaParser.parseInternal(s3), new TestVisitor()));
 
   }
 
@@ -196,7 +198,7 @@ public class TestSchemas {
   void visit4() {
     String s4 = "{\"type\": \"record\", \"name\": \"st1\", \"fields\": [" + "{\"name\": \"f1\", \"type\": \"int\"}"
         + "]}";
-    assertEquals("st1.!", Schemas.visit(new Schema.Parser().parse(s4), new TestVisitor()));
+    assertEquals("st1.!", Schemas.visit(JsonSchemaParser.parseInternal(s4), new TestVisitor()));
 
   }
 
@@ -205,7 +207,7 @@ public class TestSchemas {
     String s5 = "{\"type\": \"record\", \"name\": \"c1\", \"fields\": ["
         + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"c2\", \"fields\": "
         + "[{\"name\": \"f11\", \"type\": \"int\"}]}}," + "{\"name\": \"f2\", \"type\": \"long\"}" + "]}";
-    assertEquals("c1.c2.\"int\"!\"long\"!", Schemas.visit(new Schema.Parser().parse(s5), new TestVisitor()));
+    assertEquals("c1.c2.\"int\"!\"long\"!", Schemas.visit(JsonSchemaParser.parseInternal(s5), new TestVisitor()));
 
   }
 
@@ -214,7 +216,7 @@ public class TestSchemas {
     String s6 = "{\"type\": \"record\", \"name\": \"c1\", \"fields\": ["
         + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"ss2\", \"fields\": "
         + "[{\"name\": \"f11\", \"type\": \"int\"}]}}," + "{\"name\": \"f2\", \"type\": \"long\"}" + "]}";
-    assertEquals("c1.ss2.!", Schemas.visit(new Schema.Parser().parse(s6), new TestVisitor()));
+    assertEquals("c1.ss2.!", Schemas.visit(JsonSchemaParser.parseInternal(s6), new TestVisitor()));
 
   }
 
@@ -223,7 +225,7 @@ public class TestSchemas {
     String s7 = "{\"type\": \"record\", \"name\": \"c1\", \"fields\": ["
         + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"css2\", \"fields\": "
         + "[{\"name\": \"f11\", \"type\": \"int\"}]}}," + "{\"name\": \"f2\", \"type\": \"long\"}" + "]}";
-    assertEquals("c1.css2.\"int\"!!", Schemas.visit(new Schema.Parser().parse(s7), new TestVisitor()));
+    assertEquals("c1.css2.\"int\"!!", Schemas.visit(new SchemaParser().parse(s7), new TestVisitor()));
   }
 
   @Test
@@ -232,7 +234,7 @@ public class TestSchemas {
       String s8 = "{\"type\": \"record\", \"name\": \"c1\", \"fields\": ["
           + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"cst2\", \"fields\": "
           + "[{\"name\": \"f11\", \"type\": \"int\"}]}}," + "{\"name\": \"f2\", \"type\": \"int\"}" + "]}";
-      Schemas.visit(new Schema.Parser().parse(s8), new TestVisitor());
+      Schemas.visit(new SchemaParser().parse(s8), new TestVisitor());
     });
   }
 
@@ -241,7 +243,7 @@ public class TestSchemas {
     String s9 = "{\"type\": \"record\", \"name\": \"c1\", \"fields\": ["
         + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"ct2\", \"fields\": "
         + "[{\"name\": \"f11\", \"type\": \"int\"}]}}," + "{\"name\": \"f2\", \"type\": \"long\"}" + "]}";
-    assertEquals("c1.ct2.\"int\"!", Schemas.visit(new Schema.Parser().parse(s9), new TestVisitor()));
+    assertEquals("c1.ct2.\"int\"!", Schemas.visit(new SchemaParser().parse(s9), new TestVisitor()));
   }
 
   @Test
@@ -250,7 +252,7 @@ public class TestSchemas {
         + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"ct2\", \"fields\": "
         + "[{\"name\": \"f11\", \"type\": \"int\"}]}}," + "{\"name\": \"f2\", \"type\": \"int\"}" + "]}";
     assertThrows(UnsupportedOperationException.class, () -> {
-      Schemas.visit(new Schema.Parser().parse(s10), new TestVisitor() {
+      Schemas.visit(new SchemaParser().parse(s10), new TestVisitor() {
         @Override
         public SchemaVisitorAction visitTerminal(Schema terminal) {
           return SchemaVisitorAction.SKIP_SUBTREE;
@@ -265,7 +267,7 @@ public class TestSchemas {
         + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"c2\", \"fields\": "
         + "[{\"name\": \"f11\", \"type\": \"int\"},{\"name\": \"f12\", \"type\": \"double\"}" + "]}},"
         + "{\"name\": \"f2\", \"type\": \"long\"}" + "]}";
-    assertEquals("c1.c2.\"int\".!\"long\".!", Schemas.visit(new Schema.Parser().parse(s11), new TestVisitor() {
+    assertEquals("c1.c2.\"int\".!\"long\".!", Schemas.visit(new SchemaParser().parse(s11), new TestVisitor() {
       public SchemaVisitorAction visitTerminal(Schema terminal) {
         sb.append(terminal).append('.');
         return SchemaVisitorAction.SKIP_SIBLINGS;
@@ -278,7 +280,7 @@ public class TestSchemas {
     String s12 = "{\"type\": \"record\", \"name\": \"c1\", \"fields\": ["
         + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"ct2\", \"fields\": "
         + "[{\"name\": \"f11\", \"type\": \"int\"}]}}," + "{\"name\": \"f2\", \"type\": \"long\"}" + "]}";
-    assertEquals("c1.ct2.\"int\".", Schemas.visit(new Schema.Parser().parse(s12), new TestVisitor() {
+    assertEquals("c1.ct2.\"int\".", Schemas.visit(new SchemaParser().parse(s12), new TestVisitor() {
       public SchemaVisitorAction visitTerminal(Schema terminal) {
         sb.append(terminal).append('.');
         return SchemaVisitorAction.TERMINATE;
@@ -289,7 +291,7 @@ public class TestSchemas {
   @Test
   void visit13() {
     String s12 = "{\"type\": \"int\"}";
-    assertEquals("\"int\".", Schemas.visit(new Schema.Parser().parse(s12), new TestVisitor() {
+    assertEquals("\"int\".", Schemas.visit(new SchemaParser().parse(s12), new TestVisitor() {
       public SchemaVisitorAction visitTerminal(Schema terminal) {
         sb.append(terminal).append('.');
         return SchemaVisitorAction.SKIP_SIBLINGS;

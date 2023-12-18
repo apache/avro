@@ -63,7 +63,7 @@ public class TestSchemaWarnings {
     Schema s = SchemaBuilder.record("A").fields().requiredInt("a1").endRecord();
 
     // Force reparsing the schema, and no warning should be logged.
-    s = new Schema.Parser().parse(s.toString());
+    s = JsonSchemaParser.parseInternal(s.toString());
     assertThat(s.getField("a1").schema().getLogicalType(), nullValue());
     assertThat(getCapturedStdErr(), is(""));
 
@@ -73,7 +73,7 @@ public class TestSchemaWarnings {
     assertThat(s.getField("a1").schema().getLogicalType(), nullValue());
 
     // Force reparsing the schema, and a warning should be logged.
-    s = new Schema.Parser().parse(s.toString());
+    s = JsonSchemaParser.parseInternal(s.toString());
     assertThat(getCapturedStdErr(), containsString("Ignored the A.a1.logicalType property (\"date\"). It should"
         + " probably be nested inside the \"type\" for the field."));
     assertThat(s.getField("a1").schema().getLogicalType(), nullValue());
@@ -85,7 +85,7 @@ public class TestSchemaWarnings {
 
     // Force reparsing the schema. No warning should be logged, and the logical type
     // should be applied.
-    s = new Schema.Parser().parse(s.toString());
+    s = JsonSchemaParser.parseInternal(s.toString());
     assertThat(getCapturedStdErr(), is(""));
     assertThat(s.getField("a1").schema().getLogicalType(), is(LogicalTypes.date()));
 
@@ -101,7 +101,7 @@ public class TestSchemaWarnings {
     s.getField("a1").schema().addProp(LOGICAL_TYPE_PROP, LogicalTypes.date().getName());
     // Force reparsing the schema. No warning should be logged, and the logical type
     // should be applied.
-    s = new Schema.Parser().parse(s.toString());
+    s = JsonSchemaParser.parseInternal(s.toString());
     assertThat(s.getField("a1").schema().getLogicalType(), nullValue());
     assertThat(getCapturedStdErr(), containsString("Ignoring invalid logical type for name: date"));
   }

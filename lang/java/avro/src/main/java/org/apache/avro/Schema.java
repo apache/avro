@@ -110,7 +110,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     private String schemaString;
 
     private Object readResolve() {
-      return new Schema.Parser().parse(schemaString);
+      return JsonSchemaParser.parseInternal(schemaString);
     }
   }
 
@@ -206,8 +206,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * Create an anonymous record schema.
    *
    * @deprecated This method allows to create Schema objects that cannot be parsed
-   *             by {@link Schema.Parser#parse(String)}. It will be removed in a
-   *             future version of Avro. Better use
+   *             by {@link SchemaParser#parse(CharSequence)}. It will be removed
+   *             in a future version of Avro. Better use
    *             {@link #createRecord(String, String, String, boolean, List)} to
    *             produce a fully qualified Schema.
    */
@@ -1397,7 +1397,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
    */
   public static class Parser {
     private final Names names = new Names();
-    private final ParseContext context;
+    final ParseContext context;
     private final NameValidator validate;
     private boolean validateDefaults = true;
 
@@ -1408,6 +1408,11 @@ public abstract class Schema extends JsonProperties implements Serializable {
     public Parser(final NameValidator validate) {
       this.validate = validate;
       context = new ParseContext(validate);
+    }
+
+    public Parser(final ParseContext context) {
+      this.validate = context.nameValidator;
+      this.context = context;
     }
 
     /**
@@ -1528,7 +1533,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * @return The freshly built Schema.
    * @throws IOException if there was trouble reading the contents, or they are
    *                     invalid
-   * @deprecated use {@link Schema.Parser} instead.
+   * @deprecated use {@link SchemaParser} instead.
    */
   @Deprecated
   public static Schema parse(File file) throws IOException {
@@ -1543,7 +1548,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * @return The freshly built Schema.
    * @throws IOException if there was trouble reading the contents, or they are
    *                     invalid
-   * @deprecated use {@link Schema.Parser} instead.
+   * @deprecated use {@link SchemaParser} instead.
    */
   @Deprecated
   public static Schema parse(InputStream in) throws IOException {
@@ -1553,7 +1558,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
   /**
    * Construct a schema from <a href="https://json.org/">JSON</a> text.
    *
-   * @deprecated use {@link Schema.Parser} instead.
+   * @deprecated use {@link SchemaParser} instead.
    */
   @Deprecated
   public static Schema parse(String jsonSchema) {
@@ -1564,7 +1569,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * Construct a schema from <a href="https://json.org/">JSON</a> text.
    *
    * @param validate true if names should be validated, false if not.
-   * @deprecated use {@link Schema.Parser} instead.
+   * @deprecated use {@link SchemaParser} instead.
    */
   @Deprecated
   public static Schema parse(String jsonSchema, boolean validate) {
@@ -1785,7 +1790,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
           JsonNode fieldTypeNode = field.get("type");
           if (fieldTypeNode == null)
             throw new SchemaParseException("No field type: " + field);
-          Schema fieldSchema = parse(fieldTypeNode, context, space);
+          Schema fieldSchema = parse(fieldTypeNode, context, name.space);
           Field.Order order = Field.Order.ASCENDING;
           JsonNode orderNode = field.get("order");
           if (orderNode != null)

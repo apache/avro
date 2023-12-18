@@ -17,11 +17,9 @@
  */
 package org.apache.avro.specific;
 
-import org.apache.avro.generic.GenericArray;
-import org.apache.avro.specific.SpecificData;
-import org.apache.avro.util.Utf8;
-import org.apache.avro.message.BinaryMessageEncoder;
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.message.BinaryMessageDecoder;
+import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.SchemaStore;
 
 @org.apache.avro.specific.AvroGenerated
@@ -29,7 +27,7 @@ public class TestRecordWithMapsAndArrays extends org.apache.avro.specific.Specif
     implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = 3113266652594662627L;
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(
+  public static final org.apache.avro.Schema SCHEMA$ = JsonSchemaParser.parseInternal(
       "{\"type\":\"record\",\"name\":\"TestRecordWithMapsAndArrays\",\"namespace\":\"org.apache.avro.specific\",\"fields\":[{\"name\":\"arr\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"default\":[]}},{\"name\":\"map\",\"type\":{\"type\":\"map\",\"values\":\"long\",\"avro.java.string\":\"String\",\"default\":{}}}]}");
 
   public static org.apache.avro.Schema getClassSchema() {

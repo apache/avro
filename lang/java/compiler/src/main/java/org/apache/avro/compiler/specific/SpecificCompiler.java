@@ -17,6 +17,28 @@
  */
 package org.apache.avro.compiler.specific;
 
+import org.apache.avro.Conversion;
+import org.apache.avro.Conversions;
+import org.apache.avro.JsonProperties;
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
+import org.apache.avro.Protocol;
+import org.apache.avro.Protocol.Message;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.SchemaNormalization;
+import org.apache.avro.SchemaParser;
+import org.apache.avro.data.TimeConversions;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericData.StringType;
+import org.apache.avro.specific.SpecificData;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -37,27 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.apache.avro.Conversion;
-import org.apache.avro.Conversions;
-import org.apache.avro.JsonProperties;
-import org.apache.avro.LogicalType;
-import org.apache.avro.LogicalTypes;
-import org.apache.avro.Protocol;
-import org.apache.avro.Protocol.Message;
-import org.apache.avro.Schema;
-import org.apache.avro.Schema.Field;
-import org.apache.avro.SchemaNormalization;
-import org.apache.avro.data.TimeConversions;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericData.StringType;
-import org.apache.avro.specific.SpecificData;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.avro.specific.SpecificData.RESERVED_WORDS;
@@ -437,9 +438,9 @@ public class SpecificCompiler {
      * Writes output to path destination directory when it is newer than src,
      * creating directories as necessary. Returns the created file.
      */
-    File writeToDestination(File src, File destDir) throws IOException {
+    File writeToDestination(Long lastModified, File destDir) throws IOException {
       File f = new File(destDir, path);
-      if (src != null && f.exists() && f.lastModified() >= src.lastModified())
+      if (lastModified != null && f.exists() && f.lastModified() >= lastModified)
         return f; // already up to date: ignore
       f.getParentFile().mkdirs();
       Writer fw = null;
@@ -483,7 +484,7 @@ public class SpecificCompiler {
     for (File src : srcFiles) {
       Protocol protocol = Protocol.parse(src);
       SpecificCompiler compiler = new SpecificCompiler(protocol);
-      compiler.compileToDestination(src, dest);
+      compiler.compileToDestination(src.lastModified(), dest);
     }
   }
 
@@ -498,12 +499,16 @@ public class SpecificCompiler {
    * Generates Java classes for a number of schema files.
    */
   public static void compileSchema(File[] srcFiles, File dest) throws IOException {
-    Schema.Parser parser = new Schema.Parser();
+    SchemaParser parser = new SchemaParser();
 
+    long lastModified = 0;
     for (File src : srcFiles) {
-      Schema schema = parser.parse(src);
+      parser.parse(src);
+      lastModified = Math.max(lastModified, src.lastModified());
+    }
+    for (Schema schema : parser.getParseResult()) {
       SpecificCompiler compiler = new SpecificCompiler(schema);
-      compiler.compileToDestination(src, dest);
+      compiler.compileToDestination(lastModified == 0 ? null : lastModified, dest);
     }
   }
 
@@ -564,13 +569,13 @@ public class SpecificCompiler {
   /**
    * Generate output under dst, unless existing file is newer than src.
    */
-  public void compileToDestination(File src, File dst) throws IOException {
+  public void compileToDestination(Long lastModified, File dst) throws IOException {
     for (Schema schema : queue) {
       OutputFile o = compile(schema);
-      o.writeToDestination(src, dst);
+      o.writeToDestination(lastModified, dst);
     }
     if (protocol != null) {
-      compileInterface(protocol).writeToDestination(src, dst);
+      compileInterface(protocol).writeToDestination(lastModified, dst);
     }
   }
 

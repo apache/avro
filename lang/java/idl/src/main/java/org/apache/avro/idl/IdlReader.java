@@ -38,7 +38,6 @@ import org.apache.avro.JsonProperties;
 import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
-import org.apache.avro.NameValidator;
 import org.apache.avro.ParseContext;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
@@ -153,10 +152,6 @@ public class IdlReader {
     this(new ParseContext());
   }
 
-  public IdlReader(NameValidator nameValidator) {
-    this(new ParseContext(nameValidator));
-  }
-
   public IdlReader(ParseContext parseContext) {
     readLocations = new HashSet<>();
     this.parseContext = parseContext;
@@ -171,10 +166,12 @@ public class IdlReader {
   }
 
   public IdlFile resolve(IdlFile unresolved) {
+    parseContext.commit();
     Protocol protocol = unresolved.getProtocol();
     if (protocol == null) {
-      Schema mainSchema = SchemaResolver.resolve(parseContext, unresolved.getMainSchema());
-      Iterable<Schema> namedSchemas = SchemaResolver.resolve(parseContext, unresolved.getNamedSchemas().values());
+      parseContext.resolveAllTypes();
+      Iterable<Schema> namedSchemas = parseContext.resolveAllTypes();
+      Schema mainSchema = SchemaResolver.resolve(parseContext, unresolved.getMainSchema(), true);
       return new IdlFile(mainSchema, namedSchemas, unresolved.getWarnings());
     } else {
       return new IdlFile(SchemaResolver.resolve(parseContext, protocol), unresolved.getWarnings());

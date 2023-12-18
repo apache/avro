@@ -17,20 +17,21 @@
  */
 package org.apache.avro.compiler.specific;
 
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
+
 import java.io.File;
 import java.io.IOException;
-
-import org.apache.avro.Schema;
 
 /** Ant task to generate Java interface and classes for a protocol. */
 public class SchemaTask extends ProtocolTask {
   @Override
   protected void doCompile(File src, File dest) throws IOException {
-    final Schema.Parser parser = new Schema.Parser();
-    final Schema schema = parser.parse(src);
+    final SchemaParser parser = new SchemaParser();
+    final Schema schema = parser.resolve(parser.parse(src));
     final SpecificCompiler compiler = new SpecificCompiler(schema);
     compiler.setStringType(getStringType());
-    compiler.compileToDestination(src, dest);
+    compiler.compileToDestination(src.lastModified(), dest);
   }
 
   public static void main(String[] args) throws IOException {

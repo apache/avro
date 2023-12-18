@@ -24,11 +24,8 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +45,8 @@ import static org.apache.avro.Schema.Type.UNION;
 
 /**
  * Utility class to resolve schemas that are unavailable at the point they are
- * referenced in the IDL.
+ * referenced in a schema file. This class is meant for internal use: use at
+ * your own risk!
  */
 public final class SchemaResolver {
 
@@ -113,30 +111,23 @@ public final class SchemaResolver {
   }
 
   /**
-   * Clone the provided schema while resolving all unreferenced schemas.
+   * Clone the provided schema while resolving all unreferenced schemas. Useful
+   * for (possibly) non-named schemata containing references.
    *
-   * @param parseContext the parse context with known names
-   * @param schema       the schema to resolve
-   * @return a copy of the schema with all schemas resolved
+   * @param parseContext   the parse context with known names
+   * @param schema         the schema to resolve
+   * @param requireSuccess if {@code false}, this method returns {@code null} if a
+   *                       named schema cannot be resolved (otherwise it throws)
+   * @return a copy of the schema with all schemas resolved, or {@code null}
+   * @throws AvroTypeException if {@code requireSuccess==true} and a named schema
+   *                           cannot be resolved
    */
-  public static Schema resolve(final ParseContext parseContext, Schema schema) {
+  public static Schema resolve(final ParseContext parseContext, Schema schema, boolean requireSuccess) {
     if (schema == null) {
       return null;
     }
-    ResolvingVisitor visitor = new ResolvingVisitor(schema, parseContext::getNamedSchema);
+    ResolvingVisitor visitor = new ResolvingVisitor(schema, parseContext::getNamedSchema, !requireSuccess);
     return Schemas.visit(schema, visitor);
-  }
-
-  /**
-   * Clone all provided schemas while resolving all unreferenced schemas.
-   *
-   * @param parseContext the parse context with known names
-   * @param schemas      the schemas to resolve
-   * @return a copy of all schemas with all schemas resolved
-   */
-  public static Collection<Schema> resolve(final ParseContext parseContext, Collection<Schema> schemas) {
-    ResolvingVisitor visitor = new ResolvingVisitor(null, parseContext::getNamedSchema);
-    return schemas.stream().map(schema -> Schemas.visit(schema, visitor.withRoot(schema))).collect(Collectors.toList());
   }
 
   /**
@@ -151,7 +142,7 @@ public final class SchemaResolver {
     Protocol result = new Protocol(protocol.getName(), protocol.getDoc(), protocol.getNamespace());
     protocol.getObjectProps().forEach(((JsonProperties) result)::addProp);
 
-    ResolvingVisitor visitor = new ResolvingVisitor(null, parseContext::getNamedSchema);
+    ResolvingVisitor visitor = new ResolvingVisitor(null, parseContext::getNamedSchema, false);
     Function<Schema, Schema> resolver = schema -> Schemas.visit(schema, visitor.withRoot(schema));
 
     // Resolve all schemata in the protocol.
@@ -222,41 +213,38 @@ public final class SchemaResolver {
     private static final Set<Schema.Type> NAMED_SCHEMA_TYPES = EnumSet.of(RECORD, ENUM, FIXED);
 
     private final Function<String, Schema> symbolTable;
-    private final Set<String> schemaPropertiesToRemove;
     private final IdentityHashMap<Schema, Schema> replace;
 
     private final Schema root;
+    private final boolean returnNullUponFailure;
 
     public ResolvingVisitor(final Schema root, final Function<String, Schema> symbolTable,
-        String... schemaPropertiesToRemove) {
-      this(root, symbolTable, new HashSet<>(Arrays.asList(schemaPropertiesToRemove)));
-    }
-
-    public ResolvingVisitor(final Schema root, final Function<String, Schema> symbolTable,
-        Set<String> schemaPropertiesToRemove) {
-      this(root, new IdentityHashMap<>(), symbolTable, schemaPropertiesToRemove);
+        boolean returnNullUponFailure) {
+      this(root, new IdentityHashMap<>(), symbolTable, returnNullUponFailure);
     }
 
     public ResolvingVisitor(final Schema root, final IdentityHashMap<Schema, Schema> replace,
-        Function<String, Schema> symbolTable, Set<String> schemaPropertiesToRemove) {
+        Function<String, Schema> symbolTable, boolean returnNullUponFailure) {
       this.replace = replace;
       this.symbolTable = symbolTable;
-      this.schemaPropertiesToRemove = schemaPropertiesToRemove;
-
       this.root = root;
+      this.returnNullUponFailure = returnNullUponFailure;
     }
 
     public ResolvingVisitor withRoot(Schema root) {
-      return new ResolvingVisitor(root, replace, symbolTable, schemaPropertiesToRemove);
+      return new ResolvingVisitor(root, replace, symbolTable, returnNullUponFailure);
     }
 
     @Override
     public SchemaVisitorAction visitTerminal(final Schema terminal) {
       Schema.Type type = terminal.getType();
-      if (CONTAINER_SCHEMA_TYPES.contains(type) && !replace.containsKey(terminal)) {
-        throw new IllegalStateException("Schema " + terminal + " must be already processed");
+      if (CONTAINER_SCHEMA_TYPES.contains(type)) {
+        if (!replace.containsKey(terminal)) {
+          throw new IllegalStateException("Schema " + terminal + " must be already processed");
+        }
+      } else {
+        replace.put(terminal, terminal);
       }
-      replace.put(terminal, terminal);
       return SchemaVisitorAction.CONTINUE;
     }
 
@@ -270,10 +258,17 @@ public final class SchemaResolver {
           final String unresolvedSchemaName = getUnresolvedSchemaName(nt);
           Schema resSchema = symbolTable.apply(unresolvedSchemaName);
           if (resSchema == null) {
+            if (returnNullUponFailure) {
+              replace.clear();
+              return SchemaVisitorAction.TERMINATE;
+            }
             throw new AvroTypeException("Undefined schema: " + unresolvedSchemaName);
           }
-          replace.computeIfAbsent(resSchema, schema -> Schemas.visit(schema, this));
-          replace.put(nt, replace.get(resSchema));
+          Schema replacement = replace.computeIfAbsent(resSchema, schema -> {
+            Schemas.visit(schema, this);
+            return replace.get(schema); // This is not what the visitor returns!
+          });
+          replace.put(nt, replacement);
         } else {
           replace.computeIfAbsent(nt, s -> {
             // Create a clone without fields. Fields will be added in afterVisitNonTerminal.
@@ -296,11 +291,7 @@ public final class SchemaResolver {
       }
 
       // Other properties
-      first.getObjectProps().forEach((name, value) -> {
-        if (!schemaPropertiesToRemove.contains(name)) {
-          second.addProp(name, value);
-        }
-      });
+      first.getObjectProps().forEach(second::addProp);
     }
 
     @Override
@@ -352,8 +343,7 @@ public final class SchemaResolver {
 
     @Override
     public String toString() {
-      return "ResolvingVisitor{symbolTable=" + symbolTable + ", schemaPropertiesToRemove=" + schemaPropertiesToRemove
-          + ", replace=" + replace + '}';
+      return "ResolvingVisitor{symbolTable=" + symbolTable + ", replace=" + replace + '}';
     }
   }
 }

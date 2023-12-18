@@ -18,22 +18,23 @@
 
 package org.apache.avro.hadoop.io;
 
-import java.io.IOException;
-
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.AvroValue;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.SequenceFile.Metadata;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.util.Progressable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY;
@@ -694,7 +695,7 @@ public class AvroSequenceFile {
         Text keySchemaText = metadata.get(METADATA_FIELD_KEY_SCHEMA);
         if (null != keySchemaText) {
           LOG.debug("Using key writer schema from SequenceFile metadata: {}", keySchemaText);
-          AvroSerialization.setKeyWriterSchema(confWithAvro, new Schema.Parser().parse(keySchemaText.toString()));
+          AvroSerialization.setKeyWriterSchema(confWithAvro, JsonSchemaParser.parseInternal(keySchemaText.toString()));
           if (null != mKeyReaderSchema) {
             AvroSerialization.setKeyReaderSchema(confWithAvro, mKeyReaderSchema);
           }
@@ -704,7 +705,8 @@ public class AvroSequenceFile {
         Text valueSchemaText = metadata.get(METADATA_FIELD_VALUE_SCHEMA);
         if (null != valueSchemaText) {
           LOG.debug("Using value writer schema from SequenceFile metadata: {}", valueSchemaText);
-          AvroSerialization.setValueWriterSchema(confWithAvro, new Schema.Parser().parse(valueSchemaText.toString()));
+          AvroSerialization.setValueWriterSchema(confWithAvro,
+              JsonSchemaParser.parseInternal(valueSchemaText.toString()));
           if (null != mValueReaderSchema) {
             AvroSerialization.setValueReaderSchema(confWithAvro, mValueReaderSchema);
           }

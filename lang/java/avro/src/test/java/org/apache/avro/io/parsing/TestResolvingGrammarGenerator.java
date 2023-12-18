@@ -17,19 +17,11 @@
  */
 package org.apache.avro.io.parsing;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.UncheckedIOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.stream.Stream;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.file.DataFileStream;
@@ -40,12 +32,20 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.UncheckedIOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Stream;
 
 import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA_NAMESPACE_1;
 import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA_NAMESPACE_2;
@@ -110,7 +110,7 @@ public class TestResolvingGrammarGenerator {
     final ObjectMapper mapper = new ObjectMapper(factory);
 
     return ret.stream().map((String[] args) -> {
-      Schema schema = new Schema.Parser().parse(args[0]);
+      Schema schema = JsonSchemaParser.parseInternal(args[0]);
       try {
         JsonNode data = mapper.readTree(new StringReader(args[1]));
         return Arguments.of(schema, data);

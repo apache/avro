@@ -17,15 +17,16 @@
  */
 package org.apache.avro.file;
 
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.io.IOException;
-import java.io.OutputStream;
-
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.util.RandomData;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.io.OutputStream;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 /*
  * Tests if we not write any garbage to the end of the file after any exception occurred
@@ -54,7 +55,7 @@ public class TestIOExceptionDuringWrite {
 
   private static final String SCHEMA_JSON = "{\"type\": \"record\", \"name\": \"Test\", \"fields\": ["
       + "{\"name\":\"stringField\", \"type\":\"string\"}," + "{\"name\":\"longField\", \"type\":\"long\"}]}";
-  private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
+  private static final Schema SCHEMA = JsonSchemaParser.parseInternal(SCHEMA_JSON);
 
   @Test
   void noWritingAfterException() throws IOException {

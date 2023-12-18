@@ -17,16 +17,16 @@
  */
 package org.apache.avro;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.RandomData;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
  * Generates file with objects of a specific schema(that doesn't contain nesting
@@ -58,7 +58,8 @@ public class GenerateBlockingData {
       System.exit(-1);
     }
 
-    Schema sch = new Schema.Parser().parse(new File(args[0]));
+    SchemaParser parser = new SchemaParser();
+    Schema sch = parser.resolve(parser.parse(new File(args[0])));
     File outputFile = new File(args[1]);
     int numObjects = Integer.parseInt(args[2]);
 

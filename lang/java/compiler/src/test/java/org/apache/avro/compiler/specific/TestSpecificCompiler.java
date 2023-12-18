@@ -17,6 +17,43 @@
  */
 package org.apache.avro.compiler.specific;
 
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.JsonSchemaParser;
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.SchemaParser;
+import org.apache.avro.generic.GenericData.StringType;
+import org.apache.avro.specific.SpecificData;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticListener;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.not;
@@ -26,48 +63,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticListener;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
-import org.apache.avro.AvroTypeException;
-
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.avro.LogicalType;
-import org.apache.avro.LogicalTypes;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
-import org.apache.avro.generic.GenericData.StringType;
-import org.apache.avro.specific.SpecificData;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class TestSpecificCompiler {
   private static final Logger LOG = LoggerFactory.getLogger(TestSpecificCompiler.class);
 
   /**
-   * JDK 18+ generates a warning for each member field which does not implement
-   * java.io.Serializable. Since Avro is an alternative serialization format, we
-   * can just ignore this warning.
+   * JDK 18+ generates a warning for each member field that does not implement
+   * {@code java.io.Serializable}. Since Avro is an alternative serialization
+   * format, we can just ignore this warning.
    */
   private static final String NON_TRANSIENT_INSTANCE_FIELD_MESSAGE = "non-transient instance field of a serializable class declared with a non-serializable type";
 
@@ -81,7 +83,7 @@ public class TestSpecificCompiler {
     this.outputFile = new File(this.OUTPUT_DIR, "SimpleRecord.java");
   }
 
-  private File src = new File("src/test/resources/simple_record.avsc");
+  private final File src = new File("src/test/resources/simple_record.avsc");
 
   static void assertCompilesWithJavaCompiler(File dstDir, Collection<SpecificCompiler.OutputFile> outputs)
       throws IOException {
@@ -147,8 +149,8 @@ public class TestSpecificCompiler {
   }
 
   private SpecificCompiler createCompiler() throws IOException {
-    Schema.Parser parser = new Schema.Parser();
-    Schema schema = parser.parse(this.src);
+    SchemaParser parser = new SchemaParser();
+    Schema schema = parser.resolve(parser.parse(this.src));
     SpecificCompiler compiler = new SpecificCompiler(schema);
     String velocityTemplateDir = "src/main/velocity/org/apache/avro/compiler/specific/templates/java/classic/";
     compiler.setTemplateDir(velocityTemplateDir);
@@ -159,7 +161,7 @@ public class TestSpecificCompiler {
   @Test
   void canReadTemplateFilesOnTheFilesystem() throws IOException {
     SpecificCompiler compiler = createCompiler();
-    compiler.compileToDestination(this.src, OUTPUT_DIR);
+    compiler.compileToDestination(this.src.lastModified(), OUTPUT_DIR);
     assertTrue(new File(OUTPUT_DIR, "SimpleRecord.java").exists());
   }
 
@@ -169,7 +171,7 @@ public class TestSpecificCompiler {
     compiler.setFieldVisibility(SpecificCompiler.FieldVisibility.PUBLIC);
     assertTrue(compiler.publicFields());
     assertFalse(compiler.privateFields());
-    compiler.compileToDestination(this.src, this.OUTPUT_DIR);
+    compiler.compileToDestination(this.src.lastModified(), this.OUTPUT_DIR);
     assertTrue(this.outputFile.exists());
     try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
       String line;
@@ -187,7 +189,7 @@ public class TestSpecificCompiler {
   @Test
   void createAllArgsConstructor() throws Exception {
     SpecificCompiler compiler = createCompiler();
-    compiler.compileToDestination(this.src, this.OUTPUT_DIR);
+    compiler.compileToDestination(this.src.lastModified(), this.OUTPUT_DIR);
     assertTrue(this.outputFile.exists());
     boolean foundAllArgsConstructor = false;
     try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
@@ -222,18 +224,18 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  void maxParameterCounts() throws Exception {
+  void maxParameterCounts() {
     Schema validSchema1 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT, 0);
-    assertTrue(new SpecificCompiler(validSchema1).compile().size() > 0);
+    assertFalse(new SpecificCompiler(validSchema1).compile().isEmpty());
 
     Schema validSchema2 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT - 2, 1);
-    assertTrue(new SpecificCompiler(validSchema2).compile().size() > 0);
+    assertFalse(new SpecificCompiler(validSchema2).compile().isEmpty());
 
     Schema validSchema3 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT - 1, 1);
-    assertTrue(new SpecificCompiler(validSchema3).compile().size() > 0);
+    assertFalse(new SpecificCompiler(validSchema3).compile().isEmpty());
 
     Schema validSchema4 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT + 1, 0);
-    assertTrue(new SpecificCompiler(validSchema4).compile().size() > 0);
+    assertFalse(new SpecificCompiler(validSchema4).compile().isEmpty());
   }
 
   @Test
@@ -250,10 +252,10 @@ public class TestSpecificCompiler {
     compiler.setFieldVisibility(SpecificCompiler.FieldVisibility.PRIVATE);
     assertFalse(compiler.publicFields());
     assertTrue(compiler.privateFields());
-    compiler.compileToDestination(this.src, this.OUTPUT_DIR);
+    compiler.compileToDestination(this.src.lastModified(), this.OUTPUT_DIR);
     assertTrue(this.outputFile.exists());
     try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
-      String line = null;
+      String line;
       while ((line = reader.readLine()) != null) {
         // No line, once trimmed, should start with a public field declaration
         // or with a deprecated public field declaration
@@ -269,7 +271,7 @@ public class TestSpecificCompiler {
   void settersCreatedByDefault() throws IOException {
     SpecificCompiler compiler = createCompiler();
     assertTrue(compiler.isCreateSetters());
-    compiler.compileToDestination(this.src, this.OUTPUT_DIR);
+    compiler.compileToDestination(this.src.lastModified(), this.OUTPUT_DIR);
     assertTrue(this.outputFile.exists());
     int foundSetters = 0;
     try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
@@ -290,7 +292,7 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = createCompiler();
     compiler.setCreateSetters(false);
     assertFalse(compiler.isCreateSetters());
-    compiler.compileToDestination(this.src, this.OUTPUT_DIR);
+    compiler.compileToDestination(this.src.lastModified(), this.OUTPUT_DIR);
     assertTrue(this.outputFile.exists());
     try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
       String line;
@@ -306,9 +308,10 @@ public class TestSpecificCompiler {
   void settingOutputCharacterEncoding() throws Exception {
     SpecificCompiler compiler = createCompiler();
     // Generated file in default encoding
-    compiler.compileToDestination(this.src, this.OUTPUT_DIR);
+    compiler.compileToDestination(this.src.lastModified(), this.OUTPUT_DIR);
     byte[] fileInDefaultEncoding = new byte[(int) this.outputFile.length()];
     FileInputStream is = new FileInputStream(this.outputFile);
+    // noinspection ResultOfMethodCallIgnored
     is.read(fileInDefaultEncoding);
     is.close(); // close input stream otherwise delete might fail
     if (!this.outputFile.delete()) {
@@ -318,11 +321,12 @@ public class TestSpecificCompiler {
     }
     // Generate file in another encoding (make sure it has different number of bytes
     // per character)
-    String differentEncoding = Charset.defaultCharset().equals(Charset.forName("UTF-16")) ? "UTF-32" : "UTF-16";
+    String differentEncoding = Charset.defaultCharset().equals(StandardCharsets.UTF_16) ? "UTF-32" : "UTF-16";
     compiler.setOutputCharacterEncoding(differentEncoding);
-    compiler.compileToDestination(this.src, this.OUTPUT_DIR);
+    compiler.compileToDestination(this.src.lastModified(), this.OUTPUT_DIR);
     byte[] fileInDifferentEncoding = new byte[(int) this.outputFile.length()];
     is = new FileInputStream(this.outputFile);
+    // noinspection ResultOfMethodCallIgnored
     is.read(fileInDifferentEncoding);
     is.close();
     // Compare as bytes
@@ -529,8 +533,8 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(true);
 
-    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
-        + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
+    final Schema schema = JsonSchemaParser.parseInternal("{\"type\":\"record\","
+        + "\"name\":\"NestedLogicalTypesRecord\"," + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
         + "\"doc\":\"Test nested types with logical types in generated Java classes\"," + "\"fields\":["
         + "{\"name\":\"nestedRecord\",\"type\":" + "{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":"
         + "[{\"name\":\"nullableDateField\"," + "\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}},"
@@ -551,8 +555,8 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(true);
 
-    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
-        + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
+    final Schema schema = JsonSchemaParser.parseInternal("{\"type\":\"record\","
+        + "\"name\":\"NestedLogicalTypesRecord\"," + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
         + "\"doc\":\"Test nested types with logical types in generated Java classes\"," + "\"fields\":["
         + "{\"name\":\"nestedRecord\"," + "\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":"
         + "[{\"name\":\"nullableDateField\","
@@ -603,7 +607,7 @@ public class TestSpecificCompiler {
   void getUsedConversionClassesForNullableLogicalTypesInNestedRecord() throws Exception {
     SpecificCompiler compiler = createCompiler();
 
-    final Schema schema = new Schema.Parser().parse(
+    final Schema schema = JsonSchemaParser.parseInternal(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesRecord\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"nestedRecord\",\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
@@ -615,7 +619,7 @@ public class TestSpecificCompiler {
   void getUsedConversionClassesForNullableLogicalTypesInArray() throws Exception {
     SpecificCompiler compiler = createCompiler();
 
-    final Schema schema = new Schema.Parser().parse(
+    final Schema schema = JsonSchemaParser.parseInternal(
         "{\"type\":\"record\",\"name\":\"NullableLogicalTypesArray\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"arrayOfLogicalType\",\"type\":{\"type\":\"array\",\"items\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
@@ -627,7 +631,7 @@ public class TestSpecificCompiler {
   void getUsedConversionClassesForNullableLogicalTypesInArrayOfRecords() throws Exception {
     SpecificCompiler compiler = createCompiler();
 
-    final Schema schema = new Schema.Parser().parse(
+    final Schema schema = JsonSchemaParser.parseInternal(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesArray\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"arrayOfRecords\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"RecordInArray\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
@@ -639,7 +643,7 @@ public class TestSpecificCompiler {
   void getUsedConversionClassesForNullableLogicalTypesInUnionOfRecords() throws Exception {
     SpecificCompiler compiler = createCompiler();
 
-    final Schema schema = new Schema.Parser().parse(
+    final Schema schema = JsonSchemaParser.parseInternal(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesUnion\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"unionOfRecords\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"RecordInUnion\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}]}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
@@ -651,7 +655,7 @@ public class TestSpecificCompiler {
   void getUsedConversionClassesForNullableLogicalTypesInMapOfRecords() throws Exception {
     SpecificCompiler compiler = createCompiler();
 
-    final Schema schema = new Schema.Parser().parse(
+    final Schema schema = new SchemaParser().parse(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesMap\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"mapOfRecords\",\"type\":{\"type\":\"map\",\"values\":{\"type\":\"record\",\"name\":\"RecordInMap\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]},\"avro.java.string\":\"String\"}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
@@ -681,7 +685,7 @@ public class TestSpecificCompiler {
     reservedIdentifiers.addAll(SpecificCompiler.ERROR_RESERVED_WORDS);
     for (String reserved : reservedIdentifiers) {
       try {
-        Schema s = new Schema.Parser().parse(schema.replace("__test__", reserved));
+        Schema s = new SchemaParser().parse(schema.replace("__test__", reserved));
         assertCompilesWithJavaCompiler(new File(OUTPUT_DIR, dstDirPrefix + "_" + reserved),
             new SpecificCompiler(s).compile());
       } catch (AvroTypeException e) {
@@ -731,24 +735,28 @@ public class TestSpecificCompiler {
 
   @Test
   void logicalTypesWithMultipleFields() throws Exception {
-    Schema logicalTypesWithMultipleFields = new Schema.Parser()
-        .parse(new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
+    Schema logicalTypesWithMultipleFields = parseFile(
+        new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
     assertCompilesWithJavaCompiler(new File(OUTPUT_DIR, "testLogicalTypesWithMultipleFields"),
         new SpecificCompiler(logicalTypesWithMultipleFields).compile(), true);
   }
 
+  private static Schema parseFile(File file) throws IOException {
+    SchemaParser schemaParser = new SchemaParser();
+    return schemaParser.resolve(schemaParser.parse(file));
+  }
+
   @Test
   void unionAndFixedFields() throws Exception {
-    Schema unionTypesWithMultipleFields = new Schema.Parser()
-        .parse(new File("src/test/resources/union_and_fixed_fields.avsc"));
+    Schema unionTypesWithMultipleFields = parseFile(new File("src/test/resources/union_and_fixed_fields.avsc"));
     assertCompilesWithJavaCompiler(new File(this.outputFile, "testUnionAndFixedFields"),
         new SpecificCompiler(unionTypesWithMultipleFields).compile());
   }
 
   @Test
   void logicalTypesWithMultipleFieldsDateTime() throws Exception {
-    Schema logicalTypesWithMultipleFields = new Schema.Parser()
-        .parse(new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
+    Schema logicalTypesWithMultipleFields = parseFile(
+        new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
     assertCompilesWithJavaCompiler(new File(this.outputFile, "testLogicalTypesWithMultipleFieldsDateTime"),
         new SpecificCompiler(logicalTypesWithMultipleFields).compile());
   }
@@ -801,7 +809,7 @@ public class TestSpecificCompiler {
   @Test
   void pojoWithOptionalTurnedOffByDefault() throws IOException {
     SpecificCompiler compiler = createCompiler();
-    compiler.compileToDestination(this.src, OUTPUT_DIR);
+    compiler.compileToDestination(this.src.lastModified(), OUTPUT_DIR);
     assertTrue(this.outputFile.exists());
     try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
       String line;
@@ -817,7 +825,7 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = createCompiler();
     compiler.setGettersReturnOptional(true);
     // compiler.setCreateOptionalGetters(true);
-    compiler.compileToDestination(this.src, OUTPUT_DIR);
+    compiler.compileToDestination(this.src.lastModified(), OUTPUT_DIR);
     assertTrue(this.outputFile.exists());
     int optionalFound = 0;
     try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
@@ -837,7 +845,7 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = createCompiler();
     compiler.setGettersReturnOptional(true);
     compiler.setOptionalGettersForNullableFieldsOnly(true);
-    compiler.compileToDestination(this.src, OUTPUT_DIR);
+    compiler.compileToDestination(this.src.lastModified(), OUTPUT_DIR);
     assertTrue(this.outputFile.exists());
     int optionalFound = 0;
     try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
@@ -857,7 +865,7 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = createCompiler();
     // compiler.setGettersReturnOptional(true);
     compiler.setCreateOptionalGetters(true);
-    compiler.compileToDestination(this.src, OUTPUT_DIR);
+    compiler.compileToDestination(this.src.lastModified(), OUTPUT_DIR);
     assertTrue(this.outputFile.exists());
     int optionalFound = 0;
     try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
@@ -876,7 +884,7 @@ public class TestSpecificCompiler {
   void pojoWithOptionalOnlyWhenNullableCreatedTurnedOnAndGettersReturnOptionalTurnedOff() throws IOException {
     SpecificCompiler compiler = createCompiler();
     compiler.setOptionalGettersForNullableFieldsOnly(true);
-    compiler.compileToDestination(this.src, OUTPUT_DIR);
+    compiler.compileToDestination(this.src.lastModified(), OUTPUT_DIR);
     assertTrue(this.outputFile.exists());
     try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
       String line;
@@ -892,10 +900,10 @@ public class TestSpecificCompiler {
   void additionalToolsAreInjectedIntoTemplate() throws Exception {
     SpecificCompiler compiler = createCompiler();
     List<Object> customTools = new ArrayList<>();
-    customTools.add(new String());
+    customTools.add("");
     compiler.setAdditionalVelocityTools(customTools);
     compiler.setTemplateDir("src/test/resources/templates_with_custom_tools/");
-    compiler.compileToDestination(this.src, this.OUTPUT_DIR);
+    compiler.compileToDestination(this.src.lastModified(), this.OUTPUT_DIR);
     assertTrue(this.outputFile.exists());
     int itWorksFound = 0;
     try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
@@ -915,7 +923,7 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = createCompiler();
     compiler.setOptionalGettersForNullableFieldsOnly(true);
     File avsc = new File("src/main/resources/logical-uuid.avsc");
-    compiler.compileToDestination(avsc, OUTPUT_DIR);
+    compiler.compileToDestination(avsc.lastModified(), OUTPUT_DIR);
     assertTrue(this.outputFile.exists());
     try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
       String line;
@@ -939,7 +947,7 @@ public class TestSpecificCompiler {
   void fieldWithUnderscore_avro3826() {
     String jsonSchema = "{\n" + "  \"name\": \"Value\",\n" + "  \"type\": \"record\",\n" + "  \"fields\": [\n"
         + "    { \"name\": \"__deleted\",  \"type\": \"string\"\n" + "    }\n" + "  ]\n" + "}";
-    Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(jsonSchema))
+    Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(new SchemaParser().parse(jsonSchema))
         .compile();
     assertEquals(1, outputs.size());
     SpecificCompiler.OutputFile outputFile = outputs.iterator().next();
@@ -950,7 +958,7 @@ public class TestSpecificCompiler {
     String jsonSchema2 = "{\n" + "  \"name\": \"Value\",  \"type\": \"record\",\n" + "  \"fields\": [\n"
         + "    { \"name\": \"__deleted\",  \"type\": \"string\"},\n"
         + "    { \"name\": \"_deleted\",  \"type\": \"string\"}\n" + "  ]\n" + "}";
-    Collection<SpecificCompiler.OutputFile> outputs2 = new SpecificCompiler(new Schema.Parser().parse(jsonSchema2))
+    Collection<SpecificCompiler.OutputFile> outputs2 = new SpecificCompiler(new SchemaParser().parse(jsonSchema2))
         .compile();
     assertEquals(1, outputs2.size());
     SpecificCompiler.OutputFile outputFile2 = outputs2.iterator().next();
@@ -963,7 +971,7 @@ public class TestSpecificCompiler {
         + "    { \"name\": \"__deleted\",  \"type\": \"string\"},\n"
         + "    { \"name\": \"_deleted\",  \"type\": \"string\"},\n"
         + "    { \"name\": \"deleted\",  \"type\": \"string\"}\n" + "  ]\n" + "}";
-    Collection<SpecificCompiler.OutputFile> outputs3 = new SpecificCompiler(new Schema.Parser().parse(jsonSchema3))
+    Collection<SpecificCompiler.OutputFile> outputs3 = new SpecificCompiler(new SchemaParser().parse(jsonSchema3))
         .compile();
     assertEquals(1, outputs3.size());
     SpecificCompiler.OutputFile outputFile3 = outputs3.iterator().next();
@@ -978,7 +986,7 @@ public class TestSpecificCompiler {
         + "    { \"name\": \"_deleted\",  \"type\": \"string\"},\n"
         + "    { \"name\": \"deleted\",  \"type\": \"string\"},\n"
         + "    { \"name\": \"Deleted\",  \"type\": \"string\"}\n" + "  ]\n" + "}";
-    Collection<SpecificCompiler.OutputFile> outputs4 = new SpecificCompiler(new Schema.Parser().parse(jsonSchema4))
+    Collection<SpecificCompiler.OutputFile> outputs4 = new SpecificCompiler(new SchemaParser().parse(jsonSchema4))
         .compile();
     assertEquals(1, outputs4.size());
     SpecificCompiler.OutputFile outputFile4 = outputs4.iterator().next();

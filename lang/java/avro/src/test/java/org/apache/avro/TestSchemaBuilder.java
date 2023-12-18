@@ -873,7 +873,7 @@ public class TestSchemaBuilder {
     Schema b = SchemaBuilder.record("b").fields().name("c").type(c).noDefault().endRecord();
 
     Schema a1 = SchemaBuilder.record("default.a").fields().name("b").type(b).noDefault().endRecord();
-    Schema a2 = new Schema.Parser().parse(a1.toString());
+    Schema a2 = JsonSchemaParser.parseInternal(a1.toString());
 
     assertEquals(a2, a1);
   }

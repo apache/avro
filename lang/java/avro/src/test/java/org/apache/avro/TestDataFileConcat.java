@@ -62,7 +62,7 @@ public class TestDataFileConcat {
 
   private static final String SCHEMA_JSON = "{\"type\": \"record\", \"name\": \"Test\", \"fields\": ["
       + "{\"name\":\"stringField\", \"type\":\"string\"}" + "," + "{\"name\":\"longField\", \"type\":\"long\"}" + "]}";
-  private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
+  private static final Schema SCHEMA = JsonSchemaParser.parseInternal(SCHEMA_JSON);
 
   private File makeFile(String name) {
     return new File(DIR, "test-" + name + ".avro");

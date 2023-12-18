@@ -18,9 +18,7 @@
 
 package org.apache.avro.perf.test.record;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
@@ -33,6 +31,9 @@ import org.openjdk.jmh.annotations.OperationsPerInvocation;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 public class ValidatingRecordTest {
 
@@ -104,7 +105,7 @@ public class ValidatingRecordTest {
 
     public TestStateDecode() {
       super();
-      this.schema = new Schema.Parser().parse(RECORD_SCHEMA);
+      this.schema = JsonSchemaParser.parseInternal(RECORD_SCHEMA);
     }
 
     /**

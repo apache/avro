@@ -17,19 +17,20 @@
  */
 package org.apache.avro.mapred;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaParseException;
+import org.apache.avro.SchemaParser;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobConf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaParseException;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.JobConf;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * This class supports Avro-MapReduce jobs that have multiple input paths with a
@@ -144,7 +145,7 @@ public class AvroMultipleInputs {
 
     addInputPath(conf, path, inputSchema);
 
-    String mapperMapping = path.toString() + ";" + mapperClass.getName();
+    String mapperMapping = path + ";" + mapperClass.getName();
     LOG.info(mapperMapping);
     String mappers = conf.get(MAPPERS_KEY);
     conf.set(MAPPERS_KEY, mappers == null ? mapperMapping : mappers + "," + mapperMapping);
@@ -194,13 +195,14 @@ public class AvroMultipleInputs {
     }
     Map<Path, Schema> m = new HashMap<>();
     String[] schemaMappings = conf.get(SCHEMA_KEY).split(",");
-    Schema.Parser schemaParser = new Schema.Parser();
+    SchemaParser schemaParser = new SchemaParser();
     for (String schemaMapping : schemaMappings) {
       String[] split = schemaMapping.split(";");
       String schemaString = fromBase64(split[1]);
       Schema inputSchema;
       try {
-        inputSchema = schemaParser.parse(schemaString);
+        // resolve immediately: disallow references to next splits
+        inputSchema = schemaParser.resolve(schemaParser.parse(schemaString));
       } catch (SchemaParseException e) {
         throw new RuntimeException(e);
       }

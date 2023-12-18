@@ -26,7 +26,7 @@ package org.apache.avro;
 public enum TypeEnum implements org.apache.avro.generic.GenericEnumSymbol<TypeEnum> {
   a, b, c;
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(
+  public static final org.apache.avro.Schema SCHEMA$ = JsonSchemaParser.parseInternal(
       "{\"type\":\"enum\",\"name\":\"TypeEnum\",\"namespace\":\"org.apache.avro\",\"symbols\":[\"a\",\"b\",\"c\"]}");
 
   public static org.apache.avro.Schema getClassSchema() {

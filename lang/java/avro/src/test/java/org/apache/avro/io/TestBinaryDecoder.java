@@ -18,6 +18,7 @@
 package org.apache.avro.io;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.SystemLimitException;
 import org.apache.avro.generic.GenericData;
@@ -28,7 +29,6 @@ import org.apache.avro.util.ByteBufferInputStream;
 import org.apache.avro.util.ByteBufferOutputStream;
 import org.apache.avro.util.RandomData;
 import org.apache.avro.util.Utf8;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,12 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static org.apache.avro.TestSystemLimitException.*;
+import static org.apache.avro.TestSystemLimitException.ERROR_NEGATIVE;
+import static org.apache.avro.TestSystemLimitException.ERROR_VM_LIMIT_BYTES;
+import static org.apache.avro.TestSystemLimitException.ERROR_VM_LIMIT_COLLECTION;
+import static org.apache.avro.TestSystemLimitException.ERROR_VM_LIMIT_STRING;
+import static org.apache.avro.TestSystemLimitException.MAX_ARRAY_VM_LIMIT;
+import static org.apache.avro.TestSystemLimitException.resetLimits;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestBinaryDecoder {
@@ -207,7 +212,7 @@ public class TestBinaryDecoder {
         + "{\"name\":\"floatField\", \"type\":\"float\"}," + "{\"name\":\"doubleField\", \"type\":\"double\"},"
         + "{\"name\":\"arrayField\", \"type\": " + "{\"type\":\"array\", \"items\":\"boolean\"}},"
         + "{\"name\":\"longField\", \"type\":\"long\"}]}";
-    schema = new Schema.Parser().parse(jsonSchema);
+    schema = JsonSchemaParser.parseInternal(jsonSchema);
     GenericDatumWriter<Object> writer = new GenericDatumWriter<>();
     writer.setSchema(schema);
     ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);
@@ -688,7 +693,7 @@ public class TestBinaryDecoder {
   @Test
   void testFloatPrecision() throws Exception {
     String def = "{\"type\":\"record\",\"name\":\"X\",\"fields\":" + "[{\"type\":\"float\",\"name\":\"n\"}]}";
-    Schema schema = new Schema.Parser().parse(def);
+    Schema schema = JsonSchemaParser.parseInternal(def);
     DatumReader<GenericRecord> reader = new GenericDatumReader<>(schema);
 
     float value = 33.33000183105469f;

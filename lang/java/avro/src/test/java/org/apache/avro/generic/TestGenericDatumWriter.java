@@ -17,7 +17,17 @@
  */
 package org.apache.avro.generic;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.JsonSchemaParser;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
+import org.apache.avro.UnresolvedUnionException;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.Utf8;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,15 +45,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import org.apache.avro.AvroTypeException;
-import org.apache.avro.Schema;
-import org.apache.avro.UnresolvedUnionException;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.Encoder;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.util.Utf8;
-import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestGenericDatumWriter {
   @Test
@@ -64,7 +70,7 @@ public class TestGenericDatumWriter {
   void write() throws IOException {
     String json = "{\"type\": \"record\", \"name\": \"r\", \"fields\": [" + "{ \"name\": \"f1\", \"type\": \"long\" }"
         + "]}";
-    Schema s = new Schema.Parser().parse(json);
+    Schema s = JsonSchemaParser.parseInternal(json);
     GenericRecord r = new GenericData.Record(s);
     r.put("f1", 100L);
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
@@ -81,7 +87,7 @@ public class TestGenericDatumWriter {
   @Test
   void arrayConcurrentModification() throws Exception {
     String json = "{\"type\": \"array\", \"items\": \"int\" }";
-    Schema s = new Schema.Parser().parse(json);
+    Schema s = JsonSchemaParser.parseInternal(json);
     final GenericArray<Integer> a = new GenericData.Array<>(1, s);
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
     final GenericDatumWriter<GenericArray<Integer>> w = new GenericDatumWriter<>(s);
@@ -114,7 +120,7 @@ public class TestGenericDatumWriter {
   @Test
   void mapConcurrentModification() throws Exception {
     String json = "{\"type\": \"map\", \"values\": \"int\" }";
-    Schema s = new Schema.Parser().parse(json);
+    Schema s = JsonSchemaParser.parseInternal(json);
     final Map<String, Integer> m = new HashMap<>();
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
     final GenericDatumWriter<Map<String, Integer>> w = new GenericDatumWriter<>(s);
@@ -289,7 +295,7 @@ public class TestGenericDatumWriter {
       final String json = "{\"type\": \"record\", \"name\": \"recordWithEnum\"," + "\"fields\": [ "
           + "{\"name\": \"field\", \"type\": " + "{\"type\": \"enum\", \"name\": \"enum\", \"symbols\": "
           + "[\"ONE\",\"TWO\",\"THREE\"] " + "}" + "}" + "]}";
-      Schema schema = new Schema.Parser().parse(json);
+      Schema schema = JsonSchemaParser.parseInternal(json);
       GenericRecord record = new GenericData.Record(schema);
       record.put("field", "ONE");
 
@@ -311,7 +317,7 @@ public class TestGenericDatumWriter {
       final String json = "{\"type\": \"record\", \"name\": \"recordWithEnum\"," + "\"fields\": [ "
           + "{\"name\": \"field\", \"type\": " + "{\"type\": \"enum\", \"name\": \"enum\", \"symbols\": "
           + "[\"ONE\",\"TWO\",\"THREE\"] " + "}" + "}" + "]}";
-      Schema schema = new Schema.Parser().parse(json);
+      Schema schema = JsonSchemaParser.parseInternal(json);
       GenericRecord record = new GenericData.Record(schema);
       record.put("field", AnEnum.ONE);
 
@@ -436,7 +442,8 @@ public class TestGenericDatumWriter {
 
   private GenericData.Record buildComplexRecord() throws IOException {
 
-    Schema schema = new Schema.Parser().parse(new File("../../../share/test/schemas/RecordWithRequiredFields.avsc"));
+    SchemaParser parser = new SchemaParser();
+    Schema schema = parser.resolve(parser.parse(new File("../../../share/test/schemas/RecordWithRequiredFields.avsc")));
 
     GenericData.Record topLevelRecord = new GenericData.Record(schema);
     GenericData.Record unionRecord = new GenericData.Record(schema.getField("unionField").schema().getTypes().get(1));
@@ -475,13 +482,13 @@ public class TestGenericDatumWriter {
     String schema = "{\"type\":\"record\",\"name\":\"my_record\",\"namespace\":\"mytest.namespace\",\"doc\":\"doc\","
         + "\"fields\":[{\"name\":\"f\",\"type\":[\"null\",\"string\"],\"doc\":\"field doc doc\", "
         + "\"default\":null}]}";
-    return new Schema.Parser().parse(schema);
+    return JsonSchemaParser.parseInternal(schema);
   }
 
   private Schema schemaWithoutExplicitNullDefault() {
     String schema = "{\"type\":\"record\",\"name\":\"my_record\",\"namespace\":\"mytest.namespace\",\"doc\":\"doc\","
         + "\"fields\":[{\"name\":\"f\",\"type\":[\"null\",\"string\"],\"doc\":\"field doc doc\"}]}";
-    return new Schema.Parser().parse(schema);
+    return JsonSchemaParser.parseInternal(schema);
   }
 
   private void writeObject(GenericRecord datum) throws Exception {

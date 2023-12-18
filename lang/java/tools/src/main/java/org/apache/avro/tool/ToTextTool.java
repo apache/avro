@@ -17,6 +17,12 @@
  */
 package org.apache.avro.tool;
 
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import org.apache.avro.JsonSchemaParser;
+import org.apache.avro.file.DataFileStream;
+import org.apache.avro.generic.GenericDatumReader;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.InputStream;
@@ -24,13 +30,6 @@ import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-
-import org.apache.avro.Schema;
-import org.apache.avro.file.DataFileStream;
-import org.apache.avro.generic.GenericDatumReader;
 
 /** Reads an avro data file into a plain text file. */
 public class ToTextTool implements Tool {
@@ -64,7 +63,7 @@ public class ToTextTool implements Tool {
     GenericDatumReader<Object> reader = new GenericDatumReader<>();
     DataFileStream<Object> fileReader = new DataFileStream<>(inStream, reader);
 
-    if (!fileReader.getSchema().equals(new Schema.Parser().parse(TEXT_FILE_SCHEMA))) {
+    if (!fileReader.getSchema().equals(JsonSchemaParser.parseInternal(TEXT_FILE_SCHEMA))) {
       err.println("Avro file is not generic text schema");
       p.printHelpOn(err);
       fileReader.close();

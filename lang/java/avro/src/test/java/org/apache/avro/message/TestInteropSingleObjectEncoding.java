@@ -20,19 +20,20 @@
 package org.apache.avro.message;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 /**
  * Tests that <code>test_message.bin</code> is properly encoded <a href=
@@ -50,7 +51,8 @@ public class TestInteropSingleObjectEncoding {
   @BeforeAll
   public static void setup() throws IOException {
     try (FileInputStream fileInputStream = new FileInputStream(SCHEMA_FILE)) {
-      SCHEMA = new Schema.Parser().parse(fileInputStream);
+      SchemaParser parser = new SchemaParser();
+      SCHEMA = parser.resolve(parser.parse(fileInputStream));
       BUILDER = new GenericRecordBuilder(SCHEMA);
     }
   }

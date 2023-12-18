@@ -18,6 +18,7 @@
 
 package org.apache.avro.specific;
 
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.SchemaStore;
@@ -27,7 +28,7 @@ import org.apache.avro.message.SchemaStore;
 public class TestUnionRecord extends SpecificRecordBase implements SpecificRecord {
   private static final long serialVersionUID = -3829374192747523457L;
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(
+  public static final org.apache.avro.Schema SCHEMA$ = JsonSchemaParser.parseInternal(
       "{\"type\":\"record\",\"name\":\"TestUnionRecord\",\"namespace\":\"org.apache.avro.specific\",\"fields\":[{\"name\":\"amount\",\"type\":[\"null\",{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":31,\"scale\":8}],\"default\":null}]}");
 
   public static org.apache.avro.Schema getClassSchema() {

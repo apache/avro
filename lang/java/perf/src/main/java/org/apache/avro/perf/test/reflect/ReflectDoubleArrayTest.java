@@ -18,19 +18,15 @@
 
 package org.apache.avro.perf.test.reflect;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Random;
-
 import org.apache.avro.Schema;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.perf.test.BasicArrayState;
+import org.apache.avro.perf.test.BasicState;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
-import org.apache.avro.perf.test.BasicArrayState;
-import org.apache.avro.perf.test.BasicState;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.OperationsPerInvocation;
@@ -38,6 +34,12 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Random;
+
+import static org.apache.avro.JsonSchemaParser.parseInternal;
 
 public class ReflectDoubleArrayTest {
 
@@ -74,7 +76,7 @@ public class ReflectDoubleArrayTest {
     public TestStateEncode() {
       super(ARRAY_SIZE);
       final String jsonText = ReflectData.get().getSchema(double[].class).toString();
-      this.schema = new Schema.Parser().parse(jsonText);
+      this.schema = parseInternal(jsonText);
     }
 
     /**
@@ -106,7 +108,7 @@ public class ReflectDoubleArrayTest {
     public TestStateDecode() {
       super(ARRAY_SIZE);
       final String jsonText = ReflectData.get().getSchema(double[].class).toString();
-      this.schema = new Schema.Parser().parse(jsonText);
+      this.schema = parseInternal(jsonText);
     }
 
     /**

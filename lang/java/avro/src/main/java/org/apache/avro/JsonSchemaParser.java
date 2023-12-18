@@ -57,26 +57,22 @@ public class JsonSchemaParser implements FormattedSchemaParser {
     for (String fragment : fragments) {
       buffer.append(fragment);
     }
-    return new JsonSchemaParser().parse(new ParseContext(NameValidator.NO_VALIDATION), buffer, null);
+    return new JsonSchemaParser().parse(new ParseContext(NameValidator.NO_VALIDATION), buffer, true);
   }
 
   @Override
   public Schema parse(ParseContext parseContext, URI baseUri, CharSequence formattedSchema)
       throws IOException, SchemaParseException {
-    return parse(parseContext, formattedSchema, parseContext.nameValidator);
+    return parse(parseContext, formattedSchema, false);
   }
 
-  private Schema parse(ParseContext parseContext, CharSequence formattedSchema, NameValidator nameValidator)
+  private Schema parse(ParseContext parseContext, CharSequence formattedSchema, boolean allowInvalidDefaults)
       throws SchemaParseException {
-    Schema.Parser parser = new Schema.Parser(nameValidator);
-    if (nameValidator == NameValidator.NO_VALIDATION) {
+    Schema.Parser parser = new Schema.Parser(parseContext);
+    if (allowInvalidDefaults) {
       parser.setValidateDefaults(false);
-    } else {
-      parser = new Schema.Parser(nameValidator);
     }
-    parser.addTypes(parseContext.typesByName().values());
     Schema schema = parser.parse(formattedSchema.toString());
-    parser.getTypes().values().forEach(parseContext::put);
     return schema;
   }
 }

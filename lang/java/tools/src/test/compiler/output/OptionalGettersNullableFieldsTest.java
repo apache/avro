@@ -5,6 +5,7 @@
  */
 package avro.examples.baseball;
 
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.util.Utf8;
@@ -18,7 +19,7 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
   private static final long serialVersionUID = -6919829133416680993L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OptionalGettersNullableFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that optional getters are created only for nullable fields\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"nullable_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"favorite_number\",\"type\":[\"int\"]},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]},{\"name\":\"nullable_array\",\"type\":[{\"type\":\"array\",\"items\":\"string\"},\"null\"]}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = JsonSchemaParser.parseInternal("{\"type\":\"record\",\"name\":\"OptionalGettersNullableFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that optional getters are created only for nullable fields\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"nullable_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"favorite_number\",\"type\":[\"int\"]},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]},{\"name\":\"nullable_array\",\"type\":[{\"type\":\"array\",\"items\":\"string\"},\"null\"]}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
