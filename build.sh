@@ -217,7 +217,7 @@ do
         else
           gpg --pinentry-mode loopback --local-user="$GPG_LOCAL_USER" --passphrase "$password" --armor --output "$f.asc" --detach-sig "$f"
         fi
-        
+
       done
 
       set -x
@@ -308,12 +308,13 @@ do
         echo "ENV HOME /home/$USER_NAME"
         echo "RUN getent group $GROUP_ID || groupadd -g $GROUP_ID $USER_NAME"
         echo "RUN getent passwd $USER_ID || useradd -g $GROUP_ID -u $USER_ID -k /root -m $USER_NAME"
+        echo "RUN mkdir -p /home/$USER_NAME/.m2/repository"
       } > Dockerfile
       # Include the ruby gemspec for preinstallation.
       # shellcheck disable=SC2086
       tar -cf- Dockerfile $DOCKER_EXTRA_CONTEXT | DOCKER_BUILDKIT=1 docker build $DOCKER_BUILD_XTRA_ARGS -t "$DOCKER_IMAGE_NAME" -
       rm Dockerfile
-      # By mapping the .m2 directory you can do an mvn install from
+      # By mapping the .m2/repository directory you can do an mvn install from
       # within the container and use the result on your normal
       # system.  And this also is a significant speedup in subsequent
       # builds because the dependencies are downloaded only once.
@@ -325,10 +326,13 @@ do
       # extra second before the changes are available within the docker container.
       # shellcheck disable=SC2086
       docker run --rm -t -i \
-        --env "JAVA=${JAVA:-8}" \
+        --env "JAVA=${JAVA:-21}" \
         --user "${USER_NAME}" \
         --volume "${HOME}/.gnupg:/home/${USER_NAME}/.gnupg" \
-        --volume "${HOME}/.m2:/home/${USER_NAME}/.m2${DOCKER_MOUNT_FLAG}" \
+        --volume "${PWD}/share/docker/m2:/home/${USER_NAME}/.m2/" \
+        --volume "${PWD}/share/docker/m2/toolchains.xml:/home/${USER_NAME}/.m2/toolchains.xml" \
+        --volume "${HOME}/.m2/repository:/home/${USER_NAME}/.m2/repository${DOCKER_MOUNT_FLAG}" \
+        --volume "${HOME}/.m2/build-cache:/home/${USER_NAME}/.m2/build-cache${DOCKER_MOUNT_FLAG}" \
         --volume "${PWD}:/home/${USER_NAME}/avro${DOCKER_MOUNT_FLAG}" \
         --workdir "/home/${USER_NAME}/avro" \
         ${DOCKER_RUN_XTRA_ARGS} "$DOCKER_IMAGE_NAME" ${DOCKER_RUN_ENTRYPOINT}

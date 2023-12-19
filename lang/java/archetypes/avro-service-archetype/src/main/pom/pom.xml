@@ -34,7 +34,7 @@
 
   <properties>
     <maven.compiler.source>${maven.compiler.source}</maven.compiler.source>
-    <maven.compiler.target>${maven.compiler.target}</maven.compiler.target>
+    <maven.compiler.release>${maven.compiler.release}</maven.compiler.release>
     <project.build.sourceEncoding>${project.build.sourceEncoding}</project.build.sourceEncoding>
     <avro.version>${project.version}</avro.version>
     <jackson-bom.version>${jackson-bom.version}</jackson-bom.version>
@@ -142,7 +142,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <source>\${maven.compiler.source}</source>
-          <target>\${maven.compiler.target}</target>
+          <release>\${maven.compiler.release}</release>
         </configuration>
       </plugin>
     </plugins>
