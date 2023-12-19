@@ -35,54 +35,57 @@ concurrency:
 
 jobs:
   test:
-    name: Java ${{ matrix.java }} Test
+    name: 'Java Test'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        java:
-        - '8'
-        - '11'
-        - '17'
-        - '21'
-        - '22-ea'
     steps:
-      - uses: actions/checkout@v4
+      - name: 'Checkout sourcecode'
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
-      - name: Cache Local Maven Repository
-        uses: actions/cache@v4
+      - name: 'Cache Local Maven Repository'
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Setup Temurin JDK
-        uses: actions/setup-java@v4
+      - name: 'Setup Temurin JDK 8, 11, 17 & 21'
+        uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # v4.0.0
         with:
           distribution: 'temurin'
-          java-version: ${{ matrix.java }}
+          java-version: |
+            8
+            11
+            17
+            21
 
-      - name: Lint
+      - name: 'Setup Maven 3.9.6'
+        uses: stCarolas/setup-maven@07fbbe97d97ef44336b7382563d66743297e442f # v4.5
+        with:
+          maven-version: 3.9.6
+
+      - name: 'Java Lint'
         run: ./build.sh lint
 
-      - name: Test
+      - name: 'Java Test'
         run: ./build.sh test
 
-  interop:
-    name: Java ${{ matrix.java }} Interop
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        java:
-        - '8'
-        - '11'
-        - '17'
-        - '21'
-        - '22-ea'
-    steps:
-      - uses: actions/checkout@v4
+      - name: 'Install Java Avro for reproducibility test'
+        working-directory: .
+        run: mvn -B clean install -PskipQuality
 
-      - name: Cache Local Maven Repository
+      - name: 'Test Reproducible Build'
+        working-directory: .
+        run: mvn clean verify -PskipQuality artifact:compare
+
+  interop:
+    name: 'Java Interop'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: 'Cache Local Maven Repository'
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository
@@ -90,28 +93,37 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - name: 'Setup Temurin JDK 8, 11, 17 & 21'
+        uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # v4.0.0
         with:
           distribution: 'temurin'
-          java-version: ${{ matrix.java }}
+          java-version: |
+            8
+            11
+            17
+            21
 
-      - name: Setup Python for Generating Input Data
-        uses: actions/setup-python@v5
+      - name: 'Setup Maven 3.9.6'
+        uses: stCarolas/setup-maven@07fbbe97d97ef44336b7382563d66743297e442f # v4.5
+        with:
+          maven-version: 3.9.6
 
-      - name: Apt Install Compression Libs Required by Python
+      - name: 'Setup Python for Generating Input Data'
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+
+      - name: 'Apt Install Compression Libs Required by Python'
         run: |
           sudo apt-get install -qqy --no-install-recommends libbz2-dev \
                                                             liblzma-dev \
                                                             libsnappy-dev \
                                                             libzstd-dev
 
-      - name: Install Python Dependencies
+      - name: 'Install Python Dependencies'
         run: |
           python3 -m pip install --upgrade pip setuptools tox
           python3 -m pip install python-snappy zstandard
 
-      - name: Setup C# for Generating Interop Data
+      - name: 'Setup C# for Generating Interop Data'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
@@ -121,65 +133,70 @@ jobs:
             7.0.x
             8.0.x
 
-      - name: Install Java Avro for Interop Test
-        working-directory: .
-        run: mvn -B install -DskipTests
-
-      - name: Create Interop Data Directory
+      - name: 'Create Interop Data Directory'
         working-directory: .
         run: mkdir -p build/interop/data
 
-      - name: Generate Interop Resources
-        working-directory: lang/java/avro
-        run: mvn -B -P interop-data-generate generate-resources
-
-      - name: Generate Interop Data using Python
+      - name: 'Generate Interop Data using Python'
         working-directory: lang/py
         run: ./build.sh interop-data-generate
 
-      - name: Generate Interop Data using C#
+      - name: 'Generate Interop Data using C#'
         working-directory: lang/csharp
         run: ./build.sh interop-data-generate
 
-      - name: Run Interop Tests
-        working-directory: lang/java/ipc
-        run: mvn -B test -P interop-data-test
-
-      - name: Test Reproducible Build
+      - name: 'Install Java Avro for other tests'
         working-directory: .
-        run: mvn clean verify -DskipTests -Dcyclonedx.skip artifact:compare
+        run: mvn -B install -PskipQuality
+
+      - name: 'Generate Interop Data using Java 8, 11, 17 & 21'
+        working-directory: lang/java/interop-data-test
+        run: mvn -B verify -Pgenerate-test-data
+
+      - name: 'Run Interop Tests using Java 8, 11, 17 & 21'
+        working-directory: lang/java/interop-data-test
+        run: mvn -B verify -Pcheck-test-data
 
   arm64:
     name: Java on Linux ARM64
     runs-on: ["self-hosted", "asf-arm"]
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: 'Checkout sourcecode'
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
-      - name: Setup Temurin JDK
-        uses: actions/setup-java@v4
+      - name: 'Setup Temurin JDK 8, 11, 17 & 21'
+        uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # v4.0.0
         with:
           distribution: 'temurin'
-          java-version: 11
+          java-version: |
+            8
+            11
+            17
+            21
 
-      - name: Cache Local Maven Repository
-        uses: actions/cache@v4
+      - name: 'Cache Local Maven Repository'
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: 'Setup Maven 3.9.6'
+        uses: stCarolas/setup-maven@07fbbe97d97ef44336b7382563d66743297e442f # v4.5
+        with:
+          maven-version: 3.9.6
+
       - name: Build
-        run: |
-          set -x
-          export MAVEN_VERSION="3.9.4"
-          wget https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz
-          tar zxvf apache-maven-$MAVEN_VERSION-bin.tar.gz
-          export M2_HOME=$PWD/apache-maven-$MAVEN_VERSION
-          export PATH="$M2_HOME/bin:$PATH"
-          java -version
-          mvn -version
-          #MAVEN_OPTS="-Dsurefire.excludes=*TestCustomCodec*,*TestAllCodecs*,*TestNettyServer*" ./build.sh clean test
-          ./build.sh clean test
+        run: ./build.sh clean test
+#          set -x
+#          export MAVEN_VERSION="3.9.6"
+#          wget https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz
+#          tar zxvf apache-maven-$MAVEN_VERSION-bin.tar.gz
+#          export M2_HOME=$PWD/apache-maven-$MAVEN_VERSION
+#          export PATH="$M2_HOME/bin:$PATH"
+#          java -version
+#          mvn -version
+#          #MAVEN_OPTS="-Dsurefire.excludes=*TestCustomCodec*,*TestAllCodecs*,*TestNettyServer*" ./build.sh clean test
+#          ./build.sh clean test

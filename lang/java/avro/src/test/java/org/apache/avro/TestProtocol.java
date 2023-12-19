@@ -42,7 +42,7 @@ public class TestProtocol {
 
   @Test
   public void parse() throws IOException {
-    File fic = new File("../../../share/test/schemas/namespace.avpr");
+    File fic = new File("target/test-classes/share/test/schemas/namespace.avpr");
     Protocol protocol = Protocol.parse(fic);
     assertNotNull(protocol);
     assertEquals("TestNamespace", protocol.getName());
