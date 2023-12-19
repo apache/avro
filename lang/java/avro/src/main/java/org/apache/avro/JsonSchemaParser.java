@@ -57,7 +57,20 @@ public class JsonSchemaParser implements FormattedSchemaParser {
     for (String fragment : fragments) {
       buffer.append(fragment);
     }
-    return new JsonSchemaParser().parse(new ParseContext(NameValidator.NO_VALIDATION), buffer, true);
+
+    boolean saved = Schema.getValidateDefaults();
+    try {
+      ParseContext context = new ParseContext(NameValidator.NO_VALIDATION);
+
+      Schema schema = new JsonSchemaParser().parse(context, buffer, true);
+      context.commit();
+      Schema.setValidateDefaults(false);
+      context.resolveAllTypes();
+      return context.resolve(schema);
+    } finally {
+      // Unless explicitly disabled when needed, defaults should always be validated.
+      Schema.setValidateDefaults(saved);
+    }
   }
 
   @Override
@@ -72,7 +85,6 @@ public class JsonSchemaParser implements FormattedSchemaParser {
     if (allowInvalidDefaults) {
       parser.setValidateDefaults(false);
     }
-    Schema schema = parser.parse(formattedSchema.toString());
-    return schema;
+    return parser.parse(formattedSchema.toString());
   }
 }

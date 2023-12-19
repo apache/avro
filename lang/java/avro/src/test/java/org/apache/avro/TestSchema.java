@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -38,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -46,9 +48,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -475,26 +479,24 @@ public class TestSchema {
     assertFalse(unionStrBytes.isValidDefault(JsonNodeFactory.instance.numberNode(123)));
   }
 
-  /*
-   * @Test void enumLateDefine() { String schemaString = "{\n" +
-   * "    \"type\":\"record\",\n" + "    \"name\": \"Main\",\n" +
-   * "    \"fields\":[\n" + "        {\n" + "            \"name\":\"f1\",\n" +
-   * "            \"type\":\"Sub\"\n" + "        },\n" + "        {\n" +
-   * "            \"name\":\"f2\",\n" + "            \"type\":{\n" +
-   * "                \"type\":\"enum\",\n" +
-   * "                \"name\":\"Sub\",\n" +
-   * "                \"symbols\":[\"OPEN\",\"CLOSE\"]\n" + "            }\n" +
-   * "        }\n" + "    ]\n" + "}";
-   * 
-   * final Schema schema = JsonSchemaParser.parseInternal(schemaString); Schema
-   * f1Schema = schema.getField("f1").schema(); Schema f2Schema =
-   * schema.getField("f2").schema(); assertSame(f1Schema, f2Schema);
-   * assertEquals(Type.ENUM, f1Schema.getType()); String stringSchema =
-   * schema.toString(); int definitionIndex =
-   * stringSchema.indexOf("\"symbols\":[\"OPEN\",\"CLOSE\"]"); int usageIndex =
-   * stringSchema.indexOf("\"type\":\"Sub\""); assertTrue(definitionIndex <
-   * usageIndex, "usage is before definition"); }
-   */
+  @Test
+  void enumLateDefine() {
+    String schemaString = "{\n" + "    \"type\":\"record\",\n" + "    \"name\": \"Main\",\n" + "    \"fields\":[\n"
+        + "        {\n" + "            \"name\":\"f1\",\n" + "            \"type\":\"Sub\"\n" + "        },\n"
+        + "        {\n" + "            \"name\":\"f2\",\n" + "            \"type\":{\n"
+        + "                \"type\":\"enum\",\n" + "                \"name\":\"Sub\",\n"
+        + "                \"symbols\":[\"OPEN\",\"CLOSE\"]\n" + "            }\n" + "        }\n" + "    ]\n" + "}";
+
+    final Schema schema = JsonSchemaParser.parseInternal(schemaString);
+    Schema f1Schema = schema.getField("f1").schema();
+    Schema f2Schema = schema.getField("f2").schema();
+    assertSame(f1Schema, f2Schema);
+    assertEquals(Type.ENUM, f1Schema.getType());
+    String stringSchema = schema.toString();
+    int definitionIndex = stringSchema.indexOf("\"symbols\":[\"OPEN\",\"CLOSE\"]");
+    int usageIndex = stringSchema.indexOf("\"type\":\"Sub\"");
+    assertTrue(definitionIndex < usageIndex, "usage is before definition");
+  }
 
   @Test
   public void testRecordInArray() {
@@ -582,42 +584,44 @@ public class TestSchema {
     assertThrows(SchemaParseException.class, () -> parser.parse(avscFile));
   }
 
-  /*
-   * @Test void testParseMultipleFile() throws IOException { URL directory =
-   * Thread.currentThread().getContextClassLoader().getResource("multipleFile");
-   * File f1 = new File(directory.getPath(), "ApplicationEvent.avsc"); File f2 =
-   * new File(directory.getPath(), "DocumentInfo.avsc"); File f3 = new
-   * File(directory.getPath(), "MyResponse.avsc");
-   * Assertions.assertTrue(f1.exists(), "File not exist for test " +
-   * f1.getPath()); Assertions.assertTrue(f2.exists(), "File not exist for test "
-   * + f2.getPath()); Assertions.assertTrue(f3.exists(),
-   * "File not exist for test " + f3.getPath());
-   *
-   * final List<Schema> schemas = JsonSchemaParser.parseInternal(Arrays.asList(f1,
-   * f2, f3)); Assertions.assertEquals(3, schemas.size()); Schema schemaAppEvent =
-   * schemas.get(0); Schema schemaDocInfo = schemas.get(1); Schema schemaResponse
-   * = schemas.get(2);
-   *
-   * Assertions.assertNotNull(schemaAppEvent); Assertions.assertEquals(3,
-   * schemaAppEvent.getFields().size()); Field documents =
-   * schemaAppEvent.getField("documents"); Schema docSchema =
-   * documents.schema().getTypes().get(1).getElementType();
-   * Assertions.assertEquals(docSchema, schemaDocInfo);
-   *
-   * Assertions.assertNotNull(schemaDocInfo);
-   * Assertions.assertNotNull(schemaResponse); }
-   */
+  @Test
+  void testParseMultipleFile() throws IOException {
+    URL directory = requireNonNull(Thread.currentThread().getContextClassLoader().getResource("multipleFile"));
+    File f1 = new File(directory.getPath(), "ApplicationEvent.avsc");
+    File f2 = new File(directory.getPath(), "DocumentInfo.avsc");
+    File f3 = new File(directory.getPath(), "MyResponse.avsc");
+    Assertions.assertTrue(f1.exists(), "File not exist for test " + f1.getPath());
+    Assertions.assertTrue(f2.exists(), "File not exist for test " + f2.getPath());
+    Assertions.assertTrue(f3.exists(), "File not exist for test " + f3.getPath());
+    SchemaParser parser = new SchemaParser();
+    parser.parse(f1);
+    parser.parse(f2);
+    parser.parse(f3);
+    final List<Schema> schemas = parser.getParseResult();
+    Assertions.assertEquals(3, schemas.size());
+    Schema schemaAppEvent = schemas.get(0);
+    Schema schemaDocInfo = schemas.get(1);
+    Schema schemaResponse = schemas.get(2);
+    Assertions.assertNotNull(schemaAppEvent);
+    Assertions.assertEquals(3, schemaAppEvent.getFields().size());
+    Field documents = schemaAppEvent.getField("documents");
+    Schema docSchema = documents.schema().getTypes().get(1).getElementType();
+    Assertions.assertEquals(docSchema, schemaDocInfo);
+    Assertions.assertNotNull(schemaDocInfo);
+    Assertions.assertNotNull(schemaResponse);
+  }
 
-  /*
-   * @Test void add_types() { String schemaRecord2 =
-   * "{\"type\":\"record\", \"name\":\"record2\", \"fields\": [" +
-   * "  {\"name\":\"f1\", \"type\":\"record1\" }" + "]}"; // register schema1 in
-   * schema. Schema schemaRecord1 = Schema.createRecord("record1", "doc", "",
-   * false); Schema.Parser parser = new
-   * Schema.Parser().addTypes(Collections.singleton(schemaRecord1));
-   * 
-   * // parse schema for record2 that contains field for schema1. final Schema
-   * schema = parser.parse(schemaRecord2); final Field f1 = schema.getField("f1");
-   * assertNotNull(f1); assertEquals(schemaRecord1, f1.schema()); }
-   */
+  @Test
+  void add_types() {
+    String schemaRecord2 = "{\"type\":\"record\", \"name\":\"record2\", \"fields\": ["
+        + "  {\"name\":\"f1\", \"type\":\"record1\" }" + "]}"; // register schema1 in schema.
+    Schema schemaRecord1 = Schema.createRecord("record1", "doc", "", false);
+    Schema.Parser parser = new Schema.Parser().addTypes(Collections.singleton(schemaRecord1));
+
+    // parse schema for record2 that contains field for schema1.
+    final Schema schema = parser.parse(schemaRecord2);
+    final Field f1 = schema.getField("f1");
+    assertNotNull(f1);
+    assertEquals(schemaRecord1, f1.schema());
+  }
 }

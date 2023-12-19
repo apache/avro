@@ -1657,8 +1657,20 @@ public abstract class Schema extends JsonProperties implements Serializable {
     return name;
   }
 
+  /*
+   * @deprecated Scheduled for removal. Do Not Use!
+   */
+  @Deprecated
   public static void setNameValidator(final NameValidator validator) {
     Schema.VALIDATE_NAMES.set(validator);
+  }
+
+  /*
+   * @deprecated Scheduled for removal. Do Not Use!
+   */
+  @Deprecated
+  public static NameValidator getNameValidator() {
+    return Schema.VALIDATE_NAMES.get();
   }
 
   private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS = ThreadLocalWithInitial.of(() -> true);
@@ -1669,6 +1681,22 @@ public abstract class Schema extends JsonProperties implements Serializable {
       throw new AvroTypeException(message); // throw exception
     }
     return defaultValue;
+  }
+
+  /*
+   * @deprecated Scheduled for removal. Do Not Use!
+   */
+  @Deprecated
+  public static void setValidateDefaults(boolean validateDefaults) {
+    Schema.VALIDATE_DEFAULTS.set(validateDefaults);
+  }
+
+  /*
+   * @deprecated Scheduled for removal. Do Not Use!
+   */
+  @Deprecated
+  public static boolean getValidateDefaults() {
+    return Schema.VALIDATE_DEFAULTS.get();
   }
 
   /**

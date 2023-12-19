@@ -167,14 +167,31 @@ public class IdlReader {
 
   public IdlFile resolve(IdlFile unresolved) {
     parseContext.commit();
+    List<Schema> namedSchemas = parseContext.resolveAllTypes();
+
     Protocol protocol = unresolved.getProtocol();
     if (protocol == null) {
-      parseContext.resolveAllTypes();
-      Iterable<Schema> namedSchemas = parseContext.resolveAllTypes();
-      Schema mainSchema = SchemaResolver.resolve(parseContext, unresolved.getMainSchema(), true);
+      Schema unresolvedMain = unresolved.getMainSchema();
+      Schema mainSchema = unresolvedMain == null ? null : parseContext.resolve(unresolvedMain);
       return new IdlFile(mainSchema, namedSchemas, unresolved.getWarnings());
     } else {
-      return new IdlFile(SchemaResolver.resolve(parseContext, protocol), unresolved.getWarnings());
+      protocol.setTypes(namedSchemas);
+      Map<String, Protocol.Message> messages = protocol.getMessages();
+      for (Map.Entry<String, Protocol.Message> entry : messages.entrySet()) {
+        Protocol.Message oldValue = entry.getValue();
+        Protocol.Message newValue;
+        if (oldValue.isOneWay()) {
+          newValue = protocol.createMessage(oldValue.getName(), oldValue.getDoc(), oldValue,
+              parseContext.resolve(oldValue.getRequest()));
+        } else {
+          Schema request = parseContext.resolve(oldValue.getRequest());
+          Schema response = parseContext.resolve(oldValue.getResponse());
+          Schema errors = parseContext.resolve(oldValue.getErrors());
+          newValue = protocol.createMessage(oldValue.getName(), oldValue.getDoc(), oldValue, request, response, errors);
+        }
+        entry.setValue(newValue);
+      }
+      return new IdlFile(protocol, unresolved.getWarnings());
     }
   }
 

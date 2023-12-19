@@ -18,9 +18,6 @@
 package org.apache.avro.util;
 
 import org.apache.avro.AvroTypeException;
-import org.apache.avro.JsonProperties;
-import org.apache.avro.ParseContext;
-import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 
 import java.util.ArrayList;
@@ -28,12 +25,10 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static org.apache.avro.Schema.Type.ARRAY;
@@ -108,60 +103,6 @@ public final class SchemaResolver {
     } else {
       return Schemas.visit(schema, new IsResolvedSchemaVisitor());
     }
-  }
-
-  /**
-   * Clone the provided schema while resolving all unreferenced schemas. Useful
-   * for (possibly) non-named schemata containing references.
-   *
-   * @param parseContext   the parse context with known names
-   * @param schema         the schema to resolve
-   * @param requireSuccess if {@code false}, this method returns {@code null} if a
-   *                       named schema cannot be resolved (otherwise it throws)
-   * @return a copy of the schema with all schemas resolved, or {@code null}
-   * @throws AvroTypeException if {@code requireSuccess==true} and a named schema
-   *                           cannot be resolved
-   */
-  public static Schema resolve(final ParseContext parseContext, Schema schema, boolean requireSuccess) {
-    if (schema == null) {
-      return null;
-    }
-    ResolvingVisitor visitor = new ResolvingVisitor(schema, parseContext::getNamedSchema, !requireSuccess);
-    return Schemas.visit(schema, visitor);
-  }
-
-  /**
-   * Will clone the provided protocol while resolving all unreferenced schemas
-   *
-   * @param parseContext the parse context with known names
-   * @param protocol     the protocol to resolve
-   * @return a copy of the protocol with all schemas resolved
-   */
-  public static Protocol resolve(ParseContext parseContext, final Protocol protocol) {
-    // Create an empty copy of the protocol
-    Protocol result = new Protocol(protocol.getName(), protocol.getDoc(), protocol.getNamespace());
-    protocol.getObjectProps().forEach(((JsonProperties) result)::addProp);
-
-    ResolvingVisitor visitor = new ResolvingVisitor(null, parseContext::getNamedSchema, false);
-    Function<Schema, Schema> resolver = schema -> Schemas.visit(schema, visitor.withRoot(schema));
-
-    // Resolve all schemata in the protocol.
-    result.setTypes(protocol.getTypes().stream().map(resolver).collect(Collectors.toList()));
-    Map<String, Protocol.Message> resultMessages = result.getMessages();
-    protocol.getMessages().forEach((name, oldValue) -> {
-      Protocol.Message newValue;
-      if (oldValue.isOneWay()) {
-        newValue = result.createMessage(oldValue.getName(), oldValue.getDoc(), oldValue,
-            resolver.apply(oldValue.getRequest()));
-      } else {
-        Schema request = resolver.apply(oldValue.getRequest());
-        Schema response = resolver.apply(oldValue.getResponse());
-        Schema errors = resolver.apply(oldValue.getErrors());
-        newValue = result.createMessage(oldValue.getName(), oldValue.getDoc(), oldValue, request, response, errors);
-      }
-      resultMessages.put(name, newValue);
-    });
-    return result;
   }
 
   /**
@@ -271,10 +212,10 @@ public final class SchemaResolver {
           replace.put(nt, replacement);
         } else {
           replace.computeIfAbsent(nt, s -> {
-            // Create a clone without fields. Fields will be added in afterVisitNonTerminal.
-            Schema newSchema = Schema.createRecord(s.getName(), s.getDoc(), s.getNamespace(), s.isError());
-            copyProperties(s, newSchema);
-            return newSchema;
+            // Create a clone without fields or properties. They will be added in
+            // afterVisitNonTerminal, as they can both create circular references.
+            // (see org.apache.avro.TestCircularReferences as an example)
+            return Schema.createRecord(s.getName(), s.getDoc(), s.getNamespace(), s.isError());
           });
         }
       }
@@ -311,6 +252,7 @@ public final class SchemaResolver {
               newFields.add(new Schema.Field(field, replace.get(field.schema())));
             }
             newSchema.setFields(newFields);
+            copyProperties(nt, newSchema);
           }
         }
         return SchemaVisitorAction.CONTINUE;

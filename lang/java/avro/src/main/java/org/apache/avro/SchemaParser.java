@@ -265,6 +265,11 @@ public class SchemaParser {
     throw parseException;
   }
 
+  /**
+   * Get all parsed schemata.
+   *
+   * @return all parsed schemas, in the order they were parsed
+   */
   public List<Schema> getParseResult() {
     return parseContext.resolveAllTypes();
   }
@@ -297,6 +302,6 @@ public class SchemaParser {
    * @throws AvroTypeException if the schema cannot be resolved
    */
   public Schema resolve(Schema schema) {
-    return parseContext.forceResolve(schema);
+    return parseContext.resolve(schema);
   }
 }

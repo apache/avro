@@ -245,14 +245,20 @@ public class ParseContext {
     }
 
     if (!isResolved) {
-      HashMap<String, Schema> result = new LinkedHashMap<>(oldSchemas);
-      SchemaResolver.ResolvingVisitor visitor = new SchemaResolver.ResolvingVisitor(null, result::get, false);
-      Function<Schema, Schema> resolver = schema -> Schemas.visit(schema, visitor.withRoot(schema));
-      for (Map.Entry<String, Schema> entry : result.entrySet()) {
-        entry.setValue(resolver.apply(entry.getValue()));
+      NameValidator saved = Schema.getNameValidator();
+      try {
+        Schema.setNameValidator(nameValidator); // Ensure we use the same validation.
+        HashMap<String, Schema> result = new LinkedHashMap<>(oldSchemas);
+        SchemaResolver.ResolvingVisitor visitor = new SchemaResolver.ResolvingVisitor(null, result::get, false);
+        Function<Schema, Schema> resolver = schema -> Schemas.visit(schema, visitor.withRoot(schema));
+        for (Map.Entry<String, Schema> entry : result.entrySet()) {
+          entry.setValue(resolver.apply(entry.getValue()));
+        }
+        oldSchemas.putAll(result);
+        isResolved = true;
+      } finally {
+        Schema.setNameValidator(saved);
       }
-      oldSchemas.putAll(result);
-      isResolved = true;
     }
 
     return new ArrayList<>(oldSchemas.values());
@@ -267,7 +273,10 @@ public class ParseContext {
    * @return the fully resolved schema if possible, {@code null} otherwise
    */
   public Schema tryResolve(Schema schema) {
-    return Schemas.visit(schema, new SchemaResolver.ResolvingVisitor(schema, this::getNamedSchema, false));
+    if (schema == null) {
+      return null;
+    }
+    return resolve(schema, true);
   }
 
   /**
@@ -279,8 +288,19 @@ public class ParseContext {
    * @return the fully resolved schema
    * @throws AvroTypeException if the schema cannot be resolved
    */
-  public Schema forceResolve(Schema schema) {
-    return Schemas.visit(schema, new SchemaResolver.ResolvingVisitor(schema, this::getNamedSchema, true));
+  public Schema resolve(Schema schema) {
+    return resolve(schema, false);
+  }
+
+  public Schema resolve(Schema schema, boolean returnNullUponFailure) {
+    NameValidator saved = Schema.getNameValidator();
+    try {
+      Schema.setNameValidator(nameValidator); // Ensure we use the same validation.
+      return Schemas.visit(schema,
+          new SchemaResolver.ResolvingVisitor(schema, this::getNamedSchema, returnNullUponFailure));
+    } finally {
+      Schema.setNameValidator(saved);
+    }
   }
 
   /**

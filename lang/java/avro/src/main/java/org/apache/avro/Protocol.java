@@ -22,7 +22,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Field.Order;
-import org.apache.avro.util.SchemaResolver;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -319,11 +318,11 @@ public class Protocol extends JsonProperties {
 
   /** Returns the named type. */
   public Schema getType(String name) {
-    Schema namedSchema = context.getNamedSchema(name);
-    if (namedSchema == null && !name.contains(".")) {
-      return context.getNamedSchema(namespace + "." + name);
+    Schema namedSchema = null;
+    if (!name.contains(".")) {
+      namedSchema = context.getNamedSchema(namespace + "." + name);
     }
-    return namedSchema;
+    return namedSchema != null ? namedSchema : context.getNamedSchema(name);
   }
 
   /** Set the types of this protocol. */
@@ -500,7 +499,7 @@ public class Protocol extends JsonProperties {
     try {
       Protocol protocol = new Protocol();
       protocol.parse((JsonNode) Schema.MAPPER.readTree(parser));
-      return SchemaResolver.resolve(protocol.context, protocol);
+      return protocol;
     } catch (IOException e) {
       throw new SchemaParseException(e);
     }
@@ -515,6 +514,24 @@ public class Protocol extends JsonProperties {
 
     context.commit();
     context.resolveAllTypes();
+    resolveMessageSchemata();
+  }
+
+  private void resolveMessageSchemata() {
+    for (Map.Entry<String, Message> entry : messages.entrySet()) {
+      Message oldValue = entry.getValue();
+      Message newValue;
+      if (oldValue.isOneWay()) {
+        newValue = createMessage(oldValue.getName(), oldValue.getDoc(), oldValue,
+            context.resolve(oldValue.getRequest()));
+      } else {
+        Schema request = context.resolve(oldValue.getRequest());
+        Schema response = context.resolve(oldValue.getResponse());
+        Schema errors = context.resolve(oldValue.getErrors());
+        newValue = createMessage(oldValue.getName(), oldValue.getDoc(), oldValue, request, response, errors);
+      }
+      entry.setValue(newValue);
+    }
   }
 
   private void parseNameAndNamespace(JsonNode json) {
