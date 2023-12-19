@@ -836,7 +836,10 @@ public abstract class Schema extends JsonProperties implements Serializable {
       Set<String> result = new LinkedHashSet<>();
       if (aliases != null)
         for (Name alias : aliases)
-          result.add(alias.full);
+          if (alias.space == null && name.space != null)
+            result.add("." + alias.name);
+          else
+            result.add(alias.full);
       return result;
     }
 
