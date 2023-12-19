@@ -21,21 +21,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class TestSchemaResolver {
-
-  @Test
-  public void testResolving() throws IOException {
-    // Path testIdl = Paths.get(".", "src", "test", "idl",
-    // "cycle.avdl").toAbsolutePath();
-    // IdlReader parser = new IdlReader();
-    // IdlFile idlFile = parser.parse(testIdl);
-    // Protocol protocol = idlFile.getProtocol();
-    // System.out.println(protocol);
-    // Assert.assertEquals(5, protocol.getTypes().size());
-  }
-
   @Test(expected = IllegalArgumentException.class)
   public void testIsUnresolvedSchemaError1() {
     // No "org.apache.avro.idl.unresolved.name" property
