@@ -17,7 +17,7 @@
 # Dockerfile for installing the necessary dependencies for building Avro.
 # See BUILD.md.
 
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 WORKDIR /root
 
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
@@ -55,9 +55,10 @@ RUN apt-get -qqy update \
                                                  libssl-dev \
                                                  make \
                                                  mypy \
+                                                 openjdk-8-jdk \
                                                  openjdk-11-jdk \
                                                  openjdk-17-jdk \
-                                                 openjdk-8-jdk \
+                                                 openjdk-21-jdk \
                                                  perl \
                                                  python3 \
                                                  python3-pip \
@@ -91,7 +92,7 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
 
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/bbb9892e165d40fb35fa19f38929effc5d0c709b/Dockerfile#L30
-ENV MAVEN_VERSION 3.8.6
+ENV MAVEN_VERSION 3.9.6
 ENV APACHE_DIST_URLS \
   https://www.apache.org/dyn/closer.cgi?action=download&filename= \
   # if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
@@ -179,7 +180,7 @@ RUN curl -sSL https://cpanmin.us \
 # Install Python3
 ENV PATH="${PATH}:/opt/pypy3.8/bin:/opt/pypy3.9/bin:/opt/pypy3.10/bin" \
     PIP_NO_CACHE_DIR=off
-    
+
 # https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
 ARG BUILDARCH
 RUN case "${BUILDARCH:?}" in \
@@ -213,10 +214,11 @@ RUN gem install bundler --no-document && \
 # Install Rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.70.0
 
-# Note: This "ubertool" container has two JDK versions:
+# Note: This "ubertool" container has 4 JDK versions:
 # - OpenJDK 8
 # - OpenJDK 11
 # - OpenJDK 17
+# - OpenJDK 21
 # - The root build.sh script switches between the versions according to
 #   the JAVA environment variable.
 
@@ -232,7 +234,7 @@ RUN cd /opt ; \
     
 ENV PATH $PATH:/opt/dotnet
 
-# Since we want the JDK8 as a default, we have to re-prepend it to the PATH.
-RUN update-java-alternatives  -s "java-1.8.0*"
+# Since we want the JDK21 as a default, we have to re-prepend it to the PATH.
+RUN update-java-alternatives  -s "java-1.21.*"
 
 CMD ["/bin/bash", "-i"]

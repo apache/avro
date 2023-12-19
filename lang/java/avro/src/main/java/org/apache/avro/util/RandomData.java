@@ -30,6 +30,8 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
@@ -208,7 +210,9 @@ public class RandomData implements Iterable<Object> {
     try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>())) {
       writer.setCodec(CodecFactory.fromString(args.length >= 4 ? args[3] : "null"));
       writer.setMeta("user_metadata", "someByteArray".getBytes(StandardCharsets.UTF_8));
-      writer.create(sch, new File(args[1]));
+      File file = new File(args[1]);
+      Files.createDirectories(Paths.get(file.getParent()));
+      writer.create(sch, file);
 
       for (Object datum : new RandomData(sch, Integer.parseInt(args[2]))) {
         writer.append(datum);

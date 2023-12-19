@@ -90,6 +90,7 @@
     <module>grpc</module>
     <module>integration-test</module>
     <module>perf</module>
+    <module>interop-data-test</module>
   </modules>
 
   <build>
@@ -118,6 +119,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin.version}</version>
           <configuration>
             <compilerArgs>
               <arg>-parameters</arg>
@@ -255,11 +257,17 @@
           <instructions>
             <Bundle-Name>${project.name}</Bundle-Name>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <!--suppress UnresolvedMavenProperty -->
             <Export-Package>${osgi.export}</Export-Package>
+            <!--suppress UnresolvedMavenProperty -->
             <Import-Package>${osgi.import}</Import-Package>
+            <!--suppress UnresolvedMavenProperty -->
             <DynamicImport-Package>${osgi.dynamic.import}</DynamicImport-Package>
+            <!--suppress UnresolvedMavenProperty -->
             <Private-Package>${osgi.private}</Private-Package>
+            <!--suppress UnresolvedMavenProperty -->
             <Require-Bundle>${osgi.bundles}</Require-Bundle>
+            <!--suppress UnresolvedMavenProperty -->
             <Bundle-Activator>${osgi.activator}</Bundle-Activator>
           </instructions>
           <supportedProjectTypes>
@@ -307,7 +315,7 @@
               <!-- Avro uses Sun's java code style conventions with 2 spaces, this is a modified version of
                    the eclipse formatter -->
               <file>${main.basedir}/lang/java/eclipse-java-formatter.xml</file>
-              <version>4.19.0</version>
+              <version>4.19</version>
             </eclipse>
             <!-- Temporarily disabled for JDK 16+ builds -->
             <!--<removeUnusedImports/>-->
@@ -350,6 +358,21 @@
   </reporting>
 
   <profiles>
+
+    <profile>
+      <id>skipQuality</id>
+      <properties>
+        <skipTests>true</skipTests>
+        <rat.skip>true</rat.skip>
+        <checkstyle.skip>true</checkstyle.skip>
+        <spotless.skip>true</spotless.skip>
+        <invoker.skip>true</invoker.skip>
+        <cyclonedx.skip>true</cyclonedx.skip>
+        <gpg.skip>true</gpg.skip>
+        <maven.build.cache.skipCache>true</maven.build.cache.skipCache>
+      </properties>
+    </profile>
+
     <profile>
       <id>m2e</id>
       <activation>
@@ -447,31 +470,6 @@
       </build>
     </profile>
     <profile>
-      <id>interop-data-test</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <includes>
-                <include>**/DataFileInteropTest*</include>
-              </includes>
-              <excludes>
-              </excludes>
-              <enableAssertions>false</enableAssertions>
-              <forkCount>1</forkCount>
-              <reuseForks>true</reuseForks>
-              <redirectTestOutputToFile>false</redirectTestOutputToFile>
-              <systemPropertyVariables>
-                <test.dir>../../../build/interop/data/</test.dir>
-              </systemPropertyVariables>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
       <id>mac</id>
       <activation>
         <os>
@@ -562,11 +560,13 @@
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>${mockito.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest-library</artifactId>
         <version>${hamcrest.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.xerial.snappy</groupId>

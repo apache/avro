@@ -28,12 +28,14 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumWriter;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestSchemaCommons {
   private static final Logger LOG = LoggerFactory.getLogger(TestSchemaCommons.class);
@@ -49,7 +51,7 @@ public class TestSchemaCommons {
       return;
     }
     final Schema schema = new Schema.Parser().parse(schemaSource);
-    Assertions.assertNotNull(schema);
+    assertNotNull(schema);
 
     if (!data.exists()) {
       LOG.warn("No 'data.avro' file on folder {}", folder.getPath());
@@ -71,15 +73,18 @@ public class TestSchemaCommons {
       while (dataFileReader.hasNext()) {
         record = dataFileReader.next();
         counter++;
-        Assertions.assertNotNull(record);
+        assertNotNull(record);
         dataFileWriter.append(record);
       }
-      Assertions.assertTrue(counter > 0, "no data in file");
+      assertTrue(counter > 0, "no data in file");
     }
+
+    // Cleanup
+    assertTrue(copyData.delete());
   }
 
   public static Stream<Arguments> sharedFolders() {
-    File root = new File("../../../share/test/data/schemas");
+    File root = new File("target/test-classes/share/test/data/schemas");
     return Arrays.stream(root.listFiles(File::isDirectory)).map(Arguments::of);
   }
 

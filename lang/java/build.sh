@@ -32,7 +32,7 @@ main() {
         mvn -B spotless:apply
         ;;
       test)
-        mvn -B test
+        mvn -B verify
         # Test the modules that depend on hadoop using Hadoop 2
         mvn -Dmaven.build.cache.enabled=false -B test -Phadoop2
         ;;

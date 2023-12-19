@@ -17,8 +17,6 @@
  */
 package org.apache.avro;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -30,6 +28,10 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DataFileInteropTest {
 
@@ -83,9 +85,9 @@ public class DataFileInteropTest {
       try (DataFileReader<? extends Object> reader = (DataFileReader<? extends Object>) DataFileReader.openReader(f,
           provider.get())) {
 
-        byte[] user_metadata = reader.getMeta("user_metadata");
-        if (user_metadata != null) {
-          assertArrayEquals("someByteArray".getBytes(StandardCharsets.UTF_8), user_metadata);
+        byte[] userMetadata = reader.getMeta("user_metadata");
+        if (userMetadata != null) {
+          assertArrayEquals("someByteArray".getBytes(StandardCharsets.UTF_8), userMetadata);
         }
 
         int i = 0;
