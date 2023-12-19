@@ -1399,7 +1399,6 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * may refer to it by name.
    */
   public static class Parser {
-    private final Names names = new Names();
     final ParseContext context;
     private final NameValidator validate;
     private boolean validateDefaults = true;
