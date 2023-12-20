@@ -19,30 +19,37 @@ name: Rust Security Audit
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths:
       - .github/workflows/test-lang-rust-audit.yml
       - lang/rust/Cargo.toml
       - lang/rust/Cargo.lock
 
+permissions:
+  contents: read
+
+env:
+  RUSTFLAGS: -Dwarnings
+
 defaults:
   run:
     working-directory: lang/rust
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-      # Currently does not work. See https://github.com/actions-rs/audit-check/issues/194
-      #- name: Rust Audit
-      #  uses: actions-rs/audit-check@v1
-      #  with:
-      #    token: ${{ secrets.GITHUB_TOKEN }}
-      # Install it manually
+        uses: actions/checkout@v4
+      - name: Dependency Review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v3
       - name: Install Cargo Audit
         run: cargo install cargo-audit
       - name: Audit

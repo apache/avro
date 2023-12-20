@@ -83,7 +83,7 @@ namespace Avro.IO
         /// Throws a <see cref="NotSupportedException"/>.
         /// </summary>
         /// <exception cref="NotSupportedException">
-        /// Always thows.
+        /// Always throws.
         /// </exception>
         public override long Length
         {

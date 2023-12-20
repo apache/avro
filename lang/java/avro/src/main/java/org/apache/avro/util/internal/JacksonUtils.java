@@ -18,6 +18,7 @@
 package org.apache.avro.util.internal;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -75,7 +76,7 @@ public class JacksonUtils {
       }
       generator.writeEndArray();
     } else if (datum instanceof byte[]) { // bytes, fixed
-      generator.writeString(new String((byte[]) datum, StandardCharsets.ISO_8859_1));
+      generator.writeBinary((byte[]) datum);// writeString(new String((byte[]) datum, StandardCharsets.ISO_8859_1));
     } else if (datum instanceof CharSequence || datum instanceof Enum<?>) { // string, enum
       generator.writeString(datum.toString());
     } else if (datum instanceof Double) { // double
@@ -136,10 +137,23 @@ public class JacksonUtils {
         return jsonNode.asDouble();
       }
     } else if (jsonNode.isDouble() || jsonNode.isFloat()) {
-      if (schema == null || schema.getType().equals(Schema.Type.DOUBLE)) {
-        return jsonNode.asDouble();
-      } else if (schema.getType().equals(Schema.Type.FLOAT)) {
-        return (float) jsonNode.asDouble();
+      if (schema != null) {
+        if (schema.getType().equals(Schema.Type.DOUBLE)) {
+          return jsonNode.doubleValue();
+        } else if (schema.getType().equals(Schema.Type.FLOAT)) {
+          return jsonNode.floatValue();
+        }
+      } else if (jsonNode.isDouble()) {
+        return jsonNode.doubleValue();
+      } else {
+        return jsonNode.floatValue();
+      }
+    } else if (jsonNode.isBinary()) {
+      try {
+        return jsonNode.binaryValue();
+      } catch (IOException ex) {
+        // only for TextNode, so, can't happen with binaryNode.
+        throw new UncheckedIOException(ex);
       }
     } else if (jsonNode.isTextual()) {
       if (schema == null || schema.getType().equals(Schema.Type.STRING) || schema.getType().equals(Schema.Type.ENUM)) {
@@ -175,7 +189,7 @@ public class JacksonUtils {
 
   /**
    * Convert an object into a map
-   * 
+   *
    * @param datum The object
    * @return Its Map representation
    */

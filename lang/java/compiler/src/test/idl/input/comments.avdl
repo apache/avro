@@ -27,41 +27,38 @@ protocol Comments {
     /** Dangling Enum8 */ A
     /** Dangling Enum9 */;
 
-    // The "Dangling Enum9" doc comment above will be attributed to this enum.
-    enum NotUndocumentedEnum {D,E}
+    enum UndocumentedEnum {D,E}
 
-    /** Dangling Fixed1 */ fixed
-    /** Dangling Fixed2 */ DocumentedFixed
-    /** Dangling Fixed3 */(
-    /** Dangling Fixed4 */ 16
-    /** Dangling Fixed5 */)
-    /** Documented Fixed Type */;
+    /** Documented Fixed Type */ fixed
+    /** Dangling Fixed1 */ DocumentedFixed
+    /** Dangling Fixed2 */(
+    /** Dangling Fixed3 */ 16
+    /** Dangling Fixed4 */)
+    /** Dangling Fixed5 */;
 
     fixed UndocumentedFixed(16);
 
-    /** Dangling Error1 */ error
-    /** Documented Error */ DocumentedError
+    /** Documented Error */ error
+    /** Dangling Error1 */ DocumentedError
     /** Dangling Field1 */{
-    /** Dangling Field2 */string
-    /** Dangling Field3 */reason
-    /** Documented Field */;
+    /** Default Doc Explanation Field */string
+    /** Documented Reason Field */reason, explanation
+    /** Dangling Field2 */;
     /** Dangling Error2 */}
 
-    // The "Dangling Error2" doc comment above will be attributed to this record.
-    record NotUndocumentedRecord {
+    record UndocumentedRecord {
         string description;
     }
 
     /** Documented Method */ void
     /** Dangling Param1 */ documentedMethod
     /** Dangling Param2 */(
-        /** Dangling Param3 */ string
-        /** Dangling Param4 */ message
-    /** Documented Parameter */)
+        string /** Documented Parameter */ message,
+        /** Default Documented Parameter */ string defMsg
+    /** Dangling Param3 */)
     /** Dangling Method1 */ throws
     /** Dangling Method2 */ DocumentedError
     /** Dangling Method3 */;
 
-    // The "Dangling Method3" doc comment above will be attributed to this method.
-    void notUndocumentedMethod(string message);
+    void undocumentedMethod(string message);
 }

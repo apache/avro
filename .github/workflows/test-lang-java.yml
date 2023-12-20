@@ -17,9 +17,9 @@ name: 'Test Java'
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths:
     - .github/workflows/test-lang-java.yml
     - lang/java/**
@@ -28,6 +28,10 @@ on:
 defaults:
   run:
     working-directory: lang/java
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -39,20 +43,21 @@ jobs:
         - '8'
         - '11'
         - '17'
-        - '18-ea'
+        - '21'
+        - '22-ea'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Setup Java
-        uses: actions/setup-java@v2
+      - name: Setup Temurin JDK
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
@@ -72,11 +77,13 @@ jobs:
         - '8'
         - '11'
         - '17'
+        - '21'
+        - '22-ea'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -84,13 +91,13 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Setup Java
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
 
       - name: Setup Python for Generating Input Data
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
 
       - name: Apt Install Compression Libs Required by Python
         run: |
@@ -101,8 +108,18 @@ jobs:
 
       - name: Install Python Dependencies
         run: |
-          python3 -m pip install --upgrade pip setuptools tox-wheel
+          python3 -m pip install --upgrade pip setuptools tox
           python3 -m pip install python-snappy zstandard
+
+      - name: Setup C# for Generating Interop Data
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
+            7.0.x
+            8.0.x
 
       - name: Install Java Avro for Interop Test
         working-directory: .
@@ -120,6 +137,49 @@ jobs:
         working-directory: lang/py
         run: ./build.sh interop-data-generate
 
+      - name: Generate Interop Data using C#
+        working-directory: lang/csharp
+        run: ./build.sh interop-data-generate
+
       - name: Run Interop Tests
         working-directory: lang/java/ipc
         run: mvn -B test -P interop-data-test
+
+      - name: Test Reproducible Build
+        working-directory: .
+        run: mvn clean verify -DskipTests -Dcyclonedx.skip artifact:compare
+
+  arm64:
+    name: Java on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Temurin JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 11
+
+      - name: Cache Local Maven Repository
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build
+        run: |
+          set -x
+          export MAVEN_VERSION="3.9.4"
+          wget https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz
+          tar zxvf apache-maven-$MAVEN_VERSION-bin.tar.gz
+          export M2_HOME=$PWD/apache-maven-$MAVEN_VERSION
+          export PATH="$M2_HOME/bin:$PATH"
+          java -version
+          mvn -version
+          #MAVEN_OPTS="-Dsurefire.excludes=*TestCustomCodec*,*TestAllCodecs*,*TestNettyServer*" ./build.sh clean test
+          ./build.sh clean test

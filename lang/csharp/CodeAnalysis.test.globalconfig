@@ -1125,7 +1125,7 @@ dotnet_diagnostic.SA1314.severity = none
 # SA1316: Tuple element names should use correct casing
 dotnet_diagnostic.SA1316.severity = none
 
-# SA1400: Member should declare an access modifer
+# SA1400: Member should declare an access modifier
 dotnet_diagnostic.SA1400.severity = none
 
 # SA1401: Fields should be private
@@ -1149,7 +1149,7 @@ dotnet_diagnostic.SA1407.severity = none
 # SA1408: Conditional expressions should declare precedence
 dotnet_diagnostic.SA1408.severity = none
 
-# SA1410: Remove delegate parens when possible
+# SA1410: Remove delegate parentheses when possible
 dotnet_diagnostic.SA1410.severity = none
 
 # SA1411: Attribute constructor shouldn't use unnecessary parenthesis

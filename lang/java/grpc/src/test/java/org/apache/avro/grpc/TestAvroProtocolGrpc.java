@@ -25,9 +25,9 @@ import org.apache.avro.grpc.test.TestError;
 import org.apache.avro.grpc.test.TestRecord;
 import org.apache.avro.grpc.test.TestService;
 import org.apache.avro.ipc.CallFuture;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -43,9 +43,11 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestAvroProtocolGrpc {
   private final TestRecord record = TestRecord.newBuilder().setName("foo").setKind(Kind.FOO)
@@ -63,7 +65,7 @@ public class TestAvroProtocolGrpc {
   private Server server;
   private ManagedChannel channel;
 
-  @Before
+  @BeforeEach
   public void setUp() throws IOException {
     TestService serviceImpl = new TestServiceImplBase();
     setUpServerAndClient(serviceImpl);
@@ -85,26 +87,26 @@ public class TestAvroProtocolGrpc {
     callbackStub = AvroGrpcClient.create(channel, TestService.Callback.class);
   }
 
-  @After
+  @AfterEach
   public void cleanUp() {
     channel.shutdownNow();
     server.shutdownNow();
   }
 
   @Test
-  public void testEchoRecord() throws Exception {
+  void echoRecord() throws Exception {
     TestRecord echoedRecord = stub.echo(record);
     assertEquals(record, echoedRecord);
   }
 
   @Test
-  public void testMultipleArgsAdd() throws Exception {
+  void multipleArgsAdd() throws Exception {
     int result = stub.add(3, 5, 2);
     assertEquals(10, result);
   }
 
   @Test
-  public void testMultipleArgsConcatenate() throws Exception {
+  void multipleArgsConcatenate() throws Exception {
     String val1 = "foo-bar";
     Boolean val2 = true;
     long val3 = 123321L;
@@ -113,14 +115,14 @@ public class TestAvroProtocolGrpc {
   }
 
   @Test
-  public void testCallbackInterface() throws Exception {
+  void callbackInterface() throws Exception {
     CallFuture<TestRecord> future = new CallFuture<>();
     callbackStub.echo(record, future);
     assertEquals(record, future.get(1, TimeUnit.SECONDS));
   }
 
   @Test
-  public void testOneWayRpc() throws Exception {
+  void oneWayRpc() throws Exception {
     oneWayStart = new CountDownLatch(1);
     oneWayDone = new CountDownLatch(3);
     oneWayCount = new AtomicInteger();
@@ -135,7 +137,7 @@ public class TestAvroProtocolGrpc {
   }
 
   @Test
-  public void testDeclaredError() throws Exception {
+  void declaredError() throws Exception {
     try {
       stub.error(true);
       fail("Expected exception but none thrown");
@@ -145,7 +147,7 @@ public class TestAvroProtocolGrpc {
   }
 
   @Test
-  public void testUndeclaredError() throws Exception {
+  void undeclaredError() throws Exception {
     try {
       stub.error(false);
       fail("Expected exception but none thrown");
@@ -155,25 +157,27 @@ public class TestAvroProtocolGrpc {
   }
 
   @Test
-  public void testNullableResponse() throws Exception {
+  void nullableResponse() throws Exception {
     setUpServerAndClient(new TestServiceImplBase() {
       @Override
       public String concatenate(String val1, boolean val2, long val3, int val4) {
         return null;
       }
     });
-    assertEquals(null, stub.concatenate("foo", true, 42L, 42));
-  }
-
-  @Test(expected = AvroRuntimeException.class)
-  public void testGrpcConnectionError() throws Exception {
-    // close the channel and initiate request
-    channel.shutdownNow();
-    stub.add(0, 1, 2);
+    assertNull(stub.concatenate("foo", true, 42L, 42));
   }
 
   @Test
-  public void testRepeatedRequests() throws Exception {
+  void grpcConnectionError() throws Exception {
+    assertThrows(AvroRuntimeException.class, () -> {
+      // close the channel and initiate request
+      channel.shutdownNow();
+      stub.add(0, 1, 2);
+    });
+  }
+
+  @Test
+  void repeatedRequests() throws Exception {
     TestRecord[] echoedRecords = new TestRecord[5];
     // validate results after all requests are done
     for (int i = 0; i < 5; i++) {
@@ -185,7 +189,7 @@ public class TestAvroProtocolGrpc {
   }
 
   @Test
-  public void testConcurrentClientAccess() throws Exception {
+  void concurrentClientAccess() throws Exception {
     ExecutorService es = Executors.newCachedThreadPool();
     Future<TestRecord>[] records = new Future[5];
     Future<Integer>[] adds = new Future[5];
@@ -203,7 +207,7 @@ public class TestAvroProtocolGrpc {
   }
 
   @Test
-  public void testConcurrentChannels() throws Exception {
+  void concurrentChannels() throws Exception {
     ManagedChannel otherChannel = ManagedChannelBuilder.forAddress("localhost", server.getPort()).usePlaintext()
         .build();
     TestService otherStub = AvroGrpcClient.create(otherChannel, TestService.class);

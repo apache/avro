@@ -18,8 +18,10 @@
 
 package org.apache.avro.io;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 
 public class TestBinaryData {
 
@@ -29,13 +31,33 @@ public class TestBinaryData {
    * normal 8). When skipping it, the next byte should be 10.
    */
   @Test
-  public void testSkipLong() {
+  void skipLong() {
     byte[] b = new byte[10];
     BinaryData.encodeLong(Long.MAX_VALUE, b, 0);
 
     final int nextIndex = BinaryData.skipLong(b, 0);
 
-    Assert.assertEquals(nextIndex, 10);
+    assertEquals(nextIndex, 10);
   }
 
+  @Test
+  void testIntLongVleEquality() {
+    byte[] intResult = new byte[9];
+    byte[] longResult = new byte[9];
+    BinaryData.encodeInt(0, intResult, 0);
+    BinaryData.encodeLong(0, longResult, 0);
+    assertArrayEquals(intResult, longResult);
+    BinaryData.encodeInt(42, intResult, 0);
+    BinaryData.encodeLong(42, longResult, 0);
+    assertArrayEquals(intResult, longResult);
+    BinaryData.encodeInt(-24, intResult, 0);
+    BinaryData.encodeLong(-24, longResult, 0);
+    assertArrayEquals(intResult, longResult);
+    BinaryData.encodeInt(Integer.MAX_VALUE, intResult, 0);
+    BinaryData.encodeLong(Integer.MAX_VALUE, longResult, 0);
+    assertArrayEquals(intResult, longResult);
+    BinaryData.encodeInt(Integer.MIN_VALUE, intResult, 0);
+    BinaryData.encodeLong(Integer.MIN_VALUE, longResult, 0);
+    assertArrayEquals(intResult, longResult);
+  }
 }

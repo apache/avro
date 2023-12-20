@@ -145,7 +145,7 @@ class InputBuffer {
     bitCount++;
     if (bitCount == 8)
       bitCount = 0;
-    return bit == 0 ? false : true;
+    return bit != 0;
   }
 
   public int readLength() throws IOException {

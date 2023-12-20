@@ -17,9 +17,9 @@ name: Test C
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths:
     - .github/workflows/test-lang-c.yml
     - lang/c/**
@@ -28,11 +28,15 @@ defaults:
   run:
     working-directory: lang/c
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: sudo apt-get install -qqy libjansson-dev libsnappy-dev
@@ -44,7 +48,7 @@ jobs:
         run: ./build.sh test
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -72,7 +76,7 @@ jobs:
   interop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: |
@@ -83,7 +87,7 @@ jobs:
                                                             libzstd-dev
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -107,3 +111,21 @@ jobs:
 
       - name: Run Interop Tests
         run: ./build.sh interop-data-test
+
+  arm64:
+    name: C on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y cmake liblzma-dev libsnappy-dev libjansson-dev zlib1g-dev pkg-config
+
+      - name: Build
+        run: |
+          set -x
+          ./build.sh clean test

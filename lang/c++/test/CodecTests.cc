@@ -34,7 +34,7 @@
 
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/random/mersenne_twister.hpp>
-#include <boost/test/included/unit_test_framework.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <boost/test/parameterized_test.hpp>
 #include <boost/test/unit_test.hpp>
 

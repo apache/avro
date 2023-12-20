@@ -17,37 +17,38 @@
  */
 package org.apache.avro;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 import org.apache.avro.file.DataFileReader;
-import org.apache.avro.file.FileReader;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class DataFileInteropTest {
 
   private static final File DATAFILE_DIR = new File(System.getProperty("test.dir", "/tmp"));
 
-  @BeforeClass
+  @BeforeAll
   public static void printDir() {
     System.out.println("Reading data files from directory: " + DATAFILE_DIR.getAbsolutePath());
   }
 
   @Test
-  public void testGeneratedGeneric() throws IOException {
+  void generatedGeneric() throws IOException {
     System.out.println("Reading with generic:");
     DatumReaderProvider<Object> provider = GenericDatumReader::new;
     readFiles(provider);
   }
 
   @Test
-  public void testGeneratedSpecific() throws IOException {
+  void generatedSpecific() throws IOException {
     System.out.println("Reading with specific:");
     DatumReaderProvider<Interop> provider = SpecificDatumReader::new;
     readFiles(provider);
@@ -79,19 +80,26 @@ public class DataFileInteropTest {
   private <T extends Object> void readFiles(DatumReaderProvider<T> provider) throws IOException {
     for (File f : Objects.requireNonNull(DATAFILE_DIR.listFiles())) {
       System.out.println("Reading: " + f.getName());
-      try (FileReader<? extends Object> reader = DataFileReader.openReader(f, provider.get())) {
+      try (DataFileReader<? extends Object> reader = (DataFileReader<? extends Object>) DataFileReader.openReader(f,
+          provider.get())) {
+
+        byte[] user_metadata = reader.getMeta("user_metadata");
+        if (user_metadata != null) {
+          assertArrayEquals("someByteArray".getBytes(StandardCharsets.UTF_8), user_metadata);
+        }
+
         int i = 0;
         for (Object datum : reader) {
           i++;
-          Assert.assertNotNull(datum);
+          assertNotNull(datum);
         }
-        Assert.assertNotEquals(0, i);
+        assertNotEquals(0, i);
       }
     }
   }
 
   interface DatumReaderProvider<T extends Object> {
-    public DatumReader<T> get();
+    DatumReader<T> get();
   }
 
 }

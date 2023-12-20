@@ -1,4 +1,4 @@
-# Avro C# [![Build Status](https://travis-ci.org/apache/avro.svg?branch=master)](https://travis-ci.org/apache/avro) [![NuGet Package](https://img.shields.io/nuget/v/Apache.Avro.svg)](https://www.nuget.org/packages/Apache.Avro)
+# Avro C# [![Test C#](https://github.com/apache/avro/actions/workflows/test-lang-csharp.yml/badge.svg)](https://github.com/apache/avro/actions/workflows/test-lang-csharp.yml) [![NuGet Package](https://img.shields.io/nuget/v/Apache.Avro.svg)](https://www.nuget.org/packages/Apache.Avro)
 
  [![Avro](https://avro.apache.org/images/avro-logo.png)](http://avro.apache.org/)
 
@@ -12,20 +12,25 @@ Install-Package Apache.Avro
 
 ## Build & Test
 
-1. Install [.NET SDK 5.0+](https://dotnet.microsoft.com/download/dotnet-core)
+1. Install [.NET SDK 8.0+](https://dotnet.microsoft.com/download/dotnet-core)
 2. `dotnet test`
 
 ## Project Target Frameworks
 
-| Project         | Type       | .NET Standard 2.0  | .NET Standard 2.1 | .NET Core 3.1 | .NET 5.0  | .NET 6.0  |
-|:---------------:|:----------:|:------------------:|:-----------------:|:-------------:|:---------:|:---------:|
-| Avro.codegen    | Exe        |                    |                   | ✔️            |✔️        |✔️        |
-| Avro.ipc        | Library    | ✔️                 | ✔️               |               |           |           |
-| Avro.ipc.test   | Unit Tests |                    |                   | ✔️            |✔️        |✔️        |
-| Avro.main       | Library    | ✔️                 | ✔️               |               |           |           |
-| Avro.msbuild    | Library    | ✔️                 | ✔️               |               |           |           |
-| Avro.perf       | Exe        |                    |                   | ✔️            |✔️        |✔️        |
-| Avro.test       | Unit Tests |                    |                   | ✔️            |✔️        |✔️        |
+| Project             | Published to nuget.org     | Type       | .NET Standard 2.0  | .NET Standard 2.1 | .NET Core 3.1 | .NET 5.0  | .NET 6.0  | .NET 7.0  | .NET 8.0  |
+|:-------------------:|:--------------------------:|:----------:|:------------------:|:-----------------:|:-------------:|:---------:|:---------:|:---------:|:---------:|
+| Avro.main           | Apache.Avro                | Library    | ✔️                 | ✔️               |               |           |           |           |           |
+| Avro.File.Snappy    | Apache.Avro.File.Snappy    | Library    | ✔️                 | ✔️               |               |           |           |           |           |
+| Avro.File.BZip2     | Apache.Avro.File.BZip2     | Library    | ✔️                 | ✔️               |               |           |           |           |           |
+| Avro.File.XZ        | Apache.Avro.File.XZ        | Library    | ✔️                 | ✔️               |               |           |           |           |           |
+| Avro.File.Zstandard | Apache.Avro.File.Zstandard | Library    | ✔️                 | ✔️               |               |           |           |           |           |
+| Avro.codegen        | Apache.Avro.Tools          |  Exe        |                    |                   | ✔️            |✔️        |✔️        |✔️        |✔️        |
+| Avro.ipc            |                            | Library    | ✔️                 | ✔️               |               |           |           |           |           |
+| Avro.ipc.test       |                            | Unit Tests |                    |                   | ✔️            |✔️        |✔️        |✔️        |✔️        |
+| Avro.msbuild        |                            | Library    | ✔️                 | ✔️               |               |           |           |           |           |
+| Avro.perf           |                            | Exe        |                    |                   | ✔️            |✔️        |✔️        |✔️        |✔️        |
+| Avro.test           |                            | Unit Tests |                    |                   | ✔️            |✔️        |✔️        |✔️        |✔️        |
+| Avro.benchmark      |                            | Exe        |                    |                   | ✔️            |✔️        |✔️        |✔️        |✔️        |
 
 ## Dependency package version strategy
 
@@ -37,3 +42,7 @@ In short, we should only update the version of the dependencies in our libraries
 ## Notes
 
 The [LICENSE](./LICENSE) and [NOTICE](./NOTICE) files in the lang/csharp source directory are used to build the binary distribution. The [LICENSE.txt](../../LICENSE.txt) and [NOTICE.txt](../../NOTICE.txt) information for the Avro C# source distribution is in the root directory.
+
+## Styling Guidelines
+
+Can be found in [STYLING](./STYLING.MD).

@@ -17,16 +17,97 @@
  */
 using System;
 using System.IO;
-using System.Linq;
 using Avro.IO;
 using System.Collections.Generic;
+using System.Text;
 using Avro.Generic;
 using NUnit.Framework;
+using Decoder = Avro.IO.Decoder;
+using Encoder = Avro.IO.Encoder;
 
 namespace Avro.Test.Generic
 {
     class GenericTests
     {
+        private static string intToUtf8(int value)
+        {
+            var decimalLogicalType = new Avro.Util.Decimal();
+            var logicalSchema = (LogicalSchema)
+                Schema.Parse(@"{ ""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4 }");
+
+            byte[] byteArray = (byte[])decimalLogicalType.ConvertToBaseValue(new AvroDecimal(value), logicalSchema);
+
+            return Encoding.GetEncoding("iso-8859-1").GetString(byteArray);
+        }
+
+        [Test]
+        public void ConvertsDecimalZeroToLogicalType() => ConvertsDefaultToLogicalType(
+            @"{""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4}",
+            @$"""{intToUtf8(0)}""", new AvroDecimal(0));
+
+        [Test]
+        public void ConvertsDecimalIntegerToLogicalType() => ConvertsDefaultToLogicalType(
+            @"{""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4}",
+            @$"""{intToUtf8(1234)}""", new AvroDecimal(1234));
+
+        [Test]
+        public void ConvertsDecimalScaledToLogicalType() => ConvertsDefaultToLogicalType(
+            @"{""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 3}",
+            @$"""{intToUtf8(1234)}""", new AvroDecimal(1.234));
+
+        private static IEnumerable<TestCaseData> ConvertsDefaultToLogicalTypeSource = new List<TestCaseData>()
+        {
+            new TestCaseData(@"{""type"": ""string"", ""logicalType"": ""uuid""}", @"""00000000-0000-0000-0000-000000000000""", new Guid()),
+            new TestCaseData(@"{""type"": ""string"", ""logicalType"": ""uuid""}", @"""00000000000000000000000000000000""", new Guid()),
+            new TestCaseData(@"{""type"": ""string"", ""logicalType"": ""uuid""}", @"""12345678-1234-5678-1234-123456789012""", new Guid("12345678-1234-5678-1234-123456789012")),
+            new TestCaseData(@"{""type"": ""string"", ""logicalType"": ""uuid""}", @"""12345678123456781234123456789012""", new Guid("12345678-1234-5678-1234-123456789012")),
+            new TestCaseData(@"{""type"": ""int"", ""logicalType"": ""date""}", "0", DateTime.UnixEpoch),
+            new TestCaseData(@"{""type"": ""int"", ""logicalType"": ""date""}", "123456", DateTime.UnixEpoch.AddDays(123456)),
+            new TestCaseData(@"{""type"": ""long"", ""logicalType"": ""time-micros""}", "0", new TimeSpan()),
+            new TestCaseData(@"{""type"": ""long"", ""logicalType"": ""time-micros""}", "123456", new TimeSpan(123456*TimeSpan.TicksPerMillisecond/1000)),
+            new TestCaseData(@"{""type"": ""int"", ""logicalType"": ""time-millis""}", "0", new TimeSpan()),
+            new TestCaseData(@"{""type"": ""int"", ""logicalType"": ""time-millis""}", "123456", new TimeSpan(0, 0, 0, 0, 123456)),
+            new TestCaseData(@"{""type"": ""long"", ""logicalType"": ""timestamp-micros""}", "0", DateTime.UnixEpoch),
+            new TestCaseData(@"{""type"": ""long"", ""logicalType"": ""timestamp-micros""}", "123456", DateTime.UnixEpoch.AddTicks(123456*TimeSpan.TicksPerMillisecond/1000)),
+            new TestCaseData(@"{""type"": ""long"", ""logicalType"": ""timestamp-millis""}", "0", DateTime.UnixEpoch),
+            new TestCaseData(@"{""type"": ""long"", ""logicalType"": ""timestamp-millis""}", "123456", DateTime.UnixEpoch.AddMilliseconds(123456))
+        };
+
+        [TestCaseSource(nameof(ConvertsDefaultToLogicalTypeSource))]
+        public void ConvertsDefaultToLogicalType(string typeDefinition, string defaultDefinition, object expected)
+        {
+            var writerSchemaString = @"{
+    ""type"": ""record"",
+    ""name"": ""Foo"",
+    ""fields"": [      
+    ]
+}";
+
+            var readerSchemaString = $@"{{
+    ""type"": ""record"",
+    ""name"": ""Foo"",
+    ""fields"": [
+        {{
+            ""name"": ""x"",
+            ""type"": {typeDefinition},
+            ""default"": {defaultDefinition}
+        }}
+    ]
+}}";
+            var writerSchema = Schema.Parse(writerSchemaString);
+
+            Stream stream;
+
+            serialize(writerSchemaString,
+                MkRecord(new object[] { }, (RecordSchema)writerSchema),
+                out stream,
+                out _);
+
+            var output = deserialize<GenericRecord>(stream, writerSchema, Schema.Parse(readerSchemaString)).GetValue(0);
+            
+            Assert.AreEqual(expected, output);
+        }
+
         private static void test<T>(string s, T value)
         {
             Stream ms;
@@ -47,6 +128,18 @@ namespace Avro.Test.Generic
         [TestCase("[\"int\", \"long\"]", 100L)]
         [TestCase("[\"float\", \"double\"]", 100.75)]
         [TestCase("[\"float\", \"double\"]", 23.67f)]
+        [TestCase("[\"float\", \"int\"]", 0)]
+        [TestCase("[\"float\", \"int\"]", 0.0f)]
+        [TestCase("[\"float\", \"int\"]", 100)]
+        [TestCase("[\"float\", \"int\"]", 100.0f)]
+        [TestCase("[\"float\", \"int\"]", -100)]
+        [TestCase("[\"float\", \"int\"]", -100.0f)]
+        [TestCase("[\"double\", \"long\"]", 0L)]
+        [TestCase("[\"double\", \"long\"]", 0.0)]
+        [TestCase("[\"double\", \"long\"]", 100L)]
+        [TestCase("[\"double\", \"long\"]", 100.0)]
+        [TestCase("[\"double\", \"long\"]", -100L)]
+        [TestCase("[\"double\", \"long\"]", -100.0)]
         [TestCase("[{\"type\": \"array\", \"items\": \"float\"}, \"double\"]", new float[] { 23.67f, 22.78f })]
         [TestCase("[{\"type\": \"array\", \"items\": \"float\"}, \"double\"]", 100.89)]
         [TestCase("[{\"type\": \"array\", \"items\": \"string\"}, \"string\"]", "a")]
@@ -98,7 +191,7 @@ namespace Avro.Test.Generic
             new object[] { "f1", new byte[] { 1, 2 } })]
         public void TestRecord(string schema, object[] kv)
         {
-            test(schema, mkRecord(kv, Schema.Parse(schema) as RecordSchema));
+            test(schema, MkRecord(kv, Schema.Parse(schema) as RecordSchema));
         }
 
         [TestCase("{\"type\": \"map\", \"values\": \"string\"}",
@@ -166,7 +259,7 @@ namespace Avro.Test.Generic
             new object[] { "f1", "v1" })]
         public void TestUnion_record(string unionSchema, string recordSchema, object[] value)
         {
-            test(unionSchema, mkRecord(value, Schema.Parse(recordSchema) as RecordSchema));
+            test(unionSchema, MkRecord(value, Schema.Parse(recordSchema) as RecordSchema));
         }
 
         [TestCase("[{\"type\": \"enum\", \"symbols\": [\"s1\", \"s2\"], \"name\": \"e\"}, \"string\"]",
@@ -344,8 +437,8 @@ namespace Avro.Test.Generic
             new object[] { "f1", true, "f2", "d" }, Description = "Default field")]
         public void TestResolution_record(string ws, object[] actual, string rs, object[] expected)
         {
-            TestResolution(ws, mkRecord(actual, Schema.Parse(ws) as RecordSchema), rs,
-                mkRecord(expected, Schema.Parse(rs) as RecordSchema));
+            TestResolution(ws, MkRecord(actual, Schema.Parse(ws) as RecordSchema), rs,
+                MkRecord(expected, Schema.Parse(rs) as RecordSchema));
         }
 
         [TestCase("{\"type\":\"map\",\"values\":\"int\"}", new object[] { "a", 100, "b", -202 },
@@ -419,11 +512,11 @@ namespace Avro.Test.Generic
         {
             if (expectedExceptionType != null)
             {
-                Assert.Throws(expectedExceptionType, () => { testResolutionMismatch(ws, mkRecord(actual, Schema.Parse(ws) as RecordSchema), rs); });
+                Assert.Throws(expectedExceptionType, () => { testResolutionMismatch(ws, MkRecord(actual, Schema.Parse(ws) as RecordSchema), rs); });
             }
             else
             {
-                testResolutionMismatch(ws, mkRecord(actual, Schema.Parse(ws) as RecordSchema), rs);
+                testResolutionMismatch(ws, MkRecord(actual, Schema.Parse(ws) as RecordSchema), rs);
             }
         }
 
@@ -491,7 +584,7 @@ namespace Avro.Test.Generic
                 "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
                 "[{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"int\"}}]}");
 
-            Func<int[], GenericRecord> makeRec = arr => mkRecord(new object[] { "a", arr }, schema);
+            Func<int[], GenericRecord> makeRec = arr => MkRecord(new object[] { "a", arr }, schema);
 
             var rec1 = makeRec(new[] { 69, 23 });
             var rec2 = makeRec(new[] { 42, 11 });
@@ -506,7 +599,7 @@ namespace Avro.Test.Generic
                 "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
                 "[{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"int\"}}]}");
 
-            Func<int[], GenericRecord> makeRec = arr => mkRecord(new object[] { "a", arr }, schema);
+            Func<int[], GenericRecord> makeRec = arr => MkRecord(new object[] { "a", arr }, schema);
 
             // Intentionally duplicated so reference equality doesn't apply
             var rec1 = makeRec(new[] { 89, 12, 66 });
@@ -522,7 +615,7 @@ namespace Avro.Test.Generic
                 "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
                 "[{\"name\":\"a\",\"type\":{\"type\":\"map\",\"values\":\"int\"}}]}");
 
-            Func<int, GenericRecord> makeRec = value => mkRecord(
+            Func<int, GenericRecord> makeRec = value => MkRecord(
                 new object[] { "a", new Dictionary<string, int> { { "key", value } } }, schema);
 
             var rec1 = makeRec(52);
@@ -538,7 +631,7 @@ namespace Avro.Test.Generic
                 "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
                 "[{\"name\":\"a\",\"type\":{\"type\":\"map\",\"values\":\"int\"}}]}");
 
-            Func<int, GenericRecord> makeRec = value => mkRecord(
+            Func<int, GenericRecord> makeRec = value => MkRecord(
                 new object[] { "a", new Dictionary<string, int> { { "key", value } } }, schema);
 
             var rec1 = makeRec(69);
@@ -547,7 +640,7 @@ namespace Avro.Test.Generic
             Assert.AreNotEqual(rec1, rec2);
         }
 
-        private static GenericRecord mkRecord(object[] kv, RecordSchema s)
+        public static GenericRecord MkRecord(object[] kv, RecordSchema s)
         {
             GenericRecord input = new GenericRecord(s);
             for (int i = 0; i < kv.Length; i += 2)

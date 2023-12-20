@@ -18,43 +18,27 @@
 
 package org.apache.avro.file;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.assertTrue;
-
-@RunWith(Parameterized.class)
 public class TestAllCodecs {
 
-  @Parameterized.Parameters(name = "{index}: codec={0}")
-  public static Collection<Object[]> data() {
-    return Arrays.asList(new Object[][] { { "bzip2", BZip2Codec.class }, { "zstandard", ZstandardCodec.class },
-        { "null", NullCodec.class }, { "xz", XZCodec.class }, { "snappy", SnappyCodec.class },
-        { "deflate", DeflateCodec.class }, });
-  }
-
-  @Parameterized.Parameter(0)
-  public String codec;
-
-  @Parameterized.Parameter(1)
-  public Class<? extends Codec> codecClass;
-
-  @Test
-  public void testCodec() throws IOException {
+  @ParameterizedTest
+  @MethodSource("codecTypes")
+  void codec(String codec, Class<? extends Codec> codecClass) throws IOException {
     int inputSize = 500_000;
 
     byte[] input = generateTestData(inputSize);
 
     Codec codecInstance = CodecFactory.fromString(codec).createInstance();
-    assertTrue(codecClass.isInstance(codecInstance));
-    assertTrue(codecInstance.getName().equals(codec));
+    Assertions.assertTrue(codecClass.isInstance(codecInstance));
+    Assertions.assertTrue(codecInstance.getName().equals(codec));
 
     ByteBuffer inputByteBuffer = ByteBuffer.wrap(input);
     ByteBuffer compressedBuffer = codecInstance.compress(inputByteBuffer);
@@ -62,28 +46,30 @@ public class TestAllCodecs {
     int compressedSize = compressedBuffer.remaining();
 
     // Make sure something returned
-    assertTrue(compressedSize > 0);
+    Assertions.assertTrue(compressedSize > 0);
 
     // While the compressed size could in many real cases
     // *increase* compared to the input size, our input data
     // is extremely easy to compress and all Avro's compression algorithms
     // should have a compression ratio greater than 1 (except 'null').
-    assertTrue(compressedSize < inputSize || codec.equals("null"));
+    Assertions.assertTrue(compressedSize < inputSize || codec.equals("null"));
 
     // Decompress the data
     ByteBuffer decompressedBuffer = codecInstance.decompress(compressedBuffer);
 
     // Validate the the input and output are equal.
     inputByteBuffer.rewind();
-    Assert.assertEquals(decompressedBuffer, inputByteBuffer);
+    Assertions.assertEquals(inputByteBuffer, decompressedBuffer);
   }
 
-  @Test
-  public void testCodecSlice() throws IOException {
+  @ParameterizedTest
+  @MethodSource("codecTypes")
+  void codecSlice(String codec, Class<? extends Codec> codecClass) throws IOException {
     int inputSize = 500_000;
     byte[] input = generateTestData(inputSize);
 
     Codec codecInstance = CodecFactory.fromString(codec).createInstance();
+    Assertions.assertTrue(codecClass.isInstance(codecInstance));
 
     ByteBuffer partialBuffer = ByteBuffer.wrap(input);
     partialBuffer.position(17);
@@ -94,7 +80,7 @@ public class TestAllCodecs {
     int compressedSize = compressedBuffer.remaining();
 
     // Make sure something returned
-    assertTrue(compressedSize > 0);
+    Assertions.assertTrue(compressedSize > 0);
 
     // Create a slice from the compressed buffer
     ByteBuffer sliceBuffer = ByteBuffer.allocate(compressedSize + 100);
@@ -108,7 +94,13 @@ public class TestAllCodecs {
 
     // Validate the the input and output are equal.
     inputByteBuffer.rewind();
-    Assert.assertEquals(decompressedBuffer, inputByteBuffer);
+    Assertions.assertEquals(inputByteBuffer, decompressedBuffer);
+  }
+
+  public static Stream<Arguments> codecTypes() {
+    return Stream.of(Arguments.of("bzip2", BZip2Codec.class), Arguments.of("zstandard", ZstandardCodec.class),
+        Arguments.of("null", NullCodec.class), Arguments.of("xz", XZCodec.class),
+        Arguments.of("snappy", SnappyCodec.class), Arguments.of("deflate", DeflateCodec.class));
   }
 
   // Generate some test data that will compress easily

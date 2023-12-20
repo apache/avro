@@ -18,7 +18,7 @@
 set -e
 
 usage() {
-  echo "Usage: $0 {clean|dist|interop-data-generate|interop-data-test|lint|test}"
+  echo "Usage: $0 {clean|dist|doc|interop-data-generate|interop-data-test|lint|test}"
   exit 1
 }
 
@@ -27,11 +27,11 @@ clean() {
                  '*.avsc' \
                  '*.egg-info' \
                  '*.py[co]' \
-                 'VERSION.txt' \
                  '__pycache__' \
                  '.tox' \
                  'avro/test/interop' \
                  'dist' \
+                 'docs/build' \
                  'userlogs'
 }
 
@@ -50,6 +50,15 @@ dist() (
   "$virtualenv/bin/python3" -m pip install build
   "$virtualenv/bin/python3" -m build --outdir "$destination"
 )
+
+doc() {
+  local doc_dir
+  local version=$(cat ../../share/VERSION.txt)
+  doc_dir="../../build/avro-doc-$version/api/py"
+  python3 -m tox -e docs
+  mkdir -p "$doc_dir"
+  cp -a docs/build/* "$doc_dir"
+}
 
 interop-data-generate() {
   ./setup.py generate_interop_data
@@ -76,6 +85,7 @@ main() {
     case "$target" in
       clean) clean;;
       dist) dist;;
+      doc) doc;;
       interop-data-generate) interop-data-generate;;
       interop-data-test) interop-data-test;;
       lint) lint;;

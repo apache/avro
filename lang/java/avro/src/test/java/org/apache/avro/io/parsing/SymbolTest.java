@@ -15,14 +15,14 @@
  */
 package org.apache.avro.io.parsing;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.avro.Schema;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test to verify that recursive schemas are flattened correctly. See
@@ -41,7 +41,7 @@ public class SymbolTest {
       + "                  ]}},\n" + "              {\"name\":\"node\",\"type\":\"SampleNode\"}]}}}]}";
 
   @Test
-  public void testSomeMethod() throws IOException {
+  void someMethod() throws IOException {
     Schema schema = new Schema.Parser().parse(SCHEMA);
     Symbol root = new ResolvingGrammarGenerator().generate(schema, schema);
     validateNonNull(root, new HashSet<>());
@@ -57,8 +57,7 @@ public class SymbolTest {
       for (Symbol s : symb.production) {
         if (s == null) {
           fail("invalid parsing tree should not contain nulls");
-        }
-        if (s.kind != Symbol.Kind.ROOT) {
+        } else if (s.kind != Symbol.Kind.ROOT) {
           validateNonNull(s, seen);
         }
       }

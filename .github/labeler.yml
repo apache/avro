@@ -18,15 +18,39 @@
 #
 # Pull Request Labeler Github Action Configuration: https://github.com/marketplace/actions/labeler
 
-C: ["lang/c/**/*"]
-C++: ["lang/c++/**/*"]
-C#: ["lang/csharp/**/*"]
-Java: ["lang/java/**/*"]
-Js: ["lang/js/**/*"]
-Perl: ["lang/perl/**/*"]
-Php: ["lang/php/**/*"]
-Python: ["lang/py/**/*"]
-Ruby: ["lang/ruby/**/*"]
-Rust: ["lang/rust/**/*"]
-build: ["**/*Dockerfile*", "**/*.sh", "**/*pom.xml", ".github/**/*"]
-website: ["doc/**/*"]
+C: 
+  - changed-files:
+    - any-glob-to-any-file: "lang/c/**/*"
+C++: 
+  - changed-files:
+    - any-glob-to-any-file: "lang/c++/**/*"
+C#: 
+  - changed-files:
+    - any-glob-to-any-file: "lang/csharp/**/*"
+Java: 
+  - changed-files:
+    - any-glob-to-any-file: "lang/java/**/*"
+Js: 
+  - changed-files:
+    - any-glob-to-any-file: "lang/js/**/*"
+Perl: 
+  - changed-files:
+    - any-glob-to-any-file: "lang/perl/**/*"
+Php: 
+  - changed-files:
+    - any-glob-to-any-file: "lang/php/**/*"
+Python: 
+  - changed-files:
+    - any-glob-to-any-file: "lang/py/**/*"
+Ruby: 
+  - changed-files:
+    - any-glob-to-any-file: "lang/ruby/**/*"
+Rust: 
+  - changed-files:
+    - any-glob-to-any-file: "lang/rust/**/*"
+build: 
+  - changed-files:
+    - any-glob-to-any-file: ["**/*Dockerfile*", "**/*.sh", "**/*pom.xml", ".github/**/*"]
+website: 
+  - changed-files:
+    - any-glob-to-any-file: "doc/**/*"

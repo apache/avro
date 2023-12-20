@@ -50,7 +50,7 @@ namespace Avro.Reflect
 
         /// <summary>
         /// Delegate to a factory method to create objects of type x. If you are deserializing to interfaces
-        /// you could use an IoC container factory insread of the default. Default is Activator.CreateInstance()
+        /// you could use an IoC container factory instead of the default. Default is Activator.CreateInstance()
         /// </summary>
         /// <returns></returns>
         public Func<Type, object> RecordFactory { get => _recordFactory; set => _recordFactory = value; }
@@ -373,7 +373,7 @@ namespace Avro.Reflect
         /// <summary>
         /// Deserializes a enum. Uses CreateEnum to construct the new enum object.
         /// </summary>
-        /// <param name="reuse">If appropirate, uses this instead of creating a new enum object.</param>
+        /// <param name="reuse">If appropriate, uses this instead of creating a new enum object.</param>
         /// <param name="writerSchema">The schema the writer used while writing the enum</param>
         /// <param name="readerSchema">The schema the reader is using</param>
         /// <param name="d">The decoder for deserialization.</param>
@@ -450,10 +450,10 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="reuse">If appropriate, uses this object instead of creating a new one.</param>
         /// <param name="writerSchema">The FixedSchema the writer used during serialization.</param>
-        /// <param name="readerSchema">The schema that the readr uses. Must be a FixedSchema with the same
+        /// <param name="readerSchema">The schema that the reader uses. Must be a FixedSchema with the same
         /// size as the writerSchema.</param>
         /// <param name="d">The decoder for deserialization.</param>
-        /// <returns>The deserilized object.</returns>
+        /// <returns>The deserialized object.</returns>
         protected override object ReadFixed(object reuse, FixedSchema writerSchema, Schema readerSchema, Decoder d)
         {
             FixedSchema rs = readerSchema as FixedSchema;

@@ -269,10 +269,8 @@ namespace Avro
         /// <returns></returns>
         public override int GetHashCode()
         {
-#pragma warning disable CA1307 // Specify StringComparison
             return Name.GetHashCode() + Namespace.GetHashCode() +
-#pragma warning restore CA1307 // Specify StringComparison
-                   GetTypesHashCode() + GetMessagesHashCode();
+                GetTypesHashCode() + GetMessagesHashCode();
         }
 
         /// <summary>
@@ -295,9 +293,10 @@ namespace Avro
         {
             int hash = Messages.Count;
             foreach (KeyValuePair<string, Message> pair in Messages)
-#pragma warning disable CA1307 // Specify StringComparison
+            {
                 hash += pair.Key.GetHashCode() + pair.Value.GetHashCode();
-#pragma warning restore CA1307 // Specify StringComparison
+            }
+
             return hash;
         }
     }

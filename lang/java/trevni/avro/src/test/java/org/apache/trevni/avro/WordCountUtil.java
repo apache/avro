@@ -18,8 +18,6 @@
 
 package org.apache.trevni.avro;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 import java.io.File;
 import java.util.StringTokenizer;
@@ -29,6 +27,8 @@ import java.util.TreeMap;
 import org.apache.hadoop.fs.FileUtil;
 
 import org.apache.avro.Schema;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
@@ -92,7 +92,7 @@ public class WordCountUtil {
         new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
     int numWords = 0;
     for (Pair<String, Long> wc : reader) {
-      assertEquals(wc.key(), COUNTS.get(wc.key()), wc.value());
+      assertEquals(COUNTS.get(wc.key()), wc.value(), wc.key());
       numWords++;
     }
     reader.close();
@@ -104,7 +104,7 @@ public class WordCountUtil {
         new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
     int numWords = 0;
     for (GenericRecord wc : reader) {
-      assertEquals((String) wc.get("key"), COUNTS.get(wc.get("key")), wc.get("value"));
+      assertEquals(COUNTS.get(wc.get("key")), wc.get("value"), (String) wc.get("key"));
       // assertEquals(wc.getKey(), COUNTS.get(wc.getKey()), wc.getValue());
       numWords++;
     }

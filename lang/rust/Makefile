@@ -85,7 +85,7 @@ doc-local:
 
 .PHONY: readme
 readme:
-	cargo readme > README.md
+	cargo rdme
 
 
 # BUILDING

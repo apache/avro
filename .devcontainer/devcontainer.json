@@ -1,0 +1,36 @@
+{
+    "name": "Avro Development",
+    "build": {
+        "dockerfile": "../share/docker/Dockerfile",
+        "context": ".."
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {
+            },
+            "extensions": [
+                // Python
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                // C/C++
+                "ms-vscode.cpptools",
+                // C#
+                "ms-dotnettools.csharp",
+                // Rust
+                "vadimcn.vscode-lldb",
+                "mutantdino.resourcemonitor",
+                "matklad.rust-analyzer",
+                "tamasfe.even-better-toml",
+                "serayuzgur.crates",
+                // Java
+                "vscjava.vscode-java-pack",
+                // Shell script
+                "timonwong.shellcheck",
+                // YAML
+                "redhat.vscode-yaml",
+                // Git
+                "eamodio.gitlens"
+            ]
+        }
+    }
+}

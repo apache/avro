@@ -15,4 +15,4 @@ To contribute to Avro, please read [How to Contribute](https://cwiki.apache.org/
 
 ### License, Credits and Acknowledgements
 
-License, credits and acknowledgements are maintained in the [LICENSE.txt](https://github.com/apache/avro/blob/master/LICENSE.txt) and [NOTICE.txt](https://github.com/apache/avro/blob/master/NOTICE.txt) in the source code repository. Those files are also included with the installed package.
+License, credits and acknowledgements are maintained in the [LICENSE.txt](https://github.com/apache/avro/blob/main/LICENSE.txt) and [NOTICE.txt](https://github.com/apache/avro/blob/main/NOTICE.txt) in the source code repository. Those files are also included with the installed package.

@@ -370,6 +370,34 @@ NS_RECORD2 = parse(
         }
     )
 )
+WITHOUT_NAMESPACE_RECORD = parse(
+    json.dumps(
+        {
+            "type": SchemaType.RECORD,
+            "name": "Record",
+            "fields": [
+                {
+                    "name": "f1",
+                    "type": "int",
+                }
+            ],
+        },
+    )
+)
+WITH_NAMESPACE_RECORD = parse(
+    json.dumps(
+        {
+            "type": SchemaType.RECORD,
+            "name": "ns.Record",
+            "fields": [
+                {
+                    "name": "f1",
+                    "type": "int",
+                }
+            ],
+        },
+    )
+)
 
 UNION_INT_RECORD1 = UnionSchema(
     [
@@ -583,6 +611,7 @@ class TestCompatibility(unittest.TestCase):
         self.assertIsInstance(reader, UnionSchema)
         self.assertIsInstance(writer, UnionSchema)
         self.assertFalse(self.are_compatible(reader, writer))
+
         # testReaderWriterCompatibility
         compatible_reader_writer_test_cases = [
             (BOOLEAN_SCHEMA, BOOLEAN_SCHEMA),
@@ -659,9 +688,10 @@ class TestCompatibility(unittest.TestCase):
                 ENUM_ABC_FIELD_DEFAULT_B_ENUM_DEFAULT_A_RECORD,
             ),
             (NS_RECORD1, NS_RECORD2),
+            (WITHOUT_NAMESPACE_RECORD, WITH_NAMESPACE_RECORD),
         ]
 
-        for (reader, writer) in compatible_reader_writer_test_cases:
+        for reader, writer in compatible_reader_writer_test_cases:
             self.assertTrue(self.are_compatible(reader, writer))
 
     def test_schema_compatibility_fixed_size_mismatch(self):
@@ -681,7 +711,7 @@ class TestCompatibility(unittest.TestCase):
                 "/fields/1/type/size",
             ),
         ]
-        for (reader, writer, message, location) in incompatible_fixed_pairs:
+        for reader, writer, message, location in incompatible_fixed_pairs:
             result = ReaderWriterCompatibilityChecker().get_compatibility(reader, writer)
             self.assertIs(result.compatibility, SchemaCompatibilityType.incompatible)
             self.assertIn(
@@ -707,7 +737,7 @@ class TestCompatibility(unittest.TestCase):
                 "/fields/0/type/symbols",
             ),
         ]
-        for (reader, writer, message, location) in incompatible_pairs:
+        for reader, writer, message, location in incompatible_pairs:
             result = ReaderWriterCompatibilityChecker().get_compatibility(reader, writer)
             self.assertIs(result.compatibility, SchemaCompatibilityType.incompatible)
             self.assertIn(message, result.messages)
@@ -823,7 +853,7 @@ class TestCompatibility(unittest.TestCase):
             ),
         ]
 
-        for (reader, writer, message, location) in incompatible_pairs:
+        for reader, writer, message, location in incompatible_pairs:
             result = ReaderWriterCompatibilityChecker().get_compatibility(reader, writer)
             self.assertIs(result.compatibility, SchemaCompatibilityType.incompatible)
             self.assertEqual(result.messages, message)
@@ -842,7 +872,7 @@ class TestCompatibility(unittest.TestCase):
             ),
         ]
 
-        for (reader, writer, message, location) in incompatible_pairs:
+        for reader, writer, message, location in incompatible_pairs:
             result = ReaderWriterCompatibilityChecker().get_compatibility(reader, writer)
             self.assertIs(result.compatibility, SchemaCompatibilityType.incompatible)
             self.assertIn(message, result.messages)
@@ -853,7 +883,7 @@ class TestCompatibility(unittest.TestCase):
             (A_INT_RECORD1, EMPTY_RECORD1, "a", "/fields/0"),
             (A_INT_B_DINT_RECORD1, EMPTY_RECORD1, "a", "/fields/0"),
         ]
-        for (reader, writer, message, location) in incompatible_pairs:
+        for reader, writer, message, location in incompatible_pairs:
             result = ReaderWriterCompatibilityChecker().get_compatibility(reader, writer)
             self.assertIs(result.compatibility, SchemaCompatibilityType.incompatible)
             self.assertEqual(len(result.messages), 1)
@@ -1033,7 +1063,7 @@ class TestCompatibility(unittest.TestCase):
                 "/",
             ),
         ]
-        for (reader, writer, message, location) in incompatible_pairs:
+        for reader, writer, message, location in incompatible_pairs:
             result = ReaderWriterCompatibilityChecker().get_compatibility(reader, writer)
             self.assertIs(result.compatibility, SchemaCompatibilityType.incompatible)
             self.assertIn(message, result.messages)

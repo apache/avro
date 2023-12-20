@@ -17,15 +17,17 @@
  */
 package org.apache.avro.io;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
 import org.apache.avro.util.Utf8;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class TestBinaryEncoderFidelity {
 
@@ -138,7 +140,7 @@ public class TestBinaryEncoderFidelity {
     e.flush();
   }
 
-  @BeforeClass
+  @BeforeAll
   public static void generateLegacyData() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     Encoder e = new LegacyBinaryEncoder(baos);
@@ -150,49 +152,91 @@ public class TestBinaryEncoderFidelity {
   }
 
   @Test
-  public void testBinaryEncoder() throws IOException {
+  void binaryEncoder() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     BinaryEncoder e = factory.binaryEncoder(baos, null);
     generateData(e, true);
     byte[] result = baos.toByteArray();
-    Assert.assertEquals(legacydata.length, result.length);
-    Assert.assertArrayEquals(legacydata, result);
+    assertEquals(legacydata.length, result.length);
+    assertArrayEquals(legacydata, result);
     baos.reset();
     generateComplexData(e);
     byte[] result2 = baos.toByteArray();
-    Assert.assertEquals(complexdata.length, result2.length);
-    Assert.assertArrayEquals(complexdata, result2);
+    assertEquals(complexdata.length, result2.length);
+    assertArrayEquals(complexdata, result2);
   }
 
   @Test
-  public void testDirectBinaryEncoder() throws IOException {
+  void directBinaryEncoder() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     BinaryEncoder e = factory.directBinaryEncoder(baos, null);
     generateData(e, true);
     byte[] result = baos.toByteArray();
-    Assert.assertEquals(legacydata.length, result.length);
-    Assert.assertArrayEquals(legacydata, result);
+    assertEquals(legacydata.length, result.length);
+    assertArrayEquals(legacydata, result);
     baos.reset();
     generateComplexData(e);
     byte[] result2 = baos.toByteArray();
-    Assert.assertEquals(complexdata.length, result2.length);
-    Assert.assertArrayEquals(complexdata, result2);
+    assertEquals(complexdata.length, result2.length);
+    assertArrayEquals(complexdata, result2);
   }
 
   @Test
-  public void testBlockingBinaryEncoder() throws IOException {
+  void blockingDirectBinaryEncoder() throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    BinaryEncoder e = factory.blockingDirectBinaryEncoder(baos, null);
+    generateData(e, true);
+
+    byte[] result = baos.toByteArray();
+    assertEquals(legacydata.length, result.length);
+    assertArrayEquals(legacydata, result);
+    baos.reset();
+
+    generateComplexData(e);
+    byte[] result2 = baos.toByteArray();
+    // blocking will cause different length, should be two bytes larger
+    assertEquals(complexdata.length + 2, result2.length);
+    // the first byte is the array start, with the count of items negative
+    assertEquals(complexdata[0] >>> 1, result2[0]);
+    baos.reset();
+
+    e.writeArrayStart();
+    e.setItemCount(1);
+    e.startItem();
+    e.writeInt(1);
+    e.writeArrayEnd();
+
+    // 1: 1 element in the array
+    // 2: 1 byte for the int
+    // 3: zigzag encoded int
+    // 4: 0 elements in the next block
+    assertArrayEquals(baos.toByteArray(), new byte[] { 1, 2, 2, 0 });
+    baos.reset();
+
+    e.writeArrayStart();
+    e.setItemCount(0);
+    e.writeArrayEnd();
+
+    // This is correct
+    // 0: 0 elements in the block
+    assertArrayEquals(baos.toByteArray(), new byte[] { 0 });
+    baos.reset();
+  }
+
+  @Test
+  void blockingBinaryEncoder() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     BinaryEncoder e = factory.blockingBinaryEncoder(baos, null);
     generateData(e, true);
     byte[] result = baos.toByteArray();
-    Assert.assertEquals(legacydata.length, result.length);
-    Assert.assertArrayEquals(legacydata, result);
+    assertEquals(legacydata.length, result.length);
+    assertArrayEquals(legacydata, result);
     baos.reset();
     generateComplexData(e);
     byte[] result2 = baos.toByteArray();
     // blocking will cause different length, should be two bytes larger
-    Assert.assertEquals(complexdata.length + 2, result2.length);
+    assertEquals(complexdata.length + 2, result2.length);
     // the first byte is the array start, with the count of items negative
-    Assert.assertEquals(complexdata[0] >>> 1, result2[0]);
+    assertEquals(complexdata[0] >>> 1, result2[0]);
   }
 }

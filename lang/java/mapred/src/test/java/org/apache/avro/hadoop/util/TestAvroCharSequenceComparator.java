@@ -18,24 +18,24 @@
 
 package org.apache.avro.hadoop.util;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.apache.avro.util.Utf8;
 
 public class TestAvroCharSequenceComparator {
   private AvroCharSequenceComparator<CharSequence> mComparator;
 
-  @Before
+  @BeforeEach
   public void setup() {
     mComparator = new AvroCharSequenceComparator<>();
   }
 
   @Test
-  public void testCompareString() {
+  void compareString() {
     assertEquals(0, mComparator.compare("", ""));
     assertThat(mComparator.compare("", "a"), lessThan(0));
     assertThat(mComparator.compare("a", ""), greaterThan(0));
@@ -53,7 +53,7 @@ public class TestAvroCharSequenceComparator {
   }
 
   @Test
-  public void testCompareUtf8() {
+  void compareUtf8() {
     assertEquals(0, mComparator.compare(new Utf8(""), new Utf8("")));
     assertThat(mComparator.compare(new Utf8(""), new Utf8("a")), lessThan(0));
     assertThat(mComparator.compare(new Utf8("a"), new Utf8("")), greaterThan(0));
@@ -71,7 +71,7 @@ public class TestAvroCharSequenceComparator {
   }
 
   @Test
-  public void testCompareUtf8ToString() {
+  void compareUtf8ToString() {
     assertEquals(0, mComparator.compare(new Utf8(""), ""));
     assertThat(mComparator.compare(new Utf8(""), "a"), lessThan(0));
     assertThat(mComparator.compare(new Utf8("a"), ""), greaterThan(0));

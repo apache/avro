@@ -74,6 +74,14 @@ public class DocCommentHelper {
     DOC.set(newDocComment);
   }
 
+  /**
+   * Clear any documentation (and generate a warning if there was).
+   *
+   * This method should NOT be used after an optional component in a grammar
+   * (i.e., after a @code{[…]} or @code{…*} construct), because the optional
+   * grammar part may have already caused parsing a doc comment special token
+   * placed after the code block.
+   */
   static void clearDoc() {
     DocComment oldDocComment = DOC.get();
     if (oldDocComment != null) {

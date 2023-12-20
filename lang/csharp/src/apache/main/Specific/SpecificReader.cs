@@ -72,7 +72,7 @@ namespace Avro.Specific
         /// Generic read function
         /// </summary>
         /// <param name="reuse">object to store data read</param>
-        /// <param name="dec">decorder to use for reading data</param>
+        /// <param name="dec">decoder to use for reading data</param>
         /// <returns></returns>
         public T Read(T reuse, Decoder dec)
         {
@@ -130,20 +130,22 @@ namespace Avro.Specific
                 }
             }
 
-            var defaultStream = new MemoryStream();
-            var defaultEncoder = new BinaryEncoder(defaultStream);
-            var defaultDecoder = new BinaryDecoder(defaultStream);
-            foreach (Field rf in rs)
+            using (var defaultStream = new MemoryStream())
             {
-                if (writerSchema.Contains(rf.Name)) continue;
+                var defaultEncoder = new BinaryEncoder(defaultStream);
+                var defaultDecoder = new BinaryDecoder(defaultStream);
+                foreach (Field rf in rs)
+                {
+                    if (writerSchema.Contains(rf.Name)) continue;
 
-                defaultStream.Position = 0; // reset for writing
-                Resolver.EncodeDefaultValue(defaultEncoder, rf.Schema, rf.DefaultValue);
-                defaultStream.Flush();
-                defaultStream.Position = 0; // reset for reading
+                    defaultStream.Position = 0; // reset for writing
+                    Resolver.EncodeDefaultValue(defaultEncoder, rf.Schema, rf.DefaultValue);
+                    defaultStream.Flush();
+                    defaultStream.Position = 0; // reset for reading
 
-                obj = rec.Get(rf.Pos);
-                rec.Put(rf.Pos, Read(obj, rf.Schema, rf.Schema, defaultDecoder));
+                    obj = rec.Get(rf.Pos);
+                    rec.Put(rf.Pos, Read(obj, rf.Schema, rf.Schema, defaultDecoder));
+                }
             }
 
             return rec;
@@ -155,10 +157,10 @@ namespace Avro.Specific
         /// </summary>
         /// <param name="reuse">If appropriate, uses this object instead of creating a new one.</param>
         /// <param name="writerSchema">The FixedSchema the writer used during serialization.</param>
-        /// <param name="readerSchema">The schema that the readr uses. Must be a FixedSchema with the same
+        /// <param name="readerSchema">The schema that the reader uses. Must be a FixedSchema with the same
         /// size as the writerSchema.</param>
         /// <param name="d">The decoder for deserialization.</param>
-        /// <returns>The deserilized object.</returns>
+        /// <returns>The deserialized object.</returns>
         protected override object ReadFixed(object reuse, FixedSchema writerSchema, Schema readerSchema, Decoder d)
         {
             FixedSchema rs = readerSchema as FixedSchema;
@@ -220,7 +222,7 @@ namespace Avro.Specific
         }
 
         /// <summary>
-        /// Deserialized an avro map. The default implemenation creats a new map using CreateMap() and then
+        /// Deserialized an avro map. The default implementation creates a new map using CreateMap() and then
         /// adds elements to the map using AddMapEntry().
         /// </summary>
         /// <param name="reuse">If appropriate, use this instead of creating a new map object.</param>

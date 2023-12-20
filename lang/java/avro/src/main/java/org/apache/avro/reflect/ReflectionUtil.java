@@ -118,10 +118,8 @@ public class ReflectionUtil {
     }
 
     private boolean validField(FieldAccess access, String name, Object original, Object toSet) throws Exception {
-      FieldAccessor a;
-      boolean valid = true;
-      a = accessor(access, name);
-      valid &= original.equals(a.get(this));
+      FieldAccessor a = accessor(access, name);
+      boolean valid = original.equals(a.get(this));
       a.set(this, toSet);
       valid &= !original.equals(a.get(this));
       return valid;

@@ -17,8 +17,8 @@
  */
 package org.apache.avro.ipc.jetty;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Protocol;
@@ -33,7 +33,7 @@ import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.test.Simple;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.URL;
 import java.net.ServerSocket;
@@ -53,12 +53,13 @@ public class TestProtocolHttp extends TestProtocolSpecific {
     return new HttpTransceiver(new URL("http://127.0.0.1:" + server.getPort() + "/"));
   }
 
+  @Override
   protected int getExpectedHandshakeCount() {
     return REPEATING;
   }
 
   @Test
-  public void testTimeout() throws Throwable {
+  void timeout() throws Throwable {
     ServerSocket s = new ServerSocket(0);
     HttpTransceiver client = new HttpTransceiver(new URL("http://127.0.0.1:" + s.getLocalPort() + "/"));
     client.setTimeout(100);
@@ -67,7 +68,7 @@ public class TestProtocolHttp extends TestProtocolSpecific {
       proxy.hello("foo");
       fail("Should have failed with an exception");
     } catch (AvroRuntimeException e) {
-      assertTrue("Got unwanted exception: " + e.getCause(), e.getCause() instanceof SocketTimeoutException);
+      assertTrue(e.getCause() instanceof SocketTimeoutException, "Got unwanted exception: " + e.getCause());
     } finally {
       s.close();
     }
@@ -75,7 +76,7 @@ public class TestProtocolHttp extends TestProtocolSpecific {
 
   /** Test that Responder ignores one-way with stateless transport. */
   @Test
-  public void testStatelessOneway() throws Exception {
+  void statelessOneway() throws Exception {
     // a version of the Simple protocol that doesn't declare "ack" one-way
     Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
     Protocol.Message message = protocol.createMessage("ack", null, new LinkedHashMap<String, String>(),

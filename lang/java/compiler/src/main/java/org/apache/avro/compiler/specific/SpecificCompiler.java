@@ -102,8 +102,10 @@ public class SpecificCompiler {
     specificData.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimestampNanosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampMicrosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampNanosConversion());
     specificData.addLogicalTypeConversion(new Conversions.UUIDConversion());
   }
 
@@ -118,11 +120,16 @@ public class SpecificCompiler {
   private boolean gettersReturnOptional = false;
   private boolean optionalGettersForNullableFieldsOnly = false;
   private boolean createSetters = true;
+  private boolean createNullSafeAnnotations = false;
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
   private boolean enableDecimalLogicalType = false;
   private String suffix = ".java";
   private List<Object> additionalVelocityTools = Collections.emptyList();
+
+  private String recordSpecificClass = "org.apache.avro.specific.SpecificRecordBase";
+
+  private String errorSpecificClass = "org.apache.avro.specific.SpecificExceptionBase";
 
   /*
    * Used in the record.vm template.
@@ -144,8 +151,20 @@ public class SpecificCompiler {
   }
 
   public SpecificCompiler(Schema schema) {
+    this(Collections.singleton(schema));
+  }
+
+  public SpecificCompiler(Collection<Schema> schemas) {
     this();
-    enqueue(schema);
+    for (Schema schema : schemas) {
+      enqueue(schema);
+    }
+    this.protocol = null;
+  }
+
+  public SpecificCompiler(Iterable<Schema> schemas) {
+    this();
+    schemas.forEach(this::enqueue);
     this.protocol = null;
   }
 
@@ -214,6 +233,17 @@ public class SpecificCompiler {
    */
   public void setCreateSetters(boolean createSetters) {
     this.createSetters = createSetters;
+  }
+
+  public boolean isCreateNullSafeAnnotations() {
+    return this.createNullSafeAnnotations;
+  }
+
+  /**
+   * Set to true to add jetbrains @Nullable and @NotNull annotations
+   */
+  public void setCreateNullSafeAnnotations(boolean createNullSafeAnnotations) {
+    this.createNullSafeAnnotations = createNullSafeAnnotations;
   }
 
   public boolean isCreateOptionalGetters() {
@@ -352,7 +382,7 @@ public class SpecificCompiler {
         "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
     velocityEngine.addProperty("resource.loader.file.class",
         "org.apache.velocity.runtime.resource.loader.FileResourceLoader");
-    velocityEngine.addProperty("resource.loader.file.path", "/, .");
+    velocityEngine.addProperty("resource.loader.file.path", "/, ., ");
     velocityEngine.setProperty("runtime.strict_mode.enable", true);
 
     // Set whitespace gobbling to Backward Compatible (BC)
@@ -634,9 +664,7 @@ public class SpecificCompiler {
     Protocol newP = new Protocol(p.getName(), p.getDoc(), p.getNamespace());
     Map<Schema, Schema> types = new LinkedHashMap<>();
 
-    for (Map.Entry<String, Object> a : p.getObjectProps().entrySet()) {
-      newP.addProp(a.getKey(), a.getValue());
-    }
+    p.forEachProperty(newP::addProp);
 
     // annotate types
     Collection<Schema> namedTypes = new LinkedHashSet<>();
@@ -901,19 +929,21 @@ public class SpecificCompiler {
    * record.vm can handle the schema being presented.
    */
   public boolean isCustomCodable(Schema schema) {
-    if (schema.isError())
-      return false;
     return isCustomCodable(schema, new HashSet<>());
   }
 
   private boolean isCustomCodable(Schema schema, Set<Schema> seen) {
     if (!seen.add(schema))
+      // Recursive call: assume custom codable until a caller on the call stack proves
+      // otherwise.
       return true;
     if (schema.getLogicalType() != null)
       return false;
     boolean result = true;
     switch (schema.getType()) {
     case RECORD:
+      if (schema.isError())
+        return false;
       for (Schema.Field f : schema.getFields())
         result &= isCustomCodable(f.schema(), seen);
       break;
@@ -1016,7 +1046,7 @@ public class SpecificCompiler {
    * Utility for template use. Escapes comment end with HTML entities.
    */
   public static String escapeForJavadoc(String s) {
-    return s.replace("*/", "*&#47;");
+    return s.replace("*/", "*&#47;").replace("<", "&lt;").replace(">", "&gt;");
   }
 
   /**
@@ -1198,10 +1228,7 @@ public class SpecificCompiler {
 
     // Check for the special case in which the schema defines two fields whose
     // names are identical except for the case of the first character:
-    char firstChar = field.name().charAt(0);
-    String conflictingFieldName = (Character.isLowerCase(firstChar) ? Character.toUpperCase(firstChar)
-        : Character.toLowerCase(firstChar)) + (field.name().length() > 1 ? field.name().substring(1) : "");
-    boolean fieldNameConflict = schema.getField(conflictingFieldName) != null;
+    int indexNameConflict = calcNameIndex(field.name(), schema);
 
     StringBuilder methodBuilder = new StringBuilder(prefix);
     String fieldName = SpecificData.mangleMethod(field.name(), schema.isError());
@@ -1220,14 +1247,73 @@ public class SpecificCompiler {
     methodBuilder.append(postfix);
 
     // If there is a field name conflict append $0 or $1
-    if (fieldNameConflict) {
+    if (indexNameConflict >= 0) {
       if (methodBuilder.charAt(methodBuilder.length() - 1) != '$') {
         methodBuilder.append('$');
       }
-      methodBuilder.append(Character.isLowerCase(firstChar) ? '0' : '1');
+      methodBuilder.append(indexNameConflict);
     }
 
     return methodBuilder.toString();
+  }
+
+  /**
+   * Calc name index for getter / setter field in case of conflict as example,
+   * having a schema with fields __X, _X, _x, X, x should result with indexes __X:
+   * 3, _X: 2, _x: 1, X: 0 x: None (-1)
+   *
+   * @param fieldName : field name.
+   * @param schema    : schema.
+   * @return index for field.
+   */
+  private static int calcNameIndex(String fieldName, Schema schema) {
+    // get name without underscore at start
+    // and calc number of other similar fields with same subname.
+    int countSimilar = 0;
+    String pureFieldName = fieldName;
+    while (!pureFieldName.isEmpty() && pureFieldName.charAt(0) == '_') {
+      pureFieldName = pureFieldName.substring(1);
+      if (schema.getField(pureFieldName) != null) {
+        countSimilar++;
+      }
+      String reversed = reverseFirstLetter(pureFieldName);
+      if (schema.getField(reversed) != null) {
+        countSimilar++;
+      }
+    }
+    // field name start with upper have +1
+    String reversed = reverseFirstLetter(fieldName);
+    if (!pureFieldName.isEmpty() && Character.isUpperCase(pureFieldName.charAt(0))
+        && schema.getField(reversed) != null) {
+      countSimilar++;
+    }
+
+    int ret = -1; // if no similar name, no index.
+    if (countSimilar > 0) {
+      ret = countSimilar - 1; // index is count similar -1 (start with $0)
+    }
+
+    return ret;
+  }
+
+  /**
+   * Reverse first letter upper <=> lower. __Name <=> __name
+   *
+   * @param name : input name.
+   * @return name with change case of first letter.
+   */
+  private static String reverseFirstLetter(String name) {
+    StringBuilder builder = new StringBuilder(name);
+    int index = 0;
+    while (builder.length() > index && builder.charAt(index) == '_') {
+      index++;
+    }
+    if (builder.length() > index) {
+      char c = builder.charAt(index);
+      char inverseC = Character.isLowerCase(c) ? Character.toUpperCase(c) : Character.toLowerCase(c);
+      builder.setCharAt(index, inverseC);
+    }
+    return builder.toString();
   }
 
   /**
@@ -1260,5 +1346,21 @@ public class SpecificCompiler {
    */
   public void setOutputCharacterEncoding(String outputCharacterEncoding) {
     this.outputCharacterEncoding = outputCharacterEncoding;
+  }
+
+  public String getSchemaParentClass(boolean isError) {
+    if (isError) {
+      return this.errorSpecificClass;
+    } else {
+      return this.recordSpecificClass;
+    }
+  }
+
+  public void setRecordSpecificClass(final String recordSpecificClass) {
+    this.recordSpecificClass = recordSpecificClass;
+  }
+
+  public void setErrorSpecificClass(final String errorSpecificClass) {
+    this.errorSpecificClass = errorSpecificClass;
   }
 }

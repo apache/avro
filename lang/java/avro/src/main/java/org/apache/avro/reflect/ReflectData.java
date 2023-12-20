@@ -71,6 +71,9 @@ public class ReflectData extends SpecificData {
 
   private static final String STRING_OUTER_PARENT_REFERENCE = "this$0";
 
+  /**
+   * Always false since custom coders are not available for {@link ReflectData}.
+   */
   @Override
   public boolean useCustomCoders() {
     return false;
@@ -571,7 +574,7 @@ public class ReflectData extends SpecificData {
       Package pkg2 = valueClass.getPackage();
 
       if (pkg1 != null && pkg1.getName().startsWith("java") && pkg2 != null && pkg2.getName().startsWith("java")) {
-        return NS_MAP_ARRAY_RECORD + keyClass.getSimpleName() + valueClass.getSimpleName();
+        return NS_MAP_ARRAY_RECORD + simpleName(keyClass) + simpleName(valueClass);
       }
     }
 
@@ -614,11 +617,8 @@ public class ReflectData extends SpecificData {
     AvroDefault defaultAnnotation = field.getAnnotation(AvroDefault.class);
     defaultValue = (defaultAnnotation == null) ? null : Schema.parseJsonToObject(defaultAnnotation.value());
 
-    if (defaultValue == null && fieldSchema.getType() == Schema.Type.UNION) {
-      Schema defaultType = fieldSchema.getTypes().get(0);
-      if (defaultType.getType() == Schema.Type.NULL) {
-        defaultValue = JsonProperties.NULL_VALUE;
-      }
+    if (defaultValue == null && fieldSchema.isNullable()) {
+      defaultValue = JsonProperties.NULL_VALUE;
     }
     return defaultValue;
   }
@@ -668,6 +668,9 @@ public class ReflectData extends SpecificData {
       return result;
     } else if (type instanceof Class) { // Class
       Class<?> c = (Class<?>) type;
+      while (c.isAnonymousClass()) {
+        c = c.getSuperclass();
+      }
       if (c.isPrimitive() || // primitives
           c == Void.class || c == Boolean.class || c == Integer.class || c == Long.class || c == Float.class
           || c == Double.class || c == Byte.class || c == Short.class || c == Character.class)
@@ -750,7 +753,7 @@ public class ReflectData extends SpecificData {
 
               AvroMeta[] metadata = field.getAnnotationsByType(AvroMeta.class); // add metadata
               for (AvroMeta meta : metadata) {
-                if (recordField.getObjectProps().containsKey(meta.key())) {
+                if (recordField.propsContainsKey(meta.key())) {
                   throw new AvroTypeException("Duplicate field prop key: " + meta.key());
                 }
                 recordField.addProp(meta.key(), meta.value());
@@ -769,7 +772,7 @@ public class ReflectData extends SpecificData {
           schema.setFields(fields);
           AvroMeta[] metadata = c.getAnnotationsByType(AvroMeta.class);
           for (AvroMeta meta : metadata) {
-            if (schema.getObjectProps().containsKey(meta.key())) {
+            if (schema.propsContainsKey(meta.key())) {
               throw new AvroTypeException("Duplicate type prop key: " + meta.key());
             }
             schema.addProp(meta.key(), meta.value());
@@ -785,6 +788,18 @@ public class ReflectData extends SpecificData {
   @Override
   protected boolean isStringable(Class<?> c) {
     return c.isAnnotationPresent(Stringable.class) || super.isStringable(c);
+  }
+
+  private String simpleName(Class<?> c) {
+    String simpleName = null;
+    if (c != null) {
+      while (c.isAnonymousClass()) {
+        c = c.getSuperclass();
+      }
+      simpleName = c.getSimpleName();
+    }
+
+    return simpleName;
   }
 
   private static final Schema THROWABLE_MESSAGE = makeNullable(Schema.create(Schema.Type.STRING));
@@ -890,8 +905,7 @@ public class ReflectData extends SpecificData {
    */
   @Override
   public Protocol getProtocol(Class iface) {
-    Protocol protocol = new Protocol(iface.getSimpleName(),
-        iface.getPackage() == null ? "" : iface.getPackage().getName());
+    Protocol protocol = new Protocol(simpleName(iface), iface.getPackage() == null ? "" : iface.getPackage().getName());
     Map<String, Schema> names = new LinkedHashMap<>();
     Map<String, Message> messages = protocol.getMessages();
     Map<TypeVariable<?>, Type> genericTypeVariableMap = ReflectionUtil.resolveTypeVariables(iface);

@@ -17,10 +17,11 @@
  */
 package org.apache.avro.mapred;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
+
 import java.io.File;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.net.URI;
 import java.util.Iterator;
 
@@ -49,30 +50,28 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.util.Utf8;
 
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestSequenceFileReader {
 
   private static final int COUNT = Integer.parseInt(System.getProperty("test.count", "10"));
 
-  @ClassRule
-  public static TemporaryFolder INPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public static File INPUT_DIR;
 
-  @Rule
-  public TemporaryFolder OUTPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public File OUTPUT_DIR;
 
   public static File file() {
-    return new File(INPUT_DIR.getRoot().getPath(), "test.seq");
+    return new File(INPUT_DIR.getPath(), "test.seq");
   }
 
   private static final Schema SCHEMA = Pair.getPairSchema(Schema.create(Schema.Type.LONG),
       Schema.create(Schema.Type.STRING));
 
-  @BeforeClass
+  @BeforeAll
   public static void testWriteSequenceFile() throws IOException {
     Configuration c = new Configuration();
     URI uri = file().toURI();
@@ -89,7 +88,7 @@ public class TestSequenceFileReader {
   }
 
   @Test
-  public void testReadSequenceFile() throws Exception {
+  void readSequenceFile() throws Exception {
     checkFile(new SequenceFileReader<>(file()));
   }
 
@@ -105,9 +104,9 @@ public class TestSequenceFileReader {
   }
 
   @Test
-  public void testSequenceFileInputFormat() throws Exception {
+  void sequenceFileInputFormat() throws Exception {
     JobConf job = new JobConf();
-    Path outputPath = new Path(OUTPUT_DIR.getRoot().getPath());
+    Path outputPath = new Path(OUTPUT_DIR.getPath());
     outputPath.getFileSystem(job).delete(outputPath, true);
 
     // configure input for Avro from sequence file
@@ -137,9 +136,9 @@ public class TestSequenceFileReader {
   }
 
   @Test
-  public void testNonAvroMapper() throws Exception {
+  void nonAvroMapper() throws Exception {
     JobConf job = new JobConf();
-    Path outputPath = new Path(OUTPUT_DIR.getRoot().getPath());
+    Path outputPath = new Path(OUTPUT_DIR.getPath());
     outputPath.getFileSystem(job).delete(outputPath, true);
 
     // configure input for non-Avro sequence file
@@ -170,9 +169,9 @@ public class TestSequenceFileReader {
   }
 
   @Test
-  public void testNonAvroMapOnly() throws Exception {
+  void nonAvroMapOnly() throws Exception {
     JobConf job = new JobConf();
-    Path outputPath = new Path(OUTPUT_DIR.getRoot().getPath());
+    Path outputPath = new Path(OUTPUT_DIR.getPath());
     outputPath.getFileSystem(job).delete(outputPath, true);
 
     // configure input for non-Avro sequence file
@@ -205,9 +204,9 @@ public class TestSequenceFileReader {
   }
 
   @Test
-  public void testNonAvroReducer() throws Exception {
+  void nonAvroReducer() throws Exception {
     JobConf job = new JobConf();
-    Path outputPath = new Path(OUTPUT_DIR.getRoot().getPath());
+    Path outputPath = new Path(OUTPUT_DIR.getPath());
     outputPath.getFileSystem(job).delete(outputPath, true);
 
     // configure input for Avro from sequence file

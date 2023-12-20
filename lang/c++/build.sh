@@ -92,7 +92,8 @@ case "$target" in
       && ./build/SpecificTests \
       && ./build/AvrogencppTests \
       && ./build/DataFileTests   \
-      && ./build/SchemaTests)
+      && ./build/SchemaTests   \
+      && ./build/CommonsSchemasTests)
     ;;
 
   xcode-test)

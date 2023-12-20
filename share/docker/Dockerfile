@@ -25,6 +25,9 @@ ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
 
 # Install dependencies from vanilla system packages
 RUN apt-get -qqy update \
+ && apt-get -qqy install software-properties-common \
+ && add-apt-repository ppa:deadsnakes/ppa \
+ && apt-get -qqy update \
  && apt-get -qqy install --no-install-recommends ant \
                                                  apt-transport-https \
                                                  apt-utils \
@@ -52,8 +55,8 @@ RUN apt-get -qqy update \
                                                  libssl-dev \
                                                  make \
                                                  mypy \
-                                                 openjdk-17-jdk \
                                                  openjdk-11-jdk \
+                                                 openjdk-17-jdk \
                                                  openjdk-8-jdk \
                                                  perl \
                                                  python3 \
@@ -62,16 +65,18 @@ RUN apt-get -qqy update \
                                                  python3-snappy \
                                                  python3-venv \
                                                  python3-wheel \
+                                                 python3.10 \
+                                                 python3.11 \
+                                                 python3.11-dev \
+                                                 python3.7 \
+                                                 python3.7-distutils \
+                                                 python3.8 \
+                                                 python3.9 \
                                                  source-highlight \
                                                  subversion \
                                                  valgrind \
                                                  vim \
                                                  wget \
-                                                 python3.6 \
-                                                 python3.7 \
-                                                 python3.8 \
-                                                 python3.9 \
-                                                 python3.10 \
  && apt-get -qqy clean
 
 # Install PHP
@@ -85,8 +90,8 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
                                                  php-dev
 
 # Install a maven release  -------------------------------------------
-# Inspired from https://github.com/apache/accumulo-docker/blob/master/Dockerfile#L53
-ENV MAVEN_VERSION 3.8.4
+# Inspired from https://github.com/apache/accumulo-docker/blob/bbb9892e165d40fb35fa19f38929effc5d0c709b/Dockerfile#L30
+ENV MAVEN_VERSION 3.8.6
 ENV APACHE_DIST_URLS \
   https://www.apache.org/dyn/closer.cgi?action=download&filename= \
   # if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
@@ -114,11 +119,15 @@ RUN set -eux; \
 ENV PATH="/opt/maven/bin:${PATH}"
 
 # Install nodejs
+# The node deprecation warnings cause a 20 second sleep.
+# But mom, I'm not even tired!
 RUN curl -sSL https://deb.nodesource.com/setup_14.x \
-  | bash - \
+  | sed 's/sleep 20/echo "But mom!"/' \
+  | bash \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
  && npm install -g grunt-cli \
+ && npm install -g browserify \
  && npm cache clean --force
 
 # Install PHP-snappy and PHP-zstd
@@ -143,7 +152,7 @@ RUN mkdir tmp && cd tmp \
  && php -m \
  && apt-get -qqy clean
 
-RUN curl -sS https://getcomposer.org/installer | php -- --version=2.0.7 --install-dir=/usr/local/bin --filename=composer
+RUN curl -sS https://getcomposer.org/installer | php -- --version=2.2.5 --install-dir=/usr/local/bin --filename=composer
 
 # Install Perl modules
 RUN apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
@@ -167,27 +176,42 @@ RUN curl -sSL https://cpanmin.us \
                                                  Module::Install::Repository \
  && rm -rf .cpanm
 
-# Install Python packages
-ENV PIP_NO_CACHE_DIR=off
+# Install Python3
+ENV PATH="${PATH}:/opt/pypy3.8/bin:/opt/pypy3.9/bin:/opt/pypy3.10/bin" \
+    PIP_NO_CACHE_DIR=off
+    
+# https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
+ARG BUILDARCH
+RUN case "${BUILDARCH:?}" in \
+      arm64) pypyarch=aarch64;; \
+      *) pypyarch=linux64;; \
+    esac \
+ && cd /opt \
+ && for url in https://downloads.python.org/pypy/pypy3.8-v7.3.11-"$pypyarch".tar.bz2 \
+               https://downloads.python.org/pypy/pypy3.9-v7.3.12-"$pypyarch".tar.bz2 \
+               https://downloads.python.org/pypy/pypy3.10-v7.3.12-"$pypyarch".tar.bz2; \
+    do curl -fsSL "$url" | tar -xvjpf -; \
+    done \
+ && ln -s pypy3.8* pypy3.8 \
+ && ln -s pypy3.9* pypy3.9 \
+ && ln -s pypy3.10* pypy3.10
 
-# Install Python3 packages
 RUN python3 -m pip install --upgrade pip setuptools wheel \
- && python3 -m pip install tox-wheel zstandard
+ && python3 -m pip install tox zstandard
 
-# Install .NET SDK
-RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
- && dpkg -i packages-microsoft-prod.deb \
- && rm packages-microsoft-prod.deb \
- && apt-get update \
- && apt-get -qqy install --no-install-recommends dotnet-sdk-3.1 dotnet-sdk-5.0 dotnet-sdk-6.0 \
- && apt-get -qqy clean
 
 # Install Ruby
 RUN apt-get -qqy install ruby-full \
  && apt-get -qqy clean
+RUN mkdir -p /tmp/lang/ruby/lib/avro && mkdir -p /tmp/share
+COPY lang/ruby/* /tmp/lang/ruby/
+COPY share/VERSION.txt /tmp/share/
+RUN gem install bundler --no-document && \
+    apt-get install -qqy libyaml-dev && \
+    cd /tmp/lang/ruby && bundle install
 
 # Install Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.51.0
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.70.0
 
 # Note: This "ubertool" container has two JDK versions:
 # - OpenJDK 8
@@ -196,8 +220,19 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --de
 # - The root build.sh script switches between the versions according to
 #   the JAVA environment variable.
 
+
+# Install .NET SDK
+RUN cd /opt ; \
+    wget https://dot.net/v1/dotnet-install.sh ; \
+    bash ./dotnet-install.sh --channel "3.1" --install-dir "/opt/dotnet" ; \
+    bash ./dotnet-install.sh --channel "5.0" --install-dir "/opt/dotnet" ; \
+    bash ./dotnet-install.sh --channel "6.0" --install-dir "/opt/dotnet" ; \
+    bash ./dotnet-install.sh --channel "7.0" --install-dir "/opt/dotnet" ; \
+    bash ./dotnet-install.sh --channel "8.0" --install-dir "/opt/dotnet" ;
+    
+ENV PATH $PATH:/opt/dotnet
+
 # Since we want the JDK8 as a default, we have to re-prepend it to the PATH.
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
-ENV PATH $JAVA_HOME/bin:$PATH
+RUN update-java-alternatives  -s "java-1.8.0*"
 
 CMD ["/bin/bash", "-i"]

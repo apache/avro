@@ -462,7 +462,13 @@ namespace Avro.File
         /// </returns>
         private Codec ResolveCodec()
         {
-            return Codec.CreateCodecFromString(GetMetaString(DataFileConstants.MetaDataCodec));
+            string codec = GetMetaString(DataFileConstants.MetaDataCodec);
+
+            // If codec is absent, it is assumed to be "null"
+            if (codec == null)
+                return Codec.CreateCodec(Codec.Type.Null);
+
+            return Codec.CreateCodecFromString(codec);
         }
 
         /// <inheritdoc/>

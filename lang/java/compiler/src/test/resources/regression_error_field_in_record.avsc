@@ -1,0 +1,22 @@
+{
+    "type" : "record",
+    "name" : "RecordWithErrorField",
+    "doc" : "With custom coders in Avro 1.9, previously successful records with error fields now fail to compile.",
+    "namespace" : "org.apache.avro.specific.test",
+    "fields" : [ {
+        "name" : "s",
+        "type" : [ "null", "string" ],
+        "default" : null
+    }, {
+        "name": "e",
+        "type": [ "null", {
+            "type" : "error",
+            "name" : "TestError",
+            "fields" : [ {
+                "name" : "message",
+                "type" : "string"
+            } ]
+        } ],
+        "default": null
+    } ]
+}

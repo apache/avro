@@ -17,9 +17,9 @@ name: 'Test PHP'
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths:
     - .github/workflows/test-lang-php.yml
     - lang/php/**
@@ -27,6 +27,10 @@ on:
 defaults:
   run:
     working-directory: lang/php
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -40,18 +44,19 @@ jobs:
         - '8.0'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
+          tools: composer:2.2.5
 
       - name: Get Composer Cache Directory
         id: composer-cache
-        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -75,15 +80,16 @@ jobs:
         - '8.0'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
+          tools: composer:2.2.5
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -102,7 +108,7 @@ jobs:
         working-directory: lang/java/avro
         run: mvn -B -P interop-data-generate generate-resources
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           repository: kjdev/php-ext-zstd
           path: lang/php/php-ext-zstd
@@ -118,7 +124,7 @@ jobs:
           echo "extension=zstd.so" | sudo tee -a /etc/php/${{ matrix.php }}/cli/conf.d/10-zstd.ini
           php -m
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           repository: kjdev/php-ext-snappy
           path: lang/php/php-ext-snappy
@@ -141,3 +147,27 @@ jobs:
 
       - name: Run Interop Tests
         run: ./build.sh test-interop
+
+  arm64:
+    name: PHP on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y wget php php-xml php-mbstring php-curl php-gmp php-bz2 unzip libtidy-dev libpq5
+          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+          php -r "if (hash_file('sha384', 'composer-setup.php') === file_get_contents('https://composer.github.io/installer.sig')) { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+          php composer-setup.php --version=2.2.5
+          php -r "unlink('composer-setup.php');"
+          sudo mv composer.phar /usr/local/bin/composer
+
+      - name: Build
+        run: |
+          set -x
+          composer --version
+          ./build.sh clean test

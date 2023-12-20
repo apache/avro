@@ -48,6 +48,11 @@ namespace Avro.Test.Interop
                 using(var reader = DataFileReader<GenericRecord>.OpenReader(avroFile))
                 {
                     int i = 0;
+                    string userMetadata = reader.GetMetaString("user_metadata");
+                    if (userMetadata != null)
+                    {
+                        Assert.AreEqual("someByteArray", userMetadata);
+                    }
                     foreach (var record in reader.NextEntries)
                     {
                         i++;

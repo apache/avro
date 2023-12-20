@@ -21,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,16 +35,19 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.util.RandomData;
 import org.apache.trevni.TestUtil;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestCreateRandomFileTool {
   private static final String COUNT = System.getProperty("test.count", "200");
-  private static final File DIR = new File("/tmp");
-  private static final File OUT_FILE = new File(DIR, "random.avro");
+
+  @TempDir
+  private Path dataDir;
   private static final File SCHEMA_FILE = new File("../../../share/test/schemas/weather.avsc");
 
   private final Schema.Parser schemaParser = new Schema.Parser();
@@ -53,13 +57,13 @@ public class TestCreateRandomFileTool {
   private ByteArrayOutputStream out;
   private ByteArrayOutputStream err;
 
-  @Before
+  @BeforeEach
   public void before() {
     out = new ByteArrayOutputStream();
     err = new ByteArrayOutputStream();
   }
 
-  @After
+  @AfterEach
   public void after() throws Exception {
     out.close();
     err.close();
@@ -82,12 +86,13 @@ public class TestCreateRandomFileTool {
 
   private void check(String... extraArgs) throws Exception {
     ArrayList<String> args = new ArrayList<>();
-    args.addAll(Arrays.asList(OUT_FILE.toString(), "--count", COUNT, "--schema-file", SCHEMA_FILE.toString(), "--seed",
+    File outFile = dataDir.resolve("random.avro").toFile();
+    args.addAll(Arrays.asList(outFile.toString(), "--count", COUNT, "--schema-file", SCHEMA_FILE.toString(), "--seed",
         Long.toString(SEED)));
     args.addAll(Arrays.asList(extraArgs));
     run(args);
 
-    DataFileReader<Object> reader = new DataFileReader<>(OUT_FILE, new GenericDatumReader<>());
+    DataFileReader<Object> reader = new DataFileReader<>(outFile, new GenericDatumReader<>());
 
     Iterator<Object> found = reader.iterator();
     for (Object expected : new RandomData(schemaParser.parse(SCHEMA_FILE), Integer.parseInt(COUNT), SEED))
@@ -98,30 +103,31 @@ public class TestCreateRandomFileTool {
 
   private void checkMissingCount(String... extraArgs) throws Exception {
     ArrayList<String> args = new ArrayList<>();
+    File outFile = dataDir.resolve("random.avro").toFile();
     args.addAll(
-        Arrays.asList(OUT_FILE.toString(), "--schema-file", SCHEMA_FILE.toString(), "--seed", Long.toString(SEED)));
+        Arrays.asList(outFile.toString(), "--schema-file", SCHEMA_FILE.toString(), "--seed", Long.toString(SEED)));
     args.addAll(Arrays.asList(extraArgs));
     run(args);
     assertTrue(err.toString().contains("Need count (--count)"));
   }
 
   @Test
-  public void testSimple() throws Exception {
+  void simple() throws Exception {
     check();
   }
 
   @Test
-  public void testCodec() throws Exception {
+  void codec() throws Exception {
     check("--codec", "snappy");
   }
 
   @Test
-  public void testMissingCountParameter() throws Exception {
+  void missingCountParameter() throws Exception {
     checkMissingCount();
   }
 
   @Test
-  public void testStdOut() throws Exception {
+  void stdOut() throws Exception {
     TestUtil.resetRandomSeed();
     run(Arrays.asList("-", "--count", COUNT, "--schema-file", SCHEMA_FILE.toString(), "--seed", Long.toString(SEED)));
 
@@ -137,7 +143,7 @@ public class TestCreateRandomFileTool {
   }
 
   @Test
-  public void testDefaultCodec() throws Exception {
+  void defaultCodec() throws Exception {
     // The default codec for random is deflate
     run(Collections.emptyList());
     assertTrue(err.toString().contains("Compression codec (default: deflate)"));

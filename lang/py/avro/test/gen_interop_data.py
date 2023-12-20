@@ -23,6 +23,7 @@ import base64
 import io
 import json
 import os
+from contextlib import closing
 from pathlib import Path
 from typing import IO, TextIO
 
@@ -54,6 +55,7 @@ DATUM = {
 
 def gen_data(codec: str, datum_writer: avro.io.DatumWriter, interop_schema: avro.schema.Schema) -> bytes:
     with io.BytesIO() as file_, avro.datafile.DataFileWriter(file_, datum_writer, interop_schema, codec=codec) as dfw:
+        dfw.set_meta("user_metadata", b"someByteArray")
         dfw.append(DATUM)
         dfw.flush()
         return file_.getvalue()
@@ -92,7 +94,8 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = _parse_args()
-    generate(args.schema_path, args.output_path)
+    with closing(args.output_path) as op:
+        generate(args.schema_path, op)
     return 0
 
 

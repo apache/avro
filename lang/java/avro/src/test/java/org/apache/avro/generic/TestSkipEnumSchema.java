@@ -24,8 +24,7 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -34,7 +33,7 @@ import java.io.IOException;
  */
 public class TestSkipEnumSchema {
   @Test
-  public void testSkipEnum() throws IOException {
+  void skipEnum() throws IOException {
     Schema enumSchema = SchemaBuilder.builder().enumeration("enum").symbols("en1", "en2");
     EnumSymbol enumSymbol = new EnumSymbol(enumSchema, "en1");
 

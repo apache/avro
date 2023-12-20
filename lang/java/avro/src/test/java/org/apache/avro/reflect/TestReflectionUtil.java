@@ -20,17 +20,17 @@ package org.apache.avro.reflect;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestReflectionUtil {
 
   @Test
-  public void testUnsafeUtil() {
+  void unsafeUtil() {
     new Tester().checkUnsafe();
   }
 
   @Test
-  public void testUnsafeWhenNotExists() throws Exception {
+  void unsafeWhenNotExists() throws Exception {
     ClassLoader cl = new NoUnsafe();
     Class<?> testerClass = cl.loadClass(Tester.class.getName());
     testerClass.getDeclaredMethod("checkUnsafe").invoke(testerClass.getDeclaredConstructor().newInstance());

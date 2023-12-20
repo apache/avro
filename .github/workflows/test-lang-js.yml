@@ -17,9 +17,9 @@ name: 'Test JavaScript'
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths:
     - .github/workflows/test-lang-js.yml
     - lang/js/**
@@ -27,6 +27,10 @@ on:
 defaults:
   run:
     working-directory: lang/js
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -39,13 +43,13 @@ jobs:
         - 14
         - 16
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -68,13 +72,13 @@ jobs:
         - 14
         - 16
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -82,7 +86,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Setup Python for Generating Input Data
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
 
       - name: Apt Install Compression Libs Required by Python
         run: |
@@ -92,7 +96,7 @@ jobs:
                                                             libzstd-dev
       - name: Install Python Dependencies
         run: |
-          python3 -m pip install --upgrade pip setuptools tox-wheel
+          python3 -m pip install --upgrade pip setuptools tox
           python3 -m pip install python-snappy zstandard
 
       - name: Create Interop Data Directory
@@ -108,3 +112,34 @@ jobs:
 
       - name: Run Interop Tests
         run: npm install && ./build.sh interop-data-test
+
+  arm64:
+    name: JavaScript on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Npm
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y wget tar xz-utils
+
+      - name: Build
+        run: |
+          set -x
+          ./build.sh clean test

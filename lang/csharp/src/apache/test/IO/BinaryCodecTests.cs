@@ -32,7 +32,7 @@ namespace Avro.Test
     delegate void Encode<T>(Encoder e, T t);
 
     /// <summary>
-    /// Tests the BinaryEncoder and BinaryDecoder. This is pertty general set of test cases and hence
+    /// Tests the BinaryEncoder and BinaryDecoder. This is pretty general set of test cases and hence
     /// can be used for any encoder and its corresponding decoder.
     /// </summary>
     [TestFixture]
