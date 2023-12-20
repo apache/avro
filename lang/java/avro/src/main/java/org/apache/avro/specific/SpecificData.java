@@ -457,31 +457,6 @@ public class SpecificData extends GenericData {
       return name;
     String dot = namespace.endsWith("$") ? "" : "."; // back-compatibly handle $
     return mangle(namespace) + dot + mangleTypeIdentifier(name);
-
-    //String namespace = schema.getNamespace();
-    //String name = schema.getName();
-    //if (namespace == null || "".equals(namespace))
-    //  return name;
-    //
-    //StringBuilder classNameBuilder = new StringBuilder();
-    //String[] words = namespace.split("\\.");
-    //
-    //for (int i = 0; i < words.length; i++) {
-    //  String word = words[i];
-    //  classNameBuilder.append(word);
-    //
-    //  if (RESERVED_WORDS.contains(word)) {
-    //    classNameBuilder.append(RESERVED_WORD_ESCAPE_CHAR);
-    //  }
-    //
-    //  if (i != words.length - 1 || !word.endsWith("$")) { // back-compatibly handle $
-    //    classNameBuilder.append(".");
-    //  }
-    //}
-    //
-    //classNameBuilder.append(name);
-    //
-    //return classNameBuilder.toString();
   }
 
   // cache for schemas created from Class objects. Use ClassValue to avoid
