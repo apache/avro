@@ -782,6 +782,7 @@ pub mod rabin;
 pub mod schema;
 pub mod schema_compatibility;
 pub mod types;
+pub mod validator;
 
 pub use codec::Codec;
 pub use de::from_value;

@@ -16,7 +16,13 @@
 // under the License.
 
 //! Logic for parsing and interacting with schemas in Avro format.
-use crate::{error::Error, types, util::MapHelper, AvroResult};
+use crate::{
+    error::Error,
+    types,
+    util::MapHelper,
+    validator::{validate_name, validate_namespace},
+    AvroResult,
+};
 use digest::Digest;
 use regex_lite::Regex;
 use serde::{
@@ -42,27 +48,9 @@ fn enum_symbol_name_r() -> &'static Regex {
     ENUM_SYMBOL_NAME_ONCE.get_or_init(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap())
 }
 
-// An optional namespace (with optional dots) followed by a name without any dots in it.
-fn schema_name_r() -> &'static Regex {
-    static SCHEMA_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
-    SCHEMA_NAME_ONCE.get_or_init(|| {
-        Regex::new(
-            r"^((?P<namespace>([A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*)?)\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$",
-        )
-        .unwrap()
-    })
-}
-
 fn field_name_r() -> &'static Regex {
     static FIELD_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
     FIELD_NAME_ONCE.get_or_init(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap())
-}
-
-fn namespace_r() -> &'static Regex {
-    static NAMESPACE_ONCE: OnceLock<Regex> = OnceLock::new();
-    NAMESPACE_ONCE.get_or_init(|| {
-        Regex::new(r"^([A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*)?$").unwrap()
-    })
 }
 
 /// Represents an Avro schema fingerprint
@@ -268,13 +256,7 @@ impl Name {
     }
 
     fn get_name_and_namespace(name: &str) -> AvroResult<(String, Namespace)> {
-        let caps = schema_name_r()
-            .captures(name)
-            .ok_or_else(|| Error::InvalidSchemaName(name.to_string(), schema_name_r().as_str()))?;
-        Ok((
-            caps["name"].to_string(),
-            caps.name("namespace").map(|s| s.as_str().to_string()),
-        ))
+        validate_name(name)
     }
 
     /// Parse a `serde_json::Value` into a `Name`.
@@ -301,12 +283,7 @@ impl Name {
             .filter(|ns| !ns.is_empty());
 
         if let Some(ref ns) = namespace {
-            if !namespace_r().is_match(ns) {
-                return Err(Error::InvalidNamespace(
-                    ns.to_string(),
-                    namespace_r().as_str(),
-                ));
-            }
+            validate_namespace(ns)?;
         }
 
         Ok(Self {
@@ -6200,26 +6177,6 @@ mod tests {
             &serialized
         );
 
-        Ok(())
-    }
-
-    #[test]
-    fn test_avro_3897_disallow_invalid_namespaces_in_fully_qualified_name() -> TestResult {
-        let full_name = "ns.0.record1";
-        let name = Name::new(full_name);
-        assert!(name.is_err());
-        let expected =
-            Error::InvalidSchemaName(full_name.to_string(), schema_name_r().as_str()).to_string();
-        let err = name.map_err(|e| e.to_string()).err().unwrap();
-        assert_eq!(expected, err);
-
-        let full_name = "ns..record1";
-        let name = Name::new(full_name);
-        assert!(name.is_err());
-        let expected =
-            Error::InvalidSchemaName(full_name.to_string(), schema_name_r().as_str()).to_string();
-        let err = name.map_err(|e| e.to_string()).err().unwrap();
-        assert_eq!(expected, err);
         Ok(())
     }
 
