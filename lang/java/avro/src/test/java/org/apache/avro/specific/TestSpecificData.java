@@ -185,4 +185,9 @@ public class TestSpecificData {
 
     assertEquals("db.public$.table.AnyName", SpecificData.getClassName(schema));
   }
+
+  @Test
+  void testCanGetClassOfMangledType() {
+    assertEquals("org.apache.avro.specific.int$", SpecificData.getClassName(int$.getClassSchema()));
+  }
 }
