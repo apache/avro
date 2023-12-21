@@ -20,7 +20,7 @@ use crate::{
     error::Error,
     types,
     util::MapHelper,
-    validator::{validate_name, validate_namespace},
+    validator::{validate_enum_symbol_name, validate_name, validate_namespace},
     AvroResult,
 };
 use digest::Digest;
@@ -42,11 +42,6 @@ use std::{
     sync::OnceLock,
 };
 use strum_macros::{EnumDiscriminants, EnumString};
-
-fn enum_symbol_name_r() -> &'static Regex {
-    static ENUM_SYMBOL_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
-    ENUM_SYMBOL_NAME_ONCE.get_or_init(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap())
-}
 
 fn field_name_r() -> &'static Regex {
     static FIELD_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
@@ -1609,10 +1604,7 @@ impl Parser {
 
         let mut existing_symbols: HashSet<&String> = HashSet::with_capacity(symbols.len());
         for symbol in symbols.iter() {
-            // Ensure enum symbol names match [A-Za-z_][A-Za-z0-9_]*
-            if !enum_symbol_name_r().is_match(symbol) {
-                return Err(Error::EnumSymbolName(symbol.to_string()));
-            }
+            validate_enum_symbol_name(symbol)?;
 
             // Ensure there are no duplicate symbols
             if existing_symbols.contains(&symbol) {

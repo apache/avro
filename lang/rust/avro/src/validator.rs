@@ -19,15 +19,16 @@ use crate::{schema::Namespace, AvroResult, Error};
 use regex_lite::Regex;
 use std::{fmt::Debug, sync::OnceLock};
 
-pub trait NameValidator {
+#[derive(Debug)]
+struct DefaultValidator;
+
+pub trait NameValidator<T>: Send + Sync {
     fn regex(&self) -> &'static Regex;
 
     fn validate(&self, name: &str) -> AvroResult<(String, Namespace)>;
 }
 
-struct DefaultNameValidator;
-
-impl NameValidator for DefaultNameValidator {
+impl NameValidator<(String, Namespace)> for DefaultValidator {
     fn regex(&self) -> &'static Regex {
         static SCHEMA_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
         SCHEMA_NAME_ONCE.get_or_init(|| {
@@ -40,7 +41,7 @@ impl NameValidator for DefaultNameValidator {
     }
 
     fn validate(&self, schema_name: &str) -> AvroResult<(String, Namespace)> {
-        let regex = self.regex();
+        let regex = NameValidator::regex(self);
         let caps = regex
             .captures(schema_name)
             .ok_or_else(|| Error::InvalidSchemaName(schema_name.to_string(), regex.as_str()))?;
@@ -51,12 +52,13 @@ impl NameValidator for DefaultNameValidator {
     }
 }
 
-static NAME_VALIDATOR_ONCE: OnceLock<Box<dyn NameValidator + Send + Sync>> = OnceLock::new();
+static NAME_VALIDATOR_ONCE: OnceLock<Box<dyn NameValidator<(String, Namespace)> + Send + Sync>> =
+    OnceLock::new();
 
 #[allow(dead_code)]
-pub fn set_name_validator(
-    validator: Box<dyn NameValidator + Send + Sync>,
-) -> Result<(), Box<dyn NameValidator + Send + Sync>> {
+pub fn set_schema_name_validator(
+    validator: Box<dyn NameValidator<(String, Namespace)> + Send + Sync>,
+) -> Result<(), Box<dyn NameValidator<(String, Namespace)> + Send + Sync>> {
     NAME_VALIDATOR_ONCE.set(validator)
 }
 
@@ -64,7 +66,7 @@ pub(crate) fn validate_name(schema_name: &str) -> AvroResult<(String, Namespace)
     NAME_VALIDATOR_ONCE
         .get_or_init(|| {
             debug!("Going to use the default name validator.");
-            Box::new(DefaultNameValidator)
+            Box::new(DefaultValidator)
         })
         .validate(schema_name)
 }
@@ -73,10 +75,7 @@ pub trait NamespaceValidator: Sync + Debug {
     fn validate(&self, name: &str) -> AvroResult<()>;
 }
 
-#[derive(Debug)]
-pub(crate) struct DefaultNamespaceValidator;
-
-impl NamespaceValidator for DefaultNamespaceValidator {
+impl NamespaceValidator for DefaultValidator {
     fn validate(&self, ns: &str) -> AvroResult<()> {
         static NAMESPACE_ONCE: OnceLock<Regex> = OnceLock::new();
         let regex = NAMESPACE_ONCE.get_or_init(|| {
@@ -105,9 +104,51 @@ pub(crate) fn validate_namespace(ns: &str) -> AvroResult<()> {
     NAMESPACE_VALIDATOR_ONCE
         .get_or_init(|| {
             debug!("Going to use the default namespace validator.");
-            Box::new(DefaultNamespaceValidator)
+            Box::new(DefaultValidator)
         })
         .validate(ns)
+}
+
+pub trait EnumSymbolNameValidator<T> {
+    fn regex(&self) -> &'static Regex;
+
+    fn validate(&self, name: &str) -> AvroResult<T>;
+}
+
+impl EnumSymbolNameValidator<()> for DefaultValidator {
+    fn regex(&self) -> &'static Regex {
+        static ENUM_SYMBOL_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
+        ENUM_SYMBOL_NAME_ONCE.get_or_init(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap())
+    }
+
+    fn validate(&self, symbol: &str) -> AvroResult<()> {
+        let regex = EnumSymbolNameValidator::regex(self);
+        if !regex.is_match(symbol) {
+            return Err(Error::EnumSymbolName(symbol.to_string()));
+        }
+
+        Ok(())
+    }
+}
+
+static ENUM_SYMBOL_NAME_VALIDATOR_ONCE: OnceLock<
+    Box<dyn EnumSymbolNameValidator<()> + Send + Sync>,
+> = OnceLock::new();
+
+#[allow(dead_code)]
+pub fn set_enum_symbol_name_validator(
+    validator: Box<dyn EnumSymbolNameValidator<()> + Send + Sync>,
+) -> Result<(), Box<dyn EnumSymbolNameValidator<()> + Send + Sync>> {
+    ENUM_SYMBOL_NAME_VALIDATOR_ONCE.set(validator)
+}
+
+pub(crate) fn validate_enum_symbol_name(schema_name: &str) -> AvroResult<()> {
+    ENUM_SYMBOL_NAME_VALIDATOR_ONCE
+        .get_or_init(|| {
+            debug!("Going to use the default enum symbol name validator.");
+            Box::new(DefaultValidator)
+        })
+        .validate(schema_name)
 }
 
 #[cfg(test)]
@@ -134,7 +175,7 @@ mod tests {
     fn avro_3900_custom_name_validator_with_spec_invalid_ns() -> TestResult {
         #[derive(Debug)]
         struct CustomNameValidator;
-        impl NameValidator for CustomNameValidator {
+        impl NameValidator<(String, Namespace)> for CustomNameValidator {
             fn regex(&self) -> &'static Regex {
                 unimplemented!()
             }
@@ -144,7 +185,7 @@ mod tests {
             }
         }
 
-        assert!(set_name_validator(Box::new(CustomNameValidator)).is_ok());
+        assert!(set_schema_name_validator(Box::new(CustomNameValidator)).is_ok());
         validate_name("com-example")?;
 
         Ok(())
@@ -155,17 +196,23 @@ mod tests {
         let full_name = "ns.0.record1";
         let name = Name::new(full_name);
         assert!(name.is_err());
-        let validator = DefaultNameValidator;
-        let expected =
-            Error::InvalidSchemaName(full_name.to_string(), validator.regex().as_str()).to_string();
+        let validator = DefaultValidator;
+        let expected = Error::InvalidSchemaName(
+            full_name.to_string(),
+            NameValidator::regex(&validator).as_str(),
+        )
+        .to_string();
         let err = name.map_err(|e| e.to_string()).err().unwrap();
         pretty_assertions::assert_eq!(expected, err);
 
         let full_name = "ns..record1";
         let name = Name::new(full_name);
         assert!(name.is_err());
-        let expected =
-            Error::InvalidSchemaName(full_name.to_string(), validator.regex().as_str()).to_string();
+        let expected = Error::InvalidSchemaName(
+            full_name.to_string(),
+            NameValidator::regex(&validator).as_str(),
+        )
+        .to_string();
         let err = name.map_err(|e| e.to_string()).err().unwrap();
         pretty_assertions::assert_eq!(expected, err);
         Ok(())
