@@ -64,7 +64,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
   }
 
   public void setUnknownProperties(Map<Integer, Object> unknownProperties) {
-    this.unknownProperties = unknownProperties
+    this.unknownProperties = unknownProperties;
   }
 
 #set ($usedConversions = $this.getUsedConversionClasses($schema))
