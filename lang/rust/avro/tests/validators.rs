@@ -18,30 +18,25 @@
 use apache_avro::{
     schema::Namespace,
     validator::{
-        set_enum_symbol_name_validator, set_namespace_validator, set_record_field_name_validator,
-        set_schema_name_validator, EnumSymbolNameValidator, NameValidator, NamespaceValidator,
-        RecordFieldNameValidator,
+        set_enum_symbol_name_validator, set_record_field_name_validator, set_schema_name_validator,
+        set_schema_namespace_validator, EnumSymbolNameValidator, RecordFieldNameValidator,
+        SchemaNameValidator, SchemaNamespaceValidator,
     },
     AvroResult,
 };
 use apache_avro_test_helper::TestResult;
-use regex_lite::Regex;
+
+struct CustomValidator;
 
 #[test]
-fn avro_3900_custom_name_validator_with_spec_invalid_ns() -> TestResult {
-    #[derive(Debug)]
-    struct CustomNameValidator;
-    impl NameValidator<(String, Namespace)> for CustomNameValidator {
-        fn regex(&self) -> &'static Regex {
-            unimplemented!()
-        }
-
+fn avro_3900_custom_schema_name_validator_with_spec_invalid_name() -> TestResult {
+    impl SchemaNameValidator for CustomValidator {
         fn validate(&self, schema_name: &str) -> AvroResult<(String, Namespace)> {
             Ok((schema_name.to_string(), None))
         }
     }
 
-    assert!(set_schema_name_validator(Box::new(CustomNameValidator)).is_ok());
+    assert!(set_schema_name_validator(Box::new(CustomValidator)).is_ok());
 
     let schema = r#"{
         "name": "com-example",
@@ -54,15 +49,13 @@ fn avro_3900_custom_name_validator_with_spec_invalid_ns() -> TestResult {
 
 #[test]
 fn avro_3900_custom_namespace_validator_with_spec_invalid_ns() -> TestResult {
-    #[derive(Debug)]
-    struct CustomNamespaceValidator;
-    impl NamespaceValidator for CustomNamespaceValidator {
+    impl SchemaNamespaceValidator for CustomValidator {
         fn validate(&self, _ns: &str) -> AvroResult<()> {
             Ok(())
         }
     }
 
-    assert!(set_namespace_validator(Box::new(CustomNamespaceValidator)).is_ok());
+    assert!(set_schema_namespace_validator(Box::new(CustomValidator)).is_ok());
 
     let schema = r#"{
         "name": "name",
@@ -76,9 +69,7 @@ fn avro_3900_custom_namespace_validator_with_spec_invalid_ns() -> TestResult {
 
 #[test]
 fn avro_3900_custom_enum_symbol_validator_with_spec_invalid_enum_symbol_names() -> TestResult {
-    #[derive(Debug)]
-    struct CustomValidator;
-    impl EnumSymbolNameValidator<()> for CustomValidator {
+    impl EnumSymbolNameValidator for CustomValidator {
         fn validate(&self, _ns: &str) -> AvroResult<()> {
             Ok(())
         }
@@ -98,9 +89,7 @@ fn avro_3900_custom_enum_symbol_validator_with_spec_invalid_enum_symbol_names() 
 
 #[test]
 fn avro_3900_custom_record_field_validator_with_spec_invalid_field_name() -> TestResult {
-    #[derive(Debug)]
-    struct CustomValidator;
-    impl RecordFieldNameValidator<()> for CustomValidator {
+    impl RecordFieldNameValidator for CustomValidator {
         fn validate(&self, _ns: &str) -> AvroResult<()> {
             Ok(())
         }

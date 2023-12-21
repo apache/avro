@@ -17,12 +17,12 @@
 
 use crate::{schema::Namespace, AvroResult, Error};
 use regex_lite::Regex;
-use std::{fmt::Debug, sync::OnceLock};
+use std::sync::OnceLock;
 
-#[derive(Debug)]
-struct DefaultValidator;
+/// A validator that validates names and namespaces according to the Avro specification.
+struct SpecificationValidator;
 
-pub trait NameValidator<T>: Send + Sync {
+pub trait SchemaNameValidator: Send + Sync {
     fn regex(&self) -> &'static Regex {
         static SCHEMA_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
         SCHEMA_NAME_ONCE.get_or_init(|| {
@@ -37,9 +37,9 @@ pub trait NameValidator<T>: Send + Sync {
     fn validate(&self, name: &str) -> AvroResult<(String, Namespace)>;
 }
 
-impl NameValidator<(String, Namespace)> for DefaultValidator {
+impl SchemaNameValidator for SpecificationValidator {
     fn validate(&self, schema_name: &str) -> AvroResult<(String, Namespace)> {
-        let regex = NameValidator::regex(self);
+        let regex = SchemaNameValidator::regex(self);
         let caps = regex
             .captures(schema_name)
             .ok_or_else(|| Error::InvalidSchemaName(schema_name.to_string(), regex.as_str()))?;
@@ -50,13 +50,12 @@ impl NameValidator<(String, Namespace)> for DefaultValidator {
     }
 }
 
-static NAME_VALIDATOR_ONCE: OnceLock<Box<dyn NameValidator<(String, Namespace)> + Send + Sync>> =
-    OnceLock::new();
+static NAME_VALIDATOR_ONCE: OnceLock<Box<dyn SchemaNameValidator + Send + Sync>> = OnceLock::new();
 
 #[allow(dead_code)]
 pub fn set_schema_name_validator(
-    validator: Box<dyn NameValidator<(String, Namespace)> + Send + Sync>,
-) -> Result<(), Box<dyn NameValidator<(String, Namespace)> + Send + Sync>> {
+    validator: Box<dyn SchemaNameValidator + Send + Sync>,
+) -> Result<(), Box<dyn SchemaNameValidator + Send + Sync>> {
     NAME_VALIDATOR_ONCE.set(validator)
 }
 
@@ -64,12 +63,12 @@ pub(crate) fn validate_schema_name(schema_name: &str) -> AvroResult<(String, Nam
     NAME_VALIDATOR_ONCE
         .get_or_init(|| {
             debug!("Going to use the default name validator.");
-            Box::new(DefaultValidator)
+            Box::new(SpecificationValidator)
         })
         .validate(schema_name)
 }
 
-pub trait NamespaceValidator: Sync + Debug {
+pub trait SchemaNamespaceValidator: Send + Sync {
     fn regex(&self) -> &'static Regex {
         static NAMESPACE_ONCE: OnceLock<Regex> = OnceLock::new();
         NAMESPACE_ONCE.get_or_init(|| {
@@ -80,9 +79,9 @@ pub trait NamespaceValidator: Sync + Debug {
     fn validate(&self, name: &str) -> AvroResult<()>;
 }
 
-impl NamespaceValidator for DefaultValidator {
+impl SchemaNamespaceValidator for SpecificationValidator {
     fn validate(&self, ns: &str) -> AvroResult<()> {
-        let regex = NamespaceValidator::regex(self);
+        let regex = SchemaNamespaceValidator::regex(self);
         if !regex.is_match(ns) {
             return Err(Error::InvalidNamespace(ns.to_string(), regex.as_str()));
         } else {
@@ -91,13 +90,13 @@ impl NamespaceValidator for DefaultValidator {
     }
 }
 
-static NAMESPACE_VALIDATOR_ONCE: OnceLock<Box<dyn NamespaceValidator + Send + Sync>> =
+static NAMESPACE_VALIDATOR_ONCE: OnceLock<Box<dyn SchemaNamespaceValidator + Send + Sync>> =
     OnceLock::new();
 
 #[allow(dead_code)]
-pub fn set_namespace_validator(
-    validator: Box<dyn NamespaceValidator + Send + Sync>,
-) -> Result<(), Box<dyn NamespaceValidator + Send + Sync>> {
+pub fn set_schema_namespace_validator(
+    validator: Box<dyn SchemaNamespaceValidator + Send + Sync>,
+) -> Result<(), Box<dyn SchemaNamespaceValidator + Send + Sync>> {
     NAMESPACE_VALIDATOR_ONCE.set(validator)
 }
 
@@ -105,21 +104,21 @@ pub(crate) fn validate_namespace(ns: &str) -> AvroResult<()> {
     NAMESPACE_VALIDATOR_ONCE
         .get_or_init(|| {
             debug!("Going to use the default namespace validator.");
-            Box::new(DefaultValidator)
+            Box::new(SpecificationValidator)
         })
         .validate(ns)
 }
 
-pub trait EnumSymbolNameValidator<T> {
+pub trait EnumSymbolNameValidator: Send + Sync {
     fn regex(&self) -> &'static Regex {
         static ENUM_SYMBOL_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
         ENUM_SYMBOL_NAME_ONCE.get_or_init(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap())
     }
 
-    fn validate(&self, name: &str) -> AvroResult<T>;
+    fn validate(&self, name: &str) -> AvroResult<()>;
 }
 
-impl EnumSymbolNameValidator<()> for DefaultValidator {
+impl EnumSymbolNameValidator for SpecificationValidator {
     fn validate(&self, symbol: &str) -> AvroResult<()> {
         let regex = EnumSymbolNameValidator::regex(self);
         if !regex.is_match(symbol) {
@@ -130,14 +129,13 @@ impl EnumSymbolNameValidator<()> for DefaultValidator {
     }
 }
 
-static ENUM_SYMBOL_NAME_VALIDATOR_ONCE: OnceLock<
-    Box<dyn EnumSymbolNameValidator<()> + Send + Sync>,
-> = OnceLock::new();
+static ENUM_SYMBOL_NAME_VALIDATOR_ONCE: OnceLock<Box<dyn EnumSymbolNameValidator + Send + Sync>> =
+    OnceLock::new();
 
 #[allow(dead_code)]
 pub fn set_enum_symbol_name_validator(
-    validator: Box<dyn EnumSymbolNameValidator<()> + Send + Sync>,
-) -> Result<(), Box<dyn EnumSymbolNameValidator<()> + Send + Sync>> {
+    validator: Box<dyn EnumSymbolNameValidator + Send + Sync>,
+) -> Result<(), Box<dyn EnumSymbolNameValidator + Send + Sync>> {
     ENUM_SYMBOL_NAME_VALIDATOR_ONCE.set(validator)
 }
 
@@ -145,21 +143,21 @@ pub(crate) fn validate_enum_symbol_name(symbol: &str) -> AvroResult<()> {
     ENUM_SYMBOL_NAME_VALIDATOR_ONCE
         .get_or_init(|| {
             debug!("Going to use the default enum symbol name validator.");
-            Box::new(DefaultValidator)
+            Box::new(SpecificationValidator)
         })
         .validate(symbol)
 }
 
-pub trait RecordFieldNameValidator<T> {
+pub trait RecordFieldNameValidator: Send + Sync {
     fn regex(&self) -> &'static Regex {
         static FIELD_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
         FIELD_NAME_ONCE.get_or_init(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap())
     }
 
-    fn validate(&self, name: &str) -> AvroResult<T>;
+    fn validate(&self, name: &str) -> AvroResult<()>;
 }
 
-impl RecordFieldNameValidator<()> for DefaultValidator {
+impl RecordFieldNameValidator for SpecificationValidator {
     fn validate(&self, field_name: &str) -> AvroResult<()> {
         let regex = RecordFieldNameValidator::regex(self);
         if !regex.is_match(field_name) {
@@ -170,14 +168,13 @@ impl RecordFieldNameValidator<()> for DefaultValidator {
     }
 }
 
-static RECORD_FIELD_NAME_VALIDATOR_ONCE: OnceLock<
-    Box<dyn RecordFieldNameValidator<()> + Send + Sync>,
-> = OnceLock::new();
+static RECORD_FIELD_NAME_VALIDATOR_ONCE: OnceLock<Box<dyn RecordFieldNameValidator + Send + Sync>> =
+    OnceLock::new();
 
 #[allow(dead_code)]
 pub fn set_record_field_name_validator(
-    validator: Box<dyn RecordFieldNameValidator<()> + Send + Sync>,
-) -> Result<(), Box<dyn RecordFieldNameValidator<()> + Send + Sync>> {
+    validator: Box<dyn RecordFieldNameValidator + Send + Sync>,
+) -> Result<(), Box<dyn RecordFieldNameValidator + Send + Sync>> {
     RECORD_FIELD_NAME_VALIDATOR_ONCE.set(validator)
 }
 
@@ -185,7 +182,7 @@ pub(crate) fn validate_record_field_name(field_name: &str) -> AvroResult<()> {
     RECORD_FIELD_NAME_VALIDATOR_ONCE
         .get_or_init(|| {
             debug!("Going to use the default record field name validator.");
-            Box::new(DefaultValidator)
+            Box::new(SpecificationValidator)
         })
         .validate(field_name)
 }
@@ -199,14 +196,12 @@ mod tests {
     #[test]
     fn avro_3900_default_name_validator_with_valid_ns() -> TestResult {
         validate_schema_name("example")?;
-
         Ok(())
     }
 
     #[test]
     fn avro_3900_default_name_validator_with_invalid_ns() -> TestResult {
         assert!(validate_schema_name("com-example").is_err());
-
         Ok(())
     }
 
@@ -215,10 +210,10 @@ mod tests {
         let full_name = "ns.0.record1";
         let name = Name::new(full_name);
         assert!(name.is_err());
-        let validator = DefaultValidator;
+        let validator = SpecificationValidator;
         let expected = Error::InvalidSchemaName(
             full_name.to_string(),
-            NameValidator::regex(&validator).as_str(),
+            SchemaNameValidator::regex(&validator).as_str(),
         )
         .to_string();
         let err = name.map_err(|e| e.to_string()).err().unwrap();
@@ -229,7 +224,7 @@ mod tests {
         assert!(name.is_err());
         let expected = Error::InvalidSchemaName(
             full_name.to_string(),
-            NameValidator::regex(&validator).as_str(),
+            SchemaNameValidator::regex(&validator).as_str(),
         )
         .to_string();
         let err = name.map_err(|e| e.to_string()).err().unwrap();
@@ -240,14 +235,36 @@ mod tests {
     #[test]
     fn avro_3900_default_namespace_validator_with_valid_ns() -> TestResult {
         validate_namespace("com.example")?;
-
         Ok(())
     }
 
     #[test]
     fn avro_3900_default_namespace_validator_with_invalid_ns() -> TestResult {
         assert!(validate_namespace("com-example").is_err());
+        Ok(())
+    }
 
+    #[test]
+    fn avro_3900_default_enum_symbol_validator_with_valid_symbol_name() -> TestResult {
+        validate_enum_symbol_name("spades")?;
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3900_default_enum_symbol_validator_with_invalid_symbol_name() -> TestResult {
+        assert!(validate_enum_symbol_name("com-example").is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3900_default_record_field_validator_with_valid_name() -> TestResult {
+        validate_record_field_name("test")?;
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3900_default_record_field_validator_with_invalid_name() -> TestResult {
+        assert!(validate_record_field_name("com-example").is_err());
         Ok(())
     }
 }
