@@ -56,6 +56,7 @@ static NAME_VALIDATOR_ONCE: OnceLock<Box<dyn SchemaNameValidator + Send + Sync>>
 pub fn set_schema_name_validator(
     validator: Box<dyn SchemaNameValidator + Send + Sync>,
 ) -> Result<(), Box<dyn SchemaNameValidator + Send + Sync>> {
+    debug!("Setting a custom schema name validator.");
     NAME_VALIDATOR_ONCE.set(validator)
 }
 
