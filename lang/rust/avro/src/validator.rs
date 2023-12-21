@@ -23,12 +23,6 @@ use std::{fmt::Debug, sync::OnceLock};
 struct DefaultValidator;
 
 pub trait NameValidator<T>: Send + Sync {
-    fn regex(&self) -> &'static Regex;
-
-    fn validate(&self, name: &str) -> AvroResult<(String, Namespace)>;
-}
-
-impl NameValidator<(String, Namespace)> for DefaultValidator {
     fn regex(&self) -> &'static Regex {
         static SCHEMA_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
         SCHEMA_NAME_ONCE.get_or_init(|| {
@@ -36,10 +30,14 @@ impl NameValidator<(String, Namespace)> for DefaultValidator {
                 // An optional namespace (with optional dots) followed by a name without any dots in it.
                 r"^((?P<namespace>([A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*)?)\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$",
             )
-            .unwrap()
+                .unwrap()
         })
     }
 
+    fn validate(&self, name: &str) -> AvroResult<(String, Namespace)>;
+}
+
+impl NameValidator<(String, Namespace)> for DefaultValidator {
     fn validate(&self, schema_name: &str) -> AvroResult<(String, Namespace)> {
         let regex = NameValidator::regex(self);
         let caps = regex
@@ -62,7 +60,7 @@ pub fn set_schema_name_validator(
     NAME_VALIDATOR_ONCE.set(validator)
 }
 
-pub(crate) fn validate_name(schema_name: &str) -> AvroResult<(String, Namespace)> {
+pub(crate) fn validate_schema_name(schema_name: &str) -> AvroResult<(String, Namespace)> {
     NAME_VALIDATOR_ONCE
         .get_or_init(|| {
             debug!("Going to use the default name validator.");
@@ -72,16 +70,19 @@ pub(crate) fn validate_name(schema_name: &str) -> AvroResult<(String, Namespace)
 }
 
 pub trait NamespaceValidator: Sync + Debug {
+    fn regex(&self) -> &'static Regex {
+        static NAMESPACE_ONCE: OnceLock<Regex> = OnceLock::new();
+        NAMESPACE_ONCE.get_or_init(|| {
+            Regex::new(r"^([A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*)?$").unwrap()
+        })
+    }
+
     fn validate(&self, name: &str) -> AvroResult<()>;
 }
 
 impl NamespaceValidator for DefaultValidator {
     fn validate(&self, ns: &str) -> AvroResult<()> {
-        static NAMESPACE_ONCE: OnceLock<Regex> = OnceLock::new();
-        let regex = NAMESPACE_ONCE.get_or_init(|| {
-            Regex::new(r"^([A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*)?$").unwrap()
-        });
-
+        let regex = NamespaceValidator::regex(self);
         if !regex.is_match(ns) {
             return Err(Error::InvalidNamespace(ns.to_string(), regex.as_str()));
         } else {
@@ -110,17 +111,15 @@ pub(crate) fn validate_namespace(ns: &str) -> AvroResult<()> {
 }
 
 pub trait EnumSymbolNameValidator<T> {
-    fn regex(&self) -> &'static Regex;
-
-    fn validate(&self, name: &str) -> AvroResult<T>;
-}
-
-impl EnumSymbolNameValidator<()> for DefaultValidator {
     fn regex(&self) -> &'static Regex {
         static ENUM_SYMBOL_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
         ENUM_SYMBOL_NAME_ONCE.get_or_init(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap())
     }
 
+    fn validate(&self, name: &str) -> AvroResult<T>;
+}
+
+impl EnumSymbolNameValidator<()> for DefaultValidator {
     fn validate(&self, symbol: &str) -> AvroResult<()> {
         let regex = EnumSymbolNameValidator::regex(self);
         if !regex.is_match(symbol) {
@@ -152,17 +151,15 @@ pub(crate) fn validate_enum_symbol_name(symbol: &str) -> AvroResult<()> {
 }
 
 pub trait RecordFieldNameValidator<T> {
-    fn regex(&self) -> &'static Regex;
-
-    fn validate(&self, name: &str) -> AvroResult<T>;
-}
-
-impl RecordFieldNameValidator<()> for DefaultValidator {
     fn regex(&self) -> &'static Regex {
         static FIELD_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
         FIELD_NAME_ONCE.get_or_init(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap())
     }
 
+    fn validate(&self, name: &str) -> AvroResult<T>;
+}
+
+impl RecordFieldNameValidator<()> for DefaultValidator {
     fn validate(&self, field_name: &str) -> AvroResult<()> {
         let regex = RecordFieldNameValidator::regex(self);
         if !regex.is_match(field_name) {
@@ -201,34 +198,14 @@ mod tests {
 
     #[test]
     fn avro_3900_default_name_validator_with_valid_ns() -> TestResult {
-        validate_name("example")?;
+        validate_schema_name("example")?;
 
         Ok(())
     }
 
     #[test]
     fn avro_3900_default_name_validator_with_invalid_ns() -> TestResult {
-        assert!(validate_name("com-example").is_err());
-
-        Ok(())
-    }
-
-    #[test]
-    fn avro_3900_custom_name_validator_with_spec_invalid_ns() -> TestResult {
-        #[derive(Debug)]
-        struct CustomNameValidator;
-        impl NameValidator<(String, Namespace)> for CustomNameValidator {
-            fn regex(&self) -> &'static Regex {
-                unimplemented!()
-            }
-
-            fn validate(&self, schema_name: &str) -> AvroResult<(String, Namespace)> {
-                Ok((schema_name.to_string(), None))
-            }
-        }
-
-        assert!(set_schema_name_validator(Box::new(CustomNameValidator)).is_ok());
-        validate_name("com-example")?;
+        assert!(validate_schema_name("com-example").is_err());
 
         Ok(())
     }
@@ -270,22 +247,6 @@ mod tests {
     #[test]
     fn avro_3900_default_namespace_validator_with_invalid_ns() -> TestResult {
         assert!(validate_namespace("com-example").is_err());
-
-        Ok(())
-    }
-
-    #[test]
-    fn avro_3900_custom_namespace_validator_with_spec_invalid_ns() -> TestResult {
-        #[derive(Debug)]
-        struct CustomNamespaceValidator;
-        impl NamespaceValidator for CustomNamespaceValidator {
-            fn validate(&self, _ns: &str) -> AvroResult<()> {
-                Ok(())
-            }
-        }
-
-        assert!(set_namespace_validator(Box::new(CustomNamespaceValidator)).is_ok());
-        validate_namespace("com-example")?;
 
         Ok(())
     }

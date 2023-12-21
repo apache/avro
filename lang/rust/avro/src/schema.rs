@@ -16,12 +16,14 @@
 // under the License.
 
 //! Logic for parsing and interacting with schemas in Avro format.
-use crate::validator::validate_record_field_name;
 use crate::{
     error::Error,
     types,
     util::MapHelper,
-    validator::{validate_enum_symbol_name, validate_name, validate_namespace},
+    validator::{
+        validate_enum_symbol_name, validate_namespace, validate_record_field_name,
+        validate_schema_name,
+    },
     AvroResult,
 };
 use digest::Digest;
@@ -245,7 +247,7 @@ impl Name {
     }
 
     fn get_name_and_namespace(name: &str) -> AvroResult<(String, Namespace)> {
-        validate_name(name)
+        validate_schema_name(name)
     }
 
     /// Parse a `serde_json::Value` into a `Name`.
