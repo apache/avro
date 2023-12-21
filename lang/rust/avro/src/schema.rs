@@ -16,6 +16,7 @@
 // under the License.
 
 //! Logic for parsing and interacting with schemas in Avro format.
+use crate::validator::validate_record_field_name;
 use crate::{
     error::Error,
     types,
@@ -24,7 +25,6 @@ use crate::{
     AvroResult,
 };
 use digest::Digest;
-use regex_lite::Regex;
 use serde::{
     ser::{SerializeMap, SerializeSeq},
     Deserialize, Serialize, Serializer,
@@ -39,14 +39,8 @@ use std::{
     hash::Hash,
     io::Read,
     str::FromStr,
-    sync::OnceLock,
 };
 use strum_macros::{EnumDiscriminants, EnumString};
-
-fn field_name_r() -> &'static Regex {
-    static FIELD_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
-    FIELD_NAME_ONCE.get_or_init(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap())
-}
 
 /// Represents an Avro schema fingerprint
 /// More information about Avro schema fingerprints can be found in the
@@ -645,9 +639,7 @@ impl RecordField {
     ) -> AvroResult<Self> {
         let name = field.name().ok_or(Error::GetNameFieldFromRecord)?;
 
-        if !field_name_r().is_match(&name) {
-            return Err(Error::FieldName(name));
-        }
+        validate_record_field_name(&name)?;
 
         // TODO: "type" = "<record name>"
         let schema = parser.parse_complex(field, &enclosing_record.namespace)?;

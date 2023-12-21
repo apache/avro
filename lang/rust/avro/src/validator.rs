@@ -142,13 +142,55 @@ pub fn set_enum_symbol_name_validator(
     ENUM_SYMBOL_NAME_VALIDATOR_ONCE.set(validator)
 }
 
-pub(crate) fn validate_enum_symbol_name(schema_name: &str) -> AvroResult<()> {
+pub(crate) fn validate_enum_symbol_name(symbol: &str) -> AvroResult<()> {
     ENUM_SYMBOL_NAME_VALIDATOR_ONCE
         .get_or_init(|| {
             debug!("Going to use the default enum symbol name validator.");
             Box::new(DefaultValidator)
         })
-        .validate(schema_name)
+        .validate(symbol)
+}
+
+pub trait RecordFieldNameValidator<T> {
+    fn regex(&self) -> &'static Regex;
+
+    fn validate(&self, name: &str) -> AvroResult<T>;
+}
+
+impl RecordFieldNameValidator<()> for DefaultValidator {
+    fn regex(&self) -> &'static Regex {
+        static FIELD_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
+        FIELD_NAME_ONCE.get_or_init(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap())
+    }
+
+    fn validate(&self, field_name: &str) -> AvroResult<()> {
+        let regex = RecordFieldNameValidator::regex(self);
+        if !regex.is_match(field_name) {
+            return Err(Error::FieldName(field_name.to_string()));
+        }
+
+        Ok(())
+    }
+}
+
+static RECORD_FIELD_NAME_VALIDATOR_ONCE: OnceLock<
+    Box<dyn RecordFieldNameValidator<()> + Send + Sync>,
+> = OnceLock::new();
+
+#[allow(dead_code)]
+pub fn set_record_field_name_validator(
+    validator: Box<dyn RecordFieldNameValidator<()> + Send + Sync>,
+) -> Result<(), Box<dyn RecordFieldNameValidator<()> + Send + Sync>> {
+    RECORD_FIELD_NAME_VALIDATOR_ONCE.set(validator)
+}
+
+pub(crate) fn validate_record_field_name(field_name: &str) -> AvroResult<()> {
+    RECORD_FIELD_NAME_VALIDATOR_ONCE
+        .get_or_init(|| {
+            debug!("Going to use the default record field name validator.");
+            Box::new(DefaultValidator)
+        })
+        .validate(field_name)
 }
 
 #[cfg(test)]
