@@ -120,7 +120,6 @@ dependencies = [
  "ctor",
  "env_logger",
  "log",
- "ref_thread_local",
 ]
 
 [[package]]
@@ -998,12 +997,6 @@ checksum = "4722d768eff46b75989dd134e5c353f0d6296e5aaa3132e776cbdb56be7731aa"
 dependencies = [
  "bitflags 1.3.2",
 ]
-
-[[package]]
-name = "ref_thread_local"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0d51660a68078997855ba5602f73ab3a5031bd7ad480a9d4c90fbbf04e1fff0"
 
 [[package]]
 name = "regex"
