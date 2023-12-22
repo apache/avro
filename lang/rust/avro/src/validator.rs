@@ -22,7 +22,11 @@ use std::sync::OnceLock;
 /// A validator that validates names and namespaces according to the Avro specification.
 struct SpecificationValidator;
 
+/// A trait that validates schema names.
+/// To register a custom one use [set_schema_name_validator].
 pub trait SchemaNameValidator: Send + Sync {
+    /// Returns the regex used to validate the schema name
+    /// according to the Avro specification.
     fn regex(&self) -> &'static Regex {
         static SCHEMA_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
         SCHEMA_NAME_ONCE.get_or_init(|| {
@@ -34,7 +38,9 @@ pub trait SchemaNameValidator: Send + Sync {
         })
     }
 
-    fn validate(&self, name: &str) -> AvroResult<(String, Namespace)>;
+    /// Validates the schema name and returns the name and the optional namespace,
+    /// or [Error::InvalidSchemaName] if it is invalid.
+    fn validate(&self, schema_name: &str) -> AvroResult<(String, Namespace)>;
 }
 
 impl SchemaNameValidator for SpecificationValidator {
@@ -52,6 +58,13 @@ impl SchemaNameValidator for SpecificationValidator {
 
 static NAME_VALIDATOR_ONCE: OnceLock<Box<dyn SchemaNameValidator + Send + Sync>> = OnceLock::new();
 
+/// Sets a custom schema name validator.
+///
+/// Returns a unit if the registration was successful or the already
+/// registered validator if the registration failed.
+///
+/// **Note**: This function must be called before parsing any schema because this will
+/// register the default validator and the registration is one time only!
 pub fn set_schema_name_validator(
     validator: Box<dyn SchemaNameValidator + Send + Sync>,
 ) -> Result<(), Box<dyn SchemaNameValidator + Send + Sync>> {
@@ -68,7 +81,11 @@ pub(crate) fn validate_schema_name(schema_name: &str) -> AvroResult<(String, Nam
         .validate(schema_name)
 }
 
+/// A trait that validates schema namespaces.
+/// To register a custom one use [set_schema_namespace_validator].
 pub trait SchemaNamespaceValidator: Send + Sync {
+    /// Returns the regex used to validate the schema namespace
+    /// according to the Avro specification.
     fn regex(&self) -> &'static Regex {
         static NAMESPACE_ONCE: OnceLock<Regex> = OnceLock::new();
         NAMESPACE_ONCE.get_or_init(|| {
@@ -76,7 +93,8 @@ pub trait SchemaNamespaceValidator: Send + Sync {
         })
     }
 
-    fn validate(&self, name: &str) -> AvroResult<()>;
+    /// Validates the schema namespace or [Error::InvalidNamespace] if it is invalid.
+    fn validate(&self, namespace: &str) -> AvroResult<()>;
 }
 
 impl SchemaNamespaceValidator for SpecificationValidator {
@@ -93,6 +111,13 @@ impl SchemaNamespaceValidator for SpecificationValidator {
 static NAMESPACE_VALIDATOR_ONCE: OnceLock<Box<dyn SchemaNamespaceValidator + Send + Sync>> =
     OnceLock::new();
 
+/// Sets a custom schema namespace validator.
+///
+/// Returns a unit if the registration was successful or the already
+/// registered validator if the registration failed.
+///
+/// **Note**: This function must be called before parsing any schema because this will
+/// register the default validator and the registration is one time only!
 pub fn set_schema_namespace_validator(
     validator: Box<dyn SchemaNamespaceValidator + Send + Sync>,
 ) -> Result<(), Box<dyn SchemaNamespaceValidator + Send + Sync>> {
@@ -108,12 +133,18 @@ pub(crate) fn validate_namespace(ns: &str) -> AvroResult<()> {
         .validate(ns)
 }
 
+/// A trait that validates enum symbol names.
+/// To register a custom one use [set_enum_symbol_name_validator].
 pub trait EnumSymbolNameValidator: Send + Sync {
+    /// Returns the regex used to validate the symbols of enum schema
+    /// according to the Avro specification.
     fn regex(&self) -> &'static Regex {
         static ENUM_SYMBOL_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
         ENUM_SYMBOL_NAME_ONCE.get_or_init(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap())
     }
 
+    /// Validates the symbols of an Enum schema name and returns nothing (unit),
+    /// or [Error::EnumSymbolName] if it is invalid.
     fn validate(&self, name: &str) -> AvroResult<()>;
 }
 
@@ -131,6 +162,13 @@ impl EnumSymbolNameValidator for SpecificationValidator {
 static ENUM_SYMBOL_NAME_VALIDATOR_ONCE: OnceLock<Box<dyn EnumSymbolNameValidator + Send + Sync>> =
     OnceLock::new();
 
+/// Sets a custom enum symbol name validator.
+///
+/// Returns a unit if the registration was successful or the already
+/// registered validator if the registration failed.
+///
+/// **Note**: This function must be called before parsing any schema because this will
+/// register the default validator and the registration is one time only!
 pub fn set_enum_symbol_name_validator(
     validator: Box<dyn EnumSymbolNameValidator + Send + Sync>,
 ) -> Result<(), Box<dyn EnumSymbolNameValidator + Send + Sync>> {
@@ -146,12 +184,18 @@ pub(crate) fn validate_enum_symbol_name(symbol: &str) -> AvroResult<()> {
         .validate(symbol)
 }
 
+/// A trait that validates record field names.
+/// To register a custom one use [set_record_field_name_validator].
 pub trait RecordFieldNameValidator: Send + Sync {
+    /// Returns the regex used to validate the record field names
+    /// according to the Avro specification.
     fn regex(&self) -> &'static Regex {
         static FIELD_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
         FIELD_NAME_ONCE.get_or_init(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap())
     }
 
+    /// Validates the record field's names and returns nothing (unit),
+    /// or [Error::FieldName] if it is invalid.
     fn validate(&self, name: &str) -> AvroResult<()>;
 }
 
@@ -169,6 +213,13 @@ impl RecordFieldNameValidator for SpecificationValidator {
 static RECORD_FIELD_NAME_VALIDATOR_ONCE: OnceLock<Box<dyn RecordFieldNameValidator + Send + Sync>> =
     OnceLock::new();
 
+/// Sets a custom record field name validator.
+///
+/// Returns a unit if the registration was successful or the already
+/// registered validator if the registration failed.
+///
+/// **Note**: This function must be called before parsing any schema because this will
+/// register the default validator and the registration is one time only!
 pub fn set_record_field_name_validator(
     validator: Box<dyn RecordFieldNameValidator + Send + Sync>,
 ) -> Result<(), Box<dyn RecordFieldNameValidator + Send + Sync>> {

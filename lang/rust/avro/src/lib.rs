@@ -786,10 +786,18 @@
 //!     }
 //! }
 //!
+//! // don't parse any schema before registering the custom validator(s) !
+//!
 //! set_schema_name_validator(Box::new(MyCustomValidator));
+//!
+//! // ... use the library
 //! ```
 //!
 //! Similar logic could be applied to the schema namespace, enum symbols and field names validation.
+//!
+//! **Note**: the library allows to set a validator only once per the application lifetime!
+//! If the application parses schemas before setting a validator, the default validator will be
+//! registered and used!
 //!
 
 mod bigdecimal;
