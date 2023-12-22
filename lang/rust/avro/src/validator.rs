@@ -52,7 +52,6 @@ impl SchemaNameValidator for SpecificationValidator {
 
 static NAME_VALIDATOR_ONCE: OnceLock<Box<dyn SchemaNameValidator + Send + Sync>> = OnceLock::new();
 
-#[allow(dead_code)]
 pub fn set_schema_name_validator(
     validator: Box<dyn SchemaNameValidator + Send + Sync>,
 ) -> Result<(), Box<dyn SchemaNameValidator + Send + Sync>> {
@@ -94,7 +93,6 @@ impl SchemaNamespaceValidator for SpecificationValidator {
 static NAMESPACE_VALIDATOR_ONCE: OnceLock<Box<dyn SchemaNamespaceValidator + Send + Sync>> =
     OnceLock::new();
 
-#[allow(dead_code)]
 pub fn set_schema_namespace_validator(
     validator: Box<dyn SchemaNamespaceValidator + Send + Sync>,
 ) -> Result<(), Box<dyn SchemaNamespaceValidator + Send + Sync>> {
@@ -133,7 +131,6 @@ impl EnumSymbolNameValidator for SpecificationValidator {
 static ENUM_SYMBOL_NAME_VALIDATOR_ONCE: OnceLock<Box<dyn EnumSymbolNameValidator + Send + Sync>> =
     OnceLock::new();
 
-#[allow(dead_code)]
 pub fn set_enum_symbol_name_validator(
     validator: Box<dyn EnumSymbolNameValidator + Send + Sync>,
 ) -> Result<(), Box<dyn EnumSymbolNameValidator + Send + Sync>> {
@@ -172,7 +169,6 @@ impl RecordFieldNameValidator for SpecificationValidator {
 static RECORD_FIELD_NAME_VALIDATOR_ONCE: OnceLock<Box<dyn RecordFieldNameValidator + Send + Sync>> =
     OnceLock::new();
 
-#[allow(dead_code)]
 pub fn set_record_field_name_validator(
     validator: Box<dyn RecordFieldNameValidator + Send + Sync>,
 ) -> Result<(), Box<dyn RecordFieldNameValidator + Send + Sync>> {

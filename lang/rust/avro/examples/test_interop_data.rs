@@ -18,10 +18,10 @@
 use apache_avro::Reader;
 use std::{
     collections::HashMap,
+    error::Error,
     ffi::OsStr,
     io::{BufReader, Read},
 };
-use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut expected_user_metadata: HashMap<String, Vec<u8>> = HashMap::new();
