@@ -2043,6 +2043,10 @@ impl Serialize for RecordField {
             map.serialize_entry("aliases", aliases)?;
         }
 
+        for attr in &self.custom_attributes {
+            map.serialize_entry(attr.0, attr.1)?;
+        }
+
         map.end()
     }
 }
@@ -6416,6 +6420,43 @@ mod tests {
     }
 
     #[test]
+    fn avro_3920_serialize_record_with_custom_attributes() -> TestResult {
+        let expected = {
+            let mut lookup = BTreeMap::new();
+            lookup.insert("value".to_owned(), 0);
+            Schema::Record(RecordSchema {
+                name: Name {
+                    name: "LongList".to_owned(),
+                    namespace: None,
+                },
+                aliases: Some(vec![Alias::new("LinkedLongs").unwrap()]),
+                doc: None,
+                fields: vec![RecordField {
+                    name: "value".to_string(),
+                    doc: None,
+                    default: None,
+                    aliases: None,
+                    schema: Schema::Long,
+                    order: RecordFieldOrder::Ascending,
+                    position: 0,
+                    custom_attributes: BTreeMap::from([("field-id".to_string(), 1.into())]),
+                }],
+                lookup,
+                attributes: BTreeMap::from([("custom-attribute".to_string(), "value".into())]),
+            })
+        };
+
+        let value = serde_json::to_value(&expected)?;
+        let serialized = serde_json::to_string(&value)?;
+        assert_eq!(
+            r#"{"aliases":["LinkedLongs"],"custom-attribute":"value","fields":[{"field-id":1,"name":"value","type":"long"}],"name":"LongList","type":"record"}"#,
+            &serialized
+        );
+        assert_eq!(expected, Schema::parse_str(&serialized)?);
+
+        Ok(())
+    }
+
     fn test_avro_3925_serialize_decimal_inner_fixed() -> TestResult {
         let schema = Schema::Decimal(DecimalSchema {
             precision: 36,
