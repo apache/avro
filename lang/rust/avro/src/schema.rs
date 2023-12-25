@@ -4545,26 +4545,26 @@ mod tests {
 
             assert_eq!(
                 schema.custom_attributes(),
-                Some(&expected_custom_attibutes())
+                Some(&expected_custom_attributes())
             );
         }
 
         Ok(())
     }
 
-    fn expected_custom_attibutes() -> BTreeMap<String, Value> {
-        let mut expected_attibutes: BTreeMap<String, Value> = Default::default();
-        expected_attibutes.insert("string_key".to_string(), Value::String("value".to_string()));
-        expected_attibutes.insert("number_key".to_string(), json!(1.23));
-        expected_attibutes.insert("null_key".to_string(), Value::Null);
-        expected_attibutes.insert(
+    fn expected_custom_attributes() -> BTreeMap<String, Value> {
+        let mut expected_attributes: BTreeMap<String, Value> = Default::default();
+        expected_attributes.insert("string_key".to_string(), Value::String("value".to_string()));
+        expected_attributes.insert("number_key".to_string(), json!(1.23));
+        expected_attributes.insert("null_key".to_string(), Value::Null);
+        expected_attributes.insert(
             "array_key".to_string(),
             Value::Array(vec![json!(1), json!(2), json!(3)]),
         );
         let mut object_value: HashMap<String, Value> = HashMap::new();
         object_value.insert("key".to_string(), Value::String("value".to_string()));
-        expected_attibutes.insert("object_key".to_string(), json!(object_value));
-        expected_attibutes
+        expected_attributes.insert("object_key".to_string(), json!(object_value));
+        expected_attributes
     }
 
     #[test]
@@ -4594,7 +4594,7 @@ mod tests {
                 assert_eq!(fields.len(), 1);
                 let field = &fields[0];
                 assert_eq!(&field.name, "field_one");
-                assert_eq!(field.custom_attributes, expected_custom_attibutes());
+                assert_eq!(field.custom_attributes, expected_custom_attributes());
             }
             _ => panic!("Expected Schema::Record"),
         }
