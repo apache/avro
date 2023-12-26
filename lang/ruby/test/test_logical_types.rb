@@ -141,7 +141,7 @@ class TestLogicalTypes < Test::Unit::TestCase
                     "null"
                 ],
                 "default": "\u0000"
-            }  
+            }
         ]
     }')
 
@@ -215,7 +215,7 @@ class TestLogicalTypes < Test::Unit::TestCase
     sales_tax_record = {
       "sales" => BigDecimal("12.34"),
       "tax" => BigDecimal("0.000"),
-      "invoice_date" => Time.at(0).to_date,
+      "invoice_date" => Date.new(1970, 1, 1),
       # time-millis is not supported
       "invoice_time" => 0,
       "created_at" => Time.at(0).utc,
