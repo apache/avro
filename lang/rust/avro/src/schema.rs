@@ -709,10 +709,10 @@ impl RecordField {
             doc: field.doc(),
             default,
             aliases,
-            schema,
             order,
             position,
-            custom_attributes: RecordField::get_field_custom_attributes(field),
+            custom_attributes: RecordField::get_field_custom_attributes(field, &schema),
+            schema,
         })
     }
 
@@ -765,11 +765,16 @@ impl RecordField {
         Ok(())
     }
 
-    fn get_field_custom_attributes(field: &Map<String, Value>) -> BTreeMap<String, Value> {
+    fn get_field_custom_attributes(
+        field: &Map<String, Value>,
+        schema: &Schema,
+    ) -> BTreeMap<String, Value> {
         let mut custom_attributes: BTreeMap<String, Value> = BTreeMap::new();
         for (key, value) in field {
             match key.as_str() {
                 "type" | "name" | "doc" | "default" | "order" | "position" | "aliases" => continue,
+                key if key == "symbols" && matches!(schema, Schema::Enum(_)) => continue,
+                key if key == "size" && matches!(schema, Schema::Fixed(_)) => continue,
                 _ => custom_attributes.insert(key.clone(), value.clone()),
             };
         }
@@ -3327,16 +3332,16 @@ mod tests {
 
         let schema = Schema::parse_str(raw_schema)?;
         assert_eq!(
-            "abf662f831715ff78f88545a05a9262af75d6406b54e1a8a174ff1d2b75affc4",
+            "b18ddbf029afaa876b54cb4de997506ef67e202bee13d8b54cb5698288c25318",
             format!("{}", schema.fingerprint::<Sha256>())
         );
 
         assert_eq!(
-            "6e21c350f71b1a34e9efe90970f1bc69",
+            "125fc6c592fde3a38cce17faf64f2d98",
             format!("{}", schema.fingerprint::<Md5>())
         );
         assert_eq!(
-            "28cf0a67d9937bb3",
+            "224cc43e4e57d7a7",
             format!("{}", schema.fingerprint::<Rabin>())
         );
 
