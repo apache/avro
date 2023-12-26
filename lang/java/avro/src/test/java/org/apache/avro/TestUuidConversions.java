@@ -46,8 +46,10 @@ class TestUuidConversions {
   @ParameterizedTest
   @MethodSource("uuidData")
   void uuidBytes(UUID uuid) {
-    ByteBuffer value = uuidConversion.toBytes(uuid, fixedUUid, LogicalTypes.uuid());
-    UUID uuid1 = uuidConversion.fromBytes(value, fixedUUid, LogicalTypes.uuid());
+    Schema schema = Schema.create(Schema.Type.BYTES);
+    Schema bytesUUid = LogicalTypes.uuid().addToSchema(schema);
+    ByteBuffer value = uuidConversion.toBytes(uuid, bytesUUid, LogicalTypes.uuid());
+    UUID uuid1 = uuidConversion.fromBytes(value, bytesUUid, LogicalTypes.uuid());
     Assertions.assertEquals(uuid, uuid1);
   }
 
