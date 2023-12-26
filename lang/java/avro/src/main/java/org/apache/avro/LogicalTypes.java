@@ -296,8 +296,12 @@ public class LogicalTypes {
     @Override
     public void validate(Schema schema) {
       super.validate(schema);
-      if (schema.getType() != Schema.Type.STRING) {
-        throw new IllegalArgumentException("Uuid can only be used with an underlying string type");
+      if (schema.getType() != Schema.Type.STRING && schema.getType() != Schema.Type.FIXED
+          && schema.getType() != Schema.Type.BYTES) {
+        throw new IllegalArgumentException("Uuid can only be used with an underlying string, fixed or byte type");
+      }
+      if (schema.getType() == Schema.Type.FIXED && schema.getFixedSize() != 2 * Long.BYTES) {
+        throw new IllegalArgumentException("Uuid with fixed type must have a size of " + (2 * Long.BYTES) + " bytes");
       }
     }
   }

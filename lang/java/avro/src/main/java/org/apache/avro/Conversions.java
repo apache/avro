@@ -30,6 +30,7 @@ import org.apache.avro.util.TimePeriod;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -67,6 +68,60 @@ public class Conversions {
     @Override
     public CharSequence toCharSequence(UUID value, Schema schema, LogicalType type) {
       return value.toString();
+    }
+
+    @Override
+    public UUID fromFixed(final GenericFixed value, final Schema schema, final LogicalType type) {
+      long mostSigBits = 0;
+      long leastSigBits = 0;
+      byte[] bytes = value.bytes();
+      for (int i = 0; i < Long.BYTES; i++) {
+        mostSigBits |= ((long) (bytes[i] & 255)) << (Byte.SIZE * i);
+        leastSigBits |= ((long) (bytes[i + Long.BYTES] & 255)) << (Byte.SIZE * i);
+      }
+
+      return new UUID(mostSigBits, leastSigBits);
+    }
+
+    @Override
+    public UUID fromBytes(final ByteBuffer value, final Schema schema, final LogicalType type) {
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(value.array(), null);
+      try {
+        final long mostSigBits = decoder.readLong();
+        final long leastSigBits = decoder.readLong();
+        return new UUID(mostSigBits, leastSigBits);
+      } catch (IOException ex) {
+        throw new UncheckedIOException("Error while deserialize UUID from bytes " + ex.getMessage(), ex);
+      }
+    }
+
+    @Override
+    public GenericFixed toFixed(final UUID value, final Schema schema, final LogicalType type) {
+      final long mostSigBits = value.getMostSignificantBits();
+      final long leastSigBits = value.getLeastSignificantBits();
+      byte[] result = new byte[2 * Long.BYTES];
+      for (int i = 0; i < Long.BYTES; i++) {
+        result[i] = (byte) ((mostSigBits >> (i * Byte.SIZE)) & 255);
+        result[i + Long.BYTES] = (byte) ((leastSigBits >> (i * Byte.SIZE)) & 255);
+      }
+
+      return new GenericData.Fixed(schema, result);
+    }
+
+    @Override
+    public ByteBuffer toBytes(final UUID value, final Schema schema, final LogicalType type) {
+      try {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(out, null);
+
+        encoder.writeLong(value.getMostSignificantBits());
+        encoder.writeLong(value.getLeastSignificantBits());
+        encoder.flush();
+        return ByteBuffer.wrap(out.toByteArray());
+
+      } catch (IOException e) {
+        throw new UncheckedIOException("Error while serialize uuid to byte: " + e.getMessage(), e);
+      }
     }
   }
 
