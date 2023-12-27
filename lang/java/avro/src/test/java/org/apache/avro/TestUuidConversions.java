@@ -28,7 +28,7 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-class TestUuidConversions {
+public class TestUuidConversions {
 
   private Conversions.UUIDConversion uuidConversion = new Conversions.UUIDConversion();
 
@@ -40,6 +40,22 @@ class TestUuidConversions {
   void uuidFixed(UUID uuid) {
     GenericFixed value = uuidConversion.toFixed(uuid, fixedUUid, LogicalTypes.uuid());
     UUID uuid1 = uuidConversion.fromFixed(value, fixedUUid, LogicalTypes.uuid());
+    Assertions.assertEquals(uuid, uuid1);
+  }
+
+  @ParameterizedTest
+  @MethodSource("uuidData")
+  void uuidFixedReverse(UUID uuid) {
+    Conversions.UUIDConversion bigEndianConversion = new Conversions.UUIDConversion(true);
+    Conversions.UUIDConversion littleEndianConversion = new Conversions.UUIDConversion(false);
+
+    // simulate uuid from other endian source, assume it's big endian (nevermind if
+    // current jvm is big endian, as we simulate).
+    UUID reverserUUID = new UUID(Long.reverseBytes(uuid.getMostSignificantBits()),
+        Long.reverseBytes(uuid.getLeastSignificantBits()));
+    GenericFixed value = bigEndianConversion.toFixed(reverserUUID, fixedUUid, LogicalTypes.uuid());
+
+    UUID uuid1 = littleEndianConversion.fromFixed(value, fixedUUid, LogicalTypes.uuid());
     Assertions.assertEquals(uuid, uuid1);
   }
 

@@ -45,6 +45,17 @@ import java.util.UUID;
 public class Conversions {
 
   public static class UUIDConversion extends Conversion<UUID> {
+
+    private final boolean isBigEndian;
+
+    public UUIDConversion() {
+      this(ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN);
+    }
+
+    public UUIDConversion(final boolean isBigEndian) {
+      this.isBigEndian = isBigEndian;
+    }
+
     @Override
     public Class<UUID> getConvertedType() {
       return UUID.class;
@@ -80,7 +91,15 @@ public class Conversions {
         leastSigBits |= ((long) (bytes[i + Long.BYTES] & 255)) << (Byte.SIZE * i);
       }
 
-      return new UUID(mostSigBits, leastSigBits);
+      return new UUID(this.convert(mostSigBits), this.convert(leastSigBits));
+    }
+
+    private long convert(long value) {
+      if (this.isBigEndian) {
+        return value;
+      } else {
+        return Long.reverseBytes(value);
+      }
     }
 
     @Override
@@ -97,8 +116,8 @@ public class Conversions {
 
     @Override
     public GenericFixed toFixed(final UUID value, final Schema schema, final LogicalType type) {
-      final long mostSigBits = value.getMostSignificantBits();
-      final long leastSigBits = value.getLeastSignificantBits();
+      final long mostSigBits = this.convert(value.getMostSignificantBits());
+      final long leastSigBits = this.convert(value.getLeastSignificantBits());
       byte[] result = new byte[2 * Long.BYTES];
       for (int i = 0; i < Long.BYTES; i++) {
         result[i] = (byte) ((mostSigBits >> (i * Byte.SIZE)) & 255);
