@@ -92,6 +92,28 @@ class TestLogicalTypes < Test::Unit::TestCase
     assert_equal Time.utc(2015, 5, 28, 21, 46, 53, 221843), type.decode(1432849613221843)
   end
 
+  def test_timestamp_nanos_long
+    schema = Avro::Schema.parse <<-SCHEMA
+      { "type": "long", "logicalType": "timestamp-nanos" }
+    SCHEMA
+
+    time = Time.at(628232400, 123456789, :nanosecond)
+    assert_equal 'timestamp-nanos', schema.logical_type
+    assert_encode_and_decode time, schema
+    assert_preencoded Avro::LogicalTypes::TimestampNanos.encode(time), schema, time.utc
+  end
+
+  def test_timestamp_nanos_long_conversion
+    type = Avro::LogicalTypes::TimestampNanos
+
+    now = Time.now.utc
+
+    assert_equal Time.at(now.to_i, now.nsec, :nanosecond).utc, type.decode(type.encode(now))
+    assert_equal 1432849613221843789, type.encode(Time.at(1432849613, 221843789, :nanosecond).utc)
+    assert_equal 1432849613221843789, type.encode(DateTime.new(2015, 5, 28, 21, 46, 53.221843789))
+    assert_equal Time.at(1432849613, 221843789, :nanosecond).utc, type.decode(1432849613221843789)
+  end
+
   def test_parse_fixed_duration
     schema = Avro::Schema.parse <<-SCHEMA
       { "type": "fixed", "size": 12, "name": "fixed_dur", "logicalType": "duration" }
