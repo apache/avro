@@ -827,7 +827,7 @@ Here, as scale property is stored in value itself it needs more bytes than prece
 ### UUID
 The `uuid` logical type represents a random generated universally unique identifier (UUID).
 
-A `uuid` logical type annotates an Avro `string`, `fixed` of length 16 or `bytes`. The string has to conform with [RFC-4122](https://www.ietf.org/rfc/rfc4122.txt)
+A `uuid` logical type annotates an Avro `string` or `fixed` of length 16. The string has to conform with [RFC-4122](https://www.ietf.org/rfc/rfc4122.txt)
 
 The following schemas represent a uuid:
 ```json
@@ -845,13 +845,7 @@ The following schemas represent a uuid:
 }
 ```
 
-```json
-{
-  "type": "bytes",
-  "logicalType": "uuid"
-}
-```
-(UUID will be sorted differently if the underlying type is a string, a fixed or a bytes)
+(UUID will be sorted differently if the underlying type is a string or a fixed)
 
 ### Date
 The `date` logical type represents a date within the calendar, with no reference to a particular time zone or time of day.

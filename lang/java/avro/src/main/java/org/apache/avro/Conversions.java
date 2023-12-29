@@ -30,7 +30,6 @@ import org.apache.avro.util.TimePeriod;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -103,18 +102,6 @@ public class Conversions {
     }
 
     @Override
-    public UUID fromBytes(final ByteBuffer value, final Schema schema, final LogicalType type) {
-      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(value.array(), null);
-      try {
-        final long mostSigBits = decoder.readLong();
-        final long leastSigBits = decoder.readLong();
-        return new UUID(mostSigBits, leastSigBits);
-      } catch (IOException ex) {
-        throw new UncheckedIOException("Error while deserialize UUID from bytes " + ex.getMessage(), ex);
-      }
-    }
-
-    @Override
     public GenericFixed toFixed(final UUID value, final Schema schema, final LogicalType type) {
       final long mostSigBits = this.convert(value.getMostSignificantBits());
       final long leastSigBits = this.convert(value.getLeastSignificantBits());
@@ -125,22 +112,6 @@ public class Conversions {
       }
 
       return new GenericData.Fixed(schema, result);
-    }
-
-    @Override
-    public ByteBuffer toBytes(final UUID value, final Schema schema, final LogicalType type) {
-      try {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(out, null);
-
-        encoder.writeLong(value.getMostSignificantBits());
-        encoder.writeLong(value.getLeastSignificantBits());
-        encoder.flush();
-        return ByteBuffer.wrap(out.toByteArray());
-
-      } catch (IOException e) {
-        throw new UncheckedIOException("Error while serialize uuid to byte: " + e.getMessage(), e);
-      }
     }
   }
 
