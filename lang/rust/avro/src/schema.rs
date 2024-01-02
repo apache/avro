@@ -737,7 +737,7 @@ impl RecordField {
                     });
 
                     if !resolved {
-                        let schema: Option<&Schema> = schemas.get(0);
+                        let schema: Option<&Schema> = schemas.first();
                         return match schema {
                             Some(first_schema) => Err(Error::GetDefaultUnion(
                                 SchemaKind::from(first_schema),
@@ -2541,7 +2541,7 @@ mod tests {
 
         match schema_a {
             Schema::Record(RecordSchema { fields, .. }) => {
-                let f1 = fields.get(0);
+                let f1 = fields.first();
 
                 let ref_schema = Schema::Ref {
                     name: Name::new("B")?,
