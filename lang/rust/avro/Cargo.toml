@@ -68,7 +68,7 @@ serde_json = { workspace = true }
 snap = { default-features = false, version = "1.1.0", optional = true }
 strum = { default-features = false, version = "0.25.0" }
 strum_macros = { default-features = false, version = "0.25.3" }
-thiserror = { default-features = false, version = "1.0.51" }
+thiserror = { default-features = false, version = "1.0.55" }
 typed-builder = { default-features = false, version = "0.18.0" }
 uuid = { default-features = false, version = "1.6.1", features = ["serde", "std"] }
 xz2 = { default-features = false, version = "0.1.7", optional = true }
