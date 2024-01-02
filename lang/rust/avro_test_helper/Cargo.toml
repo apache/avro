@@ -31,7 +31,7 @@ readme = "README.md"
 
 
 [dependencies]
-anyhow = { default-features = false, version = "1.0.76", features = ["std"] }
+anyhow = { default-features = false, version = "1.0.79", features = ["std"] }
 better-panic = { default-features = false, version = "0.3.0" }
 ctor = { default-features = false, version = "0.2.6" }
 env_logger = { default-features = false, version = "0.10.1" }
