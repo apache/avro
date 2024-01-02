@@ -89,6 +89,8 @@ class RandomData
       Avro::LogicalTypes::TimestampMicros.decode(rand_long)
     when 'timestamp-millis'
       Avro::LogicalTypes::TimestampMillis.decode(rand_long)
+    when 'timestamp-nanos'
+      Avro::LogicalTypes::TimestampNanos.decode(rand_long)
     end
   end
 
