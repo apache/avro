@@ -82,7 +82,8 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
 
       URLClassLoader projPathLoader = new URLClassLoader(runtimeUrls.toArray(new URL[0]),
           Thread.currentThread().getContextClassLoader());
-      try (Idl parser = new Idl(new File(sourceDirectory, filename), projPathLoader)) {
+      File sourceFile = new File(sourceDirectory, filename);
+      try (Idl parser = new Idl(sourceFile, projPathLoader)) {
 
         Protocol p = parser.CompilationUnit();
         for (String warning : parser.getWarningsAfterParsing()) {
@@ -104,7 +105,7 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
           compiler.addCustomConversion(projPathLoader.loadClass(customConversion));
         }
         compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
-        compiler.compileToDestination(null, outputDirectory);
+        compiler.compileToDestination(sourceFile, outputDirectory);
       }
     } catch (ParseException | ClassNotFoundException | DependencyResolutionRequiredException e) {
       throw new IOException(e);
