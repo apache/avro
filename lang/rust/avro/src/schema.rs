@@ -709,10 +709,10 @@ impl RecordField {
             doc: field.doc(),
             default,
             aliases,
-            schema,
             order,
             position,
-            custom_attributes: RecordField::get_field_custom_attributes(field),
+            custom_attributes: RecordField::get_field_custom_attributes(field, &schema),
+            schema,
         })
     }
 
@@ -765,11 +765,17 @@ impl RecordField {
         Ok(())
     }
 
-    fn get_field_custom_attributes(field: &Map<String, Value>) -> BTreeMap<String, Value> {
+    fn get_field_custom_attributes(
+        field: &Map<String, Value>,
+        schema: &Schema,
+    ) -> BTreeMap<String, Value> {
         let mut custom_attributes: BTreeMap<String, Value> = BTreeMap::new();
         for (key, value) in field {
             match key.as_str() {
-                "type" | "name" | "doc" | "default" | "order" | "position" | "aliases" => continue,
+                "type" | "name" | "doc" | "default" | "order" | "position" | "aliases"
+                | "logicalType" => continue,
+                key if key == "symbols" && matches!(schema, Schema::Enum(_)) => continue,
+                key if key == "size" && matches!(schema, Schema::Fixed(_)) => continue,
                 _ => custom_attributes.insert(key.clone(), value.clone()),
             };
         }
@@ -2041,6 +2047,10 @@ impl Serialize for RecordField {
 
         if let Some(ref aliases) = self.aliases {
             map.serialize_entry("aliases", aliases)?;
+        }
+
+        for attr in &self.custom_attributes {
+            map.serialize_entry(attr.0, attr.1)?;
         }
 
         map.end()
@@ -4541,26 +4551,26 @@ mod tests {
 
             assert_eq!(
                 schema.custom_attributes(),
-                Some(&expected_custom_attibutes())
+                Some(&expected_custom_attributes())
             );
         }
 
         Ok(())
     }
 
-    fn expected_custom_attibutes() -> BTreeMap<String, Value> {
-        let mut expected_attibutes: BTreeMap<String, Value> = Default::default();
-        expected_attibutes.insert("string_key".to_string(), Value::String("value".to_string()));
-        expected_attibutes.insert("number_key".to_string(), json!(1.23));
-        expected_attibutes.insert("null_key".to_string(), Value::Null);
-        expected_attibutes.insert(
+    fn expected_custom_attributes() -> BTreeMap<String, Value> {
+        let mut expected_attributes: BTreeMap<String, Value> = Default::default();
+        expected_attributes.insert("string_key".to_string(), Value::String("value".to_string()));
+        expected_attributes.insert("number_key".to_string(), json!(1.23));
+        expected_attributes.insert("null_key".to_string(), Value::Null);
+        expected_attributes.insert(
             "array_key".to_string(),
             Value::Array(vec![json!(1), json!(2), json!(3)]),
         );
         let mut object_value: HashMap<String, Value> = HashMap::new();
         object_value.insert("key".to_string(), Value::String("value".to_string()));
-        expected_attibutes.insert("object_key".to_string(), json!(object_value));
-        expected_attibutes
+        expected_attributes.insert("object_key".to_string(), json!(object_value));
+        expected_attributes
     }
 
     #[test]
@@ -4590,7 +4600,7 @@ mod tests {
                 assert_eq!(fields.len(), 1);
                 let field = &fields[0];
                 assert_eq!(&field.name, "field_one");
-                assert_eq!(field.custom_attributes, expected_custom_attibutes());
+                assert_eq!(field.custom_attributes, expected_custom_attributes());
             }
             _ => panic!("Expected Schema::Record"),
         }
@@ -6416,6 +6426,44 @@ mod tests {
     }
 
     #[test]
+    fn avro_3920_serialize_record_with_custom_attributes() -> TestResult {
+        let expected = {
+            let mut lookup = BTreeMap::new();
+            lookup.insert("value".to_owned(), 0);
+            Schema::Record(RecordSchema {
+                name: Name {
+                    name: "LongList".to_owned(),
+                    namespace: None,
+                },
+                aliases: Some(vec![Alias::new("LinkedLongs").unwrap()]),
+                doc: None,
+                fields: vec![RecordField {
+                    name: "value".to_string(),
+                    doc: None,
+                    default: None,
+                    aliases: None,
+                    schema: Schema::Long,
+                    order: RecordFieldOrder::Ascending,
+                    position: 0,
+                    custom_attributes: BTreeMap::from([("field-id".to_string(), 1.into())]),
+                }],
+                lookup,
+                attributes: BTreeMap::from([("custom-attribute".to_string(), "value".into())]),
+            })
+        };
+
+        let value = serde_json::to_value(&expected)?;
+        let serialized = serde_json::to_string(&value)?;
+        assert_eq!(
+            r#"{"aliases":["LinkedLongs"],"custom-attribute":"value","fields":[{"field-id":1,"name":"value","type":"long"}],"name":"LongList","type":"record"}"#,
+            &serialized
+        );
+        assert_eq!(expected, Schema::parse_str(&serialized)?);
+
+        Ok(())
+    }
+
+    #[test]
     fn test_avro_3925_serialize_decimal_inner_fixed() -> TestResult {
         let schema = Schema::Decimal(DecimalSchema {
             precision: 36,
@@ -6441,6 +6489,7 @@ mod tests {
 }"#;
 
         assert_eq!(serialized_json, expected_json);
+
         Ok(())
     }
 
@@ -6462,6 +6511,7 @@ mod tests {
 }"#;
 
         assert_eq!(serialized_json, expected_json);
+
         Ok(())
     }
 
