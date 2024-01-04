@@ -89,6 +89,12 @@ pub enum Error {
     #[error("Failed to convert &str to UUID")]
     ConvertStrToUuid(#[source] uuid::Error),
 
+    #[error("Failed to convert Fixed bytes to UUID. It must be exactly 16 bytes, got {0}")]
+    ConvertFixedToUuid(usize),
+
+    #[error("Failed to convert Fixed bytes to UUID")]
+    ConvertSliceToUuid(#[source] uuid::Error),
+
     #[error("Map key is not a string; key type is {0:?}")]
     MapKeyType(ValueKind),
 
