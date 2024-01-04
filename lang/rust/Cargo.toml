@@ -43,7 +43,7 @@ documentation = "https://docs.rs/apache-avro"
 [workspace.dependencies]
 log = { default-features = false, version = "0.4.20" }
 serde = { default-features = false, version = "1.0.194", features = ["derive"] }
-serde_json = { default-features = false, version = "1.0.110", features = ["std"] }
+serde_json = { default-features = false, version = "1.0.111", features = ["std"] }
 
 [profile.release.package.hello-wasm]
 # Tell `rustc` to optimize for small code size.
