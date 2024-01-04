@@ -6432,13 +6432,13 @@ mod tests {
         let serialized_json = serde_json::to_string_pretty(&schema)?;
 
         let expected_json = r#"{
-          "type": "fixed",
-          "name": "decimal_36_10",
-          "size": 16,
-          "logicalType": "decimal",
-          "scale": 10,
-          "precision": 36
-        }"#;
+  "type": "fixed",
+  "name": "decimal_36_10",
+  "size": 16,
+  "logicalType": "decimal",
+  "scale": 10,
+  "precision": 36
+}"#;
 
         assert_eq!(serialized_json, expected_json);
         Ok(())
@@ -6455,11 +6455,11 @@ mod tests {
         let serialized_json = serde_json::to_string_pretty(&schema)?;
 
         let expected_json = r#"{
-          "type": "bytes",
-          "logicalType": "decimal",
-          "scale": 10,
-          "precision": 36
-        }"#;
+  "type": "bytes",
+  "logicalType": "decimal",
+  "scale": 10,
+  "precision": 36
+}"#;
 
         assert_eq!(serialized_json, expected_json);
         Ok(())
