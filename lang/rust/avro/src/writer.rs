@@ -378,7 +378,7 @@ impl<'a, W: Write> Writer<'a, W> {
         header.extend_from_slice(AVRO_OBJECT_HEADER);
         encode(
             &metadata.into(),
-            &Schema::Map(Box::new(Schema::Bytes)),
+            &Schema::Map(Box::new(Schema::Bytes).into()),
             &mut header,
         )?;
         header.extend_from_slice(&self.marker);
