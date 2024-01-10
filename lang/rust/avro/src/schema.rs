@@ -165,28 +165,10 @@ pub struct MapSchema {
     pub custom_attributes: BTreeMap<String, Value>,
 }
 
-impl From<Box<Schema>> for MapSchema {
-    fn from(types: Box<Schema>) -> Self {
-        Self {
-            types,
-            custom_attributes: BTreeMap::new(),
-        }
-    }
-}
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct ArraySchema {
     pub items: Box<Schema>,
     pub custom_attributes: BTreeMap<String, Value>,
-}
-
-impl From<Box<Schema>> for ArraySchema {
-    fn from(items: Box<Schema>) -> Self {
-        Self {
-            items,
-            custom_attributes: BTreeMap::new(),
-        }
-    }
 }
 
 impl PartialEq for Schema {
@@ -1192,6 +1174,41 @@ impl Schema {
             _ => None,
         }
     }
+
+    /// Returns a Schema::Map with the given types.
+    pub fn map(types: Schema) -> Self {
+        Schema::Map(MapSchema {
+            types: Box::new(types),
+            custom_attributes: Default::default(),
+        })
+    }
+
+    /// Returns a Schema::Map with the given types and custom attributes.
+    pub fn map_with_attributes(types: Schema, custom_attributes: BTreeMap<String, Value>) -> Self {
+        Schema::Map(MapSchema {
+            types: Box::new(types),
+            custom_attributes,
+        })
+    }
+
+    /// Returns a Schema::Array with the given items.
+    pub fn array(items: Schema) -> Self {
+        Schema::Array(ArraySchema {
+            items: Box::new(items),
+            custom_attributes: Default::default(),
+        })
+    }
+
+    /// Returns a Schema::Array with the given items and custom attributes.
+    pub fn array_with_attributes(
+        items: Schema,
+        custom_attributes: BTreeMap<String, Value>,
+    ) -> Self {
+        Schema::Array(ArraySchema {
+            items: Box::new(items),
+            custom_attributes,
+        })
+    }
 }
 
 impl Parser {
@@ -1755,7 +1772,7 @@ impl Parser {
             .get("items")
             .ok_or(Error::GetArrayItemsField)
             .and_then(|items| self.parse(items, enclosing_namespace))
-            .map(|schema| Schema::Array(Box::new(schema).into()))
+            .map(Schema::array)
     }
 
     /// Parse a `serde_json::Value` representing a Avro map type into a
@@ -1769,7 +1786,7 @@ impl Parser {
             .get("values")
             .ok_or(Error::GetMapValuesField)
             .and_then(|items| self.parse(items, enclosing_namespace))
-            .map(|schema| Schema::Map(Box::new(schema).into()))
+            .map(Schema::map)
     }
 
     /// Parse a `serde_json::Value` representing a Avro union type into a
@@ -2308,9 +2325,7 @@ pub mod derive {
             named_schemas: &mut Names,
             enclosing_namespace: &Namespace,
         ) -> Schema {
-            Schema::Array(
-                Box::new(T::get_schema_in_ctxt(named_schemas, enclosing_namespace)).into(),
-            )
+            Schema::array(T::get_schema_in_ctxt(named_schemas, enclosing_namespace))
         }
     }
 
@@ -2342,7 +2357,7 @@ pub mod derive {
             named_schemas: &mut Names,
             enclosing_namespace: &Namespace,
         ) -> Schema {
-            Schema::Map(Box::new(T::get_schema_in_ctxt(named_schemas, enclosing_namespace)).into())
+            Schema::map(T::get_schema_in_ctxt(named_schemas, enclosing_namespace))
         }
     }
 
@@ -2354,7 +2369,7 @@ pub mod derive {
             named_schemas: &mut Names,
             enclosing_namespace: &Namespace,
         ) -> Schema {
-            Schema::Map(Box::new(T::get_schema_in_ctxt(named_schemas, enclosing_namespace)).into())
+            Schema::map(T::get_schema_in_ctxt(named_schemas, enclosing_namespace))
         }
     }
 
@@ -2418,14 +2433,14 @@ mod tests {
     #[test]
     fn test_array_schema() -> TestResult {
         let schema = Schema::parse_str(r#"{"type": "array", "items": "string"}"#)?;
-        assert_eq!(Schema::Array(Box::new(Schema::String).into()), schema);
+        assert_eq!(Schema::array(Schema::String), schema);
         Ok(())
     }
 
     #[test]
     fn test_map_schema() -> TestResult {
         let schema = Schema::parse_str(r#"{"type": "map", "values": "double"}"#)?;
-        assert_eq!(Schema::Map(Box::new(Schema::Double).into()), schema);
+        assert_eq!(Schema::map(Schema::Double), schema);
         Ok(())
     }
 
@@ -2779,12 +2794,9 @@ mod tests {
                             doc: None,
                             default: None,
                             aliases: None,
-                            schema: Schema::Array(
-                                Box::new(Schema::Ref {
-                                    name: Name::new("Node")?,
-                                })
-                                .into(),
-                            ),
+                            schema: Schema::array(Schema::Ref {
+                                name: Name::new("Node")?,
+                            }),
                             order: RecordFieldOrder::Ascending,
                             position: 1,
                             custom_attributes: Default::default(),
@@ -6566,10 +6578,10 @@ mod tests {
 
     #[test]
     fn test_avro_3927_serialize_array_with_custom_attributes() -> TestResult {
-        let expected = Schema::Array(ArraySchema {
-            items: Box::new(Schema::Long),
-            custom_attributes: BTreeMap::from([("field-id".to_string(), "1".into())]),
-        });
+        let expected = Schema::array_with_attributes(
+            Schema::Long,
+            BTreeMap::from([("field-id".to_string(), "1".into())]),
+        );
 
         let value = serde_json::to_value(&expected)?;
         let serialized = serde_json::to_string(&value)?;
@@ -6584,10 +6596,10 @@ mod tests {
 
     #[test]
     fn test_avro_3927_serialize_map_with_custom_attributes() -> TestResult {
-        let expected = Schema::Map(MapSchema {
-            types: Box::new(Schema::Long),
-            custom_attributes: BTreeMap::from([("field-id".to_string(), "1".into())]),
-        });
+        let expected = Schema::map_with_attributes(
+            Schema::Long,
+            BTreeMap::from([("field-id".to_string(), "1".into())]),
+        );
 
         let value = serde_json::to_value(&expected)?;
         let serialized = serde_json::to_string(&value)?;

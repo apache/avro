@@ -1267,13 +1267,13 @@ mod tests {
             ),
             (
                 Value::Array(vec![Value::Long(42i64)]),
-                Schema::Array(Box::new(Schema::Long).into()),
+                Schema::array(Schema::Long),
                 true,
                 "",
             ),
             (
                 Value::Array(vec![Value::Boolean(true)]),
-                Schema::Array(Box::new(Schema::Long).into()),
+                Schema::array(Schema::Long),
                 false,
                 "Invalid value: Array([Boolean(true)]) for schema: Array(ArraySchema { items: Long, custom_attributes: {} }). Reason: Unsupported value-schema combination",
             ),

@@ -309,13 +309,10 @@ pub(crate) mod tests {
         let empty: Vec<Value> = Vec::new();
         encode(
             &Value::Array(empty.clone()),
-            &Schema::Array(Box::new(Schema::Int).into()),
+            &Schema::array(Schema::Int),
             &mut buf,
         )
-        .expect(&success(
-            &Value::Array(empty),
-            &Schema::Array(Box::new(Schema::Int).into()),
-        ));
+        .expect(&success(&Value::Array(empty), &Schema::array(Schema::Int)));
         assert_eq!(vec![0u8], buf);
     }
 
@@ -325,13 +322,10 @@ pub(crate) mod tests {
         let empty: HashMap<String, Value> = HashMap::new();
         encode(
             &Value::Map(empty.clone()),
-            &Schema::Map(Box::new(Schema::Int).into()),
+            &Schema::map(Schema::Int),
             &mut buf,
         )
-        .expect(&success(
-            &Value::Map(empty),
-            &Schema::Map(Box::new(Schema::Int).into()),
-        ));
+        .expect(&success(&Value::Map(empty), &Schema::map(Schema::Int)));
         assert_eq!(vec![0u8], buf);
     }
 
