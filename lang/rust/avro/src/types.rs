@@ -281,7 +281,14 @@ impl From<JsonValue> for Value {
         match value {
             JsonValue::Null => Self::Null,
             JsonValue::Bool(b) => b.into(),
-            JsonValue::Number(ref n) if n.is_i64() => Value::Long(n.as_i64().unwrap()),
+            JsonValue::Number(ref n) if n.is_i64() => {
+                let n = n.as_i64().unwrap();
+                if n >= i32::MIN as i64 && n <= i32::MAX as i64 {
+                    Value::Int(n as i32)
+                } else {
+                    Value::Long(n)
+                }
+            }
             JsonValue::Number(ref n) if n.is_f64() => Value::Double(n.as_f64().unwrap()),
             JsonValue::Number(n) => Value::Long(n.as_u64().unwrap() as i64), // TODO: Not so great
             JsonValue::String(s) => s.into(),
@@ -1154,6 +1161,7 @@ mod tests {
     };
     use num_bigint::BigInt;
     use pretty_assertions::assert_eq;
+    use serde_json::json;
     use uuid::Uuid;
 
     #[test]
@@ -3060,5 +3068,50 @@ Field with name '"b"' is not a member of the map items"#,
             .is_err(),);
 
         Ok(())
+    }
+
+    #[test]
+    fn avro_3928_from_serde_value_to_types_value() {
+        assert_eq!(Value::from(serde_json::Value::Null), Value::Null);
+        assert_eq!(Value::from(json!(true)), Value::Boolean(true));
+        assert_eq!(Value::from(json!(false)), Value::Boolean(false));
+        assert_eq!(Value::from(json!(0)), Value::Int(0));
+        assert_eq!(Value::from(json!(i32::MIN)), Value::Int(i32::MIN));
+        assert_eq!(Value::from(json!(i32::MAX)), Value::Int(i32::MAX));
+        assert_eq!(
+            Value::from(json!(i32::MIN as i64 - 1)),
+            Value::Long(i32::MIN as i64 - 1)
+        );
+        assert_eq!(
+            Value::from(json!(i32::MAX as i64 + 1)),
+            Value::Long(i32::MAX as i64 + 1)
+        );
+        assert_eq!(Value::from(json!(1.23)), Value::Double(1.23));
+        assert_eq!(Value::from(json!(-1.23)), Value::Double(-1.23));
+        assert_eq!(Value::from(json!(u64::MIN)), Value::Int(u64::MIN as i32));
+        assert_eq!(Value::from(json!(u64::MAX)), Value::Long(u64::MAX as i64));
+        assert_eq!(
+            Value::from(json!("some text")),
+            Value::String("some text".into())
+        );
+        assert_eq!(
+            Value::from(json!(["text1", "text2", "text3"])),
+            Value::Array(vec![
+                Value::String("text1".into()),
+                Value::String("text2".into()),
+                Value::String("text3".into())
+            ])
+        );
+        assert_eq!(
+            Value::from(json!({"key1": "value1", "key2": "value2"})),
+            Value::Map(
+                vec![
+                    ("key1".into(), Value::String("value1".into())),
+                    ("key2".into(), Value::String("value2".into()))
+                ]
+                .into_iter()
+                .collect()
+            )
+        );
     }
 }
