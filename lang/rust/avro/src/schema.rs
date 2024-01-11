@@ -111,11 +111,11 @@ pub enum Schema {
     String,
     /// A `array` Avro schema. Avro arrays are required to have the same type for each element.
     /// This variant holds the `Schema` for the array element type.
-    Array(Box<Schema>),
+    Array(ArraySchema),
     /// A `map` Avro schema.
     /// `Map` holds a pointer to the `Schema` of its values, which must all be the same schema.
     /// `Map` keys are assumed to be `string`.
-    Map(Box<Schema>),
+    Map(MapSchema),
     /// A `union` Avro schema.
     Union(UnionSchema),
     /// A `record` Avro schema.
@@ -157,6 +157,18 @@ pub enum Schema {
     Duration,
     /// A reference to another schema.
     Ref { name: Name },
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct MapSchema {
+    pub types: Box<Schema>,
+    pub custom_attributes: BTreeMap<String, Value>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ArraySchema {
+    pub items: Box<Schema>,
+    pub custom_attributes: BTreeMap<String, Value>,
 }
 
 impl PartialEq for Schema {
@@ -495,8 +507,11 @@ impl<'s> ResolvedSchema<'s> {
     ) -> AvroResult<()> {
         for schema in schemata {
             match schema {
-                Schema::Array(schema) | Schema::Map(schema) => {
-                    self.resolve(vec![schema], enclosing_namespace, known_schemata)?
+                Schema::Array(schema) => {
+                    self.resolve(vec![&schema.items], enclosing_namespace, known_schemata)?
+                }
+                Schema::Map(schema) => {
+                    self.resolve(vec![&schema.types], enclosing_namespace, known_schemata)?
                 }
                 Schema::Union(UnionSchema { schemas, .. }) => {
                     for schema in schemas {
@@ -581,9 +596,8 @@ impl ResolvedOwnedSchema {
         enclosing_namespace: &Namespace,
     ) -> AvroResult<()> {
         match schema {
-            Schema::Array(schema) | Schema::Map(schema) => {
-                Self::from_internal(schema, names, enclosing_namespace)
-            }
+            Schema::Array(schema) => Self::from_internal(&schema.items, names, enclosing_namespace),
+            Schema::Map(schema) => Self::from_internal(&schema.types, names, enclosing_namespace),
             Schema::Union(UnionSchema { schemas, .. }) => {
                 for schema in schemas {
                     Self::from_internal(schema, names, enclosing_namespace)?
@@ -1160,6 +1174,41 @@ impl Schema {
             _ => None,
         }
     }
+
+    /// Returns a Schema::Map with the given types.
+    pub fn map(types: Schema) -> Self {
+        Schema::Map(MapSchema {
+            types: Box::new(types),
+            custom_attributes: Default::default(),
+        })
+    }
+
+    /// Returns a Schema::Map with the given types and custom attributes.
+    pub fn map_with_attributes(types: Schema, custom_attributes: BTreeMap<String, Value>) -> Self {
+        Schema::Map(MapSchema {
+            types: Box::new(types),
+            custom_attributes,
+        })
+    }
+
+    /// Returns a Schema::Array with the given items.
+    pub fn array(items: Schema) -> Self {
+        Schema::Array(ArraySchema {
+            items: Box::new(items),
+            custom_attributes: Default::default(),
+        })
+    }
+
+    /// Returns a Schema::Array with the given items and custom attributes.
+    pub fn array_with_attributes(
+        items: Schema,
+        custom_attributes: BTreeMap<String, Value>,
+    ) -> Self {
+        Schema::Array(ArraySchema {
+            items: Box::new(items),
+            custom_attributes,
+        })
+    }
 }
 
 impl Parser {
@@ -1723,7 +1772,7 @@ impl Parser {
             .get("items")
             .ok_or(Error::GetArrayItemsField)
             .and_then(|items| self.parse(items, enclosing_namespace))
-            .map(|schema| Schema::Array(Box::new(schema)))
+            .map(Schema::array)
     }
 
     /// Parse a `serde_json::Value` representing a Avro map type into a
@@ -1737,7 +1786,7 @@ impl Parser {
             .get("values")
             .ok_or(Error::GetMapValuesField)
             .and_then(|items| self.parse(items, enclosing_namespace))
-            .map(|schema| Schema::Map(Box::new(schema)))
+            .map(Schema::map)
     }
 
     /// Parse a `serde_json::Value` representing a Avro union type into a
@@ -1847,15 +1896,21 @@ impl Serialize for Schema {
             Schema::Bytes => serializer.serialize_str("bytes"),
             Schema::String => serializer.serialize_str("string"),
             Schema::Array(ref inner) => {
-                let mut map = serializer.serialize_map(Some(2))?;
+                let mut map = serializer.serialize_map(Some(2 + inner.custom_attributes.len()))?;
                 map.serialize_entry("type", "array")?;
-                map.serialize_entry("items", &*inner.clone())?;
+                map.serialize_entry("items", &*inner.items.clone())?;
+                for attr in &inner.custom_attributes {
+                    map.serialize_entry(attr.0, attr.1)?;
+                }
                 map.end()
             }
             Schema::Map(ref inner) => {
-                let mut map = serializer.serialize_map(Some(2))?;
+                let mut map = serializer.serialize_map(Some(2 + inner.custom_attributes.len()))?;
                 map.serialize_entry("type", "map")?;
-                map.serialize_entry("values", &*inner.clone())?;
+                map.serialize_entry("values", &*inner.types.clone())?;
+                for attr in &inner.custom_attributes {
+                    map.serialize_entry(attr.0, attr.1)?;
+                }
                 map.end()
             }
             Schema::Union(ref inner) => {
@@ -2270,10 +2325,7 @@ pub mod derive {
             named_schemas: &mut Names,
             enclosing_namespace: &Namespace,
         ) -> Schema {
-            Schema::Array(Box::new(T::get_schema_in_ctxt(
-                named_schemas,
-                enclosing_namespace,
-            )))
+            Schema::array(T::get_schema_in_ctxt(named_schemas, enclosing_namespace))
         }
     }
 
@@ -2305,10 +2357,7 @@ pub mod derive {
             named_schemas: &mut Names,
             enclosing_namespace: &Namespace,
         ) -> Schema {
-            Schema::Map(Box::new(T::get_schema_in_ctxt(
-                named_schemas,
-                enclosing_namespace,
-            )))
+            Schema::map(T::get_schema_in_ctxt(named_schemas, enclosing_namespace))
         }
     }
 
@@ -2320,10 +2369,7 @@ pub mod derive {
             named_schemas: &mut Names,
             enclosing_namespace: &Namespace,
         ) -> Schema {
-            Schema::Map(Box::new(T::get_schema_in_ctxt(
-                named_schemas,
-                enclosing_namespace,
-            )))
+            Schema::map(T::get_schema_in_ctxt(named_schemas, enclosing_namespace))
         }
     }
 
@@ -2387,14 +2433,14 @@ mod tests {
     #[test]
     fn test_array_schema() -> TestResult {
         let schema = Schema::parse_str(r#"{"type": "array", "items": "string"}"#)?;
-        assert_eq!(Schema::Array(Box::new(Schema::String)), schema);
+        assert_eq!(Schema::array(Schema::String), schema);
         Ok(())
     }
 
     #[test]
     fn test_map_schema() -> TestResult {
         let schema = Schema::parse_str(r#"{"type": "map", "values": "double"}"#)?;
-        assert_eq!(Schema::Map(Box::new(Schema::Double)), schema);
+        assert_eq!(Schema::map(Schema::Double), schema);
         Ok(())
     }
 
@@ -2748,9 +2794,9 @@ mod tests {
                             doc: None,
                             default: None,
                             aliases: None,
-                            schema: Schema::Array(Box::new(Schema::Ref {
+                            schema: Schema::array(Schema::Ref {
                                 name: Name::new("Node")?,
-                            })),
+                            }),
                             order: RecordFieldOrder::Ascending,
                             position: 1,
                             custom_attributes: Default::default(),
@@ -4442,7 +4488,7 @@ mod tests {
                 assert_eq!(union.schemas[0], Schema::Null);
 
                 if let Schema::Array(ref array_schema) = union.schemas[1] {
-                    if let Schema::Long = **array_schema {
+                    if let Schema::Long = *array_schema.items {
                         // OK
                     } else {
                         panic!("Expected a Schema::Array of type Long");
@@ -6526,6 +6572,42 @@ mod tests {
         let serialized_json = serde_json::to_string_pretty(&schema);
 
         assert!(serialized_json.is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3927_serialize_array_with_custom_attributes() -> TestResult {
+        let expected = Schema::array_with_attributes(
+            Schema::Long,
+            BTreeMap::from([("field-id".to_string(), "1".into())]),
+        );
+
+        let value = serde_json::to_value(&expected)?;
+        let serialized = serde_json::to_string(&value)?;
+        assert_eq!(
+            r#"{"field-id":"1","items":"long","type":"array"}"#,
+            &serialized
+        );
+        assert_eq!(expected, Schema::parse_str(&serialized)?);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3927_serialize_map_with_custom_attributes() -> TestResult {
+        let expected = Schema::map_with_attributes(
+            Schema::Long,
+            BTreeMap::from([("field-id".to_string(), "1".into())]),
+        );
+
+        let value = serde_json::to_value(&expected)?;
+        let serialized = serde_json::to_string(&value)?;
+        assert_eq!(
+            r#"{"field-id":"1","type":"map","values":"long"}"#,
+            &serialized
+        );
+        assert_eq!(expected, Schema::parse_str(&serialized)?);
 
         Ok(())
     }
