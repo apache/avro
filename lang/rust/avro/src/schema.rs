@@ -6611,4 +6611,34 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn avro_3928_parse_int_based_schema_with_default() -> TestResult {
+        let schema = r#"
+        {
+          "type": "record",
+          "name": "DateLogicalType",
+          "fields": [ {
+            "name": "birthday",
+            "type": {"type": "int", "logicalType": "date"},
+            "default": 1681601653
+          } ]
+        }"#;
+
+        match Schema::parse_str(schema)? {
+            Schema::Record(record_schema) => {
+                assert_eq!(record_schema.fields.len(), 1);
+                let field = record_schema.fields.first().unwrap();
+                assert_eq!(field.name, "birthday");
+                assert_eq!(field.schema, Schema::Date);
+                assert_eq!(
+                    types::Value::from(field.default.clone().unwrap()),
+                    types::Value::Int(1681601653)
+                );
+            }
+            _ => unreachable!("Expected Schema::Record"),
+        }
+
+        Ok(())
+    }
 }
