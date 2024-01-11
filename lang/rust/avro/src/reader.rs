@@ -71,7 +71,7 @@ impl<'r, R: Read> Block<'r, R> {
     /// Try to read the header and to set the writer `Schema`, the `Codec` and the marker based on
     /// its content.
     fn read_header(&mut self) -> AvroResult<()> {
-        let meta_schema = Schema::Map(Box::new(Schema::Bytes));
+        let meta_schema = Schema::map(Schema::Bytes);
 
         let mut buf = [0u8; 4];
         self.reader

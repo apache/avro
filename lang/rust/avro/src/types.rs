@@ -523,14 +523,14 @@ impl Value {
             (Value::Array(items), Schema::Array(inner)) => items.iter().fold(None, |acc, item| {
                 Value::accumulate(
                     acc,
-                    item.validate_internal(inner, names, enclosing_namespace),
+                    item.validate_internal(&inner.items, names, enclosing_namespace),
                 )
             }),
             (Value::Map(items), Schema::Map(inner)) => {
                 items.iter().fold(None, |acc, (_, value)| {
                     Value::accumulate(
                         acc,
-                        value.validate_internal(inner, names, enclosing_namespace),
+                        value.validate_internal(&inner.types, names, enclosing_namespace),
                     )
                 })
             }
@@ -681,8 +681,10 @@ impl Value {
                 ref default,
                 ..
             }) => self.resolve_enum(symbols, default, field_default),
-            Schema::Array(ref inner) => self.resolve_array(inner, names, enclosing_namespace),
-            Schema::Map(ref inner) => self.resolve_map(inner, names, enclosing_namespace),
+            Schema::Array(ref inner) => {
+                self.resolve_array(&inner.items, names, enclosing_namespace)
+            }
+            Schema::Map(ref inner) => self.resolve_map(&inner.types, names, enclosing_namespace),
             Schema::Record(RecordSchema { ref fields, .. }) => {
                 self.resolve_record(fields, names, enclosing_namespace)
             }
@@ -1265,15 +1267,15 @@ mod tests {
             ),
             (
                 Value::Array(vec![Value::Long(42i64)]),
-                Schema::Array(Box::new(Schema::Long)),
+                Schema::array(Schema::Long),
                 true,
                 "",
             ),
             (
                 Value::Array(vec![Value::Boolean(true)]),
-                Schema::Array(Box::new(Schema::Long)),
+                Schema::array(Schema::Long),
                 false,
-                "Invalid value: Array([Boolean(true)]) for schema: Array(Long). Reason: Unsupported value-schema combination",
+                "Invalid value: Array([Boolean(true)]) for schema: Array(ArraySchema { items: Long, custom_attributes: {} }). Reason: Unsupported value-schema combination",
             ),
             (Value::Record(vec![]), Schema::Null, false, "Invalid value: Record([]) for schema: Null. Reason: Unsupported value-schema combination"),
             (

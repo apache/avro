@@ -71,7 +71,7 @@ impl Checker {
             SchemaKind::Map => {
                 if let Schema::Map(w_m) = writers_schema {
                     match readers_schema {
-                        Schema::Map(r_m) => self.full_match_schemas(w_m, r_m),
+                        Schema::Map(r_m) => self.full_match_schemas(&w_m.types, &r_m.types),
                         _ => Err(CompatibilityError::WrongType {
                             writer_schema_type: format!("{:#?}", writers_schema),
                             reader_schema_type: format!("{:#?}", readers_schema),
@@ -87,7 +87,7 @@ impl Checker {
             SchemaKind::Array => {
                 if let Schema::Array(w_a) = writers_schema {
                     match readers_schema {
-                        Schema::Array(r_a) => self.full_match_schemas(w_a, r_a),
+                        Schema::Array(r_a) => self.full_match_schemas(&w_a.items, &r_a.items),
                         _ => Err(CompatibilityError::WrongType {
                             writer_schema_type: format!("{:#?}", writers_schema),
                             reader_schema_type: format!("{:#?}", readers_schema),
@@ -370,7 +370,7 @@ impl SchemaCompatibility {
                 SchemaKind::Map => {
                     if let Schema::Map(w_m) = writers_schema {
                         if let Schema::Map(r_m) = readers_schema {
-                            return SchemaCompatibility::match_schemas(w_m, r_m);
+                            return SchemaCompatibility::match_schemas(&w_m.types, &r_m.types);
                         } else {
                             return Err(CompatibilityError::TypeExpected {
                                 schema_type: String::from("readers_schema"),
@@ -387,7 +387,7 @@ impl SchemaCompatibility {
                 SchemaKind::Array => {
                     if let Schema::Array(w_a) = writers_schema {
                         if let Schema::Array(r_a) = readers_schema {
-                            return SchemaCompatibility::match_schemas(w_a, r_a);
+                            return SchemaCompatibility::match_schemas(&w_a.items, &r_a.items);
                         } else {
                             return Err(CompatibilityError::TypeExpected {
                                 schema_type: String::from("readers_schema"),
