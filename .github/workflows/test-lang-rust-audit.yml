@@ -19,9 +19,9 @@ name: Rust Security Audit
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [icelake-dev]
   pull_request:
-    branches: [ main ]
+    branches: [icelake-dev]
     paths:
       - .github/workflows/test-lang-rust-audit.yml
       - lang/rust/Cargo.toml

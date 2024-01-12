@@ -19,9 +19,9 @@ name: Rust Clippy Check
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [icelake-dev]
   pull_request:
-    branches: [ main ]
+    branches: [icelake-dev]
     paths:
       - .github/workflows/test-lang-rust-clippy.yml
       - lang/rust/**
@@ -46,8 +46,8 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 'stable'
-          - '1.70.0'  # MSRV
+          - "stable"
+          - "1.70.0" # MSRV
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly

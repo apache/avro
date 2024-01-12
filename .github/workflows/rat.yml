@@ -13,13 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: 'Rat'
+name: "Rat"
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [icelake-dev]
   pull_request:
-    branches: [ main ]
+    branches: [icelake-dev]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -42,8 +42,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'adopt'
-          java-version: '11'
+          distribution: "adopt"
+          java-version: "11"
 
       - name: Run Rat
         run: mvn test -Dmaven.main.skip=true -Dmaven.test.skip=true -DskipTests=true -P rat -pl :avro-toplevel

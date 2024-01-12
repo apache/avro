@@ -19,9 +19,9 @@ name: Rust Continuous Integration
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [icelake-dev]
   pull_request:
-    branches: [ main ]
+    branches: [icelake-dev]
     paths:
       - .github/workflows/test-lang-rust-ci.yml
       - lang/rust/**
@@ -31,7 +31,7 @@ permissions:
 
 env:
   RUSTFLAGS: -Dwarnings
-  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: 'git' # TODO: remove this env var once MSRV is 1.70.0+
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: "git" # TODO: remove this env var once MSRV is 1.70.0+
 
 defaults:
   run:
@@ -47,10 +47,10 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 'stable'
-          - 'beta'
-          - 'nightly'
-          - '1.70.0'  # MSRV
+          - "stable"
+          - "beta"
+          - "nightly"
+          - "1.70.0" # MSRV
         target:
           - x86_64-unknown-linux-gnu
           - wasm32-unknown-unknown
@@ -195,7 +195,6 @@ jobs:
                                                        Regexp::Common \
                                                        Try::Tiny \
                                                        inc::Module::Install
-
 
       - name: Perl reads interop files created by Java and Rust
         working-directory: lang/perl
