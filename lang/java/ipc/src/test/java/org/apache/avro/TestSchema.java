@@ -415,7 +415,7 @@ public class TestSchema {
   @Test
   void parseInputStream() throws IOException {
     SchemaParser parser = new SchemaParser();
-    Schema s = parser.resolve(parser.parse(new ByteArrayInputStream("\"boolean\"".getBytes(StandardCharsets.UTF_8))));
+    Schema s = parser.parse(new ByteArrayInputStream("\"boolean\"".getBytes(StandardCharsets.UTF_8))).mainSchema();
     assertEquals(JsonSchemaParser.parseInternal("\"boolean\""), s);
   }
 
@@ -516,7 +516,7 @@ public class TestSchema {
   private static void checkParseError(String json) {
     try {
       SchemaParser parser = new SchemaParser();
-      parser.resolve(parser.parse(json));
+      parser.parse(json).mainSchema();
     } catch (AvroRuntimeException e) {
       return;
     }

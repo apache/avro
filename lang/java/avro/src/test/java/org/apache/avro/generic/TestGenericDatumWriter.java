@@ -443,7 +443,7 @@ public class TestGenericDatumWriter {
   private GenericData.Record buildComplexRecord() throws IOException {
 
     SchemaParser parser = new SchemaParser();
-    Schema schema = parser.resolve(parser.parse(new File("../../../share/test/schemas/RecordWithRequiredFields.avsc")));
+    Schema schema = parser.parse(new File("../../../share/test/schemas/RecordWithRequiredFields.avsc")).mainSchema();
 
     GenericData.Record topLevelRecord = new GenericData.Record(schema);
     GenericData.Record unionRecord = new GenericData.Record(schema.getField("unionField").schema().getTypes().get(1));

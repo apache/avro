@@ -128,7 +128,7 @@ class TaggedInputSplit implements Configurable, InputSplit {
     inputFormatClass = (Class<? extends InputFormat>) readClass(in);
     mapperClass = (Class<? extends AvroMapper>) readClass(in);
     String schemaString = Text.readString(in);
-    schema = schemaParser.resolve(schemaParser.parse(schemaString));
+    schema = schemaParser.parse(schemaString).mainSchema();
   }
 
   private Class<?> readClass(DataInput in) throws IOException {

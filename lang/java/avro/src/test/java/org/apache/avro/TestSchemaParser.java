@@ -41,7 +41,7 @@ class TestSchemaParser {
     Path tempFile = Files.createTempFile("TestSchemaParser", null);
     Files.write(tempFile, singletonList(SCHEMA_JSON));
 
-    Schema schema = new SchemaParser().parse(tempFile.toFile());
+    Schema schema = new SchemaParser().parse(tempFile.toFile()).mainSchema();
     assertEquals(SCHEMA_REAL, schema);
   }
 
@@ -50,38 +50,39 @@ class TestSchemaParser {
     Path tempFile = Files.createTempFile("TestSchemaParser", null);
     Files.write(tempFile, singletonList(SCHEMA_JSON));
 
-    Schema schema = new SchemaParser().parse(tempFile);
+    Schema schema = new SchemaParser().parse(tempFile).mainSchema();
     assertEquals(SCHEMA_REAL, schema);
   }
 
   @Test
   void testParseReader() throws IOException {
-    Schema schema = new SchemaParser().parse(new StringReader(SCHEMA_JSON));
+    Schema schema = new SchemaParser().parse(new StringReader(SCHEMA_JSON)).mainSchema();
     assertEquals(SCHEMA_REAL, schema);
   }
 
   @Test
   void testParseStream() throws IOException {
-    Schema schema = new SchemaParser().parse(new ByteArrayInputStream(SCHEMA_JSON.getBytes(StandardCharsets.UTF_16)));
+    Schema schema = new SchemaParser().parse(new ByteArrayInputStream(SCHEMA_JSON.getBytes(StandardCharsets.UTF_16)))
+        .mainSchema();
     assertEquals(SCHEMA_REAL, schema);
   }
 
   @Test
   void testParseTextWithFallbackJsonParser() {
-    Schema schema = new SchemaParser().parse(SCHEMA_JSON);
+    Schema schema = new SchemaParser().parse(SCHEMA_JSON).mainSchema();
     assertEquals(SCHEMA_REAL, schema);
   }
 
   @Test
   void testParseByCustomParser() {
-    Schema schema = new SchemaParser().parse(DummySchemaParser.SCHEMA_TEXT_ONE);
+    Schema schema = new SchemaParser().parse(DummySchemaParser.SCHEMA_TEXT_ONE).mainSchema();
     assertEquals(DummySchemaParser.FIXED_SCHEMA, schema);
   }
 
   @Test
   void testSingleParseError() {
     SchemaParseException parseException = assertThrows(SchemaParseException.class,
-        () -> new SchemaParser().parse("foo"));
+        () -> new SchemaParser().parse("foo").mainSchema());
     assertEquals(JsonParseException.class, parseException.getCause().getClass());
     assertEquals(0, parseException.getSuppressed().length);
   }
@@ -89,7 +90,7 @@ class TestSchemaParser {
   @Test
   void testMultipleParseErrors() {
     SchemaParseException parseException = assertThrows(SchemaParseException.class,
-        () -> new SchemaParser().parse(DummySchemaParser.SCHEMA_TEXT_ERROR));
+        () -> new SchemaParser().parse(DummySchemaParser.SCHEMA_TEXT_ERROR).mainSchema());
     assertTrue(parseException.getMessage().startsWith("Could not parse the schema"));
     Throwable[] suppressed = parseException.getSuppressed();
     assertEquals(2, suppressed.length);
@@ -100,7 +101,7 @@ class TestSchemaParser {
   @Test
   void testIOFailureWhileParsingText() {
     AvroRuntimeException exception = assertThrows(AvroRuntimeException.class,
-        () -> new SchemaParser().parse(DummySchemaParser.SCHEMA_TEXT_IO_ERROR));
+        () -> new SchemaParser().parse(DummySchemaParser.SCHEMA_TEXT_IO_ERROR).mainSchema());
     assertEquals(IOException.class, exception.getCause().getClass());
     assertEquals(DummySchemaParser.IO_ERROR_MESSAGE, exception.getCause().getMessage());
   }

@@ -206,7 +206,7 @@ public class RandomData implements Iterable<Object> {
       System.exit(-1);
     }
     SchemaParser parser = new SchemaParser();
-    Schema sch = parser.resolve(parser.parse(new File(args[0])));
+    Schema sch = parser.parse(new File(args[0])).mainSchema();
     try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>())) {
       writer.setCodec(CodecFactory.fromString(args.length >= 4 ? args[3] : "null"));
       writer.setMeta("user_metadata", "someByteArray".getBytes(StandardCharsets.UTF_8));

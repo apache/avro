@@ -313,6 +313,12 @@ public class Protocol extends JsonProperties {
 
   /** The types of this protocol. */
   public Collection<Schema> getTypes() {
+    return context.resolveAllSchemas();
+  }
+
+  /** @deprecated can return invalid schemata: do NOT use! */
+  @Deprecated
+  public Collection<Schema> getUnresolvedTypes() {
     return context.typesByName().values();
   }
 
@@ -330,6 +336,7 @@ public class Protocol extends JsonProperties {
     context = new ParseContext();
     for (Schema s : newTypes)
       context.put(s);
+    context.commit();
   }
 
   /** The messages of this protocol. */
@@ -395,8 +402,8 @@ public class Protocol extends JsonProperties {
       return false;
     Protocol that = (Protocol) o;
     return this.name.equals(that.name) && this.namespace.equals(that.namespace)
-        && this.context.typesByName().equals(that.context.typesByName()) && this.messages.equals(that.messages)
-        && this.propsEqual(that);
+        && this.context.resolveAllSchemas().equals(that.context.resolveAllSchemas())
+        && this.messages.equals(that.messages) && this.propsEqual(that);
   }
 
   @Override
@@ -441,7 +448,7 @@ public class Protocol extends JsonProperties {
     writeProps(gen);
     gen.writeArrayFieldStart("types");
     Set<String> knownNames = new HashSet<>();
-    for (Schema type : context.typesByName().values())
+    for (Schema type : context.resolveAllSchemas())
       if (!knownNames.contains(type.getFullName()))
         type.toJson(knownNames, namespace, gen);
     gen.writeEndArray();
@@ -513,7 +520,7 @@ public class Protocol extends JsonProperties {
     parseProps(json);
 
     context.commit();
-    context.resolveAllTypes();
+    context.resolveAllSchemas();
     resolveMessageSchemata();
   }
 

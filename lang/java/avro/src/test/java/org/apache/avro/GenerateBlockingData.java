@@ -59,7 +59,7 @@ public class GenerateBlockingData {
     }
 
     SchemaParser parser = new SchemaParser();
-    Schema sch = parser.resolve(parser.parse(new File(args[0])));
+    Schema sch = parser.parse(new File(args[0])).mainSchema();
     File outputFile = new File(args[1]);
     int numObjects = Integer.parseInt(args[2]);
 

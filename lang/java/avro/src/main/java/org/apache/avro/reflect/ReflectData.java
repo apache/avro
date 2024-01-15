@@ -788,8 +788,8 @@ public class ReflectData extends SpecificData {
 
   private static Schema parseExplicitSchema(String explicitSchemaText) {
     SchemaParser schemaParser = new SchemaParser();
-    Schema explicitSchema = schemaParser.parse(explicitSchemaText);
-    return schemaParser.resolve(explicitSchema);
+    SchemaParser.ParseResult explicitSchema = schemaParser.parse(explicitSchemaText);
+    return explicitSchema.mainSchema();
   }
 
   @Override

@@ -112,7 +112,7 @@ public class DataFileReadTool implements Tool {
     } else if (schemaStr != null) {
       LOG.info("Reading schema from string '{}'", schemaStr);
       SchemaParser parser = new SchemaParser();
-      readerSchema = parser.resolve(parser.parse(schemaStr));
+      readerSchema = parser.parse(schemaStr).mainSchema();
     }
     return readerSchema;
   }

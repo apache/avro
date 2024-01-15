@@ -49,7 +49,7 @@ public class TestGenerateInteropSingleObjectEncoding {
   public static void setup() throws IOException {
     try (FileInputStream fileInputStream = new FileInputStream(SCHEMA_FILE)) {
       SchemaParser parser = new SchemaParser();
-      SCHEMA = parser.resolve(parser.parse(fileInputStream));
+      SCHEMA = parser.parse(fileInputStream).mainSchema();
       BUILDER = new GenericRecordBuilder(SCHEMA);
     }
   }

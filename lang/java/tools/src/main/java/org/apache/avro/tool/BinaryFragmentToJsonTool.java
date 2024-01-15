@@ -61,7 +61,7 @@ public class BinaryFragmentToJsonTool implements Tool {
     String inputFile;
     if (schemaFile == null) {
       SchemaParser parser = new SchemaParser();
-      schema = parser.resolve(parser.parse(nargs.get(0)));
+      schema = parser.parse(nargs.get(0)).mainSchema();
       inputFile = nargs.get(1);
     } else {
       schema = Util.parseSchemaFromFS(schemaFile);

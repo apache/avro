@@ -53,7 +53,7 @@ public class TrevniCreateRandomTool implements Tool {
     File outputFile = new File(args.get(2));
 
     SchemaParser parser = new SchemaParser();
-    Schema schema = parser.resolve(parser.parse(schemaFile));
+    Schema schema = parser.parse(schemaFile).mainSchema();
 
     AvroColumnWriter<Object> writer = new AvroColumnWriter<>(schema, new ColumnFileMetaData());
 

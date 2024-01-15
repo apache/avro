@@ -201,8 +201,8 @@ public class AvroMultipleInputs {
       String schemaString = fromBase64(split[1]);
       Schema inputSchema;
       try {
-        // resolve immediately: disallow references to next splits
-        inputSchema = schemaParser.resolve(schemaParser.parse(schemaString));
+        // get result immediately: disallow references to next splits
+        inputSchema = schemaParser.parse(schemaString).mainSchema();
       } catch (SchemaParseException e) {
         throw new RuntimeException(e);
       }

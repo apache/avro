@@ -166,7 +166,7 @@ class Util {
     InputStream stream = openFromFS(filename);
     try {
       SchemaParser parser = new SchemaParser();
-      return parser.resolve(parser.parse(stream));
+      return parser.parse(stream).mainSchema();
     } finally {
       close(stream);
     }

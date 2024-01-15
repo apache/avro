@@ -76,7 +76,7 @@ public class CreateRandomFileTool implements Tool {
       schema = Util.parseSchemaFromFS(schemafile);
     } else {
       SchemaParser parser = new SchemaParser();
-      schema = parser.resolve(parser.parse(schemastr));
+      schema = parser.parse(schemastr).mainSchema();
     }
 
     DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>());

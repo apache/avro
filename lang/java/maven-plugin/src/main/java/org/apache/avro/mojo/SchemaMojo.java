@@ -81,7 +81,7 @@ public class SchemaMojo extends AbstractAvroMojo {
       for (File sourceFile : sourceFiles) {
         parser.parse(sourceFile);
       }
-      schemas = parser.getParseResult();
+      schemas = parser.getParsedNamedSchemas();
 
       doCompile(sourceFileForModificationDetection, schemas, outputDirectory);
     } catch (IOException | SchemaParseException ex) {

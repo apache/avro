@@ -506,7 +506,7 @@ public class SpecificCompiler {
       parser.parse(src);
       lastModified = Math.max(lastModified, src.lastModified());
     }
-    for (Schema schema : parser.getParseResult()) {
+    for (Schema schema : parser.getParsedNamedSchemas()) {
       SpecificCompiler compiler = new SpecificCompiler(schema);
       compiler.compileToDestination(lastModified == 0 ? null : lastModified, dest);
     }

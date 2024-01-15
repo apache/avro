@@ -345,7 +345,7 @@ public class TestDataFile {
     File input = new File(args[0]);
     Schema projection = null;
     if (args.length > 1)
-      projection = new SchemaParser().parse(new File(args[1]));
+      projection = new SchemaParser().parse(new File(args[1])).mainSchema();
     TestDataFile.readFile(input, new GenericDatumReader<>(null, projection));
     long start = System.currentTimeMillis();
     for (int i = 0; i < 4; i++)

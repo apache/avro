@@ -59,7 +59,7 @@ public class SchemaNormalizationTool implements Tool {
     BufferedOutputStream outStream = Util.fileOrStdout(args.get(1), out);
 
     SchemaParser parser = new SchemaParser();
-    Schema schema = parser.resolve(parser.parse(inStream));
+    Schema schema = parser.parse(inStream).mainSchema();
 
     String canonicalForm = SchemaNormalization.toParsingForm(schema);
 

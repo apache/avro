@@ -49,7 +49,7 @@ public class TestCases {
 
   private void runCase(File dir) throws Exception {
     SchemaParser parser = new SchemaParser();
-    Schema schema = parser.resolve(parser.parse(new File(dir, "input.avsc")));
+    Schema schema = parser.parse(new File(dir, "input.avsc")).mainSchema();
     List<Object> data = fromJson(schema, new File(dir, "input.json"));
 
     // write full data
@@ -65,7 +65,7 @@ public class TestCases {
     for (File f : dir.listFiles())
       if (f.isDirectory() && !f.getName().startsWith(".")) {
         SchemaParser subParser = new SchemaParser();
-        Schema s = subParser.resolve(subParser.parse(new File(f, "sub.avsc")));
+        Schema s = subParser.parse(new File(f, "sub.avsc")).mainSchema();
         checkRead(s, fromJson(s, new File(f, "sub.json")));
       }
   }

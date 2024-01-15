@@ -165,36 +165,6 @@ public class IdlReader {
     parseContext.put(schema);
   }
 
-  public IdlFile resolve(IdlFile unresolved) {
-    parseContext.commit();
-    List<Schema> namedSchemas = parseContext.resolveAllTypes();
-
-    Protocol protocol = unresolved.getProtocol();
-    if (protocol == null) {
-      Schema unresolvedMain = unresolved.getMainSchema();
-      Schema mainSchema = unresolvedMain == null ? null : parseContext.resolve(unresolvedMain);
-      return new IdlFile(mainSchema, namedSchemas, unresolved.getWarnings());
-    } else {
-      protocol.setTypes(namedSchemas);
-      Map<String, Protocol.Message> messages = protocol.getMessages();
-      for (Map.Entry<String, Protocol.Message> entry : messages.entrySet()) {
-        Protocol.Message oldValue = entry.getValue();
-        Protocol.Message newValue;
-        if (oldValue.isOneWay()) {
-          newValue = protocol.createMessage(oldValue.getName(), oldValue.getDoc(), oldValue,
-              parseContext.resolve(oldValue.getRequest()));
-        } else {
-          Schema request = parseContext.resolve(oldValue.getRequest());
-          Schema response = parseContext.resolve(oldValue.getResponse());
-          Schema errors = parseContext.resolve(oldValue.getErrors());
-          newValue = protocol.createMessage(oldValue.getName(), oldValue.getDoc(), oldValue, request, response, errors);
-        }
-        entry.setValue(newValue);
-      }
-      return new IdlFile(protocol, unresolved.getWarnings());
-    }
-  }
-
   public IdlFile parse(Path location) throws IOException {
     return parse(location.toUri());
   }
@@ -378,9 +348,9 @@ public class IdlReader {
     @Override
     public void exitIdlFile(IdlFileContext ctx) {
       if (protocol == null) {
-        result = new IdlFile(mainSchema, parseContext.typesByName().values(), warnings);
+        result = new IdlFile(mainSchema, parseContext, warnings);
       } else {
-        result = new IdlFile(protocol, warnings);
+        result = new IdlFile(protocol, parseContext, warnings);
       }
     }
 
@@ -404,8 +374,10 @@ public class IdlReader {
 
     @Override
     public void exitProtocolDeclaration(ProtocolDeclarationContext ctx) {
-      if (protocol != null)
-        protocol.setTypes(parseContext.typesByName().values());
+      if (protocol != null) {
+        parseContext.commit();
+        protocol.setTypes(parseContext.resolveAllSchemas());
+      }
       if (!namespaces.isEmpty())
         popNamespace();
     }
@@ -418,6 +390,14 @@ public class IdlReader {
     @Override
     public void exitMainSchemaDeclaration(IdlParser.MainSchemaDeclarationContext ctx) {
       mainSchema = typeStack.pop();
+      switch (mainSchema.getType()) {
+      case RECORD:
+      case ENUM:
+      case FIXED:
+        if (mainSchema.getFullName() != null) {
+          parseContext.put(mainSchema);
+        }
+      }
       assert typeStack.isEmpty();
     }
 

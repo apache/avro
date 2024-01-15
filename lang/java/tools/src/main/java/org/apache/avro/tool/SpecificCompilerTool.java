@@ -162,7 +162,7 @@ public class SpecificCompilerTool implements Tool {
         parser.parse(src);
         lastModified = Math.max(lastModified, src.lastModified());
       }
-      final SpecificCompiler compiler = new SpecificCompiler(parser.getParseResult());
+      final SpecificCompiler compiler = new SpecificCompiler(parser.getParsedNamedSchemas());
       executeCompiler(compiler, compilerOpts, lastModified, output);
     } else if ("protocol".equals(method)) {
       for (File src : determineInputs(inputs, PROTOCOL_FILTER)) {

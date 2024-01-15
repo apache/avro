@@ -28,7 +28,7 @@ public class SchemaTask extends ProtocolTask {
   @Override
   protected void doCompile(File src, File dest) throws IOException {
     final SchemaParser parser = new SchemaParser();
-    final Schema schema = parser.resolve(parser.parse(src));
+    final Schema schema = parser.parse(src).mainSchema();
     final SpecificCompiler compiler = new SpecificCompiler(schema);
     compiler.setStringType(getStringType());
     compiler.compileToDestination(src.lastModified(), dest);

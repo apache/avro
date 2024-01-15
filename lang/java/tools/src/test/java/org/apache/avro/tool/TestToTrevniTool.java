@@ -54,7 +54,7 @@ public class TestToTrevniTool {
   @Test
   void test() throws Exception {
     SchemaParser parser = new SchemaParser();
-    Schema schema = parser.resolve(parser.parse(SCHEMA_FILE));
+    Schema schema = parser.parse(SCHEMA_FILE).mainSchema();
 
     DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>());
     File avroFile = dataDir.resolve("random.avro").toFile();

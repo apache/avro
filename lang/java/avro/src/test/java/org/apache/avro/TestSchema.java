@@ -218,7 +218,7 @@ public class TestSchema {
         InputStream jsonSchema = getClass().getResourceAsStream("/SchemaBuilder.avsc")) {
 
       SchemaParser parser = new SchemaParser();
-      Schema payload = parser.resolve(parser.parse(jsonSchema));
+      Schema payload = parser.parse(jsonSchema).mainSchema();
       oos.writeObject(payload);
 
       try (ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
@@ -236,8 +236,8 @@ public class TestSchema {
     String parent = "{\"type\":\"record\"," + "\"name\":\"Parent\"," + "\"namespace\":\"org.apache.avro.nested\","
         + "\"fields\":" + "[{\"name\":\"child\",\"type\":\"Child\"}]}";
     SchemaParser parser = new SchemaParser();
-    Schema childSchema = parser.parse(child);
-    Schema parentSchema = parser.parse(parent);
+    Schema childSchema = parser.parse(child).mainSchema();
+    Schema parentSchema = parser.parse(parent).mainSchema();
     String parentWithoutInlinedChildReference = parentSchema.toString(Collections.singleton(childSchema), false);
     // The generated string should be the same as the original parent
     // schema string that did not have the child schema inlined.
@@ -560,7 +560,8 @@ public class TestSchema {
   @Test
   void testContentAfterAvsc() {
     SchemaParser parser = new SchemaParser();
-    assertThrows(SchemaParseException.class, () -> parser.parse("{\"type\": \"string\"}; DROP TABLE STUDENTS"));
+    assertThrows(SchemaParseException.class,
+        () -> parser.parse("{\"type\": \"string\"}; DROP TABLE STUDENTS").mainSchema());
   }
 
   @Test
@@ -581,7 +582,7 @@ public class TestSchema {
     }
 
     SchemaParser parser = new SchemaParser();
-    assertThrows(SchemaParseException.class, () -> parser.parse(avscFile));
+    assertThrows(SchemaParseException.class, () -> parser.parse(avscFile).mainSchema());
   }
 
   @Test
@@ -597,7 +598,7 @@ public class TestSchema {
     parser.parse(f1);
     parser.parse(f2);
     parser.parse(f3);
-    final List<Schema> schemas = parser.getParseResult();
+    final List<Schema> schemas = parser.getParsedNamedSchemas();
     Assertions.assertEquals(3, schemas.size());
     Schema schemaAppEvent = schemas.get(0);
     Schema schemaDocInfo = schemas.get(1);

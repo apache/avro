@@ -150,7 +150,7 @@ public class TestSpecificCompiler {
 
   private SpecificCompiler createCompiler() throws IOException {
     SchemaParser parser = new SchemaParser();
-    Schema schema = parser.resolve(parser.parse(this.src));
+    Schema schema = parser.parse(this.src).mainSchema();
     SpecificCompiler compiler = new SpecificCompiler(schema);
     String velocityTemplateDir = "src/main/velocity/org/apache/avro/compiler/specific/templates/java/classic/";
     compiler.setTemplateDir(velocityTemplateDir);
@@ -656,7 +656,8 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = createCompiler();
 
     final Schema schema = new SchemaParser().parse(
-        "{\"type\":\"record\",\"name\":\"NestedLogicalTypesMap\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"mapOfRecords\",\"type\":{\"type\":\"map\",\"values\":{\"type\":\"record\",\"name\":\"RecordInMap\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]},\"avro.java.string\":\"String\"}}]}");
+        "{\"type\":\"record\",\"name\":\"NestedLogicalTypesMap\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"mapOfRecords\",\"type\":{\"type\":\"map\",\"values\":{\"type\":\"record\",\"name\":\"RecordInMap\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]},\"avro.java.string\":\"String\"}}]}")
+        .mainSchema();
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
     assertEquals(1, usedConversionClasses.size());
@@ -685,7 +686,7 @@ public class TestSpecificCompiler {
     reservedIdentifiers.addAll(SpecificCompiler.ERROR_RESERVED_WORDS);
     for (String reserved : reservedIdentifiers) {
       try {
-        Schema s = new SchemaParser().parse(schema.replace("__test__", reserved));
+        Schema s = new SchemaParser().parse(schema.replace("__test__", reserved)).mainSchema();
         assertCompilesWithJavaCompiler(new File(OUTPUT_DIR, dstDirPrefix + "_" + reserved),
             new SpecificCompiler(s).compile());
       } catch (AvroTypeException e) {
@@ -743,7 +744,7 @@ public class TestSpecificCompiler {
 
   private static Schema parseFile(File file) throws IOException {
     SchemaParser schemaParser = new SchemaParser();
-    return schemaParser.resolve(schemaParser.parse(file));
+    return schemaParser.parse(file).mainSchema();
   }
 
   @Test
@@ -947,8 +948,8 @@ public class TestSpecificCompiler {
   void fieldWithUnderscore_avro3826() {
     String jsonSchema = "{\n" + "  \"name\": \"Value\",\n" + "  \"type\": \"record\",\n" + "  \"fields\": [\n"
         + "    { \"name\": \"__deleted\",  \"type\": \"string\"\n" + "    }\n" + "  ]\n" + "}";
-    Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(new SchemaParser().parse(jsonSchema))
-        .compile();
+    Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(
+        new SchemaParser().parse(jsonSchema).mainSchema()).compile();
     assertEquals(1, outputs.size());
     SpecificCompiler.OutputFile outputFile = outputs.iterator().next();
     assertTrue(outputFile.contents.contains("getDeleted()"));
@@ -958,8 +959,8 @@ public class TestSpecificCompiler {
     String jsonSchema2 = "{\n" + "  \"name\": \"Value\",  \"type\": \"record\",\n" + "  \"fields\": [\n"
         + "    { \"name\": \"__deleted\",  \"type\": \"string\"},\n"
         + "    { \"name\": \"_deleted\",  \"type\": \"string\"}\n" + "  ]\n" + "}";
-    Collection<SpecificCompiler.OutputFile> outputs2 = new SpecificCompiler(new SchemaParser().parse(jsonSchema2))
-        .compile();
+    Collection<SpecificCompiler.OutputFile> outputs2 = new SpecificCompiler(
+        new SchemaParser().parse(jsonSchema2).mainSchema()).compile();
     assertEquals(1, outputs2.size());
     SpecificCompiler.OutputFile outputFile2 = outputs2.iterator().next();
 
@@ -971,8 +972,8 @@ public class TestSpecificCompiler {
         + "    { \"name\": \"__deleted\",  \"type\": \"string\"},\n"
         + "    { \"name\": \"_deleted\",  \"type\": \"string\"},\n"
         + "    { \"name\": \"deleted\",  \"type\": \"string\"}\n" + "  ]\n" + "}";
-    Collection<SpecificCompiler.OutputFile> outputs3 = new SpecificCompiler(new SchemaParser().parse(jsonSchema3))
-        .compile();
+    Collection<SpecificCompiler.OutputFile> outputs3 = new SpecificCompiler(
+        new SchemaParser().parse(jsonSchema3).mainSchema()).compile();
     assertEquals(1, outputs3.size());
     SpecificCompiler.OutputFile outputFile3 = outputs3.iterator().next();
 
@@ -986,8 +987,8 @@ public class TestSpecificCompiler {
         + "    { \"name\": \"_deleted\",  \"type\": \"string\"},\n"
         + "    { \"name\": \"deleted\",  \"type\": \"string\"},\n"
         + "    { \"name\": \"Deleted\",  \"type\": \"string\"}\n" + "  ]\n" + "}";
-    Collection<SpecificCompiler.OutputFile> outputs4 = new SpecificCompiler(new SchemaParser().parse(jsonSchema4))
-        .compile();
+    Collection<SpecificCompiler.OutputFile> outputs4 = new SpecificCompiler(
+        new SchemaParser().parse(jsonSchema4).mainSchema()).compile();
     assertEquals(1, outputs4.size());
     SpecificCompiler.OutputFile outputFile4 = outputs4.iterator().next();
 

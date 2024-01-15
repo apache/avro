@@ -149,31 +149,16 @@ public final class SchemaResolver {
    * This visitor creates clone of the visited Schemata, minus the specified
    * schema properties, and resolves all unresolved schemas.
    */
-  public static final class ResolvingVisitor implements SchemaVisitor<Schema> {
+  public static final class ResolvingVisitor implements SchemaVisitor<Void> {
     private static final Set<Schema.Type> CONTAINER_SCHEMA_TYPES = EnumSet.of(RECORD, ARRAY, MAP, UNION);
     private static final Set<Schema.Type> NAMED_SCHEMA_TYPES = EnumSet.of(RECORD, ENUM, FIXED);
 
     private final Function<String, Schema> symbolTable;
     private final IdentityHashMap<Schema, Schema> replace;
 
-    private final Schema root;
-    private final boolean returnNullUponFailure;
-
-    public ResolvingVisitor(final Schema root, final Function<String, Schema> symbolTable,
-        boolean returnNullUponFailure) {
-      this(root, new IdentityHashMap<>(), symbolTable, returnNullUponFailure);
-    }
-
-    public ResolvingVisitor(final Schema root, final IdentityHashMap<Schema, Schema> replace,
-        Function<String, Schema> symbolTable, boolean returnNullUponFailure) {
-      this.replace = replace;
+    public ResolvingVisitor(final Function<String, Schema> symbolTable) {
+      this.replace = new IdentityHashMap<>();
       this.symbolTable = symbolTable;
-      this.root = root;
-      this.returnNullUponFailure = returnNullUponFailure;
-    }
-
-    public ResolvingVisitor withRoot(Schema root) {
-      return new ResolvingVisitor(root, replace, symbolTable, returnNullUponFailure);
     }
 
     @Override
@@ -192,17 +177,13 @@ public final class SchemaResolver {
     @Override
     public SchemaVisitorAction visitNonTerminal(final Schema nt) {
       Schema.Type type = nt.getType();
-      if (type == RECORD) {
+      if (type == RECORD && !replace.containsKey(nt)) {
         if (isUnresolvedSchema(nt)) {
           // unresolved schema will get a replacement that we already encountered,
           // or we will attempt to resolve.
           final String unresolvedSchemaName = getUnresolvedSchemaName(nt);
           Schema resSchema = symbolTable.apply(unresolvedSchemaName);
           if (resSchema == null) {
-            if (returnNullUponFailure) {
-              replace.clear();
-              return SchemaVisitorAction.TERMINATE;
-            }
             throw new AvroTypeException("Undefined schema: " + unresolvedSchemaName);
           }
           Schema replacement = replace.computeIfAbsent(resSchema, schema -> {
@@ -211,12 +192,10 @@ public final class SchemaResolver {
           });
           replace.put(nt, replacement);
         } else {
-          replace.computeIfAbsent(nt, s -> {
-            // Create a clone without fields or properties. They will be added in
-            // afterVisitNonTerminal, as they can both create circular references.
-            // (see org.apache.avro.TestCircularReferences as an example)
-            return Schema.createRecord(s.getName(), s.getDoc(), s.getNamespace(), s.isError());
-          });
+          // Create a clone without fields or properties. They will be added in
+          // afterVisitNonTerminal, as they can both create circular references.
+          // (see org.apache.avro.TestCircularReferences as an example)
+          replace.put(nt, Schema.createRecord(nt.getName(), nt.getDoc(), nt.getNamespace(), nt.isError()));
         }
       }
       return SchemaVisitorAction.CONTINUE;
@@ -279,8 +258,13 @@ public final class SchemaResolver {
     }
 
     @Override
-    public Schema get() {
-      return replace.get(root);
+    public Void get() {
+      return null;
+    }
+
+    public Schema getResolved(Schema schema) {
+      return requireNonNull(replace.get(schema),
+          () -> "Unknown schema: " + schema.getFullName() + ". Was it resolved before?");
     }
 
     @Override

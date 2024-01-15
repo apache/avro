@@ -62,9 +62,9 @@ public interface FormattedSchemaParser {
    * the parsing process, so reserve that for rethrowing exceptions.</li>
    * </ul>
    *
-   * @param parseContext    the current parse context: all parsed schemata should
-   *                        be added here to resolve names with; contains all
-   *                        previously known types
+   * @param parseContext    the current parse context: all named schemata that are
+   *                        parsed should be added here, otherwise resolving
+   *                        schemata can fail; contains all previously known types
    * @param baseUri         the base location of the schema, or {@code null} if
    *                        not known
    * @param formattedSchema the text of the schema definition(s) to parse

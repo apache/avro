@@ -55,8 +55,8 @@ public class SchemaFingerprintTool implements Tool {
     for (final String fileOrStdin : (List<String>) opts.nonOptionArguments()) {
       final InputStream input = Util.fileOrStdin(fileOrStdin, in);
       try {
-        // Resolve immediately: do not allow references to next files
-        final Schema schema = parser.resolve(parser.parse(input));
+        // Get main schema immediately: do not allow references to next files
+        final Schema schema = parser.parse(input).mainSchema();
         final byte[] fingerprint = SchemaNormalization.parsingFingerprint(opts.valueOf(fingerprintOpt), schema);
         out.format("%s %s%n", Util.encodeHex(fingerprint), fileOrStdin);
       } finally {
