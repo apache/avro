@@ -47,7 +47,7 @@
     <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>
 
     <!-- plugin versions -->
-    <apache-rat-plugin.version>0.15</apache-rat-plugin.version>
+    <apache-rat-plugin.version>0.16</apache-rat-plugin.version>
     <checkstyle-plugin.version>3.3.1</checkstyle-plugin.version>
     <checkstyle.version>9.3</checkstyle.version>
     <enforcer-plugin.version>3.4.1</enforcer-plugin.version>
