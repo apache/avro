@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro.idl;
+package org.apache.avro.util;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -51,8 +51,7 @@ public final class Schemas {
     while ((current = dq.poll()) != null) {
       if (current instanceof Supplier) {
         // We are executing a non-terminal post visit.
-        @SuppressWarnings("unchecked")
-        SchemaVisitorAction action = ((Supplier<SchemaVisitorAction>) current).get();
+        SchemaVisitor.SchemaVisitorAction action = ((Supplier<SchemaVisitor.SchemaVisitorAction>) current).get();
         switch (action) {
         case CONTINUE:
           break;
@@ -107,14 +106,14 @@ public final class Schemas {
 
   private static boolean visitNonTerminal(final SchemaVisitor<?> visitor, final Schema schema, final Deque<Object> dq,
       final Iterable<Schema> itSupp) {
-    SchemaVisitorAction action = visitor.visitNonTerminal(schema);
+    SchemaVisitor.SchemaVisitorAction action = visitor.visitNonTerminal(schema);
     switch (action) {
     case CONTINUE:
-      dq.push((Supplier<SchemaVisitorAction>) () -> visitor.afterVisitNonTerminal(schema));
+      dq.push((Supplier<SchemaVisitor.SchemaVisitorAction>) () -> visitor.afterVisitNonTerminal(schema));
       itSupp.forEach(dq::push);
       break;
     case SKIP_SUBTREE:
-      dq.push((Supplier<SchemaVisitorAction>) () -> visitor.afterVisitNonTerminal(schema));
+      dq.push((Supplier<SchemaVisitor.SchemaVisitorAction>) () -> visitor.afterVisitNonTerminal(schema));
       break;
     case SKIP_SIBLINGS:
       while (dq.peek() instanceof Schema) {
@@ -130,7 +129,7 @@ public final class Schemas {
   }
 
   private static boolean visitTerminal(final SchemaVisitor<?> visitor, final Schema schema, final Deque<Object> dq) {
-    SchemaVisitorAction action = visitor.visitTerminal(schema);
+    SchemaVisitor.SchemaVisitorAction action = visitor.visitTerminal(schema);
     switch (action) {
     case CONTINUE:
       break;

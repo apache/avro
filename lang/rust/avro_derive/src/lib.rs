@@ -267,7 +267,7 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<syn::Error>> {
         Ok(schema)
     } else if let Type::Array(ta) = ty {
         let inner_schema_expr = type_to_schema_expr(&ta.elem)?;
-        Ok(quote! {apache_avro::schema::Schema::Array(Box::new(#inner_schema_expr))})
+        Ok(quote! {apache_avro::schema::Schema::array(#inner_schema_expr)})
     } else if let Type::Reference(tr) = ty {
         type_to_schema_expr(&tr.elem)
     } else {

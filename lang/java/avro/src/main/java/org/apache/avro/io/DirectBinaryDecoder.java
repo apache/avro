@@ -45,10 +45,10 @@ class DirectBinaryDecoder extends BinaryDecoder {
         result = old;
         result.clear();
       } else {
-        result = ByteBuffer.allocate((int) length);
+        result = ByteBuffer.allocate(length);
       }
-      doReadBytes(result.array(), result.position(), (int) length);
-      result.limit((int) length);
+      doReadBytes(result.array(), result.position(), length);
+      result.limit(length);
       return result;
     }
   }
@@ -65,7 +65,7 @@ class DirectBinaryDecoder extends BinaryDecoder {
       if (old != null) {
         return super.read(old, length);
       } else {
-        return bbi.readBuffer((int) length);
+        return bbi.readBuffer(length);
       }
     }
   }

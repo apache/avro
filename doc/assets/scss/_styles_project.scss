@@ -15,9 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
+@font-face {
+  font-family: 'PT Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(./PTMono-Regular.ttf) format('truetype');
+}
+
 // Disable all github editing links for now
 .td-page-meta--view { display: none !important; }
 .td-page-meta--edit { display: none !important; }
 .td-page-meta--child { display: none !important; }
 .td-page-meta--issue { display: none !important; }
 .td-page-meta--project-issue { display: none !important; }
+
+.navbar-brand {
+  font-family: "PT Mono", monospace;
+}

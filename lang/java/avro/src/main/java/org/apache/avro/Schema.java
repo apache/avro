@@ -25,6 +25,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.NullNode;
+import org.apache.avro.util.internal.Accessor;
+import org.apache.avro.util.internal.Accessor.FieldAccessor;
+import org.apache.avro.util.internal.JacksonUtils;
+import org.apache.avro.util.internal.ThreadLocalWithInitial;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -50,13 +56,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-
-import org.apache.avro.util.internal.Accessor;
-import org.apache.avro.util.internal.Accessor.FieldAccessor;
-import org.apache.avro.util.internal.JacksonUtils;
-import org.apache.avro.util.internal.ThreadLocalWithInitial;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.apache.avro.LogicalType.LOGICAL_TYPE_PROP;
 
@@ -1490,7 +1489,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
    */
   public static class Parser {
     private Names names = new Names();
-    private final Schema.NameValidator validate;
+    private final NameValidator validate;
     private boolean validateDefaults = true;
 
     public Parser() {
@@ -1760,18 +1759,18 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
   }
 
-  private static ThreadLocal<Schema.NameValidator> validateNames = ThreadLocalWithInitial
+  private static ThreadLocal<NameValidator> validateNames = ThreadLocalWithInitial
       .of(() -> NameValidator.UTF_VALIDATOR);
 
   private static String validateName(String name) {
     NameValidator.Result result = validateNames.get().validate(name);
     if (!result.isOK()) {
-      throw new SchemaParseException(result.errors);
+      throw new SchemaParseException(result.getErrors());
     }
     return name;
   }
 
-  public static void setNameValidator(final Schema.NameValidator validator) {
+  public static void setNameValidator(final NameValidator validator) {
     Schema.validateNames.set(validator);
   }
 
@@ -2309,84 +2308,6 @@ public abstract class Schema extends JsonProperties implements Serializable {
     if (alias == null)
       return field;
     return alias;
-  }
-
-  public interface NameValidator {
-
-    class Result {
-      private final String errors;
-
-      public Result(final String errors) {
-        this.errors = errors;
-      }
-
-      public boolean isOK() {
-        return this == NameValidator.OK;
-      }
-
-      public String getErrors() {
-        return errors;
-      }
-    }
-
-    Result OK = new Result(null);
-
-    default Result validate(String name) {
-      return OK;
-    }
-
-    NameValidator NO_VALIDATION = new NameValidator() {
-    };
-
-    NameValidator UTF_VALIDATOR = new NameValidator() {
-      @Override
-      public Result validate(final String name) {
-        if (name == null)
-          return new Result("Null name");
-        int length = name.length();
-        if (length == 0)
-          return new Result("Empty name");
-        char first = name.charAt(0);
-        if (!(Character.isLetter(first) || first == '_'))
-          return new Result("Illegal initial character: " + name);
-        for (int i = 1; i < length; i++) {
-          char c = name.charAt(i);
-          if (!(Character.isLetterOrDigit(c) || c == '_'))
-            return new Result("Illegal character in: " + name);
-        }
-        return OK;
-      }
-    };
-
-    NameValidator STRICT_VALIDATOR = new NameValidator() {
-      @Override
-      public Result validate(final String name) {
-        if (name == null)
-          return new Result("Null name");
-        int length = name.length();
-        if (length == 0)
-          return new Result("Empty name");
-        char first = name.charAt(0);
-        if (!(isLetter(first) || first == '_'))
-          return new Result("Illegal initial character: " + name);
-        for (int i = 1; i < length; i++) {
-          char c = name.charAt(i);
-          if (!(isLetter(c) || isDigit(c) || c == '_'))
-            return new Result("Illegal character in: " + name);
-        }
-        return OK;
-      }
-
-      private boolean isLetter(char c) {
-        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-      }
-
-      private boolean isDigit(char c) {
-        return c >= '0' && c <= '9';
-      }
-
-    };
-
   }
 
   /**

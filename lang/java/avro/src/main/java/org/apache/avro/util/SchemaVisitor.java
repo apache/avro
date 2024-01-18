@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro.idl;
+package org.apache.avro.util;
 
 import org.apache.avro.Schema;
 
@@ -44,4 +44,26 @@ public interface SchemaVisitor<T> {
    * @return a value that will be returned by the visit method.
    */
   T get();
+
+  enum SchemaVisitorAction {
+
+    /**
+     * continue visit.
+     */
+    CONTINUE,
+    /**
+     * terminate visit.
+     */
+    TERMINATE,
+    /**
+     * when returned from pre non terminal visit method the children of the non
+     * terminal are skipped. afterVisitNonTerminal for the current schema will not
+     * be invoked.
+     */
+    SKIP_SUBTREE,
+    /**
+     * Skip visiting the siblings of this schema.
+     */
+    SKIP_SIBLINGS
+  }
 }

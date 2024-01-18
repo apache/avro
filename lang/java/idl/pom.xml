@@ -102,6 +102,7 @@
         <configuration>
           <sourceDirectory>${project.basedir}/../../../share/idl_grammar</sourceDirectory>
           <libDirectory>${project.basedir}/../../../share/idl_grammar/imports</libDirectory>
+          <treatWarningsAsErrors>true</treatWarningsAsErrors>
           <listener>true</listener>
           <visitor>false</visitor>
         </configuration>

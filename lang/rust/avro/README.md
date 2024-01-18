@@ -538,8 +538,10 @@ fn main() -> Result<(), Error> {
     record.put("time_micros", Value::TimeMicros(3));
     record.put("timestamp_millis", Value::TimestampMillis(4));
     record.put("timestamp_micros", Value::TimestampMicros(5));
+    record.put("timestamp_nanos", Value::TimestampNanos(6));
     record.put("local_timestamp_millis", Value::LocalTimestampMillis(4));
     record.put("local_timestamp_micros", Value::LocalTimestampMicros(5));
+    record.put("local_timestamp_nanos", Value::LocalTimestampMicros(6));
     record.put("duration", Duration::new(Months::new(6), Days::new(7), Millis::new(8)));
 
     writer.append(record)?;
@@ -634,7 +636,7 @@ use apache_avro::{Schema, schema_compatibility::SchemaCompatibility};
 
 let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
 let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
-assert_eq!(true, SchemaCompatibility::can_read(&writers_schema, &readers_schema));
+assert!(SchemaCompatibility::can_read(&writers_schema, &readers_schema).is_ok());
 ```
 
 2. Incompatible schemas (a long array schema cannot be read by an int array schema)
@@ -647,14 +649,14 @@ use apache_avro::{Schema, schema_compatibility::SchemaCompatibility};
 
 let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
 let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
-assert_eq!(false, SchemaCompatibility::can_read(&writers_schema, &readers_schema));
+assert!(SchemaCompatibility::can_read(&writers_schema, &readers_schema).is_err());
 ```
 
 <!-- cargo-rdme end -->
 
 ## Minimal supported Rust version
 
-1.65.0
+1.70.0
 
 ## License
 This project is licensed under [Apache License 2.0](https://github.com/apache/avro/blob/main/LICENSE.txt).

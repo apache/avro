@@ -33,7 +33,11 @@ pub mod logger;
 #[ctor]
 fn before_all() {
     // better stacktraces in tests
-    color_backtrace::install();
+    better_panic::Settings::new()
+        .most_recent_first(true)
+        .lineno_suffix(false)
+        .backtrace_first(true)
+        .install();
 
     // enable logging in tests
     logger::install();

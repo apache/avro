@@ -323,6 +323,7 @@ impl<'a, W: Write> Writer<'a, W> {
     /// **NOTE** This function forces the written data to be flushed (an implicit
     /// call to [`flush`](struct.Writer.html#method.flush) is performed).
     pub fn into_inner(mut self) -> AvroResult<W> {
+        self.maybe_write_header()?;
         self.flush()?;
         Ok(self.writer)
     }
@@ -375,11 +376,7 @@ impl<'a, W: Write> Writer<'a, W> {
 
         let mut header = Vec::new();
         header.extend_from_slice(AVRO_OBJECT_HEADER);
-        encode(
-            &metadata.into(),
-            &Schema::Map(Box::new(Schema::Bytes)),
-            &mut header,
-        )?;
+        encode(&metadata.into(), &Schema::map(Schema::Bytes), &mut header)?;
         header.extend_from_slice(&self.marker);
 
         Ok(header)
@@ -635,6 +632,7 @@ mod tests {
         schema::{DecimalSchema, FixedSchema, Name},
         types::Record,
         util::zig_i64,
+        Reader,
     };
     use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
@@ -893,7 +891,7 @@ mod tests {
         let record_copy = record.clone();
         let records = vec![record, record_copy];
 
-        let n1 = writer.extend(records.into_iter())?;
+        let n1 = writer.extend(records)?;
         let n2 = writer.flush()?;
         let result = writer.into_inner()?;
 
@@ -968,7 +966,7 @@ mod tests {
         let record_copy = record.clone();
         let records = vec![record, record_copy];
 
-        let n1 = writer.extend_ser(records.into_iter())?;
+        let n1 = writer.extend_ser(records)?;
         let n2 = writer.flush()?;
         let result = writer.into_inner()?;
 
@@ -1135,6 +1133,22 @@ mod tests {
         let result = writer.into_inner()?;
 
         assert_eq!(result.len(), 260);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3881_metadata_empty_body() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
+        let mut writer = Writer::new(&schema, Vec::new());
+        writer.add_user_metadata("a".to_string(), "b")?;
+        let result = writer.into_inner()?;
+
+        let reader = Reader::with_schema(&schema, &result[..])?;
+        let mut expected = HashMap::new();
+        expected.insert("a".to_string(), vec![b'b']);
+        assert_eq!(reader.user_metadata(), &expected);
+        assert_eq!(reader.into_iter().count(), 0);
 
         Ok(())
     }
@@ -1322,6 +1336,39 @@ mod tests {
             .expect("Serialization expected");
         assert_eq!(buf1, buf2);
         assert_eq!(buf1, buf3);
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3894_take_aliases_into_account_when_serializing() -> TestResult {
+        const SCHEMA: &str = r#"
+  {
+      "type": "record",
+      "name": "Conference",
+      "fields": [
+          {"type": "string", "name": "name"},
+          {"type": ["null", "long"], "name": "date", "aliases" : [ "time2", "time" ]}
+      ]
+  }"#;
+
+        #[derive(Debug, PartialEq, Eq, Clone, Serialize)]
+        pub struct Conference {
+            pub name: String,
+            pub time: Option<i64>,
+        }
+
+        let conf = Conference {
+            name: "RustConf".to_string(),
+            time: Some(1234567890),
+        };
+
+        let schema = Schema::parse_str(SCHEMA)?;
+        let mut writer = Writer::new(&schema, Vec::new());
+
+        let bytes = writer.append_ser(conf)?;
+
+        assert_eq!(198, bytes);
 
         Ok(())
     }

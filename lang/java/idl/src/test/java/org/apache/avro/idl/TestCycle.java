@@ -44,26 +44,27 @@ public class TestCycle {
   @Test
   public void testCycleGeneration() throws IOException, URISyntaxException {
     final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-    IdlFile idlFile = new IdlReader().parse(requireNonNull(cl.getResource("input/cycle.avdl")).toURI());
+    IdlReader parser = new IdlReader();
+    IdlFile idlFile = parser.resolve(parser.parse(requireNonNull(cl.getResource("input/cycle.avdl")).toURI()));
     String json = idlFile.outputString();
     LOG.info(json);
 
-    GenericRecordBuilder rb2 = new GenericRecordBuilder(idlFile.getNamedSchema("SampleNode"));
+    GenericRecordBuilder rb2 = new GenericRecordBuilder(idlFile.getNamedSchema("org.apache.avro.gen.SampleNode"));
     rb2.set("count", 10);
     rb2.set("subNodes", Collections.EMPTY_LIST);
     GenericData.Record node = rb2.build();
 
-    GenericRecordBuilder mb = new GenericRecordBuilder(idlFile.getNamedSchema("Method"));
+    GenericRecordBuilder mb = new GenericRecordBuilder(idlFile.getNamedSchema("org.apache.avro.gen.Method"));
     mb.set("declaringClass", "Test");
     mb.set("methodName", "test");
     GenericData.Record method = mb.build();
 
-    GenericRecordBuilder spb = new GenericRecordBuilder(idlFile.getNamedSchema("SamplePair"));
+    GenericRecordBuilder spb = new GenericRecordBuilder(idlFile.getNamedSchema("org.apache.avro.gen.SamplePair"));
     spb.set("method", method);
     spb.set("node", node);
     GenericData.Record sp = spb.build();
 
-    GenericRecordBuilder rb = new GenericRecordBuilder(idlFile.getNamedSchema("SampleNode"));
+    GenericRecordBuilder rb = new GenericRecordBuilder(idlFile.getNamedSchema("org.apache.avro.gen.SampleNode"));
     rb.set("count", 10);
     rb.set("subNodes", Collections.singletonList(sp));
     GenericData.Record record = rb.build();

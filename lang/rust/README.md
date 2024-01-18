@@ -21,6 +21,12 @@
 
 Apache Avro Rust SDK
 
+[![Current Crates.io Version](https://img.shields.io/crates/v/apache_avro.svg)](https://crates.io/crates/apache-avro)
+[![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/apache-avro/latest/apache_avro/)
+[![CI](https://github.com/apache/avro/actions/workflows/test-lang-rust-ci.yml/badge.svg)](https://github.com/apache/avro/actions/workflows/test-lang-rust-ci.yml)
+![Rust Version](https://img.shields.io/crates/msrv/apache_avro.svg?label=MSRV&color=red)
+![license](https://shields.io/badge/license-Apache--2.0-blue)
+
 # Subprojects
 
 ## Avro
@@ -38,4 +44,3 @@ See [avro_test_helper/README.md](./avro_test_helper/README.md)
 ## WebAssembly demo application
 
 See [wasm-demo/README.md](./wasm-demo/README.md)
-

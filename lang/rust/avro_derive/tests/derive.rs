@@ -68,8 +68,8 @@ mod test_derive {
     {
         assert!(!encoded.is_empty());
         let schema = T::get_schema();
-        let reader = Reader::with_schema(&schema, &encoded[..]).unwrap();
-        for res in reader {
+        let mut reader = Reader::with_schema(&schema, &encoded[..]).unwrap();
+        if let Some(res) = reader.next() {
             match res {
                 Ok(value) => {
                     return from_value::<T>(&value).unwrap();
@@ -1565,7 +1565,7 @@ mod test_derive {
 
         let derived_schema = TestRawIdent::get_schema();
         if let Schema::Record(RecordSchema { fields, .. }) = derived_schema {
-            let field = fields.get(0).expect("TestRawIdent must contain a field");
+            let field = fields.first().expect("TestRawIdent must contain a field");
             assert_eq!(field.name, "type");
         } else {
             panic!("Unexpected schema type for {derived_schema:?}")

@@ -34,12 +34,12 @@ proc-macro = true
 
 [dependencies]
 darling = { default-features = false, version = "0.20.3" }
-proc-macro2 = { default-features = false, version = "1.0.67" }
-quote = { default-features = false, version = "1.0.33" }
-serde_json = { default-features = false, version = "1.0.107", features = ["std"] }
-syn = { default-features = false, version = "2.0.37", features = ["full", "fold"] }
+proc-macro2 = { default-features = false, version = "1.0.76" }
+quote = { default-features = false, version = "1.0.35" }
+serde_json = { workspace = true }
+syn = { default-features = false, version = "2.0.48", features = ["full", "fold"] }
 
 [dev-dependencies]
 apache-avro = { default-features = false, path = "../avro", features = ["derive"] }
-proptest = { default-features = false, version = "1.2.0", features = ["std"] }
-serde = { default-features = false, version = "1.0.188", features = ["derive"] }
+proptest = { default-features = false, version = "1.4.0", features = ["std"] }
+serde = { default-features = false, version = "1.0.195", features = ["derive"] }
