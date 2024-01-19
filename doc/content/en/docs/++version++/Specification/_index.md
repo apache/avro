@@ -829,6 +829,14 @@ The `uuid` logical type represents a random generated universally unique identif
 
 A `uuid` logical type annotates an Avro `string`. The string has to conform with [RFC-4122](https://www.ietf.org/rfc/rfc4122.txt)
 
+The following schema represents a uuid:
+```json
+{
+  "type": "string",
+  "logicalType": "uuid"
+}
+```
+
 ### Date
 The `date` logical type represents a date within the calendar, with no reference to a particular time zone or time of day.
 

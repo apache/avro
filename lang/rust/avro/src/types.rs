@@ -281,7 +281,14 @@ impl From<JsonValue> for Value {
         match value {
             JsonValue::Null => Self::Null,
             JsonValue::Bool(b) => b.into(),
-            JsonValue::Number(ref n) if n.is_i64() => Value::Long(n.as_i64().unwrap()),
+            JsonValue::Number(ref n) if n.is_i64() => {
+                let n = n.as_i64().unwrap();
+                if n >= i32::MIN as i64 && n <= i32::MAX as i64 {
+                    Value::Int(n as i32)
+                } else {
+                    Value::Long(n)
+                }
+            }
             JsonValue::Number(ref n) if n.is_f64() => Value::Double(n.as_f64().unwrap()),
             JsonValue::Number(n) => Value::Long(n.as_u64().unwrap() as i64), // TODO: Not so great
             JsonValue::String(s) => s.into(),
@@ -523,14 +530,14 @@ impl Value {
             (Value::Array(items), Schema::Array(inner)) => items.iter().fold(None, |acc, item| {
                 Value::accumulate(
                     acc,
-                    item.validate_internal(inner, names, enclosing_namespace),
+                    item.validate_internal(&inner.items, names, enclosing_namespace),
                 )
             }),
             (Value::Map(items), Schema::Map(inner)) => {
                 items.iter().fold(None, |acc, (_, value)| {
                     Value::accumulate(
                         acc,
-                        value.validate_internal(inner, names, enclosing_namespace),
+                        value.validate_internal(&inner.types, names, enclosing_namespace),
                     )
                 })
             }
@@ -681,8 +688,10 @@ impl Value {
                 ref default,
                 ..
             }) => self.resolve_enum(symbols, default, field_default),
-            Schema::Array(ref inner) => self.resolve_array(inner, names, enclosing_namespace),
-            Schema::Map(ref inner) => self.resolve_map(inner, names, enclosing_namespace),
+            Schema::Array(ref inner) => {
+                self.resolve_array(&inner.items, names, enclosing_namespace)
+            }
+            Schema::Map(ref inner) => self.resolve_map(&inner.types, names, enclosing_namespace),
             Schema::Record(RecordSchema { ref fields, .. }) => {
                 self.resolve_record(fields, names, enclosing_namespace)
             }
@@ -1152,6 +1161,7 @@ mod tests {
     };
     use num_bigint::BigInt;
     use pretty_assertions::assert_eq;
+    use serde_json::json;
     use uuid::Uuid;
 
     #[test]
@@ -1265,15 +1275,15 @@ mod tests {
             ),
             (
                 Value::Array(vec![Value::Long(42i64)]),
-                Schema::Array(Box::new(Schema::Long)),
+                Schema::array(Schema::Long),
                 true,
                 "",
             ),
             (
                 Value::Array(vec![Value::Boolean(true)]),
-                Schema::Array(Box::new(Schema::Long)),
+                Schema::array(Schema::Long),
                 false,
-                "Invalid value: Array([Boolean(true)]) for schema: Array(Long). Reason: Unsupported value-schema combination",
+                "Invalid value: Array([Boolean(true)]) for schema: Array(ArraySchema { items: Long, custom_attributes: {} }). Reason: Unsupported value-schema combination",
             ),
             (Value::Record(vec![]), Schema::Null, false, "Invalid value: Record([]) for schema: Null. Reason: Unsupported value-schema combination"),
             (
@@ -2927,7 +2937,7 @@ Field with name '"b"' is not a member of the map items"#,
 
         let schemas = Schema::parse_list(&[main_schema, referenced_schema])?;
 
-        let main_schema = schemas.get(0).unwrap();
+        let main_schema = schemas.first().unwrap();
         let schemata: Vec<_> = schemas.iter().skip(1).collect();
 
         let resolve_result = avro_value.clone().resolve_schemata(main_schema, schemata);
@@ -3058,5 +3068,50 @@ Field with name '"b"' is not a member of the map items"#,
             .is_err(),);
 
         Ok(())
+    }
+
+    #[test]
+    fn avro_3928_from_serde_value_to_types_value() {
+        assert_eq!(Value::from(serde_json::Value::Null), Value::Null);
+        assert_eq!(Value::from(json!(true)), Value::Boolean(true));
+        assert_eq!(Value::from(json!(false)), Value::Boolean(false));
+        assert_eq!(Value::from(json!(0)), Value::Int(0));
+        assert_eq!(Value::from(json!(i32::MIN)), Value::Int(i32::MIN));
+        assert_eq!(Value::from(json!(i32::MAX)), Value::Int(i32::MAX));
+        assert_eq!(
+            Value::from(json!(i32::MIN as i64 - 1)),
+            Value::Long(i32::MIN as i64 - 1)
+        );
+        assert_eq!(
+            Value::from(json!(i32::MAX as i64 + 1)),
+            Value::Long(i32::MAX as i64 + 1)
+        );
+        assert_eq!(Value::from(json!(1.23)), Value::Double(1.23));
+        assert_eq!(Value::from(json!(-1.23)), Value::Double(-1.23));
+        assert_eq!(Value::from(json!(u64::MIN)), Value::Int(u64::MIN as i32));
+        assert_eq!(Value::from(json!(u64::MAX)), Value::Long(u64::MAX as i64));
+        assert_eq!(
+            Value::from(json!("some text")),
+            Value::String("some text".into())
+        );
+        assert_eq!(
+            Value::from(json!(["text1", "text2", "text3"])),
+            Value::Array(vec![
+                Value::String("text1".into()),
+                Value::String("text2".into()),
+                Value::String("text3".into())
+            ])
+        );
+        assert_eq!(
+            Value::from(json!({"key1": "value1", "key2": "value2"})),
+            Value::Map(
+                vec![
+                    ("key1".into(), Value::String("value1".into())),
+                    ("key2".into(), Value::String("value2".into()))
+                ]
+                .into_iter()
+                .collect()
+            )
+        );
     }
 }
