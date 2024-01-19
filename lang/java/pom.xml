@@ -40,7 +40,8 @@
     <ant.version>1.10.14</ant.version>
     <commons-cli.version>1.6.0</commons-cli.version>
     <commons-compress.version>1.25.0</commons-compress.version>
-    <commons-text.version>1.10.0</commons-text.version>
+    <commons-text.version>1.11.0</commons-text.version>
+    <commons-lang3.version>3.14.0</commons-lang3.version>
     <grpc.version>1.61.0</grpc.version>
     <hadoop.version>3.3.6</hadoop.version>
     <hamcrest.version>2.2</hamcrest.version>
@@ -613,6 +614,11 @@
         <groupId>com.github.luben</groupId>
         <artifactId>zstd-jni</artifactId>
         <version>${zstd-jni.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${commons-lang3.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
