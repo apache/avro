@@ -1877,17 +1877,11 @@ public abstract class Schema extends JsonProperties implements Serializable {
       } else { // For unions with self reference
         return context.find(type, currentNameSpace);
       }
-      Iterator<String> i = schema.fieldNames();
-
-      Set<String> reserved = SCHEMA_RESERVED;
-      if (isTypeEnum) {
-        reserved = ENUM_RESERVED;
-      }
-      while (i.hasNext()) { // add properties
-        String prop = i.next();
+      Set<String> reserved = isTypeEnum ? ENUM_RESERVED : SCHEMA_RESERVED;
+      schema.fieldNames().forEachRemaining(prop -> { // add properties
         if (!reserved.contains(prop)) // ignore reserved
           result.addProp(prop, schema.get(prop));
-      }
+      });
       // parse logical type if present
       result.logicalType = LogicalTypes.fromSchemaIgnoreInvalid(result);
       if (result instanceof NamedSchema) {
