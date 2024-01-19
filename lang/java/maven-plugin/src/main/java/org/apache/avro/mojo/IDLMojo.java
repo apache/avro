@@ -110,7 +110,7 @@ public class IDLMojo extends AbstractAvroMojo {
           compiler.addCustomConversion(projPathLoader.loadClass(customConversion));
         }
         compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
-        compiler.compileToDestination(sourceFilePath.toFile(), outputDirectory);
+        compiler.compileToDestination(sourceFilePath.toFile().lastModified(), outputDirectory);
       } finally {
         Thread.currentThread().setContextClassLoader(contextClassLoader);
       }
