@@ -146,7 +146,12 @@ public class ParseContext {
    * schema name (see step 2)</li>
    * </ol>
    *
-   * <p>Note: as an unresolved reference might be returned, the schema is not directly usable. Please {@link #put(Schema)} the schema using it in the context. The {@link SchemaParser} and protocol parsers will </p>
+   * <p>
+   * Note: as an unresolved reference might be returned, the schema is not
+   * directly usable. Please {@link #put(Schema)} the schema using it in the
+   * context. The {@link SchemaParser} and protocol parsers will ensure you'll
+   * only get a resolved schema that is usable.
+   * </p>
    *
    * @param name      the schema name to find
    * @param namespace the namespace to find the schema against
