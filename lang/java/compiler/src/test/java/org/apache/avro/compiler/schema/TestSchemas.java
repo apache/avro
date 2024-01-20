@@ -269,6 +269,7 @@ public class TestSchemas {
         + "{\"name\": \"f2\", \"type\": \"long\"}" + "]}";
     assertEquals("c1.c2.\"int\".!\"long\".!",
         Schemas.visit(new SchemaParser().parse(s11).mainSchema(), new TestVisitor() {
+          @Override
           public SchemaVisitorAction visitTerminal(Schema terminal) {
             sb.append(terminal).append('.');
             return SchemaVisitorAction.SKIP_SIBLINGS;

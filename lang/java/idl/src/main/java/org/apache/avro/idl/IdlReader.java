@@ -89,6 +89,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -144,6 +145,8 @@ public class IdlReader {
   private static final Set<String> INVALID_TYPE_NAMES = new HashSet<>(Arrays.asList("boolean", "int", "long", "float",
       "double", "bytes", "string", "null", "date", "time_ms", "timestamp_ms", "localtimestamp_ms", "uuid"));
   private static final String CLASSPATH_SCHEME = "classpath";
+  private static final Set<Schema.Type> NAMED_SCHEMA_TYPES = EnumSet.of(Schema.Type.RECORD, Schema.Type.ENUM,
+      Schema.Type.FIXED);
 
   private final Set<URI> readLocations;
   private final ParseContext parseContext;
@@ -390,13 +393,9 @@ public class IdlReader {
     @Override
     public void exitMainSchemaDeclaration(IdlParser.MainSchemaDeclarationContext ctx) {
       mainSchema = typeStack.pop();
-      switch (mainSchema.getType()) {
-      case RECORD:
-      case ENUM:
-      case FIXED:
-        if (mainSchema.getFullName() != null) {
-          parseContext.put(mainSchema);
-        }
+
+      if (NAMED_SCHEMA_TYPES.contains(mainSchema.getType()) && mainSchema.getFullName() != null) {
+        parseContext.put(mainSchema);
       }
       assert typeStack.isEmpty();
     }
