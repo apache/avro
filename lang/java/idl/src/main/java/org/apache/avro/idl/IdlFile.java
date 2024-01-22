@@ -145,6 +145,7 @@ public class IdlFile {
 
   // Visible for testing
   String outputString() {
+    ensureSchemasAreResolved();
     if (protocol != null) {
       return protocol.toString();
     }
