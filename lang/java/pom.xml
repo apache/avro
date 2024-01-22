@@ -43,7 +43,7 @@
     <jetty.version>9.4.53.v20231009</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit5.version>5.10.1</junit5.version>
-    <netty.version>4.1.98.Final</netty.version>
+    <netty.version>4.1.106.Final</netty.version>
     <protobuf.version>3.25.2</protobuf.version>
     <thrift.version>0.16.0</thrift.version>
     <slf4j.version>1.7.36</slf4j.version>
