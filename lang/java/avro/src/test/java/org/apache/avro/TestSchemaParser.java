@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,6 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TestSchemaParser {
   private static final Schema SCHEMA_REAL = Schema.createFixed("Real", null, "tests", 42);
   private static final String SCHEMA_JSON = SCHEMA_REAL.toString(false);
+  private static final Charset[] UTF_CHARSETS = { StandardCharsets.UTF_8, StandardCharsets.UTF_16LE,
+      StandardCharsets.UTF_16BE };
 
   @Test
   void testParseFile() throws IOException {
@@ -51,6 +54,16 @@ class TestSchemaParser {
     Files.write(tempFile, singletonList(SCHEMA_JSON));
 
     Schema schema = new SchemaParser().parse(tempFile).mainSchema();
+    assertEquals(SCHEMA_REAL, schema);
+  }
+
+  @Test
+  void testParseURI() throws IOException {
+    Path tempFile = Files.createTempFile("TestSchemaParser", null);
+    Charset charset = UTF_CHARSETS[(int) Math.floor(UTF_CHARSETS.length * Math.random())];
+    Files.write(tempFile, singletonList(SCHEMA_JSON), charset);
+
+    Schema schema = new SchemaParser().parse(tempFile.toUri(), null).mainSchema();
     assertEquals(SCHEMA_REAL, schema);
   }
 
