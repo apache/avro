@@ -48,7 +48,7 @@ jobs:
         run: ./build.sh test
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -87,7 +87,7 @@ jobs:
                                                             libzstd-dev
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
