@@ -46,7 +46,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1785,120 +1784,183 @@ public abstract class Schema extends JsonProperties implements Serializable {
   static Schema parse(JsonNode schema, ParseContext context, String currentNameSpace) {
     if (schema == null) {
       throw new SchemaParseException("Cannot parse <null> schema");
-    }
-    if (schema.isTextual()) { // name
+    } else if (schema.isTextual()) { // name
       return context.find(schema.textValue(), currentNameSpace);
     } else if (schema.isObject()) {
-      Schema result;
       String type = getRequiredText(schema, "type", "No type");
-      Name name = null;
-      String space = null;
-      String doc = null;
       final boolean isTypeError = "error".equals(type);
-      final boolean isTypeRecord = "record".equals(type);
-      final boolean isTypeEnum = "enum".equals(type);
-      final boolean isTypeFixed = "fixed".equals(type);
-      if (isTypeRecord || isTypeError || isTypeEnum || isTypeFixed) {
-        space = getOptionalText(schema, "namespace");
-        doc = getOptionalText(schema, "doc");
-        if (space == null)
-          space = currentNameSpace;
-        name = new Name(getRequiredText(schema, "name", "No name in schema"), space);
-      }
       if (PRIMITIVES.containsKey(type)) { // primitive
-        result = create(PRIMITIVES.get(type));
-      } else if (isTypeRecord || isTypeError) { // record
-        List<Field> fields = new ArrayList<>();
-        result = new RecordSchema(name, doc, isTypeError);
-        context.put(result);
-        JsonNode fieldsNode = schema.get("fields");
-        if (fieldsNode == null || !fieldsNode.isArray())
-          throw new SchemaParseException("Record has no fields: " + schema);
-        for (JsonNode field : fieldsNode) {
-          String fieldName = getRequiredText(field, "name", "No field name");
-          String fieldDoc = getOptionalText(field, "doc");
-          JsonNode fieldTypeNode = field.get("type");
-          if (fieldTypeNode == null)
-            throw new SchemaParseException("No field type: " + field);
-          Schema fieldSchema = parse(fieldTypeNode, context, name.space);
-          Field.Order order = Field.Order.ASCENDING;
-          JsonNode orderNode = field.get("order");
-          if (orderNode != null)
-            order = Field.Order.valueOf(orderNode.textValue().toUpperCase(Locale.ENGLISH));
-          JsonNode defaultValue = field.get("default");
-          if (defaultValue != null
-              && (Type.FLOAT.equals(fieldSchema.getType()) || Type.DOUBLE.equals(fieldSchema.getType()))
-              && defaultValue.isTextual())
-            defaultValue = new DoubleNode(Double.parseDouble(defaultValue.textValue()));
-          Field f = new Field(fieldName, fieldSchema, fieldDoc, defaultValue, true, order);
-          Iterator<String> i = field.fieldNames();
-          while (i.hasNext()) { // add field props
-            String prop = i.next();
-            if (!FIELD_RESERVED.contains(prop))
-              f.addProp(prop, field.get(prop));
-          }
-          f.aliases = parseAliases(field);
-          fields.add(f);
-          if (fieldSchema.getLogicalType() == null && getOptionalText(field, LOGICAL_TYPE_PROP) != null)
-            LOG.warn(
-                "Ignored the {}.{}.logicalType property (\"{}\"). It should probably be nested inside the \"type\" for the field.",
-                name, fieldName, getOptionalText(field, "logicalType"));
-        }
-        result.setFields(fields);
-      } else if (isTypeEnum) { // enum
-        JsonNode symbolsNode = schema.get("symbols");
-        if (symbolsNode == null || !symbolsNode.isArray())
-          throw new SchemaParseException("Enum has no symbols: " + schema);
-        LockableArrayList<String> symbols = new LockableArrayList<>(symbolsNode.size());
-        for (JsonNode n : symbolsNode)
-          symbols.add(n.textValue());
-        JsonNode enumDefault = schema.get("default");
-        String defaultSymbol = null;
-        if (enumDefault != null)
-          defaultSymbol = enumDefault.textValue();
-        result = new EnumSchema(name, doc, symbols, defaultSymbol);
-        context.put(result);
+        return parsePrimitive(schema, type);
+      } else if ("record".equals(type) || isTypeError) { // record
+        return parseRecord(schema, context, currentNameSpace, isTypeError);
+      } else if ("enum".equals(type)) { // enum
+        return parseEnum(schema, context, currentNameSpace);
       } else if (type.equals("array")) { // array
-        JsonNode itemsNode = schema.get("items");
-        if (itemsNode == null)
-          throw new SchemaParseException("Array has no items type: " + schema);
-        result = new ArraySchema(parse(itemsNode, context, currentNameSpace));
+        return parseArray(schema, context, currentNameSpace);
       } else if (type.equals("map")) { // map
-        JsonNode valuesNode = schema.get("values");
-        if (valuesNode == null)
-          throw new SchemaParseException("Map has no values type: " + schema);
-        result = new MapSchema(parse(valuesNode, context, currentNameSpace));
-      } else if (isTypeFixed) { // fixed
-        JsonNode sizeNode = schema.get("size");
-        if (sizeNode == null || !sizeNode.isInt())
-          throw new SchemaParseException("Invalid or no size: " + schema);
-        result = new FixedSchema(name, doc, sizeNode.intValue());
-        context.put(result);
+        return parseMap(schema, context, currentNameSpace);
+      } else if ("fixed".equals(type)) { // fixed
+        return parseFixed(schema, context, currentNameSpace);
       } else { // For unions with self reference
         return context.find(type, currentNameSpace);
       }
-      Set<String> reserved = isTypeEnum ? ENUM_RESERVED : SCHEMA_RESERVED;
-      schema.fieldNames().forEachRemaining(prop -> { // add properties
-        if (!reserved.contains(prop)) // ignore reserved
-          result.addProp(prop, schema.get(prop));
-      });
-      // parse logical type if present
-      result.logicalType = LogicalTypes.fromSchemaIgnoreInvalid(result);
-      if (result instanceof NamedSchema) {
-        Set<String> aliases = parseAliases(schema);
-        if (aliases != null) // add aliases
-          for (String alias : aliases)
-            result.addAlias(alias);
-      }
-      return result;
     } else if (schema.isArray()) { // union
-      LockableArrayList<Schema> types = new LockableArrayList<>(schema.size());
-      for (JsonNode typeNode : schema)
-        types.add(parse(typeNode, context, currentNameSpace));
-      return new UnionSchema(types);
+      return parseUnion(schema, context, currentNameSpace);
     } else {
       throw new SchemaParseException("Schema not yet supported: " + schema);
     }
+  }
+
+  private static Schema parsePrimitive(JsonNode schema, String type) {
+    Schema result = create(PRIMITIVES.get(type));
+    parseProperties(schema, result, SCHEMA_RESERVED);
+    return result;
+  }
+
+  private static Schema parseRecord(JsonNode schema, ParseContext context, String currentNameSpace,
+      boolean isTypeError) {
+    Name name = parseName(schema, currentNameSpace);
+    String doc = parseDoc(schema);
+    Schema result = new RecordSchema(name, doc, isTypeError);
+    context.put(result);
+
+    JsonNode fieldsNode = schema.get("fields");
+    if (fieldsNode == null || !fieldsNode.isArray())
+      throw new SchemaParseException("Record has no fields: " + schema);
+    List<Field> fields = new ArrayList<>();
+    for (JsonNode field : fieldsNode) {
+      Field f = parseField(field, context, name.space);
+      fields.add(f);
+      if (f.schema().getLogicalType() == null && getOptionalText(field, LOGICAL_TYPE_PROP) != null)
+        LOG.warn(
+            "Ignored the {}.{}.logicalType property (\"{}\"). It should probably be nested inside the \"type\" for the field.",
+            name, f.name(), getOptionalText(field, "logicalType"));
+    }
+    result.setFields(fields);
+    parseProperties(schema, result, SCHEMA_RESERVED);
+    parseAliases(schema, result);
+    return result;
+  }
+
+  private static Field parseField(JsonNode field, ParseContext context, String namespace) {
+    String fieldName = getRequiredText(field, "name", "No field name");
+    String fieldDoc = parseDoc(field);
+    JsonNode fieldTypeNode = field.get("type");
+    if (fieldTypeNode == null)
+      throw new SchemaParseException("No field type: " + field);
+    Schema fieldSchema = parse(fieldTypeNode, context, namespace);
+
+    Field.Order order = Field.Order.ASCENDING;
+    JsonNode orderNode = field.get("order");
+    if (orderNode != null)
+      order = Field.Order.valueOf(orderNode.textValue().toUpperCase(Locale.ENGLISH));
+
+    JsonNode defaultValue = field.get("default");
+    if (defaultValue != null && (Type.FLOAT.equals(fieldSchema.getType()) || Type.DOUBLE.equals(fieldSchema.getType()))
+        && defaultValue.isTextual())
+      defaultValue = new DoubleNode(Double.parseDouble(defaultValue.textValue()));
+
+    Field f = new Field(fieldName, fieldSchema, fieldDoc, defaultValue, true, order);
+    parseProperties(field, f, FIELD_RESERVED);
+    f.aliases = parseAliases(field);
+    return f;
+  }
+
+  private static Schema parseEnum(JsonNode schema, ParseContext context, String currentNameSpace) {
+    Name name = parseName(schema, currentNameSpace);
+    String doc = parseDoc(schema);
+
+    JsonNode symbolsNode = schema.get("symbols");
+    if (symbolsNode == null || !symbolsNode.isArray()) {
+      throw new SchemaParseException("Enum has no symbols: " + schema);
+    }
+    LockableArrayList<String> symbols = new LockableArrayList<>(symbolsNode.size());
+    for (JsonNode n : symbolsNode)
+      symbols.add(n.textValue());
+    JsonNode enumDefault = schema.get("default");
+    String defaultSymbol = null;
+    if (enumDefault != null) {
+      defaultSymbol = enumDefault.textValue();
+    }
+
+    Schema result = new EnumSchema(name, doc, symbols, defaultSymbol);
+    context.put(result);
+    parseProperties(schema, result, ENUM_RESERVED);
+    parseAliases(schema, result);
+    return result;
+  }
+
+  private static Schema parseArray(JsonNode schema, ParseContext context, String currentNameSpace) {
+    Schema result;
+    JsonNode itemsNode = schema.get("items");
+    if (itemsNode == null)
+      throw new SchemaParseException("Array has no items type: " + schema);
+    result = new ArraySchema(parse(itemsNode, context, currentNameSpace));
+    parseProperties(schema, result, SCHEMA_RESERVED);
+    return result;
+  }
+
+  private static Schema parseMap(JsonNode schema, ParseContext context, String currentNameSpace) {
+    Schema result;
+    JsonNode valuesNode = schema.get("values");
+    if (valuesNode == null)
+      throw new SchemaParseException("Map has no values type: " + schema);
+    result = new MapSchema(parse(valuesNode, context, currentNameSpace));
+    parseProperties(schema, result, SCHEMA_RESERVED);
+    return result;
+  }
+
+  private static Schema parseFixed(JsonNode schema, ParseContext context, String currentNameSpace) {
+    Name name = parseName(schema, currentNameSpace);
+    String doc = parseDoc(schema);
+
+    JsonNode sizeNode = schema.get("size");
+    if (sizeNode == null || !sizeNode.isInt())
+      throw new SchemaParseException("Invalid or no size: " + schema);
+
+    Schema result = new FixedSchema(name, doc, sizeNode.intValue());
+    context.put(result);
+    parseProperties(schema, result, SCHEMA_RESERVED);
+    parseAliases(schema, result);
+    return result;
+  }
+
+  private static UnionSchema parseUnion(JsonNode schema, ParseContext context, String currentNameSpace) {
+    LockableArrayList<Schema> types = new LockableArrayList<>(schema.size());
+    for (JsonNode typeNode : schema)
+      types.add(parse(typeNode, context, currentNameSpace));
+    return new UnionSchema(types);
+  }
+
+  private static void parseProperties(JsonNode jsonNode, Schema result, Set<String> propertiesToSkip) {
+    parseProperties(jsonNode, (JsonProperties) result, propertiesToSkip);
+    // parse logical type if present
+    result.logicalType = LogicalTypes.fromSchemaIgnoreInvalid(result);
+  }
+
+  private static void parseProperties(JsonNode schema, JsonProperties result, Set<String> propertiesToSkip) {
+    schema.fieldNames().forEachRemaining(prop -> { // add properties
+      if (!propertiesToSkip.contains(prop)) // ignore reserved
+        result.addProp(prop, schema.get(prop));
+    });
+  }
+
+  private static Name parseName(JsonNode schema, String currentNameSpace) {
+    String space = getOptionalText(schema, "namespace");
+    if (space == null)
+      space = currentNameSpace;
+    return new Name(getRequiredText(schema, "name", "No name in schema"), space);
+  }
+
+  private static String parseDoc(JsonNode schema) {
+    return getOptionalText(schema, "doc");
+  }
+
+  private static void parseAliases(JsonNode schema, Schema result) {
+    Set<String> aliases = parseAliases(schema);
+    if (aliases != null) // add aliases
+      for (String alias : aliases)
+        result.addAlias(alias);
   }
 
   static Set<String> parseAliases(JsonNode node) {
