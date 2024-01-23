@@ -21,11 +21,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <locale.h>
 #ifdef _WIN32
  #include "msdirent.h"
 #else
  #include <dirent.h>
 #endif
+#include "unicode/uchar.h"
+#include "unicode/unistr.h"
+
 
 int test_cases = 0;
 avro_writer_t avro_stderr;
@@ -207,17 +211,45 @@ static int test_map(void)
 	return 0;
 }
 
+int custom_check_avro(const char* name) {
+    return 1;
+}
+
 static int test_record(void)
 {
 	avro_schema_t schema = avro_schema_record("person", NULL);
 
 	avro_schema_record_field_append(schema, "name", avro_schema_string());
 	avro_schema_record_field_append(schema, "age", avro_schema_int());
+	avro_schema_record_field_append(schema, "prénom", avro_schema_string());
+	avro_schema_record_field_append(schema, "我", avro_schema_string());
+	avro_schema_record_field_append(schema, "_undescores_and_numbers123", avro_schema_string());
+	avro_schema_record_field_append(schema, "Not Good", avro_schema_string());
 
 	if (avro_schema_record_field_get_index(schema, "name") != 0) {
 		fprintf(stderr, "Incorrect index for \"name\" field\n");
 		exit(EXIT_FAILURE);
 	}
+
+	if (avro_schema_record_field_get_index(schema, "prénom") != 2) {
+    	fprintf(stderr, "Incorrect index for \"prénom\" field\n");
+    	exit(EXIT_FAILURE);
+    }
+
+    if (avro_schema_record_field_get_index(schema, "我") != 3) {
+        fprintf(stderr, "Incorrect index for \"我\" field\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (avro_schema_record_field_get_index(schema, "_undescores_and_numbers123") != 4) {
+        fprintf(stderr, "Incorrect index for \"_undescores_and_numbers123\" field\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (avro_schema_record_field_get_index(schema, "Not Good") != -1) {
+    	fprintf(stderr, "Incorrect index for \"Not Good\" field\n");
+    	exit(EXIT_FAILURE);
+    }
 
 	if (avro_schema_record_field_get_index(schema, "unknown") != -1) {
 		fprintf(stderr, "Incorrect index for \"unknown\" field\n");
@@ -239,6 +271,14 @@ static int test_record(void)
 	}
 
 	avro_schema_decref(schema);
+
+	set_check_avro_id_function(&custom_check_avro);
+	avro_schema_t schema2 = avro_schema_record("person2", NULL);
+	avro_schema_record_field_append(schema2, "Good For Custom Check", avro_schema_string());
+	if (avro_schema_record_field_get_index(schema2, "Good For Custom Check") != 0) {
+    	fprintf(stderr, "Incorrect index for \"Good For Custom Check\" field\n");
+    	exit(EXIT_FAILURE);
+    }
 	return 0;
 }
 
