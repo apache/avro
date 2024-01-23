@@ -46,4 +46,6 @@ jobs:
           java-version: '11'
 
       - name: Run Rat
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
         run: mvn test -Dmaven.main.skip=true -Dmaven.test.skip=true -DskipTests=true -P rat -pl :avro-toplevel

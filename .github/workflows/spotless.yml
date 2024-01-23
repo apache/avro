@@ -49,4 +49,6 @@ jobs:
           java-version: '11'
 
       - name: Run Spotless Check
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
         run: mvn spotless:check
