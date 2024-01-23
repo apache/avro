@@ -1813,7 +1813,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
   private static Schema parsePrimitive(JsonNode schema, String type) {
     Schema result = create(PRIMITIVES.get(type));
-    parseProperties(schema, result, SCHEMA_RESERVED);
+    parsePropertiesAndLogicalType(schema, result, SCHEMA_RESERVED);
     return result;
   }
 
@@ -1837,7 +1837,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
             name, f.name(), getOptionalText(field, "logicalType"));
     }
     result.setFields(fields);
-    parseProperties(schema, result, SCHEMA_RESERVED);
+    parsePropertiesAndLogicalType(schema, result, SCHEMA_RESERVED);
     parseAliases(schema, result);
     return result;
   }
@@ -1885,7 +1885,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
     Schema result = new EnumSchema(name, doc, symbols, defaultSymbol);
     context.put(result);
-    parseProperties(schema, result, ENUM_RESERVED);
+    parsePropertiesAndLogicalType(schema, result, ENUM_RESERVED);
     parseAliases(schema, result);
     return result;
   }
@@ -1896,7 +1896,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     if (itemsNode == null)
       throw new SchemaParseException("Array has no items type: " + schema);
     result = new ArraySchema(parse(itemsNode, context, currentNameSpace));
-    parseProperties(schema, result, SCHEMA_RESERVED);
+    parsePropertiesAndLogicalType(schema, result, SCHEMA_RESERVED);
     return result;
   }
 
@@ -1906,7 +1906,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     if (valuesNode == null)
       throw new SchemaParseException("Map has no values type: " + schema);
     result = new MapSchema(parse(valuesNode, context, currentNameSpace));
-    parseProperties(schema, result, SCHEMA_RESERVED);
+    parsePropertiesAndLogicalType(schema, result, SCHEMA_RESERVED);
     return result;
   }
 
@@ -1920,7 +1920,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
     Schema result = new FixedSchema(name, doc, sizeNode.intValue());
     context.put(result);
-    parseProperties(schema, result, SCHEMA_RESERVED);
+    parsePropertiesAndLogicalType(schema, result, SCHEMA_RESERVED);
     parseAliases(schema, result);
     return result;
   }
@@ -1932,7 +1932,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     return new UnionSchema(types);
   }
 
-  private static void parseProperties(JsonNode jsonNode, Schema result, Set<String> propertiesToSkip) {
+  private static void parsePropertiesAndLogicalType(JsonNode jsonNode, Schema result, Set<String> propertiesToSkip) {
     parseProperties(jsonNode, (JsonProperties) result, propertiesToSkip);
     // parse logical type if present
     result.logicalType = LogicalTypes.fromSchemaIgnoreInvalid(result);
