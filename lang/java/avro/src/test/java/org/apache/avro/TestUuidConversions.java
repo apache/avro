@@ -24,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.math.BigInteger;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -32,29 +33,34 @@ public class TestUuidConversions {
   private Conversions.UUIDConversion uuidConversion = new Conversions.UUIDConversion();
 
   private Schema fixed = Schema.createFixed("fixed", "doc", "", Long.BYTES * 2);
-  private Schema fixedUUid = LogicalTypes.uuid().addToSchema(fixed);
+  private Schema fixedUuid = LogicalTypes.uuid().addToSchema(fixed);
+
+  private Schema string = Schema.createFixed("fixed", "doc", "", Long.BYTES * 2);
+  private Schema stringUuid = LogicalTypes.uuid().addToSchema(string);
 
   @ParameterizedTest
   @MethodSource("uuidData")
   void uuidFixed(UUID uuid) {
-    GenericFixed value = uuidConversion.toFixed(uuid, fixedUUid, LogicalTypes.uuid());
-    UUID uuid1 = uuidConversion.fromFixed(value, fixedUUid, LogicalTypes.uuid());
+    GenericFixed value = uuidConversion.toFixed(uuid, fixedUuid, LogicalTypes.uuid());
+
+    byte[] b = new byte[Long.BYTES];
+    System.arraycopy(value.bytes(), 0, b, 0, b.length);
+    Assertions.assertEquals(uuid.getMostSignificantBits(), new BigInteger(b).longValue());
+    System.arraycopy(value.bytes(), Long.BYTES, b, 0, b.length);
+    Assertions.assertEquals(uuid.getLeastSignificantBits(), new BigInteger(b).longValue());
+
+    UUID uuid1 = uuidConversion.fromFixed(value, fixedUuid, LogicalTypes.uuid());
     Assertions.assertEquals(uuid, uuid1);
   }
 
   @ParameterizedTest
   @MethodSource("uuidData")
-  void uuidFixedReverse(UUID uuid) {
-    Conversions.UUIDConversion bigEndianConversion = new Conversions.UUIDConversion(true);
-    Conversions.UUIDConversion littleEndianConversion = new Conversions.UUIDConversion(false);
+  void uuidCharSequence(UUID uuid) {
+    CharSequence value = uuidConversion.toCharSequence(uuid, stringUuid, LogicalTypes.uuid());
 
-    // simulate uuid from other endian source, assume it's big endian (nevermind if
-    // current jvm is big endian, as we simulate).
-    UUID reverserUUID = new UUID(Long.reverseBytes(uuid.getMostSignificantBits()),
-        Long.reverseBytes(uuid.getLeastSignificantBits()));
-    GenericFixed value = bigEndianConversion.toFixed(reverserUUID, fixedUUid, LogicalTypes.uuid());
+    Assertions.assertEquals(uuid.toString(), value.toString());
 
-    UUID uuid1 = littleEndianConversion.fromFixed(value, fixedUUid, LogicalTypes.uuid());
+    UUID uuid1 = uuidConversion.fromCharSequence(value, stringUuid, LogicalTypes.uuid());
     Assertions.assertEquals(uuid, uuid1);
   }
 

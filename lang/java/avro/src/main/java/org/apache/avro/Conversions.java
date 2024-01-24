@@ -45,16 +45,6 @@ public class Conversions {
 
   public static class UUIDConversion extends Conversion<UUID> {
 
-    private final boolean isBigEndian;
-
-    public UUIDConversion() {
-      this(ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN);
-    }
-
-    public UUIDConversion(final boolean isBigEndian) {
-      this.isBigEndian = isBigEndian;
-    }
-
     @Override
     public Class<UUID> getConvertedType() {
       return UUID.class;
@@ -82,36 +72,18 @@ public class Conversions {
 
     @Override
     public UUID fromFixed(final GenericFixed value, final Schema schema, final LogicalType type) {
-      long mostSigBits = 0;
-      long leastSigBits = 0;
-      byte[] bytes = value.bytes();
-      for (int i = 0; i < Long.BYTES; i++) {
-        mostSigBits |= ((long) (bytes[i] & 255)) << (Byte.SIZE * i);
-        leastSigBits |= ((long) (bytes[i + Long.BYTES] & 255)) << (Byte.SIZE * i);
-      }
-
-      return new UUID(this.convert(mostSigBits), this.convert(leastSigBits));
-    }
-
-    private long convert(long value) {
-      if (this.isBigEndian) {
-        return value;
-      } else {
-        return Long.reverseBytes(value);
-      }
+      ByteBuffer buffer = ByteBuffer.wrap(value.bytes());
+      long mostSigBits = buffer.getLong();
+      long leastSigBits = buffer.getLong();
+      return new UUID(mostSigBits, leastSigBits);
     }
 
     @Override
     public GenericFixed toFixed(final UUID value, final Schema schema, final LogicalType type) {
-      final long mostSigBits = this.convert(value.getMostSignificantBits());
-      final long leastSigBits = this.convert(value.getLeastSignificantBits());
-      byte[] result = new byte[2 * Long.BYTES];
-      for (int i = 0; i < Long.BYTES; i++) {
-        result[i] = (byte) ((mostSigBits >> (i * Byte.SIZE)) & 255);
-        result[i + Long.BYTES] = (byte) ((leastSigBits >> (i * Byte.SIZE)) & 255);
-      }
-
-      return new GenericData.Fixed(schema, result);
+      ByteBuffer buffer = ByteBuffer.allocate(2 * Long.BYTES);
+      buffer.putLong(value.getMostSignificantBits());
+      buffer.putLong(value.getLeastSignificantBits());
+      return new GenericData.Fixed(schema, buffer.array());
     }
   }
 
