@@ -58,4 +58,11 @@ public class TestHadoopCodecFactory {
     CodecFactory hadoopSnappyCodec = HadoopCodecFactory.fromHadoopString("org.apache.hadoop.io.compress.FooCodec");
     assertNull(hadoopSnappyCodec);
   }
+
+  @Test
+  void hadoopCodecFactoryZstd() {
+    CodecFactory hadoopZstdCodec = HadoopCodecFactory.fromHadoopString("org.apache.hadoop.io.compress.ZStandardCodec");
+    CodecFactory avroZstdCodec = CodecFactory.fromString("zstandard");
+    assertEquals(hadoopZstdCodec.getClass(), avroZstdCodec.getClass());
+  }
 }
