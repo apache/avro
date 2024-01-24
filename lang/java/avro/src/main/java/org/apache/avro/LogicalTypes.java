@@ -281,9 +281,9 @@ public class LogicalTypes {
     return LOCAL_TIMESTAMP_MICROS_TYPE;
   }
 
-  private static final LocalTimestampMicros LOCAL_TIMESTAMP_NANOS_TYPE = new LocalTimestampMicros();
+  private static final LocalTimestampNanos LOCAL_TIMESTAMP_NANOS_TYPE = new LocalTimestampNanos();
 
-  public static LocalTimestampMicros localTimestampNanos() {
+  public static LocalTimestampNanos localTimestampNanos() {
     return LOCAL_TIMESTAMP_NANOS_TYPE;
   }
 
