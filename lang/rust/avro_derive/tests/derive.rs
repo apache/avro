@@ -1565,7 +1565,7 @@ mod test_derive {
 
         let derived_schema = TestRawIdent::get_schema();
         if let Schema::Record(RecordSchema { fields, .. }) = derived_schema {
-            let field = fields.get(0).expect("TestRawIdent must contain a field");
+            let field = fields.first().expect("TestRawIdent must contain a field");
             assert_eq!(field.name, "type");
         } else {
             panic!("Unexpected schema type for {derived_schema:?}")

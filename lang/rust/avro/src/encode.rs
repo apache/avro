@@ -187,7 +187,7 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
                 if !items.is_empty() {
                     encode_long(items.len() as i64, buffer);
                     for item in items.iter() {
-                        encode_internal(item, inner, names, enclosing_namespace, buffer)?;
+                        encode_internal(item, &inner.items, names, enclosing_namespace, buffer)?;
                     }
                 }
                 buffer.push(0u8);
@@ -205,7 +205,7 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
                     encode_long(items.len() as i64, buffer);
                     for (key, value) in items {
                         encode_bytes(key, buffer);
-                        encode_internal(value, inner, names, enclosing_namespace, buffer)?;
+                        encode_internal(value, &inner.types, names, enclosing_namespace, buffer)?;
                     }
                 }
                 buffer.push(0u8);
@@ -309,13 +309,10 @@ pub(crate) mod tests {
         let empty: Vec<Value> = Vec::new();
         encode(
             &Value::Array(empty.clone()),
-            &Schema::Array(Box::new(Schema::Int)),
+            &Schema::array(Schema::Int),
             &mut buf,
         )
-        .expect(&success(
-            &Value::Array(empty),
-            &Schema::Array(Box::new(Schema::Int)),
-        ));
+        .expect(&success(&Value::Array(empty), &Schema::array(Schema::Int)));
         assert_eq!(vec![0u8], buf);
     }
 
@@ -325,13 +322,10 @@ pub(crate) mod tests {
         let empty: HashMap<String, Value> = HashMap::new();
         encode(
             &Value::Map(empty.clone()),
-            &Schema::Map(Box::new(Schema::Int)),
+            &Schema::map(Schema::Int),
             &mut buf,
         )
-        .expect(&success(
-            &Value::Map(empty),
-            &Schema::Map(Box::new(Schema::Int)),
-        ));
+        .expect(&success(&Value::Map(empty), &Schema::map(Schema::Int)));
         assert_eq!(vec![0u8], buf);
     }
 

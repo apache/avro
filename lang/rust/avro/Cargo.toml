@@ -68,9 +68,9 @@ serde_json = { workspace = true }
 snap = { default-features = false, version = "1.1.0", optional = true }
 strum = { default-features = false, version = "0.25.0" }
 strum_macros = { default-features = false, version = "0.25.3" }
-thiserror = { default-features = false, version = "1.0.51" }
-typed-builder = { default-features = false, version = "0.18.0" }
-uuid = { default-features = false, version = "1.6.1", features = ["serde", "std"] }
+thiserror = { default-features = false, version = "1.0.56" }
+typed-builder = { default-features = false, version = "0.18.1" }
+uuid = { default-features = false, version = "1.7.0", features = ["serde", "std"] }
 xz2 = { default-features = false, version = "0.1.7", optional = true }
 zstd = { default-features = false, version = "0.13.0", optional = true }
 
@@ -82,11 +82,11 @@ quad-rand = { default-features = false, version = "0.2.1" }
 rand = { default-features = false, version = "0.8.5", features = ["default"] }
 
 [dev-dependencies]
-anyhow = { default-features = false, version = "1.0.75", features = ["std"] }
+anyhow = { default-features = false, version = "1.0.79", features = ["std"] }
 apache-avro-test-helper = { default-features = false, version = "0.17.0", path = "../avro_test_helper" }
 criterion = { default-features = false, version = "0.5.1" }
 hex-literal = { default-features = false, version = "0.4.1" }
 md-5 = { default-features = false, version = "0.10.6" }
 pretty_assertions = { default-features = false, version = "1.4.0", features = ["std"] }
-serial_test = "2.0.0"
+serial_test = "3.0.0"
 sha2 = { default-features = false, version = "0.10.8" }

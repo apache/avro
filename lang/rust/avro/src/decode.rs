@@ -196,7 +196,12 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
 
                 items.reserve(len);
                 for _ in 0..len {
-                    items.push(decode_internal(inner, names, enclosing_namespace, reader)?);
+                    items.push(decode_internal(
+                        &inner.items,
+                        names,
+                        enclosing_namespace,
+                        reader,
+                    )?);
                 }
             }
 
@@ -215,7 +220,8 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
                 for _ in 0..len {
                     match decode_internal(&Schema::String, names, enclosing_namespace, reader)? {
                         Value::String(key) => {
-                            let value = decode_internal(inner, names, enclosing_namespace, reader)?;
+                            let value =
+                                decode_internal(&inner.types, names, enclosing_namespace, reader)?;
                             items.insert(key, value);
                         }
                         value => return Err(Error::MapKeyType(value.into())),
@@ -321,7 +327,7 @@ mod tests {
     #[test]
     fn test_decode_array_without_size() -> TestResult {
         let mut input: &[u8] = &[6, 2, 4, 6, 0];
-        let result = decode(&Schema::Array(Box::new(Schema::Int)), &mut input);
+        let result = decode(&Schema::array(Schema::Int), &mut input);
         assert_eq!(Array(vec!(Int(1), Int(2), Int(3))), result?);
 
         Ok(())
@@ -330,7 +336,7 @@ mod tests {
     #[test]
     fn test_decode_array_with_size() -> TestResult {
         let mut input: &[u8] = &[5, 6, 2, 4, 6, 0];
-        let result = decode(&Schema::Array(Box::new(Schema::Int)), &mut input);
+        let result = decode(&Schema::array(Schema::Int), &mut input);
         assert_eq!(Array(vec!(Int(1), Int(2), Int(3))), result?);
 
         Ok(())
@@ -339,7 +345,7 @@ mod tests {
     #[test]
     fn test_decode_map_without_size() -> TestResult {
         let mut input: &[u8] = &[0x02, 0x08, 0x74, 0x65, 0x73, 0x74, 0x02, 0x00];
-        let result = decode(&Schema::Map(Box::new(Schema::Int)), &mut input);
+        let result = decode(&Schema::map(Schema::Int), &mut input);
         let mut expected = HashMap::new();
         expected.insert(String::from("test"), Int(1));
         assert_eq!(Map(expected), result?);
@@ -350,7 +356,7 @@ mod tests {
     #[test]
     fn test_decode_map_with_size() -> TestResult {
         let mut input: &[u8] = &[0x01, 0x0C, 0x08, 0x74, 0x65, 0x73, 0x74, 0x02, 0x00];
-        let result = decode(&Schema::Map(Box::new(Schema::Int)), &mut input);
+        let result = decode(&Schema::map(Schema::Int), &mut input);
         let mut expected = HashMap::new();
         expected.insert(String::from("test"), Int(1));
         assert_eq!(Map(expected), result?);
