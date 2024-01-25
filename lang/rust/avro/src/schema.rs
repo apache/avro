@@ -16,9 +16,17 @@
 // under the License.
 
 //! Logic for parsing and interacting with schemas in Avro format.
-use crate::{error::Error, types, util::MapHelper, AvroResult};
+use crate::{
+    error::Error,
+    types,
+    util::MapHelper,
+    validator::{
+        validate_enum_symbol_name, validate_namespace, validate_record_field_name,
+        validate_schema_name,
+    },
+    AvroResult,
+};
 use digest::Digest;
-use regex_lite::Regex;
 use serde::{
     ser::{SerializeMap, SerializeSeq},
     Deserialize, Serialize, Serializer,
@@ -33,36 +41,8 @@ use std::{
     hash::Hash,
     io::Read,
     str::FromStr,
-    sync::OnceLock,
 };
 use strum_macros::{EnumDiscriminants, EnumString};
-
-fn enum_symbol_name_r() -> &'static Regex {
-    static ENUM_SYMBOL_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
-    ENUM_SYMBOL_NAME_ONCE.get_or_init(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap())
-}
-
-// An optional namespace (with optional dots) followed by a name without any dots in it.
-fn schema_name_r() -> &'static Regex {
-    static SCHEMA_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
-    SCHEMA_NAME_ONCE.get_or_init(|| {
-        Regex::new(
-            r"^((?P<namespace>([A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*)?)\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$",
-        ).unwrap()
-    })
-}
-
-fn field_name_r() -> &'static Regex {
-    static FIELD_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
-    FIELD_NAME_ONCE.get_or_init(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap())
-}
-
-fn namespace_r() -> &'static Regex {
-    static NAMESPACE_ONCE: OnceLock<Regex> = OnceLock::new();
-    NAMESPACE_ONCE.get_or_init(|| {
-        Regex::new(r"^([A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*)?$").unwrap()
-    })
-}
 
 /// Represents an Avro schema fingerprint
 /// More information about Avro schema fingerprints can be found in the
@@ -279,13 +259,7 @@ impl Name {
     }
 
     fn get_name_and_namespace(name: &str) -> AvroResult<(String, Namespace)> {
-        let caps = schema_name_r()
-            .captures(name)
-            .ok_or_else(|| Error::InvalidSchemaName(name.to_string(), schema_name_r().as_str()))?;
-        Ok((
-            caps["name"].to_string(),
-            caps.name("namespace").map(|s| s.as_str().to_string()),
-        ))
+        validate_schema_name(name)
     }
 
     /// Parse a `serde_json::Value` into a `Name`.
@@ -312,12 +286,7 @@ impl Name {
             .filter(|ns| !ns.is_empty());
 
         if let Some(ref ns) = namespace {
-            if !namespace_r().is_match(ns) {
-                return Err(Error::InvalidNamespace(
-                    ns.to_string(),
-                    namespace_r().as_str(),
-                ));
-            }
+            validate_namespace(ns)?;
         }
 
         Ok(Self {
@@ -686,9 +655,7 @@ impl RecordField {
     ) -> AvroResult<Self> {
         let name = field.name().ok_or(Error::GetNameFieldFromRecord)?;
 
-        if !field_name_r().is_match(&name) {
-            return Err(Error::FieldName(name));
-        }
+        validate_record_field_name(&name)?;
 
         // TODO: "type" = "<record name>"
         let schema = parser.parse_complex(field, &enclosing_record.namespace)?;
@@ -1713,10 +1680,7 @@ impl Parser {
 
         let mut existing_symbols: HashSet<&String> = HashSet::with_capacity(symbols.len());
         for symbol in symbols.iter() {
-            // Ensure enum symbol names match [A-Za-z_][A-Za-z0-9_]*
-            if !enum_symbol_name_r().is_match(symbol) {
-                return Err(Error::EnumSymbolName(symbol.to_string()));
-            }
+            validate_enum_symbol_name(symbol)?;
 
             // Ensure there are no duplicate symbols
             if existing_symbols.contains(&symbol) {
@@ -6274,26 +6238,6 @@ mod tests {
             &serialized
         );
 
-        Ok(())
-    }
-
-    #[test]
-    fn test_avro_3897_disallow_invalid_namespaces_in_fully_qualified_name() -> TestResult {
-        let full_name = "ns.0.record1";
-        let name = Name::new(full_name);
-        assert!(name.is_err());
-        let expected =
-            Error::InvalidSchemaName(full_name.to_string(), schema_name_r().as_str()).to_string();
-        let err = name.map_err(|e| e.to_string()).err().unwrap();
-        assert_eq!(expected, err);
-
-        let full_name = "ns..record1";
-        let name = Name::new(full_name);
-        assert!(name.is_err());
-        let expected =
-            Error::InvalidSchemaName(full_name.to_string(), schema_name_r().as_str()).to_string();
-        let err = name.map_err(|e| e.to_string()).err().unwrap();
-        assert_eq!(expected, err);
         Ok(())
     }
 
