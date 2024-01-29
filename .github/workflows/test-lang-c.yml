@@ -47,6 +47,15 @@ jobs:
       - name: Test
         run: ./build.sh test
 
+      - name: Check pkg-config
+        run: |
+          mkdir -p build
+          cd build
+          cmake ..
+          cp /usr/lib/x86_64-linux-gnu/pkgconfig/snappy.pc src/libsnappy.pc
+          export PKG_CONFIG_PATH=./src
+          pkg-config --libs avro-c
+
       - name: Cache Local Maven Repository
         uses: actions/cache@v4
         with:
