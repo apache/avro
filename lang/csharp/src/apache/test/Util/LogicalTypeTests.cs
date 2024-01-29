@@ -405,6 +405,52 @@ namespace Avro.Test
             }
         }
 
+        [TestCase(0, 0, 0)]
+        [TestCase(0, 0, 1)]
+        [TestCase(0, 1, 0)]
+        [TestCase(0, 1, 1)]
+        [TestCase(1, 0, 0)]
+        [TestCase(1, 0, 1)]
+        [TestCase(1, 1, 0)]
+        [TestCase(1, 1, 1)]
+        [TestCase(999, 9999, 99999)]
+        public void TestDuration(int months, int days, int milliseconds)
+        {
+            var durationSchema = (LogicalSchema)Schema.Parse("{\"type\": {\"type\": \"fixed\", \"size\": 12, \"name\": \"n\"}, \"logicalType\": \"duration\"}");
+
+            var avroDuration = new AvroDuration(months, days, milliseconds);
+
+            var duration = new Duration();
+
+            var convertedDuration = (AvroDuration)duration.ConvertToLogicalValue(duration.ConvertToBaseValue(avroDuration, durationSchema), durationSchema);
+            Assert.AreEqual(avroDuration, convertedDuration);
+        }
+
+        [TestCase(0, 0, 1, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00 })]
+        [TestCase(0, 0, 999, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe7, 0x03, 0x00, 0x00 })]
+        [TestCase(0, 0, 1999, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xcf, 0x07, 0x00, 0x00 })]
+        [TestCase(0, 1, 999, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xe7, 0x03, 0x00, 0x00 })]
+        [TestCase(1, 0, 999, new byte[] { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe7, 0x03, 0x00, 0x00 })]
+        [TestCase(1, 1, 999, new byte[] { 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xe7, 0x03, 0x00, 0x00 })]
+        // This tests ensures that changes to Duration.ConvertToBaseValue and ConvertToLogicalValue can be validated (bytes)
+        public void TestDurationConvert(int months, int days, int milliseconds, byte[] converted)
+        {
+            var durationSchema = (LogicalSchema)Schema.Parse("{\"type\": {\"type\": \"fixed\", \"size\": 12, \"name\": \"n\"}, \"logicalType\": \"duration\"}");
+
+            var avroDuration = new AvroDuration(months, days, milliseconds);
+            
+            var duration = new Duration();
+
+            // TestDuration tests ConvertToLogicalValue(ConvertToBaseValue(...)) which might hide symmetrical breaking changes in both functions
+            // The following 2 tests are checking the conversions seperately
+
+            // Validate Duration.ConvertToBaseValue
+            Assert.AreEqual(converted, duration.ConvertToBaseValue(avroDuration, durationSchema));
+
+            // Validate Duration.ConvertToLogicalValue
+            Assert.AreEqual(avroDuration, duration.ConvertToLogicalValue(converted, durationSchema));
+        }
+
         [TestCase("633a6cf0-52cb-43aa-b00a-658510720958")]
         public void TestUuid(string guidString)
         {

@@ -18,7 +18,7 @@
 
 using NUnit.Framework;
 
-namespace Avro.test
+namespace Avro.Test
 {
     [TestFixture]
     class AvroDecimalTest

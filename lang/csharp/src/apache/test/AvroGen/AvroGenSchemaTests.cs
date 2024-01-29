@@ -704,10 +704,12 @@ namespace Avro.Test.AvroGen
       { ""name"" : ""nullibledecimal"", ""type"" : [""null"", {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
       { ""name"" : ""decimal"", ""type"" : {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} },
       { ""name"" : ""nullibledecimalfixed"", ""type"" : [""null"", {""type"": {""type"" : ""fixed"", ""size"": 16, ""name"": ""ndf""}, ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
-      { ""name"" : ""decimalfixed"", ""type"" : {""type"": {""type"" : ""fixed"", ""size"": 16, ""name"": ""df""}, ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} }
+      { ""name"" : ""decimalfixed"", ""type"" : {""type"": {""type"" : ""fixed"", ""size"": 16, ""name"": ""df""}, ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} },
+      { ""name"" : ""nullibleduration"", ""type"" : [""null"", {""type"": { ""type"": ""fixed"", ""size"": 12, ""name"": ""_nullibleduration""}, ""logicalType"": ""duration""}] },
+      { ""name"" : ""duration"", ""type"" : {""type"": { ""type"": ""fixed"", ""size"": 12, ""name"": ""_duration""}, ""logicalType"": ""duration""} }
     ]
 }",
-            new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal), typeof(AvroDecimal?), typeof(AvroDecimal) })]
+            new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal), typeof(AvroDecimal?), typeof(AvroDecimal), typeof(AvroDuration?), typeof(AvroDuration) })]
         [TestCase(@"
 {
   ""namespace"": ""enum.base"",
