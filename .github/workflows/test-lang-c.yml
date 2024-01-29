@@ -52,7 +52,6 @@ jobs:
           mkdir -p build
           cd build
           cmake ..
-          cp /usr/lib/x86_64-linux-gnu/pkgconfig/snappy.pc src/libsnappy.pc
           export PKG_CONFIG_PATH=./src
           pkg-config --libs avro-c
 
