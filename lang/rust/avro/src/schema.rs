@@ -1153,10 +1153,10 @@ impl Schema {
     }
 
     /// Returns a Schema::Map with the given types and custom attributes.
-    pub fn map_with_attributes(types: Schema, custom_attributes: BTreeMap<String, Value>) -> Self {
+    pub fn map_with_attributes(types: Schema, attributes: BTreeMap<String, Value>) -> Self {
         Schema::Map(MapSchema {
             types: Box::new(types),
-            attributes: custom_attributes,
+            attributes,
         })
     }
 
@@ -1169,13 +1169,10 @@ impl Schema {
     }
 
     /// Returns a Schema::Array with the given items and custom attributes.
-    pub fn array_with_attributes(
-        items: Schema,
-        custom_attributes: BTreeMap<String, Value>,
-    ) -> Self {
+    pub fn array_with_attributes(items: Schema, attributes: BTreeMap<String, Value>) -> Self {
         Schema::Array(ArraySchema {
             items: Box::new(items),
-            attributes: custom_attributes,
+            attributes,
         })
     }
 }
