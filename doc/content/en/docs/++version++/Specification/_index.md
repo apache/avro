@@ -825,14 +825,24 @@ _Currently only available in Java and Rust_.
 Here, as scale property is stored in value itself it needs more bytes than preceding `decimal` type, but it allows more flexibility.
 
 ### UUID
+
 The `uuid` logical type represents a random generated universally unique identifier (UUID).
 
-A `uuid` logical type annotates an Avro `string`. The string has to conform with [RFC-4122](https://www.ietf.org/rfc/rfc4122.txt)
+A `uuid` logical type annotates an Avro `string` or `fixed` of length 16. Both the string and `fixed` byte layout have to conform with [RFC-4122](https://www.ietf.org/rfc/rfc4122.txt).
 
-The following schema represents a uuid:
+The following schemas represent a uuid:
+
 ```json
 {
   "type": "string",
+  "logicalType": "uuid"
+}
+```
+
+```json
+{
+  "type": "fixed",
+  "size": "16",
   "logicalType": "uuid"
 }
 ```
