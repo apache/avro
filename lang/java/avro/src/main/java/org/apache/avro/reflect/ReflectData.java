@@ -690,6 +690,11 @@ public class ReflectData extends SpecificData {
       AvroSchema explicit = c.getAnnotation(AvroSchema.class);
       if (explicit != null) // explicit schema
         return new Schema.Parser().parse(explicit.value());
+      CustomEncoding<?> custom = getCustomEncoding(c);
+      // if custom encoding does not specify the schema use the default schema
+      if (custom != null && custom.getSchema() != null) {
+        return custom.getSchema();
+      }
       if (CharSequence.class.isAssignableFrom(c)) // String
         return Schema.create(Schema.Type.STRING);
       if (ByteBuffer.class.isAssignableFrom(c)) // bytes
