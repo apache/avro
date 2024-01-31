@@ -44,7 +44,6 @@ import java.util.UUID;
 public class Conversions {
 
   public static class UUIDConversion extends Conversion<UUID> {
-
     @Override
     public Class<UUID> getConvertedType() {
       return UUID.class;
