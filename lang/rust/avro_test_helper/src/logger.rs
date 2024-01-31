@@ -17,7 +17,6 @@
 
 use crate::LOG_MESSAGES;
 use log::{LevelFilter, Log, Metadata};
-use ref_thread_local::RefThreadLocal;
 use std::sync::OnceLock;
 
 struct TestLogger {
@@ -32,7 +31,7 @@ impl Log for TestLogger {
 
     fn log(&self, record: &log::Record) {
         if self.enabled(record.metadata()) {
-            LOG_MESSAGES.borrow_mut().push(format!("{}", record.args()));
+            LOG_MESSAGES.with(|msgs| msgs.borrow_mut().push(format!("{}", record.args())));
 
             self.delegate.log(record);
         }
@@ -53,20 +52,24 @@ fn test_logger() -> &'static TestLogger {
 }
 
 pub fn clear_log_messages() {
-    LOG_MESSAGES.borrow_mut().clear();
+    LOG_MESSAGES.with(|msgs| match msgs.try_borrow_mut() {
+        Ok(mut log_messages) => log_messages.clear(),
+        Err(err) => panic!("Failed to clear log messages: {err:?}"),
+    });
 }
 
 pub fn assert_not_logged(unexpected_message: &str) {
-    match LOG_MESSAGES.borrow().last() {
+    LOG_MESSAGES.with(|msgs| match msgs.borrow().last() {
         Some(last_log) if last_log == unexpected_message => {
             panic!("The following log message should not have been logged: '{unexpected_message}'")
         }
         _ => (),
-    }
+    });
 }
 
 pub fn assert_logged(expected_message: &str) {
-    assert_eq!(LOG_MESSAGES.borrow_mut().pop().unwrap(), expected_message);
+    let last_message = LOG_MESSAGES.with(|msgs| msgs.borrow_mut().pop().unwrap());
+    assert_eq!(last_message, expected_message);
 }
 
 #[cfg(not(target_arch = "wasm32"))]

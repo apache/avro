@@ -35,7 +35,7 @@ import org.apache.avro.file.CodecFactory;
  * <li>{@code org.apache.hadoop.io.compress.SnappyCodec} will map to
  * {@code snappy}</li>
  * <li>{@code org.apache.hadoop.io.compress.BZip2Codec} will map to
- * {@code zbip2}</li>
+ * {@code bzip2}</li>
  * <li>{@code org.apache.hadoop.io.compress.GZipCodec} will map to
  * {@code deflate}</li>
  * </ul>
@@ -61,7 +61,7 @@ public class HadoopCodecFactory {
    * <li>{@code org.apache.hadoop.io.compress.SnappyCodec} will map to
    * {@code snappy}</li>
    * <li>{@code org.apache.hadoop.io.compress.BZip2Codec} will map to
-   * {@code zbip2}</li>
+   * {@code bzip2}</li>
    * <li>{@code org.apache.hadoop.io.compress.GZipCodec} will map to
    * {@code deflate}</li>
    * </ul>

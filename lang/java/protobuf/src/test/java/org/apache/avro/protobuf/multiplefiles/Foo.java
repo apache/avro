@@ -59,12 +59,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
         case 0:
           done = true;
           break;
-        default: {
-          if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-            done = true;
-          }
-          break;
-        }
         case 8: {
           bitField0_ |= 0x00000001;
           int32_ = input.readInt32();
@@ -143,6 +137,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
         }
         case 128: {
           int rawValue = input.readEnum();
+          @SuppressWarnings("deprecation")
           org.apache.avro.protobuf.multiplefiles.A value = org.apache.avro.protobuf.multiplefiles.A.valueOf(rawValue);
           if (value == null) {
             unknownFields.mergeVarintField(16, rawValue);
@@ -188,6 +183,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
         }
         case 152: {
           int rawValue = input.readEnum();
+          @SuppressWarnings("deprecation")
           org.apache.avro.protobuf.multiplefiles.A value = org.apache.avro.protobuf.multiplefiles.A.valueOf(rawValue);
           if (value == null) {
             unknownFields.mergeVarintField(19, rawValue);
@@ -205,6 +201,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
           int oldLimit = input.pushLimit(length);
           while (input.getBytesUntilLimit() > 0) {
             int rawValue = input.readEnum();
+            @SuppressWarnings("deprecation")
             org.apache.avro.protobuf.multiplefiles.A value = org.apache.avro.protobuf.multiplefiles.A.valueOf(rawValue);
             if (value == null) {
               unknownFields.mergeVarintField(19, rawValue);
@@ -240,6 +237,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
           bitField0_ |= 0x00020000;
           break;
         }
+        default: {
+          if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+            done = true;
+          }
+          break;
+        }
         }
       }
     } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -265,6 +268,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.internal_static_org_apache_avro_protobuf_multiplefiles_Foo_descriptor;
   }
 
+  @java.lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
     return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.internal_static_org_apache_avro_protobuf_multiplefiles_Foo_fieldAccessorTable
         .ensureFieldAccessorsInitialized(org.apache.avro.protobuf.multiplefiles.Foo.class,
@@ -573,6 +577,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
    * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
    */
   public org.apache.avro.protobuf.multiplefiles.A getEnum() {
+    @SuppressWarnings("deprecation")
     org.apache.avro.protobuf.multiplefiles.A result = org.apache.avro.protobuf.multiplefiles.A.valueOf(enum_);
     return result == null ? org.apache.avro.protobuf.multiplefiles.A.Z : result;
   }
@@ -655,6 +660,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   private java.util.List<java.lang.Integer> syms_;
   private static final com.google.protobuf.Internal.ListAdapter.Converter<java.lang.Integer, org.apache.avro.protobuf.multiplefiles.A> syms_converter_ = new com.google.protobuf.Internal.ListAdapter.Converter<java.lang.Integer, org.apache.avro.protobuf.multiplefiles.A>() {
     public org.apache.avro.protobuf.multiplefiles.A convert(java.lang.Integer from) {
+      @SuppressWarnings("deprecation")
       org.apache.avro.protobuf.multiplefiles.A result = org.apache.avro.protobuf.multiplefiles.A.valueOf(from);
       return result == null ? org.apache.avro.protobuf.multiplefiles.A.X : result;
     }
@@ -756,6 +762,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   private byte memoizedIsInitialized = -1;
 
+  @java.lang.Override
   public final boolean isInitialized() {
     byte isInitialized = memoizedIsInitialized;
     if (isInitialized == 1)
@@ -783,6 +790,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     return true;
   }
 
+  @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
     if (((bitField0_ & 0x00000001) == 0x00000001)) {
       output.writeInt32(1, int32_);
@@ -850,6 +858,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     unknownFields.writeTo(output);
   }
 
+  @java.lang.Override
   public int getSerializedSize() {
     int size = memoizedSize;
     if (size != -1)
@@ -1185,6 +1194,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
   }
 
+  @java.lang.Override
   public Builder newBuilderForType() {
     return newBuilder();
   }
@@ -1197,6 +1207,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
 
+  @java.lang.Override
   public Builder toBuilder() {
     return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
   }
@@ -1217,6 +1228,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.internal_static_org_apache_avro_protobuf_multiplefiles_Foo_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
       return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.internal_static_org_apache_avro_protobuf_multiplefiles_Foo_fieldAccessorTable
           .ensureFieldAccessorsInitialized(org.apache.avro.protobuf.multiplefiles.Foo.class,
@@ -1241,6 +1253,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       }
     }
 
+    @java.lang.Override
     public Builder clear() {
       super.clear();
       int32_ = 0;
@@ -1300,14 +1313,17 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
+    @java.lang.Override
     public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
       return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.internal_static_org_apache_avro_protobuf_multiplefiles_Foo_descriptor;
     }
 
+    @java.lang.Override
     public org.apache.avro.protobuf.multiplefiles.Foo getDefaultInstanceForType() {
       return org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance();
     }
 
+    @java.lang.Override
     public org.apache.avro.protobuf.multiplefiles.Foo build() {
       org.apache.avro.protobuf.multiplefiles.Foo result = buildPartial();
       if (!result.isInitialized()) {
@@ -1316,6 +1332,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return result;
     }
 
+    @java.lang.Override
     public org.apache.avro.protobuf.multiplefiles.Foo buildPartial() {
       org.apache.avro.protobuf.multiplefiles.Foo result = new org.apache.avro.protobuf.multiplefiles.Foo(this);
       int from_bitField0_ = bitField0_;
@@ -1424,31 +1441,38 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return result;
     }
 
+    @java.lang.Override
     public Builder clone() {
       return (Builder) super.clone();
     }
 
+    @java.lang.Override
     public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
       return (Builder) super.setField(field, value);
     }
 
+    @java.lang.Override
     public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
       return (Builder) super.clearField(field);
     }
 
+    @java.lang.Override
     public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
       return (Builder) super.clearOneof(oneof);
     }
 
+    @java.lang.Override
     public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
         java.lang.Object value) {
       return (Builder) super.setRepeatedField(field, index, value);
     }
 
+    @java.lang.Override
     public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
       return (Builder) super.addRepeatedField(field, value);
     }
 
+    @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
       if (other instanceof org.apache.avro.protobuf.multiplefiles.Foo) {
         return mergeFrom((org.apache.avro.protobuf.multiplefiles.Foo) other);
@@ -1567,6 +1591,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
+    @java.lang.Override
     public final boolean isInitialized() {
       if (!hasInt32()) {
         return false;
@@ -1584,6 +1609,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return true;
     }
 
+    @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
       org.apache.avro.protobuf.multiplefiles.Foo parsedMessage = null;
@@ -2214,6 +2240,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
      */
     public org.apache.avro.protobuf.multiplefiles.A getEnum() {
+      @SuppressWarnings("deprecation")
       org.apache.avro.protobuf.multiplefiles.A result = org.apache.avro.protobuf.multiplefiles.A.valueOf(enum_);
       return result == null ? org.apache.avro.protobuf.multiplefiles.A.Z : result;
     }
@@ -2963,10 +2990,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return timestampBuilder_;
     }
 
+    @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
       return super.setUnknownFields(unknownFields);
     }
 
+    @java.lang.Override
     public final Builder mergeUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
       return super.mergeUnknownFields(unknownFields);
     }
@@ -2986,6 +3015,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   @java.lang.Deprecated
   public static final com.google.protobuf.Parser<Foo> PARSER = new com.google.protobuf.AbstractParser<Foo>() {
+    @java.lang.Override
     public Foo parsePartialFrom(com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -3002,6 +3032,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     return PARSER;
   }
 
+  @java.lang.Override
   public org.apache.avro.protobuf.multiplefiles.Foo getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
