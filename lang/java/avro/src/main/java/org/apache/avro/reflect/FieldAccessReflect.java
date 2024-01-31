@@ -18,6 +18,7 @@
 package org.apache.avro.reflect;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 
@@ -103,7 +104,8 @@ class FieldAccessReflect extends FieldAccess {
     }
   }
 
-  private static final class ReflectionBasesAccessorCustomEncoded extends ReflectionBasedAccessor {
+  private static final class ReflectionBasesAccessorCustomEncoded extends ReflectionBasedAccessor
+      implements CustomEncoderFieldAccess {
 
     private CustomEncoding<?> encoding;
 
@@ -138,6 +140,11 @@ class FieldAccessReflect extends FieldAccess {
     @Override
     protected boolean supportsIO() {
       return true;
+    }
+
+    @Override
+    public FieldAccessor withSchema(Schema schema) {
+      return new ReflectionBasesAccessorCustomEncoded(field, encoding.withSchema(schema));
     }
   }
 }

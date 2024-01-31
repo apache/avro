@@ -676,4 +676,9 @@ public class SpecificData extends GenericData {
     return super.createString(value);
   }
 
+  /** Needed for simulating schema change during test. */
+  protected void removeFromSchemaClassCache(Class<?> c) {
+    schemaClassCache.remove(c);
+  }
+
 }
