@@ -41,9 +41,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Add libzstd
+      - name: Install packages
         shell: bash
-        run: sudo apt-get install -y libzstd-dev
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y libzstd-dev libicu-dev
 
       - name: Install .NET SDKs
         uses: actions/setup-dotnet@v4
