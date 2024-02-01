@@ -34,7 +34,10 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ["self-hosted", "asf-arm"]]
     steps:
       - uses: actions/checkout@v4
 
