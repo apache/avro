@@ -47,6 +47,10 @@ jobs:
           sudo apt-get update -q
           sudo apt-get install -q -y libzstd-dev libicu-dev
 
+      - if: matrix.os != 'ubuntu-latest'
+        run: |
+          sudo -u $USER mkdir -p /usr/share/dotnet
+
       - name: Install .NET SDKs
         uses: actions/setup-dotnet@v4
         with:
