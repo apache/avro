@@ -106,13 +106,27 @@ public class ReflectData extends SpecificData {
 
   private static final ReflectData INSTANCE = new ReflectData();
 
+  private final boolean useDeterministicFieldOrder;
+
   /** For subclasses. Applications normally use {@link ReflectData#get()}. */
   public ReflectData() {
+    this(true);
+  }
+
+  /** Control whether to order the reflection fields. */
+  public ReflectData(boolean useDeterministicFieldOrder) {
+    this.useDeterministicFieldOrder = useDeterministicFieldOrder;
   }
 
   /** Construct with a particular classloader. */
   public ReflectData(ClassLoader classLoader) {
+    this(classLoader, true);
+  }
+
+  /** Control whether to order the reflection fields. */
+  public ReflectData(ClassLoader classLoader, boolean useDeterministicFieldOrder) {
     super(classLoader);
+    this.useDeterministicFieldOrder = useDeterministicFieldOrder;
   }
 
   /** Return the singleton instance. */
@@ -365,7 +379,7 @@ public class ReflectData extends SpecificData {
 
     private ClassAccessorData(Class<?> c) {
       clazz = c;
-      for (Field f : getFields(c, false)) {
+      for (Field f : getFields(c, false, true)) {
         if (f.isAnnotationPresent(AvroIgnore.class)) {
           continue;
         }
@@ -735,7 +749,7 @@ public class ReflectData extends SpecificData {
           schema = Schema.createRecord(name, doc, space, error);
           consumeAvroAliasAnnotation(c, schema);
           names.put(c.getName(), schema);
-          for (Field field : getCachedFields(c))
+          for (Field field : getCachedFields(c, useDeterministicFieldOrder))
             if ((field.getModifiers() & (Modifier.TRANSIENT | Modifier.STATIC)) == 0
                 && !field.isAnnotationPresent(AvroIgnore.class)) {
               Schema fieldSchema = createFieldSchema(field, names);
@@ -845,12 +859,15 @@ public class ReflectData extends SpecificData {
 
   private static final ConcurrentMap<Class<?>, Field[]> FIELDS_CACHE = new ConcurrentHashMap<>();
 
+  private static final ConcurrentMap<Class<?>, Field[]> NATIVE_FIELDS_CACHE = new ConcurrentHashMap<>();
+
   // Return of this class and its superclasses to serialize.
-  private static Field[] getCachedFields(Class<?> recordClass) {
-    return MapUtil.computeIfAbsent(FIELDS_CACHE, recordClass, rc -> getFields(rc, true));
+  private static Field[] getCachedFields(Class<?> recordClass, boolean useDeterministicFieldOrder) {
+    return MapUtil.computeIfAbsent(useDeterministicFieldOrder ? FIELDS_CACHE : NATIVE_FIELDS_CACHE, recordClass,
+        rc -> getFields(rc, true, useDeterministicFieldOrder));
   }
 
-  private static Field[] getFields(Class<?> recordClass, boolean excludeJava) {
+  private static Field[] getFields(Class<?> recordClass, boolean excludeJava, boolean useDeterministicFieldOrder) {
     Field[] fieldsList;
     Map<String, Field> fields = new LinkedHashMap<>();
     Class<?> c = recordClass;
@@ -858,7 +875,9 @@ public class ReflectData extends SpecificData {
       if (excludeJava && c.getPackage() != null && c.getPackage().getName().startsWith("java."))
         break; // skip java built-in classes
       Field[] declaredFields = c.getDeclaredFields();
-      Arrays.sort(declaredFields, Comparator.comparing(Field::getName));
+      if (useDeterministicFieldOrder) {
+        Arrays.sort(declaredFields, Comparator.comparing(Field::getName));
+      }
       for (Field field : declaredFields)
         if ((field.getModifiers() & (Modifier.TRANSIENT | Modifier.STATIC)) == 0)
           if (fields.put(field.getName(), field) != null)

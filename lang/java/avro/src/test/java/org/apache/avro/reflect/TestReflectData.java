@@ -23,13 +23,18 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.util.internal.JacksonUtils;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -74,6 +79,26 @@ public class TestReflectData {
 
     Schema.Field existsArgument = protocol.getMessages().get("exists").getRequest().getFields().get(0);
     assertThat(existsArgument.schema(), equalTo(Schema.create(Schema.Type.STRING)));
+  }
+
+  @Test
+  void fieldsOrder() {
+    Schema schema = ReflectData.get().getSchema(Meta.class);
+    List<Schema.Field> fields = schema.getFields();
+    assertEquals(fields.size(), 4);
+    assertEquals(fields.get(0).name(), "f1");
+    assertEquals(fields.get(1).name(), "f2");
+    assertEquals(fields.get(2).name(), "f3");
+    assertEquals(fields.get(3).name(), "f4");
+
+    schema = new ReflectData(false).getSchema(Meta.class);
+    fields = schema.getFields();
+    assertEquals(fields.size(), 4);
+
+    Field[] declaredFields = Meta.class.getDeclaredFields();
+    for (int i = 0; i < declaredFields.length; i++) {
+      assertEquals(fields.get(i).name(), declaredFields[i].getName());
+    }
   }
 
   private interface CrudProtocol<R, I> extends OtherProtocol<I> {
