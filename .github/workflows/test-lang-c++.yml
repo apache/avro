@@ -34,12 +34,17 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ["self-hosted", "asf-arm"]]
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Dependencies
-        run: sudo apt update && sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev cmake
+        run: |
+          sudo apt-get update -q
+          sudo apt update && sudo apt-get install -qqy gcc g++ cppcheck libboost-all-dev libsnappy-dev cmake
 
       - name: Clean
         run: ./build.sh clean

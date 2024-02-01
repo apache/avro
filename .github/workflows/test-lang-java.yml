@@ -36,7 +36,10 @@ concurrency:
 jobs:
   test:
     name: 'Java Test'
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ["self-hosted", "asf-arm"]]
     steps:
       - name: 'Checkout sourcecode'
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1

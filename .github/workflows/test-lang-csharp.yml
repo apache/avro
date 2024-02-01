@@ -51,7 +51,6 @@ jobs:
       - if: matrix.os != 'ubuntu-latest'
         name: Install dependencies for ${{ matrix.os }}
         run: |
-          echo X${{matrix.os}}X
           sudo mkdir -p /usr/share/dotnet
           sudo chown -R $(id -u):$(id -g) /usr/share/dotnet
 
