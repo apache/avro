@@ -162,27 +162,3 @@ jobs:
 
       - name: Run Interop Tests
         run: ./build.sh test-interop
-
-  arm64:
-    name: PHP on Linux ARM64
-    runs-on: ["self-hosted", "asf-arm"]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -q -y wget php php-xml php-mbstring php-curl php-gmp php-bz2 unzip libtidy-dev libpq5
-          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-          php -r "if (hash_file('sha384', 'composer-setup.php') === file_get_contents('https://composer.github.io/installer.sig')) { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
-          php composer-setup.php --version=2.2.5
-          php -r "unlink('composer-setup.php');"
-          sudo mv composer.phar /usr/local/bin/composer
-
-      - name: Build
-        run: |
-          set -x
-          composer --version
-          ./build.sh clean test

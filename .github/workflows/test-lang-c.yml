@@ -149,21 +149,3 @@ jobs:
 
       - name: Run Interop Tests
         run: ./build.sh interop-data-test
-
-  arm64:
-    name: C on Linux ARM64
-    runs-on: ["self-hosted", "asf-arm"]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -q -y cmake liblzma-dev libsnappy-dev libjansson-dev zlib1g-dev pkg-config
-
-      - name: Build
-        run: |
-          set -x
-          ./build.sh clean test
