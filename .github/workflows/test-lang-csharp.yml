@@ -47,8 +47,9 @@ jobs:
           sudo apt-get update -q
           sudo apt-get install -q -y libzstd-dev libicu-dev
 
+      # On the hosted ARM runner, we need to create the dotnet directory and change the owner to the current user
       - if: matrix.os != 'ubuntu-latest'
-        name: Install dependencies for ARM64
+        name: Install dependencies for ${{ matrix.os }}
         run: |
           echo X${{matrix.os}}X
           sudo mkdir -p /usr/share/dotnet
