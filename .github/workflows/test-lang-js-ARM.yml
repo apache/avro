@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Test C++
+name: 'Test JavaScript on ARM'
 on:
   workflow_dispatch:
   push:
@@ -21,37 +21,45 @@ on:
   pull_request:
     branches: [ main ]
     paths:
-    - '.github/workflows/test-lang-c\+\+.yml'
-    - 'lang/c\+\+/**'
+    - .github/workflows/test-lang-js.yml
+    - lang/js/**
 
 defaults:
   run:
-    working-directory: lang/c++
+    working-directory: lang/js
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  arm64:
+    name: JavaScript on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        run: sudo apt update && sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev cmake
+      - name: Cache Npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
-      - name: Clean
-        run: ./build.sh clean
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-      - name: Lint
-        run: ./build.sh lint
-
-      - name: Test
-        run: ./build.sh test
-
-      - name: Release build
+      - name: Install dependencies
         run: |
-          mkdir -p build
-          cd build
-          cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ..
+          sudo apt-get update -q
+          sudo apt-get install -q -y wget tar xz-utils
+
+      - name: Build
+        run: |
+          set -x
+          ./build.sh clean test
