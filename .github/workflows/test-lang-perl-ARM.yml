@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: 'Test Perl'
+name: 'Test Perl on ARM'
 on:
   workflow_dispatch:
   push:

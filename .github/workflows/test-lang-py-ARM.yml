@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Test C++
+name: 'Test Python on ARM'
 on:
   workflow_dispatch:
   push:
@@ -21,37 +21,33 @@ on:
   pull_request:
     branches: [ main ]
     paths:
-    - '.github/workflows/test-lang-c\+\+.yml'
-    - 'lang/c\+\+/**'
+    - .github/workflows/test-lang-py.yml
+    - lang/py/**
 
 defaults:
   run:
-    working-directory: lang/c++
+    working-directory: lang/py
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  arm64:
+    name: Python on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        run: sudo apt update && sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev cmake
-
-      - name: Clean
-        run: ./build.sh clean
-
-      - name: Lint
-        run: ./build.sh lint
-
-      - name: Test
-        run: ./build.sh test
-
-      - name: Release build
+      - name: Install dependencies
         run: |
-          mkdir -p build
-          cd build
-          cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ..
+          sudo apt-get update -q
+          sudo apt-get install -q -y python3 python3-dev python3-pip git libbz2-dev libjansson-dev liblzma-dev libsnappy-dev libzstd-dev
+          python3 -m pip install --upgrade pip setuptools tox
+
+      - name: Build
+        run: |
+          set -x
+          ./build.sh clean test
