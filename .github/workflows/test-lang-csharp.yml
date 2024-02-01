@@ -48,7 +48,9 @@ jobs:
           sudo apt-get install -q -y libzstd-dev libicu-dev
 
       - if: matrix.os != 'ubuntu-latest'
+        name: Install dependencies for ARM64
         run: |
+          echo X${{matrix.os}}X
           sudo mkdir -p /usr/share/dotnet
           sudo chown -R $(id -u):$(id -g) /usr/share/dotnet
 
