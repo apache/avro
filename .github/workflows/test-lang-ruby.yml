@@ -35,9 +35,10 @@ concurrency:
 jobs:
   test:
     name: Ruby ${{ matrix.ruby }} Tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, ["self-hosted", "asf-arm"]]
         ruby:
         - '2.7'
         - '3.0'
@@ -52,7 +53,9 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
 
       - name: Install Dependencies
-        run: sudo apt-get install -qqy libsnappy-dev
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qqy bundler libsnappy-dev libyaml-dev
 
       - uses: actions/cache@v4
         with:

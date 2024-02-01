@@ -35,9 +35,10 @@ concurrency:
 jobs:
   test:
     name: PHP ${{ matrix.php }} Test
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, ["self-hosted", "asf-arm"]]
         php:
         - '7.3'
         - '7.4'

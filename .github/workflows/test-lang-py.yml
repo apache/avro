@@ -35,10 +35,11 @@ concurrency:
 jobs:
   test:
     name: Python ${{ matrix.python }} Tests
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, ["self-hosted", "asf-arm"]]
         python:
         - '3.11'
         - '3.10'
@@ -60,6 +61,7 @@ jobs:
 
       - name: Apt Install Compression Libs
         run: |
+          sudo apt-get update -qq
           sudo apt-get install -qqy --no-install-recommends libbz2-dev \
                                                             libjansson-dev \
                                                             liblzma-dev \

@@ -35,9 +35,10 @@ concurrency:
 jobs:
   test:
     name: Perl ${{ matrix.perl }} Tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, ["self-hosted", "asf-arm"]]
         perl:
         - '5.32'
     steps:
@@ -49,6 +50,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          sudo apt-get update -qq
           sudo apt-get -qqy install --no-install-recommends libjansson-dev \
                                                             libcompress-raw-zlib-perl \
                                                             libcpan-uploader-perl \

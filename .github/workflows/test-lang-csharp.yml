@@ -42,14 +42,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install packages
-        shell: bash
         run: |
-          sudo apt-get update -q
-          sudo apt-get install -q -y libzstd-dev libicu-dev
+          sudo apt-get update -qq
+          sudo apt-get install -qqy libzstd-dev libicu-dev
 
       # On the hosted ARM runner, we need to create the dotnet directory and change the owner to the current user
       - if: matrix.os != 'ubuntu-latest'
-        name: Install dependencies for ${{ matrix.os }}
+        name: Install dependencies
         run: |
           sudo mkdir -p /usr/share/dotnet
           sudo chown -R $(id -u):$(id -g) /usr/share/dotnet

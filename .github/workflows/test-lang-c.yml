@@ -43,8 +43,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          sudo apt-get update -q
-          sudo apt-get install -q -y cmake liblzma-dev libsnappy-dev libjansson-dev zlib1g-dev pkg-config
+          sudo apt-get update -qq
+          sudo apt-get install -qqy cmake liblzma-dev libsnappy-dev libjansson-dev zlib1g-dev pkg-config
 
       - name: Lint
         run: ./build.sh lint
