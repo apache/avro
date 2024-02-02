@@ -99,13 +99,14 @@ jobs:
         run: ./build.sh test
 
   interop:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest]
         php:
-        - '7.3'
-        - '7.4'
-        - '8.0'
+          - '7.3'
+          - '7.4'
+          - '8.0'
 
     steps:
       - uses: actions/checkout@v4

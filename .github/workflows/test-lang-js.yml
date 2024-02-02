@@ -66,9 +66,10 @@ jobs:
         run: ./build.sh test
 
   interop:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest]
         node:
         - 12
         - 14

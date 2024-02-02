@@ -91,9 +91,10 @@ jobs:
           ./build.sh test
 
   interop:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest]
         ruby:
         - '2.7'
         - '3.0'

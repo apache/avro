@@ -94,11 +94,12 @@ jobs:
         run: ./build.sh test
 
   interop:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        perl:
-        - '5.32'
+        include:
+          - os: ubuntu-latest
+            perl: '5.32'
     steps:
       - uses: actions/checkout@v4
 

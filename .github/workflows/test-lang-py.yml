@@ -92,10 +92,11 @@ jobs:
         run: python3 -m tox -e py
 
   interop:
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         python:
         - '3.11'
         - '3.10'
