@@ -37,9 +37,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, ["self-hosted", "asf-arm"]]
-        perl:
-        - '5.32'
+        include:
+          - os: ubuntu-latest
+            perl: '5.32'
+          - os: ["self-hosted", "asf-arm"]
+            perl: '5.30'
+        
     steps:
       - uses: actions/checkout@v4
 

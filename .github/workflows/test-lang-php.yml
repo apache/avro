@@ -37,11 +37,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, ["self-hosted", "asf-arm"]]
+        os: [ubuntu-latest]
         php:
-        - '7.3'
-        - '7.4'
-        - '8.0'
+          - '7.3'
+          - '7.4'
+          - '8.0'
+        include:
+          - os: ["self-hosted", "asf-arm"]
+            php: '7.4'
 
     steps:
       - uses: actions/checkout@v4

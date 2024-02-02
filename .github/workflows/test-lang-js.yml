@@ -37,11 +37,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, ["self-hosted", "asf-arm"]]
+        os: [ubuntu-latest]
         node:
         - 12
         - 14
         - 16
+        include:
+          - os: ["self-hosted", "asf-arm"]
+            node: 18
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node

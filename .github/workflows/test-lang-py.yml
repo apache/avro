@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ["self-hosted", "asf-arm"]]
+        os: [ubuntu-latest]
         python:
         - '3.11'
         - '3.10'
@@ -49,6 +49,9 @@ jobs:
         - 'pypy-3.8'
         - 'pypy-3.9'
         - 'pypy-3.10'
+        include:
+          - os: ["self-hosted", "asf-arm"]
+            python: '3.8'
 
     steps:
       - uses: actions/checkout@v4
