@@ -72,14 +72,6 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <!-- Bump this to a higher version while maven 3.3.9 still uses 3.0.22 with a -->
-    <!-- XML injection vulnerability. -->
-    <dependency>
-      <groupId>org.codehaus.plexus</groupId>
-      <artifactId>plexus-utils</artifactId>
-      <version>3.5.1</version>
-      <scope>provided</scope>
-    </dependency>
     <dependency>
       <groupId>org.apache.maven.shared</groupId>
       <artifactId>file-management</artifactId>
