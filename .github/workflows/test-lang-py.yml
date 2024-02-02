@@ -34,7 +34,6 @@ concurrency:
 
 jobs:
   test:
-    name: Python ${{ matrix.python }} Tests
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -54,11 +53,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python }}
-
       - name: Apt Install Compression Libs
         run: |
           sudo apt-get update -qq
@@ -67,6 +61,11 @@ jobs:
                                                             liblzma-dev \
                                                             libsnappy-dev \
                                                             libzstd-dev
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
 
       - name: Install Dependencies
         run: |

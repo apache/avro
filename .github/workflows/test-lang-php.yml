@@ -34,7 +34,6 @@ concurrency:
 
 jobs:
   test:
-    name: PHP ${{ matrix.php }} Test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

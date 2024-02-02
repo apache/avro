@@ -34,7 +34,6 @@ concurrency:
 
 jobs:
   test:
-    name: Perl ${{ matrix.perl }} Tests
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -44,13 +43,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Apt update
+        run: |
+          sudo apt-get update -qq
+
       - uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.perl }}
 
       - name: Install Dependencies
         run: |
-          sudo apt-get update -qq
           sudo apt-get -qqy install --no-install-recommends libjansson-dev \
                                                             libcompress-raw-zlib-perl \
                                                             libcpan-uploader-perl \

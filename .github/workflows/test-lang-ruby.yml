@@ -34,7 +34,6 @@ concurrency:
 
 jobs:
   test:
-    name: Ruby ${{ matrix.ruby }} Tests
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

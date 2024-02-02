@@ -44,7 +44,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update -qq
-          sudo sudo apt-get install -qqy gcc g++ cppcheck libboost-all-dev libsnappy-dev cmake
+          sudo apt-get install -qqy gcc g++ cppcheck libboost-all-dev libsnappy-dev cmake
 
       - name: Clean
         run: ./build.sh clean
