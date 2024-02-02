@@ -53,7 +53,7 @@ jobs:
       - if: matrix.os != 'ubuntu-latest'
         name: Setup Perl
         run: |
-          sudo apt-get install -qqy --no-install-recommends perl${{ matrix.perl }}
+          sudo apt-get install -qy --no-install-recommends perl${{ matrix.perl }} cpanminus
 
       - if: matrix.os == 'ubuntu-latest'
         name: Setup Perl
