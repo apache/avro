@@ -44,7 +44,7 @@ jobs:
           - '8.0'
         include:
           - os: ["self-hosted", "asf-arm"]
-            php: '7.4'
+            php: ''
 
     steps:
       - uses: actions/checkout@v4
@@ -53,17 +53,39 @@ jobs:
         run: |
           sudo apt-get update -qq
 
-      - name: Setup PHP
+      - if: matrix.os != 'ubuntu-latest'
+        name: Setup PHP
+        run: |
+          sudo apt-get install -qqy wget \
+                                    php \
+                                    php-xml \
+                                    php-mbstring \
+                                    php-curl \
+                                    php-gmp \
+                                    php-bz2 \
+                                    unzip \
+                                    libtidy-dev \
+                                    libpq5
+          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+          php -r "if (hash_file('sha384', 'composer-setup.php') === file_get_contents('https://composer.github.io/installer.sig')) { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+          php composer-setup.php --version=2.2.5
+          php -r "unlink('composer-setup.php');"
+          sudo mv composer.phar /usr/local/bin/composer
+
+      - if: matrix.os == 'ubuntu-latest'
+        name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           tools: composer:2.2.5
 
-      - name: Get Composer Cache Directory
+      - if: matrix.os == 'ubuntu-latest'
+        name: Get Composer Cache Directory
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v4
+      - if: matrix.os == 'ubuntu-latest'
+        uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}

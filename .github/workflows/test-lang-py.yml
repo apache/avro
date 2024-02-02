@@ -51,7 +51,7 @@ jobs:
         - 'pypy-3.10'
         include:
           - os: ["self-hosted", "asf-arm"]
-            python: '3.8'
+            python: '3'
 
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +65,13 @@ jobs:
                                                             libsnappy-dev \
                                                             libzstd-dev
 
-      - name: Setup Python
+      - if: matrix.os != 'ubuntu-latest'
+        name: Setup Python
+        run: |
+          sudo apt-get install -qqy --no-install-recommends python${{ matrix.python }}
+
+      - if: matrix.os == 'ubuntu-latest'
+        name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}

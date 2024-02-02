@@ -46,11 +46,22 @@ jobs:
         - '3.3'
         include:
           - os: ["self-hosted", "asf-arm"]
-            ruby: '2.7'
+            ruby: ''
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ruby/setup-ruby@v1
+      - name: Apt Update
+        run: |
+          sudo apt-get update -qq
+
+      - if: matrix.os != 'ubuntu-latest'
+        name: Setup Ruby 
+        run: |
+          sudo apt-get install -qqy ruby${{ matrix.ruby }}
+
+      - if: matrix.os == 'ubuntu-latest'
+        name: Setup Ruby 
+        uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
 
