@@ -35,7 +35,6 @@ concurrency:
 
 jobs:
   test:
-    name: 'Java Test'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -82,7 +81,6 @@ jobs:
         run: mvn clean verify -PskipQuality artifact:compare
 
   interop:
-    name: 'Java Interop'
     runs-on: ubuntu-latest
 
     steps:
