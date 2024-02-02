@@ -208,7 +208,7 @@ public class TestLogicalType {
     assertEquals(LogicalTypes.uuid(), uuidSchema.getLogicalType());
 
     assertThrows("UUID requires a string", IllegalArgumentException.class,
-        "Uuid can only be used with an underlying string type",
+        "Uuid can only be used with an underlying string or fixed type",
         () -> LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.INT)));
   }
 
