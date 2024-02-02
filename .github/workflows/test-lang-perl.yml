@@ -84,7 +84,6 @@ jobs:
         run: ./build.sh test
 
   interop:
-    name: Perl ${{ matrix.perl }} Interop
     runs-on: ubuntu-latest
     strategy:
       matrix:

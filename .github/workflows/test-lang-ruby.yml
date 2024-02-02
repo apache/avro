@@ -77,7 +77,6 @@ jobs:
           ./build.sh test
 
   interop:
-    name: Ruby ${{ matrix.ruby }} Interop
     runs-on: ubuntu-latest
     strategy:
       matrix:

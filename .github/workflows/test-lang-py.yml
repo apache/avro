@@ -83,7 +83,6 @@ jobs:
         run: python3 -m tox -e py
 
   interop:
-    name: Python ${{ matrix.python }} Interop
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -101,6 +100,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Apt Update
+        run: |
+          sudo apt-get update -qq
 
       - name: Setup Python
         uses: actions/setup-python@v5
