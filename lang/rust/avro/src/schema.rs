@@ -1419,8 +1419,22 @@ impl Parser {
                     return try_convert_to_logical_type(
                         "uuid",
                         parse_as_native_complex(complex, self, enclosing_namespace)?,
-                        &[SchemaKind::String],
-                        |_| -> AvroResult<Schema> { Ok(Schema::Uuid) },
+                        &[SchemaKind::String, SchemaKind::Fixed],
+                        |schema| match schema {
+                            Schema::String => Ok(Schema::Uuid),
+                            Schema::Fixed(FixedSchema { size: 16, .. }) => Ok(Schema::Uuid),
+                            Schema::Fixed(FixedSchema { size, .. }) => {
+                                warn!("Ignoring uuid logical type for a Fixed schema because its size ({size:?}) is not 16! Schema: {:?}", schema);
+                                Ok(schema)
+                            }
+                            _ => {
+                                warn!(
+                                    "Ignoring invalid uuid logical type for schema: {:?}",
+                                    schema
+                                );
+                                Ok(schema)
+                            }
+                        },
                     );
                 }
                 "date" => {
@@ -2386,8 +2400,10 @@ pub mod derive {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apache_avro_test_helper::TestResult;
-    use pretty_assertions::assert_eq;
+    use apache_avro_test_helper::{
+        logger::{assert_logged, assert_not_logged},
+        TestResult,
+    };
     use serde_json::json;
 
     #[test]
@@ -6298,7 +6314,7 @@ mod tests {
     }
 
     #[test]
-    fn test_avro_3896_uuid_schema() -> TestResult {
+    fn avro_3896_uuid_schema_for_string() -> TestResult {
         // string uuid, represents as native logical type.
         let schema = json!(
         {
@@ -6309,8 +6325,11 @@ mod tests {
         let parse_result = Schema::parse(&schema)?;
         assert_eq!(parse_result, Schema::Uuid);
 
-        // uuid logical type is not supported for SchemaKind::Fixed, so it is parsed as Schema::Fixed
-        // and the `logicalType` is preserved as an attribute.
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3926_uuid_schema_for_fixed_with_size_16() -> TestResult {
         let schema = json!(
         {
             "type": "fixed",
@@ -6319,18 +6338,36 @@ mod tests {
             "logicalType": "uuid"
         });
         let parse_result = Schema::parse(&schema)?;
+        assert_eq!(parse_result, Schema::Uuid);
+        assert_not_logged(
+            r#"Ignoring uuid logical type for a Fixed schema because its size (6) is not 16! Schema: Fixed(FixedSchema { name: Name { name: "FixedUUID", namespace: None }, aliases: None, doc: None, size: 6, attributes: {"logicalType": String("uuid")} })"#,
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3926_uuid_schema_for_fixed_with_size_different_than_16() -> TestResult {
+        let schema = json!(
+        {
+            "type": "fixed",
+            "name": "FixedUUID",
+            "size": 6,
+            "logicalType": "uuid"
+        });
+        let parse_result = Schema::parse(&schema)?;
         assert_eq!(
             parse_result,
             Schema::Fixed(FixedSchema {
                 name: Name::new("FixedUUID")?,
-                doc: None,
                 aliases: None,
-                size: 16,
-                attributes: BTreeMap::from([(
-                    "logicalType".to_string(),
-                    Value::String(String::from("uuid")),
-                )]),
+                doc: None,
+                size: 6,
+                attributes: BTreeMap::from([("logicalType".to_string(), "uuid".into())]),
             })
+        );
+        assert_logged(
+            r#"Ignoring uuid logical type for a Fixed schema because its size (6) is not 16! Schema: Fixed(FixedSchema { name: Name { name: "FixedUUID", namespace: None }, aliases: None, doc: None, size: 6, attributes: {"logicalType": String("uuid")} })"#,
         );
 
         Ok(())
@@ -6379,8 +6416,6 @@ mod tests {
 
     #[test]
     fn test_avro_3899_parse_decimal_type() -> TestResult {
-        use apache_avro_test_helper::logger::{assert_logged, assert_not_logged};
-
         let schema = Schema::parse_str(
             r#"{
              "name": "InvalidDecimal",
