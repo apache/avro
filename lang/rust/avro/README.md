@@ -428,8 +428,8 @@ fn main() -> Result<(), Error> {
 
 `apache-avro` also supports the logical types listed in the [Avro specification](https://avro.apache.org/docs/current/spec.html#Logical+Types):
 
-1. `Decimal` using the [`num_bigint`](https://docs.rs/num-bigint/0.2.6/num_bigint) crate
-1. UUID using the [`uuid`](https://docs.rs/uuid/1.0.0/uuid) crate
+1. `Decimal` using the [`num_bigint`](https://docs.rs/num-bigint/latest/num_bigint) crate
+1. UUID using the [`uuid`](https://docs.rs/uuid/latest/uuid) crate
 1. Date, Time (milli) as `i32` and Time (micro) as `i64`
 1. Timestamp (milli and micro) as `i64`
 1. Local timestamp (milli and micro) as `i64`
