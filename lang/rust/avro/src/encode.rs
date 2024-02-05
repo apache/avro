@@ -125,12 +125,28 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
             let slice: [u8; 12] = duration.into();
             buffer.extend_from_slice(&slice);
         }
-        Value::Uuid(uuid) => encode_bytes(
-            // we need the call .to_string() to properly convert ASCII to UTF-8
-            #[allow(clippy::unnecessary_to_owned)]
-            &uuid.to_string(),
-            buffer,
-        ),
+        Value::Uuid(uuid) => match *schema {
+            Schema::Uuid | Schema::String => encode_bytes(
+                // we need the call .to_string() to properly convert ASCII to UTF-8
+                #[allow(clippy::unnecessary_to_owned)]
+                &uuid.to_string(),
+                buffer,
+            ),
+            Schema::Fixed(FixedSchema { size, .. }) => {
+                if size != 16 {
+                    return Err(Error::ConvertFixedToUuid(size));
+                }
+
+                let bytes = uuid.as_bytes();
+                encode_bytes(bytes, buffer)
+            }
+            _ => {
+                return Err(Error::EncodeValueAsSchemaError {
+                    value_kind: ValueKind::Uuid,
+                    supported_schema: vec![SchemaKind::Uuid, SchemaKind::Fixed],
+                });
+            }
+        },
         Value::BigDecimal(bg) => {
             let buf: Vec<u8> = serialize_big_decimal(bg);
             buffer.extend_from_slice(buf.as_slice());
@@ -293,8 +309,10 @@ pub fn encode_to_vec(value: &Value, schema: &Schema) -> AvroResult<Vec<u8>> {
 #[allow(clippy::expect_fun_call)]
 pub(crate) mod tests {
     use super::*;
+    use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
     use std::collections::HashMap;
+    use uuid::Uuid;
 
     pub(crate) fn success(value: &Value, schema: &Schema) -> String {
         format!(
@@ -879,5 +897,27 @@ pub(crate) mod tests {
         let encoded = encode(&value, &schema, &mut buffer);
         assert!(encoded.is_ok());
         assert!(!buffer.is_empty());
+    }
+
+    #[test]
+    fn avro_3926_encode_decode_uuid_to_fixed_wrong_schema_size() -> TestResult {
+        let schema = Schema::Fixed(FixedSchema {
+            size: 15,
+            name: "uuid".into(),
+            aliases: None,
+            doc: None,
+            attributes: Default::default(),
+        });
+        let value = Value::Uuid(Uuid::parse_str("550e8400-e29b-41d4-a716-446655440000")?);
+
+        let mut buffer = Vec::new();
+        match encode(&value, &schema, &mut buffer) {
+            Err(Error::ConvertFixedToUuid(actual)) => {
+                assert_eq!(actual, 15);
+            }
+            _ => panic!("Expected Error::ConvertFixedToUuid"),
+        }
+
+        Ok(())
     }
 }
