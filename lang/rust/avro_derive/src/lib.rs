@@ -15,8 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-extern crate darling;
-
 use darling::FromAttributes;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
