@@ -283,7 +283,6 @@ do
       rm -rf lang/perl/inc/
       rm -rf lang/ruby/.gem/
       rm -rf lang/ruby/Gemfile.lock
-      rm -rf lang/py/lib/ivy-2.2.0.jar
       rm -rf lang/csharp/src/apache/ipc.test/bin/
       rm -rf lang/csharp/src/apache/ipc.test/obj
       ;;
