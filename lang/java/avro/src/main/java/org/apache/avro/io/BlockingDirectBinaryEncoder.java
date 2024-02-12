@@ -54,7 +54,7 @@ public class BlockingDirectBinaryEncoder extends DirectBinaryEncoder {
 
   private int depth = 0;
 
-  private long blockItemCount;
+  private final ArrayDeque<Long> blockItemCounts;
 
   /**
    * Create a writer that sends its output to the underlying stream
@@ -66,6 +66,7 @@ public class BlockingDirectBinaryEncoder extends DirectBinaryEncoder {
     super(out);
     this.buffers = new ArrayList<>();
     this.stashedBuffers = new ArrayDeque<>();
+    this.blockItemCounts = new ArrayDeque<>();
   }
 
   private void startBlock() {
@@ -86,6 +87,7 @@ public class BlockingDirectBinaryEncoder extends DirectBinaryEncoder {
     this.depth -= 1;
     out = stashedBuffers.pop();
     BufferOutputStream buffer = this.buffers.get(depth);
+    long blockItemCount = blockItemCounts.pop();
     if (blockItemCount > 0) {
       try {
         // Make it negative, so the reader knows that the number of bytes is coming
@@ -100,7 +102,7 @@ public class BlockingDirectBinaryEncoder extends DirectBinaryEncoder {
 
   @Override
   public void setItemCount(long itemCount) throws IOException {
-    blockItemCount = itemCount;
+    blockItemCounts.push(itemCount);
   }
 
   @Override
