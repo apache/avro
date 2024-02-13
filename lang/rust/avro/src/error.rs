@@ -503,7 +503,7 @@ pub enum CompatibilityError {
     #[error("Incompatible schema types! The {schema_type} should have been {expected_type:?}")]
     TypeExpected {
         schema_type: String,
-        expected_type: &'static [SchemaKind],
+        expected_type: Vec<SchemaKind>,
     },
 
     #[error("Incompatible schemata! Field '{0}' in reader schema does not match the type in the writer schema")]
