@@ -888,7 +888,7 @@ The `local-timestamp-{millis,micros,nanos}` logical type represents a timestamp 
 - `local-timestamp-micros`: logical type annotates an Avro `long`, where the long stores the number of microseconds, from 1 January 1970 00:00:00.000000.
 - `local-timestamp-nanos`: logical type annotates an Avro `long`, where the long stores the number of nanoseconds, from 1 January 1970 00:00:00.000000000.
 
-Example: Given an event at noon local time (12:00) on January 1, 2000, in Helsinki where the local time was two hours east of UTC (UTC+2). The timestamp is converted to Avro long 946684800000 (milliseconds) and then written.
+Example: Given an event at noon local time (12:00) on January 1, 2000, in Helsinki where the local time was two hours east of UTC (UTC+2). The timestamp is converted to Avro long 946728000000 (milliseconds) and then written.
 
 ### Duration
 The `duration` logical type represents an amount of time defined by a number of months, days and milliseconds. This is not equivalent to a number of milliseconds, because, depending on the moment in time from which the duration is measured, the number of days in the month and number of milliseconds in a day may differ. Other standard periods such as years, quarters, hours and minutes can be expressed through these basic periods.
