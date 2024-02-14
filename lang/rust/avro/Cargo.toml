@@ -30,11 +30,11 @@ categories.workspace = true
 documentation.workspace = true
 
 [features]
-bzip = ["bzip2"]
-derive = ["apache-avro-derive"]
-snappy = ["crc32fast", "snap"]
-xz = ["xz2"]
-zstandard = ["zstd"]
+bzip = ["dep:bzip2"]
+derive = ["dep:apache-avro-derive"]
+snappy = ["dep:crc32fast", "dep:snap"]
+xz = ["dep:xz2"]
+zstandard = ["dep:zstd"]
 
 [lib]
 # disable benchmarks to allow passing criterion arguments to `cargo bench`
@@ -90,3 +90,8 @@ md-5 = { default-features = false, version = "0.10.6" }
 pretty_assertions = { default-features = false, version = "1.4.0", features = ["std"] }
 serial_test = "3.0.0"
 sha2 = { default-features = false, version = "0.10.8" }
+
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
