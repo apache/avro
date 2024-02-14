@@ -136,9 +136,9 @@ For example, an array of strings is declared with:
 ```json
 {
   "type": "array",
-  "items" : "string",
-  "default": []
-}
+  "items" : "string"
+},
+"default": []
 ```
     
 ### Maps
