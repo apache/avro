@@ -37,7 +37,8 @@ import java.util.Collections;
 public class TestGenericConcreteEnum {
 
   private static byte[] serializeRecord(FooBarSpecificRecord fooBarSpecificRecord) throws IOException {
-    GenericDatumWriter<FooBarSpecificRecord> datumWriter = new GenericDatumWriter<>(FooBarSpecificRecord.SCHEMA$);
+    GenericDatumWriter<FooBarSpecificRecord> datumWriter = new GenericDatumWriter<>(
+        FooBarSpecificRecord.getClassSchema());
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().binaryEncoder(byteArrayOutputStream, null);
     datumWriter.write(fooBarSpecificRecord, encoder);
@@ -53,11 +54,12 @@ public class TestGenericConcreteEnum {
 
     Decoder decoder = DecoderFactory.get().binaryDecoder(bytes, null);
 
-    GenericDatumReader<IndexedRecord> genericDatumReader = new GenericDatumReader<>(FooBarSpecificRecord.SCHEMA$);
-    IndexedRecord deserialized = new GenericData.Record(FooBarSpecificRecord.SCHEMA$);
+    GenericDatumReader<IndexedRecord> genericDatumReader = new GenericDatumReader<>(
+        FooBarSpecificRecord.getClassSchema());
+    IndexedRecord deserialized = new GenericData.Record(FooBarSpecificRecord.getClassSchema());
     genericDatumReader.read(deserialized, decoder);
 
-    assertEquals(0, GenericData.get().compare(specificRecord, deserialized, FooBarSpecificRecord.SCHEMA$));
+    assertEquals(0, GenericData.get().compare(specificRecord, deserialized, FooBarSpecificRecord.getClassSchema()));
   }
 
   @Test
@@ -69,7 +71,7 @@ public class TestGenericConcreteEnum {
     Decoder decoder = DecoderFactory.get().binaryDecoder(bytes, null);
 
     SpecificDatumReader<FooBarSpecificRecord> specificDatumReader = new SpecificDatumReader<>(
-        FooBarSpecificRecord.SCHEMA$);
+        FooBarSpecificRecord.getClassSchema());
     FooBarSpecificRecord deserialized = new FooBarSpecificRecord();
     specificDatumReader.read(deserialized, decoder);
 

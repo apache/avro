@@ -47,7 +47,7 @@ public class TestSpecificToFromByteArray {
         LocalDate.now(), t, instant, new BigDecimal("123.45"), new BigDecimal(-23.456562323));
 
     final ByteBuffer b = record.toByteBuffer();
-    final TestRecordWithLogicalTypes copy = TestRecordWithLogicalTypes.fromByteBuffer(b);
+    final TestRecordWithLogicalTypes copy = TestRecordWithLogicalTypes.CODER.fromByteBuffer(b);
 
     assertEquals(record, copy);
   }
@@ -73,7 +73,7 @@ public class TestSpecificToFromByteArray {
           new Conversions.DecimalConversion().toBytes(new BigDecimal("123.45"), null, LogicalTypes.decimal(9, 2)));
 
       final ByteBuffer b = withoutLogicalTypes.toByteBuffer();
-      TestRecordWithLogicalTypes.fromByteBuffer(b);
+      TestRecordWithLogicalTypes.CODER.fromByteBuffer(b);
     });
   }
 

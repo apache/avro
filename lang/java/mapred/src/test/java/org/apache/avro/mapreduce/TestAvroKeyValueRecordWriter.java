@@ -53,7 +53,7 @@ public class TestAvroKeyValueRecordWriter {
   @Test
   void writeRecords() throws IOException {
     Job job = Job.getInstance();
-    AvroJob.setOutputValueSchema(job, TextStats.SCHEMA$);
+    AvroJob.setOutputValueSchema(job, TextStats.getClassSchema());
     TaskAttemptContext context = mock(TaskAttemptContext.class);
 
     AvroDatumConverterFactory factory = new AvroDatumConverterFactory(job.getConfiguration());
@@ -79,7 +79,7 @@ public class TestAvroKeyValueRecordWriter {
     writer.close(context);
 
     ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-    Schema readerSchema = AvroKeyValue.getSchema(Schema.create(Schema.Type.STRING), TextStats.SCHEMA$);
+    Schema readerSchema = AvroKeyValue.getSchema(Schema.create(Schema.Type.STRING), TextStats.getClassSchema());
     DatumReader<GenericRecord> datumReader = new SpecificDatumReader<>(readerSchema);
     DataFileStream<GenericRecord> avroFileReader = new DataFileStream<>(inputStream, datumReader);
 
@@ -152,7 +152,7 @@ public class TestAvroKeyValueRecordWriter {
   @Test
   void syncableWriteRecords() throws IOException {
     Job job = Job.getInstance();
-    AvroJob.setOutputValueSchema(job, TextStats.SCHEMA$);
+    AvroJob.setOutputValueSchema(job, TextStats.getClassSchema());
     TaskAttemptContext context = mock(TaskAttemptContext.class);
 
     AvroDatumConverterFactory factory = new AvroDatumConverterFactory(job.getConfiguration());

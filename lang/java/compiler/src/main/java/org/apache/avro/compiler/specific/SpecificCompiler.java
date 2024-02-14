@@ -28,10 +28,12 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -757,6 +759,19 @@ public class SpecificCompiler {
     return getStringType(s.getObjectProp(prop));
   }
 
+  public String parseSchemas(Schema s) throws IOException {
+    Schema current = s;
+    Deque<String> l = new LinkedList();
+    while (current != null) {
+      String schemaString = this.javaSplit(current.toString());
+      String parse = "currentSchema = parser.parse(" + schemaString + ");\n";
+      l.addFirst(parse);
+      current = current.getParent();
+    }
+    return l.stream().collect(
+        Collectors.joining("\n        ", "org.apache.avro.Schema ", "\n        this.SCHEMA$ = currentSchema;"));
+  }
+
   private String getStringType(Object overrideClassProperty) {
     if (overrideClassProperty != null)
       return overrideClassProperty.toString();
@@ -1348,9 +1363,11 @@ public class SpecificCompiler {
     this.outputCharacterEncoding = outputCharacterEncoding;
   }
 
-  public String getSchemaParentClass(boolean isError) {
-    if (isError) {
+  public String getSchemaParentClass(Schema schema) {
+    if (schema.isError()) {
       return this.errorSpecificClass;
+    } else if (schema.getParent() != null) {
+      return schema.getParent().getFullName();
     } else {
       return this.recordSpecificClass;
     }

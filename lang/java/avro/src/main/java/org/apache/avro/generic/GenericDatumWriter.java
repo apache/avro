@@ -229,8 +229,16 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
    * representations.
    */
   protected void writeRecord(Schema schema, Object datum, Encoder out) throws IOException {
-    Object state = data.getRecordState(datum, schema);
-    for (Field f : schema.getFields()) {
+    final Schema realSchema;
+    if (datum instanceof GenericRecord && schema.hasChild()) {
+      realSchema = ((GenericRecord) datum).getSchema();
+      out.writeExtends(realSchema.getIndex());
+    } else {
+      realSchema = schema;
+    }
+
+    Object state = data.getRecordState(datum, realSchema);
+    for (Field f : realSchema.getFields()) {
       writeField(datum, f, out, state);
     }
   }

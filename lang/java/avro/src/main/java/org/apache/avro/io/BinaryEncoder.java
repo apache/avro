@@ -117,6 +117,11 @@ public abstract class BinaryEncoder extends Encoder {
     writeInt(unionIndex);
   }
 
+  @Override
+  public void writeExtends(int extendsIndex) throws IOException {
+    writeInt(extendsIndex);
+  }
+
   /** Write a zero byte to the underlying output. **/
   protected abstract void writeZero() throws IOException;
 

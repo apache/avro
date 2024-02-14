@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -54,7 +55,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static org.apache.avro.LogicalType.LOGICAL_TYPE_PROP;
@@ -228,6 +231,23 @@ public abstract class Schema extends JsonProperties implements Serializable {
     return new RecordSchema(new Name(name, namespace), doc, isError, fields);
   }
 
+  /** Create a named record schema. */
+  public static Schema createRecord(Schema parent, String name, String doc, String namespace, boolean isError) {
+    if (parent.getType() != Type.RECORD) {
+      throw new IllegalArgumentException("Parent schema must be Record Type");
+    }
+    return new ExtendedRecordSchema((Schema.RecordSchema) parent, new Name(name, namespace), doc, isError);
+  }
+
+  /** Create a named record schema with fields already set. */
+  public static Schema createRecord(Schema parent, String name, String doc, String namespace, boolean isError,
+      List<Field> fields) {
+    if (parent.getType() != Type.RECORD) {
+      throw new IllegalArgumentException("Parent schema must be Record Type");
+    }
+    return new ExtendedRecordSchema((Schema.RecordSchema) parent, new Name(name, namespace), doc, isError, fields);
+  }
+
   /** Create an enum schema. */
   public static Schema createEnum(String name, String doc, String namespace, List<String> values) {
     return new EnumSchema(new Name(name, namespace), doc, new LockableArrayList<>(values), null);
@@ -286,9 +306,32 @@ public abstract class Schema extends JsonProperties implements Serializable {
   }
 
   /**
-   * If this is a record, returns whether the fields have been set.
+   * If this is a record, return if it or parent have fields.
    */
   public boolean hasFields() {
+    throw new AvroRuntimeException("Not a record: " + this);
+  }
+
+  /**
+   * If this is a record, returns whether the fields have been set.
+   */
+  protected boolean hasDeclaredFields() {
+    throw new AvroRuntimeException("Not a record: " + this);
+  }
+
+  public boolean hasChild() {
+    throw new AvroRuntimeException("Not a record: " + this);
+  }
+
+  public Schema getParent() {
+    throw new AvroRuntimeException("Not a record: " + this);
+  }
+
+  public Stream<Schema> visitHierarchy() {
+    throw new AvroRuntimeException("Not a record: " + this);
+  }
+
+  public Schema findInHierachy(int index) {
     throw new AvroRuntimeException("Not a record: " + this);
   }
 
@@ -377,6 +420,10 @@ public abstract class Schema extends JsonProperties implements Serializable {
   /** If this is a map, returns its value type. */
   public Schema getValueType() {
     throw new AvroRuntimeException("Not a map: " + this);
+  }
+
+  public int getIndex() {
+    throw new AvroRuntimeException("Not a record: " + this);
   }
 
   /** If this is a union, returns its types. */
@@ -994,9 +1041,13 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
   @SuppressWarnings(value = "unchecked")
   private static class RecordSchema extends NamedSchema {
-    private List<Field> fields;
+    protected List<Field> fields;
     private Map<String, Field> fieldMap;
     private final boolean isError;
+
+    protected int index = -1;
+
+    protected List<ExtendedRecordSchema> childs;
 
     public RecordSchema(Name name, String doc, boolean isError) {
       super(Type.RECORD, name, doc);
@@ -1007,6 +1058,14 @@ public abstract class Schema extends JsonProperties implements Serializable {
       super(Type.RECORD, name, doc);
       this.isError = isError;
       setFields(fields);
+    }
+
+    protected void addChild(ExtendedRecordSchema child) {
+      this.index = -1;
+      if (this.childs == null) {
+        this.childs = new ArrayList<>();
+      }
+      this.childs.add(child);
     }
 
     @Override
@@ -1023,7 +1082,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
     @Override
     public List<Field> getFields() {
-      if (fields == null)
+      if (!this.hasFields())
         throw new AvroRuntimeException("Schema fields not set yet");
       return fields;
     }
@@ -1034,11 +1093,29 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     @Override
+    protected boolean hasDeclaredFields() {
+      return fields != null;
+    }
+
+    @Override
+    public RecordSchema findInHierachy(int index) {
+      if (this.index == index) {
+        return this;
+      }
+      if (this.hasChild()) {
+        RecordSchema schema = this.childs.stream().map((RecordSchema e) -> e.findInHierachy(index))
+            .filter(Objects::nonNull).findFirst().orElse(null);
+        return schema;
+      }
+      return null;
+    }
+
+    @Override
     public void setFields(List<Field> fields) {
       if (this.fields != null) {
         throw new AvroRuntimeException("Fields are already set");
       }
-      int i = 0;
+      int i = startFieldPos();
       fieldMap = new HashMap<>(Math.multiplyExact(2, fields.size()));
       LockableArrayList<Field> ff = new LockableArrayList<>(fields.size());
       for (Field f : fields) {
@@ -1057,6 +1134,57 @@ public abstract class Schema extends JsonProperties implements Serializable {
       this.hashCode = NO_HASHCODE;
     }
 
+    protected int startFieldPos() {
+      return 0;
+    }
+
+    @Override
+    public boolean hasChild() {
+      return this.childs != null && !(this.childs.isEmpty());
+    }
+
+    @Override
+    public Schema getParent() {
+      return null;
+    }
+
+    @Override
+    public Stream<Schema> visitHierarchy() {
+      final Stream<Schema> childsStream;
+      if (this.hasChild()) {
+        Comparator<ExtendedRecordSchema> c = Comparator.comparing(ExtendedRecordSchema::getFullName);
+        childsStream = this.childs.stream().sorted(c).flatMap((ExtendedRecordSchema e) -> e.visitHierarchy());
+      } else {
+        childsStream = Stream.empty();
+      }
+      return Stream.concat(Stream.of(this), childsStream);
+    }
+
+    public void indexHierachy() {
+      final AtomicInteger current = new AtomicInteger(0);
+      this.visitHierarchy().forEach((Schema e) -> {
+        ((RecordSchema) e).index = current.getAndIncrement();
+      });
+    }
+
+    private void initializeIndex() {
+      if (this.index < 0) {
+        indexHierachy();
+      }
+      if (this.hasFields()) {
+        this.getFields().stream().map(Schema.Field::schema).filter(RecordSchema.class::isInstance)
+            .map(RecordSchema.class::cast).forEach(RecordSchema::initializeIndex);
+      }
+    }
+
+    @Override
+    public int getIndex() {
+      if (this.index < 0) {
+        this.initializeIndex();
+      }
+      return index;
+    }
+
     @Override
     public boolean equals(Object o) {
       if (o == this)
@@ -1064,8 +1192,6 @@ public abstract class Schema extends JsonProperties implements Serializable {
       if (!(o instanceof RecordSchema))
         return false;
       RecordSchema that = (RecordSchema) o;
-      if (!equalCachedHash(that))
-        return false;
       if (!equalNames(that))
         return false;
       if (!propsEqual(that))
@@ -1105,13 +1231,13 @@ public abstract class Schema extends JsonProperties implements Serializable {
         return;
       String savedSpace = names.space; // save namespace
       gen.writeStartObject();
-      gen.writeStringField("type", isError ? "error" : "record");
+      gen.writeStringField("type", this.getJsonType());
       writeName(names, gen);
       names.space = name.space; // set default namespace
       if (this.getDoc() != null)
         gen.writeStringField("doc", this.getDoc());
 
-      if (fields != null) {
+      if (this.hasFields()) {
         gen.writeFieldName("fields");
         fieldsToJson(names, gen);
       }
@@ -1122,10 +1248,14 @@ public abstract class Schema extends JsonProperties implements Serializable {
       names.space = savedSpace; // restore namespace
     }
 
+    protected String getJsonType() {
+      return isError ? "error" : "record";
+    }
+
     @Override
     void fieldsToJson(Names names, JsonGenerator gen) throws IOException {
       gen.writeStartArray();
-      for (Field f : fields) {
+      for (Field f : this.getFields()) {
         gen.writeStartObject();
         gen.writeStringField("name", f.name());
         gen.writeFieldName("type");
@@ -1149,6 +1279,75 @@ public abstract class Schema extends JsonProperties implements Serializable {
         gen.writeEndObject();
       }
       gen.writeEndArray();
+    }
+  }
+
+  private static class ExtendedRecordSchema extends RecordSchema {
+
+    private final RecordSchema parent;
+
+    public ExtendedRecordSchema(RecordSchema parent, Name name, String doc, boolean isError) {
+      super(name, doc, isError);
+      this.parent = parent;
+      this.parent.addChild(this);
+    }
+
+    public ExtendedRecordSchema(RecordSchema parent, Name name, String doc, boolean isError, List<Field> fields) {
+      super(name, doc, isError, fields);
+      this.parent = parent;
+      this.parent.addChild(this);
+    }
+
+    @Override
+    public Schema getParent() {
+      return parent;
+    }
+
+    @Override
+    public List<Field> getFields() {
+      Stream<Field> parentFields = parent.hasFields() ? parent.getFields().stream() : Stream.empty();
+      Stream<Field> currentFields = this.fields != null ? this.fields.stream() : Stream.empty();
+      return Stream.concat(parentFields, currentFields).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean hasFields() {
+      return super.hasFields() || parent.hasFields();
+    }
+
+    @Override
+    public Field getField(String fieldname) {
+      Field f = null;
+      if (this.fields != null) {
+        f = super.getField(fieldname);
+      }
+      if (f == null) {
+        f = parent.getField(fieldname);
+      }
+      return f;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      return o instanceof ExtendedRecordSchema && parent.equals(((ExtendedRecordSchema) o).parent) && super.equals(o);
+    }
+
+    @Override
+    protected String getJsonType() {
+      return "record:" + parent.name.getQualified(this.name.space);
+    }
+
+    @Override
+    public void indexHierachy() {
+      if (this.index < 0) {
+        this.parent.indexHierachy();
+      }
+    }
+
+    @Override
+    protected int startFieldPos() {
+      int countParentFields = this.parent.fields != null ? this.parent.fields.size() : 0;
+      return this.parent.startFieldPos() + countParentFields;
     }
   }
 
@@ -1889,18 +2088,25 @@ public abstract class Schema extends JsonProperties implements Serializable {
       Schema result = null;
       final boolean isTypeError = "error".equals(type);
       final boolean isTypeRecord = "record".equals(type);
+      final boolean isTypeExtendedRecord = type != null && (type.startsWith("record:") || type.startsWith("error:"));
       final boolean isTypeEnum = "enum".equals(type);
       final boolean isTypeFixed = "fixed".equals(type);
-
-      if (isTypeRecord || isTypeError || isTypeEnum || isTypeFixed) {
+      if (isTypeRecord || isTypeError || isTypeEnum || isTypeFixed || isTypeExtendedRecord) {
         String space = getOptionalText(schema, "namespace");
         doc = getOptionalText(schema, "doc");
         if (space == null)
           space = currentNameSpace;
         name = new Name(getRequiredText(schema, "name", "No name in schema"), space);
       }
-      if (isTypeRecord || isTypeError) { // record
-        result = new RecordSchema(name, doc, isTypeError);
+      if (isTypeRecord || isTypeError || isTypeExtendedRecord) { // record
+        if (isTypeExtendedRecord) {
+          final String extension = type.substring(type.indexOf(':') + 1).trim();
+          final Name parentName = new Name(extension, names.space);
+          final Schema parentSchema = names.get(parentName);
+          result = new ExtendedRecordSchema((RecordSchema) parentSchema, name, doc, type.startsWith("error:"));
+        } else {
+          result = new RecordSchema(name, doc, isTypeError);
+        }
         names.add(result);
         JsonNode fieldsNode = schema.get("fields");
 
@@ -2041,8 +2247,9 @@ public abstract class Schema extends JsonProperties implements Serializable {
       final boolean isTypeError = "error".equals(type);
       final boolean isTypeRecord = "record".equals(type);
       final boolean isTypeArray = "array".equals(type);
+      final boolean isTypeExtendedRecord = type != null && (type.startsWith("record:") || type.startsWith("error:"));
 
-      if (isTypeRecord || isTypeError || "enum".equals(type) || "fixed".equals(type)) {
+      if (isTypeExtendedRecord || isTypeRecord || isTypeError || "enum".equals(type) || "fixed".equals(type)) {
         // named schema
         String space = getOptionalText(schema, "namespace");
 
@@ -2055,8 +2262,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
           throw new SchemaParseException("Unparsed field type " + name);
         }
       }
-      if (isTypeRecord || isTypeError) {
-        if (result != null && !result.hasFields()) {
+      if (isTypeRecord || isTypeError || isTypeExtendedRecord) {
+        if (result != null && !result.hasDeclaredFields()) {
           final List<Field> fields = new ArrayList<>();
           JsonNode fieldsNode = schema.get("fields");
           if (fieldsNode == null || !fieldsNode.isArray())
@@ -2122,7 +2329,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
       fullName.append(nodeName);
       Schema schema1 = names.get(fullName.toString());
 
-      if (schema1 != null && schema1.getType() == Type.RECORD && !schema1.hasFields()) {
+      if (schema1 != null && schema1.getType() == Type.RECORD && !schema1.hasDeclaredFields()) {
         Schema.parseCompleteSchema(schema, names, np);
       }
       return schema1;

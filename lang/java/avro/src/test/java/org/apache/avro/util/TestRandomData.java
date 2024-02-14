@@ -27,11 +27,15 @@ import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
+import org.apache.avro.message.BinaryMessageDecoder;
+import org.apache.avro.message.BinaryMessageEncoder;
+import org.apache.avro.message.SchemaStore;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
 
 import static org.junit.Assert.assertEquals;
 
@@ -142,15 +146,103 @@ public class TestRandomData {
 
   public static final Schema TEST_SCHEMA = new Schema.Parser().parse(TEST_SCHEMA_JSON);
 
-  public static class SpecificTestRecord extends SpecificRecordBase {
-    public static final Schema SCHEMA$ = new Schema.Parser().parse(TEST_SCHEMA_JSON.replace("\"name\":\"Record\"",
-        "\"name\":\"" + SpecificTestRecord.class.getCanonicalName() + "\""));
+  public static class SpecificTestRecord extends SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
+
+    public static org.apache.avro.Schema getClassSchema() {
+      return CODER.SCHEMA$;
+    }
+
+    public static final class InternalCoders {
+
+      private final org.apache.avro.Schema SCHEMA$;// = new
+                                                   // org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NestedLogicalTypesArray\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test
+                                                   // nested types with logical types in generated Java
+                                                   // classes\",\"fields\":[{\"name\":\"arrayOfRecords\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"RecordInArray\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}}]}");
+
+      private final SpecificData MODEL$ = new SpecificData();
+
+      public InternalCoders() {
+        org.apache.avro.Schema.Parser parser = new org.apache.avro.Schema.Parser();
+        org.apache.avro.Schema currentSchema = parser.parse(TEST_SCHEMA_JSON.replace("\"name\":\"Record\"",
+            "\"name\":\"" + SpecificTestRecord.class.getCanonicalName() + "\""));
+
+        this.SCHEMA$ = currentSchema;
+
+        this.MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.DateConversion());
+        this.ENCODER = new BinaryMessageEncoder<>(this.MODEL$, this.SCHEMA$);
+        this.DECODER = new BinaryMessageDecoder<>(this.MODEL$, this.SCHEMA$);
+      }
+
+      private final BinaryMessageEncoder<SpecificTestRecord> ENCODER;
+
+      private final BinaryMessageDecoder<SpecificTestRecord> DECODER;
+
+      /**
+       * Return the BinaryMessageEncoder instance used by this class.
+       * 
+       * @return the message encoder used by this class
+       */
+      public BinaryMessageEncoder<SpecificTestRecord> getEncoder() {
+        return ENCODER;
+      }
+
+      /**
+       * Return the BinaryMessageDecoder instance used by this class.
+       * 
+       * @return the message decoder used by this class
+       */
+      public BinaryMessageDecoder<SpecificTestRecord> getDecoder() {
+        return DECODER;
+      }
+
+      /**
+       * Create a new BinaryMessageDecoder instance for this class that uses the
+       * specified {@link SchemaStore}.
+       * 
+       * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
+       * @return a BinaryMessageDecoder instance for this class backed by the given
+       *         SchemaStore
+       */
+      public BinaryMessageDecoder<SpecificTestRecord> createDecoder(SchemaStore resolver) {
+        return new BinaryMessageDecoder<>(this.MODEL$, this.SCHEMA$, resolver);
+      }
+
+      /**
+       * Deserializes a NestedLogicalTypesArray from a ByteBuffer.
+       * 
+       * @param b a byte buffer holding serialized data for an instance of this class
+       * @return a NestedLogicalTypesArray instance decoded from the given buffer
+       * @throws java.io.IOException if the given bytes could not be deserialized into
+       *                             an instance of this class
+       */
+      public SpecificTestRecord fromByteBuffer(java.nio.ByteBuffer b) throws java.io.IOException {
+        return DECODER.decode(b);
+      }
+    }
+
+    public static final InternalCoders CODER = new InternalCoders();
+
+    /**
+     * Serializes this NestedLogicalTypesArray to a ByteBuffer.
+     * 
+     * @return a buffer holding the serialized data for this instance
+     * @throws java.io.IOException if this instance could not be serialized
+     */
+    public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
+      return CODER.getEncoder().encode(this);
+    }
+
     private int x;
     private String y;
 
     @Override
+    public org.apache.avro.specific.SpecificData getSpecificData() {
+      return CODER.MODEL$;
+    }
+
+    @Override
     public Schema getSchema() {
-      return SCHEMA$;
+      return CODER.SCHEMA$;
     }
 
     @Override

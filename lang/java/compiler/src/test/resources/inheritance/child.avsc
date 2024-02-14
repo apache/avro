@@ -1,0 +1,7 @@
+{
+   "type":"record: Parent",
+   "name":"Child",
+   "fields":[
+      {"name":"f1", "type":"string", "foo1":"bar1"}
+   ]
+}

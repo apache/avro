@@ -38,6 +38,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -76,9 +77,13 @@ public class SpecificData extends GenericData {
   private static final Function<Class<?>, SpecificData> MODEL_CACHE = new ClassValueCache<>(c -> {
     Field specificDataField;
     try {
-      specificDataField = c.getDeclaredField("MODEL$");
+      Field coderField = c.getDeclaredField("CODER");
+      coderField.setAccessible(true);
+      Object internal = coderField.get(null);
+      specificDataField = internal.getClass().getDeclaredField("MODEL$");
       specificDataField.setAccessible(true);
-      return (SpecificData) specificDataField.get(null);
+      Object o = specificDataField.get(internal);
+      return (SpecificData) o;
     } catch (NoSuchFieldException e) {
       // Return default instance
       return SpecificData.get();
@@ -522,15 +527,15 @@ public class SpecificData extends GenericData {
       Schema schema = names.get(fullName);
       if (schema == null)
         try {
-          schema = (Schema) (c.getDeclaredField("SCHEMA$").get(null));
+          schema = (Schema) (c.getDeclaredMethod("getClassSchema").invoke(null));
 
           if (!fullName.equals(getClassName(schema)))
             // HACK: schema mismatches class. maven shade plugin? try replacing.
             schema = new Schema.Parser()
                 .parse(schema.toString().replace(schema.getNamespace(), c.getPackage().getName()));
-        } catch (NoSuchFieldException e) {
+        } catch (NoSuchMethodException e) {
           throw new AvroRuntimeException("Not a Specific class: " + c);
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException | InvocationTargetException e) {
           throw new AvroRuntimeException(e);
         }
       names.put(fullName, schema);

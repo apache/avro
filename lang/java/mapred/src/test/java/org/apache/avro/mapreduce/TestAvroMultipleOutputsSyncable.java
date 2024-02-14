@@ -289,10 +289,10 @@ public class TestAvroMultipleOutputsSyncable {
     job.setMapperClass(LineCountMapper.class);
     job.setMapOutputKeyClass(Text.class);
     job.setMapOutputValueClass(IntWritable.class);
-    AvroMultipleOutputs.addNamedOutput(job, "myavro3", AvroKeyOutputFormat.class, TextStats.SCHEMA$, null);
+    AvroMultipleOutputs.addNamedOutput(job, "myavro3", AvroKeyOutputFormat.class, TextStats.getClassSchema(), null);
 
     job.setReducerClass(SpecificStatsReducer.class);
-    AvroJob.setOutputKeySchema(job, TextStats.SCHEMA$);
+    AvroJob.setOutputKeySchema(job, TextStats.getClassSchema());
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
     Path outputPath = new Path(tmpFolder.getPath() + "/out-specific");
@@ -323,15 +323,15 @@ public class TestAvroMultipleOutputsSyncable {
     FileInputFormat.setInputPaths(job,
         new Path(getClass().getResource("/org/apache/avro/mapreduce/mapreduce-test-input.avro").toURI().toString()));
     job.setInputFormatClass(AvroKeyInputFormat.class);
-    AvroJob.setInputKeySchema(job, TextStats.SCHEMA$);
-    AvroMultipleOutputs.addNamedOutput(job, "myavro3", AvroKeyOutputFormat.class, TextStats.SCHEMA$, null);
+    AvroJob.setInputKeySchema(job, TextStats.getClassSchema());
+    AvroMultipleOutputs.addNamedOutput(job, "myavro3", AvroKeyOutputFormat.class, TextStats.getClassSchema(), null);
 
     job.setMapperClass(StatCountMapper.class);
     job.setMapOutputKeyClass(Text.class);
     job.setMapOutputValueClass(IntWritable.class);
 
     job.setReducerClass(SpecificStatsReducer.class);
-    AvroJob.setOutputKeySchema(job, TextStats.SCHEMA$);
+    AvroJob.setOutputKeySchema(job, TextStats.getClassSchema());
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
     Path outputPath = new Path(tmpFolder.getPath() + "/out-specific-input");
@@ -363,14 +363,14 @@ public class TestAvroMultipleOutputsSyncable {
     FileInputFormat.setInputPaths(job,
         new Path(getClass().getResource("/org/apache/avro/mapreduce/mapreduce-test-input.avro").toURI().toString()));
     job.setInputFormatClass(AvroKeyInputFormat.class);
-    AvroJob.setInputKeySchema(job, TextStats.SCHEMA$);
+    AvroJob.setInputKeySchema(job, TextStats.getClassSchema());
 
     job.setMapperClass(SortMapper.class);
-    AvroJob.setMapOutputKeySchema(job, TextStats.SCHEMA$);
+    AvroJob.setMapOutputKeySchema(job, TextStats.getClassSchema());
     job.setMapOutputValueClass(NullWritable.class);
 
     job.setReducerClass(SortReducer.class);
-    AvroJob.setOutputKeySchema(job, TextStats.SCHEMA$);
+    AvroJob.setOutputKeySchema(job, TextStats.getClassSchema());
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
     Path outputPath = new Path(tmpFolder.getPath() + "/out-specific-input");

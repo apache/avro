@@ -136,6 +136,58 @@ public class TestSchema {
   }
 
   @Test
+  public void extendedRecordWithFields() {
+    List<Field> fields = new ArrayList<>();
+    fields.add(new Field("field_name1", Schema.create(Type.NULL), null, null));
+    fields.add(new Field("field_name2", Schema.create(Type.INT), null, null));
+    Schema schema = Schema.createRecord("int", "doc", "namespace", false);
+    schema.setFields(fields);
+    String schemaString = schema.toString();
+    assertNotNull(schemaString);
+    assertEquals(2, schema.getFields().size());
+
+    Schema extendedSchema = Schema.createRecord(schema, "extended", "doc", "namespace", false);
+    assertEquals(2, extendedSchema.getFields().size());
+    assertNotNull(extendedSchema.getField("field_name1"));
+    assertTrue(extendedSchema.hasFields());
+
+    List<Field> newFields = new ArrayList<>();
+    newFields.add(new Field("field_name3", Schema.create(Type.STRING), null, "def"));
+    extendedSchema.setFields(newFields);
+
+    assertEquals(3, extendedSchema.getFields().size());
+    String json = extendedSchema.toString(true);
+    System.out.println(json);
+
+    assertNotNull(extendedSchema.getField("field_name1"));
+    assertNotNull(extendedSchema.getField("field_name2"));
+    assertNotNull(extendedSchema.getField("field_name3"));
+
+    assertNotEquals(schema, extendedSchema);
+
+    Schema extendedSchema2 = Schema.createRecord(schema, "extended", "doc", "namespace", false);
+    assertNotEquals(extendedSchema2, extendedSchema);
+
+    List<Field> newFields2 = new ArrayList<>();
+    newFields2.add(new Field("field_name3", Schema.create(Type.STRING), null, "def"));
+    extendedSchema2.setFields(newFields2);
+
+    assertEquals(extendedSchema2, extendedSchema);
+
+    Schema grandson = Schema.createRecord(extendedSchema, "ext2", "doc", "namespace", false);
+    assertEquals(3, grandson.getFields().size());
+    assertNotNull(grandson.getField("field_name1"));
+    assertNotNull(grandson.getField("field_name2"));
+    assertNotNull(grandson.getField("field_name3"));
+
+    List<Field> newFields3 = new ArrayList<>();
+    newFields3.add(new Field("field_name4", Schema.create(Type.STRING), null, "def"));
+    grandson.setFields(newFields3);
+    assertEquals(4, grandson.getFields().size());
+    assertNotNull(grandson.getField("field_name4"));
+  }
+
+  @Test
   void schemaWithNullFields() {
     assertThrows(NullPointerException.class, () -> {
       Schema.createRecord("name", "doc", "namespace", false, null);
@@ -427,6 +479,29 @@ public class TestSchema {
   }
 
   @Test
+  public void schemaHierarchy() {
+    final Schema root = Schema.createRecord("root", "doc", "space", false);
+    assertEquals(0, root.getIndex());
+
+    final Schema child2 = Schema.createRecord(root, "child2", "doc", "space2", false);
+    final Schema child1 = Schema.createRecord(root, "child1", "doc", "space", false);
+    assertEquals(1, child1.getIndex());
+
+    final Schema child1_2 = Schema.createRecord(child1, "child1_2", "doc", "space", false);
+    final Schema child1_1 = Schema.createRecord(child1, "child1_1", "doc", "space", false);
+
+    assertEquals(0, root.getIndex());
+    assertEquals(1, child1.getIndex());
+    assertEquals(2, child1_1.getIndex());
+    assertEquals(3, child1_2.getIndex());
+    assertEquals(4, child2.getIndex());
+
+    Schema.Field f1 = new Schema.Field("f1", Schema.create(Type.STRING), "doc");
+    child1.setFields(Arrays.asList(f1));
+    assertEquals(child1.hashCode(), child1.hashCode());
+  }
+
+  @Test
   void validValue() {
     // Valid null value
     final Schema nullSchema = Schema.create(Type.NULL);
@@ -620,5 +695,13 @@ public class TestSchema {
     final Field f1 = schema.getField("f1");
     assertNotNull(f1);
     assertEquals(schemaRecord1, f1.schema());
+  }
+
+  @Test
+  void cycleRecord() {
+    String cycledSchema = "  { \"type\": \"record\", \"name\": \"type1\", \n" + "    \"fields\": [\n"
+        + "       { \"name\": \"f1\",  \"type\": {\"type\": \"array\", \"items\": \"type1\" }  }\n" + "    ]\n" + "  }";
+    Schema schema = new Schema.Parser().parse(cycledSchema);
+    Assertions.assertSame(schema, schema.getField("f1").schema().getElementType());
   }
 }

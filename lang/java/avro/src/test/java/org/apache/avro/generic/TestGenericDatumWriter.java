@@ -17,7 +17,17 @@
  */
 package org.apache.avro.generic;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.UnresolvedUnionException;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.Utf8;
+
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,15 +45,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import org.apache.avro.AvroTypeException;
-import org.apache.avro.Schema;
-import org.apache.avro.UnresolvedUnionException;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.Encoder;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.util.Utf8;
-import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestGenericDatumWriter {
   @Test
@@ -76,6 +82,81 @@ public class TestGenericDatumWriter {
     Object o = new GenericDatumReader<GenericRecord>(s).read(null,
         DecoderFactory.get().jsonDecoder(s, new ByteArrayInputStream(bao.toByteArray())));
     assertEquals(r, o);
+  }
+
+  @Test
+  public void testWriteUnion() throws IOException {
+
+    Schema f1 = SchemaBuilder.record("f1").doc("doc").namespace("space").fields().name("field")
+        .type(Schema.create(Schema.Type.STRING)).noDefault().endRecord();
+    Schema f2 = SchemaBuilder.record("f2").doc("doc").namespace("space").fields().name("field")
+        .type(Schema.create(Schema.Type.INT)).noDefault().endRecord();
+
+    Schema root = SchemaBuilder.record("root").doc("doc").namespace("space").fields().name("f")
+        .type(Schema.createArray(Schema.createUnion(f1, f2, Schema.create(Schema.Type.LONG)))).noDefault().endRecord();
+
+    GenericRecord mainRecord = new GenericData.Record(root);
+
+    GenericRecord f1Record = new GenericData.Record(f1);
+    f1Record.put("field", "Hello");
+
+    mainRecord.put("f", Arrays.asList(f1Record, 3l));
+
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericRecord> w = new GenericDatumWriter<>(root);
+    Encoder e = EncoderFactory.get().jsonEncoder(root, bao);
+    w.write(mainRecord, e);
+    e.flush();
+
+    Object o = new GenericDatumReader<GenericRecord>(root).read(null,
+        DecoderFactory.get().jsonDecoder(root, new ByteArrayInputStream(bao.toByteArray())));
+    assertEquals(mainRecord, o);
+  }
+
+  @Test
+  public void testWriteRecordExtension() throws IOException {
+    String parent = "{\"type\": \"record\", \"name\": \"r\", \"fields\": [" + "{ \"name\": \"f1\", \"type\": \"long\" }"
+        + "]}";
+
+    String child = "{\"type\": \"record: r\", \"name\": \"c\", \"fields\": ["
+        + "{ \"name\": \"f2\", \"type\": \"string\" }" + "]}";
+
+    String json = "{\"type\": \"record\", \"name\": \"m\", \"fields\": [" + "{ \"name\": \"f\", \"type\": \"r\" }"
+        + "]}";
+
+    Schema.Parser parser = new Schema.Parser();
+    final Schema p = parser.parse(parent);
+    final Schema c = parser.parse(child);
+    final Schema s = parser.parse(json);
+
+    GenericRecord childObject = new GenericData.Record(c);
+    childObject.put("f1", 100L);
+    childObject.put("f2", "Hello");
+
+    GenericRecord r = new GenericData.Record(s);
+    r.put("f", childObject);
+    Object o = this.writeAndRead(r, s);
+    assertEquals(r, o);
+
+    GenericRecord r1 = new GenericData.Record(s);
+    GenericRecord parentObject = new GenericData.Record(p);
+    parentObject.put("f1", 50L);
+    r1.put("f", parentObject);
+    Object o1 = this.writeAndRead(r1, s);
+    assertEquals(r1, o1);
+
+  }
+
+  private Object writeAndRead(GenericRecord r, Schema s) throws IOException {
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericRecord> w = new GenericDatumWriter<>(s);
+    Encoder e = EncoderFactory.get().jsonEncoder(s, bao);
+    w.write(r, e);
+    e.flush();
+
+    Object o = new GenericDatumReader<GenericRecord>(s).read(null,
+        DecoderFactory.get().jsonDecoder(s, new ByteArrayInputStream(bao.toByteArray())));
+    return o;
   }
 
   @Test
@@ -280,6 +361,11 @@ public class TestGenericDatumWriter {
     @Override
     public void writeIndex(int unionIndex) throws IOException {
       e.writeIndex(unionIndex);
+    }
+
+    @Override
+    public void writeExtends(int extendsIndex) throws IOException {
+      e.writeIndex(extendsIndex);
     }
   }
 

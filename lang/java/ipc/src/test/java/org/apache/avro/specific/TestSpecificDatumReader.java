@@ -40,7 +40,8 @@ import test.StringablesRecord;
 public class TestSpecificDatumReader {
 
   public static byte[] serializeRecord(FooBarSpecificRecord fooBarSpecificRecord) throws IOException {
-    SpecificDatumWriter<FooBarSpecificRecord> datumWriter = new SpecificDatumWriter<>(FooBarSpecificRecord.SCHEMA$);
+    SpecificDatumWriter<FooBarSpecificRecord> datumWriter = new SpecificDatumWriter<>(
+        FooBarSpecificRecord.getClassSchema());
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().binaryEncoder(byteArrayOutputStream, null);
     datumWriter.write(fooBarSpecificRecord, encoder);
@@ -49,7 +50,7 @@ public class TestSpecificDatumReader {
   }
 
   public static byte[] serializeRecord(StringablesRecord stringablesRecord) throws IOException {
-    SpecificDatumWriter<StringablesRecord> datumWriter = new SpecificDatumWriter<>(StringablesRecord.SCHEMA$);
+    SpecificDatumWriter<StringablesRecord> datumWriter = new SpecificDatumWriter<>(StringablesRecord.getClassSchema());
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().binaryEncoder(byteArrayOutputStream, null);
     datumWriter.write(stringablesRecord, encoder);
@@ -70,7 +71,7 @@ public class TestSpecificDatumReader {
 
     Decoder decoder = DecoderFactory.get().binaryDecoder(recordBytes, null);
     SpecificDatumReader<FooBarSpecificRecord> specificDatumReader = new SpecificDatumReader<>(
-        FooBarSpecificRecord.SCHEMA$);
+        FooBarSpecificRecord.getClassSchema());
     FooBarSpecificRecord deserialized = new FooBarSpecificRecord();
     specificDatumReader.read(deserialized, decoder);
 
@@ -92,7 +93,8 @@ public class TestSpecificDatumReader {
     byte[] recordBytes = serializeRecord(stringablesRecord);
 
     Decoder decoder = DecoderFactory.get().binaryDecoder(recordBytes, null);
-    SpecificDatumReader<StringablesRecord> specificDatumReader = new SpecificDatumReader<>(StringablesRecord.SCHEMA$);
+    SpecificDatumReader<StringablesRecord> specificDatumReader = new SpecificDatumReader<>(
+        StringablesRecord.getClassSchema());
     StringablesRecord deserialized = new StringablesRecord();
     specificDatumReader.read(deserialized, decoder);
 
