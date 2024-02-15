@@ -16,16 +16,10 @@
 // under the License.
 
 //! Logic for parsing and interacting with schemas in Avro format.
-use crate::{
-    error::Error,
-    types,
-    util::MapHelper,
-    validator::{
-        validate_enum_symbol_name, validate_namespace, validate_record_field_name,
-        validate_schema_name,
-    },
-    AvroResult,
-};
+use crate::{error::Error, types, util::MapHelper, validator::{
+    validate_enum_symbol_name, validate_namespace, validate_record_field_name,
+    validate_schema_name,
+}, AvroResult, schema_comparator};
 use digest::Digest;
 use serde::{
     ser::{SerializeMap, SerializeSeq},
@@ -155,9 +149,9 @@ impl PartialEq for Schema {
     /// Assess equality of two `Schema` based on [Parsing Canonical Form].
     ///
     /// [Parsing Canonical Form]:
-    /// https://avro.apache.org/docs/1.8.2/spec.html#Parsing+Canonical+Form+for+Schemas
+    /// https://avro.apache.org/docs/1.11.1/specification/#parsing-canonical-form-for-schemas
     fn eq(&self, other: &Self) -> bool {
-        self.canonical_form() == other.canonical_form()
+        schema_comparator::compare_schemata(self, other)
     }
 }
 
@@ -6636,6 +6630,57 @@ mod tests {
             }
             _ => unreachable!("Expected Schema::Record"),
         }
+
+        Ok(())
+    }
+
+    #[test]
+    fn aaaaa() -> TestResult {
+        let schema = r#"
+    {
+        "type": "record",
+        "name": "User",
+        "namespace": "office",
+        "fields": [
+            {
+              "name": "details",
+              "type": [
+                {
+                  "type": "record",
+                  "name": "Employee",
+                  "fields": [
+                    {
+                      "name": "gender",
+                      "type": {
+                        "type": "enum",
+                        "name": "Gender",
+                        "symbols": [
+                          "male",
+                          "female"
+                        ]
+                      },
+                      "default": "female"
+                    }
+                  ]
+                },
+                {
+                  "type": "record",
+                  "name": "Manager",
+                  "fields": [
+                    {
+                      "name": "gender",
+                      "type": "Gender"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+        "#;
+
+        let schema = Schema::parse_str(schema)?;
+        println!("{:#?}", schema.canonical_form());
 
         Ok(())
     }
