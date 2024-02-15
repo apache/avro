@@ -15,16 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::Schema;
+use crate::{
+    schema::{EnumSchema, FixedSchema, RecordField, RecordSchema},
+    Schema,
+};
 use std::sync::OnceLock;
-use crate::schema::{EnumSchema, FixedSchema, RecordField, RecordSchema};
 
 /// A trait that compares two schemata.
-/// To register a custom one use [set_schema_name_validator].
+/// To register a custom one use [set_schemata_comparator].
 pub trait SchemataComparator: Send + Sync {
-
-    /// Validates the schema name and returns the name and the optional namespace,
-    /// or [Error::InvalidSchemaName] if it is invalid.
+    /// Compares two schemata for equality.
     fn compare(&self, schema_one: &Schema, schema_two: &Schema) -> bool;
 }
 
@@ -38,7 +38,7 @@ impl SchemataComparator for SpecificationComparator {
     }
 }
 
-/// Compares two schemas field by field, using only the fields that.
+/// Compares two schemas field by field, using only the fields that
 /// are used to construct their canonical forms.
 /// See https://avro.apache.org/docs/1.11.1/specification/#parsing-canonical-form-for-schemas
 struct StructFieldComparator;
@@ -104,15 +104,29 @@ impl SchemataComparator for StructFieldComparator {
             return false;
         }
 
-        if let Schema::Record(RecordSchema { fields : fields_one, .. }) = schema_one {
-            if let Schema::Record(RecordSchema { fields: fields_two, .. }) = schema_two {
+        if let Schema::Record(RecordSchema {
+            fields: fields_one, ..
+        }) = schema_one
+        {
+            if let Schema::Record(RecordSchema {
+                fields: fields_two, ..
+            }) = schema_two
+            {
                 return self.compare_fields(fields_one, fields_two);
             }
             return false;
         }
 
-        if let Schema::Enum(EnumSchema { symbols: symbols_one, .. }) = schema_one {
-            if let Schema::Enum(EnumSchema { symbols: symbols_two, .. }) = schema_two {
+        if let Schema::Enum(EnumSchema {
+            symbols: symbols_one,
+            ..
+        }) = schema_one
+        {
+            if let Schema::Enum(EnumSchema {
+                symbols: symbols_two,
+                ..
+            }) = schema_two
+            {
                 return symbols_one == symbols_two;
             }
             return false;
@@ -130,14 +144,17 @@ impl SchemataComparator for StructFieldComparator {
 }
 
 impl StructFieldComparator {
-    fn compare_fields(&self, fields_one: &Vec<RecordField>, fields_two: &Vec<RecordField>) -> bool {
-        fields_one.len() == fields_two.len() && fields_one.iter().zip(fields_two.iter()).all(|(f1, f2)| {
-            self.compare(&f1.schema, &f2.schema)
-        })
+    fn compare_fields(&self, fields_one: &[RecordField], fields_two: &[RecordField]) -> bool {
+        fields_one.len() == fields_two.len()
+            && fields_one
+                .iter()
+                .zip(fields_two.iter())
+                .all(|(f1, f2)| self.compare(&f1.schema, &f2.schema))
     }
 }
 
-static SCHEMATA_COMPARATOR_ONCE: OnceLock<Box<dyn SchemataComparator + Send + Sync>> = OnceLock::new();
+static SCHEMATA_COMPARATOR_ONCE: OnceLock<Box<dyn SchemataComparator + Send + Sync>> =
+    OnceLock::new();
 
 /// Sets a custom schemata comparator.
 ///
@@ -164,5 +181,4 @@ pub(crate) fn compare_schemata(schema_one: &Schema, schema_two: &Schema) -> bool
 }
 
 #[cfg(test)]
-mod tests {
-}
+mod tests {}

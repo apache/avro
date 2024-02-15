@@ -16,10 +16,16 @@
 // under the License.
 
 //! Logic for parsing and interacting with schemas in Avro format.
-use crate::{error::Error, types, util::MapHelper, validator::{
-    validate_enum_symbol_name, validate_namespace, validate_record_field_name,
-    validate_schema_name,
-}, AvroResult, schema_comparator};
+use crate::{
+    error::Error,
+    schema_comparator, types,
+    util::MapHelper,
+    validator::{
+        validate_enum_symbol_name, validate_namespace, validate_record_field_name,
+        validate_schema_name,
+    },
+    AvroResult,
+};
 use digest::Digest;
 use serde::{
     ser::{SerializeMap, SerializeSeq},
