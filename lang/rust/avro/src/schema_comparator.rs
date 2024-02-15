@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use std::any::Any;
 use crate::Schema;
 use std::sync::OnceLock;
 use crate::schema::{EnumSchema, FixedSchema, RecordField, RecordSchema};
@@ -107,7 +106,7 @@ impl SchemataComparator for StructFieldComparator {
 
         if let Schema::Record(RecordSchema { fields : fields_one, .. }) = schema_one {
             if let Schema::Record(RecordSchema { fields: fields_two, .. }) = schema_two {
-                return compare(fields_one, fields_two);
+                return self.compare_fields(fields_one, fields_two);
             }
             return false;
         }
@@ -130,8 +129,12 @@ impl SchemataComparator for StructFieldComparator {
     }
 }
 
-fn compare(fields_one: &Vec<RecordField>, fields_two: &Vec<RecordField>) -> bool {
-    true
+impl StructFieldComparator {
+    fn compare_fields(&self, fields_one: &Vec<RecordField>, fields_two: &Vec<RecordField>) -> bool {
+        fields_one.len() == fields_two.len() && fields_one.iter().zip(fields_two.iter()).all(|(f1, f2)| {
+            self.compare(&f1.schema, &f2.schema)
+        })
+    }
 }
 
 static SCHEMATA_COMPARATOR_ONCE: OnceLock<Box<dyn SchemataComparator + Send + Sync>> = OnceLock::new();
@@ -154,7 +157,8 @@ pub(crate) fn compare_schemata(schema_one: &Schema, schema_two: &Schema) -> bool
     SCHEMATA_COMPARATOR_ONCE
         .get_or_init(|| {
             // debug!("Going to use the default schemata comparator.");
-            Box::new(SpecificationComparator)
+            // Box::new(SpecificationComparator)
+            Box::new(StructFieldComparator) // TEMPORARY
         })
         .compare(schema_one, schema_two)
 }
