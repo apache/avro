@@ -621,4 +621,11 @@ public class TestSchema {
     assertNotNull(f1);
     assertEquals(schemaRecord1, f1.schema());
   }
+
+  @Test
+  void testParserNullValidate() {
+    assertThrows(NullPointerException.class, () -> {
+      new Schema.Parser(null);
+    });
+  }
 }
