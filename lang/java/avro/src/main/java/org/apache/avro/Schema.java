@@ -1497,7 +1497,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     public Parser(final NameValidator validate) {
-      this.validate = Objects.requireNonNull(validate, "validate");
+      this.validate = validate != null ? validate : NameValidator.NO_VALIDATION;
     }
 
     /**
