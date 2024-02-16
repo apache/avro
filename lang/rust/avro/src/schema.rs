@@ -18,7 +18,7 @@
 //! Logic for parsing and interacting with schemas in Avro format.
 use crate::{
     error::Error,
-    schema_comparator, types,
+    schema_equality, types,
     util::MapHelper,
     validator::{
         validate_enum_symbol_name, validate_namespace, validate_record_field_name,
@@ -157,7 +157,7 @@ impl PartialEq for Schema {
     /// [Parsing Canonical Form]:
     /// https://avro.apache.org/docs/1.11.1/specification/#parsing-canonical-form-for-schemas
     fn eq(&self, other: &Self) -> bool {
-        schema_comparator::compare_schemata(self, other)
+        schema_equality::compare_schemata(self, other)
     }
 }
 
