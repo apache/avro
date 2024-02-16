@@ -48,7 +48,7 @@ namespace Avro.Reflect
             Type t;
             if (!_nameEnumMap.TryGetValue(schema.Fullname, out t))
             {
-                throw new AvroException($"Couldnt find enumeration for avro fullname: {schema.Fullname}");
+                throw new AvroException($"Couldn't find enumeration for avro fullname: {schema.Fullname}");
             }
 
             return t;

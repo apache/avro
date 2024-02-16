@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -17,10 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
-
 import io
-import os
 import subprocess
 import sys
 import time
@@ -31,12 +28,6 @@ import avro.test.mock_tether_parent
 import avro.test.word_count_task
 import avro.tether.tether_task
 import avro.tether.util
-from avro import schema, tether
-
-try:
-    unicode
-except NameError:
-    unicode = str
 
 
 class TestTetherTask(unittest.TestCase):
@@ -44,7 +35,7 @@ class TestTetherTask(unittest.TestCase):
     TODO: We should validate the the server response by looking at stdout
     """
 
-    def test_tether_task(self):
+    def test_tether_task(self) -> None:
         """
         Test that the tether_task is working. We run the mock_tether_parent in a separate
         subprocess
@@ -58,7 +49,7 @@ class TestTetherTask(unittest.TestCase):
             # launch the server in a separate process
             proc = subprocess.Popen([sys.executable, pyfile, "start_server", str(server_port)])
 
-            print("Mock server started process pid={}".format(proc.pid))
+            print(f"Mock server started process pid={proc.pid}")
 
             # Possible race condition? open tries to connect to the subprocess before the subprocess is fully started
             # so we give the subprocess time to start up
@@ -70,14 +61,16 @@ class TestTetherTask(unittest.TestCase):
 
             # ***************************************************************
             # Test the mapper
+            if avro.tether.tether_task.TaskType is None:
+                self.fail()
             task.configure(
                 avro.tether.tether_task.TaskType.MAP,
                 str(task.inschema),
-                str(task.midschema)
+                str(task.midschema),
             )
 
             # Serialize some data so we can send it to the input function
-            datum = unicode("This is a line of text")
+            datum = "This is a line of text"
             writer = io.BytesIO()
             encoder = avro.io.BinaryEncoder(writer)
             datum_writer = avro.io.DatumWriter(task.inschema)
@@ -93,15 +86,14 @@ class TestTetherTask(unittest.TestCase):
             task.configure(
                 avro.tether.tether_task.TaskType.REDUCE,
                 str(task.midschema),
-                str(task.outschema)
+                str(task.outschema),
             )
 
             # Serialize some data so we can send it to the input function
-            datum = {"key": unicode("word"), "value": 2}
             writer = io.BytesIO()
             encoder = avro.io.BinaryEncoder(writer)
             datum_writer = avro.io.DatumWriter(task.midschema)
-            datum_writer.write(datum, encoder)
+            datum_writer.write({"key": "word", "value": 2}, encoder)
 
             writer.seek(0)
             data = writer.read()
@@ -112,12 +104,12 @@ class TestTetherTask(unittest.TestCase):
             task.complete()
 
             # try a status
-            task.status(unicode("Status message"))
+            task.status("Status message")
         finally:
             # close the process
-            if not(proc is None):
+            if not (proc is None):
                 proc.kill()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":  # pragma: no coverage
     unittest.main()

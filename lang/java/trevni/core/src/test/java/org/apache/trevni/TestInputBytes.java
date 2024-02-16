@@ -20,8 +20,9 @@ package org.apache.trevni;
 import java.util.Random;
 import java.util.Arrays;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+
+import org.junit.jupiter.api.Test;
 
 public class TestInputBytes {
 
@@ -29,7 +30,7 @@ public class TestInputBytes {
   private static final int COUNT = 100;
 
   @Test
-  public void testRandomReads() throws Exception {
+  void randomReads() throws Exception {
     Random random = new Random(19820210);
     int length = random.nextInt(SIZE) + 1;
     byte[] data = new byte[length];
@@ -42,7 +43,7 @@ public class TestInputBytes {
       int l = Math.min(random.nextInt(SIZE / 10), length - p);
       byte[] buffer = new byte[l];
       in.read(p, buffer, 0, l);
-      Assert.assertArrayEquals(Arrays.copyOfRange(data, p, p + l), buffer);
+      assertArrayEquals(Arrays.copyOfRange(data, p, p + l), buffer);
     }
     in.close();
   }

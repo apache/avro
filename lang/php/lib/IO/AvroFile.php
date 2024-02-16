@@ -31,12 +31,12 @@ class AvroFile extends AvroIO
     /**
      * @var string fopen read mode value. Used internally.
      */
-    const FOPEN_READ_MODE = 'rb';
+    public const FOPEN_READ_MODE = 'rb';
 
     /**
      * @var string fopen write mode value. Used internally.
      */
-    const FOPEN_WRITE_MODE = 'wb';
+    public const FOPEN_WRITE_MODE = 'wb';
 
     /**
      * @var string

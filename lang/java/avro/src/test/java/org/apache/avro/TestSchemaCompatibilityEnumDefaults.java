@@ -17,28 +17,31 @@
  */
 package org.apache.avro;
 
-import static org.apache.avro.TestSchemas.*;
-import static org.junit.Assert.assertEquals;
+import static org.apache.avro.TestSchemas.ENUM1_ABC_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM2_AB_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM_ABC_ENUM_DEFAULT_A_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM_AB_ENUM_DEFAULT_A_SCHEMA;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayOutputStream;
-
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.*;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
+import org.junit.jupiter.api.Test;
 
 public class TestSchemaCompatibilityEnumDefaults {
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
 
   @Test
-  public void testEnumDefaultNotAppliedWhenWriterFieldMissing() throws Exception {
-    expectedException.expect(AvroTypeException.class);
-    expectedException.expectMessage("Found Record1, expecting Record1, missing required field field1");
+  void enumDefaultNotAppliedWhenWriterFieldMissing() throws Exception {
 
     Schema writerSchema = SchemaBuilder.record("Record1").fields().name("field2").type(ENUM2_AB_SCHEMA).noDefault()
         .endRecord();
@@ -48,11 +51,13 @@ public class TestSchemaCompatibilityEnumDefaults {
 
     GenericRecord datum = new GenericData.Record(writerSchema);
     datum.put("field2", new GenericData.EnumSymbol(writerSchema, "B"));
-    serializeWithWriterThenDeserializeWithReader(writerSchema, datum, readerSchema);
+    AvroTypeException avroTypeException = assertThrows(AvroTypeException.class,
+        () -> serializeWithWriterThenDeserializeWithReader(writerSchema, datum, readerSchema));
+    assertEquals("Found Record1, expecting Record1, missing required field field1", avroTypeException.getMessage());
   }
 
   @Test
-  public void testEnumDefaultAppliedWhenNoFieldDefaultDefined() throws Exception {
+  void enumDefaultAppliedWhenNoFieldDefaultDefined() throws Exception {
     Schema writerSchema = SchemaBuilder.record("Record1").fields().name("field1").type(ENUM_ABC_ENUM_DEFAULT_A_SCHEMA)
         .noDefault().endRecord();
 
@@ -67,7 +72,7 @@ public class TestSchemaCompatibilityEnumDefaults {
   }
 
   @Test
-  public void testEnumDefaultNotAppliedWhenCompatibleSymbolIsFound() throws Exception {
+  void enumDefaultNotAppliedWhenCompatibleSymbolIsFound() throws Exception {
     Schema writerSchema = SchemaBuilder.record("Record1").fields().name("field1").type(ENUM_ABC_ENUM_DEFAULT_A_SCHEMA)
         .noDefault().endRecord();
 
@@ -81,7 +86,7 @@ public class TestSchemaCompatibilityEnumDefaults {
   }
 
   @Test
-  public void testEnumDefaultAppliedWhenFieldDefaultDefined() throws Exception {
+  void enumDefaultAppliedWhenFieldDefaultDefined() throws Exception {
     Schema writerSchema = SchemaBuilder.record("Record1").fields().name("field1").type(ENUM_ABC_ENUM_DEFAULT_A_SCHEMA)
         .noDefault().endRecord();
 
@@ -96,10 +101,7 @@ public class TestSchemaCompatibilityEnumDefaults {
   }
 
   @Test
-  public void testFieldDefaultNotAppliedForUnknownSymbol() throws Exception {
-    expectedException.expect(AvroTypeException.class);
-    expectedException.expectMessage("No match for C");
-
+  void fieldDefaultNotAppliedForUnknownSymbol() throws Exception {
     Schema writerSchema = SchemaBuilder.record("Record1").fields().name("field1").type(ENUM1_ABC_SCHEMA).noDefault()
         .endRecord();
     Schema readerSchema = SchemaBuilder.record("Record1").fields().name("field1").type(ENUM1_AB_SCHEMA).withDefault("A")
@@ -107,7 +109,9 @@ public class TestSchemaCompatibilityEnumDefaults {
 
     GenericRecord datum = new GenericData.Record(writerSchema);
     datum.put("field1", new GenericData.EnumSymbol(writerSchema, "C"));
-    serializeWithWriterThenDeserializeWithReader(writerSchema, datum, readerSchema);
+    AvroTypeException avroTypeException = assertThrows(AvroTypeException.class,
+        () -> serializeWithWriterThenDeserializeWithReader(writerSchema, datum, readerSchema));
+    assertEquals("No match for C", avroTypeException.getMessage());
   }
 
   private GenericRecord serializeWithWriterThenDeserializeWithReader(Schema writerSchema, GenericRecord datum,

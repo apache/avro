@@ -198,7 +198,7 @@ Lcg.prototype.nextBuffer = function (len) {
   for (i = 0; i < len; i++) {
     arr.push(this.nextInt(256));
   }
-  return new Buffer(arr);
+  return Buffer.from(arr);
 };
 
 Lcg.prototype.choice = function (arr) {
@@ -423,7 +423,7 @@ Tap.prototype.readFixed = function (len) {
   if (this.pos > this.buf.length) {
     return;
   }
-  var fixed = new Buffer(len);
+  var fixed = Buffer.alloc(len);
   this.buf.copy(fixed, 0, pos, pos + len);
   return fixed;
 };
@@ -546,7 +546,7 @@ Tap.prototype.matchBytes = Tap.prototype.matchString = function (tap) {
 // worry about Avro's zigzag encoding, we directly expose longs as unpacked.
 
 Tap.prototype.unpackLongBytes = function () {
-  var res = new Buffer(8);
+  var res = Buffer.alloc(8);
   var n = 0;
   var i = 0; // Byte index in target buffer.
   var j = 6; // Bit offset in current target buffer byte.

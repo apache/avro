@@ -37,7 +37,7 @@ class AvroUtil
      * @returns true if the array is a list and false otherwise.
      *
      */
-    public static function isList($ary)
+    public static function isList($ary): bool
     {
         if (is_array($ary)) {
             $i = 0;
@@ -50,16 +50,5 @@ class AvroUtil
             return true;
         }
         return false;
-    }
-
-    /**
-     * @param array $ary
-     * @param string $key
-     * @returns mixed the value of $ary[$key] if it is set,
-     *                and null otherwise.
-     */
-    public static function arrayValue($ary, $key)
-    {
-        return $ary[$key] ?? null;
     }
 }

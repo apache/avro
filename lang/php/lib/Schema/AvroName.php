@@ -28,12 +28,12 @@ class AvroName
     /**
      * @var string character used to separate names comprising the fullname
      */
-    const NAME_SEPARATOR = '.';
+    public const NAME_SEPARATOR = '.';
 
     /**
      * @var string regular expression to validate name values
      */
-    const NAME_REGEXP = '/^[A-Za-z_][A-Za-z0-9_]*$/';
+    public const NAME_REGEXP = '/^[A-Za-z_][A-Za-z0-9_]*$/';
     /**
      * @var string valid names are matched by self::NAME_REGEXP
      */

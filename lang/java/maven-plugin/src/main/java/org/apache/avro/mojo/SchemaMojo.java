@@ -18,15 +18,16 @@
 
 package org.apache.avro.mojo;
 
-import org.apache.avro.generic.GenericData.StringType;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaParseException;
+import org.apache.maven.plugin.MojoExecutionException;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URLClassLoader;
-
-import org.apache.avro.Schema;
-import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Generate Java classes from Avro schema files (.avsc)
@@ -62,40 +63,29 @@ public class SchemaMojo extends AbstractAvroMojo {
   private String[] testIncludes = new String[] { "**/*.avsc" };
 
   @Override
-  protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
-    File src = new File(sourceDirectory, filename);
-    final Schema schema;
+  protected void doCompile(String[] fileNames, File sourceDirectory, File outputDirectory)
+      throws MojoExecutionException {
+    final List<File> sourceFiles = Arrays.stream(fileNames)
+        .map((String filename) -> new File(sourceDirectory, filename)).collect(Collectors.toList());
+    final File sourceFileForModificationDetection = sourceFiles.stream().filter(file -> file.lastModified() > 0)
+        .max(Comparator.comparing(File::lastModified)).orElse(null);
+    final List<Schema> schemas;
 
-    // This is necessary to maintain backward-compatibility. If there are
-    // no imported files then isolate the schemas from each other, otherwise
-    // allow them to share a single schema so reuse and sharing of schema
-    // is possible.
-    if (imports == null) {
-      schema = new Schema.Parser().parse(src);
-    } else {
-      schema = schemaParser.parse(src);
-    }
-
-    final SpecificCompiler compiler = new SpecificCompiler(schema);
-    compiler.setTemplateDir(templateDirectory);
-    compiler.setStringType(StringType.valueOf(stringType));
-    compiler.setFieldVisibility(getFieldVisibility());
-    compiler.setCreateOptionalGetters(createOptionalGetters);
-    compiler.setGettersReturnOptional(gettersReturnOptional);
-    compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
-    compiler.setCreateSetters(createSetters);
-    compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     try {
-      final URLClassLoader classLoader = createClassLoader();
-      for (String customConversion : customConversions) {
-        compiler.addCustomConversion(classLoader.loadClass(customConversion));
+      // This is necessary to maintain backward-compatibility. If there are
+      // no imported files then isolate the schemas from each other, otherwise
+      // allow them to share a single schema so reuse and sharing of schema
+      // is possible.
+      if (imports == null) {
+        schemas = new Schema.Parser().parse(sourceFiles);
+      } else {
+        schemas = schemaParser.parse(sourceFiles);
       }
-    } catch (ClassNotFoundException | DependencyResolutionRequiredException e) {
-      throw new IOException(e);
+
+      doCompile(sourceFileForModificationDetection, schemas, outputDirectory);
+    } catch (IOException | SchemaParseException ex) {
+      throw new MojoExecutionException("Error compiling a file in " + sourceDirectory + " to " + outputDirectory, ex);
     }
-    compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
-    compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
-    compiler.compileToDestination(src, outputDirectory);
   }
 
   @Override

@@ -133,12 +133,12 @@ sub next {
 
     my @objs;
 
-    $datafile->read_block_header if $datafile->eob;
     return ()                    if $datafile->eof;
+    $datafile->read_block_header if $datafile->eob;
 
     my $block_count = $datafile->{object_count};
 
-    if ($block_count <= $count) {
+    if ($block_count < $count) {
         push @objs, $datafile->read_to_block_end;
         croak "Didn't read as many objects than expected"
             unless scalar @objs == $block_count;

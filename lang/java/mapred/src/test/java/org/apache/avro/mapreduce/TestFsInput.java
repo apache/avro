@@ -19,8 +19,8 @@ package org.apache.avro.mapreduce;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -28,13 +28,14 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-
 import org.apache.avro.mapred.FsInput;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.junit.*;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestFsInput {
   private static File file;
@@ -42,14 +43,14 @@ public class TestFsInput {
   private Configuration conf;
   private FsInput fsInput;
 
-  @Rule
-  public TemporaryFolder DIR = new TemporaryFolder();
+  @TempDir
+  public File DIR;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     conf = new Configuration();
     conf.set("fs.default.name", "file:///");
-    file = new File(DIR.getRoot(), "file.txt");
+    file = new File(DIR, "file.txt");
 
     try (
         PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
@@ -58,7 +59,7 @@ public class TestFsInput {
     fsInput = new FsInput(new Path(file.getPath()), conf);
   }
 
-  @After
+  @AfterEach
   public void tearDown() throws Exception {
     if (fsInput != null) {
       fsInput.close();
@@ -66,7 +67,7 @@ public class TestFsInput {
   }
 
   @Test
-  public void testConfigurationConstructor() throws Exception {
+  void configurationConstructor() throws Exception {
     try (FsInput in = new FsInput(new Path(file.getPath()), conf)) {
       int expectedByteCount = 1;
       byte[] readBytes = new byte[expectedByteCount];
@@ -76,7 +77,7 @@ public class TestFsInput {
   }
 
   @Test
-  public void testFileSystemConstructor() throws Exception {
+  void fileSystemConstructor() throws Exception {
     Path path = new Path(file.getPath());
     FileSystem fs = path.getFileSystem(conf);
     try (FsInput in = new FsInput(path, fs)) {
@@ -88,12 +89,12 @@ public class TestFsInput {
   }
 
   @Test
-  public void testLength() throws IOException {
+  void length() throws IOException {
     assertEquals(fsInput.length(), FILE_CONTENTS.length());
   }
 
   @Test
-  public void testRead() throws Exception {
+  void read() throws Exception {
     byte[] expectedBytes = FILE_CONTENTS.getBytes(StandardCharsets.UTF_8);
     byte[] actualBytes = new byte[expectedBytes.length];
     int actualByteCount = fsInput.read(actualBytes, 0, actualBytes.length);
@@ -103,7 +104,7 @@ public class TestFsInput {
   }
 
   @Test
-  public void testSeek() throws Exception {
+  void seek() throws Exception {
     int seekPos = FILE_CONTENTS.length() / 2;
     byte[] fileContentBytes = FILE_CONTENTS.getBytes(StandardCharsets.UTF_8);
     byte expectedByte = fileContentBytes[seekPos];
@@ -115,7 +116,7 @@ public class TestFsInput {
   }
 
   @Test
-  public void testTell() throws Exception {
+  void tell() throws Exception {
     long expectedTellPos = FILE_CONTENTS.length() / 2;
     fsInput.seek(expectedTellPos);
     long actualTellPos = fsInput.tell();

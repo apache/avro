@@ -17,6 +17,8 @@
  */
 package org.apache.avro;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -26,24 +28,21 @@ import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.specific.SpecificDatumReader;
 
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestDataFileSpecific {
 
-  @Rule
-  public TemporaryFolder DIR = new TemporaryFolder();
+  @TempDir
+  public File DIR;
 
   /*
    * Test when using SpecificDatumReader<T>() constructor to read from a file with
    * a different schema that both reader & writer schemas are found.
    */
   @Test
-  public void testSpecificDatumReaderDefaultCtor() throws IOException {
-    File file = new File(DIR.getRoot().getPath(), "testSpecificDatumReaderDefaultCtor");
+  void specificDatumReaderDefaultCtor() throws IOException {
+    File file = new File(DIR.getPath(), "testSpecificDatumReaderDefaultCtor");
 
     // like the specific Foo, but with another field
     Schema s1 = new Schema.Parser()
@@ -65,9 +64,9 @@ public class TestDataFileSpecific {
     try (DataFileReader<Foo> reader = new DataFileReader<>(file, new SpecificDatumReader<>())) {
       int i = 0;
       for (Foo f : reader) {
-        Assert.assertEquals("" + (i++), f.getLabel());
+        assertEquals("" + (i++), f.getLabel());
       }
-      Assert.assertEquals(10, i);
+      assertEquals(10, i);
     }
   }
 

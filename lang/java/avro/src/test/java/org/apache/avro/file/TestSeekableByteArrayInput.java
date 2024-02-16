@@ -17,6 +17,8 @@
  */
 package org.apache.avro.file;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +32,7 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.Utf8;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestSeekableByteArrayInput {
 
@@ -53,7 +54,7 @@ public class TestSeekableByteArrayInput {
   }
 
   @Test
-  public void testSerialization() throws Exception {
+  void serialization() throws Exception {
     Schema testSchema = getTestSchema();
     GenericRecord message = new Record(testSchema);
     message.put("name", "testValue");
@@ -66,8 +67,8 @@ public class TestSeekableByteArrayInput {
         FileReader<IndexedRecord> dfr = DataFileReader.openReader(in, reader)) {
       result = dfr.next();
     }
-    Assert.assertNotNull(result);
-    Assert.assertTrue(result instanceof GenericRecord);
-    Assert.assertEquals(new Utf8("testValue"), ((GenericRecord) result).get("name"));
+    assertNotNull(result);
+    assertTrue(result instanceof GenericRecord);
+    assertEquals(new Utf8("testValue"), ((GenericRecord) result).get("name"));
   }
 }

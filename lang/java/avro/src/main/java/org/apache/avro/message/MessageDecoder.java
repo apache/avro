@@ -21,6 +21,8 @@ package org.apache.avro.message;
 
 import org.apache.avro.util.ReusableByteArrayInputStream;
 import org.apache.avro.util.ReusableByteBufferInputStream;
+import org.apache.avro.util.internal.ThreadLocalWithInitial;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -111,11 +113,11 @@ public interface MessageDecoder<D> {
    */
   abstract class BaseDecoder<D> implements MessageDecoder<D> {
 
-    private static final ThreadLocal<ReusableByteArrayInputStream> BYTE_ARRAY_IN = ThreadLocal
-        .withInitial(ReusableByteArrayInputStream::new);
+    private static final ThreadLocal<ReusableByteArrayInputStream> BYTE_ARRAY_IN = ThreadLocalWithInitial
+        .of(ReusableByteArrayInputStream::new);
 
-    private static final ThreadLocal<ReusableByteBufferInputStream> BYTE_BUFFER_IN = ThreadLocal
-        .withInitial(ReusableByteBufferInputStream::new);
+    private static final ThreadLocal<ReusableByteBufferInputStream> BYTE_BUFFER_IN = ThreadLocalWithInitial
+        .of(ReusableByteBufferInputStream::new);
 
     @Override
     public D decode(InputStream stream) throws IOException {

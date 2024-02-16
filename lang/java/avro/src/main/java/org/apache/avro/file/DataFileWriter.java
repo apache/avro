@@ -20,9 +20,9 @@ package org.apache.avro.file;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FilterOutputStream;
 import java.io.Flushable;
 import java.io.IOException;
@@ -42,6 +42,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.NonCopyingByteArrayOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
 /**
@@ -51,7 +52,7 @@ import org.apache.commons.compress.utils.IOUtils;
  * <i>blocks</i>. A synchronization marker is written between blocks, so that
  * files may be split. Blocks may be compressed. Extensible metadata is stored
  * at the end of the file. Files may be appended to.
- * 
+ *
  * @see DataFileReader
  */
 public class DataFileWriter<D> implements Closeable, Flushable {
@@ -181,7 +182,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
    * sync marker is written. By default, the writer will flush the buffer each
    * time a sync marker is written (if the block size limit is reached or the
    * {@linkplain #sync()} is called.
-   * 
+   *
    * @param flushOnEveryBlock - If set to false, this writer will not flush the
    *                          block to the stream until {@linkplain #flush()} is
    *                          explicitly called.
@@ -211,7 +212,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   /**
    * Open a writer appending to an existing file. <strong>Since 1.9.0 this method
    * does not close in.</strong>
-   * 
+   *
    * @param in  reading the existing file.
    * @param out positioned at the end of the existing file.
    */
@@ -238,10 +239,10 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     this.underlyingStream = outs;
     this.out = new BufferedFileOutputStream(outs);
     EncoderFactory efactory = new EncoderFactory();
-    this.vout = efactory.binaryEncoder(out, null);
+    this.vout = efactory.directBinaryEncoder(out, null);
     dout.setSchema(schema);
     buffer = new NonCopyingByteArrayOutputStream(Math.min((int) (syncInterval * 1.25), Integer.MAX_VALUE / 2 - 1));
-    this.bufOut = efactory.binaryEncoder(buffer, null);
+    this.bufOut = efactory.directBinaryEncoder(buffer, null);
     if (this.codec == null) {
       this.codec = CodecFactory.nullCodec().createInstance();
     }
@@ -304,7 +305,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /**
    * Append a datum to the file.
-   * 
+   *
    * @see AppendWriteException
    */
   public void append(D datum) throws IOException {
@@ -365,7 +366,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
    * at compression level 7. If <i>recompress</i> is false, blocks will be copied
    * without changing the compression level. If true, they will be converted to
    * the new compression level.
-   * 
+   *
    * @param otherFile
    * @param recompress
    * @throws IOException
@@ -401,7 +402,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     if (blockCount > 0) {
       try {
         bufOut.flush();
-        ByteBuffer uncompressed = buffer.getByteArrayAsByteBuffer();
+        ByteBuffer uncompressed = buffer.asByteBuffer();
         DataBlock block = new DataBlock(uncompressed, blockCount);
         block.setFlushOnWrite(flushOnEveryBlock);
         block.compressUsing(codec);
@@ -439,10 +440,10 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
 
   /**
-   * If this writer was instantiated using a File or using an
-   * {@linkplain Syncable} instance, this method flushes all buffers for this
-   * writer to disk. In other cases, this method behaves exactly like
-   * {@linkplain #flush()}.
+   * If this writer was instantiated using a {@linkplain File},
+   * {@linkplain FileOutputStream} or {@linkplain Syncable} instance, this method
+   * flushes all buffers for this writer to disk. In other cases, this method
+   * behaves exactly like {@linkplain #flush()}.
    *
    * @throws IOException
    */
@@ -450,6 +451,8 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     flush();
     if (underlyingStream instanceof Syncable) {
       ((Syncable) underlyingStream).sync();
+    } else if (underlyingStream instanceof FileOutputStream) {
+      ((FileOutputStream) underlyingStream).getFD().sync();
     }
   }
 
@@ -497,16 +500,6 @@ public class DataFileWriter<D> implements Closeable, Flushable {
         // occurred during the write
         count = 0;
       }
-    }
-  }
-
-  private static class NonCopyingByteArrayOutputStream extends ByteArrayOutputStream {
-    NonCopyingByteArrayOutputStream(int initialSize) {
-      super(initialSize);
-    }
-
-    ByteBuffer getByteArrayAsByteBuffer() {
-      return ByteBuffer.wrap(buf, 0, count);
     }
   }
 

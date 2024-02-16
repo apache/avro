@@ -1,12 +1,12 @@
 # Namespace Avro.Reflect
 
-This namespace contains classes that implement Avro serialization and deserialization for plain C# objects. The classes use .net reflection to implement the serializers. The interface is similar to the Generic and Specific serialiation classes.
+This namespace contains classes that implement Avro serialization and deserialization for plain C# objects. The classes use .net reflection to implement the serializers. The interface is similar to the Generic and Specific serialization classes.
 
 ## Serialization
 
 The approach starts with the schema and iterates both the schema and the dotnet type together in a depth first manner per the specification. Serialization is the same as the Generic serializer except where the serializer encounters:
 - *A fixed type*: if the corresponding dotnet object type is a byte[] of the correct length then the object is serialized, otherwise an exception is thrown.
-- *A record type*: the serializer matches the schema property name to the dotnet object property name and then reursively serializes the schema property and the dotnet object property
+- *A record type*: the serializer matches the schema property name to the dotnet object property name and then recursively serializes the schema property and the dotnet object property
 - *An array type*: See array serialization/deserialization.
 
 Basic serialization is performed as in the following example:
@@ -37,7 +37,7 @@ You might want to do this if your class contains interfaces and/or if you use an
 
 See the section on Arrays. The ArrayHelper specifies the type of object created when an array is deserialized. The default is List\<T>.
 
-The type created for Map objects is specified by the Deserializer property MapType. *This must be a two (or more) parameter generic type where the first type paramater is string and the second is undefined* e.g. Dictionary<string,>. 
+The type created for Map objects is specified by the Deserializer property MapType. *This must be a two (or more) parameter generic type where the first type parameter is string and the second is undefined* e.g. Dictionary<string,>. 
 ```csharp
 public Type MapType { get; set; }
 ```

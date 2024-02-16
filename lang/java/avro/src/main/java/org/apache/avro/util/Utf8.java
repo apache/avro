@@ -17,48 +17,40 @@
  */
 package org.apache.avro.util;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.io.BinaryData;
-import org.slf4j.LoggerFactory;
 
 /**
  * A Utf8 string. Unlike {@link String}, instances are mutable. This is more
  * efficient than {@link String} when reading or writing a sequence of values,
  * as a single instance may be reused.
  */
-public class Utf8 implements Comparable<Utf8>, CharSequence {
-  private static final String MAX_LENGTH_PROPERTY = "org.apache.avro.limits.string.maxLength";
-  private static final int MAX_LENGTH;
+public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
+
   private static final byte[] EMPTY = new byte[0];
 
-  static {
-    String o = System.getProperty(MAX_LENGTH_PROPERTY);
-    int i = Integer.MAX_VALUE;
-    if (o != null) {
-      try {
-        i = Integer.parseUnsignedInt(o);
-      } catch (NumberFormatException nfe) {
-        LoggerFactory.getLogger(Utf8.class).warn("Could not parse property " + MAX_LENGTH_PROPERTY + ": " + o, nfe);
-      }
-    }
-    MAX_LENGTH = i;
-  }
-
-  private byte[] bytes = EMPTY;
-  private int hash = 0;
-  private boolean hasHash = false;
+  private byte[] bytes;
+  private int hash;
   private int length;
   private String string;
 
   public Utf8() {
+    bytes = EMPTY;
   }
 
   public Utf8(String string) {
-    this.bytes = getBytesFor(string);
-    this.length = bytes.length;
+    byte[] bytes = getBytesFor(string);
+    int length = bytes.length;
+    SystemLimitException.checkMaxStringLength(length);
+    this.bytes = bytes;
+    this.length = length;
     this.string = string;
   }
 
@@ -66,11 +58,14 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
     this.length = other.length;
     this.bytes = Arrays.copyOf(other.bytes, other.length);
     this.string = other.string;
+    this.hash = other.hash;
   }
 
   public Utf8(byte[] bytes) {
+    int length = bytes.length;
+    SystemLimitException.checkMaxStringLength(length);
     this.bytes = bytes;
-    this.length = bytes.length;
+    this.length = length;
   }
 
   /**
@@ -111,24 +106,25 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
    * length does not change, as this also clears the cached String.
    */
   public Utf8 setByteLength(int newLength) {
-    if (newLength > MAX_LENGTH) {
-      throw new AvroRuntimeException("String length " + newLength + " exceeds maximum allowed");
-    }
+    SystemLimitException.checkMaxStringLength(newLength);
     if (this.bytes.length < newLength) {
       this.bytes = Arrays.copyOf(this.bytes, newLength);
     }
     this.length = newLength;
     this.string = null;
-    this.hasHash = false;
+    this.hash = 0;
     return this;
   }
 
   /** Set to the contents of a String. */
   public Utf8 set(String string) {
-    this.bytes = getBytesFor(string);
-    this.length = bytes.length;
+    byte[] bytes = getBytesFor(string);
+    int length = bytes.length;
+    SystemLimitException.checkMaxStringLength(length);
+    this.bytes = bytes;
+    this.length = length;
     this.string = string;
-    this.hasHash = false;
+    this.hash = 0;
     return this;
   }
 
@@ -140,7 +136,6 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
     System.arraycopy(other.bytes, 0, bytes, 0, length);
     this.string = other.string;
     this.hash = other.hash;
-    this.hasHash = other.hasHash;
     return this;
   }
 
@@ -172,13 +167,16 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
 
   @Override
   public int hashCode() {
-    if (!hasHash) {
+    int h = hash;
+    if (h == 0) {
+      byte[] bytes = this.bytes;
+      int length = this.length;
       for (int i = 0; i < length; i++) {
-        hash = hash * 31 + bytes[i];
+        h = h * 31 + bytes[i];
       }
-      hasHash = true;
+      this.hash = h;
     }
-    return hash;
+    return h;
   }
 
   @Override
@@ -207,4 +205,15 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
     return str.getBytes(StandardCharsets.UTF_8);
   }
 
+  @Override
+  public void writeExternal(ObjectOutput out) throws IOException {
+    out.writeInt(bytes.length);
+    out.write(bytes);
+  }
+
+  @Override
+  public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    setByteLength(in.readInt());
+    in.readFully(bytes);
+  }
 }

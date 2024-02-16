@@ -1,0 +1,160 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: 'Test C# on ARM'
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    paths:
+    - .github/workflows/test-lang-csharp.yml
+    - lang/csharp/**
+
+defaults:
+  run:
+    working-directory: lang/csharp
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add libzstd
+        shell: bash
+        run: sudo apt-get install -y libzstd-dev
+
+      - name: Install .NET SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
+            7.0.x
+            8.0.x
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Lint
+        run: ./build.sh lint
+
+      - name: Test
+        run: ./build.sh test
+
+  interop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add libzstd
+        shell: bash
+        run: sudo apt-get install -y libzstd-dev
+
+      - name: Install .NET SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
+            7.0.x
+            8.0.x
+
+      - name: Cache Local Maven Repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: 'Setup Temurin JDK 8, 11, 17 & 21'
+        uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # v4.0.0
+        with:
+          distribution: 'temurin'
+          java-version: |
+            8
+            11
+            17
+            21
+
+      - name: 'Setup Maven 3.9.6'
+        uses: stCarolas/setup-maven@07fbbe97d97ef44336b7382563d66743297e442f # v4.5
+        with:
+          maven-version: 3.9.6
+
+      - name: Install Java Avro for Interop Test
+        working-directory: .
+        run: mvn -B install -PskipQuality
+
+      - name: Create Interop Data Directory
+        working-directory: .
+        run: mkdir -p build/interop/data
+
+      - name: Generate Interop Resources
+        working-directory: lang/java/avro
+        run: mvn -B -P interop-data-generate generate-resources
+
+      - name: Generate Interop Data
+        run: ./build.sh interop-data-generate
+
+      - name: Run Interop Tests
+        run: ./build.sh interop-data-test
+
+  arm64:
+    name: C# on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Nuget
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y wget libzstd-dev libicu-dev
+          wget https://dot.net/v1/dotnet-install.sh
+          bash ./dotnet-install.sh --channel "3.1" --install-dir "$HOME/.dotnet" # 3.1
+          bash ./dotnet-install.sh --channel "5.0" --install-dir "$HOME/.dotnet" # 5.0
+          bash ./dotnet-install.sh --channel "6.0" --install-dir "$HOME/.dotnet" # 6.0
+          bash ./dotnet-install.sh --channel "7.0" --install-dir "$HOME/.dotnet" # 7.0
+          bash ./dotnet-install.sh --channel "8.0" --install-dir "$HOME/.dotnet" # 8.0
+          
+      - name: Build
+        run: |
+          set -x
+          export PATH=$HOME/.dotnet:$PATH
+          dotnet --list-sdks
+          ./build.sh clean test

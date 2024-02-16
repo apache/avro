@@ -106,7 +106,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
 
     } else if (action.writer.getType() == Schema.Type.UNION) {
       if (((Resolver.WriterUnion) action).unionEquiv) {
-        return simpleGen(action.writer, seen);
+        return simpleGen(action.reader, seen);
       }
       Resolver.Action[] branches = ((Resolver.WriterUnion) action).actions;
       Symbol[] symbols = new Symbol[branches.length];
@@ -122,7 +122,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       Resolver.EnumAdjust e = (Resolver.EnumAdjust) action;
       Object[] adjs = new Object[e.adjustments.length];
       for (int i = 0; i < adjs.length; i++) {
-        adjs[i] = (0 <= e.adjustments[i] ? new Integer(e.adjustments[i])
+        adjs[i] = (0 <= e.adjustments[i] ? Integer.valueOf(e.adjustments[i])
             : "No match for " + e.writer.getEnumSymbols().get(i));
       }
       return Symbol.seq(Symbol.enumAdjustAction(e.reader.getEnumSymbols().size(), adjs), Symbol.ENUM);
@@ -292,8 +292,16 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       e.writeMapEnd();
       break;
     case UNION:
-      e.writeIndex(0);
-      encode(e, s.getTypes().get(0), n);
+      int correctIndex = 0;
+      List<Schema> innerTypes = s.getTypes();
+      while (correctIndex < innerTypes.size() && !isCompatible(innerTypes.get(correctIndex).getType(), n)) {
+        correctIndex++;
+      }
+      if (correctIndex >= innerTypes.size()) {
+        throw new AvroTypeException("Not compatible default value for union: " + n);
+      }
+      e.writeIndex(correctIndex);
+      encode(e, innerTypes.get(correctIndex), n);
       break;
     case FIXED:
       if (!n.isTextual())
@@ -345,5 +353,30 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       e.writeNull();
       break;
     }
+  }
+
+  private static boolean isCompatible(Schema.Type stype, JsonNode value) {
+    switch (stype) {
+    case RECORD:
+    case ENUM:
+    case ARRAY:
+    case MAP:
+    case UNION:
+      return true;
+    case FIXED:
+    case STRING:
+    case BYTES:
+      return value.isTextual();
+    case INT:
+    case LONG:
+    case FLOAT:
+    case DOUBLE:
+      return value.isNumber();
+    case BOOLEAN:
+      return value.isBoolean();
+    case NULL:
+      return value.isNull();
+    }
+    return true;
   }
 }

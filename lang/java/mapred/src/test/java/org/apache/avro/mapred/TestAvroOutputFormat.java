@@ -19,13 +19,13 @@ package org.apache.avro.mapred;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.hadoop.mapred.JobConf;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestAvroOutputFormat {
   @Test
-  public void testSetSyncInterval() {
+  void setSyncInterval() {
     JobConf jobConf = new JobConf();
     int newSyncInterval = 100000;
     AvroOutputFormat.setSyncInterval(jobConf, newSyncInterval);
@@ -34,7 +34,7 @@ public class TestAvroOutputFormat {
   }
 
   @Test
-  public void testNoCodec() {
+  void noCodec() {
     JobConf job = new JobConf();
     assertNull(AvroOutputFormat.getCodecFactory(job));
 
@@ -50,7 +50,7 @@ public class TestAvroOutputFormat {
   }
 
   @Test
-  public void testBZip2CodecUsingHadoopClass() {
+  void bZip2CodecUsingHadoopClass() {
     CodecFactory avroBZip2Codec = CodecFactory.fromString("bzip2");
 
     JobConf job = new JobConf();
@@ -62,7 +62,7 @@ public class TestAvroOutputFormat {
   }
 
   @Test
-  public void testBZip2CodecUsingAvroCodec() {
+  void bZip2CodecUsingAvroCodec() {
     CodecFactory avroBZip2Codec = CodecFactory.fromString("bzip2");
 
     JobConf job = new JobConf();
@@ -74,7 +74,7 @@ public class TestAvroOutputFormat {
   }
 
   @Test
-  public void testDeflateCodecUsingHadoopClass() {
+  void deflateCodecUsingHadoopClass() {
     CodecFactory avroDeflateCodec = CodecFactory.fromString("deflate");
 
     JobConf job = new JobConf();
@@ -86,7 +86,7 @@ public class TestAvroOutputFormat {
   }
 
   @Test
-  public void testDeflateCodecUsingAvroCodec() {
+  void deflateCodecUsingAvroCodec() {
     CodecFactory avroDeflateCodec = CodecFactory.fromString("deflate");
 
     JobConf job = new JobConf();
@@ -98,7 +98,7 @@ public class TestAvroOutputFormat {
   }
 
   @Test
-  public void testSnappyCodecUsingHadoopClass() {
+  void snappyCodecUsingHadoopClass() {
     CodecFactory avroSnappyCodec = CodecFactory.fromString("snappy");
 
     JobConf job = new JobConf();
@@ -110,7 +110,7 @@ public class TestAvroOutputFormat {
   }
 
   @Test
-  public void testSnappyCodecUsingAvroCodec() {
+  void snappyCodecUsingAvroCodec() {
     CodecFactory avroSnappyCodec = CodecFactory.fromString("snappy");
 
     JobConf job = new JobConf();
@@ -122,7 +122,7 @@ public class TestAvroOutputFormat {
   }
 
   @Test
-  public void testGZipCodecUsingHadoopClass() {
+  void gZipCodecUsingHadoopClass() {
     CodecFactory avroDeflateCodec = CodecFactory.fromString("deflate");
 
     JobConf job = new JobConf();

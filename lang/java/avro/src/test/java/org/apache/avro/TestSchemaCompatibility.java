@@ -18,21 +18,92 @@
 package org.apache.avro;
 
 import static java.util.Arrays.asList;
-import static org.apache.avro.SchemaCompatibility.*;
-import static org.apache.avro.TestSchemas.*;
-import static org.junit.Assert.*;
+import static org.apache.avro.SchemaCompatibility.Incompatibility;
+import static org.apache.avro.SchemaCompatibility.SchemaCompatibilityResult;
+import static org.apache.avro.SchemaCompatibility.SchemaCompatibilityType;
+import static org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
+import static org.apache.avro.SchemaCompatibility.SchemaPairCompatibility;
+import static org.apache.avro.SchemaCompatibility.checkReaderWriterCompatibility;
+import static org.apache.avro.TestSchemas.A_DINT_B_DINT_RECORD1;
+import static org.apache.avro.TestSchemas.A_DINT_RECORD1;
+import static org.apache.avro.TestSchemas.A_INT_B_DINT_RECORD1;
+import static org.apache.avro.TestSchemas.A_INT_B_INT_RECORD1;
+import static org.apache.avro.TestSchemas.A_INT_RECORD1;
+import static org.apache.avro.TestSchemas.A_LONG_RECORD1;
+import static org.apache.avro.TestSchemas.BOOLEAN_SCHEMA;
+import static org.apache.avro.TestSchemas.BYTES_SCHEMA;
+import static org.apache.avro.TestSchemas.BYTES_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.DOUBLE_SCHEMA;
+import static org.apache.avro.TestSchemas.DOUBLE_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.EMPTY_RECORD1;
+import static org.apache.avro.TestSchemas.EMPTY_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM1_ABC_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA_DEFAULT;
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA_NAMESPACE_1;
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA_NAMESPACE_2;
+import static org.apache.avro.TestSchemas.ENUM1_BC_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM_ABC_ENUM_DEFAULT_A_RECORD;
+import static org.apache.avro.TestSchemas.ENUM_ABC_ENUM_DEFAULT_A_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM_ABC_FIELD_DEFAULT_B_ENUM_DEFAULT_A_RECORD;
+import static org.apache.avro.TestSchemas.ENUM_AB_ENUM_DEFAULT_A_RECORD;
+import static org.apache.avro.TestSchemas.ENUM_AB_ENUM_DEFAULT_A_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM_AB_FIELD_DEFAULT_A_ENUM_DEFAULT_B_RECORD;
+import static org.apache.avro.TestSchemas.FIXED_4_BYTES;
+import static org.apache.avro.TestSchemas.FLOAT_SCHEMA;
+import static org.apache.avro.TestSchemas.FLOAT_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_ARRAY_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_FLOAT_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_LIST_RECORD;
+import static org.apache.avro.TestSchemas.INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_LONG_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_MAP_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_STRING_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.LONG_ARRAY_SCHEMA;
+import static org.apache.avro.TestSchemas.LONG_LIST_RECORD;
+import static org.apache.avro.TestSchemas.LONG_MAP_SCHEMA;
+import static org.apache.avro.TestSchemas.LONG_SCHEMA;
+import static org.apache.avro.TestSchemas.LONG_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.NS_RECORD1;
+import static org.apache.avro.TestSchemas.NS_RECORD2;
+import static org.apache.avro.TestSchemas.WITH_NS;
+import static org.apache.avro.TestSchemas.WITHOUT_NS;
+import static org.apache.avro.TestSchemas.NULL_SCHEMA;
+import static org.apache.avro.TestSchemas.ReaderWriter;
+import static org.apache.avro.TestSchemas.STRING_ARRAY_SCHEMA;
+import static org.apache.avro.TestSchemas.STRING_INT_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.STRING_SCHEMA;
+import static org.apache.avro.TestSchemas.STRING_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.assertSchemaContains;
+import static org.apache.avro.TestSchemas.list;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
-
+import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.EnumSymbol;
+import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.*;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.Utf8;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,9 +118,9 @@ public class TestSchemaCompatibility {
       new Schema.Field("oldfield1", INT_SCHEMA, null, null), new Schema.Field("oldfield2", STRING_SCHEMA, null, null)));
 
   @Test
-  public void testValidateSchemaPairMissingField() {
-    final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null));
-    final Schema reader = Schema.createRecord(readerFields);
+  void validateSchemaPairMissingField() {
+    final List<Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null));
+    final Schema reader = Schema.createRecord(null, null, null, false, readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), reader, WRITER_SCHEMA,
         SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
@@ -59,9 +130,9 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidateSchemaPairMissingSecondField() {
+  void validateSchemaPairMissingSecondField() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield2", STRING_SCHEMA, null, null));
-    final Schema reader = Schema.createRecord(readerFields);
+    final Schema reader = Schema.createRecord(null, null, null, false, readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), reader, WRITER_SCHEMA,
         SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
@@ -71,10 +142,10 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidateSchemaPairAllFields() {
+  void validateSchemaPairAllFields() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("oldfield2", STRING_SCHEMA, null, null));
-    final Schema reader = Schema.createRecord(readerFields);
+    final Schema reader = Schema.createRecord(null, null, null, false, readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), reader, WRITER_SCHEMA,
         SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
@@ -84,10 +155,10 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidateSchemaNewFieldWithDefault() {
+  void validateSchemaNewFieldWithDefault() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("newfield1", INT_SCHEMA, null, 42));
-    final Schema reader = Schema.createRecord(readerFields);
+    final Schema reader = Schema.createRecord(null, null, null, false, readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), reader, WRITER_SCHEMA,
         SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
@@ -97,10 +168,10 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidateSchemaNewField() {
+  void validateSchemaNewField() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("newfield1", INT_SCHEMA, null, null));
-    final Schema reader = Schema.createRecord(readerFields);
+    final Schema reader = Schema.createRecord(null, null, null, false, readerFields);
     SchemaPairCompatibility compatibility = checkReaderWriterCompatibility(reader, WRITER_SCHEMA);
 
     // Test new field without default value.
@@ -116,7 +187,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidateArrayWriterSchema() {
+  void validateArrayWriterSchema() {
     final Schema validReader = Schema.createArray(STRING_SCHEMA);
     final Schema invalidReader = Schema.createMap(STRING_SCHEMA);
     final SchemaCompatibility.SchemaPairCompatibility validResult = new SchemaCompatibility.SchemaPairCompatibility(
@@ -136,7 +207,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidatePrimitiveWriterSchema() {
+  void validatePrimitiveWriterSchema() {
     final Schema validReader = Schema.create(Schema.Type.STRING);
     final SchemaCompatibility.SchemaPairCompatibility validResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), validReader, STRING_SCHEMA,
@@ -157,11 +228,27 @@ public class TestSchemaCompatibility {
    * Reader union schema must contain all writer union branches.
    */
   @Test
-  public void testUnionReaderWriterSubsetIncompatibility() {
+  void unionReaderWriterSubsetIncompatibility() {
     final Schema unionWriter = Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA, LONG_SCHEMA));
     final Schema unionReader = Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA));
     final SchemaPairCompatibility result = checkReaderWriterCompatibility(unionReader, unionWriter);
     assertEquals(SchemaCompatibilityType.INCOMPATIBLE, result.getType());
+    assertEquals("/2", result.getResult().getIncompatibilities().get(0).getLocation());
+  }
+
+  @Test
+  void unionWriterSimpleReaderIncompatibility() {
+    Schema mandatorySchema = SchemaBuilder.record("Account").fields().name("age").type().intType().noDefault()
+        .endRecord();
+    Schema optionalSchema = SchemaBuilder.record("Account").fields().optionalInt("age").endRecord();
+
+    SchemaPairCompatibility compatibility = checkReaderWriterCompatibility(mandatorySchema, optionalSchema);
+
+    assertEquals(SchemaCompatibilityType.INCOMPATIBLE, compatibility.getType());
+
+    Incompatibility incompatibility = compatibility.getResult().getIncompatibilities().get(0);
+    assertEquals("reader type: INT not compatible with writer type: NULL", incompatibility.getMessage());
+    assertEquals("/fields/0/type/0", incompatibility.getLocation());
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -191,6 +278,10 @@ public class TestSchemaCompatibility {
       new ReaderWriter(INT_MAP_SCHEMA, INT_MAP_SCHEMA), new ReaderWriter(LONG_MAP_SCHEMA, INT_MAP_SCHEMA),
 
       new ReaderWriter(ENUM1_AB_SCHEMA, ENUM1_AB_SCHEMA), new ReaderWriter(ENUM1_ABC_SCHEMA, ENUM1_AB_SCHEMA),
+      new ReaderWriter(ENUM1_AB_SCHEMA_DEFAULT, ENUM1_ABC_SCHEMA),
+      new ReaderWriter(ENUM1_AB_SCHEMA, ENUM1_AB_SCHEMA_NAMESPACE_1),
+      new ReaderWriter(ENUM1_AB_SCHEMA_NAMESPACE_1, ENUM1_AB_SCHEMA),
+      new ReaderWriter(ENUM1_AB_SCHEMA_NAMESPACE_1, ENUM1_AB_SCHEMA_NAMESPACE_2),
 
       // String-to/from-bytes, introduced in Avro 1.7.7
       new ReaderWriter(STRING_SCHEMA, BYTES_SCHEMA), new ReaderWriter(BYTES_SCHEMA, STRING_SCHEMA),
@@ -247,7 +338,7 @@ public class TestSchemaCompatibility {
 
       // This is comparing two records that have an inner array of records with
       // different namespaces.
-      new ReaderWriter(NS_RECORD1, NS_RECORD2));
+      new ReaderWriter(NS_RECORD1, NS_RECORD2), new ReaderWriter(WITHOUT_NS, WITH_NS));
 
   // -----------------------------------------------------------------------------------------------
 
@@ -294,14 +385,14 @@ public class TestSchemaCompatibility {
    * Tests reader/writer compatibility validation.
    */
   @Test
-  public void testReaderWriterCompatibility() {
+  void readerWriterCompatibility() {
     for (ReaderWriter readerWriter : COMPATIBLE_READER_WRITER_TEST_CASES) {
       final Schema reader = readerWriter.getReader();
       final Schema writer = readerWriter.getWriter();
       LOG.debug("Testing compatibility of reader {} with writer {}.", reader, writer);
       final SchemaPairCompatibility result = checkReaderWriterCompatibility(reader, writer);
-      assertEquals(String.format("Expecting reader %s to be compatible with writer %s, but tested incompatible.",
-          reader, writer), SchemaCompatibilityType.COMPATIBLE, result.getType());
+      assertEquals(SchemaCompatibilityType.COMPATIBLE, result.getType(), String
+          .format("Expecting reader %s to be compatible with writer %s, but tested incompatible.", reader, writer));
     }
   }
 
@@ -392,7 +483,7 @@ public class TestSchemaCompatibility {
    * Tests the reader/writer compatibility at decoding time.
    */
   @Test
-  public void testReaderWriterDecodingCompatibility() throws Exception {
+  void readerWriterDecodingCompatibility() throws Exception {
     for (DecodingTestCase testCase : DECODING_COMPATIBILITY_TEST_CASES) {
       final Schema readerSchema = testCase.getReaderSchema();
       final Schema writerSchema = testCase.getWriterSchema();
@@ -415,10 +506,11 @@ public class TestSchemaCompatibility {
       final DatumReader<Object> datumReader = new GenericDatumReader<>(readerSchema);
       final Object decodedDatum = datumReader.read(null, decoder);
 
-      assertEquals(String.format(
-          "Expecting decoded value %s when decoding value %s whose writer schema is %s "
-              + "using reader schema %s, but value was %s.",
-          expectedDecodedDatum, datum, writerSchema, readerSchema, decodedDatum), expectedDecodedDatum, decodedDatum);
+      assertEquals(expectedDecodedDatum, decodedDatum,
+          String.format(
+              "Expecting decoded value %s when decoding value %s whose writer schema is %s "
+                  + "using reader schema %s, but value was %s.",
+              expectedDecodedDatum, datum, writerSchema, readerSchema, decodedDatum));
     }
   }
 
@@ -432,7 +524,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void checkResolvingDecoder() throws IOException {
+  void checkResolvingDecoder() throws IOException {
     final Schema locationSchema = readSchemaFromResources("schema-location.json");
     final Schema writeSchema = readSchemaFromResources("schema-location-write.json");
 
@@ -448,7 +540,7 @@ public class TestSchemaCompatibility {
     location.put("lat", 52.995143f);
     location.put("long", -1.539054f);
 
-    HashMap<String, GenericData.Record> locations = new HashMap<>();
+    HashMap<String, Record> locations = new HashMap<>();
     locations.put("l1", location);
     record.put("location", locations);
 

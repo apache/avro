@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.avro.AvroRuntimeException;
@@ -29,6 +30,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.util.MapEntry;
 
 /**
  * {@link org.apache.avro.io.DatumWriter DatumWriter} for existing classes via
@@ -80,8 +82,7 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
       out.writeArrayStart();
       switch (type) {
       case BOOLEAN:
-        if (elementClass.isPrimitive())
-          ArrayAccessor.writeArray((boolean[]) datum, out);
+        ArrayAccessor.writeArray((boolean[]) datum, out);
         break;
       case DOUBLE:
         ArrayAccessor.writeArray((double[]) datum, out);
@@ -153,6 +154,8 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
         entryList.add(new MapEntry(e.getKey(), e.getValue()));
       }
       datum = entryList;
+    } else if (datum instanceof Optional) {
+      datum = ((Optional) datum).orElse(null);
     }
     try {
       super.write(schema, datum, out);

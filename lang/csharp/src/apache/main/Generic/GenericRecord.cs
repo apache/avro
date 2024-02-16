@@ -239,7 +239,7 @@ namespace Avro.Generic
                 sb.Append(contents[field.Pos]);
                 sb.Append(", ");
             }
-            sb.Append("}");
+            sb.Append('}');
             return sb.ToString();
         }
     }

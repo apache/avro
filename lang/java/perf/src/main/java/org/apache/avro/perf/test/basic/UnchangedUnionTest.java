@@ -90,7 +90,7 @@ public class UnchangedUnionTest {
         final GenericRecord rec = new GenericData.Record(this.schema);
 
         final int val = super.getRandom().nextInt(1000000);
-        final Integer v = (val < 750000 ? new Integer(val) : null);
+        final Integer v = (val < 750000 ? Integer.valueOf(val) : null);
         rec.put("f", v);
 
         this.testData[i] = rec;
@@ -132,7 +132,7 @@ public class UnchangedUnionTest {
       for (int i = 0; i < getBatchSize(); i++) {
         final GenericRecord rec = new GenericData.Record(this.schema);
         final int val = super.getRandom().nextInt(1000000);
-        final Integer v = (val < 750000 ? new Integer(val) : null);
+        final Integer v = (val < 750000 ? Integer.valueOf(val) : null);
         rec.put("f", v);
 
         writer.write(rec, encoder);

@@ -78,6 +78,7 @@ namespace Avro
         internal static NamedSchema NewInstance(JObject jo, PropertyMap props, SchemaNames names, string encspace)
         {
             string type = JsonHelper.GetRequiredString(jo, "type");
+            string doc = JsonHelper.GetOptionalString(jo, "doc");
             switch (type)
             {
                 case "fixed":
@@ -90,7 +91,7 @@ namespace Avro
                     return RecordSchema.NewInstance(Type.Error, jo, props, names, encspace);
                 default:
                     NamedSchema result;
-                    if (names.TryGetValue(type, null, encspace, out result))
+                    if (names.TryGetValue(type, null, encspace, doc, out result))
                         return result;
                     return null;
             }
@@ -128,7 +129,8 @@ namespace Avro
         {
             String n = JsonHelper.GetOptionalString(jtok, "name");      // Changed this to optional string for anonymous records in messages
             String ns = JsonHelper.GetOptionalString(jtok, "namespace");
-            return new SchemaName(n, ns, encspace);
+            String d = JsonHelper.GetOptionalString(jtok, "doc");
+            return new SchemaName(n, ns, encspace, d);
         }
 
         /// <summary>
@@ -136,7 +138,7 @@ namespace Avro
         /// </summary>
         /// <param name="jtok">JSON object to read</param>
         /// <param name="space">namespace of the name this alias is for</param>
-        /// <param name="encspace">enclosing namespace of the name this alias is for</param>
+        /// <param name="encspace">enclosing namespace of the name this alias is for</param>        
         /// <returns>List of SchemaName that represents the list of alias. If no 'aliases' specified, then it returns null.</returns>
         protected static IList<SchemaName> GetAliases(JToken jtok, string space, string encspace)
         {
@@ -153,7 +155,7 @@ namespace Avro
                 if (jalias.Type != JTokenType.String)
                     throw new SchemaParseException($"Aliases must be of format JSON array of strings at '{jtok.Path}'");
 
-                aliases.Add(new SchemaName((string)jalias, space, encspace));
+                aliases.Add(new SchemaName((string)jalias, space, encspace, null));
             }
             return aliases;
         }

@@ -26,9 +26,9 @@ var files = require('../lib/files'),
        fs = require('fs'),
      path = require('path');
 
-suite('interop', function() {
+describe('interop', function() {
 
-  test('interop', function() {
+  it('interop', function() {
     var codecs = files.streams.BlockDecoder.getDefaultCodecs();
     var dir = "../../build/interop/data";
     fs.readdirSync(dir).forEach(function (file) {

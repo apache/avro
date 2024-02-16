@@ -21,8 +21,11 @@ use warnings;
 use Test::More;
 use File::Basename qw(basename);
 use IO::File;
-use_ok 'Avro::DataFile';
-use_ok 'Avro::DataFileReader';
+
+BEGIN {
+    use_ok 'Avro::DataFile';
+    use_ok 'Avro::DataFileReader';
+}
 
 for my $path (glob '../../build/interop/data/*.avro') {
     my $fn = basename($path);
@@ -30,11 +33,20 @@ for my $path (glob '../../build/interop/data/*.avro') {
     my $idx = rindex $fn, '_';
     if (-1 < $idx) {
         my $codec = substr $fn, $idx + 1;
-        next unless $Avro::DataFile::ValidCodec{$codec};
+        unless ($Avro::DataFile::ValidCodec{$codec}) {
+            diag("Skipped: ${path}");
+            next;
+        }
     }
     my $fh = IO::File->new($path);
-    Avro::DataFileReader->new(fh => $fh);
-    note("Succeeded to read ${path}");
+    my $reader = Avro::DataFileReader->new(fh => $fh);
+
+    my $metadata = $reader->metadata;
+    if (exists $metadata->{user_metadata}) {
+        is($metadata->{user_metadata}, 'someByteArray', "check user metadata");
+    }
+
+    diag("Succeeded: ${path}");
 }
 
 done_testing;

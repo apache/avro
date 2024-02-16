@@ -47,10 +47,10 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
  * @param <K> The type of the Trevni key to read.
  * @param <V> The type of the Trevni value to read.
  *
- *        <p>
- *        A subset schema to be read may be specified with
- *        {@link org.apache.avro.mapreduce.AvroJob#setInputKeySchema} and
- *        {@link org.apache.avro.mapreduce.AvroJob#setInputValueSchema}.
+ *            <p>
+ *            A subset schema to be read may be specified with
+ *            {@link org.apache.avro.mapreduce.AvroJob#setInputKeySchema} and
+ *            {@link org.apache.avro.mapreduce.AvroJob#setInputValueSchema}.
  */
 public class AvroTrevniKeyValueInputFormat<K, V> extends FileInputFormat<AvroKey<K>, AvroValue<V>> {
 

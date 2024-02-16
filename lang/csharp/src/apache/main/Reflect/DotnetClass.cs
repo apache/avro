@@ -52,14 +52,14 @@ namespace Avro.Reflect
                     if (avroAttr != null)
                     {
                         hasAttribute = true;
-                        _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema.Tag, avroAttr.Converter, cache));
+                        _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema, avroAttr.Converter, cache));
                         break;
                     }
                 }
 
                 if (!hasAttribute)
                 {
-                    _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema.Tag, cache));
+                    _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema, cache));
                 }
             }
         }
@@ -83,7 +83,7 @@ namespace Avro.Reflect
                 }
             }
 
-            throw new AvroException($"Class {_type.Name} doesnt contain property {f.Name}");
+            throw new AvroException($"Class {_type.Name} doesn't contain property {f.Name}");
         }
 
         /// <summary>
@@ -97,7 +97,7 @@ namespace Avro.Reflect
             DotnetProperty p;
             if (!_propertyMap.TryGetValue(f.Name, out p))
             {
-                throw new AvroException($"ByPosClass doesnt contain property {f.Name}");
+                throw new AvroException($"ByPosClass doesn't contain property {f.Name}");
             }
 
             return p.GetValue(o, f.Schema);
@@ -108,13 +108,13 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="o">the object</param>
         /// <param name="f">field schema</param>
-        /// <param name="v">value for the proprty referenced by the field schema</param>
+        /// <param name="v">value for the property referenced by the field schema</param>
         public void SetValue(object o, Field f, object v)
         {
             DotnetProperty p;
             if (!_propertyMap.TryGetValue(f.Name, out p))
             {
-                throw new AvroException($"ByPosClass doesnt contain property {f.Name}");
+                throw new AvroException($"ByPosClass doesn't contain property {f.Name}");
             }
 
             p.SetValue(o, v, f.Schema);
@@ -139,7 +139,7 @@ namespace Avro.Reflect
             DotnetProperty p;
             if (!_propertyMap.TryGetValue(f.Name, out p))
             {
-                throw new AvroException($"ByPosClass doesnt contain property {f.Name}");
+                throw new AvroException($"ByPosClass doesn't contain property {f.Name}");
             }
 
             return p.GetPropertyType();

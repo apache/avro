@@ -35,15 +35,6 @@ import org.apache.avro.message.MessageEncoder;
 public abstract class SpecificRecordBase
     implements SpecificRecord, Comparable<SpecificRecord>, GenericRecord, Externalizable {
 
-  @Override
-  public abstract Schema getSchema();
-
-  @Override
-  public abstract Object get(int field);
-
-  @Override
-  public abstract void put(int field, Object value);
-
   public SpecificData getSpecificData() {
     // Default implementation for backwards compatibility, overridden in generated
     // code
@@ -105,12 +96,12 @@ public abstract class SpecificRecordBase
 
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
-    new SpecificDatumWriter(getSchema()).write(this, SpecificData.getEncoder(out));
+    new SpecificDatumWriter<>(getSchema()).write(this, SpecificData.getEncoder(out));
   }
 
   @Override
   public void readExternal(ObjectInput in) throws IOException {
-    new SpecificDatumReader(getSchema()).read(this, SpecificData.getDecoder(in));
+    new SpecificDatumReader<>(getSchema()).read(this, SpecificData.getDecoder(in));
   }
 
   /**

@@ -56,7 +56,7 @@ var BLOCK_TYPE = schemas.createType({
 var LONG_TYPE = schemas.createType('long');
 
 // First 4 bytes of an Avro object container file.
-var MAGIC_BYTES = new Buffer('Obj\x01');
+var MAGIC_BYTES = Buffer.from('Obj\x01');
 
 // Convenience.
 var f = util.format;
@@ -91,7 +91,7 @@ function RawDecoder(schema, opts) {
   // readable side ends, while we need the other way. So we do it manually.
 
   this._type = parse(schema);
-  this._tap = new Tap(new Buffer(0));
+  this._tap = new Tap(Buffer.alloc(0));
   this._needPush = false;
   this._readValue = createReader(decode, this._type);
   this._finished = false;
@@ -145,8 +145,8 @@ function BlockDecoder(opts) {
   this._type = null;
   this._codecs = opts.codecs;
   this._parseOpts = opts.parseOpts || {};
-  this._tap = new Tap(new Buffer(0));
-  this._blockTap = new Tap(new Buffer(0));
+  this._tap = new Tap(Buffer.alloc(0));
+  this._blockTap = new Tap(Buffer.alloc(0));
   this._syncMarker = null;
   this._readValue = null;
   this._decode = decode;
@@ -221,7 +221,7 @@ BlockDecoder.prototype._write = function (chunk, encoding, cb) {
   // in case we already have all the data (in which case `_write` wouldn't get
   // called anymore).
   this._write = this._writeChunk;
-  this._write(new Buffer(0), encoding, cb);
+  this._write(Buffer.alloc(0), encoding, cb);
 };
 
 BlockDecoder.prototype._writeChunk = function (chunk, encoding, cb) {
@@ -300,7 +300,7 @@ function RawEncoder(schema, opts) {
       this.emit('error', err);
     }
   };
-  this._tap = new Tap(new Buffer(opts.batchSize || 65536));
+  this._tap = new Tap(Buffer.alloc(opts.batchSize || 65536));
 }
 util.inherits(RawEncoder, stream.Transform);
 
@@ -318,7 +318,7 @@ RawEncoder.prototype._transform = function (val, encoding, cb) {
     var len = tap.pos - pos;
     if (len > buf.length) {
       // Not enough space for last written object, need to resize.
-      tap.buf = new Buffer(2 * len);
+      tap.buf = Buffer.alloc(2 * len);
     }
     tap.pos = 0;
     this._writeValue(tap, val); // Rewrite last failed write.
@@ -380,7 +380,7 @@ function BlockEncoder(schema, opts) {
     }
   };
   this._blockSize = opts.blockSize || 65536;
-  this._tap = new Tap(new Buffer(this._blockSize));
+  this._tap = new Tap(Buffer.alloc(this._blockSize));
   this._codecs = opts.codecs;
   this._codec = opts.codec || 'null';
   this._compress = null;
@@ -423,8 +423,8 @@ BlockEncoder.prototype._write = function (val, encoding, cb) {
 
   if (!this._omitHeader) {
     var meta = {
-      'avro.schema': new Buffer(this._schema || this._type.getSchema()),
-      'avro.codec': new Buffer(this._codec)
+      'avro.schema': Buffer.from(this._schema || this._type.getSchema()),
+      'avro.codec': Buffer.from(this._codec)
     };
     var Header = HEADER_TYPE.getRecordConstructor();
     var header = new Header(MAGIC_BYTES, meta, this._syncMarker);
@@ -449,7 +449,7 @@ BlockEncoder.prototype._writeChunk = function (val, encoding, cb) {
       // Not enough space for last written object, need to resize.
       this._blockSize = len * 2;
     }
-    tap.buf = new Buffer(this._blockSize);
+    tap.buf = Buffer.alloc(this._blockSize);
     tap.pos = 0;
     this._writeValue(tap, val); // Rewrite last failed write.
   }
@@ -514,7 +514,7 @@ function extractFileHeader(path, opts) {
   var decode = opts.decode === undefined ? true : !!opts.decode;
   var size = Math.max(opts.size || 4096, 4);
   var fd = fs.openSync(path, 'r');
-  var buf = new Buffer(size);
+  var buf = Buffer.alloc(size);
   var pos = 0;
   var tap = new Tap(buf);
   var header = null;
@@ -543,7 +543,7 @@ function extractFileHeader(path, opts) {
       return true;
     }
     var len = 2 * tap.buf.length;
-    var buf = new Buffer(len);
+    var buf = Buffer.alloc(len);
     len = fs.readSync(fd, buf, 0, len);
     tap.buf = Buffer.concat([tap.buf, buf]);
     tap.pos = 0;
@@ -627,7 +627,7 @@ function createReader(decode, type) {
  *
  */
 function copyBuffer(buf, pos, len) {
-  var copy = new Buffer(len);
+  var copy = Buffer.alloc(len);
   buf.copy(copy, 0, pos, pos + len);
   return copy;
 }

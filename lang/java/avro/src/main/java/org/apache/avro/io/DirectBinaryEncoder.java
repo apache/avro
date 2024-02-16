@@ -27,20 +27,20 @@ import java.util.Objects;
  * This encoder does not buffer writes, and as a result is slower than
  * {@link BufferedBinaryEncoder}. However, it is lighter-weight and useful when
  * the buffering in BufferedBinaryEncoder is not desired and/or the Encoder is
- * very short lived.
+ * very short-lived.
  * <p/>
  * To construct, use
  * {@link EncoderFactory#directBinaryEncoder(OutputStream, BinaryEncoder)}
  * <p/>
  * DirectBinaryEncoder is not thread-safe
- * 
+ *
  * @see BinaryEncoder
  * @see EncoderFactory
  * @see Encoder
  * @see Decoder
  */
 public class DirectBinaryEncoder extends BinaryEncoder {
-  private OutputStream out;
+  protected OutputStream out;
   // the buffer is used for writing floats, doubles, and large longs.
   private final byte[] buf = new byte[12];
 
@@ -48,7 +48,7 @@ public class DirectBinaryEncoder extends BinaryEncoder {
    * Create a writer that sends its output to the underlying stream
    * <code>out</code>.
    **/
-  DirectBinaryEncoder(OutputStream out) {
+  public DirectBinaryEncoder(OutputStream out) {
     configure(out);
   }
 
@@ -69,8 +69,8 @@ public class DirectBinaryEncoder extends BinaryEncoder {
   }
 
   /*
-   * buffering is slower for ints that encode to just 1 or two bytes, and and
-   * faster for large ones. (Sun JRE 1.6u22, x64 -server)
+   * buffering is slower for ints that encode to just 1 or two bytes, and faster
+   * for large ones. (Sun JRE 1.6u22, x64 -server)
    */
   @Override
   public void writeInt(int n) throws IOException {

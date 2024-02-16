@@ -18,12 +18,8 @@
 
 package org.apache.avro.mapreduce;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -46,18 +42,16 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestAvroKeyRecordWriter {
   @Test
-  public void testWrite() throws IOException {
+  void write() throws IOException {
     Schema writerSchema = Schema.create(Schema.Type.INT);
     GenericData dataModel = new ReflectData();
     CodecFactory compressionCodec = CodecFactory.nullCodec();
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    TaskAttemptContext context = createMock(TaskAttemptContext.class);
-
-    replay(context);
+    TaskAttemptContext context = mock(TaskAttemptContext.class);
 
     // Write an avro container file with two records: 1 and 2.
     AvroKeyRecordWriter<Integer> recordWriter = new AvroKeyRecordWriter<>(writerSchema, dataModel, compressionCodec,
@@ -65,8 +59,6 @@ public class TestAvroKeyRecordWriter {
     recordWriter.write(new AvroKey<>(1), NullWritable.get());
     recordWriter.write(new AvroKey<>(2), NullWritable.get());
     recordWriter.close(context);
-
-    verify(context);
 
     // Verify that the file was written as expected.
     InputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
@@ -81,17 +73,17 @@ public class TestAvroKeyRecordWriter {
     assertFalse(dataFileReader.hasNext()); // No more records.
 
     dataFileReader.close();
+
+    verify(context, never()).getConfiguration();
   }
 
   @Test
-  public void testSycnableWrite() throws IOException {
+  void sycnableWrite() throws IOException {
     Schema writerSchema = Schema.create(Schema.Type.INT);
     GenericData dataModel = new ReflectData();
     CodecFactory compressionCodec = CodecFactory.nullCodec();
     FileOutputStream outputStream = new FileOutputStream(new File("target/temp.avro"));
-    TaskAttemptContext context = createMock(TaskAttemptContext.class);
-
-    replay(context);
+    TaskAttemptContext context = mock(TaskAttemptContext.class);
 
     // Write an avro container file with two records: 1 and 2.
     AvroKeyRecordWriter<Integer> recordWriter = new AvroKeyRecordWriter<>(writerSchema, dataModel, compressionCodec,
@@ -101,8 +93,6 @@ public class TestAvroKeyRecordWriter {
     long positionTwo = recordWriter.sync();
     recordWriter.write(new AvroKey<>(2), NullWritable.get());
     recordWriter.close(context);
-
-    verify(context);
 
     // Verify that the file was written as expected.
     Configuration conf = new Configuration();
@@ -120,5 +110,7 @@ public class TestAvroKeyRecordWriter {
     assertEquals(1, dataFileReader.next());
 
     dataFileReader.close();
+
+    verify(context, never()).getConfiguration();
   }
 }

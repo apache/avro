@@ -17,6 +17,7 @@
  */
 package org.apache.avro.file;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.File;
@@ -58,12 +59,19 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
     // read magic header
     byte[] magic = new byte[MAGIC.length];
     in.seek(0);
-    for (int c = 0; c < magic.length; c = in.read(magic, c, magic.length - c)) {
+    int offset = 0;
+    int length = magic.length;
+    while (length > 0) {
+      int bytesRead = in.read(magic, offset, length);
+      if (bytesRead < 0)
+        throw new EOFException("Unexpected EOF with " + length + " bytes remaining to read");
+
+      length -= bytesRead;
+      offset += bytesRead;
     }
-    in.seek(0);
 
     if (Arrays.equals(MAGIC, magic)) // current format
-      return new DataFileReader<>(in, reader);
+      return new DataFileReader<>(in, reader, magic);
     if (Arrays.equals(DataFileReader12.MAGIC, magic)) // 1.2 format
       return new DataFileReader12<>(in, reader);
 
@@ -92,42 +100,47 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
    * Construct a reader for a file. For example,if you want to read a file
    * record,you need to close the resource. You can use try-with-resource as
    * follows:
-   * 
+   *
    * <pre>
    * try (FileReader<User> dataFileReader =
    * DataFileReader.openReader(file,datumReader)) { //Consume the reader } catch
    * (IOException e) { throw new RunTimeIOException(e,"Failed to read metadata for
    * file: %s", file); }
-   * 
+   *
    * <pre/>
    */
   public DataFileReader(File file, DatumReader<D> reader) throws IOException {
-    this(new SeekableFileInput(file), reader, true);
+    this(new SeekableFileInput(file), reader, true, null);
   }
 
   /**
    * Construct a reader for a file. For example,if you want to read a file
    * record,you need to close the resource. You can use try-with-resource as
    * follows:
-   * 
+   *
    * <pre>
    * try (FileReader<User> dataFileReader =
    * DataFileReader.openReader(file,datumReader)) { //Consume the reader } catch
    * (IOException e) { throw new RunTimeIOException(e,"Failed to read metadata for
    * file: %s", file); }
-   * 
+   *
    * <pre/>
    */
   public DataFileReader(SeekableInput sin, DatumReader<D> reader) throws IOException {
-    this(sin, reader, false);
+    this(sin, reader, false, null);
+  }
+
+  private DataFileReader(SeekableInput sin, DatumReader<D> reader, byte[] magic) throws IOException {
+    this(sin, reader, false, magic);
   }
 
   /** Construct a reader for a file. Please close resource files yourself. */
-  protected DataFileReader(SeekableInput sin, DatumReader<D> reader, boolean closeOnError) throws IOException {
+  protected DataFileReader(SeekableInput sin, DatumReader<D> reader, boolean closeOnError, byte[] magic)
+      throws IOException {
     super(reader);
     try {
       this.sin = new SeekableInputStream(sin);
-      initialize(this.sin);
+      initialize(this.sin, magic);
       blockFinished();
     } catch (final Throwable e) {
       if (closeOnError) {
@@ -144,7 +157,7 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
   protected DataFileReader(SeekableInput sin, DatumReader<D> reader, Header header) throws IOException {
     super(reader);
     this.sin = new SeekableInputStream(sin);
-    initialize(this.sin, header);
+    initialize(header);
   }
 
   /**
@@ -171,7 +184,7 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
     seek(position);
     // work around an issue where 1.5.4 C stored sync in metadata
     if ((position == 0L) && (getMeta("avro.sync") != null)) {
-      initialize(sin); // re-init to skip header
+      initialize(sin, null); // re-init to skip header
       return;
     }
 

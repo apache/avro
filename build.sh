@@ -39,11 +39,25 @@ change_java_version() {
 
 # ===========================================================================
 
+# This might not have been sourced if the entrypoint is not bash
+[[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
+
 set -xe
 cd "${0%/*}"
 
 VERSION=$(<share/VERSION.txt)
-DOCKER_XTRA_ARGS=""
+
+# Extra flags to add to the docker run command.  This can be overridden using the --args argument.
+DOCKER_RUN_XTRA_ARGS=${DOCKER_RUN_XTRA_ARGS-}
+# The entrypoint when running the avro docker from this script.
+DOCKER_RUN_ENTRYPOINT=${DOCKER_RUN_ENTRYPOINT-bash}
+# Extra flags to add to the docker build command.
+DOCKER_BUILD_XTRA_ARGS=${DOCKER_BUILD_XTRA_ARGS-}
+# Override the docker image name used.
+DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME-}
+
+# When building a docker container, these are the files that will sent and available.
+DOCKER_EXTRA_CONTEXT="lang/ruby/Gemfile lang/ruby/avro.gemspec lang/ruby/Manifest share/VERSION.txt"
 
 usage() {
   echo "Usage: $0 {lint|test|dist|sign|clean|veryclean|docker [--args \"docker-args\"]|rat|githooks|docker-test}"
@@ -86,35 +100,32 @@ do
       # install java artifacts required by other builds and interop tests
       mvn -B install -DskipTests
       (cd lang/py && ./build.sh lint test)
-      (cd lang/py3 && ./build.sh lint test)
       (cd lang/c; ./build.sh test)
       (cd lang/c++; ./build.sh lint test)
       (cd lang/csharp; ./build.sh test)
       (cd lang/js; ./build.sh lint test)
       (cd lang/ruby; ./build.sh lint test)
-      (cd lang/php; ./build.sh test)
+      (cd lang/php; ./build.sh lint test)
       (cd lang/perl; ./build.sh lint test)
+      (cd lang/rust; ./build.sh lint test)
 
       (cd lang/py; ./build.sh interop-data-generate)
-      (cd lang/py3; python3 setup.py generate_interop_data \
-        --schema-file=../../share/test/schemas/interop.avsc --output-path=../../build/interop/data)
       (cd lang/c; ./build.sh interop-data-generate)
       #(cd lang/c++; make interop-data-generate)
       (cd lang/csharp; ./build.sh interop-data-generate)
       (cd lang/js; ./build.sh interop-data-generate)
-      (cd lang/ruby; rake generate_interop)
+      (cd lang/ruby; ./build.sh interop-data-generate)
       (cd lang/php; ./build.sh interop-data-generate)
       (cd lang/perl; ./build.sh interop-data-generate)
 
       # run interop data tests
       (cd lang/java/ipc; mvn -B test -P interop-data-test)
       (cd lang/py; ./build.sh interop-data-test)
-      (cd lang/py3; python3 setup.py test --test-suite avro.tests.test_datafile_interop.TestDataFileInterop)
       (cd lang/c; ./build.sh interop-data-test)
       #(cd lang/c++; make interop-data-test)
       (cd lang/csharp; ./build.sh interop-data-test)
       (cd lang/js; ./build.sh interop-data-test)
-      (cd lang/ruby; rake interop)
+      (cd lang/ruby; ./build.sh interop-data-test)
       (cd lang/php; ./build.sh test-interop)
       (cd lang/perl; ./build.sh interop-data-test)
 
@@ -156,20 +167,27 @@ do
       (mvn -N -P copy-artifacts antrun:run)
 
       (cd lang/py; ./build.sh dist)
-      (cd lang/py3; ./build.sh dist)
       (cd lang/c; ./build.sh dist)
       (cd lang/c++; ./build.sh dist)
       (cd lang/csharp; ./build.sh dist)
       (cd lang/js; ./build.sh dist)
       (cd lang/ruby; ./build.sh dist)
       (cd lang/php; ./build.sh dist)
+      (cd lang/rust; ./build.sh dist)
 
       mkdir -p dist/perl
       (cd lang/perl; ./build.sh dist)
       cp "lang/perl/Avro-$VERSION.tar.gz" dist/perl/
 
       # build docs
-      (cd doc; ant)
+      cp -r doc/ build/staging-web/
+      find build/staging-web/ -type f -print0 | xargs -0 sed -r -i "s#\+\+version\+\+#${VERSION,,}#g"
+      mv build/staging-web/content/en/docs/++version++ build/staging-web/content/en/docs/"${VERSION,,}"
+      read -n 1 -s -r -p "Build build/staging-web/ manually now. Press a key to continue..."
+      # If it was a SNAPSHOT, it was lowercased during the build.
+      cp -R build/staging-web/public/docs/"${VERSION,,}"/* "build/$DOC_DIR/"
+      cp -R "build/$DOC_DIR/api" build/staging-web/public/docs/"${VERSION,,}"/
+      ( cd build/staging-web/public/docs/; ln -s "${VERSION,,}" current )
       # add LICENSE and NOTICE for docs
       mkdir -p "build/$DOC_DIR"
       cp doc/LICENSE "build/$DOC_DIR"
@@ -193,7 +211,13 @@ do
         \! -name '*.asc' \! -name '*.txt' );
       do
         (cd "${f%/*}" && shasum -a 512 "${f##*/}") > "$f.sha512"
-        gpg --passphrase "$password" --armor --output "$f.asc" --detach-sig "$f"
+
+        if [ -z "$GPG_LOCAL_USER" ]; then
+          gpg --pinentry-mode loopback --passphrase "$password" --armor --output "$f.asc" --detach-sig "$f"
+        else
+          gpg --pinentry-mode loopback --local-user="$GPG_LOCAL_USER" --passphrase "$password" --armor --output "$f.asc" --detach-sig "$f"
+        fi
+
       done
 
       set -x
@@ -201,7 +225,7 @@ do
 
     clean)
       rm -rf build dist
-      (cd doc; ant clean)
+      rm -rf doc/public/ doc/resources/ doc/node_modules/ doc/package-lock.json doc/.hugo_build.lock
 
       (mvn -B clean)
       rm -rf lang/java/*/userlogs/
@@ -209,15 +233,6 @@ do
 
       (cd lang/py; ./build.sh clean)
       rm -rf lang/py/userlogs/
-
-      (cd lang/py3; python3 setup.py clean)
-      rm -rf lang/py3/dist
-      rm -rf lang/py3/avro_python3.egg-info
-      rm -f  lang/py3/avro/*.avsc
-      rm -f  lang/py3/avro/VERSION.txt
-      rm -rf lang/py3/avro/__pycache__/
-      rm -f  lang/py3/avro/tests/interop.avsc
-      rm -rf lang/py3/avro/tests/__pycache__/
 
       (cd lang/c; ./build.sh clean)
 
@@ -232,11 +247,13 @@ do
       (cd lang/php; ./build.sh clean)
 
       (cd lang/perl; ./build.sh clean)
+
+      (cd lang/rust; ./build.sh clean)
       ;;
 
     veryclean)
       rm -rf build dist
-      (cd doc; ant clean)
+      rm -rf doc/public/ doc/resources/ doc/node_modules/ doc/package-lock.json doc/.hugo_build.lock
 
       (mvn -B clean)
       rm -rf lang/java/*/userlogs/
@@ -244,15 +261,6 @@ do
 
       (cd lang/py; ./build.sh clean)
       rm -rf lang/py/userlogs/
-
-      (cd lang/py3; python3 setup.py clean)
-      rm -rf lang/py3/dist
-      rm -rf lang/py3/avro_python3.egg-info
-      rm -f  lang/py3/avro/*.avsc
-      rm -f  lang/py3/avro/VERSION.txt
-      rm -rf lang/py3/avro/__pycache__/
-      rm -f  lang/py3/avro/tests/interop.avsc
-      rm -rf lang/py3/avro/tests/__pycache__/
 
       (cd lang/c; ./build.sh clean)
 
@@ -267,20 +275,21 @@ do
       (cd lang/php; ./build.sh clean)
 
       (cd lang/perl; ./build.sh clean)
+
+      (cd lang/rust; ./build.sh clean)
 
       rm -rf lang/c++/build
       rm -rf lang/js/node_modules
       rm -rf lang/perl/inc/
       rm -rf lang/ruby/.gem/
       rm -rf lang/ruby/Gemfile.lock
-      rm -rf lang/py/lib/ivy-2.2.0.jar
       rm -rf lang/csharp/src/apache/ipc.test/bin/
       rm -rf lang/csharp/src/apache/ipc.test/obj
       ;;
 
     docker)
       if [[ $1 =~ ^--args ]]; then
-        DOCKER_XTRA_ARGS=$2
+        DOCKER_RUN_XTRA_ARGS=$2
         shift 2
       fi
       if [[ "$(uname -s)" = Linux ]]; then
@@ -292,16 +301,19 @@ do
         USER_ID=1000
         GROUP_ID=50
       fi
+      DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME:-"avro-build-$USER_NAME:latest"}
       {
         cat share/docker/Dockerfile
-        grep -vF 'FROM avro-build-ci' share/docker/DockerfileLocal
         echo "ENV HOME /home/$USER_NAME"
         echo "RUN getent group $GROUP_ID || groupadd -g $GROUP_ID $USER_NAME"
         echo "RUN getent passwd $USER_ID || useradd -g $GROUP_ID -u $USER_ID -k /root -m $USER_NAME"
+        echo "RUN mkdir -p /home/$USER_NAME/.m2/repository"
       } > Dockerfile
-      tar -cf- lang/ruby/Gemfile Dockerfile | docker build -t "avro-build-$USER_NAME" -
+      # Include the ruby gemspec for preinstallation.
+      # shellcheck disable=SC2086
+      tar -cf- Dockerfile $DOCKER_EXTRA_CONTEXT | DOCKER_BUILDKIT=1 docker build $DOCKER_BUILD_XTRA_ARGS -t "$DOCKER_IMAGE_NAME" -
       rm Dockerfile
-      # By mapping the .m2 directory you can do an mvn install from
+      # By mapping the .m2/repository directory you can do an mvn install from
       # within the container and use the result on your normal
       # system.  And this also is a significant speedup in subsequent
       # builds because the dependencies are downloaded only once.
@@ -311,15 +323,18 @@ do
       # Using :delegated will drop the "mvn install" time from over 30 minutes
       # down to under 10.  However, editing files from OSX may take a few
       # extra second before the changes are available within the docker container.
+      # shellcheck disable=SC2086
       docker run --rm -t -i \
-        --env "JAVA=${JAVA:-8}" \
+        --env "JAVA=${JAVA:-21}" \
         --user "${USER_NAME}" \
         --volume "${HOME}/.gnupg:/home/${USER_NAME}/.gnupg" \
-        --volume "${HOME}/.m2:/home/${USER_NAME}/.m2${DOCKER_MOUNT_FLAG}" \
+        --volume "${PWD}/share/docker/m2:/home/${USER_NAME}/.m2/" \
+        --volume "${PWD}/share/docker/m2/toolchains.xml:/home/${USER_NAME}/.m2/toolchains.xml" \
+        --volume "${HOME}/.m2/repository:/home/${USER_NAME}/.m2/repository${DOCKER_MOUNT_FLAG}" \
+        --volume "${HOME}/.m2/build-cache:/home/${USER_NAME}/.m2/build-cache${DOCKER_MOUNT_FLAG}" \
         --volume "${PWD}:/home/${USER_NAME}/avro${DOCKER_MOUNT_FLAG}" \
         --workdir "/home/${USER_NAME}/avro" \
-        ${DOCKER_XTRA_ARGS} \
-        "avro-build-${USER_NAME}" bash
+        ${DOCKER_RUN_XTRA_ARGS} "$DOCKER_IMAGE_NAME" ${DOCKER_RUN_ENTRYPOINT}
       ;;
 
     rat)
@@ -334,9 +349,9 @@ do
       ;;
 
     docker-test)
-      tar -cf- share/docker/Dockerfile lang/ruby/Gemfile |
-        docker build -t avro-test -f share/docker/Dockerfile -
-      docker run --rm -v "${PWD}:/avro/" --env "JAVA=${JAVA:-8}" avro-test /avro/share/docker/run-tests.sh
+      tar -cf- share/docker/Dockerfile $DOCKER_EXTRA_CONTEXT |
+        DOCKER_BUILDKIT=1 docker build -t avro-test -f share/docker/Dockerfile -
+      docker run --rm -v "${PWD}:/avro${DOCKER_MOUNT_FLAG}" --env "JAVA=${JAVA:-8}" avro-test /avro/share/docker/run-tests.sh
       ;;
 
     *)

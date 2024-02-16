@@ -17,15 +17,17 @@
  */
 package org.apache.avro.tool;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -43,23 +45,38 @@ public class TestSpecificCompilerTool {
   private static final File TEST_EXPECTED_OUTPUT_DIR = new File(TEST_DIR, "output");
   private static final File TEST_EXPECTED_POSITION = new File(TEST_EXPECTED_OUTPUT_DIR, "Position.java");
   private static final File TEST_EXPECTED_PLAYER = new File(TEST_EXPECTED_OUTPUT_DIR, "Player.java");
-  private static final File TEST_EXPECTED_FIELDVISIBILITYTEST = new File(TEST_EXPECTED_OUTPUT_DIR,
-      "FieldVisibilityTest.java");
+  private static final File TEST_EXPECTED_NO_SETTERS = new File(TEST_EXPECTED_OUTPUT_DIR, "NoSettersTest.java");
+  private static final File TEST_EXPECTED_OPTIONAL_GETTERS_FOR_NULLABLE_FIELDS = new File(TEST_EXPECTED_OUTPUT_DIR,
+      "OptionalGettersNullableFieldsTest.java");
+  private static final File TEST_EXPECTED_OPTIONAL_GETTERS_FOR_ALL_FIELDS = new File(TEST_EXPECTED_OUTPUT_DIR,
+      "OptionalGettersAllFieldsTest.java");
+  private static final File TEST_EXPECTED_ADD_EXTRA_OPTIONAL_GETTERS = new File(TEST_EXPECTED_OUTPUT_DIR,
+      "AddExtraOptionalGettersTest.java");
 
   private static final File TEST_EXPECTED_STRING_OUTPUT_DIR = new File(TEST_DIR, "output-string");
   private static final File TEST_EXPECTED_STRING_POSITION = new File(TEST_EXPECTED_STRING_OUTPUT_DIR,
       "avro/examples/baseball/Position.java");
   private static final File TEST_EXPECTED_STRING_PLAYER = new File(TEST_EXPECTED_STRING_OUTPUT_DIR,
       "avro/examples/baseball/Player.java");
+  private static final File TEST_EXPECTED_STRING_NULL_SAFE_ANNOTATIONS_TEST = new File(TEST_EXPECTED_STRING_OUTPUT_DIR,
+      "avro/examples/baseball/NullSafeAnnotationsFieldsTest.java");
   private static final File TEST_EXPECTED_STRING_FIELDTEST = new File(TEST_EXPECTED_STRING_OUTPUT_DIR,
       "avro/examples/baseball/FieldTest.java");
+  private static final File TEST_EXPECTED_STRING_PROTO = new File(TEST_EXPECTED_STRING_OUTPUT_DIR,
+      "avro/examples/baseball/Proto.java");
 
   // where test output goes
   private static final File TEST_OUTPUT_DIR = new File("target/compiler/output");
   private static final File TEST_OUTPUT_PLAYER = new File(TEST_OUTPUT_DIR, "avro/examples/baseball/Player.java");
   private static final File TEST_OUTPUT_POSITION = new File(TEST_OUTPUT_DIR, "avro/examples/baseball/Position.java");
-  private static final File TEST_OUTPUT_FIELDVISIBILITYTEST = new File(TEST_OUTPUT_DIR,
-      "avro/examples/baseball/FieldVisibilityTest.java");
+  private static final File TEST_OUTPUT_NO_SETTERS = new File(TEST_OUTPUT_DIR,
+      "avro/examples/baseball/NoSettersTest.java");
+  private static final File TEST_OUTPUT_OPTIONAL_GETTERS_NULLABLE_FIELDS = new File(TEST_OUTPUT_DIR,
+      "avro/examples/baseball/OptionalGettersNullableFieldsTest.java");
+  private static final File TEST_OUTPUT_OPTIONAL_GETTERS_ALL_FIELDS = new File(TEST_OUTPUT_DIR,
+      "avro/examples/baseball/OptionalGettersAllFieldsTest.java");
+  private static final File TEST_OUTPUT_ADD_EXTRA_OPTIONAL_GETTERS = new File(TEST_OUTPUT_DIR,
+      "avro/examples/baseball/AddExtraOptionalGettersTest.java");
 
   private static final File TEST_OUTPUT_STRING_DIR = new File("target/compiler/output-string");
   private static final File TEST_OUTPUT_STRING_PLAYER = new File(TEST_OUTPUT_STRING_DIR,
@@ -68,23 +85,63 @@ public class TestSpecificCompilerTool {
       "avro/examples/baseball/Position.java");
   private static final File TEST_OUTPUT_STRING_FIELDTEST = new File(TEST_OUTPUT_STRING_DIR,
       "avro/examples/baseball/FieldTest.java");
+  private static final File TEST_OUTPUT_STRING_NULL_SAFE_ANNOTATIONS_TEST = new File(TEST_OUTPUT_STRING_DIR,
+      "avro/examples/baseball/NullSafeAnnotationsFieldsTest.java");
+  private static final File TEST_OUTPUT_STRING_PROTO = new File(TEST_OUTPUT_STRING_DIR,
+      "avro/examples/baseball/Proto.java");
 
-  @Before
+  @BeforeEach
   public void setUp() {
     TEST_OUTPUT_DIR.delete();
   }
 
   @Test
-  public void testCompileSchemaWithFieldVisibility() throws Exception {
+  void compileSchemaWithExcludedSetters() throws Exception {
 
-    TEST_OUTPUT_FIELDVISIBILITYTEST.delete();
-    doCompile(new String[] { "-encoding", "UTF-8", "-fieldVisibility", "public_deprecated", "schema",
-        TEST_INPUT_DIR.toString() + "/fieldvisibilitytest.avsc", TEST_OUTPUT_DIR.getPath() });
-    assertFileMatch(TEST_EXPECTED_FIELDVISIBILITYTEST, TEST_OUTPUT_FIELDVISIBILITYTEST);
+    TEST_OUTPUT_NO_SETTERS.delete();
+    doCompile(new String[] { "-encoding", "UTF-8", "-noSetters", "schema",
+        TEST_INPUT_DIR.toString() + "/nosetterstest.avsc", TEST_OUTPUT_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_NO_SETTERS, TEST_OUTPUT_NO_SETTERS);
   }
 
   @Test
-  public void testCompileSchemaSingleFile() throws Exception {
+  void compileSchemaWithOptionalGettersForNullableFieldsOnly() throws Exception {
+
+    TEST_OUTPUT_OPTIONAL_GETTERS_NULLABLE_FIELDS.delete();
+    doCompile(new String[] { "-encoding", "UTF-8", "-optionalGetters", "only_nullable_fields", "schema",
+        TEST_INPUT_DIR.toString() + "/optionalgettersnullablefieldstest.avsc", TEST_OUTPUT_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_OPTIONAL_GETTERS_FOR_NULLABLE_FIELDS, TEST_OUTPUT_OPTIONAL_GETTERS_NULLABLE_FIELDS);
+  }
+
+  @Test
+  void compileSchemaWithNullSafeAnnotationsFields() throws Exception {
+
+    TEST_OUTPUT_STRING_NULL_SAFE_ANNOTATIONS_TEST.delete();
+    doCompile(new String[] { "-encoding", "UTF-8", "-nullSafeAnnotations", "-string", "schema",
+        TEST_INPUT_DIR.toString() + "/nullsafeannotationsfieldstest.avsc", TEST_OUTPUT_STRING_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_STRING_NULL_SAFE_ANNOTATIONS_TEST, TEST_OUTPUT_STRING_NULL_SAFE_ANNOTATIONS_TEST);
+  }
+
+  @Test
+  void compileSchemaWithOptionalGettersForAllFields() throws Exception {
+
+    TEST_OUTPUT_OPTIONAL_GETTERS_ALL_FIELDS.delete();
+    doCompile(new String[] { "-encoding", "UTF-8", "-optionalGetters", "all_fields", "schema",
+        TEST_INPUT_DIR.toString() + "/optionalgettersallfieldstest.avsc", TEST_OUTPUT_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_OPTIONAL_GETTERS_FOR_ALL_FIELDS, TEST_OUTPUT_OPTIONAL_GETTERS_ALL_FIELDS);
+  }
+
+  @Test
+  void compileSchemaWithAddExtraOptionalGetters() throws Exception {
+
+    TEST_OUTPUT_ADD_EXTRA_OPTIONAL_GETTERS.delete();
+    doCompile(new String[] { "-encoding", "UTF-8", "-addExtraOptionalGetters", "schema",
+        TEST_INPUT_DIR.toString() + "/addextraoptionalgetterstest.avsc", TEST_OUTPUT_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_ADD_EXTRA_OPTIONAL_GETTERS, TEST_OUTPUT_ADD_EXTRA_OPTIONAL_GETTERS);
+  }
+
+  @Test
+  void compileSchemaSingleFile() throws Exception {
 
     doCompile(new String[] { "-encoding", "UTF-8", "schema", TEST_INPUT_DIR.toString() + "/position.avsc",
         TEST_OUTPUT_DIR.getPath() });
@@ -92,7 +149,7 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
-  public void testCompileSchemaTwoFiles() throws Exception {
+  void compileSchemaTwoFiles() throws Exception {
 
     doCompile(new String[] { "-encoding", "UTF-8", "schema", TEST_INPUT_DIR.toString() + "/position.avsc",
         TEST_INPUT_DIR.toString() + "/player.avsc", TEST_OUTPUT_DIR.getPath() });
@@ -101,7 +158,7 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
-  public void testCompileSchemaFileAndDirectory() throws Exception {
+  void compileSchemaFileAndDirectory() throws Exception {
 
     doCompile(new String[] { "-encoding", "UTF-8", "schema", TEST_INPUT_DIR.toString() + "/position.avsc",
         TEST_INPUT_DIR.toString(), TEST_OUTPUT_DIR.getPath() });
@@ -110,7 +167,7 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
-  public void testCompileSchemasUsingString() throws Exception {
+  void compileSchemasUsingString() throws Exception {
 
     doCompile(new String[] { "-encoding", "UTF-8", "-string", "schema", TEST_INPUT_DIR.toString() + "/position.avsc",
         TEST_INPUT_DIR.toString() + "/player.avsc", TEST_OUTPUT_STRING_DIR.getPath() });
@@ -119,7 +176,7 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
-  public void testCompileSchemasWithVariousFieldTypes() throws Exception {
+  void compileSchemasWithVariousFieldTypes() throws Exception {
 
     doCompile(new String[] { "-encoding", "UTF-8", "-string", "schema", TEST_INPUT_DIR.toString() + "/fieldtest.avsc",
         TEST_INPUT_DIR.toString() + "/fieldtest.avsc", TEST_OUTPUT_STRING_DIR.getPath() });
@@ -127,7 +184,7 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
-  public void testOrderingOfFlags() throws Exception {
+  void orderingOfFlags() throws Exception {
 
     // Order of Flags as per initial implementation
     doCompile(new String[] { "-encoding", "UTF-8", "-string", "-bigDecimal", "schema",
@@ -154,6 +211,15 @@ public class TestSpecificCompilerTool {
     assertFileMatch(TEST_EXPECTED_STRING_FIELDTEST, TEST_OUTPUT_STRING_FIELDTEST);
   }
 
+  @Test
+  void compileProtocol() throws Exception {
+
+    doCompile(new String[] { "-encoding", "UTF-8", "protocol", TEST_INPUT_DIR.toString() + "/proto.avpr",
+        TEST_OUTPUT_STRING_DIR.getPath() });
+
+    assertFileMatch(TEST_EXPECTED_STRING_PROTO, TEST_OUTPUT_STRING_PROTO);
+  }
+
   // Runs the actual compiler tool with the given input args
   private void doCompile(String[] args) throws Exception {
     SpecificCompilerTool tool = new SpecificCompilerTool();
@@ -171,8 +237,8 @@ public class TestSpecificCompilerTool {
    * https://download.oracle.com/javase/6/docs/api/javax/tools/JavaCompiler.html
    */
   private static void assertFileMatch(File expected, File found) throws IOException {
-    Assert.assertEquals("Found file: " + found + " does not match expected file: " + expected, readFile(expected),
-        readFile(found));
+    assertEquals(readFile(expected), readFile(found),
+        "Found file: " + found + " does not match expected file: " + expected);
   }
 
   /**
@@ -180,7 +246,8 @@ public class TestSpecificCompilerTool {
    * file content and comparing provides nice diffs via JUnit when failures occur.
    */
   private static String readFile(File file) throws IOException {
-    BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+    BufferedReader reader = new BufferedReader(
+        new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
     StringBuilder sb = new StringBuilder();
     String line = null;
     boolean first = true;

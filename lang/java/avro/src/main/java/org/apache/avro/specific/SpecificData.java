@@ -17,36 +17,42 @@
  */
 package org.apache.avro.specific;
 
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Type;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.ClassUtils;
+import org.apache.avro.util.MapUtil;
+import org.apache.avro.util.SchemaUtil;
+import org.apache.avro.util.internal.ClassValueCache;
+
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.nio.ByteBuffer;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.ParameterizedType;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-
-import org.apache.avro.Schema;
-import org.apache.avro.Protocol;
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.AvroTypeException;
-import org.apache.avro.Schema.Type;
-import org.apache.avro.util.ClassUtils;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.BinaryDecoder;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 
 /** Utilities for generated Java classes and interfaces. */
 public class SpecificData extends GenericData {
@@ -55,39 +61,81 @@ public class SpecificData extends GenericData {
 
   private static final Class<?>[] NO_ARG = new Class[] {};
   private static final Class<?>[] SCHEMA_ARG = new Class[] { Schema.class };
-  private static final ClassValue<Constructor> CTOR_CACHE = new ClassValue<Constructor>() {
-    @Override
-    protected Constructor computeValue(Class<?> c) {
-      boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
-      try {
-        Constructor meth = c.getDeclaredConstructor(useSchema ? SCHEMA_ARG : NO_ARG);
-        meth.setAccessible(true);
-        return meth;
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
 
-  };
+  private static final Function<Class<?>, Constructor<?>> CTOR_CACHE = new ClassValueCache<>(c -> {
+    boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
+    try {
+      Constructor<?> meth = c.getDeclaredConstructor(useSchema ? SCHEMA_ARG : NO_ARG);
+      meth.setAccessible(true);
+      return meth;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  });
+
+  private static final Function<Class<?>, SpecificData> MODEL_CACHE = new ClassValueCache<>(c -> {
+    Field specificDataField;
+    try {
+      specificDataField = c.getDeclaredField("MODEL$");
+      specificDataField.setAccessible(true);
+      return (SpecificData) specificDataField.get(null);
+    } catch (NoSuchFieldException e) {
+      // Return default instance
+      return SpecificData.get();
+    } catch (IllegalAccessException e) {
+      throw new AvroRuntimeException("while trying to access field MODEL$ on " + c.getCanonicalName(), e);
+    }
+  });
 
   public static final String CLASS_PROP = "java-class";
   public static final String KEY_CLASS_PROP = "java-key-class";
   public static final String ELEMENT_PROP = "java-element-class";
 
+  public static final char RESERVED_WORD_ESCAPE_CHAR = '$';
+
   /**
-   * List of Java reserved words from
-   * https://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html#jls-3.9 combined
-   * with the boolean and null literals. combined with the classnames used
-   * internally in the generated avro code.
+   * Reserved words from
+   * https://docs.oracle.com/javase/specs/jls/se16/html/jls-3.html require
+   * mangling in order to be used in generated Java code.
    */
-  public static final Set<String> RESERVED_WORDS = new HashSet<>(
-      Arrays.asList("abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const",
-          "continue", "default", "do", "double", "else", "enum", "extends", "false", "final", "finally", "float", "for",
-          "goto", "if", "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "null",
-          "package", "private", "protected", "public", "return", "short", "static", "strictfp", "super", "switch",
-          "synchronized", "this", "throw", "throws", "transient", "true", "try", "void", "volatile", "while",
-          /* classnames use internally by the avro code generator */
-          "Builder"));
+  public static final Set<String> RESERVED_WORDS = new HashSet<>(Arrays.asList(
+      // Keywords from Section 3.9 can't be used as identifiers.
+      "_", "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue",
+      "default", "do", "double", "else", "enum", "extends", "final", "finally", "float", "for", "goto", "if",
+      "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "package", "private",
+      "protected", "public", "return", "short", "static", "strictfp", "super", "switch", "synchronized", "this",
+      "throw", "throws", "transient", "try", "void", "volatile", "while",
+      // Literals from Section 3.10 can't be used as identifiers.
+      "true", "false", "null",
+      // Note that module-related restricted keywords can still be used.
+      // Class names used internally by the avro code generator
+      "Builder"));
+
+  /* Reserved words for accessor/mutator methods */
+  public static final Set<String> ACCESSOR_MUTATOR_RESERVED_WORDS = new HashSet<>(
+      Arrays.asList("class", "schema", "classSchema"));
+
+  static {
+    // Add reserved words to accessor/mutator reserved words
+    ACCESSOR_MUTATOR_RESERVED_WORDS.addAll(RESERVED_WORDS);
+  }
+
+  /* Reserved words for type identifiers */
+  public static final Set<String> TYPE_IDENTIFIER_RESERVED_WORDS = new HashSet<>(
+      Arrays.asList("var", "yield", "record"));
+
+  static {
+    // Add reserved words to type identifier reserved words
+    TYPE_IDENTIFIER_RESERVED_WORDS.addAll(RESERVED_WORDS);
+  }
+
+  /* Reserved words for error types */
+  public static final Set<String> ERROR_RESERVED_WORDS = new HashSet<>(Arrays.asList("message", "cause"));
+
+  static {
+    // Add accessor/mutator reserved words to error reserved words
+    ERROR_RESERVED_WORDS.addAll(ACCESSOR_MUTATOR_RESERVED_WORDS);
+  }
 
   /**
    * Read/write some common builtin classes as strings. Representing these as
@@ -130,25 +178,19 @@ public class SpecificData extends GenericData {
   }
 
   /**
-   * For RECORD type schemas, this method returns the SpecificData instance of the
-   * class associated with the schema, in order to get the right conversions for
-   * any logical types used.
+   * For RECORD and UNION type schemas, this method returns the SpecificData
+   * instance of the class associated with the schema, in order to get the right
+   * conversions for any logical types used.
    *
    * @param reader the reader schema
    * @return the SpecificData associated with the schema's class, or the default
    *         instance.
    */
   public static SpecificData getForSchema(Schema reader) {
-    if (reader != null && reader.getType() == Type.RECORD) {
-      final String className = getClassName(reader);
-      if (className != null) {
-        final Class<?> clazz;
-        try {
-          clazz = Class.forName(className);
-          return getForClass(clazz);
-        } catch (ClassNotFoundException e) {
-          return SpecificData.get();
-        }
+    if (reader != null && (reader.getType() == Type.RECORD || reader.getType() == Type.UNION)) {
+      final Class<?> clazz = SpecificData.get().getClass(reader);
+      if (clazz != null) {
+        return getForClass(clazz);
       }
     }
     return SpecificData.get();
@@ -161,24 +203,14 @@ public class SpecificData extends GenericData {
    * Falls back to the default instance {@link SpecificData#get()} for other
    * classes or if the field is not found.
    *
-   * @param c A class
-   * @param   <T> .
+   * @param c   A class
+   * @param <T> .
    * @return The SpecificData from the SpecificRecordBase instance, or the default
    *         SpecificData instance.
    */
   public static <T> SpecificData getForClass(Class<T> c) {
     if (SpecificRecordBase.class.isAssignableFrom(c)) {
-      final Field specificDataField;
-      try {
-        specificDataField = c.getDeclaredField("MODEL$");
-        specificDataField.setAccessible(true);
-        return (SpecificData) specificDataField.get(null);
-      } catch (NoSuchFieldException e) {
-        // Return default instance
-        return SpecificData.get();
-      } catch (IllegalAccessException e) {
-        throw new AvroRuntimeException(e);
-      }
+      return MODEL_CACHE.apply(c);
     }
     return SpecificData.get();
   }
@@ -188,7 +220,7 @@ public class SpecificData extends GenericData {
 
   /**
    * Retrieve the current value of the custom-coders feature flag. Defaults to
-   * <code>true</code>, but this default can be overriden using the system
+   * <code>false</code>, but this default can be overridden using the system
    * property <code>org.apache.avro.specific.use_custom_coders</code>, and can be
    * set dynamically by {@link SpecificData#useCustomCoders()}. See <a
    * href="https://avro.apache.org/docs/current/gettingstartedjava.html#Beta+feature:+Generating+faster+code"Getting
@@ -226,11 +258,117 @@ public class SpecificData extends GenericData {
     return (datum instanceof Enum) ? getSchema(datum.getClass()) : super.getEnumSchema(datum);
   }
 
-  private Map<String, Class> classCache = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, Class> classCache = new ConcurrentHashMap<>();
 
   private static final Class NO_CLASS = new Object() {
   }.getClass();
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
+
+  /**
+   * Utility to mangle the fully qualified class name into a valid symbol.
+   */
+  public static String mangleFullyQualified(String fullName) {
+    int lastDot = fullName.lastIndexOf('.');
+
+    if (lastDot < 0) {
+      return mangleTypeIdentifier(fullName);
+    } else {
+      String namespace = fullName.substring(0, lastDot);
+      String typeName = fullName.substring(lastDot + 1);
+
+      return mangle(namespace) + "." + mangleTypeIdentifier(typeName);
+    }
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words.
+   */
+  public static String mangle(String word) {
+    return mangle(word, false);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words.
+   */
+  public static String mangle(String word, boolean isError) {
+    return mangle(word, isError ? ERROR_RESERVED_WORDS : RESERVED_WORDS);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words in type
+   * identifiers.
+   */
+  public static String mangleTypeIdentifier(String word) {
+    return mangleTypeIdentifier(word, false);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words in type
+   * identifiers.
+   */
+  public static String mangleTypeIdentifier(String word, boolean isError) {
+    return mangle(word, isError ? ERROR_RESERVED_WORDS : TYPE_IDENTIFIER_RESERVED_WORDS);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words.
+   */
+  public static String mangle(String word, Set<String> reservedWords) {
+    return mangle(word, reservedWords, false);
+  }
+
+  public static String mangleMethod(String word, boolean isError) {
+    return mangle(word, isError ? ERROR_RESERVED_WORDS : ACCESSOR_MUTATOR_RESERVED_WORDS, true);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words.
+   */
+  public static String mangle(String word, Set<String> reservedWords, boolean isMethod) {
+    if (isBlank(word)) {
+      return word;
+    }
+    if (word.contains(".")) {
+      // If the 'word' is really a full path of a class we must mangle just the
+      String[] packageWords = word.split("\\.");
+      String[] newPackageWords = new String[packageWords.length];
+
+      for (int i = 0; i < packageWords.length; i++) {
+        String oldName = packageWords[i];
+        newPackageWords[i] = mangle(oldName, reservedWords, false);
+      }
+
+      return String.join(".", newPackageWords);
+    }
+    if (reservedWords.contains(word) || (isMethod && reservedWords
+        .contains(Character.toLowerCase(word.charAt(0)) + ((word.length() > 1) ? word.substring(1) : "")))) {
+      return word + "$";
+    }
+    return word;
+  }
+
+  /** Undoes mangling for reserved words. */
+  protected static String unmangle(String word) {
+    while (word.endsWith("$")) {
+      word = word.substring(0, word.length() - 1);
+    }
+    return word;
+  }
+
+  private static boolean isBlank(CharSequence cs) {
+    int strLen = cs == null ? 0 : cs.length();
+    if (strLen == 0) {
+      return true;
+    } else {
+      for (int i = 0; i < strLen; ++i) {
+        if (!Character.isWhitespace(cs.charAt(i))) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+  }
 
   /** Return the class that implements a schema, or null if none exists. */
   public Class getClass(Schema schema) {
@@ -241,15 +379,24 @@ public class SpecificData extends GenericData {
       String name = schema.getFullName();
       if (name == null)
         return null;
-      Class c = classCache.computeIfAbsent(name, n -> {
+      Class<?> c = MapUtil.computeIfAbsent(classCache, name, n -> {
         try {
           return ClassUtils.forName(getClassLoader(), getClassName(schema));
         } catch (ClassNotFoundException e) {
-          try { // nested class?
-            return ClassUtils.forName(getClassLoader(), getNestedClassName(schema));
-          } catch (ClassNotFoundException ex) {
-            return NO_CLASS;
+          // This might be a nested namespace. Try using the last tokens in the
+          // namespace as an enclosing class by progressively replacing period
+          // delimiters with $
+          StringBuilder nestedName = new StringBuilder(n);
+          int lastDot = n.lastIndexOf('.');
+          while (lastDot != -1) {
+            nestedName.setCharAt(lastDot, '$');
+            try {
+              return ClassUtils.forName(getClassLoader(), nestedName.toString());
+            } catch (ClassNotFoundException ignored) {
+            }
+            lastDot = n.lastIndexOf('.', lastDot - 1);
           }
+          return NO_CLASS;
         }
       });
       return c == NO_CLASS ? null : c;
@@ -309,25 +456,12 @@ public class SpecificData extends GenericData {
     if (namespace == null || "".equals(namespace))
       return name;
     String dot = namespace.endsWith("$") ? "" : "."; // back-compatibly handle $
-    return namespace + dot + name;
-  }
-
-  private String getNestedClassName(Schema schema) {
-    String namespace = schema.getNamespace();
-    String name = schema.getName();
-    if (namespace == null || "".equals(namespace))
-      return name;
-    return namespace + "$" + name;
+    return mangle(namespace) + dot + mangleTypeIdentifier(name);
   }
 
   // cache for schemas created from Class objects. Use ClassValue to avoid
   // locking classloaders and is GC and thread safe.
-  private final ClassValue<Schema> schemaClassCache = new ClassValue<Schema>() {
-    @Override
-    protected Schema computeValue(Class<?> type) {
-      return createSchema(type, new HashMap<>());
-    }
-  };
+  private final ClassValueCache<Schema> schemaClassCache = new ClassValueCache<>(c -> createSchema(c, new HashMap<>()));
   // for non-class objects, use a WeakHashMap, but this needs a sync block around
   // it
   private final Map<java.lang.reflect.Type, Schema> schemaTypeCache = Collections.synchronizedMap(new WeakHashMap<>());
@@ -336,7 +470,7 @@ public class SpecificData extends GenericData {
   public Schema getSchema(java.lang.reflect.Type type) {
     try {
       if (type instanceof Class) {
-        return schemaClassCache.get((Class<?>) type);
+        return schemaClassCache.apply((Class<?>) type);
       }
       return schemaTypeCache.computeIfAbsent(type, t -> createSchema(t, new HashMap<>()));
     } catch (Exception e) {
@@ -374,9 +508,11 @@ public class SpecificData extends GenericData {
       } else if (Map.class.isAssignableFrom(raw)) { // map
         java.lang.reflect.Type key = params[0];
         java.lang.reflect.Type value = params[1];
-        if (!(key instanceof Class && CharSequence.class.isAssignableFrom((Class) key)))
-          throw new AvroTypeException("Map key class not CharSequence: " + key);
+        if (!(key instanceof Class && CharSequence.class.isAssignableFrom((Class<?>) key)))
+          throw new AvroTypeException("Map key class not CharSequence: " + SchemaUtil.describe(key));
         return Schema.createMap(createSchema(value, names));
+      } else if (Optional.class.isAssignableFrom(raw)) {
+        return Schema.createUnion(Schema.create(Schema.Type.NULL), createSchema(params[0], names));
       } else {
         return createSchema(raw, names);
       }
@@ -460,7 +596,7 @@ public class SpecificData extends GenericData {
     boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
     Object result;
     try {
-      Constructor meth = CTOR_CACHE.get(c);
+      Constructor<?> meth = CTOR_CACHE.apply(c);
       result = meth.newInstance(useSchema ? new Object[] { s } : null);
     } catch (Exception e) {
       throw new RuntimeException(e);
@@ -498,7 +634,7 @@ public class SpecificData extends GenericData {
     }
 
     boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
-    Constructor meth = (Constructor) CTOR_CACHE.get(c);
+    Constructor<?> meth = CTOR_CACHE.apply(c);
     Object[] params = useSchema ? new Object[] { schema } : (Object[]) null;
 
     return (old, sch) -> {

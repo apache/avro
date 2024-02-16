@@ -18,29 +18,33 @@
 
 package org.apache.avro.mapred;
 
-import org.junit.Assert;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.StringTokenizer;
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapred.*;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.StringTokenizer;
+import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.FileOutputFormat;
+import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.Reporter;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestAvroMultipleOutputs {
 
-  @Rule
-  public TemporaryFolder INPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public File INPUT_DIR;
 
-  @Rule
-  public TemporaryFolder OUTPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public File OUTPUT_DIR;
 
   public static class MapImpl extends AvroMapper<Utf8, Pair<Utf8, Long>> {
     private AvroMultipleOutputs amos;
@@ -85,14 +89,15 @@ public class TestAvroMultipleOutputs {
       collector.collect(new Pair<>(word, sum));
     }
 
+    @Override
     public void close() throws IOException {
       amos.close();
     }
   }
 
   @Test
-  public void runTestsInOrder() throws Exception {
-    String avroPath = OUTPUT_DIR.getRoot().getPath();
+  void runTestsInOrder() throws Exception {
+    String avroPath = OUTPUT_DIR.getPath();
     testJob(avroPath);
     testProjection(avroPath);
     testProjectionNewMethodsOne(avroPath);
@@ -106,7 +111,7 @@ public class TestAvroMultipleOutputs {
   public void testJob(String pathOut) throws Exception {
     JobConf job = new JobConf();
 
-    String pathIn = INPUT_DIR.getRoot().getPath();
+    String pathIn = INPUT_DIR.getPath();
 
     File fileIn = new File(pathIn, "lines.avro");
     Path outputPath = new Path(pathOut);
@@ -162,19 +167,19 @@ public class TestAvroMultipleOutputs {
     long sumOfCounts = 0;
     long numOfCounts = 0;
     while (recordReader.next(inputPair, ignore)) {
-      Assert.assertEquals(inputPair.datum().get(0), defaultRank);
+      assertEquals(inputPair.datum().get(0), defaultRank);
       sumOfCounts += (Long) inputPair.datum().get(1);
       numOfCounts++;
     }
 
-    Assert.assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
+    assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
 
     long actualSumOfCounts = 0;
     for (Long count : WordCountUtil.COUNTS.values()) {
       actualSumOfCounts += count;
     }
 
-    Assert.assertEquals(sumOfCounts, actualSumOfCounts);
+    assertEquals(sumOfCounts, actualSumOfCounts);
   }
 
   @SuppressWarnings("deprecation")
@@ -202,19 +207,19 @@ public class TestAvroMultipleOutputs {
     long sumOfCounts = 0;
     long numOfCounts = 0;
     while (recordReader.next(inputPair, ignore)) {
-      Assert.assertEquals(inputPair.datum().get(0), defaultRank);
+      assertEquals(inputPair.datum().get(0), defaultRank);
       sumOfCounts += (Long) inputPair.datum().get(1);
       numOfCounts++;
     }
 
-    Assert.assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
+    assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
 
     long actualSumOfCounts = 0;
     for (Long count : WordCountUtil.COUNTS.values()) {
       actualSumOfCounts += count;
     }
 
-    Assert.assertEquals(sumOfCounts, actualSumOfCounts);
+    assertEquals(sumOfCounts, actualSumOfCounts);
 
   }
 
@@ -237,12 +242,12 @@ public class TestAvroMultipleOutputs {
       sumOfCounts += Long.parseLong(inputPair.datum().toString().split(":")[2].replace("}", "").trim());
       numOfCounts++;
     }
-    Assert.assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
+    assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
     long actualSumOfCounts = 0;
     for (Long count : WordCountUtil.COUNTS.values()) {
       actualSumOfCounts += count;
     }
-    Assert.assertEquals(sumOfCounts, actualSumOfCounts);
+    assertEquals(sumOfCounts, actualSumOfCounts);
   }
 
   @SuppressWarnings("deprecation")
@@ -264,12 +269,12 @@ public class TestAvroMultipleOutputs {
       sumOfCounts += Long.parseLong(inputPair.datum().toString().split(":")[2].replace("}", "").trim());
       numOfCounts++;
     }
-    Assert.assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
+    assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
     long actualSumOfCounts = 0;
     for (Long count : WordCountUtil.COUNTS.values()) {
       actualSumOfCounts += count;
     }
-    Assert.assertEquals(sumOfCounts, actualSumOfCounts);
+    assertEquals(sumOfCounts, actualSumOfCounts);
   }
 
   @SuppressWarnings("deprecation")
@@ -277,10 +282,10 @@ public class TestAvroMultipleOutputs {
     JobConf job = new JobConf();
     job.setNumReduceTasks(0);
 
-    Path outputPath = new Path(OUTPUT_DIR.getRoot().getPath());
-    outputPath.getFileSystem(job).delete(outputPath);
+    Path outputPath = new Path(OUTPUT_DIR.getPath());
+    outputPath.getFileSystem(job).delete(outputPath, true);
 
-    WordCountUtil.writeLinesFile(new File(INPUT_DIR.getRoot(), "lines.avro"));
+    WordCountUtil.writeLinesFile(new File(INPUT_DIR, "lines.avro"));
 
     job.setJobName("AvroMultipleOutputs_noreducer");
 
@@ -289,7 +294,7 @@ public class TestAvroMultipleOutputs {
 
     AvroJob.setMapperClass(job, MapImpl.class);
 
-    FileInputFormat.setInputPaths(job, new Path(INPUT_DIR.getRoot().toString()));
+    FileInputFormat.setInputPaths(job, new Path(INPUT_DIR.toString()));
     FileOutputFormat.setOutputPath(job, outputPath);
     FileOutputFormat.setCompressOutput(job, false);
     AvroMultipleOutputs.addNamedOutput(job, "myavro2", AvroOutputFormat.class, Schema.create(Schema.Type.STRING));
@@ -309,7 +314,7 @@ public class TestAvroMultipleOutputs {
     NullWritable ignore = NullWritable.get();
     while (recordReader.next(inputPair, ignore)) {
       long testl = Long.parseLong(inputPair.datum().toString().split(":")[2].replace("}", "").trim());
-      Assert.assertEquals(onel, testl);
+      assertEquals(onel, testl);
     }
   }
 }

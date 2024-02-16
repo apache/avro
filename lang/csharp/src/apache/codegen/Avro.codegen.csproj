@@ -20,10 +20,15 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <!--
+    Support .NET Core 3.1 (LTS), .NET 5.0, .NET 6.0 (LTS)
+    When installing with 'dotnet tool install', the proper/supported framework will be selected,
+    unless framework is explicitly specified with 'dotnet tool install'
+    https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-tool-install
+    -->
+    <TargetFrameworks>$(DefaultExeTargetFrameworks)</TargetFrameworks>
     <AssemblyName>avrogen</AssemblyName>
     <RootNamespace>Avro.codegen</RootNamespace>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\Avro.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
@@ -42,6 +47,14 @@
       Remote procedure call (RPC).
       Simple integration with dynamic languages. Code generation is not required to read or write data files nor to use or implement RPC protocols. Code generation as an optional optimization, only worth implementing for statically typed languages.
     </Description>
+  </PropertyGroup>
+
+  <!--
+    Roll-forward to the next available higher major version, and lowest minor version, if requested major version is missing. If the requested major version is present, then the Minor policy is used.
+    https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props#rollforward
+  -->
+  <PropertyGroup>
+    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">

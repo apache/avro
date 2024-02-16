@@ -21,7 +21,7 @@ public class TestRecordWithoutLogicalTypes extends org.apache.avro.specific.Spec
     return SCHEMA$;
   }
 
-  private static SpecificData MODEL$ = new SpecificData();
+  private static final SpecificData MODEL$ = new SpecificData();
 
   private static final BinaryMessageEncoder<TestRecordWithoutLogicalTypes> ENCODER = new BinaryMessageEncoder<TestRecordWithoutLogicalTypes>(
       MODEL$, SCHEMA$);

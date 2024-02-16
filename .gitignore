@@ -23,7 +23,10 @@ test-output
 .factorypath
 .mypy_cache
 .python-version
+.java-version
 .coverage
 vendor
 composer.lock
 .phpunit.result.cache
+.mvn/jvm.config # Maven JVM settings
+**/*.run.xml    # Intellij IDEA Run configurations

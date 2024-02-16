@@ -21,6 +21,7 @@ package org.apache.avro.message;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaNormalization;
 import org.apache.avro.generic.GenericData;
+import org.apache.avro.util.internal.ThreadLocalWithInitial;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,9 +48,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class BinaryMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
 
-  private static final ThreadLocal<byte[]> HEADER_BUFFER = ThreadLocal.withInitial(() -> new byte[10]);
+  private static final ThreadLocal<byte[]> HEADER_BUFFER = ThreadLocalWithInitial.of(() -> new byte[10]);
 
-  private static final ThreadLocal<ByteBuffer> FP_BUFFER = ThreadLocal.withInitial(() -> {
+  private static final ThreadLocal<ByteBuffer> FP_BUFFER = ThreadLocalWithInitial.of(() -> {
     byte[] header = HEADER_BUFFER.get();
     return ByteBuffer.wrap(header).order(ByteOrder.LITTLE_ENDIAN);
   });

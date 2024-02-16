@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -5,9 +6,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # https://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +26,7 @@ module Avro
     SYNC_SIZE = 16
     SYNC_INTERVAL = 4000 * SYNC_SIZE
     META_SCHEMA = Schema.parse('{"type": "map", "values": "bytes"}')
-    VALID_ENCODINGS = ['binary'] # not used yet
+    VALID_ENCODINGS = ['binary'].freeze # not used yet
 
     class DataFileError < AvroError; end
 
@@ -99,7 +100,7 @@ module Avro
         @encoder = IO::BinaryEncoder.new(@writer)
         @datum_writer = datum_writer
         @meta = meta
-        @buffer_writer = StringIO.new('', 'w')
+        @buffer_writer = StringIO.new(+'', 'w')
         @buffer_writer.set_encoding('BINARY') if @buffer_writer.respond_to?(:set_encoding)
         @buffer_encoder = IO::BinaryEncoder.new(@buffer_writer)
         @block_count = 0

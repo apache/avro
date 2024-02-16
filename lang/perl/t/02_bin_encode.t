@@ -153,4 +153,34 @@ EOJ
     is $enc, "\x00\x02\x61", "Binary_Encodings.Complex_Types.Unions-a";
 }
 
+# unions other cases
+{
+    my $schema = Avro::Schema->parse(<<EOJ);
+[
+    {
+        "type": "record",
+        "name": "rectangle",
+        "fields": [{ "name": "width", "type": "long" }, { "name": "height", "type": "long"}]
+    },
+    {
+        "type": "record",
+        "name": "square",
+        "fields": [{ "name": "dim", "type": "long" }]
+    }
+]
+EOJ
+    my $warning = 0;
+    local $SIG{__WARN__} = sub { $warning = 1; };
+    my $enc = '';
+    Avro::BinaryEncoder->encode(
+        schema  => $schema,
+        data    => { dim => 10 },
+        emit_cb => sub {
+            $enc .= ${ $_[0] }
+        },
+    );
+    is $enc, "\x02\x14", "Binary_Encodings.Complex_Types.Unions-record-with-long-field";
+    is $warning, 0, "Binary_Encodings.Complex_Types.Unions-record-with-long-field-nowarning";
+}
+
 done_testing;

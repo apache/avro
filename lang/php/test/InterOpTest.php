@@ -45,20 +45,24 @@ class InterOpTest extends TestCase
         }
 
         while ($file = readdir($dh)) {
-            if (0 < preg_match('/^[a-z]+(_deflate|_snappy|_zstandard|_bzip2)?\.avro$/', $file)) {
+            if (preg_match('/^[a-z]+(_deflate|_snappy|_zstandard|_bzip2)?\.avro$/', $file)) {
                 $data_files [] = implode(DIRECTORY_SEPARATOR, array($data_dir, $file));
+            } else if (preg_match('/[^.]/', $file)) {
+                echo "Skipped: $data_dir/$file", PHP_EOL;
             }
         }
         closedir($dh);
 
         $ary = array();
         foreach ($data_files as $df) {
+            echo "Reading: $df", PHP_EOL;
             $ary [] = array($df);
         }
         return $ary;
     }
 
     /**
+     * @coversNothing
      * @dataProvider file_name_provider
      */
     public function test_read($file_name)

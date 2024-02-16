@@ -73,9 +73,8 @@ namespace Avro.Test
 
                 Assert.IsTrue(json == json2);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine(ex.Message);
                 Assert.IsFalse(valid);
             }
         }

@@ -20,14 +20,18 @@ package org.apache.avro.mapreduce;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputCommitter;
+import org.apache.hadoop.mapreduce.OutputCommitter;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileConstants;
 import org.apache.avro.hadoop.file.HadoopCodecFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+import static org.apache.avro.file.CodecFactory.DEFAULT_ZSTANDARD_BUFFERPOOL;
+import static org.apache.avro.file.CodecFactory.DEFAULT_ZSTANDARD_LEVEL;
 
 /**
  * Abstract base class for output formats that write Avro container files.
@@ -50,6 +54,10 @@ public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> 
           CodecFactory.DEFAULT_DEFLATE_LEVEL);
       int xzLevel = context.getConfiguration().getInt(org.apache.avro.mapred.AvroOutputFormat.XZ_LEVEL_KEY,
           CodecFactory.DEFAULT_XZ_LEVEL);
+      int zstdLevel = context.getConfiguration().getInt(org.apache.avro.mapred.AvroOutputFormat.ZSTD_LEVEL_KEY,
+          DEFAULT_ZSTANDARD_LEVEL);
+      boolean zstdBufferPool = context.getConfiguration()
+          .getBoolean(org.apache.avro.mapred.AvroOutputFormat.ZSTD_BUFFERPOOL_KEY, DEFAULT_ZSTANDARD_BUFFERPOOL);
 
       String outputCodec = context.getConfiguration().get(AvroJob.CONF_OUTPUT_CODEC);
 
@@ -66,6 +74,8 @@ public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> 
         return CodecFactory.deflateCodec(deflateLevel);
       } else if (DataFileConstants.XZ_CODEC.equals(outputCodec)) {
         return CodecFactory.xzCodec(xzLevel);
+      } else if (DataFileConstants.ZSTANDARD_CODEC.equals(outputCodec)) {
+        return CodecFactory.zstandardCodec(zstdLevel, false, zstdBufferPool);
       } else {
         return CodecFactory.fromString(outputCodec);
       }
@@ -76,6 +86,18 @@ public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> 
     return CodecFactory.nullCodec();
   }
 
+  private Path getWorkPathFromCommitter(TaskAttemptContext context) throws IOException {
+    // When Hadoop 2 support is dropped, this method removed to a simple cast
+    // See https://github.com/apache/avro/pull/1431/
+    OutputCommitter committer = getOutputCommitter(context);
+    try {
+      return (Path) committer.getClass().getMethod("getWorkPath").invoke(committer);
+    } catch (ReflectiveOperationException e) {
+      throw new AvroRuntimeException(
+          "Committer: " + committer.getClass().getName() + " does not have method getWorkPath", e);
+    }
+  }
+
   /**
    * Gets the target output stream where the Avro container file should be
    * written.
@@ -84,7 +106,7 @@ public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> 
    * @return The target output stream.
    */
   protected OutputStream getAvroFileOutputStream(TaskAttemptContext context) throws IOException {
-    Path path = new Path(((FileOutputCommitter) getOutputCommitter(context)).getWorkPath(),
+    Path path = new Path(getWorkPathFromCommitter(context),
         getUniqueFile(context, context.getConfiguration().get("avro.mo.config.namedOutput", "part"),
             org.apache.avro.mapred.AvroOutputFormat.EXT));
     return path.getFileSystem(context.getConfiguration()).create(path);

@@ -18,7 +18,7 @@
 set -e
 
 usage() {
-  echo "Usage: $0 {clean|dist|interop-data-generate|interop-data-test|lint|test}"
+  echo "Usage: $0 {clean|dist|doc|interop-data-generate|interop-data-test|lint|test}"
   exit 1
 }
 
@@ -27,16 +27,37 @@ clean() {
                  '*.avsc' \
                  '*.egg-info' \
                  '*.py[co]' \
-                 'VERSION.txt' \
                  '__pycache__' \
                  '.tox' \
                  'avro/test/interop' \
                  'dist' \
+                 'docs/build' \
                  'userlogs'
 }
 
-dist() {
-  ./setup.py dist
+dist() (
+  ##
+  # Use https://pypa-build.readthedocs.io to create the build artifacts.
+  local destination virtualenv
+  destination=$(
+    d=../../dist/py
+    mkdir -p "$d"
+    cd -P "$d"
+    pwd
+  )
+  virtualenv="$(mktemp -d)"
+  python3 -m venv "$virtualenv"
+  "$virtualenv/bin/python3" -m pip install build
+  "$virtualenv/bin/python3" -m build --outdir "$destination"
+)
+
+doc() {
+  local doc_dir
+  local version=$(cat ../../share/VERSION.txt)
+  doc_dir="../../build/avro-doc-$version/api/py"
+  python3 -m tox -e docs
+  mkdir -p "$doc_dir"
+  cp -a docs/build/* "$doc_dir"
 }
 
 interop-data-generate() {
@@ -47,15 +68,15 @@ interop-data-generate() {
 interop-data-test() {
   mkdir -p avro/test/interop ../../build/interop/data
   cp -r ../../build/interop/data avro/test/interop
-  python -m unittest avro.test.test_datafile_interop
+  python3 -m unittest avro.test.test_datafile_interop
 }
 
 lint() {
-  tox -e lint
+  python3 -m tox -e lint
 }
 
 test_() {
-  TOX_SKIP_ENV=lint tox --skip-missing-interpreters
+  TOX_SKIP_ENV=lint python3 -m tox --skip-missing-interpreters
 }
 
 main() {
@@ -64,6 +85,7 @@ main() {
     case "$target" in
       clean) clean;;
       dist) dist;;
+      doc) doc;;
       interop-data-generate) interop-data-generate;;
       interop-data-test) interop-data-test;;
       lint) lint;;

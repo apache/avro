@@ -18,22 +18,19 @@
 
 package org.apache.avro.codegentest;
 
-import org.apache.avro.LogicalTypes;
+import org.apache.avro.codegentest.testdata.CustomConversionWithLogicalTypes;
 import org.apache.avro.codegentest.testdata.LogicalTypesWithCustomConversion;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.apache.avro.codegentest.testdata.LogicalTypesWithCustomConversionIdl;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 public class TestCustomConversion extends AbstractSpecificRecordTest {
 
-  @BeforeClass
-  public static void init() {
-    LogicalTypes.register(FixedSizeStringFactory.NAME, new FixedSizeStringFactory());
-  }
-
   @Test
-  public void testNullValues() {
+  void nullValues() {
     LogicalTypesWithCustomConversion instanceOfGeneratedClass = LogicalTypesWithCustomConversion.newBuilder()
         .setNonNullCustomField(new CustomDecimal(BigInteger.valueOf(100), 2))
         .setNonNullFixedSizeString(new FixedSizeString("test")).build();
@@ -41,7 +38,15 @@ public class TestCustomConversion extends AbstractSpecificRecordTest {
   }
 
   @Test
-  public void testNonNullValues() {
+  void nullValuesIdl() {
+    LogicalTypesWithCustomConversionIdl instanceOfGeneratedClass = LogicalTypesWithCustomConversionIdl.newBuilder()
+        .setNonNullCustomField(new CustomDecimal(BigInteger.valueOf(100), 2))
+        .setNonNullFixedSizeString(new FixedSizeString("test")).build();
+    verifySerDeAndStandardMethods(instanceOfGeneratedClass);
+  }
+
+  @Test
+  void nonNullValues() {
     LogicalTypesWithCustomConversion instanceOfGeneratedClass = LogicalTypesWithCustomConversion.newBuilder()
         .setNonNullCustomField(new CustomDecimal(BigInteger.valueOf(100), 2))
         .setNullableCustomField(new CustomDecimal(BigInteger.valueOf(3000), 2))
@@ -50,12 +55,21 @@ public class TestCustomConversion extends AbstractSpecificRecordTest {
     verifySerDeAndStandardMethods(instanceOfGeneratedClass);
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testStringViolatesLimit() {
-    LogicalTypesWithCustomConversion instanceOfGeneratedClass = LogicalTypesWithCustomConversion.newBuilder()
-        .setNonNullCustomField(new CustomDecimal(BigInteger.valueOf(100), 2))
-        .setNonNullFixedSizeString(new FixedSizeString("")).build();
+  @Test
+  void stringViolatesLimit() {
+    assertThrows(IllegalArgumentException.class, () -> {
+      LogicalTypesWithCustomConversion instanceOfGeneratedClass = LogicalTypesWithCustomConversion.newBuilder()
+          .setNonNullCustomField(new CustomDecimal(BigInteger.valueOf(100), 2))
+          .setNonNullFixedSizeString(new FixedSizeString("")).build();
 
-    verifySerDeAndStandardMethods(instanceOfGeneratedClass);
+      verifySerDeAndStandardMethods(instanceOfGeneratedClass);
+    });
+  }
+
+  @Test
+  void customConversionWithCustomLogicalType() {
+    final CustomConversionWithLogicalTypes customConversionWithLogicalTypes = CustomConversionWithLogicalTypes
+        .newBuilder().setCustomEnum(new CustomEnumType("TWO")).build();
+    verifySerDeAndStandardMethods(customConversionWithLogicalTypes);
   }
 }

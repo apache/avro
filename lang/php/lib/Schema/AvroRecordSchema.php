@@ -20,15 +20,13 @@
 
 namespace Apache\Avro\Schema;
 
-use Apache\Avro\AvroUtil;
-
 /**
  * @package Avro
  */
 class AvroRecordSchema extends AvroNamedSchema
 {
     /**
-     * @var AvroSchema[] array of AvroNamedSchema field definitions of
+     * @var AvroNamedSchema[] array of AvroNamedSchema field definitions of
      *                   this AvroRecordSchema
      */
     private $fields;
@@ -39,7 +37,7 @@ class AvroRecordSchema extends AvroNamedSchema
     private $fieldsHash;
 
     /**
-     * @param string $name
+     * @param AvroName $name
      * @param string $namespace
      * @param string $doc
      * @param array $fields
@@ -52,7 +50,8 @@ class AvroRecordSchema extends AvroNamedSchema
         $doc,
         $fields,
         &$schemata = null,
-        $schema_type = AvroSchema::RECORD_SCHEMA
+        $schema_type = AvroSchema::RECORD_SCHEMA,
+        $aliases = null
     ) {
         if (is_null($fields)) {
             throw new AvroSchemaParseException(
@@ -63,7 +62,7 @@ class AvroRecordSchema extends AvroNamedSchema
         if (AvroSchema::REQUEST_SCHEMA == $schema_type) {
             parent::__construct($schema_type, $name);
         } else {
-            parent::__construct($schema_type, $name, $doc, $schemata);
+            parent::__construct($schema_type, $name, $doc, $schemata, $aliases);
         }
 
         [$x, $namespace] = $name->nameAndNamespace();
@@ -81,10 +80,12 @@ class AvroRecordSchema extends AvroNamedSchema
     {
         $fields = array();
         $field_names = array();
+        $alias_names = [];
         foreach ($field_data as $index => $field) {
-            $name = AvroUtil::arrayValue($field, AvroField::FIELD_NAME_ATTR);
-            $type = AvroUtil::arrayValue($field, AvroSchema::TYPE_ATTR);
-            $order = AvroUtil::arrayValue($field, AvroField::ORDER_ATTR);
+            $name = $field[AvroField::FIELD_NAME_ATTR] ?? null;
+            $type = $field[AvroSchema::TYPE_ATTR] ?? null;
+            $order = $field[AvroField::ORDER_ATTR] ?? null;
+            $aliases = $field[AvroField::ALIASES_ATTR] ?? null;
 
             $default = null;
             $has_default = false;
@@ -118,10 +119,17 @@ class AvroRecordSchema extends AvroNamedSchema
                 $is_schema_from_schemata,
                 $has_default,
                 $default,
-                $order
+                $order,
+                $aliases
             );
-            $field_names [] = $name;
-            $fields [] = $new_field;
+            $field_names[] = $name;
+            if ($new_field->hasAliases() && array_intersect($alias_names, $new_field->getAliases())) {
+                throw new AvroSchemaParseException("Alias already in use");
+            }
+            if ($new_field->hasAliases()) {
+                array_push($alias_names, ...$new_field->getAliases());
+            }
+            $fields[] = $new_field;
         }
         return $fields;
     }
@@ -135,10 +143,10 @@ class AvroRecordSchema extends AvroNamedSchema
 
         $fields_avro = array();
         foreach ($this->fields as $field) {
-            $fields_avro [] = $field->toAvro();
+            $fields_avro[] = $field->toAvro();
         }
 
-        if (AvroSchema::REQUEST_SCHEMA == $this->type) {
+        if (AvroSchema::REQUEST_SCHEMA === $this->type) {
             return $fields_avro;
         }
 
@@ -169,5 +177,18 @@ class AvroRecordSchema extends AvroNamedSchema
             $this->fieldsHash = $hash;
         }
         return $this->fieldsHash;
+    }
+
+    public function fieldsByAlias()
+    {
+        $hash = [];
+        foreach ($this->fields as $field) {
+            if ($field->hasAliases()) {
+                foreach ($field->getAliases() as $a) {
+                    $hash[$a] = $field;
+                }
+            }
+        }
+        return $hash;
     }
 }

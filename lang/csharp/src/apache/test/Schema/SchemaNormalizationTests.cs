@@ -32,6 +32,14 @@ namespace Avro.Test
         private static readonly long One = -9223372036854775808;
         private static readonly byte[] Postfix = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
+        [Test]
+        public void TestLogicalType()
+        {
+            var schema = @"[""int"", {""type"": ""string"", ""logicalType"": ""uuid""}]";
+            string pcf = SchemaNormalization.ToParsingForm(Schema.Parse(schema));
+            Assert.AreEqual(@"[""int"",""string""]", pcf);
+        }
+
         [Test, TestCaseSource("ProvideCanonicalTestCases")]
         public void CanonicalTest(string input, string expectedOutput)
         {
@@ -49,7 +57,7 @@ namespace Avro.Test
 
         private static List<object[]> ProvideFingerprintTestCases()
         {
-            var dir = Path.GetDirectoryName(new Uri(typeof(SchemaNormalizationTests).Assembly.CodeBase).LocalPath);
+            var dir = Path.GetDirectoryName(new Uri(typeof(SchemaNormalizationTests).Assembly.Location).LocalPath);
             var testsPath = Path.Combine(dir, "../../../../../../../../share/test/data/schema-tests.txt");
             using (StreamReader reader = new StreamReader(testsPath))
             {
@@ -59,7 +67,7 @@ namespace Avro.Test
 
         private static List<object[]> ProvideCanonicalTestCases()
         {
-            var dir = Path.GetDirectoryName(new Uri(typeof(SchemaNormalizationTests).Assembly.CodeBase).LocalPath);
+            var dir = Path.GetDirectoryName(new Uri(typeof(SchemaNormalizationTests).Assembly.Location).LocalPath);
             var testsPath = Path.Combine(dir, "../../../../../../../../share/test/data/schema-tests.txt");
             using (StreamReader reader = new StreamReader(testsPath))
             {

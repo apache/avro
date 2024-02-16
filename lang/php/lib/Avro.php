@@ -36,28 +36,14 @@ class Avro
      * @var string version number of Avro specification to which
      *             this implemenation complies
      */
-    const SPEC_VERSION = '1.3.3';
+    public const SPEC_VERSION = '1.4.0';
 
-    /**#@+
-     * Constant to enumerate endianness.
-     * @access private
-     * @var int
-     */
-    const BIG_ENDIAN = 0x00;
-    const LITTLE_ENDIAN = 0x01;
-    /**#@-*/
     /**#@+
      * Constant to enumerate biginteger handling mode.
      * GMP is used, if available, on 32-bit platforms.
      */
-    const PHP_BIGINTEGER_MODE = 0x00;
-    const GMP_BIGINTEGER_MODE = 0x01;
-    /**
-     * Memoized result of self::setEndianness()
-     * @var int self::BIG_ENDIAN or self::LITTLE_ENDIAN
-     * @see self::setEndianness()
-     */
-    private static $endianness;
+    private const PHP_BIGINTEGER_MODE = 0x00;
+    private const GMP_BIGINTEGER_MODE = 0x01;
     /**#@-*/
     /**
      * @var int
@@ -75,7 +61,6 @@ class Avro
     public static function checkPlatform()
     {
         self::check64Bit();
-        self::checkLittleEndian();
     }
 
     /**
@@ -94,71 +79,6 @@ class Avro
             }
         } else {
             self::$biginteger_mode = self::PHP_BIGINTEGER_MODE;
-        }
-    }
-
-    /**
-     * Determines if the host platform is little endian,
-     * required for processing double and float data.
-     *
-     * @throws AvroException if the platform is not little endian.
-     */
-    private static function checkLittleEndian()
-    {
-        if (!self::isLittleEndianPlatform()) {
-            throw new AvroException('This is not a little-endian platform');
-        }
-    }
-
-    /**
-     * @returns boolean true if the host platform is little endian,
-     *                  and false otherwise.
-     * @uses self::is_bin_endian_platform()
-     */
-    private static function isLittleEndianPlatform()
-    {
-        return !self::isBigEndianPlatform();
-    }
-
-    /**
-     * @returns boolean true if the host platform is big endian
-     *                  and false otherwise.
-     * @uses self::setEndianness()
-     */
-    private static function isBigEndianPlatform()
-    {
-        if (is_null(self::$endianness)) {
-            self::setEndianness();
-        }
-
-        return (self::BIG_ENDIAN == self::$endianness);
-    }
-
-    /**
-     * Determines the endianness of the host platform and memoizes
-     * the result to Avro::$endianness.
-     *
-     * Based on a similar check perfomed in https://pear.php.net/package/Math_BinaryUtils
-     *
-     * @throws AvroException if the endianness cannot be determined.
-     */
-    private static function setEndianness()
-    {
-        $packed = pack('d', 1);
-        switch ($packed) {
-            case "\77\360\0\0\0\0\0\0":
-                self::$endianness = self::BIG_ENDIAN;
-                break;
-            case "\0\0\0\0\0\0\360\77":
-                self::$endianness = self::LITTLE_ENDIAN;
-                break;
-            default:
-                throw new AvroException(
-                    sprintf(
-                        'Error determining platform endianness: %s',
-                        AvroDebug::hexString($packed)
-                    )
-                );
         }
     }
 

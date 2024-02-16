@@ -30,7 +30,8 @@
 
 var Tap = require('../../lib/utils').Tap,
     schemas = require('../../lib/schemas'),
-    deprecated = require('../deprecated/validator');
+    deprecated = require('../deprecated/validator'),
+    Buffer = require('buffer').Buffer
 
 
 function parse(schema, opts) {

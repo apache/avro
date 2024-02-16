@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -175,6 +176,8 @@ class TestSchema < Test::Unit::TestCase
     end
 
     assert_equal '"MissingType" is not a schema we know about.', error.message
+    assert_equal "MissingType", error.type_name
+    assert_equal "my.name.space", error.default_namespace
   end
 
   def test_invalid_name
@@ -541,6 +544,107 @@ class TestSchema < Test::Unit::TestCase
                  exception.to_s)
   end
 
+  def test_fixed_decimal_to_include_precision_scale
+    schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "fixed",
+        "name": "aFixed",
+        "logicalType": "decimal",
+        "size": 4,
+        "precision": 9,
+        "scale": 2
+      }
+    SCHEMA
+
+    schema_hash =
+      {
+        'type' => 'fixed',
+        'name' => 'aFixed',
+        'logicalType' => 'decimal',
+        'size' => 4,
+        'precision' => 9,
+        'scale' => 2
+      }
+
+    assert_equal schema_hash, schema.to_avro
+  end
+
+  def test_fixed_decimal_to_include_precision_no_scale
+    schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "fixed",
+        "name": "aFixed",
+        "logicalType": "decimal",
+        "size": 4,
+        "precision": 9
+      }
+    SCHEMA
+
+    schema_hash =
+      {
+        'type' => 'fixed',
+        'name' => 'aFixed',
+        'logicalType' => 'decimal',
+        'size' => 4,
+        'precision' => 9
+      }
+
+    assert_equal schema_hash, schema.to_avro
+  end
+
+  # Note: this is not valid but validation is not yet implemented
+  def test_fixed_decimal_to_without_precision_scale
+    schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "fixed",
+        "size": 4,
+        "name": "aFixed",
+        "logicalType": "decimal"
+      }
+    SCHEMA
+
+    schema_hash =
+      {
+        'type' => 'fixed',
+        'name' => 'aFixed',
+        'logicalType' => 'decimal',
+        'size' => 4
+      }
+
+    assert_equal schema_hash, schema.to_avro
+  end
+
+  def test_bytes_decimal_in_record
+    assert_nothing_raised do
+      hash_to_schema(
+        type: 'record',
+        name: 'account',
+        fields: [
+          { name: 'balance', type: 'bytes', logicalType: 'decimal', precision: 9, scale: 2 }
+        ]
+      )
+    end
+  end
+
+  def test_bytes_decimal_with_default_in_record
+    assert_nothing_raised do
+      hash_to_schema(
+        type: 'record',
+        name: 'account',
+        fields: [
+          {
+            name: 'balance',
+            type: [
+              { type: 'bytes', logicalType: 'decimal', precision: 9, scale: 2 },
+              'null'
+            ],
+            default: '\u00ff'
+          }
+        ]
+      )
+    end
+  end
+  
   def test_bytes_decimal_to_include_precision_scale
     schema = Avro::Schema.parse <<-SCHEMA
       {
@@ -562,21 +666,80 @@ class TestSchema < Test::Unit::TestCase
     assert_equal schema_hash, schema.to_avro
   end
 
-  def test_bytes_decimal_to_without_precision_scale
+  def test_bytes_decimal_with_string_precision_no_scale
     schema = Avro::Schema.parse <<-SCHEMA
       {
         "type": "bytes",
-        "logicalType": "decimal"
+        "logicalType": "decimal",
+        "precision": "7"
       }
     SCHEMA
 
     schema_hash =
       {
         'type' => 'bytes',
-        'logicalType' => 'decimal'
+        'logicalType' => 'decimal',
+        'precision' => 7
       }
 
     assert_equal schema_hash, schema.to_avro
+  end
+
+  def test_bytes_decimal_without_precision_or_scale
+    error = assert_raise Avro::SchemaParseError do
+      Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "bytes",
+        "logicalType": "decimal"
+      }
+      SCHEMA
+    end
+
+    assert_equal 'Precision must be positive', error.message
+  end
+
+  def test_bytes_decimal_to_negative_precision
+    error = assert_raise Avro::SchemaParseError do
+      Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": -1
+      }
+      SCHEMA
+    end
+
+    assert_equal 'Precision must be positive', error.message
+  end
+
+  def test_bytes_decimal_to_negative_scale
+    error = assert_raise Avro::SchemaParseError do
+      Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": 2,
+        "scale": -1
+      }
+      SCHEMA
+    end
+
+    assert_equal 'Scale must be greater than or equal to 0', error.message
+  end
+
+  def test_bytes_decimal_with_precision_less_than_scale
+    error = assert_raise Avro::SchemaParseError do
+      Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": 3,
+        "scale": 4
+      }
+      SCHEMA
+    end
+
+    assert_equal 'Precision must be greater than scale', error.message
   end
 
   def test_bytes_schema
@@ -644,7 +807,7 @@ class TestSchema < Test::Unit::TestCase
   ensure
     Avro.disable_enum_symbol_validation = nil
   end
-  
+
   def test_validate_field_aliases
     exception = assert_raise(Avro::SchemaParseError) do
       hash_to_schema(

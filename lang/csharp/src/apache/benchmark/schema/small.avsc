@@ -1,0 +1,13 @@
+{
+  "namespace": "org.apache.avro.benchmark.small",
+  "type": "record",
+  "name": "test",
+  "fields": [
+    {
+      "type": {
+        "type": "string"
+      },
+      "name": "field"
+    }
+  ]
+}

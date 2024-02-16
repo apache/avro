@@ -17,19 +17,23 @@
  */
 package org.apache.avro.tool;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Tests both {@link JsonToBinaryFragmentTool} and
@@ -41,47 +45,47 @@ public class TestJsonToFromBinaryFragmentTools {
   private static final String AVRO = "ZLong string implies readable length encoding.";
   private static final String JSON = "\"Long string implies readable length encoding.\"\n";
 
-  @Rule
-  public TemporaryFolder DIR = new TemporaryFolder();
+  @TempDir
+  public File DIR;
 
   @Test
-  public void testBinaryToJson() throws Exception {
+  void binaryToJson() throws Exception {
     binaryToJson(AVRO, JSON, STRING_SCHEMA);
   }
 
   @Test
-  public void testJsonToBinary() throws Exception {
+  void jsonToBinary() throws Exception {
     jsonToBinary(JSON, AVRO, STRING_SCHEMA);
   }
 
   @Test
-  public void testMultiBinaryToJson() throws Exception {
+  void multiBinaryToJson() throws Exception {
     binaryToJson(AVRO + AVRO + AVRO, JSON + JSON + JSON, STRING_SCHEMA);
   }
 
   @Test
-  public void testMultiJsonToBinary() throws Exception {
+  void multiJsonToBinary() throws Exception {
     jsonToBinary(JSON + JSON + JSON, AVRO + AVRO + AVRO, STRING_SCHEMA);
   }
 
   @Test
-  public void testBinaryToNoPrettyJson() throws Exception {
+  void binaryToNoPrettyJson() throws Exception {
     binaryToJson(AVRO, JSON, "--no-pretty", STRING_SCHEMA);
   }
 
   @Test
-  public void testMultiBinaryToNoPrettyJson() throws Exception {
+  void multiBinaryToNoPrettyJson() throws Exception {
     binaryToJson(AVRO + AVRO + AVRO, JSON + JSON + JSON, "--no-pretty", STRING_SCHEMA);
   }
 
   @Test
-  public void testBinaryToJsonSchemaFile() throws Exception {
-    binaryToJson(AVRO, JSON, "--schema-file", schemaFile(DIR.getRoot()));
+  void binaryToJsonSchemaFile() throws Exception {
+    binaryToJson(AVRO, JSON, "--schema-file", schemaFile(DIR));
   }
 
   @Test
-  public void testJsonToBinarySchemaFile() throws Exception {
-    jsonToBinary(JSON, AVRO, "--schema-file", schemaFile(DIR.getRoot()));
+  void jsonToBinarySchemaFile() throws Exception {
+    jsonToBinary(JSON, AVRO, "--schema-file", schemaFile(DIR));
   }
 
   private void binaryToJson(String avro, String json, String... options) throws Exception {

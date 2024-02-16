@@ -32,11 +32,9 @@ protocol Simple {
   fixed MD5(16);
 
   record TestRecord {
-    @order("ignore")
-    string name;
+    string @order("ignore") name;
 
-    @order("descending")
-    Kind kind;
+    Kind @order("descending") kind;
 
     MD5 hash;
 

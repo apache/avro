@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using Avro.IO;
 
 namespace Avro.Generic
@@ -23,8 +24,6 @@ namespace Avro.Generic
     /// Defines the interface for an object that writes data of a schema.
     /// </summary>
     /// <typeparam name="T">Type of the in-memory data representation.</typeparam>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming",
-        "CA1715:Identifiers should have correct prefix", Justification = "Maintain public API")]
     public interface DatumWriter<T>
     {
         /// <summary>

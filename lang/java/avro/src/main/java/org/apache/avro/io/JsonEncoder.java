@@ -22,7 +22,9 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
+import java.util.EnumSet;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -33,6 +35,7 @@ import org.apache.avro.util.Utf8;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.PrettyPrinter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 
@@ -58,11 +61,15 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   protected BitSet isEmpty = new BitSet();
 
   JsonEncoder(Schema sc, OutputStream out) throws IOException {
-    this(sc, getJsonGenerator(out, false));
+    this(sc, getJsonGenerator(out, EnumSet.noneOf(JsonOptions.class)));
   }
 
   JsonEncoder(Schema sc, OutputStream out, boolean pretty) throws IOException {
-    this(sc, getJsonGenerator(out, pretty));
+    this(sc, getJsonGenerator(out, pretty ? EnumSet.of(JsonOptions.Pretty) : EnumSet.noneOf(JsonOptions.class)));
+  }
+
+  JsonEncoder(Schema sc, OutputStream out, Set<JsonOptions> options) throws IOException {
+    this(sc, getJsonGenerator(out, options));
   }
 
   JsonEncoder(Schema sc, JsonGenerator out) throws IOException {
@@ -78,24 +85,28 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     }
   }
 
+  enum JsonOptions {
+    Pretty,
+
+    // Prevent underlying outputstream to be flush for optimisation purpose.
+    NoFlushStream
+  }
+
   // by default, one object per line.
   // with pretty option use default pretty printer with root line separator.
-  private static JsonGenerator getJsonGenerator(OutputStream out, boolean pretty) throws IOException {
+  private static JsonGenerator getJsonGenerator(OutputStream out, Set<JsonOptions> options) throws IOException {
     Objects.requireNonNull(out, "OutputStream cannot be null");
     JsonGenerator g = new JsonFactory().createGenerator(out, JsonEncoding.UTF8);
-    if (pretty) {
-      DefaultPrettyPrinter pp = new DefaultPrettyPrinter() {
-        @Override
-        public void writeRootValueSeparator(JsonGenerator jg) throws IOException {
-          jg.writeRaw(LINE_SEPARATOR);
-        }
-      };
-      g.setPrettyPrinter(pp);
-    } else {
-      MinimalPrettyPrinter pp = new MinimalPrettyPrinter();
-      pp.setRootValueSeparator(LINE_SEPARATOR);
-      g.setPrettyPrinter(pp);
+    if (options.contains(JsonOptions.NoFlushStream)) {
+      g = g.configure(JsonGenerator.Feature.FLUSH_PASSED_TO_STREAM, false);
     }
+    final PrettyPrinter pp;
+    if (options.contains(JsonOptions.Pretty)) {
+      pp = new DefaultPrettyPrinter(LINE_SEPARATOR);
+    } else {
+      pp = new MinimalPrettyPrinter(LINE_SEPARATOR);
+    }
+    g.setPrettyPrinter(pp);
     return g;
   }
 
@@ -122,7 +133,29 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
    * @return this JsonEncoder
    */
   public JsonEncoder configure(OutputStream out) throws IOException {
-    this.configure(getJsonGenerator(out, false));
+    return this.configure(out, true);
+  }
+
+  /**
+   * Reconfigures this JsonEncoder to use the output stream provided.
+   * <p/>
+   * If the OutputStream provided is null, a NullPointerException is thrown.
+   * <p/>
+   * Otherwise, this JsonEncoder will flush its current output and then
+   * reconfigure its output to use a default UTF8 JsonGenerator that writes to the
+   * provided OutputStream.
+   *
+   * @param out The OutputStream to direct output to. Cannot be null.
+   * @throws IOException
+   * @throws NullPointerException if {@code out} is {@code null}
+   * @return this JsonEncoder
+   */
+  public JsonEncoder configure(OutputStream out, boolean autoflush) throws IOException {
+    EnumSet<JsonOptions> jsonOptions = EnumSet.noneOf(JsonOptions.class);
+    if (!autoflush) {
+      jsonOptions.add(JsonOptions.NoFlushStream);
+    }
+    this.configure(getJsonGenerator(out, jsonOptions));
     return this;
   }
 
@@ -175,7 +208,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   @Override
   public void writeFloat(float f) throws IOException {
     parser.advance(Symbol.FLOAT);
-    out.writeNumber(f);
+    out.writeNumber(f + 0d);
   }
 
   @Override

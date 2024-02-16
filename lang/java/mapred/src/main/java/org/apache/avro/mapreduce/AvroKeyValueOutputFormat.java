@@ -46,9 +46,9 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
  * </p>
  *
  * @param <K> The type of key. If an Avro type, it must be wrapped in an
- *        <code>AvroKey</code>.
+ *            <code>AvroKey</code>.
  * @param <V> The type of value. If an Avro type, it must be wrapped in an
- *        <code>AvroValue</code>.
+ *            <code>AvroValue</code>.
  */
 public class AvroKeyValueOutputFormat<K, V> extends AvroOutputFormatBase<K, V> {
   /** {@inheritDoc} */

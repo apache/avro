@@ -1,0 +1,62 @@
+{
+  "namespace": "org.apache.avro.benchmark.big",
+  "type": "record",
+  "name": "userInfo",
+  "fields": [
+    {
+      "default": "NONE",
+      "type": "string",
+      "name": "username"
+    },
+    {
+      "default": -1,
+      "type": "int",
+      "name": "age"
+    },
+    {
+      "default": "NONE",
+      "type": "string",
+      "name": "phone"
+    },
+    {
+      "default": "NONE",
+      "type": "string",
+      "name": "housenum"
+    },
+    {
+      "default": {},
+      "type": {
+        "fields": [
+          {
+            "default": "NONE",
+            "type": "string",
+            "name": "street"
+          },
+          {
+            "default": "NONE",
+            "type": "string",
+            "name": "city"
+          },
+          {
+            "default": "NONE",
+            "type": "string",
+            "name": "state_prov"
+          },
+          {
+            "default": "NONE",
+            "type": "string",
+            "name": "country"
+          },
+          {
+            "default": "NONE",
+            "type": "string",
+            "name": "zip"
+          }
+        ],
+        "type": "record",
+        "name": "mailing_address"
+      },
+      "name": "address"
+    }
+  ]
+}

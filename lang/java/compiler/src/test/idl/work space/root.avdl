@@ -1,0 +1,3 @@
+protocol Root { 
+    import idl "level1.avdl"; 
+}

@@ -41,7 +41,7 @@ import org.apache.trevni.avro.AvroColumnWriter;
  * @param <K> The type of key the record writer should generate.
  * @param <V> The type of value the record wrtier should generate.
  * @param <T> The type of the entries within the Trevni container file being
- *        written.
+ *            written.
  */
 public abstract class AvroTrevniRecordWriterBase<K, V, T> extends RecordWriter<K, V> {
 

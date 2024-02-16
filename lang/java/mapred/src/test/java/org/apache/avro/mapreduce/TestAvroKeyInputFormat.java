@@ -18,8 +18,8 @@
 
 package org.apache.avro.mapreduce;
 
-import static org.junit.Assert.*;
-import static org.easymock.EasyMock.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 
@@ -31,7 +31,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestAvroKeyInputFormat {
   /**
@@ -39,18 +39,15 @@ public class TestAvroKeyInputFormat {
    * types are as expected.
    */
   @Test
-  public void testCreateRecordReader() throws IOException, InterruptedException {
+  void createRecordReader() throws IOException, InterruptedException {
     // Set up the job configuration.
     Job job = Job.getInstance();
     AvroJob.setInputKeySchema(job, Schema.create(Schema.Type.STRING));
     Configuration conf = job.getConfiguration();
 
-    FileSplit inputSplit = createMock(FileSplit.class);
-    TaskAttemptContext context = createMock(TaskAttemptContext.class);
-    expect(context.getConfiguration()).andReturn(conf).anyTimes();
-
-    replay(inputSplit);
-    replay(context);
+    FileSplit inputSplit = mock(FileSplit.class);
+    TaskAttemptContext context = mock(TaskAttemptContext.class);
+    when(context.getConfiguration()).thenReturn(conf);
 
     AvroKeyInputFormat inputFormat = new AvroKeyInputFormat();
     @SuppressWarnings("unchecked")
@@ -58,7 +55,6 @@ public class TestAvroKeyInputFormat {
     assertNotNull(inputFormat);
     recordReader.close();
 
-    verify(inputSplit);
-    verify(context);
+    verify(context).getConfiguration();
   }
 }

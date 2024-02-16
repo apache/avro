@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -29,12 +30,16 @@ module Avro
     NAMED_TYPES_SYM     = Set.new(NAMED_TYPES.map(&:to_sym))
     VALID_TYPES_SYM     = Set.new(VALID_TYPES.map(&:to_sym))
 
-    NAME_REGEX = /^([A-Za-z_][A-Za-z0-9_]*)(\.([A-Za-z_][A-Za-z0-9_]*))*$/
+    NAME_REGEX = /^([A-Za-z_][A-Za-z0-9_]*)(\.([A-Za-z_][A-Za-z0-9_]*))*$/.freeze
 
     INT_MIN_VALUE = -(1 << 31)
     INT_MAX_VALUE = (1 << 31) - 1
     LONG_MIN_VALUE = -(1 << 63)
     LONG_MAX_VALUE = (1 << 63) - 1
+
+    DEFAULT_VALIDATE_OPTIONS = { recursive: true, encoded: false }.freeze
+
+    DECIMAL_LOGICAL_TYPE = 'decimal'
 
     def self.parse(json_string)
       real_parse(MultiJson.load(json_string), {})
@@ -73,7 +78,9 @@ module Avro
           case type_sym
           when :fixed
             size = json_obj['size']
-            return FixedSchema.new(name, namespace, size, names, logical_type, aliases)
+            precision = json_obj['precision']
+            scale = json_obj['scale']
+            return FixedSchema.new(name, namespace, size, names, logical_type, aliases, precision, scale)
           when :enum
             symbols = json_obj['symbols']
             doc     = json_obj['doc']
@@ -104,12 +111,12 @@ module Avro
       elsif PRIMITIVE_TYPES.include? json_obj
         return PrimitiveSchema.new(json_obj)
       else
-        raise UnknownSchemaError.new(json_obj)
+        raise UnknownSchemaError.new(json_obj, default_namespace)
       end
     end
 
     # Determine if a ruby datum is an instance of a schema
-    def self.validate(expected_schema, logical_datum, options = { recursive: true, encoded: false })
+    def self.validate(expected_schema, logical_datum, options = DEFAULT_VALIDATE_OPTIONS)
       SchemaValidator.validate!(expected_schema, logical_datum, options)
       true
     rescue SchemaValidator::ValidationError
@@ -119,6 +126,7 @@ module Avro
     def initialize(type, logical_type=nil)
       @type_sym = type.is_a?(Symbol) ? type : type.to_sym
       @logical_type = logical_type
+      @type_adapter = nil
     end
 
     attr_reader :type_sym
@@ -129,7 +137,7 @@ module Avro
     def type; @type_sym.to_s; end
 
     def type_adapter
-      @type_adapter ||= LogicalTypes.type_adapter(type, logical_type) || LogicalTypes::Identity
+      @type_adapter ||= LogicalTypes.type_adapter(type, logical_type, self) || LogicalTypes::Identity
     end
 
     # Returns the MD5 fingerprint of the schema as an Integer.
@@ -173,7 +181,7 @@ module Avro
       fp
     end
 
-    SINGLE_OBJECT_MAGIC_NUMBER = [0xC3, 0x01]
+    SINGLE_OBJECT_MAGIC_NUMBER = [0xC3, 0x01].freeze
     def single_object_encoding_header
       [SINGLE_OBJECT_MAGIC_NUMBER, single_object_schema_fingerprint].flatten
     end
@@ -181,7 +189,7 @@ module Avro
       working = crc_64_avro_fingerprint
       bytes = Array.new(8)
       8.times do |i|
-        bytes[7 - i] = (working & 0xff)
+        bytes[i] = (working & 0xff)
         working = working >> 8
       end
       bytes
@@ -280,6 +288,10 @@ module Avro
 
       def match_fullname?(name)
         name == fullname || fullname_aliases.include?(name)
+      end
+
+      def match_schema?(schema)
+        type_sym == schema.type_sym && match_fullname?(schema.fullname)
       end
     end
 
@@ -411,7 +423,7 @@ module Avro
     end
 
     class EnumSchema < NamedSchema
-      SYMBOL_REGEX = /^[A-Za-z_][A-Za-z0-9_]*$/
+      SYMBOL_REGEX = /^[A-Za-z_][A-Za-z0-9_]*$/.freeze
 
       attr_reader :symbols, :doc, :default
 
@@ -465,14 +477,27 @@ module Avro
         hsh = super
         hsh.size == 1 ? type : hsh
       end
+
+      def match_schema?(schema)
+        return type_sym == schema.type_sym
+        # TODO: eventually this could handle schema promotion for primitive schemas too
+      end
     end
 
     class BytesSchema < PrimitiveSchema
+      ERROR_INVALID_SCALE         = 'Scale must be greater than or equal to 0'
+      ERROR_INVALID_PRECISION     = 'Precision must be positive'
+      ERROR_PRECISION_TOO_SMALL   = 'Precision must be greater than scale'
+
       attr_reader :precision, :scale
+
       def initialize(type, logical_type=nil, precision=nil, scale=nil)
         super(type.to_sym, logical_type)
-        @precision = precision
-        @scale = scale
+
+        @precision = precision.to_i if precision
+        @scale = scale.to_i if scale
+
+        validate_decimal! if logical_type == DECIMAL_LOGICAL_TYPE
       end
 
       def to_avro(names=nil)
@@ -483,35 +508,71 @@ module Avro
         avro['scale'] = scale if scale
         avro
       end
+
+      def match_schema?(schema)
+        return true if super
+
+        if logical_type == DECIMAL_LOGICAL_TYPE && schema.logical_type == DECIMAL_LOGICAL_TYPE
+          return precision == schema.precision && (scale || 0) == (schema.scale || 0)
+        end
+
+        false
+      end
+
+      private
+
+      def validate_decimal!
+        raise Avro::SchemaParseError, ERROR_INVALID_PRECISION unless precision.to_i.positive?
+        raise Avro::SchemaParseError, ERROR_INVALID_SCALE if scale.to_i.negative?
+        raise Avro::SchemaParseError, ERROR_PRECISION_TOO_SMALL if precision < scale.to_i
+      end
     end
 
     class FixedSchema < NamedSchema
-      attr_reader :size
-      def initialize(name, space, size, names=nil, logical_type=nil, aliases=nil)
+      attr_reader :size, :precision, :scale
+      def initialize(name, space, size, names=nil, logical_type=nil, aliases=nil, precision=nil, scale=nil)
         # Ensure valid cto args
         unless size.is_a?(Integer)
           raise AvroError, 'Fixed Schema requires a valid integer for size property.'
         end
         super(:fixed, name, space, names, nil, logical_type, aliases)
         @size = size
+        @precision = precision
+        @scale = scale
       end
 
       def to_avro(names=Set.new)
         avro = super
-        avro.is_a?(Hash) ? avro.merge('size' => size) : avro
+        return avro if avro.is_a?(String)
+
+        avro['size'] = size
+        avro['precision'] = precision if precision
+        avro['scale'] = scale if scale
+        avro
+      end
+
+      def match_schema?(schema)
+        return true if super && size == schema.size
+
+        if logical_type == DECIMAL_LOGICAL_TYPE && schema.logical_type == DECIMAL_LOGICAL_TYPE
+          return precision == schema.precision && (scale || 0) == (schema.scale || 0)
+        end
+
+        false
       end
     end
 
     class Field < Schema
       attr_reader :type, :name, :default, :order, :doc, :aliases
 
-      def initialize(type, name, default=:no_default, order=nil, names=nil, namespace=nil, doc=nil, aliases=nil)
+      def initialize(type, name, default=:no_default, order=nil, names=nil, namespace=nil, doc=nil, aliases=nil) # rubocop:disable Lint/MissingSuper
         @type = subparse(type, names, namespace)
         @name = name
         @default = default
         @order = order
         @doc = doc
         @aliases = aliases
+        @type_adapter = nil
         validate_aliases! if aliases
         validate_default! if default? && !Avro.disable_field_default_validation
       end
@@ -540,8 +601,16 @@ module Avro
                            else
                              type
                            end
-
-        Avro::SchemaValidator.validate!(type_for_default, default)
+        case type_for_default.logical_type
+        when DECIMAL_LOGICAL_TYPE
+          # https://avro.apache.org/docs/1.11.1/specification/#schema-record
+          # Default values for bytes and fixed fields are JSON strings, where Unicode code points 0-255 are mapped to unsigned 8-bit byte values 0-255
+          options = SchemaValidator::DEFAULT_VALIDATION_OPTIONS.dup
+          options[:encoded] = true
+          Avro::SchemaValidator.validate!(type_for_default, default, options)
+        else
+          Avro::SchemaValidator.validate!(type_for_default, default)
+        end
       rescue Avro::SchemaValidator::ValidationError => e
         raise Avro::SchemaParseError, "Error validating default for #{name}: #{e.message}"
       end
@@ -552,9 +621,11 @@ module Avro
 
   class UnknownSchemaError < SchemaParseError
     attr_reader :type_name
+    attr_reader :default_namespace
 
-    def initialize(type)
+    def initialize(type, default_namespace)
       @type_name = type
+      @default_namespace = default_namespace
       super("#{type.inspect} is not a schema we know about.")
     end
   end

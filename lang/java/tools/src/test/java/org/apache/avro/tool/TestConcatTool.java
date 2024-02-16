@@ -18,18 +18,20 @@
 package org.apache.avro.tool;
 
 import static java.util.Arrays.asList;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
-
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.file.CodecFactory;
@@ -41,8 +43,8 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.util.Utf8;
 import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.rules.TestName;
 
 public class TestConcatTool {
@@ -52,11 +54,11 @@ public class TestConcatTool {
   @Rule
   public TestName name = new TestName();
 
-  @Rule
-  public TemporaryFolder INPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public File INPUT_DIR;
 
-  @Rule
-  public TemporaryFolder OUTPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public File OUTPUT_DIR;
 
   private Object aDatum(Type ofType, int forRow) {
     switch (ofType) {
@@ -70,7 +72,7 @@ public class TestConcatTool {
   }
 
   private File generateData(String file, Type type, Map<String, String> metadata, CodecFactory codec) throws Exception {
-    File inputFile = new File(INPUT_DIR.getRoot(), file);
+    File inputFile = new File(INPUT_DIR, file);
     Schema schema = Schema.create(type);
     try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>(schema))) {
       for (Entry<String, String> metadatum : metadata.entrySet()) {
@@ -106,16 +108,16 @@ public class TestConcatTool {
   }
 
   @Test
-  public void testDirConcat() throws Exception {
+  void dirConcat() throws Exception {
     Map<String, String> metadata = new HashMap<>();
 
     for (int i = 0; i < 3; i++) {
       generateData(name.getMethodName() + "-" + i + ".avro", Type.STRING, metadata, DEFLATE);
     }
 
-    File output = new File(OUTPUT_DIR.getRoot(), name.getMethodName() + ".avro");
+    File output = new File(OUTPUT_DIR, name.getMethodName() + ".avro");
 
-    List<String> args = asList(INPUT_DIR.getRoot().getAbsolutePath(), output.getAbsolutePath());
+    List<String> args = asList(INPUT_DIR.getAbsolutePath(), output.getAbsolutePath());
     int returnCode = new ConcatTool().run(System.in, System.out, System.err, args);
 
     assertEquals(0, returnCode);
@@ -123,33 +125,34 @@ public class TestConcatTool {
   }
 
   @Test
-  public void testGlobPatternConcat() throws Exception {
+  void globPatternConcat() throws Exception {
     Map<String, String> metadata = new HashMap<>();
 
     for (int i = 0; i < 3; i++) {
       generateData(name.getMethodName() + "-" + i + ".avro", Type.STRING, metadata, DEFLATE);
     }
 
-    File output = new File(OUTPUT_DIR.getRoot(), name.getMethodName() + ".avro");
+    File output = new File(OUTPUT_DIR, name.getMethodName() + ".avro");
 
-    List<String> args = asList(new File(INPUT_DIR.getRoot(), "/*").getAbsolutePath(), output.getAbsolutePath());
+    List<String> args = asList(new File(INPUT_DIR, "/*").getAbsolutePath(), output.getAbsolutePath());
     int returnCode = new ConcatTool().run(System.in, System.out, System.err, args);
 
     assertEquals(0, returnCode);
     assertEquals(ROWS_IN_INPUT_FILES * 3, numRowsInFile(output));
   }
 
-  @Test(expected = FileNotFoundException.class)
-  public void testFileDoesNotExist() throws Exception {
-    File output = new File(INPUT_DIR.getRoot(), name.getMethodName() + ".avro");
+  @Test
+  void fileDoesNotExist() throws Exception {
+    assertThrows(FileNotFoundException.class, () -> {
+      File output = new File(INPUT_DIR, name.getMethodName() + ".avro");
 
-    List<String> args = asList(new File(INPUT_DIR.getRoot(), "/doNotExist").getAbsolutePath(),
-        output.getAbsolutePath());
-    new ConcatTool().run(System.in, System.out, System.err, args);
+      List<String> args = asList(new File(INPUT_DIR, "/doNotExist").getAbsolutePath(), output.getAbsolutePath());
+      new ConcatTool().run(System.in, System.out, System.err, args);
+    });
   }
 
   @Test
-  public void testConcat() throws Exception {
+  void concat() throws Exception {
     Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
@@ -157,7 +160,7 @@ public class TestConcatTool {
     File input2 = generateData(name.getMethodName() + "-2.avro", Type.STRING, metadata, DEFLATE);
     File input3 = generateData(name.getMethodName() + "-3.avro", Type.STRING, metadata, DEFLATE);
 
-    File output = new File(OUTPUT_DIR.getRoot(), name.getMethodName() + ".avro");
+    File output = new File(OUTPUT_DIR, name.getMethodName() + ".avro");
 
     List<String> args = asList(input1.getAbsolutePath(), input2.getAbsolutePath(), input3.getAbsolutePath(),
         output.getAbsolutePath());
@@ -169,14 +172,14 @@ public class TestConcatTool {
   }
 
   @Test
-  public void testDifferentSchemasFail() throws Exception {
+  void differentSchemasFail() throws Exception {
     Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData(name.getMethodName() + "-1.avro", Type.STRING, metadata, DEFLATE);
     File input2 = generateData(name.getMethodName() + "-2.avro", Type.INT, metadata, DEFLATE);
 
-    File output = new File(OUTPUT_DIR.getRoot(), name.getMethodName() + ".avro");
+    File output = new File(OUTPUT_DIR, name.getMethodName() + ".avro");
 
     List<String> args = asList(input1.getAbsolutePath(), input2.getAbsolutePath(), output.getAbsolutePath());
     int returnCode = new ConcatTool().run(System.in, System.out, System.err, args);
@@ -184,7 +187,7 @@ public class TestConcatTool {
   }
 
   @Test
-  public void testDifferentMetadataFail() throws Exception {
+  void differentMetadataFail() throws Exception {
     Map<String, String> metadata1 = new HashMap<>();
     metadata1.put("myMetaKey", "myMetaValue");
     Map<String, String> metadata2 = new HashMap<>();
@@ -193,7 +196,7 @@ public class TestConcatTool {
     File input1 = generateData(name.getMethodName() + "-1.avro", Type.STRING, metadata1, DEFLATE);
     File input2 = generateData(name.getMethodName() + "-2.avro", Type.STRING, metadata2, DEFLATE);
 
-    File output = new File(OUTPUT_DIR.getRoot(), name.getMethodName() + ".avro");
+    File output = new File(OUTPUT_DIR, name.getMethodName() + ".avro");
 
     List<String> args = asList(input1.getAbsolutePath(), input2.getAbsolutePath(), output.getAbsolutePath());
     int returnCode = new ConcatTool().run(System.in, System.out, System.err, args);
@@ -201,14 +204,14 @@ public class TestConcatTool {
   }
 
   @Test
-  public void testDifferentCodecFail() throws Exception {
+  void differentCodecFail() throws Exception {
     Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData(name.getMethodName() + "-1.avro", Type.STRING, metadata, DEFLATE);
     File input2 = generateData(name.getMethodName() + "-2.avro", Type.STRING, metadata, CodecFactory.nullCodec());
 
-    File output = new File(OUTPUT_DIR.getRoot(), name.getMethodName() + ".avro");
+    File output = new File(OUTPUT_DIR, name.getMethodName() + ".avro");
 
     List<String> args = asList(input1.getAbsolutePath(), input2.getAbsolutePath(), output.getAbsolutePath());
     int returnCode = new ConcatTool().run(System.in, System.out, System.err, args);
@@ -216,13 +219,13 @@ public class TestConcatTool {
   }
 
   @Test
-  public void testHelpfulMessageWhenNoArgsGiven() throws Exception {
+  void helpfulMessageWhenNoArgsGiven() throws Exception {
     int returnCode;
     try (ByteArrayOutputStream buffer = new ByteArrayOutputStream(1024)) {
       try (PrintStream out = new PrintStream(buffer)) {
         returnCode = new ConcatTool().run(System.in, out, System.err, Collections.emptyList());
       }
-      assertTrue("should have lots of help", buffer.toString().trim().length() > 200);
+      assertTrue(buffer.toString().trim().length() > 200, "should have lots of help");
     }
     assertEquals(0, returnCode);
   }

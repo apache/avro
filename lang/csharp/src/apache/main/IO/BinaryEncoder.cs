@@ -25,7 +25,7 @@ namespace Avro.IO
     /// </summary>
     public class BinaryEncoder : Encoder
     {
-        private readonly Stream Stream;
+        private readonly Stream stream;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BinaryEncoder"/> class without a backing
@@ -42,7 +42,7 @@ namespace Avro.IO
         /// <param name="stream">Stream to write to.</param>
         public BinaryEncoder(Stream stream)
         {
-            this.Stream = stream;
+            this.stream = stream;
         }
 
         /// <summary>
@@ -128,6 +128,18 @@ namespace Avro.IO
         }
 
         /// <summary>
+        /// Bytes are encoded as a long followed by that many bytes of data.
+        /// </summary>
+        /// <param name="value">The byte[] to be read (fully or partially)</param>
+        /// <param name="offset">The offset from the beginning of the byte[] to start writing</param>
+        /// <param name="length">The length of the data to be read from the byte[].</param>
+        public void WriteBytes(byte[] value, int offset, int length)
+        {
+            WriteLong(length);
+            writeBytes(value, offset, length);
+        }
+
+        /// <summary>
         /// A string is encoded as a long followed by
         /// that many bytes of UTF-8 encoded character data.
         /// </summary>
@@ -191,17 +203,22 @@ namespace Avro.IO
         /// <inheritdoc/>
         public void WriteFixed(byte[] data, int start, int len)
         {
-            Stream.Write(data, start, len);
+            stream.Write(data, start, len);
         }
 
         private void writeBytes(byte[] bytes)
         {
-            Stream.Write(bytes, 0, bytes.Length);
+            stream.Write(bytes, 0, bytes.Length);
+        }
+
+        private void writeBytes(byte[] bytes, int offset, int length)
+        {
+            stream.Write(bytes, offset, length);
         }
 
         private void writeByte(byte b)
         {
-            Stream.WriteByte(b);
+            stream.WriteByte(b);
         }
 
         /// <summary>
@@ -209,7 +226,7 @@ namespace Avro.IO
         /// </summary>
         public void Flush()
         {
-            Stream.Flush();
+            stream.Flush();
         }
     }
 }

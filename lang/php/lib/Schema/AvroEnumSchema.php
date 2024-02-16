@@ -40,7 +40,7 @@ class AvroEnumSchema extends AvroNamedSchema
      * @param AvroNamedSchemata &$schemata
      * @throws AvroSchemaParseException
      */
-    public function __construct($name, $doc, $symbols, &$schemata = null)
+    public function __construct($name, $doc, $symbols, &$schemata = null, $aliases = null)
     {
         if (!AvroUtil::isList($symbols)) {
             throw new AvroSchemaParseException('Enum Schema symbols are not a list');
@@ -60,7 +60,7 @@ class AvroEnumSchema extends AvroNamedSchema
             }
         }
 
-        parent::__construct(AvroSchema::ENUM_SCHEMA, $name, $doc, $schemata);
+        parent::__construct(AvroSchema::ENUM_SCHEMA, $name, $doc, $schemata, $aliases);
         $this->symbols = $symbols;
     }
 

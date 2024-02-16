@@ -548,7 +548,7 @@ public class AvroMultipleOutputs {
    * their <code>close()</code>
    *
    * @throws java.io.IOException thrown if any of the MultipleOutput files could
-   *         not be closed properly.
+   *                             not be closed properly.
    */
   public void close() throws IOException {
     for (RecordWriter writer : recordWriters.values()) {

@@ -17,14 +17,17 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collections;
 
 import org.apache.avro.Schema.Field;
 
-/** Schemas used by other tests in this package. Therefore package protected. */
+/**
+ * Schemas used by other tests in this package. Therefore mostly package
+ * protected.
+ */
 public class TestSchemas {
 
   static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
@@ -45,6 +48,11 @@ public class TestSchemas {
   static final Schema STRING_MAP_SCHEMA = Schema.createMap(STRING_SCHEMA);
 
   static final Schema ENUM1_AB_SCHEMA = Schema.createEnum("Enum1", null, null, list("A", "B"));
+  static final Schema ENUM1_AB_SCHEMA_DEFAULT = Schema.createEnum("Enum1", null, null, list("A", "B"), "A");
+  public static final Schema ENUM1_AB_SCHEMA_NAMESPACE_1 = Schema.createEnum("Enum1", null, "namespace1",
+      list("A", "B"));
+  public static final Schema ENUM1_AB_SCHEMA_NAMESPACE_2 = Schema.createEnum("Enum1", null, "namespace2",
+      list("A", "B"));
   static final Schema ENUM1_ABC_SCHEMA = Schema.createEnum("Enum1", null, null, list("A", "B", "C"));
   static final Schema ENUM1_BC_SCHEMA = Schema.createEnum("Enum1", null, null, list("B", "C"));
   static final Schema ENUM2_AB_SCHEMA = Schema.createEnum("Enum2", null, null, list("A", "B"));
@@ -108,6 +116,9 @@ public class TestSchemas {
   static final Schema NS_INNER_RECORD1 = Schema.createRecord("InnerRecord1", null, "ns1", false);
   static final Schema NS_INNER_RECORD2 = Schema.createRecord("InnerRecord1", null, "ns2", false);
 
+  static final Schema WITHOUT_NS = Schema.createRecord("Record", null, null, false);
+  static final Schema WITH_NS = Schema.createRecord("ns.Record", null, null, false);
+
   static {
     EMPTY_RECORD1.setFields(Collections.emptyList());
     EMPTY_RECORD2.setFields(Collections.emptyList());
@@ -137,6 +148,9 @@ public class TestSchemas {
         .setFields(list(new Schema.Field("f1", Schema.createUnion(NULL_SCHEMA, Schema.createArray(NS_INNER_RECORD1)))));
     NS_RECORD2
         .setFields(list(new Schema.Field("f1", Schema.createUnion(NULL_SCHEMA, Schema.createArray(NS_INNER_RECORD2)))));
+
+    WITH_NS.setFields(list(new Field("f1", INT_SCHEMA, null, null)));
+    WITHOUT_NS.setFields(list(new Field("f1", INT_SCHEMA, null, null)));
   }
 
   // Recursive records
@@ -180,7 +194,7 @@ public class TestSchemas {
   static void assertSchemaContains(Schema schemaSubset, Schema original) {
     String subset = schemaSubset.toString(false);
     String whole = original.toString(false);
-    assertTrue(String.format("Subset '%s' not found in '%s'", subset, whole), whole.contains(subset));
+    assertTrue(whole.contains(subset), String.format("Subset '%s' not found in '%s'", subset, whole));
   }
 
 }

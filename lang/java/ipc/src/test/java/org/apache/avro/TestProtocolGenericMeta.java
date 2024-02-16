@@ -23,11 +23,12 @@ import org.apache.avro.ipc.Responder;
 import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.generic.GenericRequestor;
-import org.junit.Before;
+
+import org.junit.jupiter.api.BeforeEach;
 
 public class TestProtocolGenericMeta extends TestProtocolGeneric {
 
-  @Before
+  @BeforeEach
   @Override
   public void testStartServer() throws Exception {
     if (server != null)

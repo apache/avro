@@ -19,6 +19,7 @@
 
 namespace Apache\Avro\Tests;
 
+use Apache\Avro\Datum\AvroIOBinaryDecoder;
 use Apache\Avro\Datum\AvroIOBinaryEncoder;
 use Apache\Avro\Datum\AvroIODatumReader;
 use Apache\Avro\Datum\AvroIODatumWriter;
@@ -38,6 +39,34 @@ JSON;
         $this->assertTrue(AvroIODatumReader::schemasMatch(
             AvroSchema::parse($writers_schema),
             AvroSchema::parse($readers_schema)));
+    }
+
+    public function test_aliased()
+    {
+        $writers_schema = AvroSchema::parse(<<<SCHEMA
+{"type":"record", "name":"Rec1", "fields":[
+{"name":"field1", "type":"int"}
+]}
+SCHEMA);
+    $readers_schema = AvroSchema::parse(<<<SCHEMA
+      {"type":"record", "name":"Rec2", "aliases":["Rec1"], "fields":[
+        {"name":"field2", "aliases":["field1"], "type":"int"}
+      ]}
+    SCHEMA);
+
+        $io = new AvroStringIO();
+        $writer = new AvroIODatumWriter();
+        $writer->writeData($writers_schema, ['field1' => 1], new AvroIOBinaryEncoder($io));
+
+        $bin = $io->string();
+        $reader = new AvroIODatumReader();
+        $record = $reader->readRecord(
+            $writers_schema,
+            $readers_schema,
+            new AvroIOBinaryDecoder(new AvroStringIO($bin))
+        );
+
+        $this->assertEquals(['field2' => 1], $record);
     }
 
     public function testRecordNullField()
