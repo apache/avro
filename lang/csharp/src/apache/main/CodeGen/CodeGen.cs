@@ -893,14 +893,13 @@ namespace Avro
             ctd.Members.Add(cmmPut);
 
             string nspace = recordSchema.Namespace;
-            //if (string.IsNullOrEmpty(nspace))
-            //{
-            //    throw new CodeGenException("Namespace required for record schema " + recordSchema.Name);
-            //}
+            if (string.IsNullOrEmpty(nspace))
+            {
+                throw new CodeGenException("Namespace required for record schema " + recordSchema.Name);
+            }
 
-            // AVRO spec DOES NOT require a Namespace but this code does.
-            // Workaround is to inject a fixed string that will be obvious if required
-            CodeNamespace codens = (!string.IsNullOrEmpty(nspace)) ? AddNamespace(nspace) : AddNamespace(@"SchemaHadNoNamespace");
+            CodeNamespace codens = AddNamespace(nspace);
+
             codens.Types.Add(ctd);
 
             return ctd;
