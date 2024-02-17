@@ -30,16 +30,14 @@
 namespace avro {
 
 AVRO_DECL constexpr uint64_t encodeZigzag64(int64_t input) noexcept {
-    // cppcheck-suppress shiftTooManyBitsSigned
-    return ((input << 1) ^ (input >> 63));
+    return ((static_cast<uint64_t>(input) << 1) ^ (input >> 63));
 }
 AVRO_DECL constexpr int64_t decodeZigzag64(uint64_t input) noexcept {
     return static_cast<int64_t>(((input >> 1) ^ -(static_cast<int64_t>(input) & 1)));
 }
 
 AVRO_DECL constexpr uint32_t encodeZigzag32(int32_t input) noexcept {
-    // cppcheck-suppress shiftTooManyBitsSigned
-    return ((input << 1) ^ (input >> 31));
+    return (static_cast<uint32_t>(input) << 1) ^ (input >> 31);
 }
 AVRO_DECL constexpr int32_t decodeZigzag32(uint32_t input) noexcept {
     return static_cast<int32_t>(((input >> 1) ^ -(static_cast<int64_t>(input) & 1)));
