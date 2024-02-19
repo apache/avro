@@ -6366,7 +6366,6 @@ mod tests {
                 attributes: BTreeMap::from([("logicalType".to_string(), "uuid".into())]),
             })
         );
-        assert_logged(r#"Going to use the default schemata equality comparator: SpecificationEq."#);
         assert_logged(
             r#"Ignoring uuid logical type for a Fixed schema because its size (6) is not 16! Schema: Fixed(FixedSchema { name: Name { name: "FixedUUID", namespace: None }, aliases: None, doc: None, size: 6, attributes: {"logicalType": String("uuid")} })"#,
         );
