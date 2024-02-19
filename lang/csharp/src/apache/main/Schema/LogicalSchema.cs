@@ -54,7 +54,7 @@ namespace Avro
         {
             BaseSchema = baseSchema ?? throw new ArgumentNullException(nameof(baseSchema));
             LogicalTypeName = logicalTypeName;
-            LogicalType = LogicalTypeFactory.Instance.GetFromLogicalSchema(this);
+            LogicalType = LogicalTypeFactory.Instance.GetFromLogicalSchema(this, true);
         }
 
         /// <summary>

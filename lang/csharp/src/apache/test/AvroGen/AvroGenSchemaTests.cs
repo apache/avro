@@ -619,7 +619,10 @@ namespace Avro.Test.AvroGen
                 string schemaFileName = Path.Combine(outputDir, $"{uniqueId}.avsc");
                 System.IO.File.WriteAllText(schemaFileName, schema);
 
-                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, new Dictionary<string, string>(), false), Is.EqualTo(1));
+                // We now support unknown logical types
+                //Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, new Dictionary<string, string>(), false), Is.EqualTo(1));
+                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, new Dictionary<string, string>(), false), Is.EqualTo(0));
+
             }
             finally
             {
