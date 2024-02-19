@@ -243,7 +243,7 @@ pub(crate) fn compare_schemata(schema_one: &Schema, schema_two: &Schema) -> bool
 #[allow(non_snake_case)]
 mod tests {
     use super::*;
-    use crate::Schema;
+    use crate::{schema::Name, Schema};
     use serde_json::Value;
     use std::collections::BTreeMap;
 
@@ -314,5 +314,56 @@ mod tests {
             BTreeMap::from_iter([("key2".to_string(), Value::Bool(true))]),
         );
         assert!(!struct_field_eq.compare(&schema_one, &schema_two));
+    }
+
+    #[test]
+    fn test_avro_3939_compare_map_schemata() {
+        let schema_one = Schema::map(Schema::Boolean);
+        assert!(!SPECIFICATION_EQ.compare(&schema_one, &Schema::Boolean));
+        assert!(!STRUCT_FIELD_EQ.compare(&schema_one, &Schema::Boolean));
+
+        let schema_two = Schema::map(Schema::Boolean);
+
+        let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
+        let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert_eq!(specification_eq_res, struct_field_eq_res);
+    }
+
+    #[test]
+    fn test_avro_3939_compare_array_schemata() {
+        let schema_one = Schema::array(Schema::Boolean);
+        assert!(!SPECIFICATION_EQ.compare(&schema_one, &Schema::Boolean));
+        assert!(!STRUCT_FIELD_EQ.compare(&schema_one, &Schema::Boolean));
+
+        let schema_two = Schema::array(Schema::Boolean);
+
+        let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
+        let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert_eq!(specification_eq_res, struct_field_eq_res);
+    }
+
+    #[test]
+    fn test_avro_3939_compare_fixed_schemata() {
+        let schema_one = Schema::Fixed(FixedSchema {
+            name: Name::from("fixed"),
+            doc: None,
+            size: 10,
+            aliases: None,
+            attributes: BTreeMap::new(),
+        });
+        assert!(!SPECIFICATION_EQ.compare(&schema_one, &Schema::Boolean));
+        assert!(!STRUCT_FIELD_EQ.compare(&schema_one, &Schema::Boolean));
+
+        let schema_two = Schema::Fixed(FixedSchema {
+            name: Name::from("fixed"),
+            doc: None,
+            size: 10,
+            aliases: None,
+            attributes: BTreeMap::new(),
+        });
+
+        let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
+        let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert_eq!(specification_eq_res, struct_field_eq_res);
     }
 }

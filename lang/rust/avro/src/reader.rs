@@ -28,7 +28,6 @@ use serde::de::DeserializeOwned;
 use serde_json::from_slice;
 use std::{
     collections::HashMap,
-    convert::TryFrom,
     io::{ErrorKind, Read},
     marker::PhantomData,
     str::FromStr,

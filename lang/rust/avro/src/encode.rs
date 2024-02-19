@@ -25,11 +25,7 @@ use crate::{
     util::{zig_i32, zig_i64},
     AvroResult, Error,
 };
-use std::{
-    borrow::Borrow,
-    collections::HashMap,
-    convert::{TryFrom, TryInto},
-};
+use std::{borrow::Borrow, collections::HashMap};
 
 /// Encode a `Value` into avro format.
 ///
