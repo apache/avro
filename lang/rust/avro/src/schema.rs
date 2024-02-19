@@ -6355,6 +6355,7 @@ mod tests {
             "logicalType": "uuid"
         });
         let parse_result = Schema::parse(&schema)?;
+
         assert_eq!(
             parse_result,
             Schema::Fixed(FixedSchema {
@@ -6365,6 +6366,7 @@ mod tests {
                 attributes: BTreeMap::from([("logicalType".to_string(), "uuid".into())]),
             })
         );
+        assert_logged(r#"Going to use the default schemata equality comparator: SpecificationEq."#);
         assert_logged(
             r#"Ignoring uuid logical type for a Fixed schema because its size (6) is not 16! Schema: Fixed(FixedSchema { name: Name { name: "FixedUUID", namespace: None }, aliases: None, doc: None, size: 6, attributes: {"logicalType": String("uuid")} })"#,
         );
@@ -6635,57 +6637,6 @@ mod tests {
             }
             _ => unreachable!("Expected Schema::Record"),
         }
-
-        Ok(())
-    }
-
-    #[test]
-    fn aaaaa() -> TestResult {
-        let schema = r#"
-    {
-        "type": "record",
-        "name": "User",
-        "namespace": "office",
-        "fields": [
-            {
-              "name": "details",
-              "type": [
-                {
-                  "type": "record",
-                  "name": "Employee",
-                  "fields": [
-                    {
-                      "name": "gender",
-                      "type": {
-                        "type": "enum",
-                        "name": "Gender",
-                        "symbols": [
-                          "male",
-                          "female"
-                        ]
-                      },
-                      "default": "female"
-                    }
-                  ]
-                },
-                {
-                  "type": "record",
-                  "name": "Manager",
-                  "fields": [
-                    {
-                      "name": "gender",
-                      "type": "Gender"
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-        "#;
-
-        let schema = Schema::parse_str(schema)?;
-        println!("{:#?}", schema.canonical_form());
 
         Ok(())
     }

@@ -22,29 +22,33 @@ use crate::{
     },
     Schema,
 };
-use std::sync::OnceLock;
+use std::{fmt::Debug, sync::OnceLock};
 
-/// A trait that compares two schemata.
+/// A trait that compares two schemata for equality.
 /// To register a custom one use [set_schemata_equality_comparator].
-pub trait SchemataEq: Send + Sync {
+pub trait SchemataEq: Debug + Send + Sync {
     /// Compares two schemata for equality.
     fn compare(&self, schema_one: &Schema, schema_two: &Schema) -> bool;
 }
 
 /// Compares two schemas according to the Avro specification by using
 /// their canonical forms.
-/// See https://avro.apache.org/docs/1.11.1/specification/#parsing-canonical-form-for-schemas
-struct SpecificationEq;
+/// See <https://avro.apache.org/docs/1.11.1/specification/#parsing-canonical-form-for-schemas>
+#[derive(Debug)]
+pub struct SpecificationEq;
 impl SchemataEq for SpecificationEq {
     fn compare(&self, schema_one: &Schema, schema_two: &Schema) -> bool {
         schema_one.canonical_form() == schema_two.canonical_form()
     }
 }
 
-/// Compares two schemas field by field, using only the fields that
+/// Compares two schemas for equality field by field, using only the fields that
 /// are used to construct their canonical forms.
 /// See <https://avro.apache.org/docs/1.11.1/specification/#parsing-canonical-form-for-schemas>
+#[derive(Debug)]
 pub struct StructFieldEq {
+    /// Whether to include custom attributes in the comparison.
+    /// The custom attributes are not used to construct the canonical form of the schema!
     pub include_attributes: bool,
 }
 
@@ -211,9 +215,9 @@ impl StructFieldEq {
     }
 }
 
-static SCHEMATA_COMPARATOR_ONCE: OnceLock<Box<dyn SchemataEq + Send + Sync>> = OnceLock::new();
+static SCHEMATA_COMPARATOR_ONCE: OnceLock<Box<dyn SchemataEq>> = OnceLock::new();
 
-/// Sets a custom schemata comparator.
+/// Sets a custom schemata equality comparator.
 ///
 /// Returns a unit if the registration was successful or the already
 /// registered comparator if the registration failed.
@@ -221,20 +225,20 @@ static SCHEMATA_COMPARATOR_ONCE: OnceLock<Box<dyn SchemataEq + Send + Sync>> = O
 /// **Note**: This function must be called before parsing any schema because this will
 /// register the default comparator and the registration is one time only!
 pub fn set_schemata_equality_comparator(
-    comparator: Box<dyn SchemataEq + Send + Sync>,
-) -> Result<(), Box<dyn SchemataEq + Send + Sync>> {
-    debug!("Setting a custom schemata equality comparator.");
+    comparator: Box<dyn SchemataEq>,
+) -> Result<(), Box<dyn SchemataEq>> {
+    debug!(
+        "Setting a custom schemata equality comparator: {:?}.",
+        comparator
+    );
     SCHEMATA_COMPARATOR_ONCE.set(comparator)
 }
 
 pub(crate) fn compare_schemata(schema_one: &Schema, schema_two: &Schema) -> bool {
     SCHEMATA_COMPARATOR_ONCE
         .get_or_init(|| {
-            // debug!("Going to use the default schemata comparator.");
-            // Box::new(SpecificationComparator)
-            Box::new(StructFieldEq {
-                include_attributes: false,
-            }) // TEMPORARY
+            debug!("Going to use the default schemata equality comparator: SpecificationEq.",);
+            Box::new(SpecificationEq)
         })
         .compare(schema_one, schema_two)
 }
@@ -244,6 +248,7 @@ pub(crate) fn compare_schemata(schema_one: &Schema, schema_two: &Schema) -> bool
 mod tests {
     use super::*;
     use crate::schema::{Name, RecordFieldOrder};
+    use apache_avro_test_helper::TestResult;
     use serde_json::Value;
     use std::collections::BTreeMap;
 
@@ -352,6 +357,27 @@ mod tests {
         assert!(!STRUCT_FIELD_EQ.compare(&schema_one, &Schema::Boolean));
 
         let schema_two = Schema::array(Schema::Boolean);
+
+        let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
+        let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert_eq!(specification_eq_res, struct_field_eq_res);
+    }
+
+    #[test]
+    fn test_avro_3939_compare_decimal_schemata() {
+        let schema_one = Schema::Decimal(DecimalSchema {
+            precision: 10,
+            scale: 2,
+            inner: Box::new(Schema::Bytes),
+        });
+        assert!(!SPECIFICATION_EQ.compare(&schema_one, &Schema::Boolean));
+        assert!(!STRUCT_FIELD_EQ.compare(&schema_one, &Schema::Boolean));
+
+        let schema_two = Schema::Decimal(DecimalSchema {
+            precision: 10,
+            scale: 2,
+            inner: Box::new(Schema::Bytes),
+        });
 
         let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
         let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
@@ -470,5 +496,19 @@ mod tests {
         let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
         let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
         assert_eq!(specification_eq_res, struct_field_eq_res);
+    }
+
+    #[test]
+    fn test_avro_3939_compare_union_schemata() -> TestResult {
+        let schema_one = Schema::Union(UnionSchema::new(vec![Schema::Boolean, Schema::Int])?);
+        assert!(!SPECIFICATION_EQ.compare(&schema_one, &Schema::Boolean));
+        assert!(!STRUCT_FIELD_EQ.compare(&schema_one, &Schema::Boolean));
+
+        let schema_two = Schema::Union(UnionSchema::new(vec![Schema::Boolean, Schema::Int])?);
+
+        let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
+        let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert_eq!(specification_eq_res, struct_field_eq_res);
+        Ok(())
     }
 }
