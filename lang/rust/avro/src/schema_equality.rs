@@ -44,7 +44,10 @@ impl SchemataEq for SpecificationEq {
 /// Compares two schemas field by field, using only the fields that
 /// are used to construct their canonical forms.
 /// See <https://avro.apache.org/docs/1.11.1/specification/#parsing-canonical-form-for-schemas>
-pub struct StructFieldEq;
+pub struct StructFieldEq {
+    pub include_attributes: bool,
+}
+
 impl SchemataEq for StructFieldEq {
     fn compare(&self, schema_one: &Schema, schema_two: &Schema) -> bool {
         macro_rules! compare_primitive {
@@ -83,6 +86,12 @@ impl SchemataEq for StructFieldEq {
         compare_primitive!(LocalTimestampMicros);
         compare_primitive!(LocalTimestampMillis);
         compare_primitive!(LocalTimestampNanos);
+
+        if self.include_attributes
+            && schema_one.custom_attributes() != schema_two.custom_attributes()
+        {
+            return false;
+        }
 
         if let Schema::Record(RecordSchema {
             fields: fields_one, ..
@@ -223,7 +232,9 @@ pub(crate) fn compare_schemata(schema_one: &Schema, schema_two: &Schema) -> bool
         .get_or_init(|| {
             // debug!("Going to use the default schemata comparator.");
             // Box::new(SpecificationComparator)
-            Box::new(StructFieldEq) // TEMPORARY
+            Box::new(StructFieldEq {
+                include_attributes: false,
+            }) // TEMPORARY
         })
         .compare(schema_one, schema_two)
 }
@@ -233,13 +244,22 @@ pub(crate) fn compare_schemata(schema_one: &Schema, schema_two: &Schema) -> bool
 mod tests {
     use super::*;
     use crate::Schema;
+    use serde_json::Value;
+    use std::collections::BTreeMap;
+
+    const SPECIFICATION_EQ: SpecificationEq = SpecificationEq;
+    const STRUCT_FIELD_EQ: StructFieldEq = StructFieldEq {
+        include_attributes: false,
+    };
 
     macro_rules! test_primitives {
         ($primitive:ident) => {
             paste::item! {
                 #[test]
                 fn [<test_avro_3939_compare_schemata_$primitive>]() {
-                    assert!(compare_schemata(&Schema::$primitive, &Schema::$primitive))
+                    let specification_eq_res = SPECIFICATION_EQ.compare(&Schema::$primitive, &Schema::$primitive);
+                    let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&Schema::$primitive, &Schema::$primitive);
+                    assert_eq!(specification_eq_res, struct_field_eq_res)
                 }
             }
         };
@@ -265,4 +285,34 @@ mod tests {
     test_primitives!(LocalTimestampMicros);
     test_primitives!(LocalTimestampMillis);
     test_primitives!(LocalTimestampNanos);
+
+    #[test]
+    fn test_avro_3939_compare_schemata_not_including_attributes() {
+        let schema_one = Schema::map_with_attributes(
+            Schema::Boolean,
+            BTreeMap::from_iter([("key1".to_string(), Value::Bool(true))]),
+        );
+        let schema_two = Schema::map_with_attributes(
+            Schema::Boolean,
+            BTreeMap::from_iter([("key2".to_string(), Value::Bool(true))]),
+        );
+        // STRUCT_FIELD_EQ does not include attributes !
+        assert!(STRUCT_FIELD_EQ.compare(&schema_one, &schema_two));
+    }
+
+    #[test]
+    fn test_avro_3939_compare_schemata_including_attributes() {
+        let struct_field_eq = StructFieldEq {
+            include_attributes: true,
+        };
+        let schema_one = Schema::map_with_attributes(
+            Schema::Boolean,
+            BTreeMap::from_iter([("key1".to_string(), Value::Bool(true))]),
+        );
+        let schema_two = Schema::map_with_attributes(
+            Schema::Boolean,
+            BTreeMap::from_iter([("key2".to_string(), Value::Bool(true))]),
+        );
+        assert!(!struct_field_eq.compare(&schema_one, &schema_two));
+    }
 }
