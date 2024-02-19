@@ -1150,7 +1150,7 @@ mod tests {
     use super::*;
     use crate::{
         duration::{Days, Millis, Months},
-        schema::{RecordField, RecordFieldOrder},
+        schema::RecordFieldOrder,
     };
     use apache_avro_test_helper::{
         logger::{assert_logged, assert_not_logged},
