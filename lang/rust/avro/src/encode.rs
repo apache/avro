@@ -307,7 +307,6 @@ pub(crate) mod tests {
     use super::*;
     use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
-    use std::collections::HashMap;
     use uuid::Uuid;
 
     pub(crate) fn success(value: &Value, schema: &Schema) -> String {

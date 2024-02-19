@@ -243,7 +243,7 @@ pub(crate) fn compare_schemata(schema_one: &Schema, schema_two: &Schema) -> bool
 #[allow(non_snake_case)]
 mod tests {
     use super::*;
-    use crate::{schema::Name, Schema};
+    use crate::schema::{Name, RecordFieldOrder};
     use serde_json::Value;
     use std::collections::BTreeMap;
 
@@ -285,6 +285,22 @@ mod tests {
     test_primitives!(LocalTimestampMicros);
     test_primitives!(LocalTimestampMillis);
     test_primitives!(LocalTimestampNanos);
+
+    #[test]
+    fn test_avro_3939_compare_named_schemata_with_different_names() {
+        let schema_one = Schema::Ref {
+            name: Name::from("name1"),
+        };
+
+        let schema_two = Schema::Ref {
+            name: Name::from("name2"),
+        };
+
+        let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
+        assert!(!specification_eq_res);
+        let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert!(!struct_field_eq_res);
+    }
 
     #[test]
     fn test_avro_3939_compare_schemata_not_including_attributes() {
@@ -360,6 +376,95 @@ mod tests {
             size: 10,
             aliases: None,
             attributes: BTreeMap::new(),
+        });
+
+        let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
+        let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert_eq!(specification_eq_res, struct_field_eq_res);
+    }
+
+    #[test]
+    fn test_avro_3939_compare_enum_schemata() {
+        let schema_one = Schema::Enum(EnumSchema {
+            name: Name::from("enum"),
+            doc: None,
+            symbols: vec!["A".to_string(), "B".to_string()],
+            default: None,
+            aliases: None,
+            attributes: BTreeMap::new(),
+        });
+        assert!(!SPECIFICATION_EQ.compare(&schema_one, &Schema::Boolean));
+        assert!(!STRUCT_FIELD_EQ.compare(&schema_one, &Schema::Boolean));
+
+        let schema_two = Schema::Enum(EnumSchema {
+            name: Name::from("enum"),
+            doc: None,
+            symbols: vec!["A".to_string(), "B".to_string()],
+            default: None,
+            aliases: None,
+            attributes: BTreeMap::new(),
+        });
+
+        let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
+        let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert_eq!(specification_eq_res, struct_field_eq_res);
+    }
+
+    #[test]
+    fn test_avro_3939_compare_ref_schemata() {
+        let schema_one = Schema::Ref {
+            name: Name::from("ref"),
+        };
+        assert!(!SPECIFICATION_EQ.compare(&schema_one, &Schema::Boolean));
+        assert!(!STRUCT_FIELD_EQ.compare(&schema_one, &Schema::Boolean));
+
+        let schema_two = Schema::Ref {
+            name: Name::from("ref"),
+        };
+
+        let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
+        let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert_eq!(specification_eq_res, struct_field_eq_res);
+    }
+
+    #[test]
+    fn test_avro_3939_compare_record_schemata() {
+        let schema_one = Schema::Record(RecordSchema {
+            name: Name::from("record"),
+            doc: None,
+            fields: vec![RecordField {
+                name: "field".to_string(),
+                doc: None,
+                default: None,
+                schema: Schema::Boolean,
+                order: RecordFieldOrder::Ignore,
+                aliases: None,
+                custom_attributes: BTreeMap::new(),
+                position: 0,
+            }],
+            aliases: None,
+            attributes: BTreeMap::new(),
+            lookup: Default::default(),
+        });
+        assert!(!SPECIFICATION_EQ.compare(&schema_one, &Schema::Boolean));
+        assert!(!STRUCT_FIELD_EQ.compare(&schema_one, &Schema::Boolean));
+
+        let schema_two = Schema::Record(RecordSchema {
+            name: Name::from("record"),
+            doc: None,
+            fields: vec![RecordField {
+                name: "field".to_string(),
+                doc: None,
+                default: None,
+                schema: Schema::Boolean,
+                order: RecordFieldOrder::Ignore,
+                aliases: None,
+                custom_attributes: BTreeMap::new(),
+                position: 0,
+            }],
+            aliases: None,
+            attributes: BTreeMap::new(),
+            lookup: Default::default(),
         });
 
         let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
