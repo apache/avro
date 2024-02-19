@@ -17,7 +17,9 @@
  */
 
 using System;
+using System.Composition.Convention;
 using System.Globalization;
+using System.Linq;
 using System.Numerics;
 using Avro.Util;
 using NUnit.Framework;
@@ -418,6 +420,59 @@ namespace Avro.Test
 
             var converted = (Guid) avroUuid.ConvertToLogicalValue(avroUuid.ConvertToBaseValue(guid, schema), schema);
             Assert.AreEqual(guid, converted);
+        }
+
+        /*
+            {
+              "fields": [
+                {
+                  "default": 0,
+                  "name": "firstField",
+                  "type": "int"
+                },
+                {
+                  "default": null,
+                  "name": "secondField",
+                  "type": [
+                    "null",
+                    {
+                      "logicalType": "varchar",
+                      "maxLength": 65,
+                      "type": "string"
+                    }
+                  ]
+                }
+              ],
+              "name": "sample_schema",
+              "type": "record"
+            }
+         */
+
+        // Before Change will throw Avro.AvroTypeException: 'Logical type 'varchar' is not supported.'
+        // Per AVRO Spec (v1.8.0 - v1.11.1) ... Logical Types Section
+        //  Language implementations must ignore unknown logical types when reading, and should use the underlying Avro type.
+        [TestCase("{\"fields\": [{\"default\": 0,\"name\": \"firstField\",\"type\": \"int\"},{\"default\": null,\"name\": \"secondField\",\"type\": [\"null\",{\"logicalType\": \"varchar\",\"maxLength\": 65,\"type\": \"string\"}]}],\"name\": \"sample_schema\",\"type\": \"record\"}")]
+        public void TestUnknownLogicalType(string schemaText)
+        {
+            var schema = Avro.Schema.Parse(schemaText);
+            Assert.IsNotNull(schema);
+
+            var secondField = ((RecordSchema)schema).Fields.FirstOrDefault(f => f.Name == @"secondField");
+            Assert.IsNotNull(secondField);
+
+            var secondFieldSchema = ((Field)secondField).Schema;
+            Assert.IsNotNull(secondFieldSchema);
+
+            var secondFieldUnionSchema = (UnionSchema)secondFieldSchema;
+            Assert.IsNotNull(secondFieldUnionSchema);
+
+            var props = secondFieldUnionSchema.Schemas.Where(s => s.Props != null).ToList();
+            Assert.IsNotNull(props);
+            Assert.IsTrue(props.Count == 1);
+
+            var prop = props[0];
+            // Confirm that the unknown logical type is ignored and the underlying AVRO type is used
+            Assert.IsTrue(prop.Name == @"string");
         }
     }
 }

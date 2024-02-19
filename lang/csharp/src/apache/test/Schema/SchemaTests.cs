@@ -548,12 +548,20 @@ namespace Avro.Test
             testToString(sc);
         }
 
+        // Per AVRO Spec (v1.8.0 - v1.11.1) ... Logical Types Section
+        //  Language implementations must ignore unknown logical types when reading, and should use the underlying Avro type.
         [TestCase("{\"type\": \"int\", \"logicalType\": \"unknown\"}", "unknown")]
         public void TestUnknownLogical(string s, string unknownType)
         {
-            var err = Assert.Throws<AvroTypeException>(() => Schema.Parse(s));
+            //var err = Assert.Throws<AvroTypeException>(() => Schema.Parse(s));
+            Assert.DoesNotThrow(() =>
+            {
+                var schema = Schema.Parse(s);
+                // confirm that the schema defaults to the underlying type
+                Assert.IsTrue(schema.Name == @"int");
+            });
 
-            Assert.AreEqual("Logical type '" + unknownType + "' is not supported.", err.Message);
+            //Assert.AreEqual("Logical type '" + unknownType + "' is not supported.", err.Message);
         }
 
         [TestCase("{\"type\": \"map\", \"values\": \"long\"}", "long")]

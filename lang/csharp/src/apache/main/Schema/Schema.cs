@@ -192,9 +192,14 @@ namespace Avro
                         return ArraySchema.NewInstance(jtok, props, names, encspace);
                     if (type.Equals("map", StringComparison.Ordinal))
                         return MapSchema.NewInstance(jtok, props, names, encspace);
-                    if (null != jo["logicalType"]) // logical type based on a primitive
-                        return LogicalSchema.NewInstance(jtok, props, names, encspace);
-
+                    try
+                    {
+                        if (null != jo["logicalType"]) // logical type based on a primitive
+                            return LogicalSchema.NewInstance(jtok, props, names, encspace);
+                    }
+                    // swallow exception from unknown logicalType
+                    catch { }
+                        
                     Schema schema = PrimitiveSchema.NewInstance((string)type, props);
                     if (null != schema)
                         return schema;
