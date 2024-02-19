@@ -403,9 +403,10 @@ public:
             prev = df.previousSync();
             sync_points.push_back(prev);
         }
+
         std::set<pair<int64_t, int64_t>> actual;
         int num = 0;
-        for (int i = sync_points.size() - 2; i >= 0; --i) {
+        for (long i = sync_points.size() - 2; i >= 0; --i) {
             df.seek(sync_points[i]);
             ComplexInteger ci;
             // Subtract avro::SyncSize here because sync and pastSync
@@ -473,14 +474,14 @@ public:
         avro::DataFileReader<ComplexInteger> df(filename, writerSchema);
         std::ifstream just_for_length(
             filename, std::ifstream::ate | std::ifstream::binary);
-        int length = just_for_length.tellg();
+        auto length = just_for_length.tellg();
         int splits = 10;
-        int end = length;     // end of split
-        int remaining = end;  // bytes remaining
+        std::streamoff end = length;     // end of split
+        std::streamoff remaining = end;  // bytes remaining
         int actual_count = 0; // count of entries
         while (remaining > 0) {
             int start =
-                std::max(0, end - boost::random::uniform_int_distribution<>(0, 2 * length / splits)(random));
+                std::max(0, (int) (end - boost::random::uniform_int_distribution<>(0, 2 * (int)(length / splits))(random)));
             df.sync(start); // count entries in split
             while (!df.pastSync(end)) {
                 ComplexInteger ci;
@@ -575,7 +576,7 @@ public:
         }
         {
             avro::DataFileReader<ComplexInteger> reader(filename, dschema);
-            std::vector<int> found;
+            std::vector<int64_t> found;
             ComplexInteger record;
             while (reader.read(record)) {
                 found.push_back(record.re);
@@ -948,7 +949,7 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
         std::unique_ptr<avro::InputStream>
             inputStream = avro::memoryInputStream(stitchedData.data(), stitchedData.size());
 
-        int recordsUptoRecordToRead = recordToRead - recordsUptoLastSync;
+        size_t recordsUptoRecordToRead = recordToRead - recordsUptoLastSync;
 
         // Ensure this is not the first record in the chunk.
         BOOST_CHECK_GT(recordsUptoRecordToRead, 0);
@@ -956,7 +957,7 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
         avro::DataFileReader<TestRecord> df(std::move(inputStream));
         TestRecord readRecord("", 0);
         //::printf("\nReading %d rows until specific record is reached", recordsUptoRecordToRead);
-        for (int index = 0; index < recordsUptoRecordToRead; index++) {
+        for (size_t index = 0; index < recordsUptoRecordToRead; index++) {
             BOOST_CHECK_EQUAL(df.read(readRecord), true);
 
             int64_t expectedId = (recordToRead - recordsUptoRecordToRead + index);

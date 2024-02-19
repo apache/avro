@@ -62,7 +62,7 @@ bool Validator::countingSetup() {
             compoundStack_.pop_back();
             proceed = false;
         } else {
-            counters_.push_back(static_cast<size_t>(count_));
+            counters_.push_back(count_);
         }
     }
 
@@ -78,7 +78,7 @@ void Validator::countingAdvance() {
             setupOperation(node->leafAt(index));
         } else {
             compoundStack_.back().pos = 0;
-            int count = --counters_.back();
+            int64_t count = --counters_.back();
             if (count == 0) {
                 counters_.pop_back();
                 compoundStarted_ = true;
@@ -117,7 +117,7 @@ void Validator::fixedAdvance() {
     compoundStack_.pop_back();
 }
 
-int Validator::nextSizeExpected() const {
+size_t Validator::nextSizeExpected() const {
     return compoundStack_.back().node->fixedSize();
 }
 

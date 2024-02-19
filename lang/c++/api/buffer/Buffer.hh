@@ -276,7 +276,7 @@ public:
      * Returns the number of chunks that contain free space.
      **/
 
-    int numChunks() const {
+    size_t numChunks() const {
         return pimpl_->numFreeChunks();
     }
 
@@ -284,7 +284,7 @@ public:
      * Returns the number of chunks that contain data
      **/
 
-    int numDataChunks() const {
+    size_t numDataChunks() const {
         return pimpl_->numDataChunks();
     }
 
@@ -384,7 +384,7 @@ public:
      * Returns the number of chunks containing data.
      **/
 
-    int numChunks() const {
+    size_t numChunks() const {
         return pimpl_->numDataChunks();
     }
 

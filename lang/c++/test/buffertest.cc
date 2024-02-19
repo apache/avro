@@ -39,9 +39,9 @@ std::string makeString(size_t len) {
     newstring.reserve(len);
 
     for (size_t i = 0; i < len; ++i) {
-        char newchar = '0' + i % 16;
+        char newchar = (char) ('0' + i % 16);
         if (newchar > '9') {
-            newchar += 7;
+            newchar = (char) (newchar + 7);
         }
         newstring.push_back(newchar);
     }
@@ -219,7 +219,7 @@ void TestDiscard() {
             BOOST_CHECK_EQUAL(ob.freeSpace(), kDefaultBlockSize / 2);
             BOOST_CHECK_EQUAL(ob.numChunks(), 1);
 
-            int chunks = 3 - (discarded / kDefaultBlockSize);
+            size_t chunks = 3 - (discarded / kDefaultBlockSize);
             BOOST_CHECK_EQUAL(ob.numDataChunks(), chunks);
         }
 
@@ -331,7 +331,7 @@ void TestExtractToInput() {
             BOOST_CHECK_EQUAL(ob.freeSpace(), kDefaultBlockSize / 2);
             BOOST_CHECK_EQUAL(ob.numChunks(), 1);
 
-            int chunks = 3 - (extracted / kDefaultBlockSize);
+            size_t chunks = 3 - (extracted / kDefaultBlockSize);
             BOOST_CHECK_EQUAL(ob.numDataChunks(), chunks);
         }
 

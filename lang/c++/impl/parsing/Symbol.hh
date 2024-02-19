@@ -619,10 +619,9 @@ public:
     size_t enumAdjust(size_t n) {
         const Symbol &s = parsingStack.top();
         assertMatch(Symbol::Kind::EnumAdjust, s.kind());
-        const auto *v = s.extrap<std::pair<std::vector<int>, std::vector<std::string>>>();
+        const auto *v = s.extrap<std::pair<std::vector<size_t>, std::vector<std::string>>>();
         assertLessThan(n, v->first.size());
-
-        int result = v->first[n];
+        size_t result = v->first[n];
         if (result < 0) {
             std::ostringstream oss;
             oss << "Cannot resolve symbol: " << v->second[-result - 1]

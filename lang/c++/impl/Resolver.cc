@@ -424,7 +424,7 @@ public:
     }
 
 protected:
-    int size_;
+    size_t size_;
 };
 
 class FixedParser : public Resolver {
@@ -441,7 +441,7 @@ public:
     }
 
 protected:
-    int size_;
+    size_t size_;
     size_t offset_;
 };
 

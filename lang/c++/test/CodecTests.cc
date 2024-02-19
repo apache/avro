@@ -156,7 +156,7 @@ static string randomString(size_t len) {
     std::string result;
     result.reserve(len + 1);
     for (size_t i = 0; i < len; ++i) {
-        auto c = static_cast<char>(rnd()) & 0x7f;
+        char c = static_cast<char>(rnd()) & 0x7f;
         if (c == '\0') {
             c = '\x7f';
         }
@@ -169,7 +169,7 @@ static vector<uint8_t> randomBytes(size_t len) {
     vector<uint8_t> result;
     result.reserve(len);
     for (size_t i = 0; i < len; ++i) {
-        result.push_back(rnd());
+        result.push_back((uint8_t) rnd());
     }
     return result;
 }

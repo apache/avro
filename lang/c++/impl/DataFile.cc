@@ -196,10 +196,10 @@ void DataFileWriterBase::sync() {
             os.push(boost::iostreams::back_inserter(temp));
             boost::iostreams::write(os, compressed.c_str(), compressed_size);
         }
-        temp.push_back((checksum >> 24) & 0xFF);
-        temp.push_back((checksum >> 16) & 0xFF);
-        temp.push_back((checksum >> 8) & 0xFF);
-        temp.push_back(checksum & 0xFF);
+        temp.push_back(static_cast<char>((checksum >> 24) & 0xFF));
+        temp.push_back(static_cast<char>((checksum >> 16) & 0xFF));
+        temp.push_back(static_cast<char>((checksum >> 8) & 0xFF));
+        temp.push_back(static_cast<char>(checksum & 0xFF));
         std::unique_ptr<InputStream> in = memoryInputStream(
             reinterpret_cast<const uint8_t *>(temp.data()), temp.size());
         int64_t byteCount = temp.size();
@@ -528,12 +528,12 @@ void DataFileReaderBase::sync(int64_t position) {
             eof_ = true;
             return;
         }
-        int len =
+        size_t len =
             std::min(static_cast<size_t>(SyncSize - i), n);
         memcpy(&sync_buffer[i], p, len);
         p += len;
         n -= len;
-        i += len;
+        i += (int) len;
     }
     for (;;) {
         size_t j = 0;
@@ -558,7 +558,7 @@ void DataFileReaderBase::sync(int64_t position) {
 }
 
 bool DataFileReaderBase::pastSync(int64_t position) {
-    return !hasMore() || blockStart_ >= position + SyncSize;
+    return !hasMore() || blockStart_ >= position + static_cast<int64_t>(SyncSize);
 }
 
 int64_t DataFileReaderBase::previousSync() const {

@@ -34,6 +34,7 @@ const char *typeToString(EntityType t) {
     switch (t) {
         case EntityType::Null: return "null";
         case EntityType::Bool: return "bool";
+        case EntityType::Int: return "int";
         case EntityType::Long: return "long";
         case EntityType::Double: return "double";
         case EntityType::String: return "string";
@@ -54,6 +55,9 @@ Entity readEntity(JsonParser &p) {
         case JsonParser::Token::Long:
             p.advance();
             return Entity(p.longValue(), p.line());
+        case JsonParser::Token::Int:
+            p.advance();
+            return Entity(p.intValue(), p.line());
         case JsonParser::Token::Double:
             p.advance();
             return Entity(p.doubleValue(), p.line());
@@ -114,6 +118,9 @@ void writeEntity(JsonGenerator<JsonNullFormatter> &g, const Entity &n) {
         case EntityType::Long:
             g.encodeNumber(n.longValue());
             break;
+        case EntityType::Int:
+            g.encodeNumber(n.intValue());
+            break;
         case EntityType::Double:
             g.encodeNumber(n.doubleValue());
             break;
@@ -145,6 +152,20 @@ void Entity::ensureType(EntityType type) const {
         format msg = format("Invalid type. Expected \"%1%\" actual %2%") % typeToString(type) % typeToString(type_);
         throw Exception(msg);
     }
+}
+
+Int Entity::intValue() const {
+    if (type_ != EntityType::Int) {
+        Long v = boost::any_cast<Long>(value_);
+        if (v < INT32_MIN || v > INT32_MAX) {
+           throw Exception("Invalid type. Expected int actual long");
+        }
+        return (Int) v;
+    }
+    else {
+        ensureType(EntityType::Int);
+    }
+    return boost::any_cast<Int>(value_);
 }
 
 String Entity::stringValue() const {

@@ -76,7 +76,7 @@ class ResolvingGrammarGenerator : public ValidatingGrammarGenerator {
         return result;
     }
 
-    static int bestBranch(const NodePtr &writer, const NodePtr &reader);
+    static size_t bestBranch(const NodePtr &writer, const NodePtr &reader);
 
     ProductionPtr getWriterProduction(const NodePtr &n,
                                       map<NodePtr, ProductionPtr> &m2);
@@ -101,7 +101,7 @@ Symbol ResolvingGrammarGenerator::generate(
     return Symbol::rootSymbol(main, backup);
 }
 
-int ResolvingGrammarGenerator::bestBranch(const NodePtr &writer,
+size_t ResolvingGrammarGenerator::bestBranch(const NodePtr &writer,
                                           const NodePtr &reader) {
     Type t = writer->type();
 
@@ -390,7 +390,7 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
                 break;
 
             case AVRO_UNION: {
-                int j = bestBranch(writer, reader);
+                size_t j = bestBranch(writer, reader);
                 if (j >= 0) {
                     ProductionPtr p = doGenerate2(writer, reader->leafAt(j), m, m2);
                     ProductionPtr result = make_shared<Production>();
@@ -530,13 +530,13 @@ int64_t ResolvingDecoderImpl<P>::decodeLong() {
 template<typename P>
 float ResolvingDecoderImpl<P>::decodeFloat() {
     Symbol::Kind k = parser_.advance(Symbol::Kind::Float);
-    return k == Symbol::Kind::Int ? base_->decodeInt() : k == Symbol::Kind::Long ? base_->decodeLong() : base_->decodeFloat();
+    return k == Symbol::Kind::Int ? (float) base_->decodeInt() : k == Symbol::Kind::Long ? (float) base_->decodeLong() : base_->decodeFloat();
 }
 
 template<typename P>
 double ResolvingDecoderImpl<P>::decodeDouble() {
     Symbol::Kind k = parser_.advance(Symbol::Kind::Double);
-    return k == Symbol::Kind::Int ? base_->decodeInt() : k == Symbol::Kind::Long ? base_->decodeLong() : k == Symbol::Kind::Float ? base_->decodeFloat() : base_->decodeDouble();
+    return k == Symbol::Kind::Int ? (double) base_->decodeInt() : k == Symbol::Kind::Long ? (double) base_->decodeLong() : k == Symbol::Kind::Float ? (double) base_->decodeFloat() : base_->decodeDouble();
 }
 
 template<typename P>

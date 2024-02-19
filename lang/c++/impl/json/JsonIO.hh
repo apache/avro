@@ -34,7 +34,7 @@ namespace avro {
 namespace json {
 
 inline char toHex(unsigned int n) {
-    return (n < 10) ? (n + '0') : (n + 'a' - 10);
+    return (n < 10) ? (char) ('0' + n) : (char) ('a' - 10 + n);
 }
 
 class AVRO_DECL JsonParser : boost::noncopyable {
@@ -48,7 +48,8 @@ public:
         ArrayStart,
         ArrayEnd,
         ObjectStart,
-        ObjectEnd
+        ObjectEnd,
+        Int
     };
 
     size_t line() const { return line_; }
@@ -72,6 +73,7 @@ private:
     Token curToken;
     bool bv;
     int64_t lv;
+    int32_t iv;
     double dv;
     std::string sv;
     size_t line_;
@@ -87,7 +89,7 @@ private:
 
 public:
     JsonParser() : curState(stValue), hasNext(false), nextChar(0), peeked(false),
-                   curToken(Token::Null), bv(false), lv(0), dv(0), line_(1) {}
+                   curToken(Token::Null), bv(false), lv(0), iv(0), dv(0), line_(1) {}
 
     void init(InputStream &is) {
         // Clear by swapping with an empty stack
@@ -128,6 +130,14 @@ public:
 
     double doubleValue() const {
         return dv;
+    }
+
+    int32_t intValue() const {
+        if (lv < INT32_MIN || lv > INT32_MAX) {
+            throw Exception(boost::format("Value out of range for int: %1%")
+                            % lv);
+        }
+        return (int32_t) lv;
     }
 
     int64_t longValue() const {
@@ -266,8 +276,8 @@ class AVRO_DECL JsonGenerator {
     void escapeUnicode(uint32_t c) {
         out_.write('\\');
         out_.write('u');
-        writeHex((c >> 8) & 0xff);
-        writeHex(c & 0xff);
+        writeHex((char) ((c >> 8) & 0xff));
+        writeHex((char) (c & 0xff));
     }
     void doEncodeString(const char *b, size_t len, bool binary) {
         const char *e = b + len;
