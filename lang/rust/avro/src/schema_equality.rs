@@ -201,6 +201,9 @@ impl SchemataEq for StructFieldEq {
             return false;
         }
 
+        error!("This is a bug in schema_equality.rs! The following schemata types are not checked! \
+            Please report it to the Avro library maintainers! \
+            Unknown schemas: \n{:?}\n\n{:?}", schema_one, schema_two);
         false
     }
 }
@@ -305,6 +308,8 @@ mod tests {
         assert!(!specification_eq_res);
         let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
         assert!(!struct_field_eq_res);
+
+        assert_eq!(specification_eq_res, struct_field_eq_res);
     }
 
     #[test]
@@ -347,6 +352,8 @@ mod tests {
 
         let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
         let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert!(specification_eq_res, "SpecificationEq: Equality of two Schema::Map failed!");
+        assert!(struct_field_eq_res, "StructFieldEq: Equality of two Schema::Map failed!");
         assert_eq!(specification_eq_res, struct_field_eq_res);
     }
 
@@ -360,6 +367,8 @@ mod tests {
 
         let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
         let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert!(specification_eq_res, "SpecificationEq: Equality of two Schema::Array failed!");
+        assert!(struct_field_eq_res, "StructFieldEq: Equality of two Schema::Array failed!");
         assert_eq!(specification_eq_res, struct_field_eq_res);
     }
 
@@ -381,6 +390,8 @@ mod tests {
 
         let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
         let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert!(specification_eq_res, "SpecificationEq: Equality of two Schema::Decimal failed!");
+        assert!(struct_field_eq_res, "StructFieldEq: Equality of two Schema::Decimal failed!");
         assert_eq!(specification_eq_res, struct_field_eq_res);
     }
 
@@ -406,6 +417,8 @@ mod tests {
 
         let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
         let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert!(specification_eq_res, "SpecificationEq: Equality of two Schema::Fixed failed!");
+        assert!(struct_field_eq_res, "StructFieldEq: Equality of two Schema::Fixed failed!");
         assert_eq!(specification_eq_res, struct_field_eq_res);
     }
 
@@ -433,6 +446,8 @@ mod tests {
 
         let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
         let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert!(specification_eq_res, "SpecificationEq: Equality of two Schema::Enum failed!");
+        assert!(struct_field_eq_res, "StructFieldEq: Equality of two Schema::Enum failed!");
         assert_eq!(specification_eq_res, struct_field_eq_res);
     }
 
@@ -450,6 +465,8 @@ mod tests {
 
         let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
         let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert!(specification_eq_res, "SpecificationEq: Equality of two Schema::Ref failed!");
+        assert!(struct_field_eq_res, "StructFieldEq: Equality of two Schema::Ref failed!");
         assert_eq!(specification_eq_res, struct_field_eq_res);
     }
 
@@ -495,6 +512,8 @@ mod tests {
 
         let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
         let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert!(specification_eq_res, "SpecificationEq: Equality of two Schema::Record failed!");
+        assert!(struct_field_eq_res, "StructFieldEq: Equality of two Schema::Record failed!");
         assert_eq!(specification_eq_res, struct_field_eq_res);
     }
 
@@ -508,6 +527,8 @@ mod tests {
 
         let specification_eq_res = SPECIFICATION_EQ.compare(&schema_one, &schema_two);
         let struct_field_eq_res = STRUCT_FIELD_EQ.compare(&schema_one, &schema_two);
+        assert!(specification_eq_res, "SpecificationEq: Equality of two Schema::Union failed!");
+        assert!(struct_field_eq_res, "StructFieldEq: Equality of two Schema::Union failed!");
         assert_eq!(specification_eq_res, struct_field_eq_res);
         Ok(())
     }
