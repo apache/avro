@@ -28,7 +28,6 @@ use serde::de::DeserializeOwned;
 use serde_json::from_slice;
 use std::{
     collections::HashMap,
-    convert::TryFrom,
     io::{ErrorKind, Read},
     marker::PhantomData,
     str::FromStr,
@@ -528,7 +527,7 @@ pub fn read_marker(bytes: &[u8]) -> [u8; 16] {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{encode::encode, from_value, types::Record, Reader};
+    use crate::{encode::encode, types::Record};
     use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
     use serde::Deserialize;

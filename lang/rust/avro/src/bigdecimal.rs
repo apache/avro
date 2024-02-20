@@ -63,10 +63,7 @@ pub(crate) fn deserialize_big_decimal(bytes: &Vec<u8>) -> Result<BigDecimal, Err
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        types::{Record, Value},
-        Codec, Reader, Schema, Writer,
-    };
+    use crate::{types::Record, Codec, Reader, Schema, Writer};
     use apache_avro_test_helper::TestResult;
     use bigdecimal::{One, Zero};
     use pretty_assertions::assert_eq;
