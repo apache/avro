@@ -203,7 +203,7 @@ impl SchemataEq for StructFieldEq {
 
         error!("This is a bug in schema_equality.rs! The following schemata types are not checked! \
             Please report it to the Avro library maintainers! \
-            Unknown schemas: \n{:?}\n\n{:?}", schema_one, schema_two);
+            \n{:?}\n\n{:?}", schema_one, schema_two);
         false
     }
 }
@@ -241,7 +241,9 @@ pub(crate) fn compare_schemata(schema_one: &Schema, schema_two: &Schema) -> bool
     SCHEMATA_COMPARATOR_ONCE
         .get_or_init(|| {
             debug!("Going to use the default schemata equality comparator: SpecificationEq.",);
-            Box::new(SpecificationEq)
+            Box::new(StructFieldEq {
+                include_attributes: false,
+            })
         })
         .compare(schema_one, schema_two)
 }
