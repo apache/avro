@@ -18,7 +18,7 @@
 //! Logic for parsing and interacting with schemas in Avro format.
 use crate::{
     error::Error,
-    types,
+    schema_equality, types,
     util::MapHelper,
     validator::{
         validate_enum_symbol_name, validate_namespace, validate_record_field_name,
@@ -35,7 +35,6 @@ use serde_json::{Map, Value};
 use std::{
     borrow::{Borrow, Cow},
     collections::{BTreeMap, HashMap, HashSet},
-    convert::{TryFrom, TryInto},
     fmt,
     fmt::Debug,
     hash::Hash,
@@ -155,9 +154,9 @@ impl PartialEq for Schema {
     /// Assess equality of two `Schema` based on [Parsing Canonical Form].
     ///
     /// [Parsing Canonical Form]:
-    /// https://avro.apache.org/docs/1.8.2/spec.html#Parsing+Canonical+Form+for+Schemas
+    /// https://avro.apache.org/docs/1.11.1/specification/#parsing-canonical-form-for-schemas
     fn eq(&self, other: &Self) -> bool {
-        self.canonical_form() == other.canonical_form()
+        schema_equality::compare_schemata(self, other)
     }
 }
 
@@ -6356,6 +6355,7 @@ mod tests {
             "logicalType": "uuid"
         });
         let parse_result = Schema::parse(&schema)?;
+
         assert_eq!(
             parse_result,
             Schema::Fixed(FixedSchema {

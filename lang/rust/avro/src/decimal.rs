@@ -110,7 +110,6 @@ mod tests {
     use super::*;
     use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
-    use std::convert::TryFrom;
 
     #[test]
     fn test_decimal_from_bytes_from_ref_decimal() -> TestResult {

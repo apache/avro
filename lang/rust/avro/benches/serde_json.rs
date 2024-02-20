@@ -17,7 +17,7 @@
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use serde_json::Value;
-use std::{collections::HashMap, iter::FromIterator};
+use std::collections::HashMap;
 
 fn make_big_json_record() -> Value {
     let address = HashMap::<_, _>::from_iter(vec![
