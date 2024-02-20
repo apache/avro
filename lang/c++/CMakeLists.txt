@@ -26,7 +26,7 @@ endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.0)
+if (APPLE)
     # Enable MACOSX_RPATH by default
     cmake_policy (SET CMP0042 NEW)
 endif()
