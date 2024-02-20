@@ -31,7 +31,6 @@ use crate::{
 use std::{
     borrow::Borrow,
     collections::HashMap,
-    convert::TryFrom,
     io::{ErrorKind, Read},
     str::FromStr,
 };

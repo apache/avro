@@ -68,8 +68,21 @@ pub fn assert_not_logged(unexpected_message: &str) {
 }
 
 pub fn assert_logged(expected_message: &str) {
-    let last_message = LOG_MESSAGES.with(|msgs| msgs.borrow_mut().pop().unwrap());
-    assert_eq!(last_message, expected_message);
+    let mut deleted = false;
+    LOG_MESSAGES.with(|msgs| {
+        msgs.borrow_mut().retain(|msg| {
+            if msg == expected_message {
+                deleted = true;
+                false
+            } else {
+                true
+            }
+        })
+    });
+
+    if !deleted {
+        panic!("Expected log message has not been logged: '{expected_message}'");
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
