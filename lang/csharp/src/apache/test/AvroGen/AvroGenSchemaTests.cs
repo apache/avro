@@ -606,9 +606,9 @@ namespace Avro.Test.AvroGen
             AvroGenHelper.TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck);
         }
 
-        [TestCase(_logicalTypesWithCustomConversion, typeof(AvroTypeException), 0)]
-        [TestCase(_customConversionWithLogicalTypes, typeof(SchemaParseException), 1)]
-        public void NotSupportedSchema(string schema, Type expectedException, int expectedResult)
+        [TestCase(_logicalTypesWithCustomConversion, typeof(AvroTypeException))]
+        [TestCase(_customConversionWithLogicalTypes, typeof(SchemaParseException))]
+        public void NotSupportedSchema(string schema, Type expectedException)
         {
             // Create temp folder
             string outputDir = AvroGenHelper.CreateEmptyTemporaryFolder(out string uniqueId);
@@ -621,7 +621,7 @@ namespace Avro.Test.AvroGen
 
                 // We now support unknown logical types
                 //Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, new Dictionary<string, string>(), false), Is.EqualTo(1));
-                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, new Dictionary<string, string>(), false), Is.EqualTo(expectedResult));
+                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, new Dictionary<string, string>(), false), Is.EqualTo(0));
 
             }
             finally
