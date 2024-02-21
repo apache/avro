@@ -42,7 +42,7 @@ namespace avro {
 namespace {
 struct BufferCopyIn {
     virtual ~BufferCopyIn() = default;
-    virtual void seek(size_t len) = 0;
+    virtual void seek(int64_t len) = 0;
     virtual bool read(uint8_t *b, size_t toRead, size_t &actual) = 0;
 };
 
@@ -59,7 +59,7 @@ struct FileBufferCopyIn : public BufferCopyIn {
         ::CloseHandle(h_);
     }
 
-    void seek(size_t len) {
+    void seek(int64_t len) {
         if (::SetFilePointer(h_, len, NULL, FILE_CURRENT) == INVALID_SET_FILE_POINTER && ::GetLastError() != NO_ERROR) {
             throw Exception(boost::format("Cannot skip file: %1%") % ::GetLastError());
         }
@@ -86,7 +86,7 @@ struct FileBufferCopyIn : public BufferCopyIn {
         ::close(fd_);
     }
 
-    void seek(size_t len) final {
+    void seek(int64_t len) final {
         off_t r = ::lseek(fd_, len, SEEK_CUR);
         if (r == static_cast<off_t>(-1)) {
             throw Exception(boost::format("Cannot skip file: %1%") % strerror(errno));
@@ -110,7 +110,7 @@ struct IStreamBufferCopyIn : public BufferCopyIn {
     explicit IStreamBufferCopyIn(istream &is) : is_(is) {
     }
 
-    void seek(size_t len) override {
+    void seek(int64_t len) override {
         if (!is_.seekg(len, std::ios_base::cur)) {
             throw Exception("Cannot skip stream");
         }
@@ -129,11 +129,11 @@ struct IStreamBufferCopyIn : public BufferCopyIn {
 struct NonSeekableIStreamBufferCopyIn : public IStreamBufferCopyIn {
     explicit NonSeekableIStreamBufferCopyIn(istream &is) : IStreamBufferCopyIn(is) {}
 
-    void seek(size_t len) final {
+    void seek(int64_t len) final {
         const size_t bufSize = 4096;
         uint8_t buf[bufSize];
         while (len > 0) {
-            size_t n = std::min(len, bufSize);
+            size_t n = std::min<int64_t>(len, bufSize);
             is_.read(reinterpret_cast<char *>(buf), n);
             if (is_.bad()) {
                 throw Exception("Cannot skip stream");
