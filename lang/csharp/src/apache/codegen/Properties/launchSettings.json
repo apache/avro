@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Avro.codegen": {
-      "commandName": "Project",
-      "commandLineArgs": " -s C:\\Users\\Thomas.Bruns\\source\\repos\\AzureDevOps\\TQL.Kafka.Samples\\TQL.Kafka.Samples\\TQL.Kafka.Samples.Messages\\v1\\cdc_tql_dbo_tbldrops.avsc .\\tab --namespace NO_SCHEMA_NAMESPACE:TQL.DEMO"
-    }
-  }
-}
