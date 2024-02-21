@@ -557,9 +557,11 @@ namespace Avro.Test
             //Assert.AreEqual("Logical type '" + unknownType + "' is not supported.", err.Message);
 
             var schema = Schema.Parse(s);
+            Assert.IsNotNull(schema);   // make sure Variable is not null
             Assert.IsInstanceOf(typeof(LogicalSchema), schema);
 
             var logicalSchema = schema as LogicalSchema;
+            Assert.IsNotNull(logicalSchema);   // make sure Variable is not null
             Assert.IsInstanceOf(typeof(UnknownLogicalType), logicalSchema.LogicalType);
 
             Assert.AreEqual(logicalSchema.LogicalTypeName, unknownType);
@@ -603,7 +605,7 @@ namespace Avro.Test
             var secondField = ((RecordSchema)schema).Fields.FirstOrDefault(f => f.Name == @"secondField");
             Assert.IsNotNull(secondField);
 
-            var secondFieldSchema = ((Field)secondField).Schema;
+            var secondFieldSchema = (secondField).Schema;
             Assert.IsNotNull(secondFieldSchema);
 
             var secondFieldUnionSchema = (UnionSchema)secondFieldSchema;
