@@ -620,6 +620,7 @@ namespace Avro.Test.AvroGen
                 System.IO.File.WriteAllText(schemaFileName, schema);
 
                 // We now support unknown logical types
+                //Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, new Dictionary<string, string>(), false), Is.EqualTo(1));
                 Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, new Dictionary<string, string>(), false), Is.EqualTo(expectedResult));
 
             }

@@ -63,6 +63,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+	  <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonMinimumVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\main\Avro.main.csproj" />
   </ItemGroup>
 

@@ -34,6 +34,8 @@ namespace Avro
     /// </summary>
     public class CodeGen
     {
+        public static string NO_SCHEMA_NAMESPACE = @"NO_SCHEMA_NAMESPACE";
+
         /// <summary>
         /// Gets object that contains all the generated types.
         /// </summary>
@@ -895,7 +897,9 @@ namespace Avro
             string nspace = recordSchema.Namespace;
             if (string.IsNullOrEmpty(nspace))
             {
-                throw new CodeGenException("Namespace required for record schema " + recordSchema.Name);
+                // if the schema does not have a namespace defined, insert a temp value so code gen will not fail
+                //throw new CodeGenException("Namespace required for record schema " + recordSchema.Name);
+                nspace = NO_SCHEMA_NAMESPACE;
             }
 
             CodeNamespace codens = AddNamespace(nspace);
@@ -1185,7 +1189,7 @@ namespace Avro
         /// </summary>
         /// <param name="outputdir">name of directory to write to.</param>
         /// <param name="skipDirectories">skip creation of directories based on schema namespace</param>
-        public virtual void WriteTypes(string outputdir, bool skipDirectories = false)
+        public virtual void WriteTypes(string outputdir, bool skipDirectories = false, string overrideClassNamepace = null)
         {
             var cscp = new CSharpCodeProvider();
 
@@ -1208,6 +1212,11 @@ namespace Avro
                     }
                 }
                 Directory.CreateDirectory(dir);
+
+                if(ns.Name == CodeGen.NO_SCHEMA_NAMESPACE && !string.IsNullOrEmpty(overrideClassNamepace))
+                {
+                    ns.Name = overrideClassNamepace;
+                }
 
                 var new_ns = new CodeNamespace(ns.Name);
                 new_ns.Comments.Add(CodeGenUtil.Instance.FileComment);
