@@ -606,7 +606,7 @@ namespace Avro.Test.AvroGen
             AvroGenHelper.TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck);
         }
 
-        //[TestCase(_logicalTypesWithCustomConversion, typeof(AvroTypeException), 0)]
+        [TestCase(_logicalTypesWithCustomConversion, typeof(AvroTypeException), 0)]
         [TestCase(_customConversionWithLogicalTypes, typeof(SchemaParseException), 1)]
         public void NotSupportedSchema(string schema, Type expectedException, int expectedResult)
         {
