@@ -553,9 +553,6 @@ namespace Avro.Test
         [TestCase("{\"type\": \"int\", \"logicalType\": \"unknown\"}", "unknown")]
         public void TestUnknownLogical(string s, string unknownType)
         {
-            //var err = Assert.Throws<AvroTypeException>(() => Schema.Parse(s));
-            //Assert.AreEqual("Logical type '" + unknownType + "' is not supported.", err.Message);
-
             var schema = Schema.Parse(s);
             Assert.IsNotNull(schema);   // make sure Variable is not null
             Assert.IsInstanceOf(typeof(LogicalSchema), schema);
