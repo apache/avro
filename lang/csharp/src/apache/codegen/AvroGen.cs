@@ -155,10 +155,6 @@ namespace Avro
                 "  --namespace      Map an Avro schema/protocol namespace to a C# namespace.\n" +
                 "                   The format is \"my.avro.namespace:my.csharp.namespace\".\n" +
                 "                   May be specified multiple times to map multiple namespaces.\n"  +
-                "                   If the source schema is missing a top level namespace\n"  +
-                $"                   the namespace [{CodeGen.NO_SCHEMA_NAMESPACE}] will be injected.\n" +
-                "                   You can replace this using the --namespace command line option\n" +
-                "                   or edit the generated class file afterwards.\n" +
                 "  --skip-directories Skip creation of namespace directories. It will generate classes right inside output directory\n",
                 AppDomain.CurrentDomain.FriendlyName);
         }
@@ -174,9 +170,6 @@ namespace Avro
                 codegen.AddProtocol(text, namespaceMapping);
 
                 codegen.GenerateCode();
-
-                bool replaceTempNamespace = namespaceMapping.Any(n => n.Key == CodeGen.NO_SCHEMA_NAMESPACE);
-
                 codegen.WriteTypes(outdir);
             }
             catch (Exception ex)
@@ -198,10 +191,7 @@ namespace Avro
                 codegen.AddSchema(text, namespaceMapping);
 
                 codegen.GenerateCode();
-
-                var overrideClassNamepace = namespaceMapping.FirstOrDefault(n => n.Key.ToLower() == CodeGen.NO_SCHEMA_NAMESPACE.ToLower()).Value;
-
-                codegen.WriteTypes(outdir, skipDirectories, overrideClassNamepace);
+                codegen.WriteTypes(outdir, skipDirectories);
             }
             catch (Exception ex)
             {
