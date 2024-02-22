@@ -147,10 +147,13 @@ string getDocField(const Entity &e, const Object &m) {
 
 struct Field {
     const string name;
+    const vector<string> aliases;
     const NodePtr schema;
     const GenericDatum defaultValue;
     const CustomAttributes customAttributes;
-    Field(string n, NodePtr v, GenericDatum dv, const CustomAttributes& ca) : name(std::move(n)), schema(std::move(v)), defaultValue(std::move(dv)), customAttributes(std::move(ca)) {}
+
+    Field(string n, vector<string> a, NodePtr v, GenericDatum dv, const CustomAttributes& ca)
+        : name(std::move(n)), aliases(std::move(a)), schema(std::move(v)), defaultValue(std::move(dv)), customAttributes(ca) {}
 };
 
 static void assertType(const Entity &e, EntityType et) {
@@ -263,7 +266,7 @@ static GenericDatum makeGenericDatum(NodePtr n,
 static const std::unordered_set<std::string>& getKnownFields() {
     // return known fields
     static const std::unordered_set<std::string> kKnownFields =
-        {"name", "type", "default", "doc", "size", "logicalType",
+        {"name", "type", "aliases", "default", "doc", "size", "logicalType",
          "values", "precision", "scale", "namespace"};
       return kKnownFields;
 }
@@ -282,7 +285,13 @@ static void getCustomAttributes(const Object& m, CustomAttributes &customAttribu
 
 static Field makeField(const Entity &e, SymbolTable &st, const string &ns) {
     const Object &m = e.objectValue();
-    const string &n = getStringField(e, m, "name");
+    string n = getStringField(e, m, "name");
+    vector<string> aliases;
+    if (containsField(m, "aliases")) {
+        for (const auto &alias : getArrayField(e, m, "aliases")) {
+            aliases.emplace_back(alias.stringValue());
+        }
+    }
     auto it = findField(e, m, "type");
     auto it2 = m.find("default");
     NodePtr node = makeNode(it->second, st, ns);
@@ -293,34 +302,34 @@ static Field makeField(const Entity &e, SymbolTable &st, const string &ns) {
     // Get custom attributes
     CustomAttributes customAttributes;
     getCustomAttributes(m, customAttributes);
-
-    return Field(n, node, d, customAttributes);
+    return Field(std::move(n), std::move(aliases), node, d, customAttributes);
 }
 
 // Extended makeRecordNode (with doc).
 static NodePtr makeRecordNode(const Entity &e, const Name &name,
                               const string *doc, const Object &m,
                               SymbolTable &st, const string &ns) {
-    const Array &v = getArrayField(e, m, "fields");
     concepts::MultiAttribute<string> fieldNames;
+    vector<vector<string>> fieldAliases;
     concepts::MultiAttribute<NodePtr> fieldValues;
     concepts::MultiAttribute<CustomAttributes> customAttributes;
     vector<GenericDatum> defaultValues;
-
-    for (const auto &it : v) {
+    for (const auto &it : getArrayField(e, m, "fields")) {
         Field f = makeField(it, st, ns);
         fieldNames.add(f.name);
+        fieldAliases.push_back(f.aliases);
         fieldValues.add(f.schema);
         defaultValues.push_back(f.defaultValue);
         customAttributes.add(f.customAttributes);
     }
+
     NodeRecord *node;
     if (doc == nullptr) {
         node = new NodeRecord(asSingleAttribute(name), fieldValues, fieldNames,
-                              defaultValues, customAttributes);
+                              fieldAliases, defaultValues, customAttributes);
     } else {
         node = new NodeRecord(asSingleAttribute(name), asSingleAttribute(*doc),
-                              fieldValues, fieldNames, defaultValues, customAttributes);
+                              fieldValues, fieldNames, fieldAliases, defaultValues, customAttributes);
     }
     return NodePtr(node);
 }
@@ -422,8 +431,9 @@ static NodePtr makeMapNode(const Entity &e, const Object &m,
 static Name getName(const Entity &e, const Object &m, const string &ns) {
     const string &name = getStringField(e, m, "name");
 
+    Name result;
     if (isFullName(name)) {
-        return Name(name);
+        result = Name(name);
     } else {
         auto it = m.find("namespace");
         if (it != m.end()) {
@@ -432,11 +442,19 @@ static Name getName(const Entity &e, const Object &m, const string &ns) {
                                     "Json field \"%1%\" is not a %2%: %3%")
                                 % "namespace" % json::type_traits<string>::name() % it->second.toString());
             }
-            Name result = Name(name, it->second.stringValue());
-            return result;
+            result = Name(name, it->second.stringValue());
+        } else {
+            result = Name(name, ns);
         }
-        return Name(name, ns);
     }
+
+    if (containsField(m, "aliases")) {
+        for (const auto &alias : getArrayField(e, m, "aliases")) {
+            result.addAlias(alias.stringValue());
+        }
+    }
+
+    return result;
 }
 
 static NodePtr makeNode(const Entity &e, const Object &m,
