@@ -294,42 +294,30 @@ protected:
 };
 
 class AVRO_DECL NodeRecord : public NodeImplRecord {
-    std::vector<GenericDatum> defaultValues;
+    std::vector<std::vector<std::string>> fieldsAliases_;
+    std::vector<GenericDatum> fieldsDefaultValues_;
 
 public:
     NodeRecord() : NodeImplRecord(AVRO_RECORD) {}
-    NodeRecord(const HasName &name, const MultiLeaves &fields,
-               const LeafNames &fieldsNames,
-               std::vector<GenericDatum> dv);
-
-    NodeRecord(const HasName &name, const HasDoc &doc, const MultiLeaves &fields,
-               const LeafNames &fieldsNames,
-               std::vector<GenericDatum> dv) : NodeImplRecord(AVRO_RECORD, name, doc, fields, fieldsNames, MultiAttributes(), NoSize()),
-                                               defaultValues(std::move(dv)) {
-        leafNameCheck();
-    }
 
     NodeRecord(const HasName &name, const MultiLeaves &fields,
-               const LeafNames &fieldsNames,
-               const std::vector<GenericDatum>& dv,
-               const MultiAttributes &customAttributes) :
-        NodeImplRecord(AVRO_RECORD, name, fields, fieldsNames, customAttributes, NoSize()),
-        defaultValues(dv) {
-        leafNameCheck();
-    }
+               const LeafNames &fieldsNames, std::vector<GenericDatum> dv);
 
     NodeRecord(const HasName &name, const HasDoc &doc, const MultiLeaves &fields,
-               const LeafNames &fieldsNames,
-               const std::vector<GenericDatum>& dv,
-               const MultiAttributes &customAttributes) :
-        NodeImplRecord(AVRO_RECORD, name, doc, fields, fieldsNames, customAttributes, NoSize()),
-        defaultValues(dv) {
-        leafNameCheck();
-    }
+               const LeafNames &fieldsNames, std::vector<GenericDatum> dv);
+
+    NodeRecord(const HasName &name, const MultiLeaves &fields,
+               const LeafNames &fieldsNames, std::vector<std::vector<std::string>> fieldsAliases,
+               std::vector<GenericDatum> dv, const MultiAttributes &customAttributes);
+
+    NodeRecord(const HasName &name, const HasDoc &doc, const MultiLeaves &fields,
+               const LeafNames &fieldsNames, std::vector<std::vector<std::string>> fieldsAliases,
+               std::vector<GenericDatum> dv, const MultiAttributes &customAttributes);
 
     void swap(NodeRecord &r) {
         NodeImplRecord::swap(r);
-        defaultValues.swap(r.defaultValues);
+        fieldsAliases_.swap(r.fieldsAliases_);
+        fieldsDefaultValues_.swap(r.fieldsDefaultValues_);
     }
 
     SchemaResolution resolve(const Node &reader) const override;
@@ -344,22 +332,10 @@ public:
     }
 
     const GenericDatum &defaultValueAt(size_t index) override {
-        return defaultValues[index];
+        return fieldsDefaultValues_[index];
     }
 
     void printDefaultToJson(const GenericDatum &g, std::ostream &os, size_t depth) const override;
-
-private:
-    // check if leaf name is valid Name and is not duplicate
-    void leafNameCheck() {
-        for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
-            if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
-                throw Exception(boost::format(
-                                    "Cannot add duplicate field: %1%")
-                                % leafNameAttributes_.get(i));
-            }
-        }
-    }
 };
 
 class AVRO_DECL NodeEnum : public NodeImplEnum {
