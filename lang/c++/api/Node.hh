@@ -59,7 +59,7 @@ public:
     std::string fullname() const;
     const std::string &ns() const { return ns_; }
     const std::string &simpleName() const { return simpleName_; }
-    const std::vector<std::string>& aliases() const;
+    const std::vector<std::string> &aliases() const;
 
     void ns(std::string n) { ns_ = std::move(n); }
     void simpleName(std::string n) { simpleName_ = std::move(n); }
