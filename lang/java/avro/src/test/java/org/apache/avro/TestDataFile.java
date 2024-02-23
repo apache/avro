@@ -263,8 +263,8 @@ public class TestDataFile {
 
   @Test
   public void syncInHeader() throws IOException {
-    try (DataFileReader<Object> reader = new DataFileReader<>(new File("../../../share/test/data/syncInMeta.avro"),
-        new GenericDatumReader<>())) {
+    try (DataFileReader<Object> reader = new DataFileReader<>(
+        new File("target/test-classes/share/test/data/syncInMeta.avro"), new GenericDatumReader<>())) {
       reader.sync(0);
       for (Object datum : reader)
         assertNotNull(datum);
@@ -273,7 +273,7 @@ public class TestDataFile {
 
   @Test
   public void test12() throws IOException {
-    readFile(new File("../../../share/test/data/test.avro12"), new GenericDatumReader<>());
+    readFile(new File("target/test-classes/share/test/data/test.avro12"), new GenericDatumReader<>());
   }
 
   @Test

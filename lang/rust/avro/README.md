@@ -428,8 +428,8 @@ fn main() -> Result<(), Error> {
 
 `apache-avro` also supports the logical types listed in the [Avro specification](https://avro.apache.org/docs/current/spec.html#Logical+Types):
 
-1. `Decimal` using the [`num_bigint`](https://docs.rs/num-bigint/0.2.6/num_bigint) crate
-1. UUID using the [`uuid`](https://docs.rs/uuid/1.0.0/uuid) crate
+1. `Decimal` using the [`num_bigint`](https://docs.rs/num-bigint/latest/num_bigint) crate
+1. UUID using the [`uuid`](https://docs.rs/uuid/latest/uuid) crate
 1. Date, Time (milli) as `i32` and Time (micro) as `i64`
 1. Timestamp (milli and micro) as `i64`
 1. Local timestamp (milli and micro) as `i64`
@@ -651,6 +651,40 @@ let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).u
 let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
 assert!(SchemaCompatibility::can_read(&writers_schema, &readers_schema).is_err());
 ```
+### Custom names validators
+
+By default the library follows the rules by the
+[Avro specification](https://avro.apache.org/docs/1.11.1/specification/#names)!
+
+Some of the other Apache Avro language SDKs are not that strict and allow more
+characters in names. For interoperability with those SDKs, the library provides
+a way to customize the names validation.
+
+```rust
+use apache_avro::AvroResult;
+use apache_avro::schema::Namespace;
+use apache_avro::validator::{SchemaNameValidator, set_schema_name_validator};
+
+struct MyCustomValidator;
+
+impl SchemaNameValidator for MyCustomValidator {
+    fn validate(&self, name: &str) -> AvroResult<(String, Namespace)> {
+        todo!()
+    }
+}
+
+// don't parse any schema before registering the custom validator(s) !
+
+set_schema_name_validator(Box::new(MyCustomValidator));
+
+// ... use the library
+```
+
+Similar logic could be applied to the schema namespace, enum symbols and field names validation.
+
+**Note**: the library allows to set a validator only once per the application lifetime!
+If the application parses schemas before setting a validator, the default validator will be
+registered and used!
 
 <!-- cargo-rdme end -->
 

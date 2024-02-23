@@ -1407,8 +1407,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     public Parser(final NameValidator validate) {
-      this.validate = validate;
-      context = new ParseContext(validate);
+      this.validate = validate != null ? validate : NameValidator.NO_VALIDATION;
+      context = new ParseContext( this.validate);
     }
 
     public Parser(final ParseContext context) {
@@ -1933,7 +1933,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
   }
 
   private static void parsePropertiesAndLogicalType(JsonNode jsonNode, Schema result, Set<String> propertiesToSkip) {
-    parseProperties(jsonNode, (JsonProperties) result, propertiesToSkip);
+    parseProperties(jsonNode, result, propertiesToSkip);
     // parse logical type if present
     result.logicalType = LogicalTypes.fromSchemaIgnoreInvalid(result);
   }

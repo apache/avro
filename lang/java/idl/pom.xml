@@ -43,7 +43,7 @@
       *
     </osgi.import>
     <osgi.export>org.apache.avro.idl*;version="${project.version}"</osgi.export>
-    <antlr.version>4.9.3</antlr.version>
+    <antlr.version>4.13.1</antlr.version>
   </properties>
 
   <build>

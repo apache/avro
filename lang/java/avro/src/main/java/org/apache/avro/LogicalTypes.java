@@ -281,14 +281,17 @@ public class LogicalTypes {
     return LOCAL_TIMESTAMP_MICROS_TYPE;
   }
 
-  private static final LocalTimestampMicros LOCAL_TIMESTAMP_NANOS_TYPE = new LocalTimestampMicros();
+  private static final LocalTimestampNanos LOCAL_TIMESTAMP_NANOS_TYPE = new LocalTimestampNanos();
 
-  public static LocalTimestampMicros localTimestampNanos() {
+  public static LocalTimestampNanos localTimestampNanos() {
     return LOCAL_TIMESTAMP_NANOS_TYPE;
   }
 
   /** Uuid represents a uuid without a time */
   public static class Uuid extends LogicalType {
+
+    private static final int UUID_BYTES = 2 * Long.BYTES;
+
     private Uuid() {
       super(UUID);
     }
@@ -296,8 +299,11 @@ public class LogicalTypes {
     @Override
     public void validate(Schema schema) {
       super.validate(schema);
-      if (schema.getType() != Schema.Type.STRING) {
-        throw new IllegalArgumentException("Uuid can only be used with an underlying string type");
+      if (schema.getType() != Schema.Type.STRING && schema.getType() != Schema.Type.FIXED) {
+        throw new IllegalArgumentException("Uuid can only be used with an underlying string or fixed type");
+      }
+      if (schema.getType() == Schema.Type.FIXED && schema.getFixedSize() != UUID_BYTES) {
+        throw new IllegalArgumentException("Uuid with fixed type must have a size of " + UUID_BYTES + " bytes");
       }
     }
   }

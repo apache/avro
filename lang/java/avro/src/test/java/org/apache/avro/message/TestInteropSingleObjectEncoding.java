@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
  * object</a>
  */
 public class TestInteropSingleObjectEncoding {
-  private static final String RESOURCES_FOLDER = System.getProperty("share.dir", "../../../share")
+  private static final String RESOURCES_FOLDER = System.getProperty("share.dir", "target/test-classes/share")
       + "/test/data/messageV1";
   private static final File SCHEMA_FILE = new File(RESOURCES_FOLDER + "/test_schema.avsc");
   private static final File MESSAGE_FILE = new File(RESOURCES_FOLDER + "/test_message.bin");

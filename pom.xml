@@ -41,26 +41,28 @@
        -->
   <properties>
     <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.release>8</maven.compiler.release>
     <main.basedir>${project.basedir}</main.basedir>
     <avro.distDir>dist</avro.distDir>
     <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>
 
     <!-- plugin versions -->
-    <apache-rat-plugin.version>0.16</apache-rat-plugin.version>
+    <apache-rat-plugin.version>0.16.1</apache-rat-plugin.version>
     <checkstyle-plugin.version>3.3.1</checkstyle-plugin.version>
-    <checkstyle.version>9.3</checkstyle.version>
+    <checkstyle.version>10.13.0</checkstyle.version>
     <enforcer-plugin.version>3.4.1</enforcer-plugin.version>
     <extra-enforcer-rules.version>1.7.0</extra-enforcer-rules.version>
     <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
+    <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
     <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
     <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
     <maven-plugin-plugin.version>3.11.0</maven-plugin-plugin.version>
     <maven-remote-resources-plugin.version>3.1.0</maven-remote-resources-plugin.version>
     <maven-shade-plugin.version>3.5.1</maven-shade-plugin.version>
     <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
+    <maven-toolchains-plugin.version>3.1.0</maven-toolchains-plugin.version>
     <plugin-tools-javadoc.version>3.5.2</plugin-tools-javadoc.version>
-    <spotless-maven-plugin.version>2.27.2</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>2.43.0</spotless-maven-plugin.version>
     <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
 
     <!-- Pin output timestamp to make the Java build reproducible -->
@@ -159,13 +161,84 @@
           <artifactId>maven-remote-resources-plugin</artifactId>
           <version>${maven-remote-resources-plugin.version}</version>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <version>${enforcer-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-toolchains-plugin</artifactId>
+          <version>${maven-toolchains-plugin.version}</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
+
+      <!-- By trying to activate all toolchains referenced in this project we get a fail-fast if any of them is missing. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-toolchains-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>Ensure ToolChain for JDK 8 is available</id>
+            <goals>
+              <goal>toolchain</goal>
+            </goals>
+            <configuration>
+              <toolchains>
+                <jdk>
+                  <version>8</version>
+                </jdk>
+              </toolchains>
+            </configuration>
+          </execution>
+          <execution>
+            <id>Ensure ToolChain for JDK 11 is available</id>
+            <goals>
+              <goal>toolchain</goal>
+            </goals>
+            <configuration>
+              <toolchains>
+                <jdk>
+                  <version>11</version>
+                </jdk>
+              </toolchains>
+            </configuration>
+          </execution>
+          <execution>
+            <id>Ensure ToolChain for JDK 17 is available</id>
+            <goals>
+              <goal>toolchain</goal>
+            </goals>
+            <configuration>
+              <toolchains>
+                <jdk>
+                  <version>17</version>
+                </jdk>
+              </toolchains>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- The last one in this list is the version used for actually building the software -->
+            <id>Build using JDK 21</id>
+            <goals>
+              <goal>toolchain</goal>
+            </goals>
+            <configuration>
+              <toolchains>
+                <jdk>
+                  <version>21</version>
+                </jdk>
+              </toolchains>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>${enforcer-plugin.version}</version>
         <executions>
           <execution>
             <id>default-cli</id>
@@ -175,7 +248,11 @@
             <configuration>
               <rules>
                 <enforceBytecodeVersion>
-                  <maxJdkVersion>1.8</maxJdkVersion>
+                  <maxJdkVersion>8</maxJdkVersion>
+                  <ignoredScopes>
+                    <ignoredScope>test</ignoredScope>
+                    <ignoredScope>provided</ignoredScope>
+                  </ignoredScopes>
                   <!--
                     Multi release jars that are Java 8 compatible should pass,
                     but the extra-enforcer-plugin does not detect them
@@ -193,10 +270,10 @@
                   </excludes>
                 </enforceBytecodeVersion>
                 <requireJavaVersion>
-                  <version>[1.8,)</version>
+                  <version>21</version>
                 </requireJavaVersion>
                 <requireMavenVersion>
-                  <version>[3.8.1,)</version>
+                  <version>[3.9.6,)</version>
                 </requireMavenVersion>
               </rules>
             </configuration>
@@ -210,15 +287,11 @@
               <rules>
                 <requireProperty>
                   <property>project.version</property>
+                  <!--suppress UnresolvedMavenProperty -->
                   <regex>${env.VERSION}</regex>
+                  <!--suppress UnresolvedMavenProperty -->
                   <regexMessage>*****!!!!! Version of project must be ${env.VERSION} !!!!!*****</regexMessage>
                 </requireProperty>
-                <enforceBytecodeVersion>
-                  <maxJdkVersion>1.8</maxJdkVersion>
-                </enforceBytecodeVersion>
-                <requireJavaVersion>
-                  <version>[1.8,)</version>
-                </requireJavaVersion>
               </rules>
             </configuration>
           </execution>
@@ -372,6 +445,7 @@
                 <exclude>**/*.rej</exclude>
                 <exclude>**/*.egg-info/**</exclude>
                 <exclude>build/**</exclude>
+                <exclude>share/docker/m2/build-cache/**</exclude>
                 <exclude>lang/java/archetypes/**</exclude>
                 <exclude>lang/java/**/target/**</exclude>
                 <exclude>lang/js/node_modules/**</exclude>

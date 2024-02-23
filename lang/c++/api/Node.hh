@@ -40,30 +40,38 @@ class GenericDatum;
 using NodePtr = std::shared_ptr<Node>;
 
 class AVRO_DECL Name {
+    struct Aliases;
+
     std::string ns_;
     std::string simpleName_;
+    std::unique_ptr<Aliases> aliases_;
 
 public:
-    Name() = default;
-    explicit Name(const std::string &fullname);
-    Name(std::string simpleName, std::string ns) : ns_(std::move(ns)), simpleName_(std::move(simpleName)) { check(); }
+    Name();
+    explicit Name(const std::string &name);
+    Name(std::string simpleName, std::string ns);
+    Name(const Name& other);
+    Name& operator=(const Name& other);
+    Name(Name&& other);
+    Name& operator=(Name&& other);
+    ~Name();
 
     std::string fullname() const;
     const std::string &ns() const { return ns_; }
     const std::string &simpleName() const { return simpleName_; }
+    const std::vector<std::string> &aliases() const;
 
     void ns(std::string n) { ns_ = std::move(n); }
     void simpleName(std::string n) { simpleName_ = std::move(n); }
     void fullname(const std::string &n);
+    void addAlias(const std::string &alias);
 
     bool operator<(const Name &n) const;
     void check() const;
     bool operator==(const Name &n) const;
     bool operator!=(const Name &n) const { return !((*this) == n); }
-    void clear() {
-        ns_.clear();
-        simpleName_.clear();
-    }
+    bool equalOrAliasedBy(const Name &n) const;
+    void clear();
     explicit operator std::string() const {
         return fullname();
     }

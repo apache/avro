@@ -63,7 +63,6 @@ In order to build Avro C++, one needs the following:
 
 For Ubuntu Linux, for example, you can have these by doing
 <tt>apt-get install</tt> for the following packages:
-\ul
 \li cmake
 \li g++
 \li libboost-dev
@@ -73,7 +72,6 @@ For Ubuntu Linux, for example, you can have these by doing
 \li libboost-system-dev
 
 For Windows native builds, you need to install the following:
-\ul
 \li cmake
 \li boost distribution from Boost consulting
 \li Visual studio
@@ -336,4 +334,3 @@ corresponding to a given schema.
 
 Please see DataFile.hh for more details.
 */
-

@@ -625,4 +625,13 @@ public class TestSchema {
     assertNotNull(f1);
     assertEquals(schemaRecord1, f1.schema());
   }
+
+  /**
+   * Tests the behavior of Schema.Parser if its validation option is set to
+   * `null`. This is then set to the default option `NO_VALIDATION`.
+   */
+  @Test
+  void testParserNullValidate() {
+    new Schema.Parser(null).parse("{\"type\":\"record\",\"name\":\"\",\"fields\":[]}"); // Empty name
+  }
 }

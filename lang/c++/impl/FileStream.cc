@@ -49,7 +49,7 @@ struct BufferCopyIn {
 struct FileBufferCopyIn : public BufferCopyIn {
 #ifdef _WIN32
     HANDLE h_;
-    FileBufferCopyIn(const char *filename) : h_(::CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) {
+    explicit FileBufferCopyIn(const char *filename) : h_(::CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) {
         if (h_ == INVALID_HANDLE_VALUE) {
             throw Exception(boost::format("Cannot open file: %1%") % ::GetLastError());
         }
@@ -59,13 +59,13 @@ struct FileBufferCopyIn : public BufferCopyIn {
         ::CloseHandle(h_);
     }
 
-    void seek(size_t len) {
+    void seek(size_t len) override {
         if (::SetFilePointer(h_, len, NULL, FILE_CURRENT) == INVALID_SET_FILE_POINTER && ::GetLastError() != NO_ERROR) {
             throw Exception(boost::format("Cannot skip file: %1%") % ::GetLastError());
         }
     }
 
-    bool read(uint8_t *b, size_t toRead, size_t &actual) {
+    bool read(uint8_t *b, size_t toRead, size_t &actual) override {
         DWORD dw = 0;
         if (!::ReadFile(h_, b, toRead, &dw, NULL)) {
             throw Exception(boost::format("Cannot read file: %1%") % ::GetLastError());
@@ -232,7 +232,7 @@ struct BufferCopyOut {
 struct FileBufferCopyOut : public BufferCopyOut {
 #ifdef _WIN32
     HANDLE h_;
-    FileBufferCopyOut(const char *filename) : h_(::CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) {
+    explicit FileBufferCopyOut(const char *filename) : h_(::CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) {
         if (h_ == INVALID_HANDLE_VALUE) {
             throw Exception(boost::format("Cannot open file: %1%") % ::GetLastError());
         }
@@ -242,7 +242,7 @@ struct FileBufferCopyOut : public BufferCopyOut {
         ::CloseHandle(h_);
     }
 
-    void write(const uint8_t *b, size_t len) {
+    void write(const uint8_t *b, size_t len) override {
         while (len > 0) {
             DWORD dw = 0;
             if (!::WriteFile(h_, b, len, &dw, NULL)) {

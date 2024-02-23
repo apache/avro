@@ -89,6 +89,12 @@ pub enum Error {
     #[error("Failed to convert &str to UUID")]
     ConvertStrToUuid(#[source] uuid::Error),
 
+    #[error("Failed to convert Fixed bytes to UUID. It must be exactly 16 bytes, got {0}")]
+    ConvertFixedToUuid(usize),
+
+    #[error("Failed to convert Fixed bytes to UUID")]
+    ConvertSliceToUuid(#[source] uuid::Error),
+
     #[error("Map key is not a string; key type is {0:?}")]
     MapKeyType(ValueKind),
 
@@ -497,7 +503,7 @@ pub enum CompatibilityError {
     #[error("Incompatible schema types! The {schema_type} should have been {expected_type:?}")]
     TypeExpected {
         schema_type: String,
-        expected_type: &'static [SchemaKind],
+        expected_type: Vec<SchemaKind>,
     },
 
     #[error("Incompatible schemata! Field '{0}' in reader schema does not match the type in the writer schema")]

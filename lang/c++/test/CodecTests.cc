@@ -1264,6 +1264,46 @@ static const TestData3 data3[] = {
 
     {R"(["boolean", "int"])", "U1I", R"(["boolean", "long"])", "U1L", 1},
     {R"(["boolean", "int"])", "U1I", R"(["long", "boolean"])", "U0L", 1},
+
+    // Aliases
+    {R"({"type": "record", "name": "r", "fields": [
+        {"name": "f0", "type": "int"},
+        {"name": "f1", "type": "boolean"},
+        {"name": "f2", "type": "double"}]})",
+     "IBD",
+    R"({"type":"record", "name":"s", "aliases":["r"], "fields":[
+        {"name":"g0", "type":"int", "aliases":["f0"]},
+        {"name":"g1", "type":"boolean", "aliases":["f1"]},
+        {"name":"f2", "type":"double", "aliases":["g2"]}]})",
+     "IBD",
+     1},
+    {R"({"type": "record", "name": "r", "namespace": "n", "fields": [
+     {"name": "f0", "type": "int"}]})",
+     "I",
+     R"({"type": "record", "name": "s", "namespace": "n2", "aliases": ["t", "n.r"], "fields":[
+       {"name": "f0", "type": "int"}]})",
+     "I",
+     1},
+    {R"({"type": "enum", "name": "e", "symbols": ["a", "b"]})",
+     "e1",
+     R"({"type": "enum", "name": "f", "aliases": ["e"], "symbols":["a", "b", "c"]})",
+     "e1",
+     1},
+    {R"({"type": "enum", "name": "e", "namespace": "n", "symbols": ["a", "b"]})",
+     "e1",
+     R"({"type": "enum", "name": "f", "namespace": "n2", "aliases": ["g", "n.e"], "symbols": ["a", "b"]})",
+     "e1",
+     1},
+    {R"({"type": "fixed", "name": "f", "size": 8})",
+     "f8",
+     R"({"type": "fixed", "name": "g", "aliases": ["f"], "size": 8})",
+     "f8",
+     1},
+    {R"({"type": "fixed", "name": "f", "namespace": "n", "size": 8})",
+     "f8",
+     R"({"type": "fixed", "name": "g", "namespace": "n2", "aliases": ["h", "n.f"], "size": 8})",
+     "f8",
+     1},
 };
 
 static const TestData4 data4[] = {

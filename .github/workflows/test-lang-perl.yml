@@ -123,9 +123,24 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: 'Setup Temurin JDK 8, 11, 17 & 21'
+        uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # v4.0.0
+        with:
+          distribution: 'temurin'
+          java-version: |
+            8
+            11
+            17
+            21
+
+      - name: 'Setup Maven 3.9.6'
+        uses: stCarolas/setup-maven@07fbbe97d97ef44336b7382563d66743297e442f # v4.5
+        with:
+          maven-version: 3.9.6
+
       - name: Install Java Avro for Interop Test
         working-directory: .
-        run: mvn -B install -DskipTests
+        run: mvn -B install -PskipQuality
 
       - name: Create Interop Data Directory
         working-directory: .
@@ -140,27 +155,3 @@ jobs:
 
       - name: Run Interop Tests
         run: ./build.sh interop-data-test
-
-  arm64:
-    name: Perl on Linux ARM64
-    runs-on: ["self-hosted", "asf-arm"]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -q -y libjansson-dev libcompress-raw-zlib-perl libcpan-uploader-perl libencode-perl libio-string-perl libjson-xs-perl libmodule-install-perl libmodule-install-readmefrompod-perl libobject-tiny-perl libperl-critic-perl libsnappy-dev libtest-exception-perl libtest-pod-perl cpanminus make gcc wget
-          cpanm Error::Simple
-          cpanm Regexp::Common
-          cpanm Try::Tiny
-          cpanm Compress::Zstd
-          cpanm Module::Install::Repository
-          cpanm inc::Module::Install
-
-      - name: Build
-        run: |
-          set -x
-          ./build.sh clean test

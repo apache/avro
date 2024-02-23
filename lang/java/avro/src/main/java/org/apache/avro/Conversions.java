@@ -68,6 +68,22 @@ public class Conversions {
     public CharSequence toCharSequence(UUID value, Schema schema, LogicalType type) {
       return value.toString();
     }
+
+    @Override
+    public UUID fromFixed(final GenericFixed value, final Schema schema, final LogicalType type) {
+      ByteBuffer buffer = ByteBuffer.wrap(value.bytes());
+      long mostSigBits = buffer.getLong();
+      long leastSigBits = buffer.getLong();
+      return new UUID(mostSigBits, leastSigBits);
+    }
+
+    @Override
+    public GenericFixed toFixed(final UUID value, final Schema schema, final LogicalType type) {
+      ByteBuffer buffer = ByteBuffer.allocate(2 * Long.BYTES);
+      buffer.putLong(value.getMostSignificantBits());
+      buffer.putLong(value.getLeastSignificantBits());
+      return new GenericData.Fixed(schema, buffer.array());
+    }
   }
 
   public static class DecimalConversion extends Conversion<BigDecimal> {
