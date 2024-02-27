@@ -50,7 +50,7 @@ public interface FormattedSchemaParser {
    * when expecting JSON), it is a good idea not to do anything (especially
    * calling methods on the @code ParseContext}).</li>
    * <li>The parameter {@code parseContext} is not thread-safe.</li>
-   * <li>When parsing, all parsed schema definitions should be added to the
+   * <li>All named schema definitions that are parsed should be added to the
    * provided {@link ParseContext}.</li>
    * <li>Optionally, you may return a "main" schema. Some schema definitions have
    * one, for example the schema defined by the root of the JSON document in a

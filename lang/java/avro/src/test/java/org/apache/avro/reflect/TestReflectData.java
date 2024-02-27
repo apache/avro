@@ -19,7 +19,6 @@
 package org.apache.avro.reflect;
 
 import org.apache.avro.AvroTypeException;
-import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.util.internal.JacksonUtils;
@@ -42,7 +41,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestReflectData {
   @Test
-  void weakSchemaCaching() {
+  @SuppressWarnings("unchecked")
+  void weakSchemaCaching() throws Exception {
     int numSchemas = 1000000;
     for (int i = 0; i < numSchemas; i++) {
       // Create schema
@@ -128,16 +128,16 @@ public class TestReflectData {
 
     final String schemaString = schema.toString(true);
 
-    Schema cloneSchema = JsonSchemaParser.parseInternal(schemaString);
+    Schema.Parser parser = new Schema.Parser();
+    Schema cloneSchema = parser.parse(schemaString);
 
-    Map<?, ?> testCases = JacksonUtils.objectToMap(meta);
+    Map testCases = JacksonUtils.objectToMap(meta);
 
     for (Schema.Field field : cloneSchema.getFields()) {
       assertEquals(field.defaultVal(), testCases.get(field.name()), "Invalid field " + field.name());
     }
   }
 
-  @SuppressWarnings("InnerClassMayBeStatic")
   public class Definition {
     public Map<String, String> tokens;
   }
@@ -146,7 +146,9 @@ public class TestReflectData {
   // FIXME: Why does this test fail under JDK 21?
   @EnabledForJreRange(min = JRE.JAVA_8, max = JRE.JAVA_17, disabledReason = "Doesn't work under JRE 21, no clue why")
   void nonStaticInnerClasses() {
-    assertThrows(AvroTypeException.class, () -> ReflectData.get().getSchema(Definition.class));
+    assertThrows(AvroTypeException.class, () -> {
+      ReflectData.get().getSchema(Definition.class);
+    });
   }
 
   @Test

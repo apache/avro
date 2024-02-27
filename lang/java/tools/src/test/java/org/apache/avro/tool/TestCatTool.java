@@ -17,20 +17,10 @@
  */
 package org.apache.avro.tool;
 
-import org.apache.avro.JsonSchemaParser;
-import org.apache.avro.Schema;
-import org.apache.avro.Schema.Type;
-import org.apache.avro.file.CodecFactory;
-import org.apache.avro.file.DataFileStream;
-import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.generic.GenericRecord;
-import org.junit.Rule;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.junit.rules.TestName;
+import static java.util.Arrays.asList;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -44,10 +34,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import static java.util.Arrays.asList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Type;
+import org.apache.avro.file.CodecFactory;
+import org.apache.avro.file.DataFileStream;
+import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.GenericRecord;
+import org.junit.Rule;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.rules.TestName;
 
 public class TestCatTool {
 
@@ -64,10 +63,10 @@ public class TestCatTool {
   private static final double SAMPLERATE = .01;
   private static final double SAMPLERATE_TOO_SMALL = .00000001;
 
-  private final Schema INTSCHEMA = JsonSchemaParser.parseInternal("{\"type\":\"record\", " + "\"name\":\"myRecord\", "
+  private final Schema INTSCHEMA = new Schema.Parser().parse("{\"type\":\"record\", " + "\"name\":\"myRecord\", "
       + "\"fields\":[ " + "{\"name\":\"value\",\"type\":\"int\"} " + "]}");
-  private final Schema STRINGSCHEMA = JsonSchemaParser.parseInternal("{\"type\":\"record\", "
-      + "\"name\":\"myRecord\", " + "\"fields\":[ {\"name\":\"value\",\"type\":\"string\"} " + "]}");
+  private final Schema STRINGSCHEMA = new Schema.Parser().parse("{\"type\":\"record\", " + "\"name\":\"myRecord\", "
+      + "\"fields\":[ {\"name\":\"value\",\"type\":\"string\"} " + "]}");
   private static final CodecFactory DEFLATE = CodecFactory.deflateCodec(9);
   private static final CodecFactory SNAPPY = CodecFactory.snappyCodec();
 

@@ -17,6 +17,18 @@
  */
 package org.apache.avro;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Stream;
+
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.EnumSymbol;
 import org.apache.avro.generic.GenericData.Record;
@@ -28,18 +40,10 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 
 public class TestReadingWritingDataInEvolvedSchemas {
 
@@ -398,11 +402,11 @@ public class TestReadingWritingDataInEvolvedSchemas {
   @ParameterizedTest
   @EnumSource(EncoderType.class)
   void aliasesInSchema(EncoderType encoderType) throws Exception {
-    Schema writer = JsonSchemaParser
-        .parseInternal("{\"namespace\": \"example.avro\", \"type\": \"record\", \"name\": \"User\", \"fields\": ["
+    Schema writer = new Schema.Parser()
+        .parse("{\"namespace\": \"example.avro\", \"type\": \"record\", \"name\": \"User\", \"fields\": ["
             + "{\"name\": \"name\", \"type\": \"int\"}\n" + "]}\n");
-    Schema reader = JsonSchemaParser
-        .parseInternal("{\"namespace\": \"example.avro\", \"type\": \"record\", \"name\": \"User\", \"fields\": ["
+    Schema reader = new Schema.Parser()
+        .parse("{\"namespace\": \"example.avro\", \"type\": \"record\", \"name\": \"User\", \"fields\": ["
             + "{\"name\": \"fname\", \"type\": \"int\", \"aliases\" : [ \"name\" ]}\n" + "]}\n");
 
     GenericData.Record record = defaultRecordWithSchema(writer, "name", 1);

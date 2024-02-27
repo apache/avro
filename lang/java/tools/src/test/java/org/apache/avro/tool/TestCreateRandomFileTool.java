@@ -17,31 +17,28 @@
  */
 package org.apache.avro.tool;
 
-import org.apache.avro.JsonSchemaParser;
-import org.apache.avro.file.DataFileReader;
-import org.apache.avro.file.DataFileStream;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.util.RandomData;
-import org.apache.avro.util.UtfTextUtils;
-import org.apache.trevni.TestUtil;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Iterator;
+
+import org.apache.avro.Schema;
+import org.apache.avro.file.DataFileReader;
+import org.apache.avro.file.DataFileStream;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.util.RandomData;
+import org.apache.trevni.TestUtil;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -52,14 +49,8 @@ public class TestCreateRandomFileTool {
   @TempDir
   private Path dataDir;
   private static final File SCHEMA_FILE = new File("../../../share/test/schemas/weather.avsc");
-  private static final String SCHEMA_CONTENT;
-  static {
-    try (InputStream inputStream = Files.newInputStream(SCHEMA_FILE.toPath())) {
-      SCHEMA_CONTENT = UtfTextUtils.readAllBytes(inputStream, null);
-    } catch (IOException e) {
-      throw new AssertionError("Failed to read source file", e);
-    }
-  }
+
+  private final Schema.Parser schemaParser = new Schema.Parser();
 
   private static final long SEED = System.currentTimeMillis();
 
@@ -104,8 +95,7 @@ public class TestCreateRandomFileTool {
     DataFileReader<Object> reader = new DataFileReader<>(outFile, new GenericDatumReader<>());
 
     Iterator<Object> found = reader.iterator();
-    for (Object expected : new RandomData(JsonSchemaParser.parseInternal(SCHEMA_CONTENT), Integer.parseInt(COUNT),
-        SEED))
+    for (Object expected : new RandomData(schemaParser.parse(SCHEMA_FILE), Integer.parseInt(COUNT), SEED))
       assertEquals(expected, found.next());
 
     reader.close();
@@ -146,8 +136,7 @@ public class TestCreateRandomFileTool {
     DataFileStream<Object> reader = new DataFileStream<>(new ByteArrayInputStream(file), new GenericDatumReader<>());
 
     Iterator<Object> found = reader.iterator();
-    for (Object expected : new RandomData(JsonSchemaParser.parseInternal(SCHEMA_CONTENT), Integer.parseInt(COUNT),
-        SEED))
+    for (Object expected : new RandomData(schemaParser.parse(SCHEMA_FILE), Integer.parseInt(COUNT), SEED))
       assertEquals(expected, found.next());
 
     reader.close();

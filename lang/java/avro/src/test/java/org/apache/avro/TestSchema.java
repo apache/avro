@@ -17,20 +17,6 @@
  */
 package org.apache.avro;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.IntNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.NullNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import org.apache.avro.Schema.Field;
-import org.apache.avro.Schema.Type;
-import org.apache.avro.generic.GenericData;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -47,6 +33,20 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.Schema.Type;
+import org.apache.avro.generic.GenericData;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -66,8 +66,8 @@ public class TestSchema {
     String schemaString = s.toString();
     int mid = schemaString.length() / 2;
 
-    Schema parsedStringSchema = JsonSchemaParser.parseInternal(s.toString());
-    Schema parsedArrayOfStringSchema = JsonSchemaParser.parseInternal(schemaString.substring(0, mid),
+    Schema parsedStringSchema = new org.apache.avro.Schema.Parser().parse(s.toString());
+    Schema parsedArrayOfStringSchema = new org.apache.avro.Schema.Parser().parse(schemaString.substring(0, mid),
         schemaString.substring(mid));
     assertNotNull(parsedStringSchema);
     assertNotNull(parsedArrayOfStringSchema);
@@ -124,7 +124,7 @@ public class TestSchema {
   @Test
   void parseEmptySchema() {
     assertThrows(SchemaParseException.class, () -> {
-      JsonSchemaParser.parseInternal("");
+      new Schema.Parser().parse("");
     });
   }
 
@@ -217,8 +217,7 @@ public class TestSchema {
         ObjectOutputStream oos = new ObjectOutputStream(bos);
         InputStream jsonSchema = getClass().getResourceAsStream("/SchemaBuilder.avsc")) {
 
-      SchemaParser parser = new SchemaParser();
-      Schema payload = parser.parse(jsonSchema).mainSchema();
+      Schema payload = new Schema.Parser().parse(jsonSchema);
       oos.writeObject(payload);
 
       try (ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
@@ -235,9 +234,9 @@ public class TestSchema {
         + "\"fields\":" + "[{\"name\":\"childField\",\"type\":\"string\"}]}";
     String parent = "{\"type\":\"record\"," + "\"name\":\"Parent\"," + "\"namespace\":\"org.apache.avro.nested\","
         + "\"fields\":" + "[{\"name\":\"child\",\"type\":\"Child\"}]}";
-    SchemaParser parser = new SchemaParser();
-    Schema childSchema = parser.parse(child).mainSchema();
-    Schema parentSchema = parser.parse(parent).mainSchema();
+    Schema.Parser parser = new Schema.Parser();
+    Schema childSchema = parser.parse(child);
+    Schema parentSchema = parser.parse(parent);
     String parentWithoutInlinedChildReference = parentSchema.toString(Collections.singleton(childSchema), false);
     // The generated string should be the same as the original parent
     // schema string that did not have the child schema inlined.
@@ -410,10 +409,10 @@ public class TestSchema {
     final String schemaString = "{\n  \"type\" : \"record\",\n  \"name\" : \"ns.int\",\n"
         + "  \"fields\" : [ \n    {\"name\" : \"value\", \"type\" : \"int\"}, \n"
         + "    {\"name\" : \"next\", \"type\" : [ \"null\", \"ns.int\" ]}\n  ]\n}";
-    final Schema schema = JsonSchemaParser.parseInternal(schemaString);
+    final Schema schema = new Schema.Parser().parse(schemaString);
     String toString = schema.toString(true);
 
-    final Schema schema2 = JsonSchemaParser.parseInternal(toString);
+    final Schema schema2 = new Schema.Parser().parse(toString);
     assertEquals(schema, schema2);
   }
 
@@ -487,7 +486,7 @@ public class TestSchema {
         + "                \"type\":\"enum\",\n" + "                \"name\":\"Sub\",\n"
         + "                \"symbols\":[\"OPEN\",\"CLOSE\"]\n" + "            }\n" + "        }\n" + "    ]\n" + "}";
 
-    final Schema schema = JsonSchemaParser.parseInternal(schemaString);
+    final Schema schema = new Schema.Parser().parse(schemaString);
     Schema f1Schema = schema.getField("f1").schema();
     Schema f2Schema = schema.getField("f2").schema();
     assertSame(f1Schema, f2Schema);
@@ -511,14 +510,14 @@ public class TestSchema {
         + "                      \"doc\": \"\",\n" + "                      \"default\": 0\n"
         + "                    }\n" + "                  ]\n" + "                }\n" + "              ]\n"
         + "            }\n" + "          }\n" + "        ]\n" + "      }\n" + "    }\n" + "  ]\n" + "}";
-    final Schema schema = JsonSchemaParser.parseInternal(schemaString);
+    final Schema schema = new Schema.Parser().parse(schemaString);
     assertNotNull(schema);
   }
 
   /*
    * @Test public void testRec() { String schemaString =
    * "[{\"name\":\"employees\",\"type\":[\"null\",{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"Pair1081149ea1d6eb80\",\"fields\":[{\"name\":\"key\",\"type\":\"int\"},{\"name\":\"value\",\"type\":{\"type\":\"record\",\"name\":\"EmployeeInfo2\",\"fields\":[{\"name\":\"companyMap\",\"type\":[\"null\",{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"PairIntegerString\",\"fields\":[{\"name\":\"key\",\"type\":\"int\"},{\"name\":\"value\",\"type\":\"string\"}]},\"java-class\":\"java.util.HashMap\"}],\"default\":null},{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null}]}}]},\"java-class\":\"java.util.HashMap\"}],\"default\":null}]";
-   * final Schema schema = JsonSchemaParser.parseInternal(schemaString);
+   * final Schema schema = new Schema.Parser().parse(schemaString);
    * Assert.assertNotNull(schema);
    *
    * }
@@ -527,7 +526,7 @@ public class TestSchema {
   @Test
   public void testUnionFieldType() {
     String schemaString = "{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": [{\"name\":\"value\", \"type\":[\"null\", \"string\",{\"type\": \"record\", \"name\": \"Cons\", \"fields\": [{\"name\":\"car\", \"type\":\"Lisp\"},{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}";
-    final Schema schema = JsonSchemaParser.parseInternal(schemaString);
+    final Schema schema = new Schema.Parser().parse(schemaString);
     Field value = schema.getField("value");
     Schema fieldSchema = value.schema();
     Schema subSchema = fieldSchema.getTypes().stream().filter((Schema s) -> s.getType() == Type.RECORD).findFirst()
@@ -559,14 +558,15 @@ public class TestSchema {
 
   @Test
   void testContentAfterAvsc() {
-    SchemaParser parser = new SchemaParser();
-    assertThrows(SchemaParseException.class,
-        () -> parser.parse("{\"type\": \"string\"}; DROP TABLE STUDENTS").mainSchema());
+    Schema.Parser parser = new Schema.Parser(NameValidator.UTF_VALIDATOR);
+    parser.setValidateDefaults(true);
+    assertThrows(SchemaParseException.class, () -> parser.parse("{\"type\": \"string\"}; DROP TABLE STUDENTS"));
   }
 
   @Test
-  void testContentAfterAvscInInputStream_ForDeprecatedParser() throws Exception {
-    Schema.Parser parser = new Schema.Parser();
+  void testContentAfterAvscInInputStream() throws Exception {
+    Schema.Parser parser = new Schema.Parser(NameValidator.UTF_VALIDATOR);
+    parser.setValidateDefaults(true);
     String avsc = "{\"type\": \"string\"}; DROP TABLE STUDENTS";
     ByteArrayInputStream is = new ByteArrayInputStream(avsc.getBytes(StandardCharsets.UTF_8));
     Schema schema = parser.parse(is);
@@ -581,8 +581,9 @@ public class TestSchema {
       writer.flush();
     }
 
-    SchemaParser parser = new SchemaParser();
-    assertThrows(SchemaParseException.class, () -> parser.parse(avscFile).mainSchema());
+    Schema.Parser parser = new Schema.Parser(NameValidator.UTF_VALIDATOR);
+    parser.setValidateDefaults(true);
+    assertThrows(SchemaParseException.class, () -> parser.parse(avscFile));
   }
 
   @Test
@@ -617,6 +618,7 @@ public class TestSchema {
     String schemaRecord2 = "{\"type\":\"record\", \"name\":\"record2\", \"fields\": ["
         + "  {\"name\":\"f1\", \"type\":\"record1\" }" + "]}"; // register schema1 in schema.
     Schema schemaRecord1 = Schema.createRecord("record1", "doc", "", false);
+    schemaRecord1.setFields(Collections.singletonList(new Field("name", Schema.create(Type.STRING))));
     Schema.Parser parser = new Schema.Parser().addTypes(Collections.singleton(schemaRecord1));
 
     // parse schema for record2 that contains field for schema1.
@@ -632,6 +634,6 @@ public class TestSchema {
    */
   @Test
   void testParserNullValidate() {
-    new Schema.Parser(null).parse("{\"type\":\"record\",\"name\":\"\",\"fields\":[]}"); // Empty name
+    new Schema.Parser((NameValidator) null).parse("{\"type\":\"record\",\"name\":\"\",\"fields\":[]}"); // Empty name
   }
 }

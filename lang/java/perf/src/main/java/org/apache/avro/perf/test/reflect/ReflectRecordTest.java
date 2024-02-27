@@ -18,16 +18,18 @@
 
 package org.apache.avro.perf.test.reflect;
 
-import org.apache.avro.JsonSchemaParser;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
 import org.apache.avro.Schema;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
-import org.apache.avro.perf.test.BasicRecord;
-import org.apache.avro.perf.test.BasicState;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
+import org.apache.avro.perf.test.BasicRecord;
+import org.apache.avro.perf.test.BasicState;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.OperationsPerInvocation;
@@ -35,9 +37,6 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 public class ReflectRecordTest {
 
@@ -71,7 +70,7 @@ public class ReflectRecordTest {
     public TestStateEncode() {
       super();
       final String jsonText = ReflectData.get().getSchema(BasicRecord.class).toString();
-      this.schema = JsonSchemaParser.parseInternal(jsonText);
+      this.schema = new Schema.Parser().parse(jsonText);
     }
 
     /**
@@ -102,7 +101,7 @@ public class ReflectRecordTest {
     public TestStateDecode() {
       super();
       final String jsonText = ReflectData.get().getSchema(BasicRecord.class).toString();
-      this.schema = JsonSchemaParser.parseInternal(jsonText);
+      this.schema = new Schema.Parser().parse(jsonText);
     }
 
     /**

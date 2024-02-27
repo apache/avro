@@ -109,7 +109,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     private String schemaString;
 
     private Object readResolve() {
-      return JsonSchemaParser.parseInternal(schemaString);
+      return new Schema.Parser().parse(schemaString);
     }
   }
 
@@ -1408,7 +1408,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
     public Parser(final NameValidator validate) {
       this.validate = validate != null ? validate : NameValidator.NO_VALIDATION;
-      context = new ParseContext( this.validate);
+      context = new ParseContext(this.validate);
     }
 
     public Parser(final ParseContext context) {
@@ -1458,7 +1458,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
      * names known to this parser.
      */
     public Schema parse(File file) throws IOException {
-      return parse(FACTORY.createParser(file), false);
+      return parse(FACTORY.createParser(file), false, true);
     }
 
     /**
@@ -1467,7 +1467,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
      */
     public Schema parse(InputStream in) throws IOException {
       JsonParser parser = FACTORY.createParser(in).disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
-      return parse(parser, true);
+      return parse(parser, true, true);
     }
 
     /** Read a schema from one or more json strings */
@@ -1484,13 +1484,21 @@ public abstract class Schema extends JsonProperties implements Serializable {
      */
     public Schema parse(String s) {
       try {
-        return parse(FACTORY.createParser(s), false);
+        return parse(FACTORY.createParser(s), false, true);
       } catch (IOException e) {
         throw new SchemaParseException(e);
       }
     }
 
-    private Schema parse(JsonParser parser, boolean allowDanglingContent) throws IOException {
+    public Schema parseInternal(String s) {
+      try {
+        return parse(FACTORY.createParser(s), false, false);
+      } catch (IOException e) {
+        throw new SchemaParseException(e);
+      }
+    }
+
+    private Schema parse(JsonParser parser, boolean allowDanglingContent, boolean resolveSchema) throws IOException {
       NameValidator saved = VALIDATE_NAMES.get();
       boolean savedValidateDefaults = VALIDATE_DEFAULTS.get();
       try {
@@ -1500,6 +1508,10 @@ public abstract class Schema extends JsonProperties implements Serializable {
         VALIDATE_DEFAULTS.set(validateDefaults);
         JsonNode jsonNode = MAPPER.readTree(parser);
         Schema schema = Schema.parse(jsonNode, context, null);
+        if (resolveSchema) {
+          context.commit();
+          schema = context.resolve(schema);
+        }
         if (!allowDanglingContent) {
           String dangling;
           StringWriter danglingWriter = new StringWriter();

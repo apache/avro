@@ -17,18 +17,19 @@
  */
 package org.apache.avro;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.specific.SpecificDatumReader;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-
-import java.io.File;
-import java.io.IOException;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestDataFileSpecific {
 
@@ -44,8 +45,8 @@ public class TestDataFileSpecific {
     File file = new File(DIR.getPath(), "testSpecificDatumReaderDefaultCtor");
 
     // like the specific Foo, but with another field
-    Schema s1 = JsonSchemaParser
-        .parseInternal("{\"type\":\"record\",\"name\":\"Foo\"," + "\"namespace\":\"org.apache.avro\",\"fields\":["
+    Schema s1 = new Schema.Parser()
+        .parse("{\"type\":\"record\",\"name\":\"Foo\"," + "\"namespace\":\"org.apache.avro\",\"fields\":["
             + "{\"name\":\"label\",\"type\":\"string\"}," + "{\"name\":\"id\",\"type\":\"int\"}]}");
 
     // write a file using generic objects

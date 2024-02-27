@@ -18,7 +18,9 @@
 
 package org.apache.avro.perf.test.basic;
 
-import org.apache.avro.JsonSchemaParser;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
@@ -34,9 +36,6 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 public class UnchangedUnionTest {
 
@@ -74,7 +73,7 @@ public class UnchangedUnionTest {
 
     public TestStateEncode() {
       super();
-      this.schema = JsonSchemaParser.parseInternal(mkSchema(UNCHANGED_UNION));
+      this.schema = new Schema.Parser().parse(mkSchema(UNCHANGED_UNION));
     }
 
     /**
@@ -115,7 +114,7 @@ public class UnchangedUnionTest {
 
     public TestStateDecode() {
       super();
-      this.schema = JsonSchemaParser.parseInternal(mkSchema(UNCHANGED_UNION));
+      this.schema = new Schema.Parser().parse(mkSchema(UNCHANGED_UNION));
     }
 
     /**

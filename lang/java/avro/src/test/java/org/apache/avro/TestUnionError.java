@@ -51,7 +51,7 @@ public class TestUnionError {
         + "                  \"fields\" : [ {\n" + "                    \"name\" : \"amount1\",\n"
         + "                    \"type\" : \"int\"\n" + "                  } ]\n" + "                } ]\n"
         + "              } ]\n" + "            }";
-    Schema writerSchema = JsonSchemaParser.parseInternal(writerSchemaJson);
+    Schema writerSchema = new Schema.Parser().parse(writerSchemaJson);
 
     String readerSchemaJson = " {\n" + "              \"type\" : \"record\",\n" + "              \"name\" : \"C1\",\n"
         + "              \"fields\" : [ {\n" + "                \"name\" : \"c\",\n"
@@ -59,7 +59,7 @@ public class TestUnionError {
         + "                  \"name\" : \"A\",\n" + "                  \"fields\" : [ {\n"
         + "                    \"name\" : \"amount\",\n" + "                    \"type\" : \"int\"\n"
         + "                  } ]\n" + "                }, \"float\" ]\n" + "              } ]\n" + "            }";
-    Schema readerSchema = JsonSchemaParser.parseInternal(readerSchemaJson);
+    Schema readerSchema = new Schema.Parser().parse(readerSchemaJson);
 
     List<Schema> unionSchemas = writerSchema.getField("c").schema().getTypes();
 

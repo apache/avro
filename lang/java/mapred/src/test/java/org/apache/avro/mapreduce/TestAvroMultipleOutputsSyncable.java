@@ -18,7 +18,14 @@
 
 package org.apache.avro.mapreduce;
 
-import org.apache.avro.JsonSchemaParser;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericData;
@@ -43,21 +50,13 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 public class TestAvroMultipleOutputsSyncable {
   @TempDir
   public File tmpFolder;
 
-  public static final Schema STATS_SCHEMA = JsonSchemaParser.parseInternal("{\"name\":\"stats\",\"type\":\"record\","
+  public static final Schema STATS_SCHEMA = new Schema.Parser().parse("{\"name\":\"stats\",\"type\":\"record\","
       + "\"fields\":[{\"name\":\"count\",\"type\":\"int\"}," + "{\"name\":\"name\",\"type\":\"string\"}]}");
-  public static final Schema STATS_SCHEMA_2 = JsonSchemaParser.parseInternal("{\"name\":\"stats\",\"type\":\"record\","
+  public static final Schema STATS_SCHEMA_2 = new Schema.Parser().parse("{\"name\":\"stats\",\"type\":\"record\","
       + "\"fields\":[{\"name\":\"count1\",\"type\":\"int\"}," + "{\"name\":\"name1\",\"type\":\"string\"}]}");
 
   private static class LineCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {

@@ -519,7 +519,7 @@ public class TestSchemaCompatibility {
       final String result = new BufferedReader(new InputStreamReader(inputStream)).lines()
           .collect(Collectors.joining("\n"));
 
-      return JsonSchemaParser.parseInternal(result);
+      return new Schema.Parser().parse(result);
     }
   }
 

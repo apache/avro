@@ -33,7 +33,6 @@
  */
 package org.apache.avro.util;
 
-import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.junit.Assert;
 import org.junit.Test;
@@ -89,14 +88,14 @@ public class TestSchemas {
   public void testVisit1() {
     String s1 = "{\"type\": \"record\", \"name\": \"t1\", \"fields\": [" + "{\"name\": \"f1\", \"type\": \"int\"}"
         + "]}";
-    Assert.assertEquals("t1.", Schemas.visit(JsonSchemaParser.parseInternal(s1), new TestVisitor()));
+    Assert.assertEquals("t1.", Schemas.visit(new Schema.Parser().parse(s1), new TestVisitor()));
   }
 
   @Test
   public void testVisit2() {
     String s2 = "{\"type\": \"record\", \"name\": \"c1\", \"fields\": [" + "{\"name\": \"f1\", \"type\": \"int\"}"
         + "]}";
-    Assert.assertEquals("c1.\"int\"!", Schemas.visit(JsonSchemaParser.parseInternal(s2), new TestVisitor()));
+    Assert.assertEquals("c1.\"int\"!", Schemas.visit(new Schema.Parser().parse(s2), new TestVisitor()));
 
   }
 
@@ -104,7 +103,7 @@ public class TestSchemas {
   public void testVisit3() {
     String s3 = "{\"type\": \"record\", \"name\": \"ss1\", \"fields\": [" + "{\"name\": \"f1\", \"type\": \"int\"}"
         + "]}";
-    Assert.assertEquals("ss1.", Schemas.visit(JsonSchemaParser.parseInternal(s3), new TestVisitor()));
+    Assert.assertEquals("ss1.", Schemas.visit(new Schema.Parser().parse(s3), new TestVisitor()));
 
   }
 
@@ -112,7 +111,7 @@ public class TestSchemas {
   public void testVisit4() {
     String s4 = "{\"type\": \"record\", \"name\": \"st1\", \"fields\": [" + "{\"name\": \"f1\", \"type\": \"int\"}"
         + "]}";
-    Assert.assertEquals("st1.!", Schemas.visit(JsonSchemaParser.parseInternal(s4), new TestVisitor()));
+    Assert.assertEquals("st1.!", Schemas.visit(new Schema.Parser().parse(s4), new TestVisitor()));
 
   }
 
@@ -121,8 +120,7 @@ public class TestSchemas {
     String s5 = "{\"type\": \"record\", \"name\": \"c1\", \"fields\": ["
         + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"c2\", \"fields\": "
         + "[{\"name\": \"f11\", \"type\": \"int\"}]}}," + "{\"name\": \"f2\", \"type\": \"long\"}" + "]}";
-    Assert.assertEquals("c1.c2.\"int\"!\"long\"!",
-        Schemas.visit(JsonSchemaParser.parseInternal(s5), new TestVisitor()));
+    Assert.assertEquals("c1.c2.\"int\"!\"long\"!", Schemas.visit(new Schema.Parser().parse(s5), new TestVisitor()));
 
   }
 
@@ -131,7 +129,7 @@ public class TestSchemas {
     String s6 = "{\"type\": \"record\", \"name\": \"c1\", \"fields\": ["
         + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"ss2\", \"fields\": "
         + "[{\"name\": \"f11\", \"type\": \"int\"}]}}," + "{\"name\": \"f2\", \"type\": \"long\"}" + "]}";
-    Assert.assertEquals("c1.ss2.!", Schemas.visit(JsonSchemaParser.parseInternal(s6), new TestVisitor()));
+    Assert.assertEquals("c1.ss2.!", Schemas.visit(new Schema.Parser().parse(s6), new TestVisitor()));
 
   }
 
@@ -140,7 +138,7 @@ public class TestSchemas {
     String s7 = "{\"type\": \"record\", \"name\": \"c1\", \"fields\": ["
         + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"css2\", \"fields\": "
         + "[{\"name\": \"f11\", \"type\": \"int\"}]}}," + "{\"name\": \"f2\", \"type\": \"long\"}" + "]}";
-    Assert.assertEquals("c1.css2.\"int\"!!", Schemas.visit(JsonSchemaParser.parseInternal(s7), new TestVisitor()));
+    Assert.assertEquals("c1.css2.\"int\"!!", Schemas.visit(new Schema.Parser().parse(s7), new TestVisitor()));
   }
 
   @Test(expected = UnsupportedOperationException.class)
@@ -148,7 +146,7 @@ public class TestSchemas {
     String s8 = "{\"type\": \"record\", \"name\": \"c1\", \"fields\": ["
         + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"cst2\", \"fields\": "
         + "[{\"name\": \"f11\", \"type\": \"int\"}]}}," + "{\"name\": \"f2\", \"type\": \"int\"}" + "]}";
-    Schemas.visit(JsonSchemaParser.parseInternal(s8), new TestVisitor());
+    Schemas.visit(new Schema.Parser().parse(s8), new TestVisitor());
   }
 
   @Test
@@ -156,7 +154,7 @@ public class TestSchemas {
     String s9 = "{\"type\": \"record\", \"name\": \"c1\", \"fields\": ["
         + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"ct2\", \"fields\": "
         + "[{\"name\": \"f11\", \"type\": \"int\"}]}}," + "{\"name\": \"f2\", \"type\": \"long\"}" + "]}";
-    Assert.assertEquals("c1.ct2.\"int\"!", Schemas.visit(JsonSchemaParser.parseInternal(s9), new TestVisitor()));
+    Assert.assertEquals("c1.ct2.\"int\"!", Schemas.visit(new Schema.Parser().parse(s9), new TestVisitor()));
   }
 
   @Test(expected = UnsupportedOperationException.class)
@@ -164,7 +162,7 @@ public class TestSchemas {
     String s10 = "{\"type\": \"record\", \"name\": \"c1\", \"fields\": ["
         + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"ct2\", \"fields\": "
         + "[{\"name\": \"f11\", \"type\": \"int\"}]}}," + "{\"name\": \"f2\", \"type\": \"int\"}" + "]}";
-    Schemas.visit(JsonSchemaParser.parseInternal(s10), new TestVisitor() {
+    Schemas.visit(new Schema.Parser().parse(s10), new TestVisitor() {
       @Override
       public SchemaVisitorAction visitTerminal(Schema terminal) {
         return SchemaVisitorAction.SKIP_SUBTREE;
@@ -178,14 +176,13 @@ public class TestSchemas {
         + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"c2\", \"fields\": "
         + "[{\"name\": \"f11\", \"type\": \"int\"},{\"name\": \"f12\", \"type\": \"double\"}" + "]}},"
         + "{\"name\": \"f2\", \"type\": \"long\"}" + "]}";
-    Assert.assertEquals("c1.c2.\"int\".!\"long\".!",
-        Schemas.visit(JsonSchemaParser.parseInternal(s11), new TestVisitor() {
-          @Override
-          public SchemaVisitorAction visitTerminal(Schema terminal) {
-            sb.append(terminal).append('.');
-            return SchemaVisitorAction.SKIP_SIBLINGS;
-          }
-        }));
+    Assert.assertEquals("c1.c2.\"int\".!\"long\".!", Schemas.visit(new Schema.Parser().parse(s11), new TestVisitor() {
+      @Override
+      public SchemaVisitorAction visitTerminal(Schema terminal) {
+        sb.append(terminal).append('.');
+        return SchemaVisitorAction.SKIP_SIBLINGS;
+      }
+    }));
   }
 
   @Test
@@ -193,7 +190,7 @@ public class TestSchemas {
     String s12 = "{\"type\": \"record\", \"name\": \"c1\", \"fields\": ["
         + "{\"name\": \"f1\", \"type\": {\"type\": \"record\", \"name\": \"ct2\", \"fields\": "
         + "[{\"name\": \"f11\", \"type\": \"int\"}]}}," + "{\"name\": \"f2\", \"type\": \"long\"}" + "]}";
-    Assert.assertEquals("c1.ct2.\"int\".", Schemas.visit(JsonSchemaParser.parseInternal(s12), new TestVisitor() {
+    Assert.assertEquals("c1.ct2.\"int\".", Schemas.visit(new Schema.Parser().parse(s12), new TestVisitor() {
       @Override
       public SchemaVisitorAction visitTerminal(Schema terminal) {
         sb.append(terminal).append('.');
@@ -205,7 +202,7 @@ public class TestSchemas {
   @Test
   public void testVisit13() {
     String s12 = "{\"type\": \"int\"}";
-    Assert.assertEquals("\"int\".", Schemas.visit(JsonSchemaParser.parseInternal(s12), new TestVisitor() {
+    Assert.assertEquals("\"int\".", Schemas.visit(new Schema.Parser().parse(s12), new TestVisitor() {
       @Override
       public SchemaVisitorAction visitTerminal(Schema terminal) {
         sb.append(terminal).append('.');

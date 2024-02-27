@@ -84,7 +84,7 @@ public class TestDataFile {
   private static final long SEED = System.currentTimeMillis();
   private static final String SCHEMA_JSON = "{\"type\": \"record\", \"name\": \"Test\", \"fields\": ["
       + "{\"name\":\"stringField\", \"type\":\"string\"}," + "{\"name\":\"longField\", \"type\":\"long\"}]}";
-  private static final Schema SCHEMA = JsonSchemaParser.parseInternal(SCHEMA_JSON);
+  private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
 
   private File makeFile(CodecFactory codec) {
     return new File(DIR, "test-" + codec + ".avro");
@@ -345,7 +345,7 @@ public class TestDataFile {
     File input = new File(args[0]);
     Schema projection = null;
     if (args.length > 1)
-      projection = new SchemaParser().parse(new File(args[1])).mainSchema();
+      projection = new Schema.Parser().parse(new File(args[1]));
     TestDataFile.readFile(input, new GenericDatumReader<>(null, projection));
     long start = System.currentTimeMillis();
     for (int i = 0; i < 4; i++)

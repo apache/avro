@@ -18,7 +18,10 @@
 
 package org.apache.avro.perf.test.generic;
 
-import org.apache.avro.JsonSchemaParser;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Random;
+
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
@@ -33,10 +36,6 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Random;
 
 public class GenericNestedTest {
 
@@ -97,7 +96,7 @@ public class GenericNestedTest {
 
     public TestStateEncode() {
       super();
-      this.schema = JsonSchemaParser.parseInternal(NESTED_RECORD_SCHEMA);
+      this.schema = new Schema.Parser().parse(NESTED_RECORD_SCHEMA);
     }
 
     /**
@@ -142,7 +141,7 @@ public class GenericNestedTest {
 
     public TestStateDecode() {
       super();
-      this.schema = JsonSchemaParser.parseInternal(NESTED_RECORD_SCHEMA);
+      this.schema = new Schema.Parser().parse(NESTED_RECORD_SCHEMA);
     }
 
     /**

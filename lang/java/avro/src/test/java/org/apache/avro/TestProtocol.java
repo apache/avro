@@ -80,7 +80,7 @@ public class TestProtocol {
                                                                                                                   // //
                                                                                                                   // Sub
         "         \"symbols\":[\"OPEN\",\"CLOSE\"]\n" + "        }\n" + "    }\n" + " ]\n" + "}";
-    Schema s = JsonSchemaParser.parseInternal(schema);
+    Schema s = new Schema.Parser().parse(schema);
     assertNotNull(s);
 
     String parsingForm = SchemaNormalization.toParsingForm(s);

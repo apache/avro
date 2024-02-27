@@ -17,9 +17,9 @@
  */
 package org.apache.avro.io;
 
-import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -54,7 +54,7 @@ public class TestValidatingIO {
   @MethodSource("data")
   public void testMain(Encoding enc, int skip, String js, String cls) throws IOException {
     for (int i = 0; i < COUNT; i++) {
-      testOnce(JsonSchemaParser.parseInternal(js), cls, skip, enc);
+      testOnce(new Schema.Parser().parse(js), cls, skip, enc);
     }
   }
 

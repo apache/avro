@@ -17,22 +17,21 @@
  */
 package org.apache.avro.file;
 
-import org.apache.avro.InvalidAvroMagicException;
-import org.apache.avro.JsonSchemaParser;
-import org.apache.avro.Schema;
-import org.apache.avro.UnknownAvroCodecException;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DecoderFactory;
-
-import java.io.Closeable;
 import java.io.IOException;
+import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import org.apache.avro.InvalidAvroMagicException;
+import org.apache.avro.Schema;
+import org.apache.avro.UnknownAvroCodecException;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.BinaryDecoder;
 
 /** Read files written by Avro version 1.2. */
 public class DataFileReader12<D> implements FileReader<D>, Closeable {
@@ -89,7 +88,7 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
     if (codec != null && !codec.equals(NULL_CODEC)) {
       throw new UnknownAvroCodecException("Unknown codec: " + codec);
     }
-    this.schema = JsonSchemaParser.parseInternal(getMetaString(SCHEMA));
+    this.schema = new Schema.Parser().parse(getMetaString(SCHEMA));
     this.reader = reader;
 
     reader.setSchema(schema);

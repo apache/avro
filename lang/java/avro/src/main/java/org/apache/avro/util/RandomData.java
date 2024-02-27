@@ -20,7 +20,6 @@ package org.apache.avro.util;
 import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
-import org.apache.avro.SchemaParser;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericArray;
@@ -207,8 +206,7 @@ public class RandomData implements Iterable<Object> {
       System.out.println("Usage: RandomData <schemafile> <outputfile> <count> [codec]");
       System.exit(-1);
     }
-    SchemaParser parser = new SchemaParser();
-    Schema sch = parser.parse(new File(args[0])).mainSchema();
+    Schema sch = new Schema.Parser().parse(new File(args[0]));
     try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>())) {
       writer.setCodec(CodecFactory.fromString(args.length >= 4 ? args[3] : "null"));
       writer.setMeta("user_metadata", "someByteArray".getBytes(StandardCharsets.UTF_8));

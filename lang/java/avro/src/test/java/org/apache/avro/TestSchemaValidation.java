@@ -17,55 +17,16 @@
  */
 package org.apache.avro;
 
-import org.apache.avro.reflect.ReflectData;
-import org.junit.jupiter.api.Test;
+import static org.apache.avro.TestSchemas.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.apache.avro.TestSchemas.A_DINT_B_DINT_RECORD1;
-import static org.apache.avro.TestSchemas.A_DINT_RECORD1;
-import static org.apache.avro.TestSchemas.A_INT_B_DINT_RECORD1;
-import static org.apache.avro.TestSchemas.A_INT_B_INT_RECORD1;
-import static org.apache.avro.TestSchemas.A_INT_RECORD1;
-import static org.apache.avro.TestSchemas.A_LONG_RECORD1;
-import static org.apache.avro.TestSchemas.BOOLEAN_SCHEMA;
-import static org.apache.avro.TestSchemas.BYTES_SCHEMA;
-import static org.apache.avro.TestSchemas.BYTES_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.DOUBLE_SCHEMA;
-import static org.apache.avro.TestSchemas.DOUBLE_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.EMPTY_RECORD1;
-import static org.apache.avro.TestSchemas.EMPTY_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.ENUM1_ABC_SCHEMA;
-import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA;
-import static org.apache.avro.TestSchemas.ENUM2_AB_SCHEMA;
-import static org.apache.avro.TestSchemas.FLOAT_SCHEMA;
-import static org.apache.avro.TestSchemas.FLOAT_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_ARRAY_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_FLOAT_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_LONG_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_MAP_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_STRING_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.LONG_ARRAY_SCHEMA;
-import static org.apache.avro.TestSchemas.LONG_MAP_SCHEMA;
-import static org.apache.avro.TestSchemas.LONG_SCHEMA;
-import static org.apache.avro.TestSchemas.LONG_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.NS_RECORD1;
-import static org.apache.avro.TestSchemas.NS_RECORD2;
-import static org.apache.avro.TestSchemas.NULL_INT_ARRAY_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.NULL_INT_MAP_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.NULL_SCHEMA;
-import static org.apache.avro.TestSchemas.ReaderWriter;
-import static org.apache.avro.TestSchemas.STRING_INT_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.STRING_SCHEMA;
-import static org.apache.avro.TestSchemas.STRING_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.list;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.apache.avro.reflect.ReflectData;
+import org.junit.jupiter.api.Test;
 
 public class TestSchemaValidation {
 
@@ -355,7 +316,7 @@ public class TestSchemaValidation {
     assertTrue(threw);
   }
 
-  public static final org.apache.avro.Schema recursiveSchema = JsonSchemaParser.parseInternal(
+  public static final org.apache.avro.Schema recursiveSchema = new org.apache.avro.Schema.Parser().parse(
       "{\"type\":\"record\",\"name\":\"Node\",\"namespace\":\"avro\",\"fields\":[{\"name\":\"value\",\"type\":[\"null\",\"Node\"],\"default\":null}]}");
 
   /**

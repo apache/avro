@@ -15,15 +15,14 @@
  */
 package org.apache.avro.io.parsing;
 
-import org.apache.avro.JsonSchemaParser;
-import org.apache.avro.Schema;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.fail;
+import org.apache.avro.Schema;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test to verify that recursive schemas are flattened correctly. See
@@ -43,7 +42,7 @@ public class SymbolTest {
 
   @Test
   void someMethod() throws IOException {
-    Schema schema = JsonSchemaParser.parseInternal(SCHEMA);
+    Schema schema = new Schema.Parser().parse(SCHEMA);
     Symbol root = new ResolvingGrammarGenerator().generate(schema, schema);
     validateNonNull(root, new HashSet<>());
   }

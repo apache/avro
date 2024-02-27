@@ -17,23 +17,23 @@
  */
 package org.apache.avro.tool;
 
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaParser;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.JsonEncoder;
-
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
+
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+
+import org.apache.avro.Schema;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.JsonEncoder;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
 
 /** Converts an input file from Avro binary into JSON. */
 public class BinaryFragmentToJsonTool implements Tool {
@@ -60,8 +60,7 @@ public class BinaryFragmentToJsonTool implements Tool {
     Schema schema;
     String inputFile;
     if (schemaFile == null) {
-      SchemaParser parser = new SchemaParser();
-      schema = parser.parse(nargs.get(0)).mainSchema();
+      schema = new Schema.Parser().parse(nargs.get(0));
       inputFile = nargs.get(1);
     } else {
       schema = Util.parseSchemaFromFS(schemaFile);

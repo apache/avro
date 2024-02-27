@@ -5,7 +5,6 @@
  */
 package avro.examples.baseball;
 
-import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.message.BinaryMessageEncoder;
@@ -18,7 +17,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
   private static final long serialVersionUID = 2020521726426674816L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = JsonSchemaParser.parseInternal("{\"type\":\"record\",\"name\":\"NullSafeAnnotationsFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that @org.jetbrains.annotations.Nullable and @org.jetbrains.annotations.NotNull annotations are created for all fields\",\"fields\":[{\"name\":\"name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"nullable_name\",\"type\":[{\"type\":\"string\",\"avro.java.string\":\"String\"},\"null\"]},{\"name\":\"favorite_number\",\"type\":\"int\"},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NullSafeAnnotationsFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that @org.jetbrains.annotations.Nullable and @org.jetbrains.annotations.NotNull annotations are created for all fields\",\"fields\":[{\"name\":\"name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"nullable_name\",\"type\":[{\"type\":\"string\",\"avro.java.string\":\"String\"},\"null\"]},{\"name\":\"favorite_number\",\"type\":\"int\"},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();

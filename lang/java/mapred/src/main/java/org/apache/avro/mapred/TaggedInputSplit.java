@@ -18,18 +18,17 @@
 
 package org.apache.avro.mapred;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.apache.avro.Schema;
-import org.apache.avro.SchemaParser;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.util.ReflectionUtils;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 
 /**
  * An {@link InputSplit} that tags another InputSplit with extra data for use by
@@ -47,7 +46,7 @@ class TaggedInputSplit implements Configurable, InputSplit {
 
   private Schema schema;
 
-  private final SchemaParser schemaParser = new SchemaParser();
+  private Schema.Parser schemaParser = new Schema.Parser();
 
   private Configuration conf;
 
@@ -128,7 +127,7 @@ class TaggedInputSplit implements Configurable, InputSplit {
     inputFormatClass = (Class<? extends InputFormat>) readClass(in);
     mapperClass = (Class<? extends AvroMapper>) readClass(in);
     String schemaString = Text.readString(in);
-    schema = schemaParser.parse(schemaString).mainSchema();
+    schema = schemaParser.parse(schemaString);
   }
 
   private Class<?> readClass(DataInput in) throws IOException {

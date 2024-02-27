@@ -18,7 +18,9 @@
 
 package org.apache.avro.hadoop.io;
 
-import org.apache.avro.JsonSchemaParser;
+import java.lang.reflect.Constructor;
+import java.util.Collection;
+
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.DatumReader;
@@ -33,9 +35,6 @@ import org.apache.hadoop.io.serializer.Deserializer;
 import org.apache.hadoop.io.serializer.Serialization;
 import org.apache.hadoop.io.serializer.Serializer;
 import org.apache.hadoop.util.ReflectionUtils;
-
-import java.lang.reflect.Constructor;
-import java.util.Collection;
 
 /**
  * The {@link org.apache.hadoop.io.serializer.Serialization} used by jobs
@@ -210,7 +209,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
    */
   public static Schema getKeyWriterSchema(Configuration conf) {
     String json = conf.get(CONF_KEY_WRITER_SCHEMA);
-    return null == json ? null : JsonSchemaParser.parseInternal(json);
+    return null == json ? null : new Schema.Parser().parse(json);
   }
 
   /**
@@ -222,7 +221,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
    */
   public static Schema getKeyReaderSchema(Configuration conf) {
     String json = conf.get(CONF_KEY_READER_SCHEMA);
-    return null == json ? null : JsonSchemaParser.parseInternal(json);
+    return null == json ? null : new Schema.Parser().parse(json);
   }
 
   /**
@@ -234,7 +233,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
    */
   public static Schema getValueWriterSchema(Configuration conf) {
     String json = conf.get(CONF_VALUE_WRITER_SCHEMA);
-    return null == json ? null : JsonSchemaParser.parseInternal(json);
+    return null == json ? null : new Schema.Parser().parse(json);
   }
 
   /**
@@ -246,7 +245,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
    */
   public static Schema getValueReaderSchema(Configuration conf) {
     String json = conf.get(CONF_VALUE_READER_SCHEMA);
-    return null == json ? null : JsonSchemaParser.parseInternal(json);
+    return null == json ? null : new Schema.Parser().parse(json);
   }
 
   /**

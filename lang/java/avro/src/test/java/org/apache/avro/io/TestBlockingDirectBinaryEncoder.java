@@ -17,7 +17,6 @@
  */
 package org.apache.avro.io;
 
-import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaNormalization;
 import org.apache.avro.generic.GenericDatumReader;
@@ -84,7 +83,7 @@ public class TestBlockingDirectBinaryEncoder {
   @Test
   void testSkippingUsingBlocks() throws IOException, NoSuchAlgorithmException {
     // Create an empty schema for read, so we skip over all the fields
-    Schema emptySchema = JsonSchemaParser.parseInternal(
+    Schema emptySchema = new Schema.Parser().parse(
         "{\"type\":\"record\",\"name\":\"TestRecordWithMapsAndArrays\",\"namespace\":\"org.apache.avro.specific\",\"fields\":[]}");
 
     GenericDatumReader<?> in = new GenericDatumReader<>(TestRecordWithMapsAndArrays.SCHEMA$, emptySchema);

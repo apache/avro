@@ -18,7 +18,10 @@
 
 package org.apache.avro.perf.test.generic;
 
-import org.apache.avro.JsonSchemaParser;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Random;
+
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
@@ -34,10 +37,6 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Random;
 
 public class GenericWithPromotionTest {
 
@@ -72,8 +71,8 @@ public class GenericWithPromotionTest {
 
     public TestStateDecode() {
       super();
-      this.readerSchema = JsonSchemaParser.parseInternal(RECORD_SCHEMA_WITH_PROMOTION);
-      this.writerSchema = JsonSchemaParser.parseInternal(RECORD_SCHEMA);
+      this.readerSchema = new Schema.Parser().parse(RECORD_SCHEMA_WITH_PROMOTION);
+      this.writerSchema = new Schema.Parser().parse(RECORD_SCHEMA);
     }
 
     /**

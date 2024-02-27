@@ -17,12 +17,6 @@
  */
 package org.apache.avro.tool;
 
-import org.apache.avro.Protocol;
-import org.apache.avro.SchemaParser;
-import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility;
-import org.apache.avro.generic.GenericData.StringType;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -38,6 +32,12 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData.StringType;
+import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility;
 
 /**
  * A Tool for compiling avro protocols or schemas to Java classes using the Avro
@@ -156,19 +156,17 @@ public class SpecificCompilerTool implements Tool {
     }
 
     if ("schema".equals(method)) {
-      SchemaParser parser = new SchemaParser();
-      long lastModified = 0;
+      Schema.Parser parser = new Schema.Parser();
       for (File src : determineInputs(inputs, SCHEMA_FILTER)) {
-        parser.parse(src);
-        lastModified = Math.max(lastModified, src.lastModified());
+        Schema schema = parser.parse(src);
+        final SpecificCompiler compiler = new SpecificCompiler(schema);
+        executeCompiler(compiler, compilerOpts, src, output);
       }
-      final SpecificCompiler compiler = new SpecificCompiler(parser.getParsedNamedSchemas());
-      executeCompiler(compiler, compilerOpts, lastModified, output);
     } else if ("protocol".equals(method)) {
       for (File src : determineInputs(inputs, PROTOCOL_FILTER)) {
         Protocol protocol = Protocol.parse(src);
         final SpecificCompiler compiler = new SpecificCompiler(protocol);
-        executeCompiler(compiler, compilerOpts, src.lastModified(), output);
+        executeCompiler(compiler, compilerOpts, src, output);
       }
     } else {
       System.err.println("Expected \"schema\" or \"protocol\".");
@@ -177,7 +175,7 @@ public class SpecificCompilerTool implements Tool {
     return 0;
   }
 
-  private void executeCompiler(SpecificCompiler compiler, CompilerOptions opts, Long lastModified, File output)
+  private void executeCompiler(SpecificCompiler compiler, CompilerOptions opts, File src, File output)
       throws IOException {
     compiler.setStringType(opts.stringType);
     compiler.setCreateSetters(opts.createSetters);
@@ -202,7 +200,7 @@ public class SpecificCompilerTool implements Tool {
     compiler.setEnableDecimalLogicalType(opts.useLogicalDecimal);
     opts.encoding.ifPresent(compiler::setOutputCharacterEncoding);
     opts.fieldVisibility.ifPresent(compiler::setFieldVisibility);
-    compiler.compileToDestination(lastModified, output);
+    compiler.compileToDestination(src.lastModified(), output);
   }
 
   @Override

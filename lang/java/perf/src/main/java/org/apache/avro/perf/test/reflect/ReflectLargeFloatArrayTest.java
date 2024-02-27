@@ -18,16 +18,19 @@
 
 package org.apache.avro.perf.test.reflect;
 
-import org.apache.avro.JsonSchemaParser;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Random;
+
 import org.apache.avro.Schema;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
-import org.apache.avro.perf.test.BasicArrayState;
-import org.apache.avro.perf.test.BasicState;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
+import org.apache.avro.perf.test.BasicArrayState;
+import org.apache.avro.perf.test.BasicState;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.OperationsPerInvocation;
@@ -35,10 +38,6 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Random;
 
 /**
  * Uses a larger array size than {@link ReflectFloatArrayTest}.
@@ -77,7 +76,7 @@ public class ReflectLargeFloatArrayTest {
     public TestStateEncode() {
       super(ARRAY_SIZE);
       final String jsonText = ReflectData.get().getSchema(float[].class).toString();
-      this.schema = JsonSchemaParser.parseInternal(jsonText);
+      this.schema = new Schema.Parser().parse(jsonText);
     }
 
     /**
@@ -108,7 +107,7 @@ public class ReflectLargeFloatArrayTest {
     public TestStateDecode() {
       super(ARRAY_SIZE);
       final String jsonText = ReflectData.get().getSchema(float[].class).toString();
-      this.schema = JsonSchemaParser.parseInternal(jsonText);
+      this.schema = new Schema.Parser().parse(jsonText);
     }
 
     /**

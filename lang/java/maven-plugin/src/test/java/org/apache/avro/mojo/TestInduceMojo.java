@@ -62,7 +62,7 @@ public class TestInduceMojo extends AbstractMojoTestCase {
     File personSchemaFile = Arrays.stream(outputDir.listFiles()).filter(file -> file.getName().endsWith("Person.avsc"))
         .findFirst().orElseThrow(AssertionError::new);
     SchemaParser parser = new SchemaParser();
-    assertEquals(ReflectData.get().getSchema(Person.class), parser.parse(personSchemaFile).mainSchema());
+    assertEquals(ReflectData.get().getSchema(Person.class), parser.resolve(parser.parse(personSchemaFile)));
   }
 
   @Test

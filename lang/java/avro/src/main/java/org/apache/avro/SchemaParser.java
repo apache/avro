@@ -273,6 +273,12 @@ public class SchemaParser {
     return parseContext.resolveAllSchemas();
   }
 
+  // Temporary method to reduce PR size
+  @Deprecated
+  public Schema resolve(ParseResult result) {
+    return result.mainSchema();
+  }
+
   public interface ParseResult {
     /**
      * The main schema parsed from a file. Can be any schema, or {@code null} if the

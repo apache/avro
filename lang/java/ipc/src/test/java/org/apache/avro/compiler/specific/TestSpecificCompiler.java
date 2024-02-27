@@ -17,28 +17,8 @@
  */
 package org.apache.avro.compiler.specific;
 
-import org.apache.avro.JsonSchemaParser;
-import org.apache.avro.Protocol;
-import org.apache.avro.Schema;
-import org.apache.avro.Schema.Field;
-import org.apache.avro.Schema.Type;
-import org.apache.avro.TestAnnotation;
-import org.apache.avro.TestProtocolParsing;
-import org.apache.avro.TestSchema;
-import org.apache.avro.compiler.specific.SpecificCompiler.OutputFile;
-import org.apache.avro.generic.GenericData.StringType;
-import org.apache.avro.test.Kind;
-import org.apache.avro.test.MD5;
-import org.apache.avro.test.Simple;
-import org.apache.avro.test.TestRecord;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.api.io.TempDir;
+import static org.junit.jupiter.api.Assertions.*;
 
-import javax.tools.JavaCompiler;
-import javax.tools.JavaCompiler.CompilationTask;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -48,10 +28,31 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import javax.tools.JavaCompiler;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
+import javax.tools.JavaCompiler.CompilationTask;
+
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.Schema.Type;
+import org.apache.avro.TestProtocolParsing;
+import org.apache.avro.TestSchema;
+import org.apache.avro.TestAnnotation;
+import org.apache.avro.generic.GenericData.StringType;
+
+import org.apache.avro.test.Simple;
+import org.apache.avro.test.TestRecord;
+import org.apache.avro.test.MD5;
+import org.apache.avro.test.Kind;
+
+import org.apache.avro.compiler.specific.SpecificCompiler.OutputFile;
+import org.junit.Rule;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.rules.TestName;
 
 public class TestSpecificCompiler {
 
@@ -81,12 +82,12 @@ public class TestSpecificCompiler {
 
   @Test
   void primitiveSchemaGeneratesNothing() {
-    assertEquals(0, new SpecificCompiler(JsonSchemaParser.parseInternal("\"double\"")).compile().size());
+    assertEquals(0, new SpecificCompiler(new Schema.Parser().parse("\"double\"")).compile().size());
   }
 
   @Test
   void simpleEnumSchema(TestInfo testInfo) throws IOException {
-    Collection<OutputFile> outputs = new SpecificCompiler(JsonSchemaParser.parseInternal(TestSchema.BASIC_ENUM_SCHEMA))
+    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(TestSchema.BASIC_ENUM_SCHEMA))
         .compile();
     assertEquals(1, outputs.size());
     OutputFile o = outputs.iterator().next();
@@ -129,7 +130,7 @@ public class TestSpecificCompiler {
 
   @Test
   void manglingForRecords(TestInfo testInfo) throws IOException {
-    Collection<OutputFile> outputs = new SpecificCompiler(JsonSchemaParser.parseInternal(SCHEMA)).compile();
+    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(SCHEMA)).compile();
     assertEquals(1, outputs.size());
     String contents = outputs.iterator().next().contents;
 
@@ -144,7 +145,7 @@ public class TestSpecificCompiler {
   void manglingForEnums(TestInfo testInfo) throws IOException {
     String enumSchema = "" + "{ \"name\": \"instanceof\", \"type\": \"enum\","
         + "  \"symbols\": [\"new\", \"super\", \"switch\"] }";
-    Collection<OutputFile> outputs = new SpecificCompiler(JsonSchemaParser.parseInternal(enumSchema)).compile();
+    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(enumSchema)).compile();
     assertEquals(1, outputs.size());
     String contents = outputs.iterator().next().contents;
 
@@ -155,7 +156,7 @@ public class TestSpecificCompiler {
 
   @Test
   void schemaSplit(TestInfo testInfo) throws IOException {
-    SpecificCompiler compiler = new SpecificCompiler(JsonSchemaParser.parseInternal(SCHEMA));
+    SpecificCompiler compiler = new SpecificCompiler(new Schema.Parser().parse(SCHEMA));
     compiler.maxStringChars = 10;
     Collection<OutputFile> files = compiler.compile();
     assertCompilesWithJavaCompiler(new File(INPUT_DIR, testInfo.getTestMethod().get().getName()), files);
@@ -171,8 +172,8 @@ public class TestSpecificCompiler {
 
   @Test
   void schemaWithDocs() {
-    Collection<OutputFile> outputs = new SpecificCompiler(
-        JsonSchemaParser.parseInternal(TestSchema.SCHEMA_WITH_DOC_TAGS)).compile();
+    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(TestSchema.SCHEMA_WITH_DOC_TAGS))
+        .compile();
     assertEquals(3, outputs.size());
     int count = 0;
     for (OutputFile o : outputs) {
@@ -580,7 +581,7 @@ public class TestSpecificCompiler {
 
   @Test
   void aliases() throws IOException {
-    Schema s = JsonSchemaParser.parseInternal("{\"name\":\"X\",\"type\":\"record\",\"aliases\":[\"Y\"],\"fields\":["
+    Schema s = new Schema.Parser().parse("{\"name\":\"X\",\"type\":\"record\",\"aliases\":[\"Y\"],\"fields\":["
         + "{\"name\":\"f\",\"type\":\"int\",\"aliases\":[\"g\"]}]}");
     SpecificCompiler compiler = new SpecificCompiler(s);
     compiler.setStringType(StringType.valueOf("String"));
@@ -641,7 +642,7 @@ public class TestSpecificCompiler {
 
   @Test
   void generateExceptionCodeBlock() throws IOException {
-    Collection<OutputFile> outputs = new SpecificCompiler(JsonSchemaParser.parseInternal(SCHEMA1)).compile();
+    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(SCHEMA1)).compile();
     assertEquals(1, outputs.size());
     String contents = outputs.iterator().next().contents;
 

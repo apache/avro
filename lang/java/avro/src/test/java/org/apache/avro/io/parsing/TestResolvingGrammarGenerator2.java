@@ -17,7 +17,11 @@
  */
 package org.apache.avro.io.parsing;
 
-import org.apache.avro.JsonSchemaParser;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.SchemaValidationException;
@@ -30,17 +34,10 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /** ResolvingGrammarGenerator tests that are not Parameterized. */
 public class TestResolvingGrammarGenerator2 {
@@ -138,7 +135,7 @@ public class TestResolvingGrammarGenerator2 {
         .nullType().and().type(inner).endUnion().noDefault().endRecord();
 
     // Make a copy with the two string fields annotated.
-    Schema outer2 = JsonSchemaParser.parseInternal(outer.toString());
+    Schema outer2 = new Schema.Parser().parse(outer.toString());
     outer2.getField("a1").schema().addProp(GenericData.STRING_PROP, "String");
     Schema inner2 = outer2.getField("inner").schema().getTypes().get(1);
     inner2.getField("b1").schema().addProp(GenericData.STRING_PROP, "String");

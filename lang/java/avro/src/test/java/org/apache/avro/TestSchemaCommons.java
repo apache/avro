@@ -50,7 +50,7 @@ public class TestSchemaCommons {
       LOG.warn("No 'schema.json' file on folder {}", folder.getPath());
       return;
     }
-    final Schema schema = new SchemaParser().parse(schemaSource).mainSchema();
+    final Schema schema = new Schema.Parser().parse(schemaSource);
     assertNotNull(schema);
 
     if (!data.exists()) {

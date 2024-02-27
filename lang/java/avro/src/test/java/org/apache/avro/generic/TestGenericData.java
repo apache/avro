@@ -17,24 +17,14 @@
  */
 package org.apache.avro.generic;
 
+import static org.apache.avro.TestCircularReferences.Reference;
+import static org.apache.avro.TestCircularReferences.Referenceable;
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.JsonSchemaParser;
-import org.apache.avro.Schema;
-import org.apache.avro.Schema.Field;
-import org.apache.avro.Schema.Type;
-import org.apache.avro.SchemaBuilder;
-import org.apache.avro.TestCircularReferences.ReferenceManager;
-import org.apache.avro.generic.GenericData.Record;
-import org.apache.avro.io.BinaryData;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.util.Utf8;
-import org.junit.jupiter.api.Test;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -52,16 +42,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.apache.avro.TestCircularReferences.Reference;
-import static org.apache.avro.TestCircularReferences.Referenceable;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.Schema.Type;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.TestCircularReferences.ReferenceManager;
+import org.apache.avro.generic.GenericData.Record;
+import org.apache.avro.io.BinaryData;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.Utf8;
+import org.junit.jupiter.api.Test;
 
 public class TestGenericData {
 
@@ -510,17 +502,17 @@ public class TestGenericData {
 
   @Test
   void mapWithNonStringKeyToStringIsJson() throws Exception {
-    Schema intMapSchema = JsonSchemaParser
-        .parseInternal("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Integer\"}");
+    Schema intMapSchema = new Schema.Parser()
+        .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Integer\"}");
     Field intMapField = new Field("intMap", Schema.createMap(intMapSchema), null, null);
-    Schema decMapSchema = JsonSchemaParser
-        .parseInternal("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.math.BigDecimal\"}");
+    Schema decMapSchema = new Schema.Parser()
+        .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.math.BigDecimal\"}");
     Field decMapField = new Field("decMap", Schema.createMap(decMapSchema), null, null);
-    Schema boolMapSchema = JsonSchemaParser
-        .parseInternal("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Boolean\"}");
+    Schema boolMapSchema = new Schema.Parser()
+        .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Boolean\"}");
     Field boolMapField = new Field("boolMap", Schema.createMap(boolMapSchema), null, null);
-    Schema fileMapSchema = JsonSchemaParser
-        .parseInternal("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.io.File\"}");
+    Schema fileMapSchema = new Schema.Parser()
+        .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.io.File\"}");
     Field fileMapField = new Field("fileMap", Schema.createMap(fileMapSchema), null, null);
     Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
     schema.setFields(Arrays.asList(intMapField, decMapField, boolMapField, fileMapField));

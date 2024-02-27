@@ -83,6 +83,6 @@ public class JsonSchemaParser implements FormattedSchemaParser {
     if (allowInvalidDefaults) {
       parser.setValidateDefaults(false);
     }
-    return parser.parse(formattedSchema.toString());
+    return parser.parseInternal(formattedSchema.toString());
   }
 }

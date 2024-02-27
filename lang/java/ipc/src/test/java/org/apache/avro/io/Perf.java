@@ -17,8 +17,20 @@
  */
 package org.apache.avro.io;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.lang.reflect.Array;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
 import org.apache.avro.FooBarSpecificRecord;
-import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.TypeEnum;
@@ -33,19 +45,6 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.avro.util.Utf8;
-
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.lang.reflect.Array;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
 /**
  * Performance tests for various low level operations of Avro encoding and
@@ -465,7 +464,7 @@ public class Perf {
 
     BasicTest(String name, String json, int factor) throws IOException {
       super(name, CYCLES, COUNT / factor);
-      this.schema = JsonSchemaParser.parseInternal(json);
+      this.schema = new Schema.Parser().parse(json);
     }
 
     @Override
@@ -1109,7 +1108,7 @@ public class Perf {
 
     public RecordWithDefault() throws IOException {
       super("RecordWithDefault");
-      readerSchema = JsonSchemaParser.parseInternal(RECORD_SCHEMA_WITH_DEFAULT);
+      readerSchema = new Schema.Parser().parse(RECORD_SCHEMA_WITH_DEFAULT);
       isWriteTest = false;
     }
 
@@ -1153,7 +1152,7 @@ public class Perf {
 
     public RecordWithOutOfOrder() throws IOException {
       super("RecordWithOutOfOrder");
-      readerSchema = JsonSchemaParser.parseInternal(RECORD_SCHEMA_WITH_OUT_OF_ORDER);
+      readerSchema = new Schema.Parser().parse(RECORD_SCHEMA_WITH_OUT_OF_ORDER);
       isWriteTest = false;
     }
 
@@ -1193,7 +1192,7 @@ public class Perf {
 
     public RecordWithPromotion() throws IOException {
       super("RecordWithPromotion");
-      readerSchema = JsonSchemaParser.parseInternal(RECORD_SCHEMA_WITH_PROMOTION);
+      readerSchema = new Schema.Parser().parse(RECORD_SCHEMA_WITH_PROMOTION);
       isWriteTest = false;
     }
 
@@ -1426,7 +1425,7 @@ public class Perf {
 
     @Override
     protected Schema getReaderSchema() {
-      return JsonSchemaParser.parseInternal(RECORD_SCHEMA_WITH_DEFAULT);
+      return new Schema.Parser().parse(RECORD_SCHEMA_WITH_DEFAULT);
     }
   }
 
@@ -1437,7 +1436,7 @@ public class Perf {
 
     @Override
     protected Schema getReaderSchema() {
-      return JsonSchemaParser.parseInternal(RECORD_SCHEMA_WITH_OUT_OF_ORDER);
+      return new Schema.Parser().parse(RECORD_SCHEMA_WITH_OUT_OF_ORDER);
     }
   }
 
@@ -1448,7 +1447,7 @@ public class Perf {
 
     @Override
     protected Schema getReaderSchema() {
-      return JsonSchemaParser.parseInternal(RECORD_SCHEMA_WITH_PROMOTION);
+      return new Schema.Parser().parse(RECORD_SCHEMA_WITH_PROMOTION);
     }
   }
 
@@ -1900,7 +1899,7 @@ public class Perf {
     public ResolvingTest(String name, String r, String w) throws IOException {
       super(name, mkSchema(r));
       isWriteTest = false;
-      this.writeSchema = JsonSchemaParser.parseInternal(mkSchema(w));
+      this.writeSchema = new Schema.Parser().parse(mkSchema(w));
     }
 
     @Override

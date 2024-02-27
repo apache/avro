@@ -18,22 +18,21 @@
 
 package org.apache.avro.mapred;
 
-import org.apache.avro.JsonSchemaParser;
-import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.reflect.ReflectData;
-import org.apache.avro.specific.SpecificData;
+import java.util.Collection;
+import java.lang.reflect.Constructor;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.lib.IdentityMapper;
 import org.apache.hadoop.mapred.lib.IdentityReducer;
 import org.apache.hadoop.util.ReflectionUtils;
-
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Constructor;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.reflect.ReflectData;
+import org.apache.avro.specific.SpecificData;
 
 /** Setters to configure jobs for Avro data. */
 public class AvroJob {
@@ -75,7 +74,7 @@ public class AvroJob {
   /** Return a job's map input schema. */
   public static Schema getInputSchema(Configuration job) {
     String schemaString = job.get(INPUT_SCHEMA);
-    return schemaString != null ? JsonSchemaParser.parseInternal(schemaString) : null;
+    return schemaString != null ? new Schema.Parser().parse(schemaString) : null;
   }
 
   /**
@@ -90,7 +89,7 @@ public class AvroJob {
 
   /** Return a job's map output key schema. */
   public static Schema getMapOutputSchema(Configuration job) {
-    return JsonSchemaParser.parseInternal(job.get(MAP_OUTPUT_SCHEMA, job.get(OUTPUT_SCHEMA)));
+    return new Schema.Parser().parse(job.get(MAP_OUTPUT_SCHEMA, job.get(OUTPUT_SCHEMA)));
   }
 
   /**
@@ -149,7 +148,7 @@ public class AvroJob {
 
   /** Return a job's output key schema. */
   public static Schema getOutputSchema(Configuration job) {
-    return JsonSchemaParser.parseInternal(job.get(OUTPUT_SCHEMA));
+    return new Schema.Parser().parse(job.get(OUTPUT_SCHEMA));
   }
 
   private static void configureAvroInput(JobConf job) {

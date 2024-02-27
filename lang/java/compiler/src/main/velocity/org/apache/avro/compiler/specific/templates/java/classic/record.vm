@@ -17,10 +17,8 @@
 ##
 #if ($schema.getNamespace())
 package $this.mangle($schema.getNamespace());
-
 #end
-import org.apache.avro.JsonSchemaParser;
-import org.apache.avro.generic.GenericArray;
+
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.util.Utf8;
 #if (!$schema.isError())
@@ -50,7 +48,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
   }
 #end
 
-  public static final org.apache.avro.Schema SCHEMA$ = JsonSchemaParser.parseInternal($schemaString);
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse($schemaString);
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();

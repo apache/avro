@@ -17,18 +17,18 @@
  */
 package org.apache.avro.tool;
 
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaParser;
-import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.util.RandomData;
-
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
+
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+
+import org.apache.avro.Schema;
+import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.util.RandomData;
 
 /** Creates a file filled with randomly-generated instances of a schema. */
 public class CreateRandomFileTool implements Tool {
@@ -71,13 +71,7 @@ public class CreateRandomFileTool implements Tool {
       p.printHelpOn(err);
       return 1;
     }
-    Schema schema;
-    if (schemafile != null) {
-      schema = Util.parseSchemaFromFS(schemafile);
-    } else {
-      SchemaParser parser = new SchemaParser();
-      schema = parser.parse(schemastr).mainSchema();
-    }
+    Schema schema = (schemafile != null) ? Util.parseSchemaFromFS(schemafile) : new Schema.Parser().parse(schemastr);
 
     DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>());
     writer.setCodec(Util.codecFactory(opts, codec, level));

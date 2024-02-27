@@ -20,21 +20,7 @@
  */
 package org.apache.avro.tool;
 
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaParser;
-import org.apache.avro.file.CodecFactory;
-import org.apache.avro.file.DataFileConstants;
-import org.apache.avro.file.DataFileReader;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.mapred.FsInput;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import static org.apache.avro.file.DataFileConstants.DEFLATE_CODEC;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -48,7 +34,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.zip.Deflater;
 
-import static org.apache.avro.file.DataFileConstants.DEFLATE_CODEC;
+import org.apache.avro.Schema;
+import org.apache.avro.file.CodecFactory;
+import org.apache.avro.file.DataFileConstants;
+import org.apache.avro.file.DataFileReader;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.mapred.FsInput;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
+import joptsimple.OptionSet;
+import joptsimple.OptionParser;
+import joptsimple.OptionSpec;
 
 /** Static utility methods for tools. */
 class Util {
@@ -124,8 +124,8 @@ class Util {
   }
 
   /**
-   * Closes the inputstream created from
-   * {@link Util#fileOrStdin(String, InputStream)} unless it is System.in.
+   * Closes the inputstream created from {@link Util.fileOrStdin} unless it is
+   * System.in.
    *
    * @param in The inputstream to be closed.
    */
@@ -140,8 +140,8 @@ class Util {
   }
 
   /**
-   * Closes the outputstream created from
-   * {@link Util#fileOrStdout(String, OutputStream)} unless it is System.out.
+   * Closes the outputstream created from {@link Util.fileOrStdout} unless it is
+   * System.out.
    *
    * @param out The outputStream to be closed.
    */
@@ -165,8 +165,7 @@ class Util {
   static Schema parseSchemaFromFS(String filename) throws IOException {
     InputStream stream = openFromFS(filename);
     try {
-      SchemaParser parser = new SchemaParser();
-      return parser.parse(stream).mainSchema();
+      return new Schema.Parser().parse(stream);
     } finally {
       close(stream);
     }
@@ -297,7 +296,8 @@ class Util {
    * the length of the passed array, as it takes two characters to represent any
    * given byte.
    *
-   * @param data a byte[] to convert to Hex characters
+   * @param data     a byte[] to convert to Hex characters
+   * @param toDigits the output alphabet
    * @return A char[] containing hexadecimal characters
    */
   static String encodeHex(final byte[] data) {

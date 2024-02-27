@@ -64,7 +64,7 @@ public class TestSpecificData {
   @Test
   void separateThreadContextClassLoader() throws Exception {
     SchemaParser parser = new SchemaParser();
-    Schema schema = parser.parse(new File("src/test/resources/foo.Bar.avsc")).mainSchema();
+    Schema schema = parser.resolve(parser.parse(new File("src/test/resources/foo.Bar.avsc")));
     SpecificCompiler compiler = new SpecificCompiler(schema);
     compiler.setStringType(GenericData.StringType.String);
     compiler.compileToDestination(null, new File("target"));

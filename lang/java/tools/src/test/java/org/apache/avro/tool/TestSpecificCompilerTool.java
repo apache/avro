@@ -21,14 +21,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Verifies that the SpecificCompilerTool generates Java source properly

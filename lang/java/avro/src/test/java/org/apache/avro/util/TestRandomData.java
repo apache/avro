@@ -17,7 +17,12 @@
  */
 package org.apache.avro.util;
 
-import org.apache.avro.JsonSchemaParser;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Objects;
+import java.util.Random;
+
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
@@ -27,12 +32,6 @@ import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Objects;
-import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
@@ -141,10 +140,10 @@ public class TestRandomData {
 
   public static final String TEST_SCHEMA_JSON = "{\"type\":\"record\",\"name\":\"Record\",\"fields\":[{\"name\":\"x\",\"type\":\"int\"},{\"name\":\"y\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}]}";
 
-  public static final Schema TEST_SCHEMA = JsonSchemaParser.parseInternal(TEST_SCHEMA_JSON);
+  public static final Schema TEST_SCHEMA = new Schema.Parser().parse(TEST_SCHEMA_JSON);
 
   public static class SpecificTestRecord extends SpecificRecordBase {
-    public static final Schema SCHEMA$ = JsonSchemaParser.parseInternal(TEST_SCHEMA_JSON.replace("\"name\":\"Record\"",
+    public static final Schema SCHEMA$ = new Schema.Parser().parse(TEST_SCHEMA_JSON.replace("\"name\":\"Record\"",
         "\"name\":\"" + SpecificTestRecord.class.getCanonicalName() + "\""));
     private int x;
     private String y;
