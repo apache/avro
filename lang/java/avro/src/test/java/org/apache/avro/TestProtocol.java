@@ -17,17 +17,26 @@
  */
 package org.apache.avro;
 
-import org.junit.jupiter.api.Test;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.IndexedRecord;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.JsonEncoder;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
-import static java.util.Collections.singletonMap;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import org.junit.jupiter.api.Test;
 
 public class TestProtocol {
 
@@ -75,11 +84,10 @@ public class TestProtocol {
   @Test
   void normalization() {
     final String schema = "{\n" + " \"type\":\"record\",  \"name\": \"Main\", " + " \"fields\":[\n"
-        + "    {  \"name\":\"f1\", \"type\":\"Sub\"  },\n" + // use Sub
-        "    {  \"name\":\"f2\", " + "       \"type\":{\n" + "         \"type\":\"enum\",  \"name\":\"Sub\",\n" + // define
-                                                                                                                  // //
+        + "    {  \"name\":\"f1\", \"type\":\"Sub\"  },\n" // use Sub
+        + "    {  \"name\":\"f2\", " + "       \"type\":{\n" + "         \"type\":\"enum\",  \"name\":\"Sub\",\n" // define
                                                                                                                   // Sub
-        "         \"symbols\":[\"OPEN\",\"CLOSE\"]\n" + "        }\n" + "    }\n" + " ]\n" + "}";
+        + "         \"symbols\":[\"OPEN\",\"CLOSE\"]\n" + "        }\n" + "    }\n" + " ]\n" + "}";
     Schema s = new Schema.Parser().parse(schema);
     assertNotNull(s);
 
