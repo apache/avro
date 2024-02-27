@@ -820,6 +820,7 @@ pub mod schema_equality;
 pub mod types;
 pub mod validator;
 
+pub use crate::bigdecimal::BigDecimal;
 pub use codec::Codec;
 pub use de::from_value;
 pub use decimal::Decimal;
