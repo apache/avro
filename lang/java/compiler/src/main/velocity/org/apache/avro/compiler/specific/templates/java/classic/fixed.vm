@@ -17,10 +17,7 @@
 ##
 #if ($schema.getNamespace())
 package $this.mangle($schema.getNamespace());
-
 #end
-import org.apache.avro.JsonSchemaParser;
-
 #if ($schema.getDoc())
 /** $schema.getDoc() */
 #end

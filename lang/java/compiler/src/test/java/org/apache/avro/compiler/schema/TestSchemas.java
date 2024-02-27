@@ -15,10 +15,8 @@
  */
 package org.apache.avro.compiler.schema;
 
-import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaCompatibility;
-import org.apache.avro.SchemaParser;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -103,8 +101,8 @@ public class TestSchemas {
   void cloningError2() {
     assertThrows(IllegalStateException.class, () -> {
       // After visit Non-terminal with int
-      Schema recordSchema = JsonSchemaParser
-          .parseInternal("{\"type\": \"record\", \"name\": \"R\", \"fields\":[{\"name\": \"f1\", \"type\": \"int\"}]}");
+      Schema recordSchema = new Schema.Parser()
+          .parse("{\"type\": \"record\", \"name\": \"R\", \"fields\":[{\"name\": \"f1\", \"type\": \"int\"}]}");
       new CloningVisitor(recordSchema).afterVisitNonTerminal(recordSchema.getField("f1").schema());
     });
   }
@@ -122,8 +120,8 @@ public class TestSchemas {
         Schemas.getJavaClassName(new Schema.Parser().parse("{\"type\": \"fixed\", \"name\": \"N\", \"size\": 10}")));
     assertEquals("N", Schemas.getJavaClassName(
         new Schema.Parser().parse("{\"type\": \"fixed\", \"name\": \"N\", \"size\": 10, \"namespace\": \"\"}")));
-    assertEquals("com.example.N", Schemas.getJavaClassName(JsonSchemaParser
-        .parseInternal("{\"type\": \"fixed\", \"name\": \"N\", \"size\": 10, \"namespace\": \"com.example\"}")));
+    assertEquals("com.example.N", Schemas.getJavaClassName(new Schema.Parser()
+        .parse("{\"type\": \"fixed\", \"name\": \"N\", \"size\": 10, \"namespace\": \"com.example\"}")));
   }
 
   private static class TestVisitor implements SchemaVisitor<String> {
@@ -268,7 +266,6 @@ public class TestSchemas {
         + "[{\"name\": \"f11\", \"type\": \"int\"},{\"name\": \"f12\", \"type\": \"double\"}" + "]}},"
         + "{\"name\": \"f2\", \"type\": \"long\"}" + "]}";
     assertEquals("c1.c2.\"int\".!\"long\".!", Schemas.visit(new Schema.Parser().parse(s11), new TestVisitor() {
-      @Override
       public SchemaVisitorAction visitTerminal(Schema terminal) {
         sb.append(terminal).append('.');
         return SchemaVisitorAction.SKIP_SIBLINGS;

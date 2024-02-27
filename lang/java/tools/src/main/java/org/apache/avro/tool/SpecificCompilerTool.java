@@ -200,7 +200,7 @@ public class SpecificCompilerTool implements Tool {
     compiler.setEnableDecimalLogicalType(opts.useLogicalDecimal);
     opts.encoding.ifPresent(compiler::setOutputCharacterEncoding);
     opts.fieldVisibility.ifPresent(compiler::setFieldVisibility);
-    compiler.compileToDestination(src.lastModified(), output);
+    compiler.compileToDestination(src, output);
   }
 
   @Override

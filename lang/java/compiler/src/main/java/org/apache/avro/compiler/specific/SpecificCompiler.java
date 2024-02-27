@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
@@ -408,9 +410,9 @@ public class SpecificCompiler {
      * Writes output to path destination directory when it is newer than src,
      * creating directories as necessary. Returns the created file.
      */
-    File writeToDestination(Long lastModified, File destDir) throws IOException {
+    File writeToDestination(File src, File destDir) throws IOException {
       File f = new File(destDir, path);
-      if (lastModified != null && f.exists() && f.lastModified() >= lastModified)
+      if (src != null && f.exists() && f.lastModified() >= src.lastModified())
         return f; // already up to date: ignore
       f.getParentFile().mkdirs();
       Writer fw = null;
@@ -454,7 +456,7 @@ public class SpecificCompiler {
     for (File src : srcFiles) {
       Protocol protocol = Protocol.parse(src);
       SpecificCompiler compiler = new SpecificCompiler(protocol);
-      compiler.compileToDestination(src.lastModified(), dest);
+      compiler.compileToDestination(src, dest);
     }
   }
 
@@ -471,14 +473,14 @@ public class SpecificCompiler {
   public static void compileSchema(File[] srcFiles, File dest) throws IOException {
     SchemaParser parser = new SchemaParser();
 
-    long lastModified = 0;
     for (File src : srcFiles) {
       parser.parse(src);
-      lastModified = Math.max(lastModified, src.lastModified());
     }
+    // FIXME: use lastModified() without causing a NoSuchMethodError in the build
+    File lastModifiedSourceFile = Stream.of(srcFiles).max(Comparator.comparing(File::lastModified)).orElse(null);
     for (Schema schema : parser.getParsedNamedSchemas()) {
       SpecificCompiler compiler = new SpecificCompiler(schema);
-      compiler.compileToDestination(lastModified == 0 ? null : lastModified, dest);
+      compiler.compileToDestination(lastModifiedSourceFile, dest);
     }
   }
 
@@ -539,13 +541,13 @@ public class SpecificCompiler {
   /**
    * Generate output under dst, unless existing file is newer than src.
    */
-  public void compileToDestination(Long lastModified, File dst) throws IOException {
+  public void compileToDestination(File src, File dst) throws IOException {
     for (Schema schema : queue) {
       OutputFile o = compile(schema);
-      o.writeToDestination(lastModified, dst);
+      o.writeToDestination(src, dst);
     }
     if (protocol != null) {
-      compileInterface(protocol).writeToDestination(lastModified, dst);
+      compileInterface(protocol).writeToDestination(src, dst);
     }
   }
 

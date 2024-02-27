@@ -18,7 +18,6 @@
 #if ($schema.getNamespace())
 package $this.mangle($schema.getNamespace());
 #end
-
 #if ($schema.getDoc())
 /** $schema.getDoc() */
 #end
@@ -31,7 +30,6 @@ public enum ${this.mangleTypeIdentifier($schema.getName())} implements org.apach
   ;
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("${this.javaEscape($schema.toString())}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
-
 
   @Override
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }

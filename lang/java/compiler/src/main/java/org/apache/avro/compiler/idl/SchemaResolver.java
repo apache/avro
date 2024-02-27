@@ -103,8 +103,8 @@ final class SchemaResolver {
   /**
    * Will clone the provided protocol while resolving all unreferenced schemas
    *
-   * @param protocol
-   * @return
+   * @param protocol a protocol with possibly unresolved schema references
+   * @return a protocol without unresolved schema references
    */
   static Protocol resolve(final Protocol protocol) {
     Protocol result = new Protocol(protocol.getName(), protocol.getDoc(), protocol.getNamespace());
