@@ -837,7 +837,10 @@ mod tests {
         r#"{"type": "array", "items": "int"}"#,
         r#"{"type": "array", "items": "long"}"#
     )]
-    fn test_match_schemas_ok(#[case] writer_schema_str: &str, #[case] reader_schema_str: &str) {
+    fn test_avro_3950_match_schemas_ok(
+        #[case] writer_schema_str: &str,
+        #[case] reader_schema_str: &str,
+    ) {
         let writer_schema = Schema::parse_str(writer_schema_str).unwrap();
         let reader_schema = Schema::parse_str(reader_schema_str).unwrap();
 
@@ -1000,13 +1003,13 @@ mod tests {
     //         SchemaKind::TimeMillis
     //     ]}
     // )]
-    // When compating different types we always get Inconclusive
+    // When comparing different types we always get Inconclusive
     #[case(
         r#"{"type": "record", "name":"record_b", "fields": [{"type": "long", "name": "date"}]}"#,
         r#"{"type": "fixed", "name": "EmployeeId", "size": 16}"#,
         CompatibilityError::Inconclusive(String::from("writers_schema"))
     )]
-    fn test_match_schemas_error(
+    fn test_avro_3950_match_schemas_error(
         #[case] writer_schema_str: &str,
         #[case] reader_schema_str: &str,
         #[case] expected_error: CompatibilityError,
