@@ -37,13 +37,14 @@ public class TestSchemaSerializationHooks {
     schema.toJson(new TestResolver(recSchema), jgen);
     jgen.flush();
     System.out.println(stringWriter.toString());
-    Schema result = new Schema.Parser(new TestResolver(recSchema)).parse(stringWriter.toString());
+    Schema result = new Schema.Parser(NameValidator.UTF_VALIDATOR, new TestResolver(recSchema))
+        .parse(stringWriter.toString());
     System.out.println(result);
     Assert.assertEquals(schema, result);
 
   }
 
-  private static class TestResolver extends Schema.Names {
+  private static class TestResolver implements SchemaJsonSerDe {
 
     private final Schema recSchema;
 
@@ -51,12 +52,7 @@ public class TestSchemaSerializationHooks {
       this.recSchema = recSchema;
     }
 
-    public TestResolver(Schema recSchema, String space) {
-      super(space);
-      this.recSchema = recSchema;
-    }
-
-    public Schema customRead(Function<String, JsonNode> object) {
+    public Schema read(Function<String, JsonNode> object) {
       JsonNode node = object.apply("$ref");
       if (node != null && "testId".equals(node.asText())) {
         return recSchema;
@@ -64,7 +60,7 @@ public class TestSchemaSerializationHooks {
       return null;
     }
 
-    public boolean customWrite(Schema schema, JsonGenerator gen) throws IOException {
+    public boolean write(Schema schema, JsonGenerator gen) throws IOException {
       String ref = schema.getProp("id");
       if (ref != null) {
         gen.writeStartObject();
