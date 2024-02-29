@@ -557,6 +557,7 @@ mod tests {
         Codec, Reader, Writer,
     };
     use apache_avro_test_helper::TestResult;
+    use rstest::*;
 
     fn int_array_schema() -> Schema {
         Schema::parse_str(r#"{"type":"array", "items":"int"}"#).unwrap()
@@ -766,6 +767,260 @@ mod tests {
         assert!(incompatible_schemas
             .iter()
             .any(|(reader, writer)| SchemaCompatibility::can_read(writer, reader).is_err()));
+    }
+
+    #[rstest]
+    // Record type test
+    #[case(
+        r#"{"type": "record", "name": "record_a", "fields": [{"type": "long", "name": "date"}]}"#,
+        r#"{"type": "record", "name": "record_a", "fields": [{"type": "long", "name": "date", "default": 18181}]}"#
+    )]
+    // Fixed type test
+    #[case(
+        r#"{"type": "fixed", "name": "EmployeeId", "size": 16}"#,
+        r#"{"type": "fixed", "name": "EmployeeId", "size": 16, "default": "u00ffffffffffffx"}"#
+    )]
+    // Enum type test
+    #[case(
+        r#"{"type": "enum", "name":"Enum1", "symbols": ["A","B"]}"#,
+        r#"{"type": "enum", "name":"Enum1", "symbols": ["A","B", "C"], "default": "C"}"#
+    )]
+    // Map type test
+    #[case(
+        r#"{"type": "map", "values": "int"}"#,
+        r#"{"type": "map", "values": "long"}"#
+    )]
+    // Date type
+    #[case(r#"{"type": "int"}"#, r#"{"type": "int", "logicalType": "date"}"#)]
+    // time-millis type
+    #[case(
+        r#"{"type": "int"}"#,
+        r#"{"type": "int", "logicalType": "time-millis"}"#
+    )]
+    // time-millis type
+    #[case(
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "time-micros"}"#
+    )]
+    // timetimestamp-nanos type
+    #[case(
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "timestamp-nanos"}"#
+    )]
+    // timestamp-millis type
+    #[case(
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "timestamp-millis"}"#
+    )]
+    // timestamp-micros type
+    #[case(
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "timestamp-micros"}"#
+    )]
+    // local-timestamp-millis type
+    #[case(
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "local-timestamp-millis"}"#
+    )]
+    // local-timestamp-micros type
+    #[case(
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "local-timestamp-micros"}"#
+    )]
+    // local-timestamp-nanos type
+    #[case(
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "local-timestamp-nanos"}"#
+    )]
+    // Array type test
+    #[case(
+        r#"{"type": "array", "items": "int"}"#,
+        r#"{"type": "array", "items": "long"}"#
+    )]
+    fn test_avro_3950_match_schemas_ok(
+        #[case] writer_schema_str: &str,
+        #[case] reader_schema_str: &str,
+    ) {
+        let writer_schema = Schema::parse_str(writer_schema_str).unwrap();
+        let reader_schema = Schema::parse_str(reader_schema_str).unwrap();
+
+        assert!(SchemaCompatibility::match_schemas(&writer_schema, &reader_schema).is_ok());
+    }
+
+    #[rstest]
+    // Record type test
+    #[case(
+        r#"{"type": "record", "name":"record_a", "fields": [{"type": "long", "name": "date"}]}"#,
+        r#"{"type": "record", "name":"record_b", "fields": [{"type": "long", "name": "date"}]}"#,
+        CompatibilityError::NameMismatch{writer_name: String::from("record_a"), reader_name: String::from("record_b")}
+    )]
+    // Fixed type test
+    #[case(
+        r#"{"type": "fixed", "name": "EmployeeId", "size": 16}"#,
+        r#"{"type": "fixed", "name": "EmployeeId", "size": 20}"#,
+        CompatibilityError::FixedMismatch
+    )]
+    // Enum type test
+    #[case(
+        r#"{"type": "enum", "name": "Enum1", "symbols": ["A","B"]}"#,
+        r#"{"type": "enum", "name": "Enum2", "symbols": ["A","B"]}"#,
+        CompatibilityError::NameMismatch{writer_name: String::from("Enum1"), reader_name: String::from("Enum2")}
+    )]
+    // Map type test
+    #[case(
+        r#"{"type":"map", "values": "long"}"#,
+        r#"{"type":"map", "values": "int"}"#,
+        CompatibilityError::TypeExpected {schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::Long,
+            SchemaKind::Float,
+            SchemaKind::Double,
+            SchemaKind::TimeMicros,
+            SchemaKind::TimestampMillis,
+            SchemaKind::TimestampMicros,
+            SchemaKind::TimestampNanos,
+            SchemaKind::LocalTimestampMillis,
+            SchemaKind::LocalTimestampMicros,
+            SchemaKind::LocalTimestampNanos,
+        ]}
+    )]
+    // Array type test
+    #[case(
+        r#"{"type": "array", "items": "long"}"#,
+        r#"{"type": "array", "items": "int"}"#,
+        CompatibilityError::TypeExpected {schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::Long,
+            SchemaKind::Float,
+            SchemaKind::Double,
+            SchemaKind::TimeMicros,
+            SchemaKind::TimestampMillis,
+            SchemaKind::TimestampMicros,
+            SchemaKind::TimestampNanos,
+            SchemaKind::LocalTimestampMillis,
+            SchemaKind::LocalTimestampMicros,
+            SchemaKind::LocalTimestampNanos,
+        ]}
+    )]
+    // Date type test
+    #[case(
+        r#"{"type": "string"}"#,
+        r#"{"type": "int", "logicalType": "date"}"#,
+        CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![SchemaKind::String, SchemaKind::Bytes]}
+    )]
+    // time-millis type
+    #[case(
+        r#"{"type": "string"}"#,
+        r#"{"type": "int", "logicalType": "time-millis"}"#,
+        CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![SchemaKind::String, SchemaKind::Bytes]}
+    )]
+    // time-millis type
+    #[case(
+        r#"{"type": "int"}"#,
+        r#"{"type": "long", "logicalType": "time-micros"}"#,
+        CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::Int,
+            SchemaKind::Long,
+            SchemaKind::Float,
+            SchemaKind::Double,
+            SchemaKind::Date,
+            SchemaKind::TimeMillis
+        ]}
+    )]
+    // timestamp-nanos type. This test should fail because it is not supported on schema parse_complex
+    // #[case(
+    //     r#"{"type": "string"}"#,
+    //     r#"{"type": "long", "logicalType": "timestamp-nanos"}"#,
+    //     CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+    //         SchemaKind::Int,
+    //         SchemaKind::Long,
+    //         SchemaKind::Float,
+    //         SchemaKind::Double,
+    //         SchemaKind::Date,
+    //         SchemaKind::TimeMillis
+    //     ]}
+    // )]
+    // timestamp-millis type
+    #[case(
+        r#"{"type": "int"}"#,
+        r#"{"type": "long", "logicalType": "timestamp-millis"}"#,
+        CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::Int,
+            SchemaKind::Long,
+            SchemaKind::Float,
+            SchemaKind::Double,
+            SchemaKind::Date,
+            SchemaKind::TimeMillis
+        ]}
+    )]
+    // timestamp-micros type
+    #[case(
+        r#"{"type": "int"}"#,
+        r#"{"type": "long", "logicalType": "timestamp-micros"}"#,
+        CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::Int,
+            SchemaKind::Long,
+            SchemaKind::Float,
+            SchemaKind::Double,
+            SchemaKind::Date,
+            SchemaKind::TimeMillis
+        ]}
+    )]
+    // local-timestamp-millis type
+    #[case(
+        r#"{"type": "int"}"#,
+        r#"{"type": "long", "logicalType": "local-timestamp-millis"}"#,
+        CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::Int,
+            SchemaKind::Long,
+            SchemaKind::Float,
+            SchemaKind::Double,
+            SchemaKind::Date,
+            SchemaKind::TimeMillis
+        ]}
+    )]
+    // local-timestamp-micros type
+    #[case(
+        r#"{"type": "int"}"#,
+        r#"{"type": "long", "logicalType": "local-timestamp-micros"}"#,
+        CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::Int,
+            SchemaKind::Long,
+            SchemaKind::Float,
+            SchemaKind::Double,
+            SchemaKind::Date,
+            SchemaKind::TimeMillis
+        ]}
+    )]
+    // local-timestamp-nanos type. This test should fail because it is not supported on schema parse_complex
+    // #[case(
+    //     r#"{"type": "int"}"#,
+    //     r#"{"type": "long", "logicalType": "local-timestamp-nanos"}"#,
+    //     CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+    //         SchemaKind::Int,
+    //         SchemaKind::Long,
+    //         SchemaKind::Float,
+    //         SchemaKind::Double,
+    //         SchemaKind::Date,
+    //         SchemaKind::TimeMillis
+    //     ]}
+    // )]
+    // When comparing different types we always get Inconclusive
+    #[case(
+        r#"{"type": "record", "name":"record_b", "fields": [{"type": "long", "name": "date"}]}"#,
+        r#"{"type": "fixed", "name": "EmployeeId", "size": 16}"#,
+        CompatibilityError::Inconclusive(String::from("writers_schema"))
+    )]
+    fn test_avro_3950_match_schemas_error(
+        #[case] writer_schema_str: &str,
+        #[case] reader_schema_str: &str,
+        #[case] expected_error: CompatibilityError,
+    ) {
+        let writer_schema = Schema::parse_str(writer_schema_str).unwrap();
+        let reader_schema = Schema::parse_str(reader_schema_str).unwrap();
+
+        assert_eq!(
+            expected_error,
+            SchemaCompatibility::match_schemas(&writer_schema, &reader_schema).unwrap_err()
+        )
     }
 
     #[test]
