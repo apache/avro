@@ -349,28 +349,18 @@ impl SchemaCompatibility {
             }
 
             match r_type {
-                SchemaKind::Record => {
-                    if let Schema::Record(RecordSchema { name: w_name, .. }) = writers_schema {
-                        if let Schema::Record(RecordSchema { name: r_name, .. }) = readers_schema {
-                            if w_name.name == r_name.name {
-                                return Ok(());
-                            }
+                SchemaKind::Record | SchemaKind::Enum => {
+                    let msg = format!("A {} type must always has a name", readers_schema);
+                    let writers_name = writers_schema.name().expect(&msg);
+                    let readers_name = readers_schema.name().expect(&msg);
 
-                            return Err(CompatibilityError::NameMismatch {
-                                writer_name: w_name.name.clone(),
-                                reader_name: r_name.name.clone(),
-                            });
-                        }
-
-                        return Err(CompatibilityError::TypeExpected {
-                            schema_type: String::from("readers_schema"),
-                            expected_type: vec![r_type],
-                        });
+                    if writers_name.name == readers_name.name {
+                        return Ok(());
                     }
 
-                    return Err(CompatibilityError::TypeExpected {
-                        schema_type: String::from("writers_schema"),
-                        expected_type: vec![r_type],
+                    return Err(CompatibilityError::NameMismatch {
+                        writer_name: writers_name.name.clone(),
+                        reader_name: readers_name.name.clone(),
                     });
                 }
                 SchemaKind::Fixed => {
@@ -394,70 +384,21 @@ impl SchemaCompatibility {
                                 .then_some(())
                                 .ok_or(CompatibilityError::FixedMismatch);
                         }
-
-                        return Err(CompatibilityError::TypeExpected {
-                            schema_type: String::from("writers_schema"),
-                            expected_type: vec![r_type],
-                        });
                     }
-                }
-                SchemaKind::Enum => {
-                    if let Schema::Enum(EnumSchema { name: w_name, .. }) = writers_schema {
-                        if let Schema::Enum(EnumSchema { name: r_name, .. }) = readers_schema {
-                            if w_name.name == r_name.name {
-                                return Ok(());
-                            }
-
-                            return Err(CompatibilityError::NameMismatch {
-                                writer_name: w_name.name.clone(),
-                                reader_name: r_name.name.clone(),
-                            });
-                        }
-
-                        return Err(CompatibilityError::TypeExpected {
-                            schema_type: String::from("readers_schema"),
-                            expected_type: vec![r_type],
-                        });
-                    }
-
-                    return Err(CompatibilityError::TypeExpected {
-                        schema_type: String::from("writers_schema"),
-                        expected_type: vec![r_type],
-                    });
                 }
                 SchemaKind::Map => {
                     if let Schema::Map(w_m) = writers_schema {
                         if let Schema::Map(r_m) = readers_schema {
                             return SchemaCompatibility::match_schemas(&w_m.types, &r_m.types);
                         }
-
-                        return Err(CompatibilityError::TypeExpected {
-                            schema_type: String::from("readers_schema"),
-                            expected_type: vec![r_type],
-                        });
                     }
-
-                    return Err(CompatibilityError::TypeExpected {
-                        schema_type: String::from("writers_schema"),
-                        expected_type: vec![r_type],
-                    });
                 }
                 SchemaKind::Array => {
                     if let Schema::Array(w_a) = writers_schema {
                         if let Schema::Array(r_a) = readers_schema {
                             return SchemaCompatibility::match_schemas(&w_a.items, &r_a.items);
                         }
-
-                        return Err(CompatibilityError::TypeExpected {
-                            schema_type: String::from("readers_schema"),
-                            expected_type: vec![r_type],
-                        });
                     }
-
-                    return Err(CompatibilityError::TypeExpected {
-                        schema_type: String::from("writers_schema"),
-                        expected_type: vec![r_type],
-                    });
                 }
                 SchemaKind::Date | SchemaKind::TimeMillis => {
                     return check_writer_type(
@@ -480,14 +421,7 @@ impl SchemaCompatibility {
                     );
                 }
                 SchemaKind::Duration => {
-                    if let Schema::Duration = writers_schema {
-                        return Ok(());
-                    }
-
-                    return Err(CompatibilityError::TypeExpected {
-                        schema_type: String::from("writers_schema"),
-                        expected_type: vec![r_type, SchemaKind::Fixed],
-                    });
+                    return Ok(());
                 }
                 _ => {
                     return Err(CompatibilityError::Inconclusive(String::from(

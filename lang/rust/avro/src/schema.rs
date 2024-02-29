@@ -41,7 +41,7 @@ use std::{
     io::Read,
     str::FromStr,
 };
-use strum_macros::{EnumDiscriminants, EnumString};
+use strum_macros::{Display, EnumDiscriminants, EnumString};
 
 /// Represents an Avro schema fingerprint
 /// More information about Avro schema fingerprints can be found in the
@@ -67,7 +67,7 @@ impl fmt::Display for SchemaFingerprint {
 /// Represents any valid Avro schema
 /// More information about Avro schemas can be found in the
 /// [Avro Specification](https://avro.apache.org/docs/current/spec.html#schemas)
-#[derive(Clone, Debug, EnumDiscriminants)]
+#[derive(Clone, Debug, EnumDiscriminants, Display)]
 #[strum_discriminants(name(SchemaKind), derive(Hash, Ord, PartialOrd))]
 pub enum Schema {
     /// A `null` Avro schema.
