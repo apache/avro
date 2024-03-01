@@ -799,6 +799,46 @@
 //! If the application parses schemas before setting a validator, the default validator will be
 //! registered and used!
 //!
+//! ## Custom schema equality comparators
+//!
+//! The library provides two implementations of schema equality comparators:
+//! 1. `SpecificationEq` - a comparator that serializes the schemas to their
+//! canonical forms (i.e. JSON) and compares them as strings. It is the only implementation
+//! until apache_avro 0.16.0.
+//! See the [Avro specification](https://avro.apache.org/docs/1.11.1/specification/#parsing-canonical-form-for-schemas)
+//! for more information!
+//! 2. `StructFieldEq` - a comparator that compares the schemas structurally.
+//! It is faster than the `SpecificationEq` because it returns `false` as soon as a difference
+//! is found and is recommended for use!
+//! It is the default comparator since apache_avro 0.17.0.
+//!
+//! To use a custom comparator, you need to implement the `SchemataEq` trait and set it using the
+//! `set_schemata_equality_comparator` function:
+//!
+//! ```rust
+//! use apache_avro::{AvroResult, Schema};
+//! use apache_avro::schema::Namespace;
+//! use apache_avro::schema_equality::{SchemataEq, set_schemata_equality_comparator};
+//!
+//! #[derive(Debug)]
+//! struct MyCustomSchemataEq;
+//!
+//! impl SchemataEq for MyCustomSchemataEq {
+//!     fn compare(&self, schema_one: &Schema, schema_two: &Schema) -> bool {
+//!         todo!()
+//!     }
+//! }
+//!
+//! // don't parse any schema before registering the custom comparator !
+//!
+//! set_schemata_equality_comparator(Box::new(MyCustomSchemataEq));
+//!
+//! // ... use the library
+//! ```
+//! **Note**: the library allows to set a comparator only once per the application lifetime!
+//! If the application parses schemas before setting a comparator, the default comparator will be
+//! registered and used!
+//!
 
 mod bigdecimal;
 mod codec;
