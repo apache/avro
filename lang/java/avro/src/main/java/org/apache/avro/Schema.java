@@ -1519,6 +1519,14 @@ public abstract class Schema extends JsonProperties implements Serializable {
       return this.addTypes(types.values());
     }
 
+    public Parser() {
+      this(new Names());
+    }
+
+    public Parser(Names names) {
+      this.names = names;
+    }
+
     /**
      * Adds the provided types to the set of defined, named types known to this
      * parser.
@@ -1717,7 +1725,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     PRIMITIVES.put("null", Type.NULL);
   }
 
-  static class Names extends LinkedHashMap<Name, Schema> {
+  public static class Names extends LinkedHashMap<Name, Schema> {
     private static final long serialVersionUID = 1L;
     private String space; // default namespace
 
