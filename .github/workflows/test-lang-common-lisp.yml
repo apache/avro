@@ -1,0 +1,65 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: Test Common Lisp
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    paths:
+    - .github/workflows/test-lang-common-lisp.yml
+    - lang/common-lisp/**
+
+defaults:
+  run:
+    working-directory: lang/common-lisp
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Depedencies
+        run: |
+          sudo apt-get install -qqy --no-install-recommends sbcl cl-quicklisp
+
+      - name: Build Test Image
+        run: |
+          sbcl --noinform --end-runtime-options --no-sysinit --no-userinit \
+               --load '/usr/share/common-lisp/source/quicklisp/quicklisp.lisp' \
+               --non-interactive \
+               --eval '(declaim (optimize (debug 3) (safety 3)))' \
+               --eval '(require :sb-posix)' \
+               --eval '(require :asdf)' \
+               --eval '(quicklisp-quickstart:install)' \
+               --eval '(defparameter +cwd+ (sb-posix:getcwd))' \
+               --eval '(setf +cwd+ (concatenate (quote string) +cwd+ "/"))' \
+               --eval '(push +cwd+ asdf:*central-registry*)' \
+               --eval '(ql:quickload :avro/test)' \
+               --eval '(defun main () (asdf:test-system :avro))' \
+               --eval '(sb-ext:save-lisp-and-die "test-image" :toplevel (function main))' \
+               --end-toplevel-options
+
+      - name: Run Test Image
+        run: sbcl --noinform --core test-image
