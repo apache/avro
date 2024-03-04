@@ -496,13 +496,7 @@ namespace Avro
 
             foreach (string symbol in enumschema.Symbols)
             {
-                var effectiveSymbol = symbol;
-                if (CodeGenUtil.Instance.ReservedKeywords.Contains(symbol))
-                {
-                    effectiveSymbol = "@" + symbol;
-                }
-
-                CodeMemberField field = new CodeMemberField(typeof(int), effectiveSymbol);
+                CodeMemberField field = new CodeMemberField(typeof(int), symbol);
                 ctd.Members.Add(field);
             }
 
