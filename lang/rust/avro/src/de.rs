@@ -324,7 +324,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
         V: Visitor<'de>,
     {
         match *self.input {
-            Value::String(ref s) => visitor.visit_borrowed_str(s),
+            Value::Enum(_, ref s) | Value::String(ref s) => visitor.visit_borrowed_str(s),
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => {
                 String::from_utf8(bytes.to_owned())
                     .map_err(|e| de::Error::custom(e.to_string()))
@@ -344,7 +344,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                 ))),
             },
             _ => Err(de::Error::custom(format!(
-                "Expected a String|Bytes|Fixed|Uuid|Union, but got {:?}",
+                "Expected a String|Bytes|Fixed|Uuid|Union|Enum, but got {:?}",
                 self.input
             ))),
         }
@@ -665,7 +665,7 @@ pub fn from_value<'de, D: Deserialize<'de>>(value: &'de Value) -> Result<D, Erro
 mod tests {
     use num_bigint::BigInt;
     use pretty_assertions::assert_eq;
-    use serde::Serialize;
+    use serde::{Deserialize, Serialize};
     use serial_test::serial;
     use std::sync::atomic::Ordering;
     use uuid::Uuid;
@@ -675,6 +675,89 @@ mod tests {
     use crate::Decimal;
 
     use super::*;
+
+    #[derive(PartialEq, Eq, Serialize, Deserialize, Debug)]
+    pub struct StringEnum {
+        pub source: String,
+    }
+
+    #[test]
+    fn avro_3955_decode_enum() -> TestResult {
+        let schema_content = r#"
+{
+  "name": "AccessLog",
+  "namespace": "com.clevercloud.accesslogs.common.avro",
+  "type": "record",
+  "fields": [
+    {
+      "name": "source",
+      "type": {
+        "type": "enum",
+        "name": "SourceType",
+        "items": "string",
+        "symbols": ["SOZU", "HAPROXY", "HAPROXY_TCP"]
+      }
+    }
+  ]
+}
+"#;
+
+        let schema = crate::Schema::parse_str(schema_content)?;
+        let data = StringEnum {
+            source: "SOZU".to_string(),
+        };
+
+        // encode into avro
+        let value = crate::to_value(&data)?;
+
+        let mut buf = std::io::Cursor::new(crate::to_avro_datum(&schema, value)?);
+
+        // decode from avro
+        let value = crate::from_avro_datum(&schema, &mut buf, None)?;
+
+        let decoded_data: StringEnum = crate::from_value(&value)?;
+
+        assert_eq!(decoded_data, data);
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3955_encode_enum_data_with_wrong_content() -> TestResult {
+        let schema_content = r#"
+{
+  "name": "AccessLog",
+  "namespace": "com.clevercloud.accesslogs.common.avro",
+  "type": "record",
+  "fields": [
+    {
+      "name": "source",
+      "type": {
+        "type": "enum",
+        "name": "SourceType",
+        "items": "string",
+        "symbols": ["SOZU", "HAPROXY", "HAPROXY_TCP"]
+      }
+    }
+  ]
+}
+"#;
+
+        let schema = crate::Schema::parse_str(schema_content)?;
+        let data = StringEnum {
+            source: "WRONG_ITEM".to_string(),
+        };
+
+        // encode into avro
+        let value = crate::to_value(data)?;
+
+        // The following sentence have to fail has the data is wrong.
+        let encoded_data = crate::to_avro_datum(&schema, value);
+
+        assert!(encoded_data.is_err());
+
+        Ok(())
+    }
 
     #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
     struct Test {
