@@ -41,6 +41,10 @@ cmake -G "Unix Makefiles" ..
 
 If it doesn't work, either you are missing boost package or you need to help
 configure locate it.
+Alternatively, you can use Conan to install the dependencies. To do that, use:
+
+conan install . -u -b missing -s:h build_type=RelWithDebInfo
+cmake -S. -Bbuild -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=build/RelWithDebInfo/generators/conan_toolchain.cmake
 
 If the Makefile is configured correctly, then you can make and run tests:
 
