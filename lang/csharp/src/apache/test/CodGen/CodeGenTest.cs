@@ -109,6 +109,33 @@ namespace Avro.Test.CodeGen
                 Assert.That(hasPlanetEnumCode);
                 Assert.That(Regex.Matches(planetEnumCode, "public enum PlanetEnum").Count, Is.EqualTo(1));
             }
+
+            [Test]
+            public void EnumWithKeywordSymbolsShouldHavePrefixedSymbols()
+            {
+                AddSchema(@"{
+    ""type"": ""enum"",
+    ""symbols"": [
+        ""string"",
+        ""integer"",
+        ""float"",
+        ""boolean"",
+        ""list"",
+        ""dict"",
+        ""regex""
+    ],
+    ""name"": ""type"",
+    ""namespace"": ""com.example""
+}");
+                GenerateCode();
+                var types = GetTypes();
+                Assert.That(types.Count, Is.EqualTo(1));
+                bool hasTypeCode = types.TryGetValue("type", out string typeCode);
+                Assert.That(hasTypeCode);
+                Assert.That(Regex.Matches(typeCode, "public enum type").Count, Is.EqualTo(1));
+                Assert.That(Regex.Matches(typeCode, "@string,").Count, Is.EqualTo(1));
+                Assert.That(Regex.Matches(typeCode, "@float,").Count, Is.EqualTo(1));
+            }
         }
     }
 }

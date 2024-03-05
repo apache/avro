@@ -474,8 +474,6 @@ namespace Avro
         /// <exception cref="CodeGenException">
         /// Unable to cast schema into an enum
         /// or
-        /// Enum symbol " + symbol + " is a C# reserved keyword
-        /// or
         /// Namespace required for enum schema " + enumschema.Name.
         /// </exception>
         protected virtual void processEnum(Schema schema)
@@ -498,11 +496,6 @@ namespace Avro
 
             foreach (string symbol in enumschema.Symbols)
             {
-                if (CodeGenUtil.Instance.ReservedKeywords.Contains(symbol))
-                {
-                    throw new CodeGenException("Enum symbol " + symbol + " is a C# reserved keyword");
-                }
-
                 CodeMemberField field = new CodeMemberField(typeof(int), symbol);
                 ctd.Members.Add(field);
             }
