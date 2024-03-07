@@ -398,7 +398,7 @@ public class Protocol extends JsonProperties {
 
   @Override
   public int hashCode() {
-    return name.hashCode() + Objects.hash(namespace) + types.hashCode() + messages.hashCode() + propsHashCode();
+    return 31 * Objects.hash(name, namespace, types, messages) + propsHashCode();
   }
 
   /** Render this as <a href="https://json.org/">JSON</a>. */
