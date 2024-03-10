@@ -181,6 +181,12 @@ int avro_datum_equal(const avro_datum_t a, const avro_datum_t b)
 		 * TODO 
 		 */
 		return 0;
+	case AVRO_INVALID:
+		/*
+		 * Invalid datums should not be compared and returning 0
+		 * matches the other error conditions
+		 */
+		return 0;
 	}
 	return 0;
 }

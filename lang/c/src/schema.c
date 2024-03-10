@@ -126,6 +126,7 @@ static void avro_schema_free(avro_schema_t schema)
 		case AVRO_DOUBLE:
 		case AVRO_BOOLEAN:
 		case AVRO_NULL:
+		case AVRO_INVALID:
 			/* no memory allocated for primitives */
 			return;
 
@@ -876,15 +877,7 @@ static int
 avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 			st_table *named_schemas, const char *parent_namespace)
 {
-#ifdef _WIN32
- #pragma message("#warning: Bug: '0' is not of type avro_type_t.")
-#else
- #warning "Bug: '0' is not of type avro_type_t."
-#endif
-  /* We should really have an "AVRO_INVALID" type in
-   * avro_type_t. Suppress warning below in which we set type to 0.
-   */
-	avro_type_t type = (avro_type_t) 0;
+	avro_type_t type = AVRO_INVALID;
 	unsigned int i;
 	avro_schema_t named_type = NULL;
 
@@ -1882,6 +1875,8 @@ avro_schema_to_json2(const avro_schema_t schema, avro_writer_t out,
 		return write_union(out, avro_schema_to_union(schema), parent_namespace);
 	case AVRO_LINK:
 		return write_link(out, avro_schema_to_link(schema), parent_namespace);
+	case AVRO_INVALID:
+		return EINVAL;
 	}
 
 	if (is_avro_primitive(schema)) {

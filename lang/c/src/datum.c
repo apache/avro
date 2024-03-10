@@ -1086,6 +1086,7 @@ static void avro_datum_free(avro_datum_t datum)
 			}
 			break;
 		case AVRO_NULL:
+		case AVRO_INVALID:
 			/* Nothing allocated */
 			break;
 
