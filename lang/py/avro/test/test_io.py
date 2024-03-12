@@ -24,6 +24,7 @@ import io
 import itertools
 import json
 import unittest
+import uuid
 import warnings
 from typing import BinaryIO, Collection, Dict, List, Optional, Tuple, Union, cast
 
@@ -72,12 +73,26 @@ SCHEMAS_TO_VALIDATE = tuple(
             decimal.Decimal("-3.1415"),
         ),
         (
+            {
+                "type": "fixed",
+                "logicalType": "decimal",
+                "name": "Test",
+                "size": 8,
+                "precision": 1,
+            },
+            decimal.Decimal("3"),
+        ),
+        (
             {"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 4},
             decimal.Decimal("3.1415"),
         ),
         (
             {"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 4},
             decimal.Decimal("-3.1415"),
+        ),
+        (
+            {"type": "bytes", "logicalType": "decimal", "precision": 1},
+            decimal.Decimal("3"),
         ),
         ({"type": "enum", "name": "Test", "symbols": ["A", "B"]}, "B"),
         ({"type": "array", "items": "long"}, [1, 3, 2]),
@@ -170,6 +185,23 @@ SCHEMAS_TO_VALIDATE = tuple(
         (
             {"type": "record", "name": "ns.long", "fields": [{"name": "value", "type": "int"}, {"name": "next", "type": ["null", "ns.long"]}]},
             {"value": 0, "next": {"value": 1, "next": None}},
+        ),
+        # Optional logical types.
+        (
+            [{"logicalType": "uuid", "type": "string"}, "null"],
+            None,
+        ),
+        (
+            [{"logicalType": "uuid", "type": "string"}, "null"],
+            uuid.uuid4().hex,
+        ),
+        (
+            [{"type": "long", "logicalType": "timestamp-millis"}, "null"],
+            datetime.datetime(1000, 1, 1, 0, 0, 0, 0, tzinfo=avro.timezones.utc),
+        ),
+        (
+            [{"type": "long", "logicalType": "timestamp-millis"}, "null"],
+            None,
         ),
     )
 )
@@ -436,7 +468,6 @@ class DefaultValueTestCase(unittest.TestCase):
 
 class TestIncompatibleSchemaReading(unittest.TestCase):
     def test_deserialization_fails(self) -> None:
-
         reader_schema = avro.schema.parse(
             json.dumps(
                 {
@@ -491,7 +522,7 @@ class TestMisc(unittest.TestCase):
         """Avro should raise an AvroTypeException when attempting to write a decimal with a larger exponent than the schema's scale."""
         datum = decimal.Decimal("3.1415")
         _, _, exp = datum.as_tuple()
-        scale = -1 * exp - 1
+        scale = -1 * int(exp) - 1
         schema = avro.schema.parse(
             json.dumps(
                 {
@@ -508,7 +539,7 @@ class TestMisc(unittest.TestCase):
         """Avro should raise an AvroTypeException when attempting to write a decimal with a larger exponent than the schema's scale."""
         datum = decimal.Decimal("3.1415")
         _, _, exp = datum.as_tuple()
-        scale = -1 * exp - 1
+        scale = -1 * int(exp) - 1
         schema = avro.schema.parse(
             json.dumps(
                 {

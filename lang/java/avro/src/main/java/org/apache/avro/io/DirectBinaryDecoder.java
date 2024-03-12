@@ -20,10 +20,10 @@ package org.apache.avro.io;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.InvalidNumberEncodingException;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.util.ByteBufferInputStream;
 
 /**
@@ -40,15 +40,15 @@ class DirectBinaryDecoder extends BinaryDecoder {
 
   private class ByteReader {
     public ByteBuffer read(ByteBuffer old, int length) throws IOException {
-      ByteBuffer result;
+      final ByteBuffer result;
       if (old != null && length <= old.capacity()) {
         result = old;
-        ((Buffer) result).clear();
+        result.clear();
       } else {
         result = ByteBuffer.allocate(length);
       }
       doReadBytes(result.array(), result.position(), length);
-      ((Buffer) result).limit(length);
+      result.limit(length);
       return result;
     }
   }
@@ -68,7 +68,6 @@ class DirectBinaryDecoder extends BinaryDecoder {
         return bbi.readBuffer(length);
       }
     }
-
   }
 
   private ByteReader byteReader;
@@ -156,8 +155,8 @@ class DirectBinaryDecoder extends BinaryDecoder {
 
   @Override
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
-    int length = readInt();
-    return byteReader.read(old, length);
+    long length = readLong();
+    return byteReader.read(old, SystemLimitException.checkMaxBytesLength(length));
   }
 
   @Override

@@ -1,7 +1,7 @@
 ---
 title: "Releases"
 linkTitle: "Releases"
-weight: 21
+weight: 20
 aliases:
 - /releases.html
 ---

@@ -20,6 +20,7 @@ use apache_avro::{
     types::{Record, Value},
     Reader, Writer,
 };
+use apache_avro_test_helper::TestResult;
 use std::{
     io::{BufReader, BufWriter},
     time::{Duration, Instant},
@@ -45,7 +46,7 @@ fn benchmark(
     big_or_small: &str,
     count: usize,
     runs: usize,
-) -> anyhow::Result<()> {
+) -> TestResult {
     let mut records = Vec::new();
     for __ in 0..count {
         records.push(record.clone());
@@ -59,7 +60,7 @@ fn benchmark(
 
         let start = Instant::now();
         let mut writer = Writer::new(schema, BufWriter::new(Vec::new()));
-        writer.extend(records.into_iter())?;
+        writer.extend(records)?;
 
         let duration = Instant::now().duration_since(start);
         durations.push(duration);
@@ -96,14 +97,11 @@ fn benchmark(
     let (total_write_secs, total_read_secs) =
         (seconds(total_duration_write), seconds(total_duration_read));
 
-    println!(
-        "{}\t\t{}\t\t{}\t\t{}\t\t{}",
-        count, runs, big_or_small, total_write_secs, total_read_secs
-    );
+    println!("{count}\t\t{runs}\t\t{big_or_small}\t\t{total_write_secs}\t\t{total_read_secs}");
     Ok(())
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> TestResult {
     let raw_small_schema = r#"
         {"namespace": "test", "type": "record", "name": "Test", "fields": [{"type": {"type": "string"}, "name": "field"}]}
     "#;
@@ -115,8 +113,8 @@ fn main() -> anyhow::Result<()> {
     let small_schema = Schema::parse_str(raw_small_schema)?;
     let big_schema = Schema::parse_str(raw_big_schema)?;
 
-    println!("{:?}", small_schema);
-    println!("{:?}", big_schema);
+    println!("{small_schema:?}");
+    println!("{big_schema:?}");
 
     let mut small_record = Record::new(&small_schema).unwrap();
     small_record.put("field", "foo");

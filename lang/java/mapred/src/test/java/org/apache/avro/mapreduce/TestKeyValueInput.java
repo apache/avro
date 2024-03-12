@@ -18,7 +18,7 @@
 
 package org.apache.avro.mapreduce;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,17 +42,16 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Tests that Avro container files of generic records with two fields 'key' and
  * 'value' can be read by the AvroKeyValueInputFormat.
  */
 public class TestKeyValueInput {
-  @Rule
-  public TemporaryFolder mTempDir = new TemporaryFolder();
+  @TempDir
+  public File mTempDir;
 
   /**
    * Creates an Avro file of <docid, text> pairs to use for test input:
@@ -78,8 +77,8 @@ public class TestKeyValueInput {
     record3.setKey(3);
     record3.setValue("apple");
 
-    return AvroFiles.createFile(new File(mTempDir.getRoot(), "inputKeyValues.avro"), keyValueSchema, record1.get(),
-        record2.get(), record3.get());
+    return AvroFiles.createFile(new File(mTempDir, "inputKeyValues.avro"), keyValueSchema, record1.get(), record2.get(),
+        record3.get());
   }
 
   /** A mapper for indexing documents. */
@@ -107,7 +106,7 @@ public class TestKeyValueInput {
   }
 
   @Test
-  public void testKeyValueInput() throws ClassNotFoundException, IOException, InterruptedException {
+  void keyValueInput() throws ClassNotFoundException, IOException, InterruptedException {
     // Create a test input file.
     File inputFile = createInputFile();
 
@@ -131,7 +130,7 @@ public class TestKeyValueInput {
 
     // Configure the output format.
     job.setOutputFormatClass(AvroKeyValueOutputFormat.class);
-    Path outputPath = new Path(mTempDir.getRoot().getPath(), "out-index");
+    Path outputPath = new Path(mTempDir.getPath(), "out-index");
     FileOutputFormat.setOutputPath(job, outputPath);
 
     // Run the job.
@@ -174,7 +173,7 @@ public class TestKeyValueInput {
   }
 
   @Test
-  public void testKeyValueInputMapOnly() throws ClassNotFoundException, IOException, InterruptedException {
+  void keyValueInputMapOnly() throws ClassNotFoundException, IOException, InterruptedException {
     // Create a test input file.
     File inputFile = createInputFile();
 
@@ -196,7 +195,7 @@ public class TestKeyValueInput {
 
     // Configure the output format.
     job.setOutputFormatClass(AvroKeyValueOutputFormat.class);
-    Path outputPath = new Path(mTempDir.getRoot().getPath(), "out-index");
+    Path outputPath = new Path(mTempDir.getPath(), "out-index");
     FileOutputFormat.setOutputPath(job, outputPath);
 
     // Run the job.

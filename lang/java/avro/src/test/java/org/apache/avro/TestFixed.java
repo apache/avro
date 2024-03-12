@@ -18,19 +18,32 @@
 
 package org.apache.avro;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestFixed {
 
   @Test
-  public void testFixedDefaultValueDrop() {
+  void fixedDefaultValueDrop() {
     Schema md5 = SchemaBuilder.builder().fixed("MD5").size(16);
     Schema frec = SchemaBuilder.builder().record("test").fields().name("hash").type(md5).withDefault(new byte[16])
         .endRecord();
     Schema.Field field = frec.getField("hash");
-    Assert.assertNotNull(field.defaultVal());
-    Assert.assertArrayEquals(new byte[16], (byte[]) field.defaultVal());
+    assertNotNull(field.defaultVal());
+    assertArrayEquals(new byte[16], (byte[]) field.defaultVal());
   }
 
+  @Test
+  void fixedLengthOutOfLimit() {
+    Exception ex = assertThrows(UnsupportedOperationException.class,
+        () -> Schema.createFixed("oversize", "doc", "space", Integer.MAX_VALUE));
+    assertEquals(TestSystemLimitException.ERROR_VM_LIMIT_BYTES, ex.getMessage());
+  }
+
+  @Test
+  void fixedNegativeLength() {
+    Exception ex = assertThrows(AvroRuntimeException.class, () -> Schema.createFixed("negative", "doc", "space", -1));
+    assertEquals(TestSystemLimitException.ERROR_NEGATIVE, ex.getMessage());
+  }
 }

@@ -21,7 +21,6 @@ import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -30,7 +29,7 @@ import org.apache.avro.JsonProperties;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
-import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.specific.SpecificData;
 
 /**
  * Avro Schema utilities, to traverse...
@@ -67,10 +66,7 @@ public final class Schemas {
   }
 
   public static void copyProperties(final JsonProperties from, final JsonProperties to) {
-    Map<String, Object> objectProps = from.getObjectProps();
-    for (Map.Entry<String, Object> entry : objectProps.entrySet()) {
-      to.addProp(entry.getKey(), entry.getValue());
-    }
+    from.forEachProperty(to::addProp);
   }
 
   public static boolean hasGeneratedJavaClass(final Schema schema) {
@@ -88,9 +84,9 @@ public final class Schemas {
   public static String getJavaClassName(final Schema schema) {
     String namespace = schema.getNamespace();
     if (namespace == null) {
-      return SpecificCompiler.mangle(schema.getName());
+      return SpecificData.mangle(schema.getName());
     } else {
-      return namespace + '.' + SpecificCompiler.mangle(schema.getName());
+      return namespace + '.' + SpecificData.mangle(schema.getName());
     }
   }
 

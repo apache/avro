@@ -289,9 +289,11 @@ namespace Avro
         public override int GetHashCode()
         {
             int result = SchemaName.GetHashCode() + getHashCode(Props);
-#pragma warning disable CA1307 // Specify StringComparison
-            foreach (string s in Symbols) result += 23 * s.GetHashCode();
-#pragma warning restore CA1307 // Specify StringComparison
+            foreach (string s in Symbols)
+            {
+                result += 23 * s.GetHashCode();
+            }
+
             return result;
         }
 

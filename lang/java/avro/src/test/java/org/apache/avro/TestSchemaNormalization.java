@@ -18,9 +18,7 @@
 package org.apache.avro;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,51 +29,36 @@ import java.util.List;
 import java.util.Locale;
 
 import org.apache.avro.util.CaseFinder;
-import org.junit.Test;
-import org.junit.experimental.runners.Enclosed;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-@RunWith(Enclosed.class)
 public class TestSchemaNormalization {
 
-  @RunWith(Parameterized.class)
+  @Nested
   public static class TestCanonical {
-    String input, expectedOutput;
 
-    public TestCanonical(String i, String o) {
-      input = i;
-      expectedOutput = o;
-    }
-
-    @Parameters
     public static List<Object[]> cases() throws IOException {
       return CaseFinder.find(data(), "canonical", new ArrayList<>());
     }
 
-    @Test
-    public void testCanonicalization() throws Exception {
+    @ParameterizedTest
+    @MethodSource("cases")
+    void canonicalization(String input, String expectedOutput) {
       assertEquals(SchemaNormalization.toParsingForm(new Schema.Parser().parse(input)), expectedOutput);
     }
   }
 
-  @RunWith(Parameterized.class)
+  @Nested
   public static class TestFingerprint {
-    String input, expectedOutput;
 
-    public TestFingerprint(String i, String o) {
-      input = i;
-      expectedOutput = o;
-    }
-
-    @Parameters
     public static List<Object[]> cases() throws IOException {
       return CaseFinder.find(data(), "fingerprint", new ArrayList<>());
     }
 
-    @Test
-    public void testCanonicalization() throws Exception {
+    @ParameterizedTest
+    @MethodSource("cases")
+    void canonicalization(String input, String expectedOutput) {
       Schema s = new Schema.Parser().parse(input);
       long carefulFP = altFingerprint(SchemaNormalization.toParsingForm(s));
       assertEquals(carefulFP, Long.parseLong(expectedOutput));
@@ -84,22 +67,16 @@ public class TestSchemaNormalization {
   }
 
   // see AVRO-1493
-  @RunWith(Parameterized.class)
+  @Nested
   public static class TestFingerprintInternationalization {
-    String input, expectedOutput;
 
-    public TestFingerprintInternationalization(String i, String o) {
-      input = i;
-      expectedOutput = o;
-    }
-
-    @Parameters
     public static List<Object[]> cases() throws IOException {
       return CaseFinder.find(data(), "fingerprint", new ArrayList<>());
     }
 
-    @Test
-    public void testCanonicalization() throws Exception {
+    @ParameterizedTest
+    @MethodSource("cases")
+    void canonicalization(String input, String expectedOutput) {
       Locale originalDefaultLocale = Locale.getDefault();
       Locale.setDefault(Locale.forLanguageTag("tr"));
       Schema s = new Schema.Parser().parse(input);
@@ -152,8 +129,7 @@ public class TestSchemaNormalization {
   private static final byte[] POSTFIX = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
   private static void assertEqHex(long expected, long actual) {
-    String m = format("0x%016x != 0x%016x", expected, actual);
-    assertTrue(m, expected == actual);
+    assertEquals(expected, actual, () -> format("0x%016x != 0x%016x", expected, actual));
   }
 
   private static String format(String f, Object... args) {

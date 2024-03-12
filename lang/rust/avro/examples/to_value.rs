@@ -24,6 +24,6 @@ struct Test {
 fn main() -> anyhow::Result<()> {
     let test = Test { a: 27, b: "foo" };
     let value = apache_avro::to_value(test)?;
-    println!("{:?}", value);
+    println!("{value:?}");
     Ok(())
 }

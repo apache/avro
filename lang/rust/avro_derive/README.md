@@ -66,4 +66,4 @@ let encoded = writer.into_inner();
 ```
 
 ### Compatibility Notes
-This module is designed to work in concert with the Serde implemenation. If your use case dictates needing to manually convert to a `Value` type in order to encode then the derived schema may not be correct.
+This module is designed to work in concert with the Serde implementation. If your use case dictates needing to manually convert to a `Value` type in order to encode then the derived schema may not be correct.

@@ -1,0 +1,22 @@
+{
+	"type":"record",
+	"namespace":"org.apache.avro",
+	"name":"TestMessage",
+	"fields":[
+		{
+			"name":"id",
+			"type":"long"
+		},
+		{
+			"name":"name",
+			"type":"string"
+		},
+		{
+			"name":"tags",
+			"type":{
+				"type":"array",
+				"items":"string"
+			}
+		}
+	]
+}

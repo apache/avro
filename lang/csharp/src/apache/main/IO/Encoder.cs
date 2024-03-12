@@ -22,8 +22,6 @@ namespace Avro.IO
     /// Defines the interface for a class that provides low-level support for serializing Avro
     /// values.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming",
-        "CA1715:Identifiers should have correct prefix", Justification = "Maintain public API")]
     public interface Encoder
     {
         /// <summary>
@@ -189,5 +187,10 @@ namespace Avro.IO
         /// <param name="start">Position within data where the contents start.</param>
         /// <param name="len">Number of bytes to write.</param>
         void WriteFixed(byte[] data, int start, int len);
+
+        /// <summary>
+        /// Flushes the encoder.
+        /// </summary>
+        void Flush();
     }
 }

@@ -199,6 +199,8 @@ namespace Avro.Reflect
                     return false;   // Union directly within another union not allowed!
                 case Schema.Type.Fixed:
                     return obj is byte[];
+                case Schema.Type.Logical:
+                    return ((LogicalSchema)sc).LogicalType.IsInstanceOfLogicalType(obj);
                 default:
                     throw new AvroException("Unknown schema type: " + sc.Tag);
             }

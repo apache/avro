@@ -24,7 +24,7 @@
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
     <version>1.12.0-SNAPSHOT</version>
-    <relativePath>../</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>avro-maven-plugin</artifactId>
@@ -60,20 +60,17 @@
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-core</artifactId>
       <version>${maven-core.version}</version>
+      <scope>provided</scope>
       <exclusions>
         <exclusion>
           <groupId>com.google.code.findbugs</groupId>
           <artifactId>jsr305</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+        </exclusion>
       </exclusions>
-    </dependency>
-    <!-- Bump this to a higher version while maven 3.3.9 still uses 3.0.22 with a -->
-    <!-- XML injection vulnerability. -->
-    <dependency>
-      <groupId>org.codehaus.plexus</groupId>
-      <artifactId>plexus-utils</artifactId>
-      <version>3.4.1</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.shared</groupId>
@@ -85,6 +82,11 @@
           <artifactId>jsr305</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>avro-idl</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>

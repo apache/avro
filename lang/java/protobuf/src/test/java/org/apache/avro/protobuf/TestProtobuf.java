@@ -26,9 +26,10 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificData;
 import org.apache.commons.compress.utils.Lists;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import com.google.protobuf.ByteString;
 
@@ -38,7 +39,7 @@ import org.apache.avro.protobuf.noopt.Test.M.N;
 
 public class TestProtobuf {
   @Test
-  public void testMessage() throws Exception {
+  void message() throws Exception {
 
     System.out.println(ProtobufData.get().getSchema(Foo.class).toString(true));
     Foo.Builder builder = Foo.newBuilder();
@@ -88,7 +89,7 @@ public class TestProtobuf {
   }
 
   @Test
-  public void testMessageWithEmptyArray() throws Exception {
+  void messageWithEmptyArray() throws Exception {
     Foo foo = Foo.newBuilder().setInt32(5).setBool(true).build();
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
     ProtobufDatumWriter<Foo> w = new ProtobufDatumWriter<>(Foo.class);
@@ -104,25 +105,25 @@ public class TestProtobuf {
   }
 
   @Test
-  public void testEmptyArray() throws Exception {
+  void emptyArray() throws Exception {
     Schema s = ProtobufData.get().getSchema(Foo.class);
     assertEquals(s.getField("fooArray").defaultVal(), Lists.newArrayList());
   }
 
   @Test
-  public void testNestedEnum() throws Exception {
+  void nestedEnum() throws Exception {
     Schema s = ProtobufData.get().getSchema(N.class);
     assertEquals(N.class.getName(), SpecificData.get().getClass(s).getName());
   }
 
   @Test
-  public void testNestedClassNamespace() throws Exception {
+  void nestedClassNamespace() throws Exception {
     Schema s = ProtobufData.get().getSchema(Foo.class);
     assertEquals(org.apache.avro.protobuf.noopt.Test.class.getName(), s.getNamespace());
   }
 
   @Test
-  public void testClassNamespaceInMultipleFiles() throws Exception {
+  void classNamespaceInMultipleFiles() throws Exception {
     Schema fooSchema = ProtobufData.get().getSchema(org.apache.avro.protobuf.multiplefiles.Foo.class);
     assertEquals(org.apache.avro.protobuf.multiplefiles.Foo.class.getPackage().getName(), fooSchema.getNamespace());
 
@@ -131,7 +132,7 @@ public class TestProtobuf {
   }
 
   @Test
-  public void testGetNonRepeatedSchemaWithLogicalType() throws Exception {
+  void getNonRepeatedSchemaWithLogicalType() throws Exception {
     ProtoConversions.TimestampMillisConversion conversion = new ProtoConversions.TimestampMillisConversion();
 
     // Don't convert to logical type if conversion isn't set

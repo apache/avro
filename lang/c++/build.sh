@@ -71,10 +71,10 @@ function do_dist() {
   fi
 }
 
-(mkdir -p build; cd build; cmake --version; cmake -G "Unix Makefiles" ..)
 for target in "$@"
 do
 
+cmake -S . -B build
 case "$target" in
   lint)
     # some versions of cppcheck seem to require an explicit
@@ -83,7 +83,7 @@ case "$target" in
     ;;
 
   test)
-    (cd build && cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug -D AVRO_ADD_PROTECTOR_FLAGS=1 .. && make && cd .. \
+    (cmake -S. -Bbuild -D CMAKE_BUILD_TYPE=Debug -D AVRO_ADD_PROTECTOR_FLAGS=1 && cmake --build build \
       && ./build/buffertest \
       && ./build/unittest \
       && ./build/CodecTests \
@@ -92,7 +92,8 @@ case "$target" in
       && ./build/SpecificTests \
       && ./build/AvrogencppTests \
       && ./build/DataFileTests   \
-      && ./build/SchemaTests)
+      && ./build/SchemaTests   \
+      && ./build/CommonsSchemasTests)
     ;;
 
   xcode-test)
@@ -104,7 +105,7 @@ case "$target" in
     ;;
 
   dist)
-    (cd build && cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ..)
+    (cd build && cmake -D CMAKE_BUILD_TYPE=Release ..)
     do_dist
     do_doc
     ;;
@@ -118,12 +119,12 @@ case "$target" in
     ;;
 
   clean)
-    (cd build && make clean)
+    (cmake --build build --target clean)
     rm -rf doc test.avro test?.df test??.df test_skip.df test_lastSync.df test_readRecordUsingLastSync.df
     ;;
 
   install)
-    (cd build && cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release .. && make install)
+    (cmake -S. -Bbuild -D CMAKE_BUILD_TYPE=Release && cmake --build build --target install)
     ;;
 
   *)

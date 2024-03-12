@@ -17,9 +17,7 @@
  */
 package org.apache.avro.ipc.stats;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,12 +27,12 @@ import java.util.List;
 import java.util.TreeSet;
 import org.apache.avro.ipc.stats.Histogram.Entry;
 import org.apache.avro.ipc.stats.Histogram.Segmenter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestHistogram {
 
   @Test
-  public void testBasicOperation() {
+  void basicOperation() {
     Segmenter<String, Integer> s = new Histogram.TreeMapSegmenter<>(new TreeSet<>(Arrays.asList(0, 1, 2, 4, 8, 16)));
 
     Histogram<String, Integer> h = new Histogram<>(s);
@@ -92,12 +90,15 @@ public class TestHistogram {
 
   }
 
-  @Test(expected = Histogram.SegmenterException.class)
-  public void testBadValue() {
-    Segmenter<String, Long> s = new Histogram.TreeMapSegmenter<>(new TreeSet<>(Arrays.asList(0L, 1L, 2L, 4L, 8L, 16L)));
+  @Test
+  void badValue() {
+    assertThrows(Histogram.SegmenterException.class, () -> {
+      Segmenter<String, Long> s = new Histogram.TreeMapSegmenter<>(
+          new TreeSet<>(Arrays.asList(0L, 1L, 2L, 4L, 8L, 16L)));
 
-    Histogram<String, Long> h = new Histogram<>(s);
-    h.add(-1L);
+      Histogram<String, Long> h = new Histogram<>(s);
+      h.add(-1L);
+    });
   }
 
   /** Only has one bucket */
@@ -128,7 +129,7 @@ public class TestHistogram {
   }
 
   @Test
-  public void testFloatHistogram() {
+  void floatHistogram() {
     FloatHistogram<String> h = new FloatHistogram<>(new SingleBucketSegmenter());
     h.add(12.0f);
     h.add(10.0f);

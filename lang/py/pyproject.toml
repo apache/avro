@@ -25,3 +25,12 @@ line-length = 150
 
 [tool.isort]
 profile = 'black'
+
+[tool.autoflake]
+expand-star-imports = true
+recursive = true
+# Put a name in __all_ to explicitly export something a module imports.
+# This is clearer and will keep autoflake from trying to remove it.
+remove-all-unused-imports = true
+remove-duplicate-keys = true
+remove-unused-variables = true

@@ -22,11 +22,15 @@ import org.apache.avro.Schema.Type;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.rules.TestName;
 
 import java.io.ByteArrayOutputStream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -36,17 +40,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.assertEquals;
-
 public class TestRecordCountTool {
 
   @Rule
   public TestName name = new TestName();
-  @Rule
-  public TemporaryFolder temporaryFolder = new TemporaryFolder();
+  @TempDir
+  public File temporaryFolder;
 
   private File generateData(int numRecords) throws Exception {
-    final File tempFile = temporaryFolder.newFile();
+    final File tempFile = File.createTempFile("junit", null, temporaryFolder);
 
     Schema schema = Schema.create(Type.STRING);
     try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>(schema))) {
@@ -61,16 +63,17 @@ public class TestRecordCountTool {
     return tempFile;
   }
 
-  @Test(expected = FileNotFoundException.class)
-  public void testFileDoesNotExist() throws Exception {
-    List<String> args = Collections
-        .singletonList(new File(temporaryFolder.getRoot(), "nonExistingFile").getAbsolutePath());
-    int returnCode = new RecordCountTool().run(System.in, System.out, System.err, args);
-    assertEquals(1, returnCode);
+  @Test
+  void fileDoesNotExist() throws Exception {
+    assertThrows(FileNotFoundException.class, () -> {
+      List<String> args = Collections.singletonList(new File(temporaryFolder, "nonExistingFile").getAbsolutePath());
+      int returnCode = new RecordCountTool().run(System.in, System.out, System.err, args);
+      assertEquals(1, returnCode);
+    });
   }
 
   @Test
-  public void testBasic() throws Exception {
+  void basic() throws Exception {
     final List<Integer> inputSizes = IntStream.range(0, 20).boxed().collect(Collectors.toList());
     for (Integer inputSize : inputSizes) {
       File inputFile = generateData(inputSize);
@@ -84,7 +87,7 @@ public class TestRecordCountTool {
   }
 
   @Test
-  public void testMultipleFiles() throws Exception {
+  void multipleFiles() throws Exception {
     File f1 = generateData(20);
     File f2 = generateData(200);
 

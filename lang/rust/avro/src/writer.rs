@@ -18,14 +18,14 @@
 //! Logic handling writing in Avro format at user level.
 use crate::{
     encode::{encode, encode_internal, encode_to_vec},
-    schema::{ResolvedSchema, Schema},
+    rabin::Rabin,
+    schema::{AvroSchema, ResolvedOwnedSchema, ResolvedSchema, Schema},
     ser::Serializer,
     types::Value,
     AvroResult, Codec, Error,
 };
-use rand::random;
 use serde::Serialize;
-use std::{collections::HashMap, convert::TryFrom, io::Write};
+use std::{collections::HashMap, io::Write, marker::PhantomData};
 
 const DEFAULT_BLOCK_SIZE: usize = 16000;
 const AVRO_OBJECT_HEADER: &[u8] = b"Obj\x01";
@@ -47,8 +47,8 @@ pub struct Writer<'a, W> {
     serializer: Serializer,
     #[builder(default = 0, setter(skip))]
     num_values: usize,
-    #[builder(default = std::iter::repeat_with(random).take(16).collect(), setter(skip))]
-    marker: Vec<u8>,
+    #[builder(default = generate_sync_marker())]
+    marker: [u8; 16],
     #[builder(default = false, setter(skip))]
     has_header: bool,
     #[builder(default)]
@@ -60,9 +60,7 @@ impl<'a, W: Write> Writer<'a, W> {
     /// to.
     /// No compression `Codec` will be used.
     pub fn new(schema: &'a Schema, writer: W) -> Self {
-        let mut w = Self::builder().schema(schema).writer(writer).build();
-        w.resolved_schema = ResolvedSchema::try_from(schema).ok();
-        w
+        Writer::with_codec(schema, writer, Codec::Null)
     }
 
     /// Creates a `Writer` with a specific `Codec` given a `Schema` and something implementing the
@@ -74,6 +72,71 @@ impl<'a, W: Write> Writer<'a, W> {
             .codec(codec)
             .build();
         w.resolved_schema = ResolvedSchema::try_from(schema).ok();
+        w
+    }
+
+    /// Creates a `Writer` with a specific `Codec` given a `Schema` and something implementing the
+    /// `io::Write` trait to write to.
+    /// If the `schema` is incomplete, i.e. contains `Schema::Ref`s then all dependencies must
+    /// be provided in `schemata`.
+    pub fn with_schemata(
+        schema: &'a Schema,
+        schemata: Vec<&'a Schema>,
+        writer: W,
+        codec: Codec,
+    ) -> Self {
+        let mut w = Self::builder()
+            .schema(schema)
+            .writer(writer)
+            .codec(codec)
+            .build();
+        w.resolved_schema = ResolvedSchema::try_from(schemata).ok();
+        w
+    }
+
+    /// Creates a `Writer` that will append values to already populated
+    /// `std::io::Write` using the provided `marker`
+    /// No compression `Codec` will be used.
+    pub fn append_to(schema: &'a Schema, writer: W, marker: [u8; 16]) -> Self {
+        Writer::append_to_with_codec(schema, writer, Codec::Null, marker)
+    }
+
+    /// Creates a `Writer` that will append values to already populated
+    /// `std::io::Write` using the provided `marker`
+    pub fn append_to_with_codec(
+        schema: &'a Schema,
+        writer: W,
+        codec: Codec,
+        marker: [u8; 16],
+    ) -> Self {
+        let mut w = Self::builder()
+            .schema(schema)
+            .writer(writer)
+            .codec(codec)
+            .marker(marker)
+            .build();
+        w.has_header = true;
+        w.resolved_schema = ResolvedSchema::try_from(schema).ok();
+        w
+    }
+
+    /// Creates a `Writer` that will append values to already populated
+    /// `std::io::Write` using the provided `marker`
+    pub fn append_to_with_codec_schemata(
+        schema: &'a Schema,
+        schemata: Vec<&'a Schema>,
+        writer: W,
+        codec: Codec,
+        marker: [u8; 16],
+    ) -> Self {
+        let mut w = Self::builder()
+            .schema(schema)
+            .writer(writer)
+            .codec(codec)
+            .marker(marker)
+            .build();
+        w.has_header = true;
+        w.resolved_schema = ResolvedSchema::try_from(schemata).ok();
         w
     }
 
@@ -110,7 +173,7 @@ impl<'a, W: Write> Writer<'a, W> {
         // Lazy init for users using the builder pattern with error throwing
         match self.resolved_schema {
             Some(ref rs) => {
-                write_value_ref_resolved(rs, value, &mut self.buffer)?;
+                write_value_ref_resolved(self.schema, rs, value, &mut self.buffer)?;
                 self.num_values += 1;
 
                 if self.buffer.len() >= self.block_size {
@@ -260,6 +323,7 @@ impl<'a, W: Write> Writer<'a, W> {
     /// **NOTE** This function forces the written data to be flushed (an implicit
     /// call to [`flush`](struct.Writer.html#method.flush) is performed).
     pub fn into_inner(mut self) -> AvroResult<W> {
+        self.maybe_write_header()?;
         self.flush()?;
         Ok(self.writer)
     }
@@ -312,11 +376,7 @@ impl<'a, W: Write> Writer<'a, W> {
 
         let mut header = Vec::new();
         header.extend_from_slice(AVRO_OBJECT_HEADER);
-        encode(
-            &metadata.into(),
-            &Schema::Map(Box::new(Schema::Bytes)),
-            &mut header,
-        )?;
+        encode(&metadata.into(), &Schema::map(Schema::Bytes), &mut header)?;
         header.extend_from_slice(&self.marker);
 
         Ok(header)
@@ -352,22 +412,165 @@ fn write_avro_datum<T: Into<Value>>(
     Ok(())
 }
 
+fn write_avro_datum_schemata<T: Into<Value>>(
+    schema: &Schema,
+    schemata: Vec<&Schema>,
+    value: T,
+    buffer: &mut Vec<u8>,
+) -> AvroResult<()> {
+    let avro = value.into();
+    let rs = ResolvedSchema::try_from(schemata)?;
+    let names = rs.get_names();
+    let enclosing_namespace = schema.namespace();
+    if let Some(_err) = avro.validate_internal(schema, names, &enclosing_namespace) {
+        return Err(Error::Validation);
+    }
+    encode_internal(&avro, schema, names, &enclosing_namespace, buffer)
+}
+
+/// Writer that encodes messages according to the single object encoding v1 spec
+/// Uses an API similar to the current File Writer
+/// Writes all object bytes at once, and drains internal buffer
+pub struct GenericSingleObjectWriter {
+    buffer: Vec<u8>,
+    resolved: ResolvedOwnedSchema,
+}
+
+impl GenericSingleObjectWriter {
+    pub fn new_with_capacity(
+        schema: &Schema,
+        initial_buffer_cap: usize,
+    ) -> AvroResult<GenericSingleObjectWriter> {
+        let fingerprint = schema.fingerprint::<Rabin>();
+        let mut buffer = Vec::with_capacity(initial_buffer_cap);
+        let header = [
+            0xC3,
+            0x01,
+            fingerprint.bytes[0],
+            fingerprint.bytes[1],
+            fingerprint.bytes[2],
+            fingerprint.bytes[3],
+            fingerprint.bytes[4],
+            fingerprint.bytes[5],
+            fingerprint.bytes[6],
+            fingerprint.bytes[7],
+        ];
+        buffer.extend_from_slice(&header);
+
+        Ok(GenericSingleObjectWriter {
+            buffer,
+            resolved: ResolvedOwnedSchema::try_from(schema.clone())?,
+        })
+    }
+
+    /// Write the referenced Value to the provided Write object. Returns a result with the number of bytes written including the header
+    pub fn write_value_ref<W: Write>(&mut self, v: &Value, writer: &mut W) -> AvroResult<usize> {
+        if self.buffer.len() != 10 {
+            Err(Error::IllegalSingleObjectWriterState)
+        } else {
+            write_value_ref_owned_resolved(&self.resolved, v, &mut self.buffer)?;
+            writer.write_all(&self.buffer).map_err(Error::WriteBytes)?;
+            let len = self.buffer.len();
+            self.buffer.truncate(10);
+            Ok(len)
+        }
+    }
+
+    /// Write the Value to the provided Write object. Returns a result with the number of bytes written including the header
+    pub fn write_value<W: Write>(&mut self, v: Value, writer: &mut W) -> AvroResult<usize> {
+        self.write_value_ref(&v, writer)
+    }
+}
+
+/// Writer that encodes messages according to the single object encoding v1 spec
+pub struct SpecificSingleObjectWriter<T>
+where
+    T: AvroSchema,
+{
+    inner: GenericSingleObjectWriter,
+    _model: PhantomData<T>,
+}
+
+impl<T> SpecificSingleObjectWriter<T>
+where
+    T: AvroSchema,
+{
+    pub fn with_capacity(buffer_cap: usize) -> AvroResult<SpecificSingleObjectWriter<T>> {
+        let schema = T::get_schema();
+        Ok(SpecificSingleObjectWriter {
+            inner: GenericSingleObjectWriter::new_with_capacity(&schema, buffer_cap)?,
+            _model: PhantomData,
+        })
+    }
+}
+
+impl<T> SpecificSingleObjectWriter<T>
+where
+    T: AvroSchema + Into<Value>,
+{
+    /// Write the `Into<Value>` to the provided Write object. Returns a result with the number
+    /// of bytes written including the header
+    pub fn write_value<W: Write>(&mut self, data: T, writer: &mut W) -> AvroResult<usize> {
+        let v: Value = data.into();
+        self.inner.write_value_ref(&v, writer)
+    }
+}
+
+impl<T> SpecificSingleObjectWriter<T>
+where
+    T: AvroSchema + Serialize,
+{
+    /// Write the referenced Serialize object to the provided Write object. Returns a result with
+    /// the number of bytes written including the header
+    pub fn write_ref<W: Write>(&mut self, data: &T, writer: &mut W) -> AvroResult<usize> {
+        let mut serializer = Serializer::default();
+        let v = data.serialize(&mut serializer)?;
+        self.inner.write_value_ref(&v, writer)
+    }
+
+    /// Write the Serialize object to the provided Write object. Returns a result with the number
+    /// of bytes written including the header
+    pub fn write<W: Write>(&mut self, data: T, writer: &mut W) -> AvroResult<usize> {
+        self.write_ref(&data, writer)
+    }
+}
+
 fn write_value_ref_resolved(
+    schema: &Schema,
     resolved_schema: &ResolvedSchema,
     value: &Value,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
+    match value.validate_internal(schema, resolved_schema.get_names(), &schema.namespace()) {
+        Some(err) => Err(Error::ValidationWithReason(err)),
+        None => encode_internal(
+            value,
+            schema,
+            resolved_schema.get_names(),
+            &schema.namespace(),
+            buffer,
+        ),
+    }
+}
+
+fn write_value_ref_owned_resolved(
+    resolved_schema: &ResolvedOwnedSchema,
+    value: &Value,
+    buffer: &mut Vec<u8>,
+) -> AvroResult<()> {
+    let root_schema = resolved_schema.get_root_schema();
     if let Some(err) = value.validate_internal(
-        resolved_schema.get_root_schema(),
+        root_schema,
         resolved_schema.get_names(),
+        &root_schema.namespace(),
     ) {
         return Err(Error::ValidationWithReason(err));
     }
     encode_internal(
         value,
-        resolved_schema.get_root_schema(),
+        root_schema,
         resolved_schema.get_names(),
-        &None,
+        &root_schema.namespace(),
         buffer,
     )?;
     Ok(())
@@ -385,17 +588,56 @@ pub fn to_avro_datum<T: Into<Value>>(schema: &Schema, value: T) -> AvroResult<Ve
     Ok(buffer)
 }
 
+/// Encode a compatible value (implementing the `ToAvro` trait) into Avro format, also
+/// performing schema validation.
+/// If the provided `schema` is incomplete then its dependencies must be
+/// provided in `schemata`
+pub fn to_avro_datum_schemata<T: Into<Value>>(
+    schema: &Schema,
+    schemata: Vec<&Schema>,
+    value: T,
+) -> AvroResult<Vec<u8>> {
+    let mut buffer = Vec::new();
+    write_avro_datum_schemata(schema, schemata, value, &mut buffer)?;
+    Ok(buffer)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn generate_sync_marker() -> [u8; 16] {
+    let mut marker = [0_u8; 16];
+    std::iter::repeat_with(rand::random)
+        .take(16)
+        .enumerate()
+        .for_each(|(i, n)| marker[i] = n);
+    marker
+}
+
+#[cfg(target_arch = "wasm32")]
+fn generate_sync_marker() -> [u8; 16] {
+    let mut marker = [0_u8; 16];
+    std::iter::repeat_with(quad_rand::rand)
+        .take(4)
+        .flat_map(|i| i.to_be_bytes())
+        .enumerate()
+        .for_each(|(i, n)| marker[i] = n);
+    marker
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::{
         decimal::Decimal,
         duration::{Days, Duration, Millis, Months},
-        schema::Name,
+        schema::{DecimalSchema, FixedSchema, Name},
         types::Record,
         util::zig_i64,
+        Reader,
     };
+    use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
+
+    use apache_avro_test_helper::TestResult;
 
     const AVRO_OBJECT_HEADER_LEN: usize = AVRO_OBJECT_HEADER.len();
 
@@ -419,8 +661,8 @@ mod tests {
     const UNION_SCHEMA: &str = r#"["null", "long"]"#;
 
     #[test]
-    fn test_to_avro_datum() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_to_avro_datum() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let mut record = Record::new(&schema).unwrap();
         record.put("a", 27i64);
         record.put("b", "foo");
@@ -428,35 +670,39 @@ mod tests {
         let mut expected = Vec::new();
         zig_i64(27, &mut expected);
         zig_i64(3, &mut expected);
-        expected.extend(vec![b'f', b'o', b'o'].into_iter());
+        expected.extend([b'f', b'o', b'o']);
 
-        assert_eq!(to_avro_datum(&schema, record).unwrap(), expected);
+        assert_eq!(to_avro_datum(&schema, record)?, expected);
+
+        Ok(())
     }
 
     #[test]
-    fn test_union_not_null() {
-        let schema = Schema::parse_str(UNION_SCHEMA).unwrap();
+    fn test_union_not_null() -> TestResult {
+        let schema = Schema::parse_str(UNION_SCHEMA)?;
         let union = Value::Union(1, Box::new(Value::Long(3)));
 
         let mut expected = Vec::new();
         zig_i64(1, &mut expected);
         zig_i64(3, &mut expected);
 
-        assert_eq!(to_avro_datum(&schema, union).unwrap(), expected);
+        assert_eq!(to_avro_datum(&schema, union)?, expected);
+
+        Ok(())
     }
 
     #[test]
-    fn test_union_null() {
-        let schema = Schema::parse_str(UNION_SCHEMA).unwrap();
+    fn test_union_null() -> TestResult {
+        let schema = Schema::parse_str(UNION_SCHEMA)?;
         let union = Value::Union(0, Box::new(Value::Null));
 
         let mut expected = Vec::new();
         zig_i64(0, &mut expected);
 
-        assert_eq!(to_avro_datum(&schema, union).unwrap(), expected);
-    }
+        assert_eq!(to_avro_datum(&schema, union)?, expected);
 
-    type TestResult<T> = Result<T, Box<dyn std::error::Error>>;
+        Ok(())
+    }
 
     fn logical_type_test<T: Into<Value> + Clone>(
         schema_str: &'static str,
@@ -466,7 +712,7 @@ mod tests {
 
         raw_schema: &Schema,
         raw_value: T,
-    ) -> TestResult<()> {
+    ) -> TestResult {
         let schema = Schema::parse_str(schema_str)?;
         assert_eq!(&schema, expected_schema);
         // The serialized format should be the same as the schema.
@@ -476,13 +722,13 @@ mod tests {
 
         // Should deserialize from the schema into the logical type.
         let mut r = ser.as_slice();
-        let de = crate::from_avro_datum(&schema, &mut r, None).unwrap();
+        let de = crate::from_avro_datum(&schema, &mut r, None)?;
         assert_eq!(de, value);
         Ok(())
     }
 
     #[test]
-    fn date() -> TestResult<()> {
+    fn date() -> TestResult {
         logical_type_test(
             r#"{"type": "int", "logicalType": "date"}"#,
             &Schema::Date,
@@ -493,7 +739,7 @@ mod tests {
     }
 
     #[test]
-    fn time_millis() -> TestResult<()> {
+    fn time_millis() -> TestResult {
         logical_type_test(
             r#"{"type": "int", "logicalType": "time-millis"}"#,
             &Schema::TimeMillis,
@@ -504,7 +750,7 @@ mod tests {
     }
 
     #[test]
-    fn time_micros() -> TestResult<()> {
+    fn time_micros() -> TestResult {
         logical_type_test(
             r#"{"type": "long", "logicalType": "time-micros"}"#,
             &Schema::TimeMicros,
@@ -515,7 +761,7 @@ mod tests {
     }
 
     #[test]
-    fn timestamp_millis() -> TestResult<()> {
+    fn timestamp_millis() -> TestResult {
         logical_type_test(
             r#"{"type": "long", "logicalType": "timestamp-millis"}"#,
             &Schema::TimestampMillis,
@@ -526,7 +772,7 @@ mod tests {
     }
 
     #[test]
-    fn timestamp_micros() -> TestResult<()> {
+    fn timestamp_micros() -> TestResult {
         logical_type_test(
             r#"{"type": "long", "logicalType": "timestamp-micros"}"#,
             &Schema::TimestampMicros,
@@ -537,22 +783,23 @@ mod tests {
     }
 
     #[test]
-    fn decimal_fixed() -> TestResult<()> {
+    fn decimal_fixed() -> TestResult {
         let size = 30;
-        let inner = Schema::Fixed {
-            name: Name::new("decimal").unwrap(),
+        let inner = Schema::Fixed(FixedSchema {
+            name: Name::new("decimal")?,
             aliases: None,
             doc: None,
             size,
-        };
+            attributes: Default::default(),
+        });
         let value = vec![0u8; size];
         logical_type_test(
             r#"{"type": {"type": "fixed", "size": 30, "name": "decimal"}, "logicalType": "decimal", "precision": 20, "scale": 5}"#,
-            &Schema::Decimal {
+            &Schema::Decimal(DecimalSchema {
                 precision: 20,
                 scale: 5,
                 inner: Box::new(inner.clone()),
-            },
+            }),
             Value::Decimal(Decimal::from(value.clone())),
             &inner,
             Value::Fixed(size, value),
@@ -560,16 +807,16 @@ mod tests {
     }
 
     #[test]
-    fn decimal_bytes() -> TestResult<()> {
+    fn decimal_bytes() -> TestResult {
         let inner = Schema::Bytes;
         let value = vec![0u8; 10];
         logical_type_test(
             r#"{"type": "bytes", "logicalType": "decimal", "precision": 4, "scale": 3}"#,
-            &Schema::Decimal {
+            &Schema::Decimal(DecimalSchema {
                 precision: 4,
                 scale: 3,
                 inner: Box::new(inner.clone()),
-            },
+            }),
             Value::Decimal(Decimal::from(value.clone())),
             &inner,
             value,
@@ -577,13 +824,14 @@ mod tests {
     }
 
     #[test]
-    fn duration() -> TestResult<()> {
-        let inner = Schema::Fixed {
-            name: Name::new("duration").unwrap(),
+    fn duration() -> TestResult {
+        let inner = Schema::Fixed(FixedSchema {
+            name: Name::new("duration")?,
             aliases: None,
             doc: None,
             size: 12,
-        };
+            attributes: Default::default(),
+        });
         let value = Value::Duration(Duration::new(
             Months::new(256),
             Days::new(512),
@@ -599,18 +847,18 @@ mod tests {
     }
 
     #[test]
-    fn test_writer_append() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_writer_append() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let mut writer = Writer::new(&schema, Vec::new());
 
         let mut record = Record::new(&schema).unwrap();
         record.put("a", 27i64);
         record.put("b", "foo");
 
-        let n1 = writer.append(record.clone()).unwrap();
-        let n2 = writer.append(record.clone()).unwrap();
-        let n3 = writer.flush().unwrap();
-        let result = writer.into_inner().unwrap();
+        let n1 = writer.append(record.clone())?;
+        let n2 = writer.append(record.clone())?;
+        let n3 = writer.flush()?;
+        let result = writer.into_inner()?;
 
         assert_eq!(n1 + n2 + n3, result.len());
 
@@ -628,11 +876,13 @@ mod tests {
             &result[last_data_byte - data.len()..last_data_byte],
             data.as_slice()
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_writer_extend() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_writer_extend() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let mut writer = Writer::new(&schema, Vec::new());
 
         let mut record = Record::new(&schema).unwrap();
@@ -641,9 +891,9 @@ mod tests {
         let record_copy = record.clone();
         let records = vec![record, record_copy];
 
-        let n1 = writer.extend(records.into_iter()).unwrap();
-        let n2 = writer.flush().unwrap();
-        let result = writer.into_inner().unwrap();
+        let n1 = writer.extend(records)?;
+        let n2 = writer.flush()?;
+        let result = writer.into_inner()?;
 
         assert_eq!(n1 + n2, result.len());
 
@@ -661,6 +911,8 @@ mod tests {
             &result[last_data_byte - data.len()..last_data_byte],
             data.as_slice()
         );
+
+        Ok(())
     }
 
     #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -670,8 +922,8 @@ mod tests {
     }
 
     #[test]
-    fn test_writer_append_ser() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_writer_append_ser() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let mut writer = Writer::new(&schema, Vec::new());
 
         let record = TestSerdeSerialize {
@@ -679,9 +931,9 @@ mod tests {
             b: "foo".to_owned(),
         };
 
-        let n1 = writer.append_ser(record).unwrap();
-        let n2 = writer.flush().unwrap();
-        let result = writer.into_inner().unwrap();
+        let n1 = writer.append_ser(record)?;
+        let n2 = writer.flush()?;
+        let result = writer.into_inner()?;
 
         assert_eq!(n1 + n2, result.len());
 
@@ -698,11 +950,13 @@ mod tests {
             &result[last_data_byte - data.len()..last_data_byte],
             data.as_slice()
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_writer_extend_ser() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_writer_extend_ser() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let mut writer = Writer::new(&schema, Vec::new());
 
         let record = TestSerdeSerialize {
@@ -712,9 +966,9 @@ mod tests {
         let record_copy = record.clone();
         let records = vec![record, record_copy];
 
-        let n1 = writer.extend_ser(records.into_iter()).unwrap();
-        let n2 = writer.flush().unwrap();
-        let result = writer.into_inner().unwrap();
+        let n1 = writer.extend_ser(records)?;
+        let n2 = writer.flush()?;
+        let result = writer.into_inner()?;
 
         assert_eq!(n1 + n2, result.len());
 
@@ -732,6 +986,8 @@ mod tests {
             &result[last_data_byte - data.len()..last_data_byte],
             data.as_slice()
         );
+
+        Ok(())
     }
 
     fn make_writer_with_codec(schema: &Schema) -> Writer<'_, Vec<u8>> {
@@ -747,15 +1003,15 @@ mod tests {
             .build()
     }
 
-    fn check_writer(mut writer: Writer<'_, Vec<u8>>, schema: &Schema) {
+    fn check_writer(mut writer: Writer<'_, Vec<u8>>, schema: &Schema) -> TestResult {
         let mut record = Record::new(schema).unwrap();
         record.put("a", 27i64);
         record.put("b", "foo");
 
-        let n1 = writer.append(record.clone()).unwrap();
-        let n2 = writer.append(record.clone()).unwrap();
-        let n3 = writer.flush().unwrap();
-        let result = writer.into_inner().unwrap();
+        let n1 = writer.append(record.clone())?;
+        let n2 = writer.append(record.clone())?;
+        let n3 = writer.flush()?;
+        let result = writer.into_inner()?;
 
         assert_eq!(n1 + n2 + n3, result.len());
 
@@ -764,7 +1020,7 @@ mod tests {
         zig_i64(3, &mut data);
         data.extend(b"foo");
         data.extend(data.clone());
-        Codec::Deflate.compress(&mut data).unwrap();
+        Codec::Deflate.compress(&mut data)?;
 
         // starts with magic
         assert_eq!(&result[..AVRO_OBJECT_HEADER_LEN], AVRO_OBJECT_HEADER);
@@ -774,24 +1030,26 @@ mod tests {
             &result[last_data_byte - data.len()..last_data_byte],
             data.as_slice()
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_writer_with_codec() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_writer_with_codec() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let writer = make_writer_with_codec(&schema);
-        check_writer(writer, &schema);
+        check_writer(writer, &schema)
     }
 
     #[test]
-    fn test_writer_with_builder() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_writer_with_builder() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let writer = make_writer_with_builder(&schema);
-        check_writer(writer, &schema);
+        check_writer(writer, &schema)
     }
 
     #[test]
-    fn test_logical_writer() {
+    fn test_logical_writer() -> TestResult {
         const LOGICAL_TYPE_SCHEMA: &str = r#"
         {
           "type": "record",
@@ -811,7 +1069,7 @@ mod tests {
         }
         "#;
         let codec = Codec::Deflate;
-        let schema = Schema::parse_str(LOGICAL_TYPE_SCHEMA).unwrap();
+        let schema = Schema::parse_str(LOGICAL_TYPE_SCHEMA)?;
         let mut writer = Writer::builder()
             .schema(&schema)
             .codec(codec)
@@ -827,10 +1085,10 @@ mod tests {
         let mut record2 = Record::new(&schema).unwrap();
         record2.put("a", Value::Union(0, Box::new(Value::Null)));
 
-        let n1 = writer.append(record1).unwrap();
-        let n2 = writer.append(record2).unwrap();
-        let n3 = writer.flush().unwrap();
-        let result = writer.into_inner().unwrap();
+        let n1 = writer.append(record1)?;
+        let n2 = writer.append(record2)?;
+        let n3 = writer.flush()?;
+        let result = writer.into_inner()?;
 
         assert_eq!(n1 + n2 + n3, result.len());
 
@@ -841,7 +1099,7 @@ mod tests {
 
         // byte indicating null
         zig_i64(0, &mut data);
-        codec.compress(&mut data).unwrap();
+        codec.compress(&mut data)?;
 
         // starts with magic
         assert_eq!(&result[..AVRO_OBJECT_HEADER_LEN], AVRO_OBJECT_HEADER);
@@ -851,81 +1109,93 @@ mod tests {
             &result[last_data_byte - data.len()..last_data_byte],
             data.as_slice()
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_avro_3405_writer_add_metadata_success() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_avro_3405_writer_add_metadata_success() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let mut writer = Writer::new(&schema, Vec::new());
 
-        writer
-            .add_user_metadata("stringKey".to_string(), String::from("stringValue"))
-            .unwrap();
-        writer
-            .add_user_metadata("strKey".to_string(), "strValue")
-            .unwrap();
-        writer
-            .add_user_metadata("bytesKey".to_string(), b"bytesValue")
-            .unwrap();
-        writer
-            .add_user_metadata("vecKey".to_string(), vec![1, 2, 3])
-            .unwrap();
+        writer.add_user_metadata("stringKey".to_string(), String::from("stringValue"))?;
+        writer.add_user_metadata("strKey".to_string(), "strValue")?;
+        writer.add_user_metadata("bytesKey".to_string(), b"bytesValue")?;
+        writer.add_user_metadata("vecKey".to_string(), vec![1, 2, 3])?;
 
         let mut record = Record::new(&schema).unwrap();
         record.put("a", 27i64);
         record.put("b", "foo");
 
-        writer.append(record.clone()).unwrap();
-        writer.append(record.clone()).unwrap();
-        writer.flush().unwrap();
-        let result = writer.into_inner().unwrap();
+        writer.append(record.clone())?;
+        writer.append(record.clone())?;
+        writer.flush()?;
+        let result = writer.into_inner()?;
 
         assert_eq!(result.len(), 260);
+
+        Ok(())
     }
 
     #[test]
-    fn test_avro_3405_writer_add_metadata_failure() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_avro_3881_metadata_empty_body() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
+        let mut writer = Writer::new(&schema, Vec::new());
+        writer.add_user_metadata("a".to_string(), "b")?;
+        let result = writer.into_inner()?;
+
+        let reader = Reader::with_schema(&schema, &result[..])?;
+        let mut expected = HashMap::new();
+        expected.insert("a".to_string(), vec![b'b']);
+        assert_eq!(reader.user_metadata(), &expected);
+        assert_eq!(reader.into_iter().count(), 0);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3405_writer_add_metadata_failure() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let mut writer = Writer::new(&schema, Vec::new());
 
         let mut record = Record::new(&schema).unwrap();
         record.put("a", 27i64);
         record.put("b", "foo");
-        writer.append(record.clone()).unwrap();
+        writer.append(record.clone())?;
 
         match writer.add_user_metadata("stringKey".to_string(), String::from("value2")) {
             Err(e @ Error::FileHeaderAlreadyWritten) => {
                 assert_eq!(e.to_string(), "The file metadata is already flushed.")
             }
-            Err(e) => panic!(
-                "Unexpected error occurred while writing user metadata: {:?}",
-                e
-            ),
+            Err(e) => panic!("Unexpected error occurred while writing user metadata: {e:?}"),
             Ok(_) => panic!("Expected an error that metadata cannot be added after adding data"),
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_avro_3405_writer_add_metadata_reserved_prefix_failure() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_avro_3405_writer_add_metadata_reserved_prefix_failure() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let mut writer = Writer::new(&schema, Vec::new());
 
         let key = "avro.stringKey".to_string();
         match writer.add_user_metadata(key.clone(), "value") {
             Err(ref e @ Error::InvalidMetadataKey(_)) => {
-                assert_eq!(e.to_string(), format!("Metadata keys starting with 'avro.' are reserved for internal usage: {}.", key))
+                assert_eq!(e.to_string(), format!("Metadata keys starting with 'avro.' are reserved for internal usage: {key}."))
             }
             Err(e) => panic!(
-                "Unexpected error occurred while writing user metadata with reserved prefix ('avro.'): {:?}",
-                e
+                "Unexpected error occurred while writing user metadata with reserved prefix ('avro.'): {e:?}"
             ),
             Ok(_) => panic!("Expected an error that the metadata key cannot be prefixed with 'avro.'"),
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_avro_3405_writer_add_metadata_with_builder_api_success() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_avro_3405_writer_add_metadata_with_builder_api_success() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
 
         let mut user_meta_data: HashMap<String, Value> = HashMap::new();
         user_meta_data.insert(
@@ -942,5 +1212,164 @@ mod tests {
             .build();
 
         assert_eq!(writer.user_metadata, user_meta_data);
+
+        Ok(())
+    }
+
+    #[derive(Serialize, Clone)]
+    struct TestSingleObjectWriter {
+        a: i64,
+        b: f64,
+        c: Vec<String>,
+    }
+
+    impl AvroSchema for TestSingleObjectWriter {
+        fn get_schema() -> Schema {
+            let schema = r#"
+            {
+                "type":"record",
+                "name":"TestSingleObjectWrtierSerialize",
+                "fields":[
+                    {
+                        "name":"a",
+                        "type":"long"
+                    },
+                    {
+                        "name":"b",
+                        "type":"double"
+                    },
+                    {
+                        "name":"c",
+                        "type":{
+                            "type":"array",
+                            "items":"string"
+                        }
+                    }
+                ]
+            }
+            "#;
+            Schema::parse_str(schema).unwrap()
+        }
+    }
+
+    impl From<TestSingleObjectWriter> for Value {
+        fn from(obj: TestSingleObjectWriter) -> Value {
+            Value::Record(vec![
+                ("a".into(), obj.a.into()),
+                ("b".into(), obj.b.into()),
+                (
+                    "c".into(),
+                    Value::Array(obj.c.into_iter().map(|s| s.into()).collect()),
+                ),
+            ])
+        }
+    }
+
+    #[test]
+    fn test_single_object_writer() -> TestResult {
+        let mut buf: Vec<u8> = Vec::new();
+        let obj = TestSingleObjectWriter {
+            a: 300,
+            b: 34.555,
+            c: vec!["cat".into(), "dog".into()],
+        };
+        let mut writer = GenericSingleObjectWriter::new_with_capacity(
+            &TestSingleObjectWriter::get_schema(),
+            1024,
+        )
+        .expect("Should resolve schema");
+        let value = obj.into();
+        let written_bytes = writer
+            .write_value_ref(&value, &mut buf)
+            .expect("Error serializing properly");
+
+        assert!(buf.len() > 10, "no bytes written");
+        assert_eq!(buf.len(), written_bytes);
+        assert_eq!(buf[0], 0xC3);
+        assert_eq!(buf[1], 0x01);
+        assert_eq!(
+            &buf[2..10],
+            &TestSingleObjectWriter::get_schema()
+                .fingerprint::<Rabin>()
+                .bytes[..]
+        );
+        let mut msg_binary = Vec::new();
+        encode(
+            &value,
+            &TestSingleObjectWriter::get_schema(),
+            &mut msg_binary,
+        )
+        .expect("encode should have failed by here as a dependency of any writing");
+        assert_eq!(&buf[10..], &msg_binary[..]);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_writer_parity() -> TestResult {
+        let obj1 = TestSingleObjectWriter {
+            a: 300,
+            b: 34.555,
+            c: vec!["cat".into(), "dog".into()],
+        };
+
+        let mut buf1: Vec<u8> = Vec::new();
+        let mut buf2: Vec<u8> = Vec::new();
+        let mut buf3: Vec<u8> = Vec::new();
+
+        let mut generic_writer = GenericSingleObjectWriter::new_with_capacity(
+            &TestSingleObjectWriter::get_schema(),
+            1024,
+        )
+        .expect("Should resolve schema");
+        let mut specific_writer =
+            SpecificSingleObjectWriter::<TestSingleObjectWriter>::with_capacity(1024)
+                .expect("Resolved should pass");
+        specific_writer
+            .write(obj1.clone(), &mut buf1)
+            .expect("Serialization expected");
+        specific_writer
+            .write_value(obj1.clone(), &mut buf2)
+            .expect("Serialization expected");
+        generic_writer
+            .write_value(obj1.into(), &mut buf3)
+            .expect("Serialization expected");
+        assert_eq!(buf1, buf2);
+        assert_eq!(buf1, buf3);
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3894_take_aliases_into_account_when_serializing() -> TestResult {
+        const SCHEMA: &str = r#"
+  {
+      "type": "record",
+      "name": "Conference",
+      "fields": [
+          {"type": "string", "name": "name"},
+          {"type": ["null", "long"], "name": "date", "aliases" : [ "time2", "time" ]}
+      ]
+  }"#;
+
+        #[derive(Debug, PartialEq, Eq, Clone, Serialize)]
+        pub struct Conference {
+            pub name: String,
+            pub time: Option<i64>,
+        }
+
+        let conf = Conference {
+            name: "RustConf".to_string(),
+            time: Some(1234567890),
+        };
+
+        let schema = Schema::parse_str(SCHEMA)?;
+        let mut writer = Writer::new(&schema, Vec::new());
+
+        let bytes = writer.append_ser(conf)?;
+
+        assert_eq!(198, bytes);
+
+        Ok(())
     }
 }

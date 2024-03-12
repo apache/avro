@@ -693,6 +693,10 @@ namespace Avro.Test.AvroGen
       { ""name"" : ""timestampmillis"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-millis""} },
       { ""name"" : ""nullibiletimestampmicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-micros""}]  },
       { ""name"" : ""timestampmicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-micros""} },
+      { ""name"" : ""nulliblelocaltimestampmillis"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""local-timestamp-millis""}]  },
+      { ""name"" : ""localtimestampmillis"", ""type"" : {""type"": ""long"", ""logicalType"": ""local-timestamp-millis""} },
+      { ""name"" : ""nullibilelocaltimestampmicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""local-timestamp-micros""}]  },
+      { ""name"" : ""locallocaltimestampmicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""local-timestamp-micros""} },
       { ""name"" : ""nullibiletimemicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""time-micros""}]  },
       { ""name"" : ""timemicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""time-micros""} },
       { ""name"" : ""nullibiletimemillis"", ""type"" : [""null"", {""type"": ""int"", ""logicalType"": ""time-millis""}]  },
@@ -703,7 +707,7 @@ namespace Avro.Test.AvroGen
       { ""name"" : ""decimalfixed"", ""type"" : {""type"": {""type"" : ""fixed"", ""size"": 16, ""name"": ""df""}, ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} }
     ]
 }",
-            new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal), typeof(AvroDecimal?), typeof(AvroDecimal) })]
+            new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal), typeof(AvroDecimal?), typeof(AvroDecimal) })]
         [TestCase(@"
 {
   ""namespace"": ""enum.base"",

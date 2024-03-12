@@ -26,7 +26,7 @@
   <name>java-example</name>
   <url>https://maven.apache.org</url>
   <properties>
-    <avro.version>1.11.0</avro.version>
+    <avro.version>1.11.3</avro.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <dependencies>
@@ -57,16 +57,16 @@
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-maven-plugin</artifactId>
         <version>${avro.version}</version>
+        <configuration>
+          <sourceDirectory>${project.basedir}/../</sourceDirectory>
+          <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
+        </configuration>
         <executions>
           <execution>
             <phase>generate-sources</phase>
             <goals>
               <goal>schema</goal>
             </goals>
-            <configuration>
-              <sourceDirectory>${project.basedir}/../</sourceDirectory>
-              <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
-            </configuration>
           </execution>
         </executions>
       </plugin>

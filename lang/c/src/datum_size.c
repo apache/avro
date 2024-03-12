@@ -271,6 +271,7 @@ static int64_t size_datum(avro_writer_t writer, const avro_encoding_t * enc,
 				  avro_datum_to_union(datum));
 
 	case AVRO_LINK:
+	case AVRO_INVALID:
 		break;
 	}
 

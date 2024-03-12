@@ -34,6 +34,7 @@ import java.util.NoSuchElementException;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.InvalidAvroMagicException;
+import org.apache.avro.NameValidator;
 import org.apache.avro.Schema;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
@@ -139,7 +140,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
     // finalize the header
     header.metaKeyList = Collections.unmodifiableList(header.metaKeyList);
-    header.schema = new Schema.Parser().setValidate(false).setValidateDefaults(false)
+    header.schema = new Schema.Parser(NameValidator.NO_VALIDATION).setValidateDefaults(false)
         .parse(getMetaString(DataFileConstants.SCHEMA));
     this.codec = resolveCodec();
     reader.setSchema(header.schema);

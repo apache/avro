@@ -20,14 +20,13 @@ package org.apache.avro.io;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.InvalidNumberEncodingException;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.util.Utf8;
-import org.slf4j.LoggerFactory;
 
 /**
  * An {@link Decoder} for binary-format data.
@@ -39,27 +38,20 @@ import org.slf4j.LoggerFactory;
  * can be accessed by inputStream().remaining(), if the BinaryDecoder is not
  * 'direct'.
  * <p/>
- * To prevent this class from making large allocations when handling potentially
- * pathological input data, set Java properties
- * <tt>org.apache.avro.limits.string.maxLength</tt> and
- * <tt>org.apache.avro.limits.bytes.maxLength</tt> before instantiating this
- * class to limit the maximum sizes of <tt>string</tt> and <tt>bytes</tt> types
- * handled. The default is to permit sizes up to Java's maximum array length.
  *
  * @see Encoder
+ * @see SystemLimitException
  */
 
 public class BinaryDecoder extends Decoder {
 
   /**
-   * The maximum size of array to allocate. Some VMs reserve some header words in
-   * an array. Attempts to allocate larger arrays may result in OutOfMemoryError:
-   * Requested array size exceeds VM limit
+   * When reading a collection (MAP or ARRAY), this keeps track of the number of
+   * elements to ensure that the
+   * {@link SystemLimitException#checkMaxCollectionLength} constraint is
+   * respected.
    */
-  static final long MAX_ARRAY_SIZE = (long) Integer.MAX_VALUE - 8L;
-
-  private static final String MAX_BYTES_LENGTH_PROPERTY = "org.apache.avro.limits.bytes.maxLength";
-  private final int maxBytesLength;
+  private long collectionCount = 0L;
 
   private ByteSource source = null;
   // we keep the buffer and its state variables in this class and not in a
@@ -99,17 +91,6 @@ public class BinaryDecoder extends Decoder {
   /** protected constructor for child classes */
   protected BinaryDecoder() {
     super();
-    String o = System.getProperty(MAX_BYTES_LENGTH_PROPERTY);
-    int i = Integer.MAX_VALUE;
-    if (o != null) {
-      try {
-        i = Integer.parseUnsignedInt(o);
-      } catch (NumberFormatException nfe) {
-        LoggerFactory.getLogger(BinaryDecoder.class)
-            .warn("Could not parse property " + MAX_BYTES_LENGTH_PROPERTY + ": " + o, nfe);
-      }
-    }
-    maxBytesLength = i;
   }
 
   BinaryDecoder(InputStream in, int bufferSize) {
@@ -300,17 +281,11 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public Utf8 readString(Utf8 old) throws IOException {
-    long length = readLong();
-    if (length > MAX_ARRAY_SIZE) {
-      throw new UnsupportedOperationException("Cannot read strings longer than " + MAX_ARRAY_SIZE + " bytes");
-    }
-    if (length < 0L) {
-      throw new AvroRuntimeException("Malformed data. Length is negative: " + length);
-    }
+    int length = SystemLimitException.checkMaxStringLength(readLong());
     Utf8 result = (old != null ? old : new Utf8());
-    result.setByteLength((int) length);
-    if (0L != length) {
-      doReadBytes(result.getBytes(), 0, (int) length);
+    result.setByteLength(length);
+    if (0 != length) {
+      doReadBytes(result.getBytes(), 0, length);
     }
     return result;
   }
@@ -329,25 +304,16 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
-    int length = readInt();
-    if (length > MAX_ARRAY_SIZE) {
-      throw new UnsupportedOperationException("Cannot read arrays longer than " + MAX_ARRAY_SIZE + " bytes");
-    }
-    if (length > maxBytesLength) {
-      throw new AvroRuntimeException("Bytes length " + length + " exceeds maximum allowed");
-    }
-    if (length < 0L) {
-      throw new AvroRuntimeException("Malformed data. Length is negative: " + length);
-    }
+    int length = SystemLimitException.checkMaxBytesLength(readLong());
     final ByteBuffer result;
     if (old != null && length <= old.capacity()) {
       result = old;
-      ((Buffer) result).clear();
+      result.clear();
     } else {
       result = ByteBuffer.allocate(length);
     }
     doReadBytes(result.array(), result.position(), length);
-    ((Buffer) result).limit(length);
+    result.limit(length);
     return result;
   }
 
@@ -443,7 +409,6 @@ public class BinaryDecoder extends Decoder {
    * @return Zero if there are no more items to skip and end of array/map is
    *         reached. Positive number if some items are found that cannot be
    *         skipped and the client needs to skip them individually.
-   *
    * @throws IOException If the first byte cannot be read for any reason other
    *                     than the end of the file, if the input stream has been
    *                     closed, or if some other I/O error occurs.
@@ -460,12 +425,15 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public long readArrayStart() throws IOException {
-    return doReadItemCount();
+    collectionCount = SystemLimitException.checkMaxCollectionLength(0L, doReadItemCount());
+    return collectionCount;
   }
 
   @Override
   public long arrayNext() throws IOException {
-    return doReadItemCount();
+    long length = doReadItemCount();
+    collectionCount = SystemLimitException.checkMaxCollectionLength(collectionCount, length);
+    return length;
   }
 
   @Override
@@ -475,12 +443,15 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public long readMapStart() throws IOException {
-    return doReadItemCount();
+    collectionCount = SystemLimitException.checkMaxCollectionLength(0L, doReadItemCount());
+    return collectionCount;
   }
 
   @Override
   public long mapNext() throws IOException {
-    return doReadItemCount();
+    long length = doReadItemCount();
+    collectionCount = SystemLimitException.checkMaxCollectionLength(collectionCount, length);
+    return length;
   }
 
   @Override
@@ -932,7 +903,6 @@ public class BinaryDecoder extends Decoder {
   /**
    * This byte source is special. It will avoid copying data by using the source's
    * byte[] as a buffer in the decoder.
-   *
    */
   private static class ByteArrayByteSource extends ByteSource {
     private static final int MIN_SIZE = 16;

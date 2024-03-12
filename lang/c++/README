@@ -39,8 +39,8 @@ mkdir build
 cd build
 cmake -G "Unix Makefiles" ..
 
-If it doesn't work, either you are missing some packages (boost, flex or bison),
-or you need to help configure locate them.
+If it doesn't work, either you are missing boost package or you need to help
+configure locate it.
 
 If the Makefile is configured correctly, then you can make and run tests:
 

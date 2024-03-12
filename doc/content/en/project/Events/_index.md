@@ -1,7 +1,7 @@
 ---
 title: "Events"
 linkTitle: "Events"
-weight: 5
+weight: 12
 ---
 
 <!--

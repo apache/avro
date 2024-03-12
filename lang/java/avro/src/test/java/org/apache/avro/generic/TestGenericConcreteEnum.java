@@ -24,13 +24,12 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 import java.util.Collections;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * See AVRO-1810: GenericDatumWriter broken with Enum
@@ -47,7 +46,7 @@ public class TestGenericConcreteEnum {
   }
 
   @Test
-  public void testGenericWriteAndRead() throws IOException {
+  void genericWriteAndRead() throws IOException {
     FooBarSpecificRecord specificRecord = getRecord();
 
     byte[] bytes = serializeRecord(specificRecord);
@@ -62,7 +61,7 @@ public class TestGenericConcreteEnum {
   }
 
   @Test
-  public void testGenericWriteSpecificRead() throws IOException {
+  void genericWriteSpecificRead() throws IOException {
     FooBarSpecificRecord specificRecord = getRecord();
 
     byte[] bytes = serializeRecord(specificRecord);

@@ -286,16 +286,10 @@ public class Resolver {
         throw new IllegalArgumentException("Only use when reader and writer are different.");
       Schema.Type wt = w.getType();
       switch (r.getType()) {
-      case INT:
-        switch (wt) {
-        case INT:
-          return true;
-        }
-        break;
+
       case LONG:
         switch (wt) {
         case INT:
-        case LONG:
           return true;
         }
         break;
@@ -303,7 +297,6 @@ public class Resolver {
         switch (wt) {
         case INT:
         case LONG:
-        case FLOAT:
           return true;
         }
         break;
@@ -312,7 +305,6 @@ public class Resolver {
         case INT:
         case LONG:
         case FLOAT:
-        case DOUBLE:
           return true;
         }
         break;

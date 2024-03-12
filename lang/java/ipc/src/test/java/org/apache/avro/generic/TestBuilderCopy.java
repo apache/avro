@@ -18,20 +18,19 @@
 
 package org.apache.avro.generic;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.HashMap;
 
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
 import test.StringablesRecord;
-
-import static org.junit.Assert.assertEquals;
 
 /** Unit test for performing a builder copy of an object with a schema */
 public class TestBuilderCopy {
   @Test
-  public void testBuilderCopy() {
+  void builderCopy() {
     StringablesRecord.Builder builder = StringablesRecord.newBuilder();
     builder.setValue(new BigDecimal("1314.11"));
 

@@ -97,6 +97,7 @@ int print_person(avro_file_reader_t db, avro_schema_t reader_schema)
 
 	rval = avro_file_reader_read(db, reader_schema, &person);
 	if (rval == 0) {
+
 		int64_t i64;
 		int32_t i32;
 		char *p;

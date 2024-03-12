@@ -137,6 +137,7 @@
                 <argument>org.apache.avro.compiler.specific.SchemaTask</argument>
                 <argument>${project.basedir}/src/test/resources/full_record_v1.avsc</argument>
                 <argument>${project.basedir}/src/test/resources/full_record_v2.avsc</argument>
+                <argument>${project.basedir}/src/test/resources/regression_error_field_in_record.avsc</argument>
                 <argument>${project.basedir}/target/generated-test-sources/javacc</argument>
               </arguments>
             </configuration>
@@ -182,36 +183,7 @@
         </executions>
       </plugin>
     </plugins>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.eclipse.m2e</groupId>
-          <artifactId>lifecycle-mapping</artifactId>
-          <version>1.0.0</version>
-          <configuration>
-            <lifecycleMappingMetadata>
-              <pluginExecutions>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>exec-maven-plugin</artifactId>
-                    <versionRange>[1.0,)</versionRange>
-                    <goals>
-                      <goal>exec</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <execute/>
-                  </action>
-                </pluginExecution>
-              </pluginExecutions>
-            </lifecycleMappingMetadata>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
   </build>
-
 
   <dependencies>
     <dependency>
@@ -241,4 +213,42 @@
     </dependency>
   </dependencies>
 
+  <profiles>
+    <profile>
+      <id>m2e</id>
+      <activation>
+        <property><name>m2e.version</name></property>
+      </activation>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.eclipse.m2e</groupId>
+              <artifactId>lifecycle-mapping</artifactId>
+              <version>1.0.0</version>
+              <configuration>
+                <lifecycleMappingMetadata>
+                  <pluginExecutions>
+                    <pluginExecution>
+                      <pluginExecutionFilter>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <versionRange>[1.0,)</versionRange>
+                        <goals>
+                          <goal>exec</goal>
+                        </goals>
+                      </pluginExecutionFilter>
+                      <action>
+                        <execute/>
+                      </action>
+                    </pluginExecution>
+                  </pluginExecutions>
+                </lifecycleMappingMetadata>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+  </profiles>
 </project>

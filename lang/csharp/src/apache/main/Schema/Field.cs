@@ -55,17 +55,9 @@ namespace Avro
         public readonly string Name;
 
         /// <summary>
-        /// List of aliases for the field name
-        /// </summary>
-        [Obsolete("Use Aliases instead. This will be removed from the public API in a future version.")]
-        public readonly IList<string> aliases;
-
-#pragma warning disable CS0618 // Type or member is obsolete
-        /// <summary>
         /// List of aliases for the field name.
         /// </summary>
-        public IList<string> Aliases => aliases;
-#pragma warning restore CS0618 // Type or member is obsolete
+        public IList<string> Aliases { get; private set; }
 
         /// <summary>
         /// Position of the field within its record.
@@ -163,9 +155,7 @@ namespace Avro
 
             Schema = schema ?? throw new ArgumentNullException("type", "type cannot be null.");
             Name = name;
-#pragma warning disable CS0618 // Type or member is obsolete
-            this.aliases = aliases;
-#pragma warning restore CS0618 // Type or member is obsolete
+            Aliases = aliases;
             Pos = pos;
             Documentation = doc;
             DefaultValue = defaultValue;

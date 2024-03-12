@@ -33,9 +33,12 @@
   <name>Simple Avro Ordering Service</name>
 
   <properties>
+    <maven.compiler.source>${maven.compiler.source}</maven.compiler.source>
+    <maven.compiler.release>${maven.compiler.release}</maven.compiler.release>
+    <project.build.sourceEncoding>${project.build.sourceEncoding}</project.build.sourceEncoding>
     <avro.version>${project.version}</avro.version>
     <jackson-bom.version>${jackson-bom.version}</jackson-bom.version>
-    <junit.version>${junit.version}</junit.version>
+    <junit5.version>${junit5.version}</junit5.version>
     <logback.version>1.2.3</logback.version>
     <slf4j.version>${slf4j.version}</slf4j.version>
   </properties>
@@ -79,9 +82,9 @@
       <version>\${logback.version}</version>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>\${junit.version}</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>\${junit5.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -137,6 +140,10 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>\${maven.compiler.source}</source>
+          <release>\${maven.compiler.release}</release>
+        </configuration>
       </plugin>
     </plugins>
   </build>

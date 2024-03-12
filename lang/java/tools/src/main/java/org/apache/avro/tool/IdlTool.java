@@ -19,12 +19,15 @@
 package org.apache.avro.tool;
 
 import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
 import org.apache.avro.compiler.idl.Idl;
+import org.apache.avro.idl.IdlFile;
+import org.apache.avro.idl.IdlReader;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.util.List;
 
 /**
@@ -34,42 +37,69 @@ public class IdlTool implements Tool {
   @Override
   public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
 
-    PrintStream parseOut = out;
-
-    if (args.size() > 2 || (args.size() == 1 && (args.get(0).equals("--help") || args.get(0).equals("-help")))) {
-      err.println("Usage: idl [in] [out]");
+    boolean useJavaCC = "--useJavaCC".equals(getArg(args, 0, null));
+    if (args.size() > (useJavaCC ? 3 : 2)
+        || (args.size() == 1 && (args.get(0).equals("--help") || args.get(0).equals("-help")))) {
+      err.println("Usage: idl [--useJavaCC] [in [out]]");
       err.println();
       err.println("If an output path is not specified, outputs to stdout.");
       err.println("If no input or output is specified, takes input from");
-      err.println("stdin and outputs to stdin.");
+      err.println("stdin and outputs to stdout.");
       err.println("The special path \"-\" may also be specified to refer to");
       err.println("stdin and stdout.");
       return -1;
     }
 
-    Idl parser;
-    if (args.size() >= 1 && !"-".equals(args.get(0))) {
-      parser = new Idl(new File(args.get(0)));
+    String inputName = getArg(args, useJavaCC ? 1 : 0, "-");
+    File inputFile = "-".equals(inputName) ? null : new File(inputName);
+    String outputName = getArg(args, useJavaCC ? 2 : 1, "-");
+    File outputFile = "-".equals(outputName) ? null : new File(outputName);
+
+    Schema m = null;
+    Protocol p;
+    if (useJavaCC) {
+      // noinspection deprecation
+      try (Idl parser = new Idl(inputFile)) {
+        p = parser.CompilationUnit();
+        for (String warning : parser.getWarningsAfterParsing()) {
+          err.println("Warning: " + warning);
+        }
+      }
     } else {
-      parser = new Idl(in);
+      IdlReader parser = new IdlReader();
+      IdlFile idlFile = inputFile == null ? parser.parse(in) : parser.parse(inputFile.toPath());
+      for (String warning : idlFile.getWarnings()) {
+        err.println("Warning: " + warning);
+      }
+      idlFile = parser.resolve(idlFile);
+      p = idlFile.getProtocol();
+      m = idlFile.getMainSchema();
     }
 
-    if (args.size() == 2 && !"-".equals(args.get(1))) {
-      parseOut = new PrintStream(new FileOutputStream(args.get(1)));
+    PrintStream parseOut = out;
+    if (outputFile != null) {
+      parseOut = new PrintStream(Files.newOutputStream(outputFile.toPath()));
     }
 
-    Protocol p = parser.CompilationUnit();
-    final List<String> warnings = parser.getWarningsAfterParsing();
-    for (String warning : warnings) {
-      err.println("Warning: " + warning);
+    if (m == null && p == null) {
+      err.println("Error: the IDL file does not contain a schema nor a protocol.");
+      return 1;
     }
     try {
-      parseOut.print(p.toString(true));
+      parseOut.print(m == null ? p.toString(true) : m.toString(true));
     } finally {
       if (parseOut != out) // Close only the newly created FileOutputStream
         parseOut.close();
     }
     return 0;
+  }
+
+  private String getArg(List<String> args, int index, String defaultValue) {
+    if (index < args.size()) {
+      return args.get(index);
+    } else {
+      return defaultValue;
+    }
   }
 
   @Override
@@ -79,6 +109,6 @@ public class IdlTool implements Tool {
 
   @Override
   public String getShortDescription() {
-    return "Generates a JSON schema from an Avro IDL file";
+    return "Generates a JSON schema or protocol from an Avro IDL file";
   }
 }

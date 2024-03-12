@@ -392,7 +392,7 @@ class TestMisc(unittest.TestCase):
         self.assertEqual("com.acme.Greeting", proto.types[0].fullname)
         self.assertEqual("Greeting", proto.types[0].name)
         # but there shouldn't be 'namespace' rendered to json on the inner type
-        self.assertFalse("namespace" in proto.to_json()["types"][0])
+        self.assertNotIn("namespace", proto.to_json()["types"][0])
 
 
 class ProtocolParseTestCase(unittest.TestCase):

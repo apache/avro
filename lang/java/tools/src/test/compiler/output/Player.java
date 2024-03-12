@@ -5,7 +5,6 @@
  */
 package avro.examples.baseball;
 
-import org.apache.avro.generic.GenericArray;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.message.BinaryMessageEncoder;
@@ -99,9 +98,14 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     this.position = position;
   }
 
+  @Override
   public org.apache.avro.specific.SpecificData getSpecificData() { return MODEL$; }
+
+  @Override
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
+
   // Used by DatumWriter.  Applications should not call.
+  @Override
   public java.lang.Object get(int field$) {
     switch (field$) {
     case 0: return number;
@@ -113,6 +117,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   }
 
   // Used by DatumReader.  Applications should not call.
+  @Override
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
