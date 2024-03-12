@@ -66,7 +66,7 @@ regex-lite = { default-features = false, version = "0.1.5", features = ["std", "
 serde = { workspace = true }
 serde_json = { workspace = true }
 snap = { default-features = false, version = "1.1.0", optional = true }
-strum = { default-features = false, version = "0.26.1" }
+strum = { default-features = false, version = "0.26.2" }
 strum_macros = { default-features = false, version = "0.26.1" }
 thiserror = { default-features = false, version = "1.0.57" }
 typed-builder = { default-features = false, version = "0.18.1" }
