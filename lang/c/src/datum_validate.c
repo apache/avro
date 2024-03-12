@@ -188,6 +188,8 @@ avro_schema_datum_validate(avro_schema_t expected_schema, avro_datum_t datum)
 						       datum);
 		}
 		break;
+	case AVRO_INVALID:
+		return EINVAL;
 	}
 	return 0;
 }
