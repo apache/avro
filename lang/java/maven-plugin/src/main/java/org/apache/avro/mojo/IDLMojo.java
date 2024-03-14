@@ -90,7 +90,6 @@ public class IDLMojo extends AbstractAvroMojo {
         for (String warning : idlFile.getWarnings()) {
           getLog().warn(warning);
         }
-        idlFile = parser.resolve(idlFile);
         final SpecificCompiler compiler;
         final Protocol protocol = idlFile.getProtocol();
         if (protocol != null) {

@@ -17,6 +17,10 @@
  */
 package org.apache.avro.compiler.idl;
 
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.compiler.schema.Schemas;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,10 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-
-import org.apache.avro.Protocol;
-import org.apache.avro.Schema;
-import org.apache.avro.compiler.schema.Schemas;
 
 /**
  * Utility class to resolve schemas that are unavailable at the time they are
@@ -103,12 +103,12 @@ final class SchemaResolver {
   /**
    * Will clone the provided protocol while resolving all unreferenced schemas
    *
-   * @param protocol
-   * @return
+   * @param protocol a protocol with possibly unresolved schema references
+   * @return a protocol without unresolved schema references
    */
   static Protocol resolve(final Protocol protocol) {
     Protocol result = new Protocol(protocol.getName(), protocol.getDoc(), protocol.getNamespace());
-    final Collection<Schema> types = protocol.getTypes();
+    final Collection<Schema> types = protocol.getUnresolvedTypes();
     // replace unresolved schemas.
     List<Schema> newSchemas = new ArrayList<>(types.size());
     IdentityHashMap<Schema, Schema> replacements = new IdentityHashMap<>();

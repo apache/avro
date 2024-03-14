@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
@@ -47,6 +49,7 @@ import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.SchemaNormalization;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.data.TimeConversions;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
@@ -468,12 +471,16 @@ public class SpecificCompiler {
    * Generates Java classes for a number of schema files.
    */
   public static void compileSchema(File[] srcFiles, File dest) throws IOException {
-    Schema.Parser parser = new Schema.Parser();
+    SchemaParser parser = new SchemaParser();
 
     for (File src : srcFiles) {
-      Schema schema = parser.parse(src);
+      parser.parse(src);
+    }
+    // FIXME: use lastModified() without causing a NoSuchMethodError in the build
+    File lastModifiedSourceFile = Stream.of(srcFiles).max(Comparator.comparing(File::lastModified)).orElse(null);
+    for (Schema schema : parser.getParsedNamedSchemas()) {
       SpecificCompiler compiler = new SpecificCompiler(schema);
-      compiler.compileToDestination(src, dest);
+      compiler.compileToDestination(lastModifiedSourceFile, dest);
     }
   }
 

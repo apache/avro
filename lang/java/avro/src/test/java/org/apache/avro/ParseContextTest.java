@@ -71,8 +71,8 @@ public class ParseContextTest {
 
     ParseContext context = new ParseContext();
     for (Schema.Type type : primitives) {
-      Schema first = context.resolve(type.getName());
-      Schema second = context.resolve(type.getName());
+      Schema first = context.find(type.getName(), null);
+      Schema second = context.find(type.getName(), null);
       assertEquals(first, second);
       assertNotSame(first, second);
 
@@ -85,26 +85,31 @@ public class ParseContextTest {
   public void validateSchemaRetrievalFailure() {
     Schema unknown = Schema.createFixed("unknown", null, null, 0);
 
-    Schema unresolved = fooBarBaz.resolve("unknown");
+    Schema unresolved = fooBarBaz.find("unknown", null);
     assertTrue(SchemaResolver.isUnresolvedSchema(unresolved));
     assertEquals(unknown.getFullName(), SchemaResolver.getUnresolvedSchemaName(unresolved));
   }
 
   @Test
   public void validateSchemaRetrievalByFullName() {
-    assertSame(fooRecord, fooBarBaz.resolve(fooRecord.getFullName()));
+    assertSame(fooRecord, fooBarBaz.find(fooRecord.getFullName(), null));
+  }
+
+  @Test
+  public void validateSchemaRetrievalBySimpleName() {
+    assertSame(fooRecord, fooBarBaz.find(fooRecord.getName(), fooRecord.getNamespace()));
   }
 
   @Test
   public void verifyPutIsIdempotent() {
     ParseContext context = new ParseContext();
-    assertNotEquals(fooRecord, context.resolve(fooRecord.getFullName()));
+    assertNotEquals(fooRecord, context.find(fooRecord.getFullName(), null));
 
     context.put(fooRecord);
-    assertEquals(fooRecord, context.resolve(fooRecord.getFullName()));
+    assertEquals(fooRecord, context.find(fooRecord.getFullName(), null));
 
     context.put(fooRecord);
-    assertEquals(fooRecord, context.resolve(fooRecord.getFullName()));
+    assertEquals(fooRecord, context.find(fooRecord.getFullName(), null));
   }
 
   @Test

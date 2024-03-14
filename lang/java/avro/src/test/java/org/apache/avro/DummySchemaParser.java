@@ -38,7 +38,7 @@ public class DummySchemaParser implements FormattedSchemaParser {
   @Override
   public Schema parse(ParseContext parseContext, URI baseUri, CharSequence formattedSchema)
       throws IOException, SchemaParseException {
-    LOGGER.info("Using DummySchemaParser for {}", formattedSchema);
+    LOGGER.debug("Using DummySchemaParser for {}", formattedSchema);
     if (SCHEMA_TEXT_ONE.contentEquals(formattedSchema)) {
       parseContext.put(FIXED_SCHEMA);
       return FIXED_SCHEMA;
