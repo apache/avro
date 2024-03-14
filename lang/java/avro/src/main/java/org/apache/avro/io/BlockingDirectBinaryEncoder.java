@@ -21,6 +21,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 
 /**
  * An {@link Encoder} for Avro's binary encoding that does not buffer output.
@@ -46,13 +48,13 @@ import java.nio.ByteBuffer;
  * @see Decoder
  */
 public class BlockingDirectBinaryEncoder extends DirectBinaryEncoder {
-  private final BufferOutputStream buffer;
+  private final ArrayList<BufferOutputStream> buffers;
 
-  private OutputStream originalStream;
+  private final ArrayDeque<OutputStream> stashedBuffers;
 
-  private boolean inBlock = false;
+  private int depth = 0;
 
-  private long blockItemCount;
+  private final ArrayDeque<Long> blockItemCounts;
 
   /**
    * Create a writer that sends its output to the underlying stream
@@ -62,24 +64,30 @@ public class BlockingDirectBinaryEncoder extends DirectBinaryEncoder {
    */
   public BlockingDirectBinaryEncoder(OutputStream out) {
     super(out);
-    this.buffer = new BufferOutputStream();
+    this.buffers = new ArrayList<>();
+    this.stashedBuffers = new ArrayDeque<>();
+    this.blockItemCounts = new ArrayDeque<>();
   }
 
   private void startBlock() {
-    if (inBlock) {
-      throw new RuntimeException("Nested Maps/Arrays are not supported by the BlockingDirectBinaryEncoder");
+    stashedBuffers.push(out);
+    if (this.buffers.size() <= depth) {
+      this.buffers.add(new BufferOutputStream());
     }
-    originalStream = out;
-    buffer.reset();
-    out = buffer;
-    inBlock = true;
+    BufferOutputStream buf = buffers.get(depth);
+    buf.reset();
+    this.depth += 1;
+    this.out = buf;
   }
 
   private void endBlock() {
-    if (!inBlock) {
+    if (depth == 0) {
       throw new RuntimeException("Called endBlock, while not buffering a block");
     }
-    out = originalStream;
+    this.depth -= 1;
+    out = stashedBuffers.pop();
+    BufferOutputStream buffer = this.buffers.get(depth);
+    long blockItemCount = blockItemCounts.pop();
     if (blockItemCount > 0) {
       try {
         // Make it negative, so the reader knows that the number of bytes is coming
@@ -90,13 +98,11 @@ public class BlockingDirectBinaryEncoder extends DirectBinaryEncoder {
         throw new RuntimeException(e);
       }
     }
-    inBlock = false;
-    buffer.reset();
   }
 
   @Override
   public void setItemCount(long itemCount) throws IOException {
-    blockItemCount = itemCount;
+    blockItemCounts.push(itemCount);
   }
 
   @Override
