@@ -278,6 +278,8 @@ public class FastReaderBuilder {
       }
     case DO_NOTHING:
       return getReaderForBaseType(action.reader, action.writer);
+    case WRITER_EXTENDS:
+      return createExtendsReader((Resolver.WriterExtends) action);
     case RECORD:
       return createRecordReader((RecordAdjust) action);
     case ENUM:
@@ -411,6 +413,22 @@ public class FastReaderBuilder {
     return reusingReader((reuse, decoder) -> {
       final int selection = decoder.readIndex();
       return unionReaders[selection].read(null, decoder);
+    });
+
+  }
+
+  private FieldReader createExtendsReader(Resolver.WriterExtends action) throws IOException {
+    FieldReader[] childReaders = new FieldReader[action.actions.length];
+    for (int i = 0; i < action.actions.length; i++) {
+      childReaders[i] = getReaderFor(action.actions[i], null);
+    }
+    return createExtendsReader(childReaders);
+  }
+
+  private FieldReader createExtendsReader(FieldReader[] childReaders) {
+    return reusingReader((reuse, decoder) -> {
+      final int selection = decoder.readExtends();
+      return childReaders[selection].read(null, decoder);
     });
 
   }

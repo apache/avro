@@ -464,6 +464,11 @@ public class BinaryDecoder extends Decoder {
     return readInt();
   }
 
+  @Override
+  public int readExtends() throws IOException {
+    return readInt();
+  }
+
   /**
    * Returns true if the current BinaryDecoder is at the end of its source data
    * and cannot read any further without throwing an EOFException or other

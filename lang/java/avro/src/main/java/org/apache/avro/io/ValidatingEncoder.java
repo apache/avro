@@ -36,7 +36,7 @@ import org.apache.avro.util.Utf8;
  * and configure.
  * <p/>
  * ValidatingEncoder is not thread-safe.
- * 
+ *
  * @see Encoder
  * @see EncoderFactory
  */
@@ -60,7 +60,7 @@ public class ValidatingEncoder extends ParsingEncoder implements Parser.ActionHa
 
   /**
    * Reconfigures this ValidatingEncoder to wrap the encoder provided.
-   * 
+   *
    * @param encoder The Encoder to wrap for validation.
    * @return This ValidatingEncoder.
    */
@@ -203,6 +203,14 @@ public class ValidatingEncoder extends ParsingEncoder implements Parser.ActionHa
     Symbol.Alternative top = (Symbol.Alternative) parser.popSymbol();
     parser.pushSymbol(top.getSymbol(unionIndex));
     out.writeIndex(unionIndex);
+  }
+
+  @Override
+  public void writeExtends(int extendsIndex) throws IOException {
+    parser.advance(Symbol.EXTENDS);
+    final Symbol.Alternative top = (Symbol.Alternative) parser.popSymbol();
+    parser.pushSymbol(top.getSymbol(extendsIndex));
+    out.writeExtends(extendsIndex);
   }
 
   @Override

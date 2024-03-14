@@ -336,13 +336,26 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   }
 
   @Override
+  public void writeExtends(int extendedIndex) throws IOException {
+    parser.advance(Symbol.EXTENDS);
+    Symbol.Alternative top = (Symbol.Alternative) parser.popSymbol();
+    Symbol symbol = top.getSymbol(extendedIndex);
+    if (symbol != Symbol.NULL && includeNamespace) {
+      out.writeStartObject();
+      out.writeFieldName(top.getLabel(extendedIndex));
+      parser.pushSymbol(Symbol.EXTENDS_END);
+    }
+    parser.pushSymbol(symbol);
+  }
+
+  @Override
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
     if (top instanceof Symbol.FieldAdjustAction) {
       Symbol.FieldAdjustAction fa = (Symbol.FieldAdjustAction) top;
       out.writeFieldName(fa.fname);
     } else if (top == Symbol.RECORD_START) {
       out.writeStartObject();
-    } else if (top == Symbol.RECORD_END || top == Symbol.UNION_END) {
+    } else if (top == Symbol.RECORD_END || top == Symbol.UNION_END || top == Symbol.EXTENDS_END) {
       out.writeEndObject();
     } else if (top != Symbol.FIELD_END) {
       throw new AvroTypeException("Unknown action symbol " + top);

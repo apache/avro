@@ -20,6 +20,7 @@ package org.apache.avro.io.parsing;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -41,7 +42,7 @@ public class ValidatingGrammarGenerator {
    * given schema <tt>sc</tt>. If there is already an entry for the given schema
    * in the given map <tt>seen</tt> then that entry is returned. Otherwise a new
    * symbol is generated and an entry is inserted into the map.
-   * 
+   *
    * @param sc   The schema for which the start symbol is required
    * @param seen A map of schema to symbol mapping done so far.
    * @return The start symbol for the schema
@@ -77,38 +78,58 @@ public class ValidatingGrammarGenerator {
       LitS wsc = new LitS(sc);
       Symbol rresult = seen.get(wsc);
       if (rresult == null) {
-        Symbol[] production = new Symbol[sc.getFields().size()];
-
-        /**
-         * We construct a symbol without filling the array. Please see
-         * {@link Symbol#production} for the reason.
-         */
-        rresult = Symbol.seq(production);
-        seen.put(wsc, rresult);
-
-        int i = production.length;
-        for (Field f : sc.getFields()) {
-          production[--i] = generate(f.schema(), seen);
+        if (sc.hasChild()) {
+          this.productRecord(sc, seen);
+          final List<Schema> subs = sc.visitHierarchy().collect(Collectors.toList());
+          final Symbol alternatives = alternatives(subs, seen);
+          rresult = Symbol.seq(alternatives, Symbol.EXTENDS);
+          seen.put(wsc, rresult);
+        } else {
+          rresult = this.productRecord(sc, seen);
         }
       }
       return rresult;
     }
     case UNION:
-      List<Schema> subs = sc.getTypes();
-      Symbol[] symbols = new Symbol[subs.size()];
-      String[] labels = new String[subs.size()];
-
-      int i = 0;
-      for (Schema b : sc.getTypes()) {
-        symbols[i] = generate(b, seen);
-        labels[i] = b.getFullName();
-        i++;
-      }
-      return Symbol.seq(Symbol.alt(symbols, labels), Symbol.UNION);
+      final List<Schema> subs = sc.getTypes();
+      final Symbol alternatives = alternatives(subs, seen);
+      return Symbol.seq(alternatives, Symbol.UNION);
 
     default:
       throw new RuntimeException("Unexpected schema type");
     }
+  }
+
+  protected Symbol productRecord(Schema sc, Map<LitS, Symbol> seen) {
+    Symbol[] production = new Symbol[sc.getFields().size()];
+
+    /**
+     * We construct a symbol without filling the array. Please see
+     * {@link Symbol#production} for the reason.
+     */
+    Symbol rresult = Symbol.seq(production);
+    LitS wsc = new LitS(sc);
+    seen.put(wsc, rresult);
+
+    int i = production.length;
+    for (Field f : sc.getFields()) {
+      production[--i] = generate(f.schema(), seen);
+    }
+    return rresult;
+  }
+
+  protected Symbol alternatives(List<Schema> subs, Map<LitS, Symbol> seen) {
+    Symbol[] symbols = new Symbol[subs.size()];
+    String[] labels = new String[subs.size()];
+
+    int i = 0;
+    for (Schema b : subs) {
+
+      symbols[i] = generate(b, seen);
+      labels[i] = b.getFullName();
+      i++;
+    }
+    return Symbol.alt(symbols, labels);
   }
 
   /** A wrapper around Schema that does "==" equality. */

@@ -20,6 +20,7 @@ package org.apache.avro;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.Schema.Field;
@@ -110,6 +111,9 @@ public class Resolver {
         return EnumAdjust.resolve(w, r, d);
 
       case RECORD:
+        if (w.hasChild()) {
+          return WriterExtends.resolve(w, r, d, seen);
+        }
         return RecordAdjust.resolve(w, r, d, seen);
 
       default:
@@ -133,7 +137,8 @@ public class Resolver {
   public static abstract class Action {
     /** Helps us traverse faster. */
     public enum Type {
-      DO_NOTHING, ERROR, PROMOTE, CONTAINER, ENUM, SKIP, RECORD, WRITER_UNION, READER_UNION
+      DO_NOTHING, ERROR, PROMOTE, CONTAINER, ENUM, SKIP, RECORD, WRITER_UNION, READER_UNION, WRITER_EXTENDS,
+      READER_EXTENDS
     }
 
     public final Schema writer, reader;
@@ -797,4 +802,68 @@ public class Resolver {
       throw new IllegalArgumentException("Unknown schema type: " + write.getType());
     }
   }
+
+  public static class WriterExtends extends Action {
+    public final Action[] actions;
+
+    private WriterExtends(Schema w, Schema r, GenericData d, Action[] a) {
+      super(w, r, d, Type.WRITER_EXTENDS);
+      actions = a;
+    }
+
+    public static Action resolve(Schema writeSchema, Schema readSchema, GenericData data, Map<SeenPair, Action> seen) {
+
+      final Action[] actions = writeSchema.visitHierarchy()
+          .map((Schema schema) -> RecordAdjust.resolve(schema, schema, data, seen)).toArray(Action[]::new);
+      return new WriterExtends(writeSchema, readSchema, data, actions);
+    }
+  }
+
+  /**
+   * In this case, the reader is a union and the writer is not. For this case, we
+   * need to pick the first branch of the reader that matches the writer and
+   * pretend to the reader that the index of this branch was found in the writer's
+   * data stream.
+   *
+   * To support this case, the {@link ReaderUnion} object has two (public) fields:
+   * <tt>firstMatch</tt> gives the index of the first matching branch in the
+   * reader's schema, and <tt>actualResolution</tt> is the {@link Action} that
+   * resolves the writer's schema with the schema found in the <tt>firstMatch</tt>
+   * branch of the reader's schema.
+   */
+  public static class ReaderExtends extends Action {
+    public final Schema firstMatch;
+    public final Action actualAction;
+
+    public ReaderExtends(Schema w, Schema r, GenericData d, Schema firstMatch, Action actual) {
+      super(w, r, d, Action.Type.READER_EXTENDS);
+      this.firstMatch = firstMatch;
+      this.actualAction = actual;
+    }
+
+    /**
+     * Returns a {@link ReaderUnion} action for resolving <tt>w</tt> and <tt>r</tt>,
+     * or an {@link ErrorAction} if there is no branch in the reader that matches
+     * the writer.
+     *
+     * @throws RuntimeException if <tt>r</tt> is not a union schema or <tt>w</tt>
+     *                          <em>is</em> a union schema
+     */
+    public static Action resolve(Schema w, Schema r, GenericData d, Map<SeenPair, Action> seen) {
+      if (w.getType() == Schema.Type.RECORD) {
+        throw new IllegalArgumentException("Writer schema is not Record.");
+      }
+      Schema schema = firstMatchingChild(w, r);
+      if (schema != null) {
+        return new ReaderExtends(w, r, d, schema, Resolver.resolve(w, schema, d, seen));
+      }
+      return new ErrorAction(w, r, d, ErrorType.NO_MATCHING_BRANCH);
+    }
+
+    private static Schema firstMatchingChild(Schema w, Schema r) {
+      return r.visitHierarchy().filter((Schema rs) -> Objects.equals(rs.getFullName(), w.getFullName())).findFirst()
+          .orElse(null);
+    }
+  }
+
 }

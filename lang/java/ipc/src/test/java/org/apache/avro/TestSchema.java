@@ -52,6 +52,9 @@ import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+
 public class TestSchema {
 
   @TempDir
@@ -201,6 +204,26 @@ public class TestSchema {
     checkParseError("{\"type\":\"record\",\"name\":\"X\",\"fields\":[" + "{\"name\":\"1f\",\"type\":\"int\"}]}");
     checkParseError("{\"type\":\"record\",\"name\":\"X\",\"fields\":[" + "{\"name\":\"f$\",\"type\":\"int\"}]}");
     checkParseError("{\"type\":\"record\",\"name\":\"X\",\"fields\":[" + "{\"name\":\"f.g\",\"type\":\"int\"}]}");
+  }
+
+  @Test
+  void extendedRecord() throws IOException {
+    String recordJsonParent = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
+        + "[{\"name\":\"f\", \"type\":\"long\", \"foo\":\"bar\"}]}";
+
+    String recordJson = "{\"type\":\"record: Test\", \"name\":\"Child\", \"fields\":"
+        + "[{\"name\":\"f1\", \"type\":\"string\", \"foo1\":\"bar1\"}]}";
+
+    final JsonNode jsonParent = Schema.MAPPER.readTree(recordJsonParent.getBytes(StandardCharsets.UTF_8));
+    final JsonNode jsonSchema = Schema.MAPPER.readTree(recordJson.getBytes(StandardCharsets.UTF_8));
+    Schema.Names names = new Schema.Names();
+
+    Schema.parse(jsonParent, names);
+    Schema schema = Schema.parse(jsonSchema, names);
+    assertEquals(Type.RECORD, schema.getType());
+    assertEquals(Type.LONG, schema.getField("f").schema().getType());
+    assertEquals(Type.STRING, schema.getField("f1").schema().getType());
+    assertEquals("org.apache.avro.Schema$ExtendedRecordSchema", schema.getClass().getName());
   }
 
   @Test
