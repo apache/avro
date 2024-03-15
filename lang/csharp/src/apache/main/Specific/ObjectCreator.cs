@@ -125,6 +125,10 @@ namespace Avro.Specific
                                     break;
                                 }
                             }
+                            if (type != null)
+                            {
+                                break;
+                            }
                         }
                         catch
                         {
