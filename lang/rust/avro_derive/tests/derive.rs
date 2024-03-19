@@ -1571,4 +1571,28 @@ mod test_derive {
             panic!("Unexpected schema type for {derived_schema:?}")
         }
     }
+
+    #[test]
+    fn avro_3962_fields_documentation() {
+        /// Foo docs
+        #[derive(AvroSchema)]
+        #[allow(dead_code)]
+        struct Foo {
+            /// a's Rustdoc
+            a: i32,
+            /// b's Rustdoc
+            #[avro(doc = "attribute doc has priority over Rustdoc")]
+            b: i32,
+        }
+
+        if let Schema::Record(RecordSchema { fields, .. }) = Foo::get_schema() {
+            assert_eq!(fields[0].doc, Some("a's Rustdoc".to_string()));
+            assert_eq!(
+                fields[1].doc,
+                Some("attribute doc has priority over Rustdoc".to_string())
+            );
+        } else {
+            panic!("Unexpected schema type for Foo")
+        }
+    }
 }
