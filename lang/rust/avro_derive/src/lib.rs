@@ -126,7 +126,8 @@ fn get_data_struct_schema_def(
                 }
                 let field_attrs =
                     FieldOptions::from_attributes(&field.attrs[..]).map_err(darling_to_syn)?;
-                let doc = preserve_optional(field_attrs.doc);
+                let doc =
+                    preserve_optional(field_attrs.doc.or_else(|| extract_outer_doc(&field.attrs)));
                 if let Some(rename) = field_attrs.rename {
                     name = rename
                 }
