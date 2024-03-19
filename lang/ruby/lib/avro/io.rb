@@ -75,7 +75,7 @@ module Avro
       def read_float
         # A float is written as 4 bytes.
         # The float is converted into a 32-bit integer using a method
-        # equivalent to Java's floatToIntBits and then encoded in
+        # equivalent to Java's floatToRawIntBits and then encoded in
         # little-endian format.
         read_and_unpack(4, 'e')
       end
@@ -83,7 +83,7 @@ module Avro
       def read_double
         #  A double is written as 8 bytes.
         # The double is converted into a 64-bit integer using a method
-        # equivalent to Java's doubleToLongBits and then encoded in
+        # equivalent to Java's doubleToRawLongBits and then encoded in
         # little-endian format.
         read_and_unpack(8, 'E')
       end
@@ -203,7 +203,7 @@ module Avro
 
       # A float is written as 4 bytes.
       # The float is converted into a 32-bit integer using a method
-      # equivalent to Java's floatToIntBits and then encoded in
+      # equivalent to Java's floatToRawIntBits and then encoded in
       # little-endian format.
       def write_float(datum)
         @writer.write([datum].pack('e'))
@@ -211,7 +211,7 @@ module Avro
 
       # A double is written as 8 bytes.
       # The double is converted into a 64-bit integer using a method
-      # equivalent to Java's doubleToLongBits and then encoded in
+      # equivalent to Java's doubleToRawLongBits and then encoded in
       # little-endian format.
       def write_double(datum)
         @writer.write([datum].pack('E'))
