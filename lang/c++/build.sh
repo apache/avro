@@ -86,14 +86,17 @@ case "$target" in
     (cmake -S. -Bbuild -D CMAKE_BUILD_TYPE=Debug -D AVRO_ADD_PROTECTOR_FLAGS=1 && cmake --build build \
       && ./build/buffertest \
       && ./build/unittest \
-      && ./build/CodecTests \
-      && ./build/CompilerTests \
-      && ./build/StreamTests \
-      && ./build/SpecificTests \
+      && ./build/AvrogencppTestReservedWords \
       && ./build/AvrogencppTests \
+      && ./build/CodecTests \
+      && ./build/CommonsSchemasTests \
+      && ./build/CompilerTests \
       && ./build/DataFileTests   \
-      && ./build/SchemaTests   \
-      && ./build/CommonsSchemasTests)
+      && ./build/JsonTests \
+      && ./build/LargeSchemaTests \
+      && ./build/SchemaTests \
+      && ./build/SpecificTests \
+      && ./build/StreamTests)
     ;;
 
   xcode-test)
