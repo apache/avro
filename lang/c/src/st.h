@@ -18,7 +18,9 @@ extern "C" {
 
 #include <avro/platform.h>		/* for uintptr_t */
 
+#ifdef __GNUC__
 #pragma GCC visibility push(hidden)
+#endif
 
 #ifndef ANYARGS
  #ifdef __cplusplus
@@ -81,7 +83,9 @@ st_table *st_copy _((st_table *));
 
 int st_strhash();
 
+#ifdef __GNUC__
 #pragma GCC visibility pop
+#endif
 
 CLOSE_EXTERN
 #endif				/* ST_INCLUDED */
