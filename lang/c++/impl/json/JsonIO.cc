@@ -316,10 +316,17 @@ JsonParser::Token JsonParser::tryString() {
 
 string JsonParser::decodeString(const string &s, bool binary) {
     string result;
-    for (string::const_iterator it = s.begin(); it != s.end(); ++it) {
-        char ch = *it;
+    const auto readNextByte = [](string::const_iterator &it, const string::const_iterator &end) -> char {
+        if (it == end)
+            throw Exception("Unexpected EOF");
+        return *it++;
+    };
+    auto it = s.cbegin();
+    const auto end = s.cend();
+    while (it != end) {
+        char ch = *it++;
         if (ch == '\\') {
-            ch = *++it;
+            ch = readNextByte(it, end);
             switch (ch) {
                 case '"':
                 case '\\':
@@ -347,7 +354,7 @@ string JsonParser::decodeString(const string &s, bool binary) {
                     char e[4];
                     for (char &i : e) {
                         n *= 16;
-                        char c = *++it;
+                        char c = readNextByte(it, end);
                         i = c;
                         if (isdigit(c)) {
                             n += c - '0';
