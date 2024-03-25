@@ -676,7 +676,7 @@ mod tests {
         record2.put("a", 42i64);
         record2.put("b", "bar");
 
-        let expected = vec![record1.into(), record2.into()];
+        let expected = [record1.into(), record2.into()];
 
         for (i, value) in reader.enumerate() {
             assert_eq!(value?, expected[i]);
