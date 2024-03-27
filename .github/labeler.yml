@@ -27,6 +27,9 @@ C++:
 C#: 
   - changed-files:
     - any-glob-to-any-file: "lang/csharp/**/*"
+Common Lisp: 
+  - changed-files:
+    - any-glob-to-any-file: "lang/common-lisp/**/*"
 Java: 
   - changed-files:
     - any-glob-to-any-file: "lang/java/**/*"
