@@ -550,11 +550,10 @@ public class TestGenericData {
   }
 
   @Test
-  void toStringEscapesControlCharsInBytes() throws Exception {
+  void toStringWritesBytesAsUEscapedSequence() throws Exception {
     GenericData data = GenericData.get();
     ByteBuffer bytes = ByteBuffer.wrap(new byte[] { 'a', '\n', 'b' });
-    assertEquals("\"a\\nb\"", data.toString(bytes));
-    assertEquals("\"a\\nb\"", data.toString(bytes));
+    assertEquals("\"\\u0061\\u000A\\u0062\"", data.toString(bytes));
   }
 
   @Test

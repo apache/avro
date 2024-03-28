@@ -21,7 +21,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.time.temporal.Temporal;
 import java.util.AbstractList;
 import java.util.Arrays;
@@ -744,7 +743,7 @@ public class GenericData {
     } else if (isBytes(datum)) {
       buffer.append("\"");
       ByteBuffer bytes = ((ByteBuffer) datum).duplicate();
-      writeEscapedString(StandardCharsets.ISO_8859_1.decode(bytes), buffer);
+      writeBytesAsJsonString(bytes, buffer);
       buffer.append("\"");
     } else if (isNanOrInfinity(datum) || isTemporal(datum) || datum instanceof UUID) {
       buffer.append("\"");
@@ -770,6 +769,20 @@ public class GenericData {
   private boolean isNanOrInfinity(Object datum) {
     return ((datum instanceof Float) && (((Float) datum).isInfinite() || ((Float) datum).isNaN()))
         || ((datum instanceof Double) && (((Double) datum).isInfinite() || ((Double) datum).isNaN()));
+  }
+
+  private static void writeBytesAsJsonString(ByteBuffer buffer, StringBuilder builder) {
+    byte[] bytes = new byte[buffer.remaining()];
+    buffer.get(bytes);
+
+    for (byte b : bytes) {
+      String hex = Integer.toHexString(b);
+
+      builder.append("\\u");
+      for (int j = 0; j < 4 - hex.length(); j++)
+        builder.append('0');
+      builder.append(hex.toUpperCase());
+    }
   }
 
   /* Adapted from https://code.google.com/p/json-simple */

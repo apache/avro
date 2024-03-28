@@ -18,7 +18,6 @@
 package org.apache.avro;
 
 import java.io.IOException;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -31,7 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
@@ -2414,11 +2412,12 @@ public class SchemaBuilder {
 
     /**
      * Completes this field with the default value provided, cannot be null. The
-     * string is interpreted as a byte[], with each character code point value
-     * equalling the byte value, as in the Avro spec JSON default.
+     * string is interpreted as a byte[] (in ISO_8859_1 encoding), with each
+     * character code point value equalling the byte value, as in the Avro spec JSON
+     * default.
      **/
     public final FieldAssembler<R> bytesDefault(String defaultVal) {
-      return super.usingDefault(defaultVal);
+      return super.usingDefault(defaultVal.getBytes(StandardCharsets.ISO_8859_1));
     }
 
     @Override
@@ -2496,11 +2495,12 @@ public class SchemaBuilder {
 
     /**
      * Completes this field with the default value provided, cannot be null. The
-     * string is interpreted as a byte[], with each character code point value
-     * equalling the byte value, as in the Avro spec JSON default.
+     * string is interpreted as a byte[] (in ISO_8859_1 encoding), with each
+     * character code point value equalling the byte value, as in the Avro spec JSON
+     * default.
      **/
     public final FieldAssembler<R> fixedDefault(String defaultVal) {
-      return super.usingDefault(defaultVal);
+      return this.fixedDefault(defaultVal.getBytes(StandardCharsets.ISO_8859_1));
     }
 
     @Override
@@ -2715,26 +2715,11 @@ public class SchemaBuilder {
   // create default value JsonNodes from objects
   private static JsonNode toJsonNode(Object o) {
     try {
-      String s;
-      if (o instanceof ByteBuffer) {
-        // special case since GenericData.toString() is incorrect for bytes
-        // note that this does not handle the case of a default value with nested bytes
-        ByteBuffer bytes = ((ByteBuffer) o);
-        ((Buffer) bytes).mark();
-        byte[] data = new byte[bytes.remaining()];
-        bytes.get(data);
-        ((Buffer) bytes).reset(); // put the buffer back the way we got it
-        s = new String(data, StandardCharsets.ISO_8859_1);
-        char[] quoted = JsonStringEncoder.getInstance().quoteAsString(s);
-        s = "\"" + new String(quoted) + "\"";
-      } else if (o instanceof byte[]) {
-        s = new String((byte[]) o, StandardCharsets.ISO_8859_1);
-        char[] quoted = JsonStringEncoder.getInstance().quoteAsString(s);
-        s = '\"' + new String(quoted) + '\"';
-      } else {
-        s = GenericData.get().toString(o);
+      if (o instanceof byte[]) {
+        o = ByteBuffer.wrap((byte[]) o);
       }
-      return new ObjectMapper().readTree(s);
+
+      return new ObjectMapper().readTree(GenericData.get().toString(o));
     } catch (IOException e) {
       throw new SchemaBuilderException(e);
     }
