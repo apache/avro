@@ -1,0 +1,26 @@
+{
+   "namespace":"com.example",
+   "type":"record",
+   "name":"BuggyRecordWorkaround",
+   "fields":[
+      {
+         "name":"my_mandatory_date",
+         "type":{
+            "type":"long",
+            "logicalType":"timestamp-millis"
+         },
+         "default":1502250227187
+      },
+      {
+         "name":"my_optional_date",
+         "type":[
+            "null",
+            {
+               "type":"long",
+               "logicalType":"timestamp-millis"
+            }
+         ],
+         "default":null
+      }
+   ]
+}

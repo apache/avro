@@ -1,0 +1,92 @@
+# See https://docs.gradle.org/current/userguide/compatibility.html
+name: Java Compatibility Tests
+on: [push, pull_request]
+jobs:
+  java8-12:
+    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
+    runs-on: "ubuntu-latest"
+    strategy:
+      matrix:
+        avro: ["1.11.0"]
+        gradle: ["5.1", "7.6"]
+        java: ["8", "11"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: "zulu"
+          java-version: ${{ matrix.java }}
+      - uses: gradle/gradle-build-action@v2
+        with:
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+  java17:
+    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
+    runs-on: "ubuntu-latest"
+    strategy:
+      matrix:
+        avro: ["1.11.0"]
+        gradle: ["7.3", "7.6"] # See here for latest versions: https://services.gradle.org/versions/
+        java: ["17"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: "zulu"
+          java-version: ${{ matrix.java }}
+      - uses: gradle/gradle-build-action@v2
+        with:
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+  java18:
+    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
+    runs-on: "ubuntu-latest"
+    strategy:
+      matrix:
+        avro: ["1.11.0"]
+        gradle: ["7.5", "7.6"] # See here for latest versions: https://services.gradle.org/versions/
+        java: ["18"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: "zulu"
+          java-version: ${{ matrix.java }}
+      - uses: gradle/gradle-build-action@v2
+        with:
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+  java-19:
+    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
+    runs-on: "ubuntu-latest"
+    strategy:
+      matrix:
+        avro: ["1.11.0"]
+        gradle: ["7.6"] # See here for latest versions: https://services.gradle.org/versions/
+        java: ["19"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: "zulu"
+          java-version: ${{ matrix.java }}
+      - uses: gradle/gradle-build-action@v2
+        continue-on-error: true
+        with:
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+  java-ea:
+    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
+    runs-on: "ubuntu-latest"
+    strategy:
+      matrix:
+        avro: ["1.11.0"]
+        gradle: ["7.6"] # See here for latest versions: https://services.gradle.org/versions/
+        java: ["20-ea"]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: "zulu"
+          java-version: ${{ matrix.java }}
+      - uses: gradle/gradle-build-action@v2
+        continue-on-error: true
+        with:
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
