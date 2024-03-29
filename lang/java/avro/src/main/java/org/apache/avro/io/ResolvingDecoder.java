@@ -287,6 +287,22 @@ public class ResolvingDecoder extends ValidatingDecoder {
   }
 
   @Override
+  public int readExtends() throws IOException {
+    parser.advance(Symbol.EXTENDS);
+    Symbol top = parser.popSymbol();
+    final int result;
+    if (top instanceof Symbol.UnionAdjustAction) {
+      result = ((Symbol.UnionAdjustAction) top).rindex;
+      top = ((Symbol.UnionAdjustAction) top).symToParse;
+    } else {
+      result = in.readExtends();
+      top = ((Symbol.Alternative) top).getSymbol(result);
+    }
+    parser.pushSymbol(top);
+    return result;
+  }
+
+  @Override
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
     if (top instanceof Symbol.FieldOrderAction) {
       return input == Symbol.FIELD_ACTION ? top : null;

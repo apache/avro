@@ -33,11 +33,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -52,9 +54,9 @@ public class TestValidatingIO {
 
   @ParameterizedTest
   @MethodSource("data")
-  public void testMain(Encoding enc, int skip, String js, String cls) throws IOException {
+  public void testMain(Encoding enc, int skip, Schema js, String cls) throws IOException {
     for (int i = 0; i < COUNT; i++) {
-      testOnce(new Schema.Parser().parse(js), cls, skip, enc);
+      testOnce(js, cls, skip, enc);
     }
   }
 
@@ -141,6 +143,11 @@ public class TestValidatingIO {
         double d = (Double) values[p++];
         vw.writeDouble(d);
         break;
+      case 'E': {
+        int index = extractInt(cs);
+        vw.writeExtends(index);
+        break;
+      }
       case 'S': {
         extractInt(cs);
         String s = (String) values[p++];
@@ -209,6 +216,9 @@ public class TestValidatingIO {
       switch (c) {
       case 'N':
         break;
+      case 'E':
+        extractInt(cs);
+        break;
       case 'B':
         result.add(r.nextBoolean());
         break;
@@ -261,6 +271,17 @@ public class TestValidatingIO {
       }
     }
     return r;
+  }
+
+  private static String extractString(InputScanner sc, int size) {
+    final char[] values = new char[size];
+    int pos = 0;
+    while (!sc.isDone() && pos < size) {
+      values[pos] = sc.cur();
+      sc.next();
+      pos++;
+    }
+    return new String(values);
   }
 
   private static byte[] nextBytes(Random r, int length) {
@@ -379,6 +400,11 @@ public class TestValidatingIO {
           }
         }
           break;
+        case 'E': {
+          extractInt(cs);
+          vi.readExtends();
+        }
+          break;
         case 'e': {
           int e = extractInt(cs);
           if (level == skipLevel) {
@@ -482,6 +508,7 @@ public class TestValidatingIO {
       case 'B':
       case 'I':
       case 'L':
+      case 'E':
       case 'F':
       case 'D':
       case 'S':
@@ -593,7 +620,7 @@ public class TestValidatingIO {
      * - Enum and its value [ Start array ] End array { Start map } End map s start
      * item
      */
-    return new Object[][] { { "\"null\"", "N" }, { "\"boolean\"", "B" }, { "\"int\"", "I" }, { "\"long\"", "L" },
+    Object[][] values = { { "\"null\"", "N" }, { "\"boolean\"", "B" }, { "\"int\"", "I" }, { "\"long\"", "L" },
         { "\"float\"", "F" }, { "\"double\"", "D" }, { "\"string\"", "S0" }, { "\"string\"", "S10" },
         { "\"bytes\"", "b0" }, { "\"bytes\"", "b10" }, { "{\"type\":\"fixed\", \"name\":\"fi\", \"size\": 1}", "f1" },
         { "{\"type\":\"fixed\", \"name\":\"fi\", \"size\": 10}", "f10" },
@@ -710,6 +737,22 @@ public class TestValidatingIO {
             "[c1s[c1s[c1s[c1s[c1s[c1s[c1s[c1s[c1s[c1s[c1s[]]]]]]]]]]]]" },
 
     };
+
+    // Add extended record
+    Schema root = Schema.createRecord("root", "doc", "space", false);
+    Schema.Field field = new Schema.Field("value", Schema.create(Schema.Type.STRING), "doc");
+    root.setFields(Arrays.asList(field));
+
+    Schema child = Schema.createRecord(root, "child", "doc", "space", false);
+    Schema.Field childField = new Schema.Field("valueField", Schema.create(Schema.Type.STRING), "doc");
+    child.setFields(Arrays.asList(childField));
+
+    final Stream<Object[]> stream = Arrays.stream(values).sequential()
+        .map((Object[] input) -> new Object[] { new Schema.Parser().parse((String) (input[0])), input[1] });
+
+    final Stream<Object[]> extendedRecordTest = Stream.of(new Object[][] { { root, "E1S10S10" }, { root, "E0S10" } });
+
+    return Stream.concat(stream, extendedRecordTest).collect(Collectors.toList()).toArray(new Object[][] {});
   }
 
   static void dump(byte[] bb) {
