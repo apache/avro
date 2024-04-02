@@ -314,11 +314,37 @@ JsonParser::Token JsonParser::tryString() {
     }
 }
 
+static string::const_iterator unicodeParse(string::const_iterator b, string::const_iterator e, uint32_t &n) {
+    string::const_iterator start = b;
+    for (int i = 0; i < 4; i++) {
+        ++b;
+        if (b == e) {
+            throw Exception(boost::format(
+                                "Invalid unicode escape: %1%") % string(start, b));
+        }
+        n *= 16;
+        char c = *b;
+        if (isdigit(c)) {
+            n += c - '0';
+        } else if (c >= 'a' && c <= 'f') {
+            n += c - 'a' + 10;
+        } else if (c >= 'A' && c <= 'F') {
+            n += c - 'A' + 10;
+        } else {
+            throw Exception(boost::format( "Invalid hex character: %1%") % c);
+        }
+    }
+    return b;
+}
+
+// Decode the given string and return contents as UTF8-encoded bytes.
+// The input does not have the enclosing double-quotes.
 string JsonParser::decodeString(const string &s, bool binary) {
     string result;
     for (string::const_iterator it = s.begin(); it != s.end(); ++it) {
         char ch = *it;
         if (ch == '\\') {
+            string::const_iterator startSeq = it;
             ch = *++it;
             switch (ch) {
                 case '"':
@@ -344,28 +370,48 @@ string JsonParser::decodeString(const string &s, bool binary) {
                 case 'u':
                 case 'U': {
                     uint32_t n = 0;
-                    char e[4];
-                    for (char &i : e) {
-                        n *= 16;
-                        char c = *++it;
-                        i = c;
-                        if (isdigit(c)) {
-                            n += c - '0';
-                        } else if (c >= 'a' && c <= 'f') {
-                            n += c - 'a' + 10;
-                        } else if (c >= 'A' && c <= 'F') {
-                            n += c - 'A' + 10;
-                        }
-                    }
+                    it = unicodeParse(it, s.end(), n);
                     if (binary) {
                         if (n > 0xff) {
                             throw Exception(boost::format(
                                                 "Invalid byte for binary: %1%%2%")
-                                            % ch % string(e, 4));
+                                            % ch % string(startSeq, ++it));
                         } else {
                             result.push_back(n);
                             continue;
                         }
+                    }
+                    if (n >= 0xd800) {
+                        ++it;
+                        if (n > 0xdbff || it == s.end()) {
+                            throw Exception(boost::format(
+                                                "Invalid unicode sequence: %1%")
+                                            % string(startSeq, it));
+                        }
+                        if (*it != '\\') {
+                            throw Exception(boost::format(
+                                                "Invalid unicode sequence: %1%")
+                                            % string(startSeq, ++it));
+                        }
+                        ++it;
+                        if (it == s.end()) {
+                            throw Exception(boost::format(
+                                                "Invalid unicode sequence: %1%")
+                                            % string(startSeq, it));
+                        }
+                        if (*it != 'u' && *it != 'U') {
+                            throw Exception(boost::format(
+                                                "Invalid unicode sequence: %1%")
+                                            % string(startSeq, ++it));
+                        }
+                        uint32_t m = 0;
+                        it = unicodeParse(it, s.end(), m);
+                        if (m < 0xdc00 || m > 0xdfff) {
+                            throw Exception(boost::format(
+                                                "Invalid unicode sequence: %1%")
+                                            % string(startSeq, ++it));
+                        }
+                        n = 0x10000 + (((n - 0xd800) << 10) | (m - 0xdc00));
                     }
                     if (n < 0x80) {
                         result.push_back(n);
@@ -376,15 +422,15 @@ string JsonParser::decodeString(const string &s, bool binary) {
                         result.push_back((n >> 12) | 0xe0);
                         result.push_back(((n >> 6) & 0x3f) | 0x80);
                         result.push_back((n & 0x3f) | 0x80);
-                    } else if (n < 110000) {
+                    } else if (n < 0x110000) {
                         result.push_back((n >> 18) | 0xf0);
                         result.push_back(((n >> 12) & 0x3f) | 0x80);
                         result.push_back(((n >> 6) & 0x3f) | 0x80);
                         result.push_back((n & 0x3f) | 0x80);
                     } else {
                         throw Exception(boost::format(
-                                            "Invalid unicode value: %1%i%2%")
-                                        % ch % string(e, 4));
+                                            "Invalid unicode value: %1%%2%")
+                                        % n % string(startSeq, ++it));
                     }
                 }
                     continue;
