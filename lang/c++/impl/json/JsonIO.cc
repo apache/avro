@@ -339,7 +339,7 @@ string JsonParser::decodeString(const string &s, bool binary) {
             } else if (c >= 'A' && c <= 'F') {
                 n += c - 'A' + 10;
             } else {
-                throw Exception(boost::format( "Invalid hex character: %1%") % c);
+                throw Exception("Invalid hex character: {}", c);
             }
         }
         return n;
@@ -375,9 +375,7 @@ string JsonParser::decodeString(const string &s, bool binary) {
                     uint32_t n = unicodeParse();
                     if (binary) {
                         if (n > 0xff) {
-                            throw Exception(boost::format(
-                                                "Invalid byte for binary: %1%%2%")
-                                            % ch % string(startSeq, ++it));
+                            throw Exception("Invalid byte for binary: {}{}", ch, string(startSeq, ++it));
                         } else {
                             result.push_back(n);
                             continue;
@@ -386,27 +384,19 @@ string JsonParser::decodeString(const string &s, bool binary) {
                     if (n >= 0xd800 && n < 0xdc00) {
                         ch = readNextByte();
                         if (ch != '\\') {
-                            throw Exception(boost::format(
-                                                "Invalid unicode sequence: %1%")
-                                            % string(startSeq, it));
+                            throw Exception("Invalid unicode sequence: {}", string(startSeq, it));
                         }
                         ch = readNextByte();
                         if (ch != 'u' && ch != 'U') {
-                            throw Exception(boost::format(
-                                                "Invalid unicode sequence: %1%")
-                                            % string(startSeq, it));
+                            throw Exception("Invalid unicode sequence: {}", string(startSeq, it));
                         }
                         uint32_t m = unicodeParse();
                         if (m < 0xdc00 || m > 0xdfff) {
-                            throw Exception(boost::format(
-                                                "Invalid unicode sequence: %1%")
-                                            % string(startSeq, it));
+                            throw Exception("Invalid unicode sequence: {}", string(startSeq, it));
                         }
                         n = 0x10000 + (((n - 0xd800) << 10) | (m - 0xdc00));
                     } else if (n >= 0xdc00 && n < 0xdfff) {
-                        throw Exception(boost::format(
-                                            "Invalid unicode sequence: %1%")
-                                        % string(startSeq, it));
+                        throw Exception("Invalid unicode sequence: {}", string(startSeq, it));
                     }
                     if (n < 0x80) {
                         result.push_back(n);
@@ -423,9 +413,7 @@ string JsonParser::decodeString(const string &s, bool binary) {
                         result.push_back(((n >> 6) & 0x3f) | 0x80);
                         result.push_back((n & 0x3f) | 0x80);
                     } else {
-                        throw Exception(boost::format(
-                                            "Invalid unicode value: %1%%2%")
-                                        % n % string(startSeq, ++it));
+                        throw Exception("Invalid unicode value: {}{}", n, string(startSeq, ++it));
                     }
                 }
                     continue;

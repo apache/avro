@@ -482,13 +482,13 @@ NodeRecord::NodeRecord(const HasName &name, const HasDoc &doc, const MultiLeaves
 
     for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
         if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
-            throw Exception(boost::format("Cannot add duplicate field: %1%") % leafNameAttributes_.get(i));
+            throw Exception("Cannot add duplicate field: {}", leafNameAttributes_.get(i));
         }
 
         if (!fieldsAliases_.empty()) {
             for (const auto &alias : fieldsAliases_[i]) {
                 if (!nameIndex_.add(alias, i)) {
-                    throw Exception(boost::format("Cannot add duplicate field: %1%") % alias);
+                    throw Exception("Cannot add duplicate field: {}", alias);
                 }
             }
         }

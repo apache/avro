@@ -77,6 +77,7 @@ endif ()
 
 find_package (Boost 1.38 REQUIRED
     COMPONENTS filesystem iostreams program_options regex system)
+find_package(fmt REQUIRED)
 
 find_package(Snappy)
 if (SNAPPY_FOUND)
@@ -121,6 +122,7 @@ set_property (TARGET avrocpp
 
 add_library (avrocpp_s STATIC ${AVRO_SOURCE_FILES})
 target_include_directories(avrocpp_s PRIVATE ${SNAPPY_INCLUDE_DIR})
+target_link_libraries(avrocpp_s fmt::fmt-header-only)
 
 set_property (TARGET avrocpp avrocpp_s
     APPEND PROPERTY COMPILE_DEFINITIONS AVRO_SOURCE)
@@ -131,7 +133,7 @@ set_target_properties (avrocpp PROPERTIES
 set_target_properties (avrocpp_s PROPERTIES
     VERSION ${AVRO_VERSION_MAJOR}.${AVRO_VERSION_MINOR}.${AVRO_VERSION_PATCH})
 
-target_link_libraries (avrocpp ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
+target_link_libraries (avrocpp ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES} fmt::fmt)
 target_include_directories(avrocpp PRIVATE ${SNAPPY_INCLUDE_DIR})
 
 add_executable (precompile test/precompile.cc)

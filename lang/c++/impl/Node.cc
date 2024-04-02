@@ -149,11 +149,10 @@ void Node::setLogicalType(LogicalType logicalType) {
                 long maxPrecision = floor(log10(2.0) * (8.0 * fixedSize() - 1));
                 if (logicalType.precision() > maxPrecision) {
                     throw Exception(
-                        boost::format(
-                            "DECIMAL precision %1% is too large for the "
-                            "FIXED type of size %2%, precision cannot be "
-                            "larger than %3%")
-                        % logicalType.precision() % fixedSize() % maxPrecision);
+                            "DECIMAL precision {} is too large for the "
+                            "FIXED type of size {}, precision cannot be "
+                            "larger than {}",
+                            logicalType.precision(), fixedSize(), maxPrecision);
                 }
             }
             if (logicalType.scale() > logicalType.precision()) {
