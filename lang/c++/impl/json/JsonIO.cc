@@ -383,12 +383,7 @@ string JsonParser::decodeString(const string &s, bool binary) {
                             continue;
                         }
                     }
-                    if (n >= 0xd800) {
-                        if (n > 0xdbff) {
-                            throw Exception(boost::format(
-                                                "Invalid unicode sequence: %1%")
-                                            % string(startSeq, it));
-                        }
+                    if (n >= 0xd800 && n < 0xdc00) {
                         ch = readNextByte();
                         if (ch != '\\') {
                             throw Exception(boost::format(
