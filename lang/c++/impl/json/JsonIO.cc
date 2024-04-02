@@ -345,10 +345,10 @@ string JsonParser::decodeString(const string &s, bool binary) {
         return n;
     };
     while (it != end) {
+        string::const_iterator startSeq = it;
         char ch = readNextByte();
         if (ch == '\\') {
             ch = readNextByte();
-            string::const_iterator startSeq = it;
             switch (ch) {
                 case '"':
                 case '\\':
