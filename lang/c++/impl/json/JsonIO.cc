@@ -403,6 +403,10 @@ string JsonParser::decodeString(const string &s, bool binary) {
                                             % string(startSeq, it));
                         }
                         n = 0x10000 + (((n - 0xd800) << 10) | (m - 0xdc00));
+                    } else if (n >= 0xdc00 && n < 0xdfff) {
+                        throw Exception(boost::format(
+                                            "Invalid unicode sequence: %1%")
+                                        % string(startSeq, it));
                     }
                     if (n < 0x80) {
                         result.push_back(n);
