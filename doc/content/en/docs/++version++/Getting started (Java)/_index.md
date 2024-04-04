@@ -212,7 +212,7 @@ Let's go over the same example as in the previous section, but without using cod
 First, we use a SchemaParser to read our schema definition and create a Schema object.
 
 ```java
-Schema schema = new SchemaParser().parse(new File("user.avsc"));
+Schema schema = new SchemaParser().parse(new File("user.avsc")).mainSchema();
 ```
 
 Using this schema, let's create some users.

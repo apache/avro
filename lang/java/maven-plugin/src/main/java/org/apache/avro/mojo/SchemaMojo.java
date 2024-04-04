@@ -20,6 +20,7 @@ package org.apache.avro.mojo;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
+import org.apache.avro.SchemaParser;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import java.io.File;
@@ -42,7 +43,7 @@ public class SchemaMojo extends AbstractAvroMojo {
    * A parser used to parse all schema files. Using a common parser will
    * facilitate the import of external schemas.
    */
-  private Schema.Parser schemaParser = new Schema.Parser();
+  private SchemaParser schemaParser = new SchemaParser();
 
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
@@ -76,11 +77,11 @@ public class SchemaMojo extends AbstractAvroMojo {
       // no imported files then isolate the schemas from each other, otherwise
       // allow them to share a single schema so reuse and sharing of schema
       // is possible.
-      if (imports == null) {
-        schemas = new Schema.Parser().parse(sourceFiles);
-      } else {
-        schemas = schemaParser.parse(sourceFiles);
+      SchemaParser parser = imports == null ? new SchemaParser() : schemaParser;
+      for (File sourceFile : sourceFiles) {
+        parser.parse(sourceFile);
       }
+      schemas = parser.getParsedNamedSchemas();
 
       doCompile(sourceFileForModificationDetection, schemas, outputDirectory);
     } catch (IOException | SchemaParseException ex) {

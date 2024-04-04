@@ -17,6 +17,7 @@
  */
 package org.apache.avro.idl;
 
+import org.apache.avro.ParseContext;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 
@@ -32,24 +33,24 @@ import java.util.stream.Collectors;
  * the protocol containing the schemas.
  */
 public class IdlFile {
-  private final Schema mainSchema;
-  private final Protocol protocol;
-  private final Map<String, Schema> namedSchemas;
+  private final Object resolveLock = new Object();
+  private volatile ParseContext parseContext;
+  private Schema mainSchema;
+  private Protocol protocol;
+  private Map<String, Schema> namedSchemas;
   private final List<String> warnings;
 
-  IdlFile(Protocol protocol, List<String> warnings) {
-    this(protocol.getTypes(), null, protocol, warnings);
+  IdlFile(Protocol protocol, ParseContext context, List<String> warnings) {
+    this(context, null, protocol, warnings);
   }
 
-  IdlFile(Schema mainSchema, Iterable<Schema> schemas, List<String> warnings) {
-    this(schemas, mainSchema, null, warnings);
+  IdlFile(Schema mainSchema, ParseContext context, List<String> warnings) {
+    this(context, mainSchema, null, warnings);
   }
 
-  private IdlFile(Iterable<Schema> schemas, Schema mainSchema, Protocol protocol, List<String> warnings) {
+  private IdlFile(ParseContext context, Schema mainSchema, Protocol protocol, List<String> warnings) {
+    this.parseContext = context;
     this.namedSchemas = new LinkedHashMap<>();
-    for (Schema namedSchema : schemas) {
-      this.namedSchemas.put(namedSchema.getFullName(), namedSchema);
-    }
     this.mainSchema = mainSchema;
     this.protocol = protocol;
     this.warnings = Collections.unmodifiableList(new ArrayList<>(warnings));
@@ -59,13 +60,55 @@ public class IdlFile {
    * The (main) schema defined by the IDL file.
    */
   public Schema getMainSchema() {
+    if (mainSchema == null) {
+      return null;
+    }
+    ensureSchemasAreResolved();
     return mainSchema;
+  }
+
+  private void ensureSchemasAreResolved() {
+    if (parseContext != null) {
+      synchronized (resolveLock) {
+        if (parseContext != null) {
+          parseContext.commit();
+          List<Schema> schemas = parseContext.resolveAllSchemas();
+          schemas.forEach(schema -> namedSchemas.put(schema.getFullName(), schema));
+          if (mainSchema != null) {
+            mainSchema = parseContext.resolve(mainSchema);
+          }
+          if (protocol != null) {
+            protocol.setTypes(schemas);
+            Map<String, Protocol.Message> messages = protocol.getMessages();
+            for (Map.Entry<String, Protocol.Message> entry : messages.entrySet()) {
+              Protocol.Message oldValue = entry.getValue();
+              Protocol.Message newValue;
+              if (oldValue.isOneWay()) {
+                newValue = protocol.createMessage(oldValue.getName(), oldValue.getDoc(), oldValue,
+                    parseContext.resolve(oldValue.getRequest()));
+              } else {
+                Schema request = parseContext.resolve(oldValue.getRequest());
+                Schema response = parseContext.resolve(oldValue.getResponse());
+                Schema errors = parseContext.resolve(oldValue.getErrors());
+                newValue = protocol.createMessage(oldValue.getName(), oldValue.getDoc(), oldValue, request, response,
+                    errors);
+              }
+              entry.setValue(newValue);
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
    * The protocol defined by the IDL file.
    */
   public Protocol getProtocol() {
+    if (protocol == null) {
+      return null;
+    }
+    ensureSchemasAreResolved();
     return protocol;
   }
 
@@ -83,6 +126,7 @@ public class IdlFile {
    * The named schemas defined by the IDL file, mapped by their full name.
    */
   public Map<String, Schema> getNamedSchemas() {
+    ensureSchemasAreResolved();
     return Collections.unmodifiableMap(namedSchemas);
   }
 
@@ -95,11 +139,13 @@ public class IdlFile {
    * @return the schema, or {@code null} if it does not exist
    */
   public Schema getNamedSchema(String name) {
+    ensureSchemasAreResolved();
     return namedSchemas.get(name);
   }
 
   // Visible for testing
   String outputString() {
+    ensureSchemasAreResolved();
     if (protocol != null) {
       return protocol.toString();
     }
