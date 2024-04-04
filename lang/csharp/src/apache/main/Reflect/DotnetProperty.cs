@@ -19,6 +19,8 @@
 using System;
 using System.Reflection;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Avro.Reflect
 {
@@ -68,7 +70,12 @@ namespace Avro.Reflect
                 case Avro.Schema.Type.Array:
                     return typeof(IEnumerable).IsAssignableFrom(propType);
                 case Avro.Schema.Type.Map:
-                    return typeof(IDictionary).IsAssignableFrom(propType);
+                    var dictionaryInterface = FindOpenGenericInterface(typeof(IDictionary<,>), propType);
+                            // IDictionary is needed for writing from SpecificWriter and PreresolvingDatumWriter.
+                            // GenericRecord uses it for mapsEqual, GenericReader and gernicwriter for read/write
+                    return typeof(IDictionary).IsAssignableFrom(propType)
+                           //IDictionary<string, object> is needed for writing from GenericWriter/
+                        && dictionaryInterface != null && dictionaryInterface.GenericTypeArguments[0] == typeof(string);
                 case Avro.Schema.Type.Union:
                     return true;
                 case Avro.Schema.Type.Fixed:
@@ -140,6 +147,22 @@ namespace Avro.Reflect
             {
                 _property.SetValue(o, v);
             }
+        }
+
+        private static Type FindOpenGenericInterface(
+            Type expected,
+            Type actual)
+        {
+            if (actual.IsGenericType &&
+                actual.GetGenericTypeDefinition() == expected)
+            {
+                return actual;
+            }
+
+            Type[] interfaces = actual.GetInterfaces();
+            return interfaces.FirstOrDefault(interfaceType =>
+                interfaceType.IsGenericType &&
+                interfaceType.GetGenericTypeDefinition() == expected);
         }
     }
 }
