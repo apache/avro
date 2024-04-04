@@ -17,12 +17,6 @@
  */
 package org.apache.avro;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.avro.Schema.Field;
-import org.apache.avro.Schema.Field.Order;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -40,8 +34,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Objects;
 import java.util.Set;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.Schema.Field.Order;
 
 /**
  * A set of messages forming an application protocol.
@@ -404,8 +403,8 @@ public class Protocol extends JsonProperties {
       return false;
     Protocol that = (Protocol) o;
     return Objects.equals(this.name, that.name) && Objects.equals(this.namespace, that.namespace)
-        && Objects.equals(this.context.resolveAllSchemas(), that.context.resolveAllSchemas()) && Objects.equals(this.messages, that.messages)
-        && this.propsEqual(that);
+        && Objects.equals(this.context.resolveAllSchemas(), that.context.resolveAllSchemas())
+        && Objects.equals(this.messages, that.messages) && this.propsEqual(that);
   }
 
   @Override
