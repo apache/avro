@@ -38,7 +38,6 @@ import org.apache.avro.JsonProperties;
 import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
-import org.apache.avro.NameValidator;
 import org.apache.avro.ParseContext;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
@@ -90,6 +89,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -145,6 +145,8 @@ public class IdlReader {
   private static final Set<String> INVALID_TYPE_NAMES = new HashSet<>(Arrays.asList("boolean", "int", "long", "float",
       "double", "bytes", "string", "null", "date", "time_ms", "timestamp_ms", "localtimestamp_ms", "uuid"));
   private static final String CLASSPATH_SCHEME = "classpath";
+  private static final Set<Schema.Type> NAMED_SCHEMA_TYPES = EnumSet.of(Schema.Type.RECORD, Schema.Type.ENUM,
+      Schema.Type.FIXED);
 
   private final Set<URI> readLocations;
   private final ParseContext parseContext;
@@ -153,32 +155,17 @@ public class IdlReader {
     this(new ParseContext());
   }
 
-  public IdlReader(NameValidator nameValidator) {
-    this(new ParseContext(nameValidator));
-  }
-
   public IdlReader(ParseContext parseContext) {
     readLocations = new HashSet<>();
     this.parseContext = parseContext;
   }
 
   private Schema namedSchemaOrUnresolved(String fullName) {
-    return parseContext.resolve(fullName);
+    return parseContext.find(fullName, null);
   }
 
   private void addSchema(Schema schema) {
     parseContext.put(schema);
-  }
-
-  public IdlFile resolve(IdlFile unresolved) {
-    Protocol protocol = unresolved.getProtocol();
-    if (protocol == null) {
-      Schema mainSchema = SchemaResolver.resolve(parseContext, unresolved.getMainSchema());
-      Iterable<Schema> namedSchemas = SchemaResolver.resolve(parseContext, unresolved.getNamedSchemas().values());
-      return new IdlFile(mainSchema, namedSchemas, unresolved.getWarnings());
-    } else {
-      return new IdlFile(SchemaResolver.resolve(parseContext, protocol), unresolved.getWarnings());
-    }
   }
 
   public IdlFile parse(Path location) throws IOException {
@@ -364,9 +351,9 @@ public class IdlReader {
     @Override
     public void exitIdlFile(IdlFileContext ctx) {
       if (protocol == null) {
-        result = new IdlFile(mainSchema, parseContext.typesByName().values(), warnings);
+        result = new IdlFile(mainSchema, parseContext, warnings);
       } else {
-        result = new IdlFile(protocol, warnings);
+        result = new IdlFile(protocol, parseContext, warnings);
       }
     }
 
@@ -390,8 +377,10 @@ public class IdlReader {
 
     @Override
     public void exitProtocolDeclaration(ProtocolDeclarationContext ctx) {
-      if (protocol != null)
-        protocol.setTypes(parseContext.typesByName().values());
+      if (protocol != null) {
+        parseContext.commit();
+        protocol.setTypes(parseContext.resolveAllSchemas());
+      }
       if (!namespaces.isEmpty())
         popNamespace();
     }
@@ -404,6 +393,10 @@ public class IdlReader {
     @Override
     public void exitMainSchemaDeclaration(IdlParser.MainSchemaDeclarationContext ctx) {
       mainSchema = typeStack.pop();
+
+      if (NAMED_SCHEMA_TYPES.contains(mainSchema.getType()) && mainSchema.getFullName() != null) {
+        parseContext.put(mainSchema);
+      }
       assert typeStack.isEmpty();
     }
 
