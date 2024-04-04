@@ -41,7 +41,7 @@ use std::{
     io::Read,
     str::FromStr,
 };
-use strum_macros::{EnumDiscriminants, EnumString};
+use strum_macros::{Display, EnumDiscriminants, EnumString};
 
 /// Represents an Avro schema fingerprint
 /// More information about Avro schema fingerprints can be found in the
@@ -67,7 +67,7 @@ impl fmt::Display for SchemaFingerprint {
 /// Represents any valid Avro schema
 /// More information about Avro schemas can be found in the
 /// [Avro Specification](https://avro.apache.org/docs/current/spec.html#schemas)
-#[derive(Clone, Debug, EnumDiscriminants)]
+#[derive(Clone, Debug, EnumDiscriminants, Display)]
 #[strum_discriminants(name(SchemaKind), derive(Hash, Ord, PartialOrd))]
 pub enum Schema {
     /// A `null` Avro schema.
@@ -1606,6 +1606,8 @@ impl Parser {
 
         self.register_resolving_schema(&fully_qualified_name, &aliases);
 
+        debug!("Going to parse record schema: {:?}", &fully_qualified_name);
+
         let fields: Vec<RecordField> = fields_opt
             .and_then(|fields| fields.as_array())
             .ok_or(Error::GetRecordFieldsJson)
@@ -1786,7 +1788,22 @@ impl Parser {
             .iter()
             .map(|v| self.parse(v, enclosing_namespace))
             .collect::<Result<Vec<_>, _>>()
-            .and_then(|schemas| Ok(Schema::Union(UnionSchema::new(schemas)?)))
+            .and_then(|schemas| {
+                if schemas.is_empty() {
+                    error!(
+                        "Union schemas should have at least two members! \
+                    Please enable debug logging to find out which Record schema \
+                    declares the union with 'RUST_LOG=apache_avro::schema=debug'."
+                    );
+                } else if schemas.len() == 1 {
+                    warn!(
+                        "Union schema with just one member! Consider dropping the union! \
+                    Please enable debug logging to find out which Record schema \
+                    declares the union with 'RUST_LOG=apache_avro::schema=debug'."
+                    );
+                }
+                Ok(Schema::Union(UnionSchema::new(schemas)?))
+            })
     }
 
     /// Parse a `serde_json::Value` representing a Avro fixed type into a
@@ -6636,6 +6653,58 @@ mod tests {
             }
             _ => unreachable!("Expected Schema::Record"),
         }
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3946_union_with_single_type() -> TestResult {
+        let schema = r#"
+        {
+          "type": "record",
+          "name": "Issue",
+          "namespace": "invalid.example",
+          "fields": [
+            {
+              "name": "myField",
+              "type": ["long"]
+            }
+          ]
+        }"#;
+
+        let _ = Schema::parse_str(schema)?;
+
+        assert_logged(
+            "Union schema with just one member! Consider dropping the union! \
+                    Please enable debug logging to find out which Record schema \
+                    declares the union with 'RUST_LOG=apache_avro::schema=debug'.",
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3946_union_without_any_types() -> TestResult {
+        let schema = r#"
+        {
+          "type": "record",
+          "name": "Issue",
+          "namespace": "invalid.example",
+          "fields": [
+            {
+              "name": "myField",
+              "type": []
+            }
+          ]
+        }"#;
+
+        let _ = Schema::parse_str(schema)?;
+
+        assert_logged(
+            "Union schemas should have at least two members! \
+                    Please enable debug logging to find out which Record schema \
+                    declares the union with 'RUST_LOG=apache_avro::schema=debug'.",
+        );
 
         Ok(())
     }

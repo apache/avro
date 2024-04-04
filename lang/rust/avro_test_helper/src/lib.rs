@@ -23,7 +23,7 @@ thread_local! {
     // The unit tests run in parallel
     // We need to keep the log messages in a thread-local variable
     // and clear them after assertion
-    pub(crate) static LOG_MESSAGES: RefCell<Vec<String>> = RefCell::new(Vec::new());
+    pub(crate) static LOG_MESSAGES: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
 }
 
 pub mod logger;

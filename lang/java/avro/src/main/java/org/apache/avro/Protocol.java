@@ -39,6 +39,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -401,14 +403,14 @@ public class Protocol extends JsonProperties {
     if (!(o instanceof Protocol))
       return false;
     Protocol that = (Protocol) o;
-    return this.name.equals(that.name) && this.namespace.equals(that.namespace)
-        && this.context.resolveAllSchemas().equals(that.context.resolveAllSchemas())
-        && this.messages.equals(that.messages) && this.propsEqual(that);
+    return Objects.equals(this.name, that.name) && Objects.equals(this.namespace, that.namespace)
+        && Objects.equals(this.context.resolveAllSchemas(), that.context.resolveAllSchemas()) && Objects.equals(this.messages, that.messages)
+        && this.propsEqual(that);
   }
 
   @Override
   public int hashCode() {
-    return name.hashCode() + namespace.hashCode() + context.hashCode() + messages.hashCode() + propsHashCode();
+    return 31 * Objects.hash(name, namespace, context, messages) + propsHashCode();
   }
 
   /** Render this as <a href="https://json.org/">JSON</a>. */

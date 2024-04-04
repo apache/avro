@@ -21,7 +21,7 @@ use crate::{
     types::Value,
     Error,
 };
-use bigdecimal::BigDecimal;
+pub use bigdecimal::BigDecimal;
 use num_bigint::BigInt;
 use std::io::Read;
 
