@@ -78,7 +78,7 @@ import static org.apache.avro.LogicalType.LOGICAL_TYPE_PROP;
  * <li><i>null</i>.
  * </ul>
  *
- * You can construct a schema using one of its static <tt>createXXX</tt>
+ * Construct a schema using one of its static <tt>createXXX</tt>
  * methods, or more conveniently using {@link SchemaBuilder}. The schema objects
  * are <i>logically</i> immutable. There are only two mutating methods -
  * {@link #setFields(List)} and {@link #addProp(String, String)}. The following
