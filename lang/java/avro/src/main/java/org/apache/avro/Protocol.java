@@ -132,7 +132,7 @@ public class Protocol extends JsonProperties {
       try {
         StringWriter writer = new StringWriter();
         JsonGenerator gen = Schema.FACTORY.createGenerator(writer);
-        toJson(gen);
+        toJson(SchemaJsonSerDe.DEFAULT, gen);
         gen.flush();
         return writer.toString();
       } catch (IOException e) {
@@ -140,19 +140,19 @@ public class Protocol extends JsonProperties {
       }
     }
 
-    void toJson(JsonGenerator gen) throws IOException {
+    void toJson(SchemaJsonSerDe customSchemaSerDe, JsonGenerator gen) throws IOException {
       gen.writeStartObject();
       if (doc != null)
         gen.writeStringField("doc", doc);
       writeProps(gen); // write out properties
       gen.writeFieldName("request");
-      request.fieldsToJson(types, gen);
+      request.fieldsToJson(types, customSchemaSerDe, gen);
 
-      toJson1(gen);
+      toJson1(customSchemaSerDe, gen);
       gen.writeEndObject();
     }
 
-    void toJson1(JsonGenerator gen) throws IOException {
+    void toJson1(SchemaJsonSerDe customSchemaSerDe, JsonGenerator gen) throws IOException {
       gen.writeStringField("response", "null");
       gen.writeBooleanField("one-way", true);
     }
@@ -227,15 +227,15 @@ public class Protocol extends JsonProperties {
     }
 
     @Override
-    void toJson1(JsonGenerator gen) throws IOException {
+    void toJson1(SchemaJsonSerDe customSchemaSerDe, JsonGenerator gen) throws IOException {
       gen.writeFieldName("response");
-      response.toJson(types, gen);
+      response.toJson(types, customSchemaSerDe, gen);
 
       List<Schema> errs = errors.getTypes(); // elide system error
       if (errs.size() > 1) {
         Schema union = Schema.createUnion(errs.subList(1, errs.size()));
         gen.writeFieldName("errors");
-        union.toJson(types, gen);
+        union.toJson(types, customSchemaSerDe, gen);
       }
     }
 
@@ -418,7 +418,7 @@ public class Protocol extends JsonProperties {
       JsonGenerator gen = Schema.FACTORY.createGenerator(writer);
       if (pretty)
         gen.useDefaultPrettyPrinter();
-      toJson(gen);
+      toJson(SchemaJsonSerDe.DEFAULT, gen);
       gen.flush();
       return writer.toString();
     } catch (IOException e) {
@@ -426,7 +426,7 @@ public class Protocol extends JsonProperties {
     }
   }
 
-  void toJson(JsonGenerator gen) throws IOException {
+  void toJson(SchemaJsonSerDe customSchemaSerDe, JsonGenerator gen) throws IOException {
     types.space(namespace);
 
     gen.writeStartObject();
@@ -442,13 +442,13 @@ public class Protocol extends JsonProperties {
     Schema.Names resolved = new Schema.Names(namespace);
     for (Schema type : types.values())
       if (!resolved.contains(type))
-        type.toJson(resolved, gen);
+        type.toJson(resolved, customSchemaSerDe, gen);
     gen.writeEndArray();
 
     gen.writeObjectFieldStart("messages");
     for (Map.Entry<String, Message> e : messages.entrySet()) {
       gen.writeFieldName(e.getKey());
-      e.getValue().toJson(gen);
+      e.getValue().toJson(customSchemaSerDe, gen);
     }
     gen.writeEndObject();
     gen.writeEndObject();
@@ -468,13 +468,13 @@ public class Protocol extends JsonProperties {
   /** Read a protocol from a Json file. */
   public static Protocol parse(File file) throws IOException {
     try (JsonParser jsonParser = Schema.FACTORY.createParser(file)) {
-      return parse(jsonParser);
+      return parse(jsonParser, SchemaJsonSerDe.DEFAULT);
     }
   }
 
   /** Read a protocol from a Json stream. */
   public static Protocol parse(InputStream stream) throws IOException {
-    return parse(Schema.FACTORY.createParser(stream));
+    return parse(Schema.FACTORY.createParser(stream), SchemaJsonSerDe.DEFAULT);
   }
 
   /** Read a protocol from one or more json strings */
@@ -488,26 +488,27 @@ public class Protocol extends JsonProperties {
   /** Read a protocol from a Json string. */
   public static Protocol parse(String string) {
     try {
-      return parse(Schema.FACTORY.createParser(new ByteArrayInputStream(string.getBytes(StandardCharsets.UTF_8))));
+      return parse(Schema.FACTORY.createParser(new ByteArrayInputStream(string.getBytes(StandardCharsets.UTF_8))),
+          SchemaJsonSerDe.DEFAULT);
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }
   }
 
-  private static Protocol parse(JsonParser parser) {
+  private static Protocol parse(JsonParser parser, SchemaJsonSerDe customSchemaSerDe) {
     try {
       Protocol protocol = new Protocol();
-      protocol.parse((JsonNode) Schema.MAPPER.readTree(parser));
+      protocol.parse((JsonNode) Schema.MAPPER.readTree(parser), customSchemaSerDe);
       return protocol;
     } catch (IOException e) {
       throw new SchemaParseException(e);
     }
   }
 
-  private void parse(JsonNode json) {
+  private void parse(JsonNode json, SchemaJsonSerDe customSchemaSerDe) {
     parseNameAndNamespace(json);
-    parseTypes(json);
-    parseMessages(json);
+    parseTypes(json, customSchemaSerDe);
+    parseMessages(json, customSchemaSerDe);
     parseDoc(json);
     parseProps(json);
   }
@@ -534,7 +535,7 @@ public class Protocol extends JsonProperties {
     return nameNode.textValue();
   }
 
-  private void parseTypes(JsonNode json) {
+  private void parseTypes(JsonNode json, SchemaJsonSerDe customSchemaSerDe) {
     JsonNode defs = json.get("types");
     if (defs == null)
       return; // no types defined
@@ -544,11 +545,11 @@ public class Protocol extends JsonProperties {
     for (JsonNode type : defs) {
       if (!type.isObject())
         throw new SchemaParseException("Type not an object: " + type);
-      Schema.parseNamesDeclared(type, types, types.space());
+      Schema.parseNamesDeclared(type, types, customSchemaSerDe, types.space());
 
     }
     for (JsonNode type : defs) {
-      Schema.parseCompleteSchema(type, types, types.space());
+      Schema.parseCompleteSchema(type, types, customSchemaSerDe, types.space());
     }
   }
 
@@ -560,17 +561,17 @@ public class Protocol extends JsonProperties {
     }
   }
 
-  private void parseMessages(JsonNode json) {
+  private void parseMessages(JsonNode json, SchemaJsonSerDe customSchemaSerDe) {
     JsonNode defs = json.get("messages");
     if (defs == null)
       return; // no messages defined
     for (Iterator<String> i = defs.fieldNames(); i.hasNext();) {
       String prop = i.next();
-      this.messages.put(prop, parseMessage(prop, defs.get(prop)));
+      this.messages.put(prop, parseMessage(prop, defs.get(prop), customSchemaSerDe));
     }
   }
 
-  private Message parseMessage(String messageName, JsonNode json) {
+  private Message parseMessage(String messageName, JsonNode json, SchemaJsonSerDe customSchemaSerDe) {
     String doc = parseDocNode(json);
 
     Map<String, JsonNode> mProps = new LinkedHashMap<>();
@@ -596,8 +597,8 @@ public class Protocol extends JsonProperties {
       JsonNode fieldDocNode = field.get("doc");
       if (fieldDocNode != null)
         fieldDoc = fieldDocNode.textValue();
-      Field newField = new Field(name, Schema.parse(fieldTypeNode, types), fieldDoc, field.get("default"), true,
-          Order.ASCENDING);
+      Field newField = new Field(name, Schema.parse(fieldTypeNode, types, customSchemaSerDe), fieldDoc,
+          field.get("default"), true, Order.ASCENDING);
       Set<String> aliases = Schema.parseAliases(field);
       if (aliases != null) { // add aliases
         for (String alias : aliases)
@@ -631,12 +632,12 @@ public class Protocol extends JsonProperties {
     if (oneWay) {
       if (decls != null)
         throw new SchemaParseException("one-way can't have errors: " + json);
-      if (responseNode != null && Schema.parse(responseNode, types).getType() != Schema.Type.NULL)
+      if (responseNode != null && Schema.parse(responseNode, types, customSchemaSerDe).getType() != Schema.Type.NULL)
         throw new SchemaParseException("One way response must be null: " + json);
       return new Message(messageName, doc, mProps, request);
     }
 
-    Schema response = Schema.parse(responseNode, types);
+    Schema response = Schema.parse(responseNode, types, customSchemaSerDe);
 
     List<Schema> errs = new ArrayList<>();
     errs.add(SYSTEM_ERROR); // every method can throw
