@@ -149,7 +149,7 @@ namespace Avro.Specific
             if (map == null)
                 throw new AvroTypeException("Map does not implement non-generic IDictionary");
 
-            encoder.WriteArrayStart();
+            encoder.WriteMapStart();
             encoder.SetItemCount(map.Count);
             foreach (System.Collections.DictionaryEntry de in map)
             {

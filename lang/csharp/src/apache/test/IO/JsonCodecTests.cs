@@ -287,11 +287,12 @@ namespace Avro.Test
         }
 
         [Test]
-        public void TestJsonDecoderSpecificWithArray()
+        public void TestJsonDecoderSpecificDatumWriterWithArrayAndMap()
         {
             Root data = new Root();
             Item item = new Item { id = 123456 };
             data.myarray = new List<Item> { item };
+            data.mymap = new Dictionary<string, int> { { "1", 1 }, { "2", 2 }, { "3", 3 }, { "4", 4 } };
 
             DatumWriter<Root> writer = new SpecificDatumWriter<Root>(data.Schema);
 
@@ -306,7 +307,32 @@ namespace Avro.Test
             using (StreamReader reader = new StreamReader(listStreams[0]))
             {
                 String output = reader.ReadToEnd();
-                Assert.AreEqual("{\"myarray\":[{\"id\":123456}]}", output);
+                Assert.AreEqual("{\"myarray\":[{\"id\":123456}],\"mymap\":{\"map\":{\"1\":1,\"2\":2,\"3\":3,\"4\":4}}}", output);
+            }
+        }
+
+        [Test]
+        public void TestJsonDecoderSpecificDefaultWriterWithArrayAndMap()
+        {
+            Root data = new Root();
+            Item item = new Item { id = 123456 };
+            data.myarray = new List<Item> { item };
+            data.mymap = new Dictionary<string, int> { { "1", 1 }, { "2", 2 }, { "3", 3 }, { "4", 4 } };
+
+            SpecificDefaultWriter writer = new SpecificDefaultWriter(data.Schema);
+
+            ByteBufferOutputStream bbos = new ByteBufferOutputStream();
+
+            Encoder encoder = new JsonEncoder(data.Schema, bbos);
+            writer.Write(data, encoder);
+            encoder.Flush();
+
+            List<MemoryStream> listStreams = bbos.GetBufferList();
+
+            using (StreamReader reader = new StreamReader(listStreams[0]))
+            {
+                String output = reader.ReadToEnd();
+                Assert.AreEqual("{\"myarray\":[{\"id\":123456}],\"mymap\":{\"map\":{\"1\":1,\"2\":2,\"3\":3,\"4\":4}}}", output);
             }
         }
 
@@ -357,9 +383,10 @@ namespace Avro.Test
         public static global::Avro.Schema _SCHEMA = global::Avro.Schema.Parse(
             "{\"type\":\"record\",\"name\":\"Root\",\"namespace\":\"Avro.Test\",\"fields\":[{\"name\":\"myarray" +
             "\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"Item\",\"namespace\":\"Avr" +
-            "o.Test\",\"fields\":[{\"name\":\"id\",\"type\":\"long\"}]}}}]}");
-
+            "o.Test\",\"fields\":[{\"name\":\"id\",\"type\":\"long\"}]}}},{\"name\":\"mymap\",\"default\":null," +
+            "\"type\":[\"null\",{\"type\":\"map\",\"values\":\"int\"}]}]}");
         private IList<Avro.Test.Item> _myarray;
+        private IDictionary<string,System.Int32> _mymap;
 
         public virtual global::Avro.Schema Schema
         {
@@ -372,11 +399,18 @@ namespace Avro.Test
             set { this._myarray = value; }
         }
 
+        public IDictionary<string,System.Int32> mymap
+        {
+            get { return this._mymap; }
+            set { this._mymap = value; }
+        }
+
         public virtual object Get(int fieldPos)
         {
             switch (fieldPos)
             {
                 case 0: return this.myarray;
+                case 1: return this.mymap;
                 default: throw new global::Avro.AvroRuntimeException("Bad index " + fieldPos + " in Get()");
             }
         }
@@ -387,6 +421,9 @@ namespace Avro.Test
             {
                 case 0:
                     this.myarray = (IList<Avro.Test.Item>)fieldValue;
+                    break;
+                case 1:
+                    this.mymap = (IDictionary<string,System.Int32>)fieldValue;
                     break;
                 default: throw new global::Avro.AvroRuntimeException("Bad index " + fieldPos + " in Put()");
             }
