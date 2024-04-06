@@ -496,6 +496,7 @@ public:
 template<typename P, typename F>
 void JsonEncoder<P, F>::init(OutputStream &os) {
     out_.init(os);
+    parser_.reset();
 }
 
 template<typename P, typename F>
