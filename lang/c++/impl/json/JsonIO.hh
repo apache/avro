@@ -263,11 +263,22 @@ class AVRO_DECL JsonGenerator {
         out_.write(toHex((static_cast<unsigned char>(c)) % 16));
     }
 
-    void escapeUnicode(uint32_t c) {
+    void escapeUnicode16(uint32_t c) {
         out_.write('\\');
         out_.write('u');
         writeHex((c >> 8) & 0xff);
         writeHex(c & 0xff);
+    }
+    void escapeUnicode(uint32_t c) {
+        if (c < 0x10000) {
+            escapeUnicode16(c);
+        } else if (c < 0x110000) {
+            c -= 0x10000;
+            escapeUnicode16(((c >> 10) & 0x3ff) | 0xd800);
+            escapeUnicode16((c & 0x3ff) | 0xdc00);
+        } else {
+            throw Exception(boost::format("Invalid code-point: %1%") % c);
+        }
     }
     void doEncodeString(const char *b, size_t len, bool binary) {
         const char *e = b + len;
