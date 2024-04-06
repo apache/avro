@@ -69,6 +69,7 @@ TestData<const char *> stringData[] = {
     {R"("\u20ac")", EntityType::String, "\xe2\x82\xac", R"("\u20ac")"},
     {R"("\u03c0")", EntityType::String, "\xcf\x80", R"("\u03c0")"},
     {R"("hello\n")", EntityType::String, "hello\n", R"("hello\n")"},
+    {R"("\Ud8ab\udccd")", EntityType::String, "\xf0\xba\xb3\x8d", R"("\ud8ab\udccd")"},
 };
 
 void testBool(const TestData<bool> &d) {
