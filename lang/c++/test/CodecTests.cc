@@ -838,7 +838,7 @@ void testGenericResolving(const TestData3 &td) {
         GenericReader gr(wvs, rvs, d1);
         GenericDatum datum;
         gr.read(datum);
-        d1->drain();
+        gr.drain();
         assertSentinel(*in1);
 
         EncoderPtr e2 = CodecFactory::newEncoder(rvs);
@@ -1319,6 +1319,72 @@ static const TestData3 data3[] = {
      R"({"type": "fixed", "name": "g", "namespace": "n2", "aliases": ["h", "n.f"], "size": 8})",
      "f8",
      1},
+    {R"({"type": "record", "name": "r1", "fields": [
+     {"name": "f1", "type": ["null", {"type": "record", "name": "r2", "fields": [{"name": "f11", "type": "string"}]}]},
+     {"name": "f2", "type": {"type": "array", "items": "r2"}}
+     ]})",
+     "U0N[c3sS1sS2sS3]",
+     R"({"type": "record", "name": "r1", "fields": [
+     {"name": "f1", "type": [
+         "null",
+         {"type": "record", "name": "r2", "fields": [{"name": "f11", "type": "string"}]},
+         {"type": "record", "name": "r3", "fields": [
+             {"name": "g11", "type": {"type": "array", "items": {"type": "record", "name": "r31", "fields": [{"name": "g111", "type": "double"}]}}}
+         ]}
+     ]},
+     {"name": "f2", "type": {"type": "array", "items": "r2"}},
+     {"name": "f3", "type": {"type": "array", "items": "r3"}, "default": []}
+     ]})",
+     "U0N[c3sS1sS2sS3][]",
+     1},
+    {
+      R"({"name": "Project", "type": "record", "fields": [
+        { "name": "_types", "type": [
+            "null",
+            { "name": "Record1", "type": "record", "fields": [{ "name": "Record1_field1", "type": "string" }]}
+        ]},
+        { "name": "field1", "type": { "type": "array", "items": "Record1" } }
+      ]})",
+        "U0N[c3sS1sS2sS3]",
+      R"({"name": "Project", "type": "record", "fields": [
+        { "name": "_types", "type": [
+            "null",
+            { "name": "Record1", "type": "record", "fields": [{ "name": "Record1_field1", "type": "string" }]},
+            { "name": "Record3", "type": "record", "fields": [
+                { "name": "Record3_field1", "type": { "type": "array", "items": { "name": "Record2", "type": "record",
+                     "fields":[{ "name": "Record2_field1", "type": "double" }]}
+                }}
+            ]}
+        ]},
+        { "name": "field1", "type": { "type": "array", "items": "Record1" } },
+        { "name": "field2", "type": { "type": "array", "items": "Record3" }, "default": [] }
+      ]})",
+        "U0N[c3sS1sS2sS3][]",
+        1},
+    {
+        R"({"name": "Project", "type": "record", "fields": [
+        { "name": "_types", "type": [
+            "null",
+            { "name": "Record1", "type": "record", "fields": [{ "name": "Record1_field1", "type": "string" }]},
+            { "name": "Record3", "type": "record", "fields": [
+                { "name": "Record3_field1", "type": { "type": "array", "items": { "name": "Record2", "type": "record",
+                     "fields":[{ "name": "Record2_field1", "type": "double" }]}
+                }}
+            ]}
+        ]},
+        { "name": "field1", "type": { "type": "array", "items": "Record1" } },
+        { "name": "field2", "type": { "type": "array", "items": "Record3" }, "default": [] }
+      ]})",
+        "U0N[c3sS1sS2sS3][]",
+      R"({"name": "Project", "type": "record", "fields": [
+        { "name": "_types", "type": [
+            "null",
+            { "name": "Record1", "type": "record", "fields": [{ "name": "Record1_field1", "type": "string" }]}
+        ]},
+        { "name": "field1", "type": { "type": "array", "items": "Record1" } }
+      ]})",
+        "U0N[c3sS1sS2sS3]",
+        1},
 };
 
 static const TestData4 data4[] = {
