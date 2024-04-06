@@ -963,6 +963,11 @@ static const TestData data[] = {
     {R"({"type":"map", "values": "boolean"})",
      "{c1sK5Bc2sK5BsK5B}", 2},
 
+    // Record with no fields
+    {"{\"type\":\"record\",\"name\":\"empty\",\"fields\":[]}",
+     "", 1},
+
+    // Single-field records
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f\", \"type\":\"boolean\"}]}",
      "B", 1},
@@ -1002,6 +1007,16 @@ static const TestData data[] = {
      "{\"name\":\"f7\", \"type\":\"bytes\"}]}",
      "NBILFDS10b25", 1},
     // record of records
+    {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+     "{\"name\":\"f1\",\"type\":\"boolean\"},"
+     "{\"name\":\"f2\", \"type\":{\"type\":\"record\","
+     "\"name\":\"inner\",\"fields\":[]}}]}",
+     "B", 1},
+    {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+     "{\"name\":\"f1\",\"type\":\"boolean\"},"
+     "{\"name\":\"f2\", \"type\":{\"type\":\"array\","
+     "\"items\":\"r\"}}]}",
+     "B[]", 1},
     {"{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
      "{\"name\":\"f1\", \"type\":{\"type\":\"record\", "
      "\"name\":\"inner\", \"fields\":["
