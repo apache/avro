@@ -35,7 +35,7 @@ derive = ["dep:apache-avro-derive"]
 snappy = ["dep:crc32fast", "dep:snap"]
 xz = ["dep:xz2"]
 zstandard = ["dep:zstd"]
-bytes = ["serde-bytes"]
+#bytes = ["serde_bytes"]
 
 [lib]
 # disable benchmarks to allow passing criterion arguments to `cargo bench`
@@ -65,7 +65,7 @@ log = { workspace = true }
 num-bigint = { default-features = false, version = "0.4.6", features = ["std", "serde"] }
 regex-lite = { default-features = false, version = "0.1.6", features = ["std", "string"] }
 serde = { workspace = true }
-serde_bytes = { default-features = false, version = "0.11", features = ["std"], optional = true }
+serde_bytes = { default-features = false, version = "0.11.14", features = ["std"] }
 serde_json = { workspace = true }
 snap = { default-features = false, version = "1.1.0", optional = true }
 strum = { default-features = false, version = "0.26.3" }

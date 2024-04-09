@@ -385,7 +385,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                     })
                     .collect();
                 visitor.visit_byte_buf(bytes?)
-            },
+            }
             Value::String(ref s) => visitor.visit_byte_buf(s.clone().into_bytes()),
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => {
                 visitor.visit_byte_buf(bytes.to_owned())
@@ -693,7 +693,6 @@ mod tests {
     use serde::{Deserialize, Serialize};
     use serial_test::serial;
     use std::sync::atomic::Ordering;
-    use serde::Serialize;
     use uuid::Uuid;
 
     use apache_avro_test_helper::TestResult;
@@ -1592,7 +1591,6 @@ mod tests {
             // will be serialized as Value::Fixed
             #[serde(with = "serde_bytes")]
             fixed_field: [u8; 6],
-
             // borrowed byte arrays are not supported
             // #[serde(with = "serde_byte_array", borrow)]
             // borrowed_fixed_field: &'a [u8; 16],

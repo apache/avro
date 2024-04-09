@@ -1164,7 +1164,6 @@ mod tests {
     use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
     use serde_json::json;
-    use serde_bytes::ByteArray;
     use uuid::Uuid;
 
     #[test]

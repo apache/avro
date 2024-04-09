@@ -540,7 +540,6 @@ mod tests {
     use serde::{Deserialize, Serialize};
     use serial_test::serial;
     use std::sync::atomic::Ordering;
-    use serde_bytes::ByteArray;
 
     #[derive(Debug, Deserialize, Serialize, Clone)]
     struct Test {
