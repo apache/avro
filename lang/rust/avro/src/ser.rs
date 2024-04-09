@@ -30,6 +30,7 @@ ref_thread_local! {
 }
 
 /// A hint helping in the serialization of a byte arrays (&[u8], [u8; N])
+#[derive(Debug)]
 enum BytesType {
     Bytes,
     Fixed,
@@ -1087,7 +1088,7 @@ mod tests {
     }
 
     #[test]
-    fn avro_3631_test_to_value_fixed_field() {
+    fn avro_3631_serialize_struct_to_value_with_byte_types() {
         #[derive(Debug, Serialize)]
         struct TestStructFixedField<'a> {
             // will be serialized as Value::Array<Vec<Value::Int>>
@@ -1104,10 +1105,15 @@ mod tests {
 
             // will be serialized as Value::Bytes
             #[serde(serialize_with = "avro_serialize_bytes")]
+            // #[serde(with = "serde_bytes")]
             bytes_field: &'a [u8],
-            #[serde(serialize_with = "avro_serialize_bytes")]
+
+            // #[serde(serialize_with = "avro_serialize_bytes")]
+            #[serde(with = "serde_bytes")]
             bytes_field2: [u8; 6],
+
             #[serde(serialize_with = "avro_serialize_bytes")]
+            // #[serde(with = "serde_bytes")]
             vec_field3: Vec<u8>,
         }
 

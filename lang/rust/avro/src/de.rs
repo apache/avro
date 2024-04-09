@@ -355,7 +355,22 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
         V: Visitor<'de>,
     {
         match *self.input {
-            Value::Array(ref _values) => unimplemented!("Array of bytes"),
+            Value::Array(ref _values) => {
+                // let bytes: Result<Vec<u8>, Self::Error> = values
+                //     .iter()
+                //     .map(|v| match v {
+                //         Value::Int(i) if *i <= (u8::MAX as i32) && *i >= (u8::MIN as i32) => {
+                //             Ok(*i as u8)
+                //         }
+                //         _ => Err(de::Error::custom(format!(
+                //             "Byte array can be created only from Value::Int values that could be casted to u8: {v:?}"
+                //         ))),
+                //     })
+                //     .collect();
+                // let a: &'de [u8] = bytes?.as_slice();
+                // visitor.visit_borrowed_bytes(a)
+                unimplemented!("Borrowed byte arrays are not supported!")
+            }
             Value::String(ref s) => visitor.visit_bytes(s.as_bytes()),
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => visitor.visit_bytes(bytes),
             Value::Uuid(ref u) => visitor.visit_bytes(u.as_bytes()),
@@ -380,7 +395,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                             Ok(*i as u8)
                         }
                         _ => Err(de::Error::custom(format!(
-                            "Byte array can be created only from Value::Int values which could be casted to u8: {v:?}"
+                            "Byte array can be created only from Value::Int values that could be casted to u8: {v:?}"
                         ))),
                     })
                     .collect();
@@ -459,15 +474,15 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
     {
         match *self.input {
             Value::Array(ref items) => visitor.visit_seq(SeqDeserializer::new(items)),
-            Value::Fixed(_len, ref items) => {
-                let mut arr = [0_u8; 6];
+            Value::Fixed(len, ref items) => {
+                let mut arr = Vec::with_capacity(len);
                 arr.clone_from_slice(items);
                 visitor.visit_bytes(&arr)
             }
             Value::Union(_i, ref inner) => match **inner {
                 Value::Array(ref items) => visitor.visit_seq(SeqDeserializer::new(items)),
-                Value::Fixed(_len, ref items) => {
-                    let mut arr = [0_u8; 6];
+                Value::Fixed(len, ref items) => {
+                    let mut arr = Vec::with_capacity(len);
                     arr.clone_from_slice(items);
                     visitor.visit_bytes(&arr)
                 }
@@ -1579,9 +1594,9 @@ mod tests {
     #[test]
     fn avro_3631_deserialize_value_to_struct_with_byte_types() {
         #[derive(Debug, Deserialize, PartialEq)]
-        struct TestStructFixedField {
-            // borrowed byte arrays are not supported
-            // #[serde(with = "serde_bytes")]
+        struct TestStructFixedField /*<'a>*/ {
+            // borrowed slices are not supported !
+            // #[serde(with = "serde_bytes", borrow)]
             // slice_field: &'a [u8],
 
             // will be serialized as Value::Array<Vec<Value::Int>>
@@ -1592,7 +1607,7 @@ mod tests {
             #[serde(with = "serde_bytes")]
             fixed_field: [u8; 6],
             // borrowed byte arrays are not supported
-            // #[serde(with = "serde_byte_array", borrow)]
+            // #[serde(with = "serde_byte", borrow)]
             // borrowed_fixed_field: &'a [u8; 16],
         }
 
