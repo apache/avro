@@ -26,6 +26,28 @@ use std::{
     ptr,
 };
 
+fn match_ref_schemas(
+    writers_schema: &Schema,
+    readers_schema: &Schema,
+) -> Result<(), CompatibilityError> {
+    match (readers_schema, writers_schema) {
+        (Schema::Ref { name: r_name }, Schema::Ref { name: w_name }) => {
+            if r_name == w_name {
+                Ok(())
+            } else {
+                Err(CompatibilityError::NameMismatch {
+                    writer_name: w_name.fullname(None),
+                    reader_name: r_name.fullname(None),
+                })
+            }
+        }
+        _ => Err(CompatibilityError::WrongType {
+            writer_schema_type: format!("{:#?}", writers_schema),
+            reader_schema_type: format!("{:#?}", readers_schema),
+        }),
+    }
+}
+
 pub struct SchemaCompatibility;
 
 struct Checker {
@@ -80,6 +102,7 @@ impl Checker {
         }
 
         match r_type {
+            SchemaKind::Ref => match_ref_schemas(writers_schema, readers_schema),
             SchemaKind::Record => self.match_record_schemas(writers_schema, readers_schema),
             SchemaKind::Map => {
                 if let Schema::Map(w_m) = writers_schema {
@@ -431,6 +454,7 @@ impl SchemaCompatibility {
                 SchemaKind::Duration => {
                     return Ok(());
                 }
+                SchemaKind::Ref => return match_ref_schemas(writers_schema, readers_schema),
                 _ => {
                     return Err(CompatibilityError::Inconclusive(String::from(
                         "readers_schema",
@@ -1707,6 +1731,41 @@ mod tests {
                     .to_string()
             );
         }
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3974_can_read_schema_references() -> TestResult {
+        let schema_strs = vec![
+            r#"{
+          "type": "record",
+          "name": "Child",
+          "namespace": "avro",
+          "fields": [
+            {
+              "name": "val",
+              "type": "int"
+            }
+          ]
+        }
+        "#,
+            r#"{
+          "type": "record",
+          "name": "Parent",
+          "namespace": "avro",
+          "fields": [
+            {
+              "name": "child",
+              "type": "avro.Child"
+            }
+          ]
+        }
+        "#,
+        ];
+
+        let schemas = Schema::parse_list(&schema_strs).unwrap();
+        SchemaCompatibility::can_read(&schemas[1], &schemas[1])?;
 
         Ok(())
     }
