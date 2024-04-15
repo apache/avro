@@ -77,7 +77,16 @@ endif ()
 
 find_package (Boost 1.38 REQUIRED
     COMPONENTS filesystem iostreams program_options regex system)
-find_package(fmt REQUIRED)
+
+include(FetchContent)
+FetchContent_Declare(
+        fmt
+        GIT_REPOSITORY  https://github.com/fmtlib/fmt.git
+        GIT_TAG         10.2.1
+        GIT_PROGRESS    TRUE
+        USES_TERMINAL_DOWNLOAD TRUE
+)
+FetchContent_MakeAvailable(fmt)
 
 find_package(Snappy)
 if (SNAPPY_FOUND)
