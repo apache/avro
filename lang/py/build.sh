@@ -55,7 +55,7 @@ doc() {
   local doc_dir
   local version=$(cat ../../share/VERSION.txt)
   doc_dir="../../build/avro-doc-$version/api/py"
-  python3 -m tox -e docs
+  _tox -e docs
   mkdir -p "$doc_dir"
   cp -a docs/build/* "$doc_dir"
 }
@@ -72,11 +72,11 @@ interop-data-test() {
 }
 
 lint() {
-  python3 -m tox -e lint
+  _tox -e lint
 }
 
 test_() {
-  TOX_SKIP_ENV=lint python3 -m tox --skip-missing-interpreters
+  TOX_SKIP_ENV=lint _tox --skip-missing-interpreters
 }
 
 main() {
@@ -93,6 +93,18 @@ main() {
       *) usage;;
     esac
   done
+}
+
+_tox() {
+  if command -v tox 2> /dev/null; then
+    tox "$@"
+  else
+    echo 'Your experience will improve if you install tox'
+    virtualenv="$(mktemp -d)"
+    python3 -m venv "$virtualenv"
+    "$virtualenv/bin/python3" -m pip install tox
+    "$virtualenv/bin/tox" "$@"
+  fi
 }
 
 main "$@"
