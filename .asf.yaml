@@ -40,6 +40,9 @@ github:
     rebase: true
     squash: true
 
+  collaborators:
+    - jbonofre
+
 notifications:
   commits: commits@avro.apache.org
   issues: issues@avro.apache.org

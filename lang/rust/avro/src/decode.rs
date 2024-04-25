@@ -31,7 +31,6 @@ use crate::{
 use std::{
     borrow::Borrow,
     collections::HashMap,
-    convert::TryFrom,
     io::{ErrorKind, Read},
     str::FromStr,
 };
@@ -324,7 +323,7 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
             Ok(if let Value::Int(raw_index) = decode_int(reader)? {
                 let index = usize::try_from(raw_index)
                     .map_err(|e| Error::ConvertI32ToUsize(e, raw_index))?;
-                if (0..=symbols.len()).contains(&index) {
+                if (0..symbols.len()).contains(&index) {
                     let symbol = symbols[index].clone();
                     Value::Enum(raw_index as u32, symbol)
                 } else {

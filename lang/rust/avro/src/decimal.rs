@@ -18,7 +18,7 @@
 use crate::{AvroResult, Error};
 use num_bigint::{BigInt, Sign};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Decimal {
     value: BigInt,
     len: usize,
@@ -110,7 +110,6 @@ mod tests {
     use super::*;
     use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
-    use std::convert::TryFrom;
 
     #[test]
     fn test_decimal_from_bytes_from_ref_decimal() -> TestResult {
@@ -130,6 +129,17 @@ mod tests {
 
         let output = <Vec<u8>>::try_from(d)?;
         assert_eq!(output, input);
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3949_decimal_serde() -> TestResult {
+        let decimal = Decimal::from(&[1, 2, 3]);
+
+        let ser = serde_json::to_string(&decimal)?;
+        let de = serde_json::from_str(&ser)?;
+        std::assert_eq!(decimal, de);
 
         Ok(())
     }

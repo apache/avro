@@ -18,7 +18,6 @@
 use crate::{schema::Documentation, AvroResult, Error};
 use serde_json::{Map, Value};
 use std::{
-    convert::TryFrom,
     i64,
     io::Read,
     sync::{

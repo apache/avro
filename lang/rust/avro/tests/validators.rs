@@ -28,35 +28,35 @@ use apache_avro_test_helper::TestResult;
 
 struct CustomValidator;
 
+// Setup the custom validators before the schema is parsed
+// because the parsing will trigger the validation and will
+// setup the default validator (SpecificationValidator)!
+impl SchemaNameValidator for CustomValidator {
+    fn validate(&self, schema_name: &str) -> AvroResult<(String, Namespace)> {
+        Ok((schema_name.to_string(), None))
+    }
+}
+
+impl SchemaNamespaceValidator for CustomValidator {
+    fn validate(&self, _ns: &str) -> AvroResult<()> {
+        Ok(())
+    }
+}
+
+impl EnumSymbolNameValidator for CustomValidator {
+    fn validate(&self, _ns: &str) -> AvroResult<()> {
+        Ok(())
+    }
+}
+
+impl RecordFieldNameValidator for CustomValidator {
+    fn validate(&self, _ns: &str) -> AvroResult<()> {
+        Ok(())
+    }
+}
+
 #[test]
 fn avro_3900_custom_validator_with_spec_invalid_names() -> TestResult {
-    // Setup the custom validators before the schema is parsed
-    // because the parsing will trigger the validation and will
-    // setup the default validator (SpecificationValidator)!
-    impl SchemaNameValidator for CustomValidator {
-        fn validate(&self, schema_name: &str) -> AvroResult<(String, Namespace)> {
-            Ok((schema_name.to_string(), None))
-        }
-    }
-
-    impl SchemaNamespaceValidator for CustomValidator {
-        fn validate(&self, _ns: &str) -> AvroResult<()> {
-            Ok(())
-        }
-    }
-
-    impl EnumSymbolNameValidator for CustomValidator {
-        fn validate(&self, _ns: &str) -> AvroResult<()> {
-            Ok(())
-        }
-    }
-
-    impl RecordFieldNameValidator for CustomValidator {
-        fn validate(&self, _ns: &str) -> AvroResult<()> {
-            Ok(())
-        }
-    }
-
     assert!(set_schema_name_validator(Box::new(CustomValidator)).is_ok());
     assert!(set_schema_namespace_validator(Box::new(CustomValidator)).is_ok());
     assert!(set_enum_symbol_name_validator(Box::new(CustomValidator)).is_ok());

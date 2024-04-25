@@ -25,7 +25,7 @@ use crate::{
     AvroResult, Codec, Error,
 };
 use serde::Serialize;
-use std::{collections::HashMap, convert::TryFrom, io::Write, marker::PhantomData};
+use std::{collections::HashMap, io::Write, marker::PhantomData};
 
 const DEFAULT_BLOCK_SIZE: usize = 16000;
 const AVRO_OBJECT_HEADER: &[u8] = b"Obj\x01";

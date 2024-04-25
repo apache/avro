@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <utility>
 
@@ -38,17 +39,14 @@ using std::make_shared;
 
 namespace parsing {
 
-using std::make_shared;
 using std::shared_ptr;
 using std::static_pointer_cast;
 
-using std::find_if;
-using std::istringstream;
 using std::make_pair;
 using std::map;
-using std::ostringstream;
 using std::pair;
 using std::reverse;
+using std::set;
 using std::stack;
 using std::string;
 using std::unique_ptr;
@@ -66,15 +64,6 @@ class ResolvingGrammarGenerator : public ValidatingGrammarGenerator {
     ProductionPtr resolveUnion(const NodePtr &writer,
                                const NodePtr &reader, map<NodePair, ProductionPtr> &m,
                                map<NodePtr, ProductionPtr> &m2);
-
-    static vector<pair<string, size_t>> fields(const NodePtr &n) {
-        vector<pair<string, size_t>> result;
-        size_t c = n->names();
-        for (size_t i = 0; i < c; ++i) {
-            result.emplace_back(n->nameAt(i), i);
-        }
-        return result;
-    }
 
     static int bestBranch(const NodePtr &writer, const NodePtr &reader);
 
@@ -154,15 +143,6 @@ static shared_ptr<vector<uint8_t>> getAvroBinary(
     return snapshot(*os);
 }
 
-template<typename T1, typename T2>
-struct equalsFirst {
-    const T1 &v_;
-    explicit equalsFirst(const T1 &v) : v_(v) {}
-    bool operator()(const pair<T1, T2> &p) {
-        return p.first == v_;
-    }
-};
-
 ProductionPtr ResolvingGrammarGenerator::getWriterProduction(
     const NodePtr &n, map<NodePtr, ProductionPtr> &m2) {
     const NodePtr &nn = (n->type() == AVRO_SYMBOLIC) ? static_cast<const NodeSymbolic &>(*n).getNode() : n;
@@ -182,10 +162,18 @@ ProductionPtr ResolvingGrammarGenerator::resolveRecords(
     map<NodePtr, ProductionPtr> &m2) {
     ProductionPtr result = make_shared<Production>();
 
-    vector<pair<string, size_t>> wf = fields(writer);
-    vector<pair<string, size_t>> rf = fields(reader);
+    vector<string> wf(writer->names());
+    for (size_t i = 0; i < wf.size(); ++i) {
+        wf[i] = writer->nameAt(i);
+    }
+
+    set<size_t> rf;
+    for (size_t i = 0; i < reader->names(); ++i) {
+        rf.emplace(i);
+    }
+
     vector<size_t> fieldOrder;
-    fieldOrder.reserve(reader->names());
+    fieldOrder.reserve(rf.size());
 
     /*
      * We look for all writer fields in the reader. If found, recursively
@@ -193,19 +181,15 @@ ProductionPtr ResolvingGrammarGenerator::resolveRecords(
      * If no matching field is found for reader, arrange to skip the writer
      * field.
      */
-    for (vector<pair<string, size_t>>::const_iterator it = wf.begin();
-         it != wf.end(); ++it) {
-        auto it2 = find_if(rf.begin(), rf.end(),
-                           equalsFirst<string, size_t>(it->first));
-        if (it2 != rf.end()) {
-            ProductionPtr p = doGenerate2(writer->leafAt(it->second),
-                                          reader->leafAt(it2->second), m, m2);
+    for (size_t wi = 0; wi != wf.size(); ++wi) {
+        size_t ri;
+        if (reader->nameIndex(wf[wi], ri)) {
+            ProductionPtr p = doGenerate2(writer->leafAt(wi), reader->leafAt(ri), m, m2);
             copy(p->rbegin(), p->rend(), back_inserter(*result));
-            fieldOrder.push_back(it2->second);
-            rf.erase(it2);
+            fieldOrder.push_back(ri);
+            rf.erase(ri);
         } else {
-            ProductionPtr p = getWriterProduction(
-                writer->leafAt(it->second), m2);
+            ProductionPtr p = getWriterProduction(writer->leafAt(wi), m2);
             result->push_back(Symbol::skipStart());
             if (p->size() == 1) {
                 result->push_back((*p)[0]);
@@ -216,24 +200,21 @@ ProductionPtr ResolvingGrammarGenerator::resolveRecords(
     }
 
     /*
-     * Examine the reader fields left out, (i.e. those didn't have corresponding
+     * Examine the reader fields left out (i.e. those didn't have corresponding
      * writer field).
      */
-    for (vector<pair<string, size_t>>::const_iterator it = rf.begin();
-         it != rf.end(); ++it) {
-
-        NodePtr s = reader->leafAt(it->second);
-        fieldOrder.push_back(it->second);
+    for (const auto ri : rf) {
+        NodePtr s = reader->leafAt(ri);
+        fieldOrder.push_back(ri);
 
         if (s->type() == AVRO_SYMBOLIC) {
             s = resolveSymbol(s);
         }
         shared_ptr<vector<uint8_t>> defaultBinary =
-            getAvroBinary(reader->defaultValueAt(it->second));
+            getAvroBinary(reader->defaultValueAt(ri));
         result->push_back(Symbol::defaultStartAction(defaultBinary));
-        map<NodePair, shared_ptr<Production>>::const_iterator it2 =
-            m.find(NodePair(s, s));
-        ProductionPtr p = (it2 == m.end()) ? doGenerate2(s, s, m, m2) : it2->second;
+        auto it = m.find(NodePair(s, s));
+        ProductionPtr p = it == m.end() ? doGenerate2(s, s, m, m2) : it->second;
         copy(p->rbegin(), p->rend(), back_inserter(*result));
         result->push_back(Symbol::defaultEndAction());
     }
@@ -289,7 +270,7 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
             case AVRO_BYTES:
                 return make_shared<Production>(1, Symbol::bytesSymbol());
             case AVRO_FIXED:
-                if (writer->name() == reader->name() && writer->fixedSize() == reader->fixedSize()) {
+                if (writer->name().equalOrAliasedBy(reader->name()) && writer->fixedSize() == reader->fixedSize()) {
                     ProductionPtr result = make_shared<Production>();
                     result->push_back(Symbol::sizeCheckSymbol(reader->fixedSize()));
                     result->push_back(Symbol::fixedSymbol());
@@ -298,7 +279,7 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
                 }
                 break;
             case AVRO_RECORD:
-                if (writer->name() == reader->name()) {
+                if (writer->name().equalOrAliasedBy(reader->name())) {
                     const pair<NodePtr, NodePtr> key(writer, reader);
                     map<NodePair, ProductionPtr>::const_iterator kp = m.find(key);
                     if (kp != m.end()) {
@@ -312,7 +293,7 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
                 break;
 
             case AVRO_ENUM:
-                if (writer->name() == reader->name()) {
+                if (writer->name().equalOrAliasedBy(reader->name())) {
                     ProductionPtr result = make_shared<Production>();
                     result->push_back(Symbol::enumAdjustSymbol(writer, reader));
                     result->push_back(Symbol::enumSymbol());

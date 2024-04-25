@@ -127,15 +127,15 @@ fn avro_3786_deserialize_union_with_different_enum_order() -> TestResult {
         bar_init: Bar::Bar1,
         bar_use_parent: Some(BarUseParent { bar_use: Bar::Bar1 }),
     };
-    let avro_value = crate::to_value(foo1)?;
+    let avro_value = to_value(foo1)?;
     assert!(
         avro_value.validate(&writer_schema),
         "value is valid for schema",
     );
-    let datum = crate::to_avro_datum(&writer_schema, avro_value)?;
+    let datum = to_avro_datum(&writer_schema, avro_value)?;
     let mut x = &datum[..];
     let reader_schema = Schema::parse_str(reader_schema)?;
-    let deser_value = crate::from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
+    let deser_value = from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
     match deser_value {
         types::Value::Record(fields) => {
             assert_eq!(fields.len(), 2);
@@ -251,15 +251,15 @@ fn avro_3786_deserialize_union_with_different_enum_order_defined_in_record() -> 
     let foo1 = Foo {
         bar_parent: Some(BarParent { bar: Bar::Bar0 }),
     };
-    let avro_value = crate::to_value(foo1)?;
+    let avro_value = to_value(foo1)?;
     assert!(
         avro_value.validate(&writer_schema),
         "value is valid for schema",
     );
-    let datum = crate::to_avro_datum(&writer_schema, avro_value)?;
+    let datum = to_avro_datum(&writer_schema, avro_value)?;
     let mut x = &datum[..];
     let reader_schema = Schema::parse_str(reader_schema)?;
-    let deser_value = crate::from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
+    let deser_value = from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
     match deser_value {
         types::Value::Record(fields) => {
             assert_eq!(fields.len(), 1);
@@ -364,15 +364,15 @@ fn test_avro_3786_deserialize_union_with_different_enum_order_defined_in_record_
     let foo1 = Foo {
         bar_parent: Some(BarParent { bar: Bar::Bar1 }),
     };
-    let avro_value = crate::to_value(foo1)?;
+    let avro_value = to_value(foo1)?;
     assert!(
         avro_value.validate(&writer_schema),
         "value is valid for schema",
     );
-    let datum = crate::to_avro_datum(&writer_schema, avro_value)?;
+    let datum = to_avro_datum(&writer_schema, avro_value)?;
     let mut x = &datum[..];
     let reader_schema = Schema::parse_str(reader_schema)?;
-    let deser_value = crate::from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
+    let deser_value = from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
     match deser_value {
         types::Value::Record(fields) => {
             assert_eq!(fields.len(), 1);
@@ -477,15 +477,15 @@ fn test_avro_3786_deserialize_union_with_different_enum_order_defined_in_record_
     let foo1 = Foo {
         bar_parent: Some(BarParent { bar: Bar::Bar1 }),
     };
-    let avro_value = crate::to_value(foo1)?;
+    let avro_value = to_value(foo1)?;
     assert!(
         avro_value.validate(&writer_schema),
         "value is valid for schema",
     );
-    let datum = crate::to_avro_datum(&writer_schema, avro_value)?;
+    let datum = to_avro_datum(&writer_schema, avro_value)?;
     let mut x = &datum[..];
     let reader_schema = Schema::parse_str(reader_schema)?;
-    let deser_value = crate::from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
+    let deser_value = from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
     match deser_value {
         types::Value::Record(fields) => {
             assert_eq!(fields.len(), 1);
@@ -590,15 +590,15 @@ fn deserialize_union_with_different_enum_order_defined_in_record() -> TestResult
     let foo1 = Foo {
         bar_parent: Some(BarParent { bar: Bar::Bar2 }),
     };
-    let avro_value = crate::to_value(foo1)?;
+    let avro_value = to_value(foo1)?;
     assert!(
         avro_value.validate(&writer_schema),
         "value is valid for schema",
     );
-    let datum = crate::to_avro_datum(&writer_schema, avro_value)?;
+    let datum = to_avro_datum(&writer_schema, avro_value)?;
     let mut x = &datum[..];
     let reader_schema = Schema::parse_str(reader_schema)?;
-    let deser_value = crate::from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
+    let deser_value = from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
     match deser_value {
         types::Value::Record(fields) => {
             assert_eq!(fields.len(), 1);
@@ -864,15 +864,15 @@ fn deserialize_union_with_record_with_enum_defined_inline_reader_has_different_i
             defined_in_record: DefinedInRecord::Val1,
         }),
     };
-    let avro_value = crate::to_value(foo1)?;
+    let avro_value = to_value(foo1)?;
     assert!(
         avro_value.validate(&writer_schema),
         "value is valid for schema",
     );
-    let datum = crate::to_avro_datum(&writer_schema, avro_value)?;
+    let datum = to_avro_datum(&writer_schema, avro_value)?;
     let mut x = &datum[..];
     let reader_schema = Schema::parse_str(reader_schema)?;
-    let deser_value = crate::from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
+    let deser_value = from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
     match deser_value {
         types::Value::Record(fields) => {
             assert_eq!(fields.len(), 3);

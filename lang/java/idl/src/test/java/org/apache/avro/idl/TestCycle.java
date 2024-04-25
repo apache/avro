@@ -45,7 +45,7 @@ public class TestCycle {
   public void testCycleGeneration() throws IOException, URISyntaxException {
     final ClassLoader cl = Thread.currentThread().getContextClassLoader();
     IdlReader parser = new IdlReader();
-    IdlFile idlFile = parser.resolve(parser.parse(requireNonNull(cl.getResource("input/cycle.avdl")).toURI()));
+    IdlFile idlFile = parser.parse(requireNonNull(cl.getResource("input/cycle.avdl")).toURI());
     String json = idlFile.outputString();
     LOG.info(json);
 

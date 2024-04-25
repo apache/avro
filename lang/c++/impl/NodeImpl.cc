@@ -254,17 +254,34 @@ static void printName(std::ostream &os, const Name &n, size_t depth) {
 void NodeRecord::printJson(std::ostream &os, size_t depth) const {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"record\",\n";
-    printName(os, nameAttribute_.get(), depth);
+    const Name &name = nameAttribute_.get();
+    printName(os, name, depth);
+
+    const auto &aliases = name.aliases();
+    if (!aliases.empty()) {
+        os << indent(depth) << "\"aliases\": [";
+        ++depth;
+        for (size_t i = 0; i < aliases.size(); ++i) {
+            if (i > 0) {
+                os << ',';
+            }
+            os << '\n'
+               << indent(depth) << "\"" << aliases[i] << "\"";
+        }
+        os << '\n'
+           << indent(--depth) << "]\n";
+    }
+
     if (!getDoc().empty()) {
         os << indent(depth) << R"("doc": ")"
            << escape(getDoc()) << "\",\n";
     }
-    os << indent(depth) << "\"fields\": [";
 
+    os << indent(depth) << "\"fields\": [";
     size_t fields = leafAttributes_.size();
     ++depth;
-    // Serialize "default" field:
-    assert(defaultValues.empty() || (defaultValues.size() == fields));
+    assert(fieldsAliases_.empty() || (fieldsAliases_.size() == fields));
+    assert(fieldsDefaultValues_.empty() || (fieldsDefaultValues_.size() == fields));
     assert(customAttributes_.size() == 0 || customAttributes_.size() == fields);
     for (size_t i = 0; i < fields; ++i) {
         if (i > 0) {
@@ -276,19 +293,37 @@ void NodeRecord::printJson(std::ostream &os, size_t depth) const {
         os << indent(depth) << "\"type\": ";
         leafAttributes_.get(i)->printJson(os, depth);
 
-        if (!defaultValues.empty()) {
-            if (!defaultValues[i].isUnion() && defaultValues[i].type() == AVRO_NULL) {
+        if (!fieldsAliases_.empty() && !fieldsAliases_[i].empty()) {
+            os << ",\n"
+               << indent(depth) << "\"aliases\": [";
+            ++depth;
+            for (size_t j = 0; j < fieldsAliases_[i].size(); ++j) {
+                if (j > 0) {
+                    os << ',';
+                }
+                os << '\n'
+                << indent(depth) << "\"" << fieldsAliases_[i][j] << "\"";
+            }
+            os << '\n'
+            << indent(--depth) << ']';
+        }
+
+        // Serialize "default" field:
+        if (!fieldsDefaultValues_.empty()) {
+            if (!fieldsDefaultValues_[i].isUnion() && fieldsDefaultValues_[i].type() == AVRO_NULL) {
                 // No "default" field.
             } else {
                 os << ",\n"
                    << indent(depth) << "\"default\": ";
-                leafAttributes_.get(i)->printDefaultToJson(defaultValues[i], os,
+                leafAttributes_.get(i)->printDefaultToJson(fieldsDefaultValues_[i], os,
                                                            depth);
             }
         }
+
         if(customAttributes_.size() == fields) {
           printCustomAttributes(customAttributes_.get(i), depth, os);
         }
+
         os << '\n';
         os << indent(--depth) << '}';
     }
@@ -424,16 +459,38 @@ void NodeRecord::printDefaultToJson(const GenericDatum &g, std::ostream &os,
            << indent(--depth) << "}";
     }
 }
-NodeRecord::NodeRecord(const HasName &name,
-                       const MultiLeaves &fields,
-                       const LeafNames &fieldsNames,
-                       std::vector<GenericDatum> dv) : NodeImplRecord(AVRO_RECORD, name, fields, fieldsNames, MultiAttributes(), NoSize()),
-                                                       defaultValues(std::move(dv)) {
+
+NodeRecord::NodeRecord(const HasName &name, const MultiLeaves &fields,
+                       const LeafNames &fieldsNames, std::vector<GenericDatum> dv)
+    : NodeRecord(name, HasDoc(), fields, fieldsNames, {}, std::move(dv), MultiAttributes()) {}
+
+NodeRecord::NodeRecord(const HasName &name, const HasDoc &doc, const MultiLeaves &fields,
+                       const LeafNames &fieldsNames, std::vector<GenericDatum> dv)
+    : NodeRecord(name, doc, fields, fieldsNames, {}, std::move(dv), MultiAttributes()) {}
+
+NodeRecord::NodeRecord(const HasName &name, const MultiLeaves &fields,
+                       const LeafNames &fieldsNames, std::vector<std::vector<std::string>> fieldsAliases,
+                       std::vector<GenericDatum> dv, const MultiAttributes &customAttributes)
+    : NodeRecord(name, HasDoc(), fields, fieldsNames, std::move(fieldsAliases), std::move(dv), customAttributes) {}
+
+NodeRecord::NodeRecord(const HasName &name, const HasDoc &doc, const MultiLeaves &fields,
+                       const LeafNames &fieldsNames, std::vector<std::vector<std::string>> fieldsAliases,
+                       std::vector<GenericDatum> dv, const MultiAttributes &customAttributes)
+    : NodeImplRecord(AVRO_RECORD, name, doc, fields, fieldsNames, customAttributes, NoSize()),
+      fieldsAliases_(std::move(fieldsAliases)),
+      fieldsDefaultValues_(std::move(dv)) {
+
     for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
         if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
-            throw Exception(boost::format(
-                                "Cannot add duplicate field: %1%")
-                            % leafNameAttributes_.get(i));
+            throw Exception(boost::format("Cannot add duplicate field: %1%") % leafNameAttributes_.get(i));
+        }
+
+        if (!fieldsAliases_.empty()) {
+            for (const auto &alias : fieldsAliases_[i]) {
+                if (!nameIndex_.add(alias, i)) {
+                    throw Exception(boost::format("Cannot add duplicate field: %1%") % alias);
+                }
+            }
         }
     }
 }

@@ -26,6 +26,28 @@ use std::{
     ptr,
 };
 
+fn match_ref_schemas(
+    writers_schema: &Schema,
+    readers_schema: &Schema,
+) -> Result<(), CompatibilityError> {
+    match (readers_schema, writers_schema) {
+        (Schema::Ref { name: r_name }, Schema::Ref { name: w_name }) => {
+            if r_name == w_name {
+                Ok(())
+            } else {
+                Err(CompatibilityError::NameMismatch {
+                    writer_name: w_name.fullname(None),
+                    reader_name: r_name.fullname(None),
+                })
+            }
+        }
+        _ => Err(CompatibilityError::WrongType {
+            writer_schema_type: format!("{:#?}", writers_schema),
+            reader_schema_type: format!("{:#?}", readers_schema),
+        }),
+    }
+}
+
 pub struct SchemaCompatibility;
 
 struct Checker {
@@ -62,11 +84,25 @@ impl Checker {
         let w_type = SchemaKind::from(writers_schema);
         let r_type = SchemaKind::from(readers_schema);
 
-        if w_type != SchemaKind::Union && (r_type.is_primitive() || r_type == SchemaKind::Fixed) {
+        if w_type != SchemaKind::Union
+            && (r_type.is_primitive()
+                || r_type == SchemaKind::Fixed
+                || r_type == SchemaKind::Uuid
+                || r_type == SchemaKind::Date
+                || r_type == SchemaKind::TimeMillis
+                || r_type == SchemaKind::TimeMicros
+                || r_type == SchemaKind::TimestampMillis
+                || r_type == SchemaKind::TimestampMicros
+                || r_type == SchemaKind::TimestampNanos
+                || r_type == SchemaKind::LocalTimestampMillis
+                || r_type == SchemaKind::LocalTimestampMicros
+                || r_type == SchemaKind::LocalTimestampNanos)
+        {
             return Ok(());
         }
 
         match r_type {
+            SchemaKind::Ref => match_ref_schemas(writers_schema, readers_schema),
             SchemaKind::Record => self.match_record_schemas(writers_schema, readers_schema),
             SchemaKind::Map => {
                 if let Schema::Map(w_m) = writers_schema {
@@ -80,7 +116,7 @@ impl Checker {
                 } else {
                     Err(CompatibilityError::TypeExpected {
                         schema_type: String::from("writers_schema"),
-                        expected_type: &[SchemaKind::Record],
+                        expected_type: vec![SchemaKind::Record],
                     })
                 }
             }
@@ -96,7 +132,7 @@ impl Checker {
                 } else {
                     Err(CompatibilityError::TypeExpected {
                         schema_type: String::from("writers_schema"),
-                        expected_type: &[SchemaKind::Array],
+                        expected_type: vec![SchemaKind::Array],
                     })
                 }
             }
@@ -143,7 +179,7 @@ impl Checker {
         if w_type == SchemaKind::Union {
             return Err(CompatibilityError::TypeExpected {
                 schema_type: String::from("writers_schema"),
-                expected_type: &[SchemaKind::Record],
+                expected_type: vec![SchemaKind::Record],
             });
         }
 
@@ -169,15 +205,14 @@ impl Checker {
                     // Check whether any of the possible fields names are in the writer schema.
                     // If the field was found, then it must have the exact same name with the writer field,
                     // otherwise we would have a false positive with the writers aliases
-                    let mut position = None;
-                    for field_name in fields_names {
-                        if let Some(pos) = w_lookup.get(field_name) {
-                            if &w_fields[*pos].name == field_name {
-                                position = Some(pos);
-                                break;
+                    let position = fields_names.iter().find_map(|field_name| {
+                        if let Some(pos) = w_lookup.get(*field_name) {
+                            if &w_fields[*pos].name == *field_name {
+                                return Some(pos);
                             }
                         }
-                    }
+                        None
+                    });
 
                     match position {
                         Some(pos) => {
@@ -278,6 +313,53 @@ impl SchemaCompatibility {
         writers_schema: &Schema,
         readers_schema: &Schema,
     ) -> Result<(), CompatibilityError> {
+        fn check_reader_type_multi(
+            reader_type: SchemaKind,
+            allowed_reader_types: Vec<SchemaKind>,
+            writer_type: SchemaKind,
+        ) -> Result<(), CompatibilityError> {
+            if allowed_reader_types.iter().any(|&t| t == reader_type) {
+                Ok(())
+            } else {
+                let mut allowed_types: Vec<SchemaKind> = vec![writer_type];
+                allowed_types.extend_from_slice(allowed_reader_types.as_slice());
+                Err(CompatibilityError::TypeExpected {
+                    schema_type: String::from("readers_schema"),
+                    expected_type: allowed_types,
+                })
+            }
+        }
+
+        fn check_reader_type(
+            reader_type: SchemaKind,
+            allowed_reader_type: SchemaKind,
+            writer_type: SchemaKind,
+        ) -> Result<(), CompatibilityError> {
+            if reader_type == allowed_reader_type {
+                Ok(())
+            } else {
+                Err(CompatibilityError::TypeExpected {
+                    schema_type: String::from("readers_schema"),
+                    expected_type: vec![writer_type, allowed_reader_type],
+                })
+            }
+        }
+
+        fn check_writer_type(
+            writers_schema: &Schema,
+            allowed_schema: &Schema,
+            expected_schema_types: Vec<SchemaKind>,
+        ) -> Result<(), CompatibilityError> {
+            if *allowed_schema == *writers_schema {
+                Ok(())
+            } else {
+                Err(CompatibilityError::TypeExpected {
+                    schema_type: String::from("writers_schema"),
+                    expected_type: expected_schema_types,
+                })
+            }
+        }
+
         let w_type = SchemaKind::from(writers_schema);
         let r_type = SchemaKind::from(readers_schema);
 
@@ -291,29 +373,19 @@ impl SchemaCompatibility {
             }
 
             match r_type {
-                SchemaKind::Record => {
-                    if let Schema::Record(RecordSchema { name: w_name, .. }) = writers_schema {
-                        if let Schema::Record(RecordSchema { name: r_name, .. }) = readers_schema {
-                            if w_name.name == r_name.name {
-                                return Ok(());
-                            } else {
-                                return Err(CompatibilityError::NameMismatch {
-                                    writer_name: w_name.name.clone(),
-                                    reader_name: r_name.name.clone(),
-                                });
-                            }
-                        } else {
-                            return Err(CompatibilityError::TypeExpected {
-                                schema_type: String::from("readers_schema"),
-                                expected_type: &[SchemaKind::Record],
-                            });
-                        }
-                    } else {
-                        return Err(CompatibilityError::TypeExpected {
-                            schema_type: String::from("writers_schema"),
-                            expected_type: &[SchemaKind::Record],
-                        });
+                SchemaKind::Record | SchemaKind::Enum => {
+                    let msg = format!("A {} type must always has a name", readers_schema);
+                    let writers_name = writers_schema.name().expect(&msg);
+                    let readers_name = readers_schema.name().expect(&msg);
+
+                    if writers_name.name == readers_name.name {
+                        return Ok(());
                     }
+
+                    return Err(CompatibilityError::NameMismatch {
+                        writer_name: writers_name.name.clone(),
+                        reader_name: readers_name.name.clone(),
+                    });
                 }
                 SchemaKind::Fixed => {
                     if let Schema::Fixed(FixedSchema {
@@ -335,72 +407,54 @@ impl SchemaCompatibility {
                             return (w_name.name == r_name.name && w_size == r_size)
                                 .then_some(())
                                 .ok_or(CompatibilityError::FixedMismatch);
-                        } else {
-                            return Err(CompatibilityError::TypeExpected {
-                                schema_type: String::from("writers_schema"),
-                                expected_type: &[SchemaKind::Fixed],
-                            });
                         }
-                    }
-                }
-                SchemaKind::Enum => {
-                    if let Schema::Enum(EnumSchema { name: w_name, .. }) = writers_schema {
-                        if let Schema::Enum(EnumSchema { name: r_name, .. }) = readers_schema {
-                            if w_name.name == r_name.name {
-                                return Ok(());
-                            } else {
-                                return Err(CompatibilityError::NameMismatch {
-                                    writer_name: w_name.name.clone(),
-                                    reader_name: r_name.name.clone(),
-                                });
-                            }
-                        } else {
-                            return Err(CompatibilityError::TypeExpected {
-                                schema_type: String::from("readers_schema"),
-                                expected_type: &[SchemaKind::Enum],
-                            });
-                        }
-                    } else {
-                        return Err(CompatibilityError::TypeExpected {
-                            schema_type: String::from("writers_schema"),
-                            expected_type: &[SchemaKind::Enum],
-                        });
                     }
                 }
                 SchemaKind::Map => {
                     if let Schema::Map(w_m) = writers_schema {
                         if let Schema::Map(r_m) = readers_schema {
                             return SchemaCompatibility::match_schemas(&w_m.types, &r_m.types);
-                        } else {
-                            return Err(CompatibilityError::TypeExpected {
-                                schema_type: String::from("readers_schema"),
-                                expected_type: &[SchemaKind::Map],
-                            });
                         }
-                    } else {
-                        return Err(CompatibilityError::TypeExpected {
-                            schema_type: String::from("writers_schema"),
-                            expected_type: &[SchemaKind::Map],
-                        });
                     }
                 }
                 SchemaKind::Array => {
                     if let Schema::Array(w_a) = writers_schema {
                         if let Schema::Array(r_a) = readers_schema {
                             return SchemaCompatibility::match_schemas(&w_a.items, &r_a.items);
-                        } else {
-                            return Err(CompatibilityError::TypeExpected {
-                                schema_type: String::from("readers_schema"),
-                                expected_type: &[SchemaKind::Array],
-                            });
                         }
-                    } else {
-                        return Err(CompatibilityError::TypeExpected {
-                            schema_type: String::from("writers_schema"),
-                            expected_type: &[SchemaKind::Array],
-                        });
                     }
                 }
+                SchemaKind::Uuid => {
+                    return check_writer_type(
+                        writers_schema,
+                        readers_schema,
+                        vec![r_type, SchemaKind::String],
+                    );
+                }
+                SchemaKind::Date | SchemaKind::TimeMillis => {
+                    return check_writer_type(
+                        writers_schema,
+                        readers_schema,
+                        vec![r_type, SchemaKind::Int],
+                    );
+                }
+                SchemaKind::TimeMicros
+                | SchemaKind::TimestampNanos
+                | SchemaKind::TimestampMillis
+                | SchemaKind::TimestampMicros
+                | SchemaKind::LocalTimestampMillis
+                | SchemaKind::LocalTimestampMicros
+                | SchemaKind::LocalTimestampNanos => {
+                    return check_writer_type(
+                        writers_schema,
+                        readers_schema,
+                        vec![r_type, SchemaKind::Long],
+                    );
+                }
+                SchemaKind::Duration => {
+                    return Ok(());
+                }
+                SchemaKind::Ref => return match_ref_schemas(writers_schema, readers_schema),
                 _ => {
                     return Err(CompatibilityError::Inconclusive(String::from(
                         "readers_schema",
@@ -411,64 +465,51 @@ impl SchemaCompatibility {
 
         // Here are the checks for primitive types
         match w_type {
-            SchemaKind::Int => {
-                if [SchemaKind::Long, SchemaKind::Float, SchemaKind::Double]
-                    .iter()
-                    .any(|&t| t == r_type)
-                {
-                    Ok(())
-                } else {
-                    Err(CompatibilityError::TypeExpected {
-                        schema_type: String::from("readers_schema"),
-                        expected_type: &[SchemaKind::Long, SchemaKind::Float, SchemaKind::Double],
-                    })
-                }
-            }
-            SchemaKind::Long => {
-                if [SchemaKind::Float, SchemaKind::Double]
-                    .iter()
-                    .any(|&t| t == r_type)
-                {
-                    Ok(())
-                } else {
-                    Err(CompatibilityError::TypeExpected {
-                        schema_type: String::from("readers_schema"),
-                        expected_type: &[SchemaKind::Float, SchemaKind::Double],
-                    })
-                }
-            }
+            SchemaKind::Int => check_reader_type_multi(
+                r_type,
+                vec![
+                    SchemaKind::Long,
+                    SchemaKind::Float,
+                    SchemaKind::Double,
+                    SchemaKind::Date,
+                    SchemaKind::TimeMillis,
+                ],
+                w_type,
+            ),
+            SchemaKind::Long => check_reader_type_multi(
+                r_type,
+                vec![
+                    SchemaKind::Float,
+                    SchemaKind::Double,
+                    SchemaKind::TimeMicros,
+                    SchemaKind::TimestampMillis,
+                    SchemaKind::TimestampMicros,
+                    SchemaKind::TimestampNanos,
+                    SchemaKind::LocalTimestampMillis,
+                    SchemaKind::LocalTimestampMicros,
+                    SchemaKind::LocalTimestampNanos,
+                ],
+                w_type,
+            ),
             SchemaKind::Float => {
-                if [SchemaKind::Float, SchemaKind::Double]
-                    .iter()
-                    .any(|&t| t == r_type)
-                {
-                    Ok(())
-                } else {
-                    Err(CompatibilityError::TypeExpected {
-                        schema_type: String::from("readers_schema"),
-                        expected_type: &[SchemaKind::Float, SchemaKind::Double],
-                    })
-                }
+                check_reader_type_multi(r_type, vec![SchemaKind::Float, SchemaKind::Double], w_type)
             }
             SchemaKind::String => {
-                if r_type == SchemaKind::Bytes {
-                    Ok(())
-                } else {
-                    Err(CompatibilityError::TypeExpected {
-                        schema_type: String::from("readers_schema"),
-                        expected_type: &[SchemaKind::Bytes],
-                    })
-                }
+                check_reader_type_multi(r_type, vec![SchemaKind::Bytes, SchemaKind::Uuid], w_type)
             }
-            SchemaKind::Bytes => {
-                if r_type == SchemaKind::String {
-                    Ok(())
-                } else {
-                    Err(CompatibilityError::TypeExpected {
-                        schema_type: String::from("readers_schema"),
-                        expected_type: &[SchemaKind::String],
-                    })
-                }
+            SchemaKind::Bytes => check_reader_type(r_type, SchemaKind::String, w_type),
+            SchemaKind::Uuid => check_reader_type(r_type, SchemaKind::String, w_type),
+            SchemaKind::Date | SchemaKind::TimeMillis => {
+                check_reader_type(r_type, SchemaKind::Int, w_type)
+            }
+            SchemaKind::TimeMicros
+            | SchemaKind::TimestampMicros
+            | SchemaKind::TimestampMillis
+            | SchemaKind::TimestampNanos
+            | SchemaKind::LocalTimestampMillis
+            | SchemaKind::LocalTimestampMicros
+            | SchemaKind::LocalTimestampNanos => {
+                check_reader_type(r_type, SchemaKind::Long, w_type)
             }
             _ => Err(CompatibilityError::Inconclusive(String::from(
                 "writers_schema",
@@ -485,6 +526,7 @@ mod tests {
         Codec, Reader, Writer,
     };
     use apache_avro_test_helper::TestResult;
+    use rstest::*;
 
     fn int_array_schema() -> Schema {
         Schema::parse_str(r#"{"type":"array", "items":"int"}"#).unwrap()
@@ -659,6 +701,16 @@ mod tests {
             // bytes
             (Schema::Bytes, Schema::Null),
             (Schema::Bytes, Schema::Int),
+            // logical types
+            (Schema::TimeMicros, Schema::Int),
+            (Schema::TimestampMillis, Schema::Int),
+            (Schema::TimestampMicros, Schema::Int),
+            (Schema::TimestampNanos, Schema::Int),
+            (Schema::LocalTimestampMillis, Schema::Int),
+            (Schema::LocalTimestampMicros, Schema::Int),
+            (Schema::LocalTimestampNanos, Schema::Int),
+            (Schema::Date, Schema::Long),
+            (Schema::TimeMillis, Schema::Long),
             // array and maps
             (int_array_schema(), long_array_schema()),
             (int_map_schema(), int_array_schema()),
@@ -686,6 +738,268 @@ mod tests {
             .any(|(reader, writer)| SchemaCompatibility::can_read(writer, reader).is_err()));
     }
 
+    #[rstest]
+    // Record type test
+    #[case(
+        r#"{"type": "record", "name": "record_a", "fields": [{"type": "long", "name": "date"}]}"#,
+        r#"{"type": "record", "name": "record_a", "fields": [{"type": "long", "name": "date", "default": 18181}]}"#
+    )]
+    // Fixed type test
+    #[case(
+        r#"{"type": "fixed", "name": "EmployeeId", "size": 16}"#,
+        r#"{"type": "fixed", "name": "EmployeeId", "size": 16, "default": "u00ffffffffffffx"}"#
+    )]
+    // Enum type test
+    #[case(
+        r#"{"type": "enum", "name":"Enum1", "symbols": ["A","B"]}"#,
+        r#"{"type": "enum", "name":"Enum1", "symbols": ["A","B", "C"], "default": "C"}"#
+    )]
+    // Map type test
+    #[case(
+        r#"{"type": "map", "values": "int"}"#,
+        r#"{"type": "map", "values": "long"}"#
+    )]
+    // Date type
+    #[case(r#"{"type": "int"}"#, r#"{"type": "int", "logicalType": "date"}"#)]
+    // time-millis type
+    #[case(
+        r#"{"type": "int"}"#,
+        r#"{"type": "int", "logicalType": "time-millis"}"#
+    )]
+    // time-millis type
+    #[case(
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "time-micros"}"#
+    )]
+    // timetimestamp-nanos type
+    #[case(
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "timestamp-nanos"}"#
+    )]
+    // timestamp-millis type
+    #[case(
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "timestamp-millis"}"#
+    )]
+    // timestamp-micros type
+    #[case(
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "timestamp-micros"}"#
+    )]
+    // local-timestamp-millis type
+    #[case(
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "local-timestamp-millis"}"#
+    )]
+    // local-timestamp-micros type
+    #[case(
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "local-timestamp-micros"}"#
+    )]
+    // local-timestamp-nanos type
+    #[case(
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "local-timestamp-nanos"}"#
+    )]
+    // Array type test
+    #[case(
+        r#"{"type": "array", "items": "int"}"#,
+        r#"{"type": "array", "items": "long"}"#
+    )]
+    fn test_avro_3950_match_schemas_ok(
+        #[case] writer_schema_str: &str,
+        #[case] reader_schema_str: &str,
+    ) {
+        let writer_schema = Schema::parse_str(writer_schema_str).unwrap();
+        let reader_schema = Schema::parse_str(reader_schema_str).unwrap();
+
+        assert!(SchemaCompatibility::match_schemas(&writer_schema, &reader_schema).is_ok());
+    }
+
+    #[rstest]
+    // Record type test
+    #[case(
+        r#"{"type": "record", "name":"record_a", "fields": [{"type": "long", "name": "date"}]}"#,
+        r#"{"type": "record", "name":"record_b", "fields": [{"type": "long", "name": "date"}]}"#,
+        CompatibilityError::NameMismatch{writer_name: String::from("record_a"), reader_name: String::from("record_b")}
+    )]
+    // Fixed type test
+    #[case(
+        r#"{"type": "fixed", "name": "EmployeeId", "size": 16}"#,
+        r#"{"type": "fixed", "name": "EmployeeId", "size": 20}"#,
+        CompatibilityError::FixedMismatch
+    )]
+    // Enum type test
+    #[case(
+        r#"{"type": "enum", "name": "Enum1", "symbols": ["A","B"]}"#,
+        r#"{"type": "enum", "name": "Enum2", "symbols": ["A","B"]}"#,
+        CompatibilityError::NameMismatch{writer_name: String::from("Enum1"), reader_name: String::from("Enum2")}
+    )]
+    // Map type test
+    #[case(
+        r#"{"type":"map", "values": "long"}"#,
+        r#"{"type":"map", "values": "int"}"#,
+        CompatibilityError::TypeExpected {schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::Long,
+            SchemaKind::Float,
+            SchemaKind::Double,
+            SchemaKind::TimeMicros,
+            SchemaKind::TimestampMillis,
+            SchemaKind::TimestampMicros,
+            SchemaKind::TimestampNanos,
+            SchemaKind::LocalTimestampMillis,
+            SchemaKind::LocalTimestampMicros,
+            SchemaKind::LocalTimestampNanos,
+        ]}
+    )]
+    // Array type test
+    #[case(
+        r#"{"type": "array", "items": "long"}"#,
+        r#"{"type": "array", "items": "int"}"#,
+        CompatibilityError::TypeExpected {schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::Long,
+            SchemaKind::Float,
+            SchemaKind::Double,
+            SchemaKind::TimeMicros,
+            SchemaKind::TimestampMillis,
+            SchemaKind::TimestampMicros,
+            SchemaKind::TimestampNanos,
+            SchemaKind::LocalTimestampMillis,
+            SchemaKind::LocalTimestampMicros,
+            SchemaKind::LocalTimestampNanos,
+        ]}
+    )]
+    // Date type test
+    #[case(
+        r#"{"type": "string"}"#,
+        r#"{"type": "int", "logicalType": "date"}"#,
+        CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::String,
+            SchemaKind::Bytes,
+            SchemaKind::Uuid,
+        ]}
+    )]
+    // time-millis type
+    #[case(
+        r#"{"type": "string"}"#,
+        r#"{"type": "int", "logicalType": "time-millis"}"#,
+        CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::String,
+            SchemaKind::Bytes,
+            SchemaKind::Uuid,
+        ]}
+    )]
+    // time-millis type
+    #[case(
+        r#"{"type": "int"}"#,
+        r#"{"type": "long", "logicalType": "time-micros"}"#,
+        CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::Int,
+            SchemaKind::Long,
+            SchemaKind::Float,
+            SchemaKind::Double,
+            SchemaKind::Date,
+            SchemaKind::TimeMillis
+        ]}
+    )]
+    // timestamp-nanos type. This test should fail because it is not supported on schema parse_complex
+    // #[case(
+    //     r#"{"type": "string"}"#,
+    //     r#"{"type": "long", "logicalType": "timestamp-nanos"}"#,
+    //     CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+    //         SchemaKind::Int,
+    //         SchemaKind::Long,
+    //         SchemaKind::Float,
+    //         SchemaKind::Double,
+    //         SchemaKind::Date,
+    //         SchemaKind::TimeMillis
+    //     ]}
+    // )]
+    // timestamp-millis type
+    #[case(
+        r#"{"type": "int"}"#,
+        r#"{"type": "long", "logicalType": "timestamp-millis"}"#,
+        CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::Int,
+            SchemaKind::Long,
+            SchemaKind::Float,
+            SchemaKind::Double,
+            SchemaKind::Date,
+            SchemaKind::TimeMillis
+        ]}
+    )]
+    // timestamp-micros type
+    #[case(
+        r#"{"type": "int"}"#,
+        r#"{"type": "long", "logicalType": "timestamp-micros"}"#,
+        CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::Int,
+            SchemaKind::Long,
+            SchemaKind::Float,
+            SchemaKind::Double,
+            SchemaKind::Date,
+            SchemaKind::TimeMillis
+        ]}
+    )]
+    // local-timestamp-millis type
+    #[case(
+        r#"{"type": "int"}"#,
+        r#"{"type": "long", "logicalType": "local-timestamp-millis"}"#,
+        CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::Int,
+            SchemaKind::Long,
+            SchemaKind::Float,
+            SchemaKind::Double,
+            SchemaKind::Date,
+            SchemaKind::TimeMillis
+        ]}
+    )]
+    // local-timestamp-micros type
+    #[case(
+        r#"{"type": "int"}"#,
+        r#"{"type": "long", "logicalType": "local-timestamp-micros"}"#,
+        CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+            SchemaKind::Int,
+            SchemaKind::Long,
+            SchemaKind::Float,
+            SchemaKind::Double,
+            SchemaKind::Date,
+            SchemaKind::TimeMillis
+        ]}
+    )]
+    // local-timestamp-nanos type. This test should fail because it is not supported on schema parse_complex
+    // #[case(
+    //     r#"{"type": "int"}"#,
+    //     r#"{"type": "long", "logicalType": "local-timestamp-nanos"}"#,
+    //     CompatibilityError::TypeExpected{schema_type: String::from("readers_schema"), expected_type: vec![
+    //         SchemaKind::Int,
+    //         SchemaKind::Long,
+    //         SchemaKind::Float,
+    //         SchemaKind::Double,
+    //         SchemaKind::Date,
+    //         SchemaKind::TimeMillis
+    //     ]}
+    // )]
+    // When comparing different types we always get Inconclusive
+    #[case(
+        r#"{"type": "record", "name":"record_b", "fields": [{"type": "long", "name": "date"}]}"#,
+        r#"{"type": "fixed", "name": "EmployeeId", "size": 16}"#,
+        CompatibilityError::Inconclusive(String::from("writers_schema"))
+    )]
+    fn test_avro_3950_match_schemas_error(
+        #[case] writer_schema_str: &str,
+        #[case] reader_schema_str: &str,
+        #[case] expected_error: CompatibilityError,
+    ) {
+        let writer_schema = Schema::parse_str(writer_schema_str).unwrap();
+        let reader_schema = Schema::parse_str(reader_schema_str).unwrap();
+
+        assert_eq!(
+            expected_error,
+            SchemaCompatibility::match_schemas(&writer_schema, &reader_schema).unwrap_err()
+        )
+    }
+
     #[test]
     fn test_compatible_reader_writer_pairs() {
         let compatible_schemas = vec![
@@ -698,6 +1012,28 @@ mod tests {
             (Schema::Double, Schema::Float),
             (Schema::String, Schema::Bytes),
             (Schema::Bytes, Schema::String),
+            // logical types
+            (Schema::Uuid, Schema::Uuid),
+            (Schema::Uuid, Schema::String),
+            (Schema::Date, Schema::Int),
+            (Schema::TimeMillis, Schema::Int),
+            (Schema::TimeMicros, Schema::Long),
+            (Schema::TimestampMillis, Schema::Long),
+            (Schema::TimestampMicros, Schema::Long),
+            (Schema::TimestampNanos, Schema::Long),
+            (Schema::LocalTimestampMillis, Schema::Long),
+            (Schema::LocalTimestampMicros, Schema::Long),
+            (Schema::LocalTimestampNanos, Schema::Long),
+            (Schema::String, Schema::Uuid),
+            (Schema::Int, Schema::Date),
+            (Schema::Int, Schema::TimeMillis),
+            (Schema::Long, Schema::TimeMicros),
+            (Schema::Long, Schema::TimestampMillis),
+            (Schema::Long, Schema::TimestampMicros),
+            (Schema::Long, Schema::TimestampNanos),
+            (Schema::Long, Schema::LocalTimestampMillis),
+            (Schema::Long, Schema::LocalTimestampMicros),
+            (Schema::Long, Schema::LocalTimestampNanos),
             (int_array_schema(), int_array_schema()),
             (long_array_schema(), int_array_schema()),
             (int_map_schema(), int_map_schema()),
@@ -859,7 +1195,14 @@ mod tests {
         assert_eq!(
             CompatibilityError::TypeExpected {
                 schema_type: String::from("readers_schema"),
-                expected_type: &[SchemaKind::Long, SchemaKind::Float, SchemaKind::Double],
+                expected_type: vec![
+                    SchemaKind::Int,
+                    SchemaKind::Long,
+                    SchemaKind::Float,
+                    SchemaKind::Double,
+                    SchemaKind::Date,
+                    SchemaKind::TimeMillis
+                ],
             },
             SchemaCompatibility::can_read(&Schema::Int, &Schema::String).unwrap_err()
         );
@@ -901,7 +1244,7 @@ mod tests {
                 "field1".to_owned(),
                 Box::new(CompatibilityError::TypeExpected {
                     schema_type: "readers_schema".to_owned(),
-                    expected_type: &[SchemaKind::Bytes]
+                    expected_type: vec![SchemaKind::String, SchemaKind::Bytes, SchemaKind::Uuid]
                 })
             ),
             SchemaCompatibility::can_read(&string_schema, &int_schema).unwrap_err()
@@ -1388,6 +1731,41 @@ mod tests {
                     .to_string()
             );
         }
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3974_can_read_schema_references() -> TestResult {
+        let schema_strs = vec![
+            r#"{
+          "type": "record",
+          "name": "Child",
+          "namespace": "avro",
+          "fields": [
+            {
+              "name": "val",
+              "type": "int"
+            }
+          ]
+        }
+        "#,
+            r#"{
+          "type": "record",
+          "name": "Parent",
+          "namespace": "avro",
+          "fields": [
+            {
+              "name": "child",
+              "type": "avro.Child"
+            }
+          ]
+        }
+        "#,
+        ];
+
+        let schemas = Schema::parse_list(&schema_strs).unwrap();
+        SchemaCompatibility::can_read(&schemas[1], &schemas[1])?;
 
         Ok(())
     }
