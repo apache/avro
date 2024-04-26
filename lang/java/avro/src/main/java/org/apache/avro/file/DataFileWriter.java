@@ -201,8 +201,8 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /** Open a writer appending to an existing file. */
   public DataFileWriter<D> appendTo(File file) throws IOException {
-    try (SeekableInput input = new SeekableFileInput(file)) {
-      OutputStream output = new SyncableFileOutputStream(file, true);
+    try (SeekableInput input = new SeekableFileInput(file);
+        OutputStream output = new SyncableFileOutputStream(file, true)) {
       return appendTo(input, output);
     }
     // output does not need to be closed here. It will be closed by invoking close()
