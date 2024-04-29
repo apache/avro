@@ -42,7 +42,7 @@ documentation = "https://docs.rs/apache-avro"
 # dependencies used by more than one members
 [workspace.dependencies]
 log = { default-features = false, version = "0.4.21" }
-serde = { default-features = false, version = "1.0.198", features = ["derive"] }
+serde = { default-features = false, version = "1.0.199", features = ["derive"] }
 serde_json = { default-features = false, version = "1.0.116", features = ["std"] }
 
 [profile.release.package.hello-wasm]
