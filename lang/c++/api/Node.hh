@@ -144,7 +144,7 @@ public:
     virtual size_t leaves() const = 0;
     virtual const NodePtr &leafAt(size_t index) const = 0;
     virtual const GenericDatum &defaultValueAt(size_t index) {
-        throw Exception(boost::format("No default value at: %1%") % index);
+        throw Exception("No default value at: {}", index);
     }
 
     void addName(const std::string &name) {
@@ -215,5 +215,12 @@ inline std::ostream &operator<<(std::ostream &os, const avro::Node &n) {
     return os;
 }
 } // namespace std
+
+template <> struct fmt::formatter<avro::Name> : fmt::formatter<std::string> {
+    template <typename FormatContext>
+    auto format(const avro::Name &n, FormatContext &ctx) {
+        return fmt::formatter<std::string>::format(n.fullname(), ctx);
+    }
+};
 
 #endif
