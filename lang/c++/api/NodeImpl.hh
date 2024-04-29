@@ -129,7 +129,7 @@ protected:
 
     void doAddName(const std::string &name) override {
         if (!nameIndex_.add(name, leafNameAttributes_.size())) {
-            throw Exception(boost::format("Cannot add duplicate name: %1%") % name);
+            throw Exception("Cannot add duplicate name: {}", name);
         }
         leafNameAttributes_.add(name);
     }
@@ -280,7 +280,7 @@ public:
     NodePtr getNode() const {
         NodePtr node = actualNode_.lock();
         if (!node) {
-            throw Exception(boost::format("Could not follow symbol %1%") % name());
+            throw Exception("Could not follow symbol {}", name());
         }
         return node;
     }
@@ -345,7 +345,7 @@ public:
     NodeEnum(const HasName &name, const LeafNames &symbols) : NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoAttributes(), NoSize()) {
         for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
             if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
-                throw Exception(boost::format("Cannot add duplicate enum: %1%") % leafNameAttributes_.get(i));
+                throw Exception("Cannot add duplicate enum: {}", leafNameAttributes_.get(i));
             }
         }
     }
