@@ -50,6 +50,9 @@
   <!-- See lang/csharp/README.md for tool and library dependency update strategy -->
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonMinimumVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'netstandard2.1'">
     <PackageReference Include="System.CodeDom" Version="$(SystemCodeDomVersion)" />
   </ItemGroup>
 
