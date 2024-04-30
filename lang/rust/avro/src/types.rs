@@ -612,7 +612,10 @@ impl Value {
                     }
                 })
             }
-            (_v, _s) => Some("Unsupported value-schema combination".to_string()),
+            (v, s) => {
+                debug!("Unsupported value-schema ({:?}-{:?}) combination:", v, s);
+                Some("Unsupported value-schema combination".to_string())
+            }
         }
     }
 
@@ -1149,8 +1152,11 @@ impl Value {
 mod tests {
     use super::*;
     use crate::{
-        duration::{Days, Millis, Months},
-        schema::RecordFieldOrder,
+        decimal::Decimal,
+        duration::{Days, Duration, Millis, Months},
+        schema::{Name, RecordField, RecordFieldOrder, Schema, UnionSchema},
+        to_value,
+        types::Value,
     };
     use apache_avro_test_helper::{
         logger::{assert_logged, assert_not_logged},
@@ -1158,7 +1164,9 @@ mod tests {
     };
     use num_bigint::BigInt;
     use pretty_assertions::assert_eq;
+    use serde::{Deserialize, Serialize};
     use serde_json::json;
+    use uuid::Uuid;
 
     #[test]
     fn avro_3809_validate_nested_records_with_implicit_namespace() -> TestResult {
@@ -2743,7 +2751,6 @@ Field with name '"b"' is not a member of the map items"#,
 
     fn avro_3674_with_or_without_namespace(with_namespace: bool) -> TestResult {
         use crate::ser::Serializer;
-        use serde::Serialize;
 
         let schema_str = r#"{
             "type": "record",
@@ -2834,7 +2841,6 @@ Field with name '"b"' is not a member of the map items"#,
 
     fn avro_3688_schema_resolution_panic(set_field_b: bool) -> TestResult {
         use crate::ser::Serializer;
-        use serde::{Deserialize, Serialize};
 
         let schema_str = r#"{
             "type": "record",
@@ -3109,5 +3115,55 @@ Field with name '"b"' is not a member of the map items"#,
                 .collect()
             )
         );
+    }
+
+    #[test]
+    fn avro_3631_test_serialize_fixed_fields() {
+        use crate::{avro_serialize_bytes, avro_serialize_fixed};
+
+        #[derive(Debug, Serialize, Deserialize)]
+        struct TestStructFixedField<'a> {
+            #[serde(serialize_with = "avro_serialize_bytes")]
+            bytes_field: &'a [u8],
+            #[serde(serialize_with = "avro_serialize_bytes")]
+            vec_field: Vec<u8>,
+            #[serde(serialize_with = "avro_serialize_fixed")]
+            fixed_field: [u8; 6],
+        }
+
+        let test = TestStructFixedField {
+            bytes_field: &[1, 2, 3],
+            fixed_field: [1; 6],
+            vec_field: vec![2, 3, 4],
+        };
+        let value: Value = to_value(test).unwrap();
+        let schema = Schema::parse_str(
+            r#"
+            {
+                "type": "record",
+                "name": "TestStructFixedField",
+                "fields": [
+                    {
+                        "name": "bytes_field",
+                        "type": "bytes"
+                    },
+                    {
+                        "name": "vec_field",
+                        "type": "bytes"
+                    },
+                    {
+                        "name": "fixed_field",
+                        "type": {
+                            "name": "fixed_field",
+                            "type": "fixed",
+                            "size": 6
+                        }
+                    }
+                ]
+            }
+            "#,
+        )
+        .unwrap();
+        assert!(value.validate(&schema));
     }
 }

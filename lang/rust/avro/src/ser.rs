@@ -17,8 +17,24 @@
 
 //! Logic for serde-compatible serialization.
 use crate::{types::Value, Error};
+use ref_thread_local::{ref_thread_local, RefThreadLocal};
 use serde::{ser, Serialize};
 use std::{collections::HashMap, iter::once};
+
+ref_thread_local! {
+    /// A thread local that is used to decide how to serialize
+    /// a byte array into Avro `types::Value`.
+    ///
+    /// Depends on the fact that serde's serialization process is single-threaded!
+    static managed BYTES_TYPE: BytesType = BytesType::Bytes;
+}
+
+/// A hint helping in the serialization of a byte arrays (&[u8], [u8; N])
+#[derive(Debug)]
+enum BytesType {
+    Bytes,
+    Fixed,
+}
 
 #[derive(Clone, Default)]
 pub struct Serializer {}
@@ -174,7 +190,10 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     }
 
     fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
-        Ok(Value::Bytes(v.to_owned()))
+        match *BYTES_TYPE.borrow() {
+            BytesType::Bytes => Ok(Value::Bytes(v.to_owned())),
+            BytesType::Fixed => Ok(Value::Fixed(v.len(), v.to_owned())),
+        }
     }
 
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
@@ -477,13 +496,49 @@ impl<'a> ser::SerializeStructVariant for StructVariantSerializer<'a> {
     }
 }
 
-/// Interpret a serializeable instance as a `Value`.
+/// Interpret a serializable instance as a `Value`.
 ///
 /// This conversion can fail if the value is not valid as per the Avro specification.
 /// e.g: HashMap with non-string keys
 pub fn to_value<S: Serialize>(value: S) -> Result<Value, Error> {
     let mut serializer = Serializer::default();
     value.serialize(&mut serializer)
+}
+
+/// A function that could be used by #[serde(serialize_with = ...)] to give a
+/// hint to Avro's `Serializer` how to serialize a byte array like `[u8; N]` to
+/// `Value::Fixed`
+#[allow(dead_code)]
+pub fn avro_serialize_fixed<S>(value: &[u8], serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: ser::Serializer,
+{
+    serialize_bytes_type(value, serializer, BytesType::Fixed)
+}
+
+/// A function that could be used by #[serde(serialize_with = ...)] to give a
+/// hint to Avro's `Serializer` how to serialize a byte array like `&[u8]` to
+/// `Value::Bytes`
+#[allow(dead_code)]
+pub fn avro_serialize_bytes<S>(value: &[u8], serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: ser::Serializer,
+{
+    serialize_bytes_type(value, serializer, BytesType::Bytes)
+}
+
+fn serialize_bytes_type<S>(
+    value: &[u8],
+    serializer: S,
+    bytes_type: BytesType,
+) -> Result<S::Ok, S::Error>
+where
+    S: ser::Serializer,
+{
+    *BYTES_TYPE.borrow_mut() = bytes_type;
+    let res = serializer.serialize_bytes(value);
+    *BYTES_TYPE.borrow_mut() = BytesType::Bytes;
+    res
 }
 
 #[cfg(test)]
@@ -1038,5 +1093,92 @@ mod tests {
         let ser = &mut Serializer {};
 
         assert!(ser.is_human_readable());
+    }
+
+    #[test]
+    fn avro_3631_serialize_struct_to_value_with_byte_types() {
+        #[derive(Debug, Serialize)]
+        struct TestStructFixedField<'a> {
+            // will be serialized as Value::Array<Vec<Value::Int>>
+            array_field: &'a [u8],
+            vec_field: Vec<u8>,
+
+            // will be serialized as Value::Fixed
+            #[serde(serialize_with = "avro_serialize_fixed")]
+            fixed_field: [u8; 6],
+            #[serde(serialize_with = "avro_serialize_fixed")]
+            fixed_field2: &'a [u8],
+            #[serde(serialize_with = "avro_serialize_fixed")]
+            vec_field2: Vec<u8>,
+
+            // will be serialized as Value::Bytes
+            #[serde(serialize_with = "avro_serialize_bytes")]
+            // #[serde(with = "serde_bytes")]
+            bytes_field: &'a [u8],
+
+            // #[serde(serialize_with = "avro_serialize_bytes")]
+            #[serde(with = "serde_bytes")]
+            bytes_field2: [u8; 6],
+
+            #[serde(serialize_with = "avro_serialize_bytes")]
+            // #[serde(with = "serde_bytes")]
+            vec_field3: Vec<u8>,
+        }
+
+        let test = TestStructFixedField {
+            array_field: &[1, 11, 111],
+            bytes_field: &[2, 22, 222],
+            bytes_field2: [2; 6],
+            fixed_field: [1; 6],
+            fixed_field2: &[6, 66],
+            vec_field: vec![3, 33],
+            vec_field2: vec![4, 44],
+            vec_field3: vec![5, 55],
+        };
+        let expected = Value::Record(vec![
+            (
+                "array_field".to_owned(),
+                Value::Array(
+                    test.array_field
+                        .iter()
+                        .map(|i| Value::Int(*i as i32))
+                        .collect(),
+                ),
+            ),
+            (
+                "vec_field".to_owned(),
+                Value::Array(
+                    test.vec_field
+                        .iter()
+                        .map(|i| Value::Int(*i as i32))
+                        .collect(),
+                ),
+            ),
+            (
+                "fixed_field".to_owned(),
+                Value::Fixed(6, Vec::from(test.fixed_field)),
+            ),
+            (
+                "fixed_field2".to_owned(),
+                Value::Fixed(2, Vec::from(test.fixed_field2)),
+            ),
+            (
+                "vec_field2".to_owned(),
+                Value::Fixed(2, test.vec_field2.clone()),
+            ),
+            (
+                "bytes_field".to_owned(),
+                Value::Bytes(Vec::from(test.bytes_field)),
+            ),
+            (
+                "bytes_field2".to_owned(),
+                Value::Bytes(Vec::from(test.bytes_field2)),
+            ),
+            (
+                "vec_field3".to_owned(),
+                Value::Bytes(test.vec_field3.clone()),
+            ),
+        ]);
+        assert_eq!(expected, to_value(test).unwrap());
     }
 }
