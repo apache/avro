@@ -47,15 +47,45 @@ namespace Avro.Util
         /// <inheritdoc/>
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
+            return ConvertToBaseValue<int>(logicalValue, schema);
+        }
+
+        /// <inheritdoc/>
+        public override T ConvertToBaseValue<T>(object logicalValue, LogicalSchema schema)
+        {
             var date = ((DateTime)logicalValue).Date;
-            return (date - UnixEpochDateTime).Days;
+            if (typeof(T) == typeof(DateTime))
+            {
+                return (T)(object)date;
+            }
+            if (typeof(T) == typeof(int))
+            {
+                return (T)(object)(date - UnixEpochDateTime).Days;
+            }
+            if (typeof(T) == typeof(string))
+            {
+                return (T)(object)(date.ToString("yyyy-MM-dd"));
+            }
+            throw new AvroTypeException($"Cannot convert logical type '{Name}' to '{typeof(T).Name}'");
         }
 
         /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
-            var noDays = (int)baseValue;
-            return UnixEpochDateTime.AddDays(noDays);
+            if (baseValue is int)
+            {
+                var noDays = (int)baseValue;
+                return UnixEpochDateTime.AddDays(noDays);
+            }
+            else if (baseValue is DateTime)
+            {
+                return ((DateTime)baseValue).Date;
+            }
+            else if (baseValue is string)
+            {
+                return DateTime.Parse((string)baseValue).Date;
+            }
+            throw new AvroTypeException($"Cannot convert base value '{baseValue}' to logical type '{Name}'");            
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using Avro.Util;
 
 namespace Avro.IO.Parsing
 {
@@ -27,6 +28,15 @@ namespace Avro.IO.Parsing
     /// </summary>
     public class JsonGrammarGenerator : ValidatingGrammarGenerator
     {
+        private readonly JsonMode mode;
+
+        /// <summary>
+        /// Creates a new instance of the JsonGrammarGenerator class.
+        /// </summary>
+        public JsonGrammarGenerator(JsonMode mode) : base()
+        {
+            this.mode = mode;
+        }
         /// <summary>
         /// Returns the non-terminal that is the start symbol for the grammar for the
         /// grammar for the given schema <tt>schema</tt>.
@@ -84,7 +94,12 @@ namespace Avro.IO.Parsing
                             production[--i] = Symbol.RecordStart;
                             foreach (Field f in ((RecordSchema)sc).Fields)
                             {
-                                production[--i] = new Symbol.FieldAdjustAction(n, f.Name, f.Aliases);
+                                var name = f.Name;
+                                if (f.AlternateNames != null && f.AlternateNames.TryGetValue("json", out string jsonName))
+                                {
+                                    name = jsonName;
+                                }
+                                production[--i] = new Symbol.FieldAdjustAction(n, name, f.Aliases);
                                 production[--i] = Generate(f.Schema, seen);
                                 production[--i] = Symbol.FieldEnd;
                                 n++;
@@ -96,7 +111,15 @@ namespace Avro.IO.Parsing
                         return rresult;
                     }
                 case Schema.Type.Logical:
-                    return Generate((sc as LogicalSchema).BaseSchema, seen);
+                    LogicalSchema logicalSchema = (LogicalSchema)sc;
+                    if (mode == JsonMode.PlainJson && logicalSchema.LogicalType is LogicalUnixEpochType<DateTime>)
+                    {
+                        return Symbol.JsonDateTime;
+                    }
+                    else
+                    {
+                        return Generate((sc as LogicalSchema).BaseSchema, seen);
+                    }
                 default:
                     throw new Exception("Unexpected schema type");
             }

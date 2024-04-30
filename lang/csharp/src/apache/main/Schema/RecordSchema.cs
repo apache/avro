@@ -72,15 +72,17 @@ namespace Avro
         /// <param name="aliases">list of aliases for the record name</param>
         /// <param name="customProperties">custom properties on this schema</param>
         /// <param name="doc">documentation for this named schema</param>
+        /// <param name="alternateNames">alternate names for this schema</param>
         public static RecordSchema Create(string name,
             List<Field> fields,
             string space = null,
             IEnumerable<string> aliases = null,
             PropertyMap customProperties = null,
-            string doc = null)
+            string doc = null,
+            IDictionary<string, string> alternateNames = null)
         {
             return new RecordSchema(Type.Record,
-                  new SchemaName(name, space, null, doc),
+                  new SchemaName(name, space, null, doc, alternateNames),
                   Aliases.GetSchemaNames(aliases, name, space),
                   customProperties,
                   fields,
@@ -187,6 +189,7 @@ namespace Avro
 
             var name = GetName(jtok, encspace);
             var aliases = NamedSchema.GetAliases(jtok, name.Space, name.EncSpace);
+            var altnames = NamedSchema.GetAlternateNames(jtok);
             var fields = new List<Field>();
             var fieldMap = new Dictionary<string, Field>();
             var fieldAliasMap = new Dictionary<string, Field>();
@@ -239,7 +242,7 @@ namespace Avro
         /// <param name="fieldAliasMap">map of field aliases and field objects</param>
         /// <param name="names">list of named schema already read</param>
         /// <param name="doc">documentation for this named schema</param>
-        private RecordSchema(Type type, SchemaName name, IList<SchemaName> aliases, PropertyMap props,
+        private RecordSchema(Type type, SchemaName name, IList<SchemaName> aliases, PropertyMap props, 
                                 List<Field> fields, bool request, IDictionary<string, Field> fieldMap,
                                 IDictionary<string, Field> fieldAliasMap, SchemaNames names, string doc)
                                 : base(type, name, aliases, props, names, doc)
@@ -270,6 +273,7 @@ namespace Avro
                 sortorder = (Field.SortOrder)Enum.Parse(typeof(Field.SortOrder), jorder);
 
             var aliases = Field.GetAliases(jfield);
+            var alternateNames = Field.GetAlternateNames(jfield);
             var props = Schema.GetProperties(jfield);
             var defaultValue = jfield["default"];
 
@@ -277,7 +281,7 @@ namespace Avro
             if (null == jtype)
                 throw new SchemaParseException($"'type' was not found for field: name at '{jfield.Path}'");
             var schema = Schema.ParseJson(jtype, names, encspace);
-            return new Field(schema, name, aliases, pos, doc, defaultValue, sortorder, props);
+            return new Field(schema, name, aliases, alternateNames, pos, doc, defaultValue, sortorder, props);
         }
 
         private static void addToFieldMap(Dictionary<string, Field> map, string name, Field field)

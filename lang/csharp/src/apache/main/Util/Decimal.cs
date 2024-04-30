@@ -19,6 +19,7 @@
 using System;
 using System.Globalization;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Avro.Generic;
 
 namespace Avro.Util
@@ -64,35 +65,65 @@ namespace Avro.Util
         /// <inheritdoc/>      
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
-            var decimalValue = (AvroDecimal)logicalValue;
-            var logicalScale = GetScalePropertyValueFromSchema(schema);
-            var scale = decimalValue.Scale;
-
-            if (scale != logicalScale)
-                throw new ArgumentOutOfRangeException(nameof(logicalValue), $"The decimal value has a scale of {scale} which cannot be encoded against a logical 'decimal' with a scale of {logicalScale}");
-
-            var buffer = decimalValue.UnscaledValue.ToByteArray();
-
-            Array.Reverse(buffer);
-
-            return Schema.Type.Bytes == schema.BaseSchema.Tag
-                ? (object)buffer
-                : (object)new GenericFixed(
-                    (FixedSchema)schema.BaseSchema,
-                    GetDecimalFixedByteArray(buffer, ((FixedSchema)schema.BaseSchema).Size,
-                    decimalValue.Sign < 0 ? (byte)0xFF : (byte)0x00));
+            return ConvertToBaseValue<object>(logicalValue, schema);
         }
+
+        /// <inheritdoc/>
+        public override T ConvertToBaseValue<T>(object logicalValue, LogicalSchema schema)
+        {
+            if ( typeof(T) == typeof(object) )
+            {
+                var decimalValue = (AvroDecimal)logicalValue;
+                var logicalScale = GetScalePropertyValueFromSchema(schema);
+                var scale = decimalValue.Scale;
+
+                if (scale != logicalScale)
+                    throw new ArgumentOutOfRangeException(nameof(logicalValue), $"The decimal value has a scale of {scale} which cannot be encoded against a logical 'decimal' with a scale of {logicalScale}");
+
+                var buffer = decimalValue.UnscaledValue.ToByteArray();
+
+                Array.Reverse(buffer);
+
+                return Schema.Type.Bytes == schema.BaseSchema.Tag
+                    ? (T)(object)buffer
+                    : (T)(object)new GenericFixed(
+                        (FixedSchema)schema.BaseSchema,
+                        GetDecimalFixedByteArray(buffer, ((FixedSchema)schema.BaseSchema).Size,
+                        decimalValue.Sign < 0 ? (byte)0xFF : (byte)0x00));
+            }
+            else if (typeof(T) == typeof(decimal))
+            {
+                return (T)(object)((AvroDecimal)logicalValue).ToType<decimal>();
+            }
+            else
+            {
+                throw new AvroTypeException($"Unsupported conversion to {typeof(T)}");
+            }            
+        } 
 
         /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
-            var buffer = Schema.Type.Bytes == schema.BaseSchema.Tag
-                ? (byte[])baseValue
-                : ((GenericFixed)baseValue).Value;
-
-            Array.Reverse(buffer);
-
-            return new AvroDecimal(new BigInteger(buffer), GetScalePropertyValueFromSchema(schema));
+            if (baseValue is decimal)
+            {
+                return new AvroDecimal((decimal)baseValue);
+            }
+            else if ( baseValue is byte[] )
+            {
+                var buffer = (byte[])baseValue;
+                Array.Reverse(buffer);
+                return new AvroDecimal(new BigInteger(buffer), GetScalePropertyValueFromSchema(schema));
+            }
+            else if ( baseValue is GenericFixed )
+            {
+                var buffer = ((GenericFixed)baseValue).Value;
+                Array.Reverse(buffer);
+                return new AvroDecimal(new BigInteger(buffer), GetScalePropertyValueFromSchema(schema));
+            }
+            else
+            {
+                throw new AvroTypeException($"Unsupported conversion from {baseValue.GetType()}");
+            }
         }
 
         /// <inheritdoc/>

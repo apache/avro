@@ -46,12 +46,9 @@ namespace Avro.Test
             "{ \"f2\": 10.4, \"f1\": 10 } ")]
         [TestCase("{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": [ \"s1\", \"s2\"] }", " \"s1\" ")]
         [TestCase("{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": [ \"s1\", \"s2\"] }", " \"s2\" ")]
-        [TestCase("{ \"type\": \"fixed\", \"name\": \"f\", \"size\": 5 }", "\"hello\"")]
         [TestCase("{ \"type\": \"array\", \"items\": \"int\" }", "[ 10, 20, 30 ]")]
         [TestCase("{ \"type\": \"map\", \"values\": \"int\" }", "{ \"k1\": 10, \"k2\": 20, \"k3\": 30 }")]
-        [TestCase("[ \"int\", \"long\" ]", "{ \"int\": 10 }")]
         [TestCase("\"string\"", "\"hello\"")]
-        [TestCase("\"bytes\"", "\"hello\"")]
         [TestCase("\"int\"", "10")]
         [TestCase("\"long\"", "10")]
         [TestCase("\"float\"", "10.0")]
@@ -61,12 +58,46 @@ namespace Avro.Test
         [TestCase("\"null\"", "null")]
         public void TestJsonAllTypesValidValues(String schemaStr, String value)
         {
+            foreach (JsonMode mode in new[] { JsonMode.AvroJson, JsonMode.PlainJson })
+            {
+                Schema schema = Schema.Parse(schemaStr);
+                byte[] avroBytes = fromJsonToAvro(value, schema, mode);
+
+                Assert.IsTrue(JToken.DeepEquals(JToken.Parse(value),
+                    JToken.Parse(fromAvroToJson(avroBytes, schema, true, mode))));
+            }
+        }
+
+        [TestCase("[ \"int\", \"long\" ]", "{ \"int\": 10 }")]
+        [TestCase("[ \"int\", \"long\" ]", "{ \"long\": 10 }")]
+        [TestCase("[ \"int\", \"null\" ]", "null")]
+        [TestCase("\"bytes\"", "\"\\u0068\\u0065\\u006C\\u006C\\u006F\"")]
+        [TestCase("{ \"type\": \"fixed\", \"name\": \"f\", \"size\": 5 }", "\"\\u0068\\u0065\\u006C\\u006C\\u006F\"")]
+        public void TestJsonAllTypesValidValuesAvroJson(String schemaStr, String value)
+        {
             Schema schema = Schema.Parse(schemaStr);
-            byte[] avroBytes = fromJsonToAvro(value, schema);
+            byte[] avroBytes = fromJsonToAvro(value, schema, JsonMode.AvroJson);
 
             Assert.IsTrue(JToken.DeepEquals(JToken.Parse(value),
-                JToken.Parse(fromAvroToJson(avroBytes, schema, true))));
+                JToken.Parse(fromAvroToJson(avroBytes, schema, true, JsonMode.AvroJson))));
         }
+
+        [TestCase("[ \"int\", \"long\" ]", "10")]
+        [TestCase("[ \"int\", \"null\" ]", "10")]
+        [TestCase("[ \"int\", \"null\" ]", "null")]
+        [TestCase("\"bytes\"", "\"aGVsbG8=\"")]
+        [TestCase("{ \"type\": \"fixed\", \"name\": \"f\", \"size\": 5 }", "\"aGVsbG8=\"")]
+
+        public void TestJsonAllTypesValidValuesPlainJson(String schemaStr, String value)
+        {
+            Schema schema = Schema.Parse(schemaStr);
+            byte[] avroBytes = fromJsonToAvro(value, schema, JsonMode.PlainJson);
+
+            Assert.IsTrue(JToken.DeepEquals(JToken.Parse(value),
+                JToken.Parse(fromAvroToJson(avroBytes, schema, true, JsonMode.PlainJson))));
+        }
+
+
 
         [TestCase("{ \"type\": \"record\", \"name\": \"r\", \"fields\": [ " +
                   " { \"name\" : \"f1\", \"type\": \"int\" }, " +
@@ -74,12 +105,9 @@ namespace Avro.Test
                   "] }",
             "{ \"f4\": 10.4, \"f3\": 10 } ")]
         [TestCase("{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": [ \"s1\", \"s2\"] }", " \"s3\" ")]
-        [TestCase("{ \"type\": \"fixed\", \"name\": \"f\", \"size\": 10 }", "\"hello\"")]
         [TestCase("{ \"type\": \"array\", \"items\": \"int\" }", "[ \"10\", \"20\", \"30\" ]")]
         [TestCase("{ \"type\": \"map\", \"values\": \"int\" }", "{ \"k1\": \"10\", \"k2\": \"20\"}")]
-        [TestCase("[ \"int\", \"long\" ]", "10")]
         [TestCase("\"string\"", "10")]
-        [TestCase("\"bytes\"", "10")]
         [TestCase("\"int\"", "\"hi\"")]
         [TestCase("\"long\"", "\"hi\"")]
         [TestCase("\"float\"", "\"hi\"")]
@@ -89,8 +117,31 @@ namespace Avro.Test
         [TestCase("\"null\"", "\"hi\"")]
         public void TestJsonAllTypesInvalidValues(String schemaStr, String value)
         {
+            foreach (JsonMode mode in new[] { JsonMode.AvroJson, JsonMode.PlainJson })
+            {
+                Schema schema = Schema.Parse(schemaStr);
+                Assert.Throws<AvroTypeException>(() => fromJsonToAvro(value, schema, mode));
+            }
+        }
+
+        [TestCase("[ \"int\", \"long\" ]", "10")]
+        [TestCase("\"bytes\"", "10")]
+        [TestCase("{ \"type\": \"fixed\", \"name\": \"f\", \"size\": 10 }", "\"hello\"")]
+        public void TestJsonAllTypesInvalidValuesAvroJson(String schemaStr, String value)
+        {
             Schema schema = Schema.Parse(schemaStr);
-            Assert.Throws<AvroTypeException>(() => fromJsonToAvro(value, schema));
+            Assert.Throws<AvroTypeException>(() => fromJsonToAvro(value, schema, JsonMode.AvroJson));
+        }
+
+        [TestCase("[ \"int\", \"long\" ]", "{ \"int\": 10}")]
+        [TestCase("\"bytes\"", "10")]
+        [TestCase("\"bytes\"", "\"&10\"")]
+        [TestCase("{ \"type\": \"fixed\", \"name\": \"f\", \"size\": 10 }", "\"129837\"")]
+        [TestCase("{ \"type\": \"fixed\", \"name\": \"f\", \"size\": 10 }", "\"abc&\"")]
+        public void TestJsonAllTypesInvalidValuesPlainJson(String schemaStr, String value)
+        {
+            Schema schema = Schema.Parse(schemaStr);
+            Assert.Throws<AvroTypeException>(() => fromJsonToAvro(value, schema, JsonMode.PlainJson));
         }
 
         [TestCase("{ \"type\": \"record\", \"name\": \"r\", \"fields\": [ " +
@@ -102,116 +153,143 @@ namespace Avro.Test
         [TestCase("\"string\"", "\"hi")]
         public void TestJsonMalformed(String schemaStr, String value)
         {
-            Schema schema = Schema.Parse(schemaStr);
-            Assert.Throws<JsonReaderException>(() => fromJsonToAvro(value, schema));
+            foreach (JsonMode mode in new[] { JsonMode.AvroJson, JsonMode.PlainJson })
+            {
+                Schema schema = Schema.Parse(schemaStr);
+                Assert.Throws<JsonReaderException>(() => fromJsonToAvro(value, schema, mode));
+            }
         }
 
         [Test]
         public void TestJsonEncoderWhenIncludeNamespaceOptionIsFalse()
         {
-            string value = "{\"b\": {\"string\":\"myVal\"}, \"a\": 1}";
-            string schemaStr = "{\"type\": \"record\", \"name\": \"ab\", \"fields\": [" +
-                               "{\"name\": \"a\", \"type\": \"int\"}, {\"name\": \"b\", \"type\": [\"null\", \"string\"]}" +
-                               "]}";
-            Schema schema = Schema.Parse(schemaStr);
-            byte[] avroBytes = fromJsonToAvro(value, schema);
+            foreach (JsonMode mode in new[] { JsonMode.AvroJson, JsonMode.PlainJson })
+            {
+                string value = (mode == JsonMode.AvroJson)
+                    ? "{\"b\": {\"string\":\"myVal\"}, \"a\": 1}"
+                    : "{\"b\": \"myVal\", \"a\": 1}";
 
-            Assert.IsTrue(JToken.DeepEquals(JObject.Parse("{\"b\":\"myVal\",\"a\":1}"),
-                JObject.Parse(fromAvroToJson(avroBytes, schema, false))));
+                string schemaStr = "{\"type\": \"record\", \"name\": \"ab\", \"fields\": [" +
+                                   "{\"name\": \"a\", \"type\": \"int\"}, {\"name\": \"b\", \"type\": [\"null\", \"string\"]}" +
+                                   "]}";
+                Schema schema = Schema.Parse(schemaStr);
+                byte[] avroBytes = fromJsonToAvro(value, schema, mode);
+
+                Assert.IsTrue(JToken.DeepEquals(JObject.Parse("{\"b\":\"myVal\",\"a\":1}"),
+                    JObject.Parse(fromAvroToJson(avroBytes, schema, false, mode))));
+            }
         }
 
         [Test]
         public void TestJsonEncoderWhenIncludeNamespaceOptionIsTrue()
         {
-            string value = "{\"b\": {\"string\":\"myVal\"}, \"a\": 1}";
-            string schemaStr = "{\"type\": \"record\", \"name\": \"ab\", \"fields\": [" +
-                               "{\"name\": \"a\", \"type\": \"int\"}, {\"name\": \"b\", \"type\": [\"null\", \"string\"]}" +
-                               "]}";
-            Schema schema = Schema.Parse(schemaStr);
-            byte[] avroBytes = fromJsonToAvro(value, schema);
+            foreach (JsonMode mode in new[] { JsonMode.AvroJson, JsonMode.PlainJson })
+            {
+                string value = (mode == JsonMode.AvroJson)
+                    ? "{\"b\": {\"string\":\"myVal\"}, \"a\": 1}"
+                    : "{\"b\": \"myVal\", \"a\": 1}";
 
-            Assert.IsTrue(JToken.DeepEquals(JObject.Parse("{\"b\":{\"string\":\"myVal\"},\"a\":1}"),
-                JObject.Parse(fromAvroToJson(avroBytes, schema, true))));
+                string schemaStr = "{\"type\": \"record\", \"name\": \"ab\", \"fields\": [" +
+                                   "{\"name\": \"a\", \"type\": \"int\"}, {\"name\": \"b\", \"type\": [\"null\", \"string\"]}" +
+                                   "]}";
+                Schema schema = Schema.Parse(schemaStr);
+                byte[] avroBytes = fromJsonToAvro(value, schema, mode);
+
+                Assert.IsTrue(JToken.DeepEquals(JObject.Parse(value),
+                    JObject.Parse(fromAvroToJson(avroBytes, schema, true, mode))));
+            }
         }
 
         [Test]
         public void TestJsonRecordOrdering()
         {
-            string value = "{\"b\": 2, \"a\": 1}";
-            Schema schema = Schema.Parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [" +
-                                         "{\"name\": \"a\", \"type\": \"int\"}, {\"name\": \"b\", \"type\": \"int\"}" +
-                                         "]}");
-            GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
-            Decoder decoder = new JsonDecoder(schema, value);
-            object o = reader.Read(null, decoder);
+            foreach (JsonMode mode in new[] { JsonMode.AvroJson, JsonMode.PlainJson })
+            {
+                string value = "{\"b\": 2, \"a\": 1}";
+                Schema schema = Schema.Parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [" +
+                                             "{\"name\": \"a\", \"type\": \"int\"}, {\"name\": \"b\", \"type\": \"int\"}" +
+                                             "]}");
+                GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
+                Decoder decoder = new JsonDecoder(schema, value);
+                object o = reader.Read(null, decoder);
 
-            Assert.AreEqual("{\"a\":1,\"b\":2}", fromDatumToJson(o, schema, false));
+                Assert.AreEqual("{\"a\":1,\"b\":2}", fromDatumToJson(o, schema, false, mode));
+            }
         }
 
         [Test]
         public void TestJsonRecordOrdering2()
         {
-            string value = "{\"b\": { \"b3\": 1.4, \"b2\": 3.14, \"b1\": \"h\"}, \"a\": {\"a2\":true, \"a1\": null}}";
-            Schema schema = Schema.Parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n" +
-                                         "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n" +
-                                         "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}},\n" +
-                                         "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n" +
-                                         "[{\"name\":\"b1\", \"type\":\"string\"}, {\"name\":\"b2\", \"type\":\"float\"}, {\"name\":\"b3\", \"type\":\"double\"}]}}\n" +
-                                         "]}");
-            GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
-            Decoder decoder = new JsonDecoder(schema, value);
-            object o = reader.Read(null, decoder);
+            foreach (JsonMode mode in new[] { JsonMode.AvroJson, JsonMode.PlainJson })
+            {
+                string value = "{\"b\": { \"b3\": 1.4, \"b2\": 3.14, \"b1\": \"h\"}, \"a\": {\"a2\":true, \"a1\": null}}";
+                Schema schema = Schema.Parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n" +
+                                             "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n" +
+                                             "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}},\n" +
+                                             "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n" +
+                                             "[{\"name\":\"b1\", \"type\":\"string\"}, {\"name\":\"b2\", \"type\":\"float\"}, {\"name\":\"b3\", \"type\":\"double\"}]}}\n" +
+                                             "]}");
+                GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
+                Decoder decoder = new JsonDecoder(schema, value);
+                object o = reader.Read(null, decoder);
 
-            Assert.AreEqual("{\"a\":{\"a1\":null,\"a2\":true},\"b\":{\"b1\":\"h\",\"b2\":3.14,\"b3\":1.4}}",
-                fromDatumToJson(o, schema, false));
+                Assert.AreEqual("{\"a\":{\"a1\":null,\"a2\":true},\"b\":{\"b1\":\"h\",\"b2\":3.14,\"b3\":1.4}}",
+                    fromDatumToJson(o, schema, false, mode));
+            }
         }
 
         [Test]
         public void TestJsonRecordOrderingWithProjection()
         {
-            String value = "{\"b\": { \"b3\": 1.4, \"b2\": 3.14, \"b1\": \"h\"}, \"a\": {\"a2\":true, \"a1\": null}}";
-            Schema writerSchema = Schema.Parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
-                                               + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
-                                               + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}},\n"
-                                               + "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n"
-                                               + "[{\"name\":\"b1\", \"type\":\"string\"}, {\"name\":\"b2\", \"type\":\"float\"}, {\"name\":\"b3\", \"type\":\"double\"}]}}\n"
-                                               + "]}");
-            Schema readerSchema = Schema.Parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
-                                               + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
-                                               + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}}\n" +
-                                               "]}");
-            GenericDatumReader<object> reader = new GenericDatumReader<object>(writerSchema, readerSchema);
-            Decoder decoder = new JsonDecoder(writerSchema, value);
-            Object o = reader.Read(null, decoder);
+            foreach (JsonMode mode in new[] { JsonMode.AvroJson, JsonMode.PlainJson })
+            {
+                String value = "{\"b\": { \"b3\": 1.4, \"b2\": 3.14, \"b1\": \"h\"}, \"a\": {\"a2\":true, \"a1\": null}}";
+                Schema writerSchema = Schema.Parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+                                                   + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
+                                                   + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}},\n"
+                                                   + "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n"
+                                                   + "[{\"name\":\"b1\", \"type\":\"string\"}, {\"name\":\"b2\", \"type\":\"float\"}, {\"name\":\"b3\", \"type\":\"double\"}]}}\n"
+                                                   + "]}");
+                Schema readerSchema = Schema.Parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+                                                   + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
+                                                   + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}}\n" +
+                                                   "]}");
+                GenericDatumReader<object> reader = new GenericDatumReader<object>(writerSchema, readerSchema);
+                Decoder decoder = new JsonDecoder(writerSchema, value);
+                Object o = reader.Read(null, decoder);
 
-            Assert.AreEqual("{\"a\":{\"a1\":null,\"a2\":true}}",
-                fromDatumToJson(o, readerSchema, false));
+                Assert.AreEqual("{\"a\":{\"a1\":null,\"a2\":true}}",
+                    fromDatumToJson(o, readerSchema, false, mode));
+            }
         }
 
 
         [Test]
         public void TestJsonRecordOrderingWithProjection2()
         {
-            String value =
+            foreach (JsonMode mode in new[] { JsonMode.AvroJson, JsonMode.PlainJson })
+            {
+                String value =
                 "{\"b\": { \"b1\": \"h\", \"b2\": [3.14, 3.56], \"b3\": 1.4}, \"a\": {\"a2\":true, \"a1\": null}}";
-            Schema writerSchema = Schema.Parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
-                                               + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
-                                               + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}},\n"
-                                               + "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n"
-                                               + "[{\"name\":\"b1\", \"type\":\"string\"}, {\"name\":\"b2\", \"type\":{\"type\":\"array\", \"items\":\"float\"}}, {\"name\":\"b3\", \"type\":\"double\"}]}}\n"
-                                               + "]}");
+                Schema writerSchema = Schema.Parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+                                                   + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
+                                                   + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}},\n"
+                                                   + "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n"
+                                                   + "[{\"name\":\"b1\", \"type\":\"string\"}, {\"name\":\"b2\", \"type\":{\"type\":\"array\", \"items\":\"float\"}}, {\"name\":\"b3\", \"type\":\"double\"}]}}\n"
+                                                   + "]}");
 
-            Schema readerSchema = Schema.Parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
-                                               + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
-                                               + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}}\n" +
-                                               "]}");
+                Schema readerSchema = Schema.Parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+                                                   + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
+                                                   + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}}\n" +
+                                                   "]}");
 
-            GenericDatumReader<object> reader = new GenericDatumReader<object>(writerSchema, readerSchema);
-            Decoder decoder = new JsonDecoder(writerSchema, value);
-            object o = reader.Read(null, decoder);
+                GenericDatumReader<object> reader = new GenericDatumReader<object>(writerSchema, readerSchema);
+                Decoder decoder = new JsonDecoder(writerSchema, value);
+                object o = reader.Read(null, decoder);
 
-            Assert.AreEqual("{\"a\":{\"a1\":null,\"a2\":true}}",
-                fromDatumToJson(o, readerSchema, false));
+                Assert.AreEqual("{\"a\":{\"a1\":null,\"a2\":true}}",
+                    fromDatumToJson(o, readerSchema, false, mode));
+            }
         }
 
         [TestCase("{\"int\":123}")]
@@ -228,7 +306,24 @@ namespace Avro.Test
             Decoder decoder = new JsonDecoder(schema, value);
             object o = reader.Read(null, decoder);
 
-            Assert.AreEqual(value, fromDatumToJson(o, schema, true));
+            Assert.AreEqual(value, fromDatumToJson(o, schema, true, JsonMode.AvroJson));
+        }
+
+        [TestCase("\"2024-05-01\"")]
+        [TestCase("\"12345678-1234-5678-1234-123456789012\"")]
+        [TestCase("null")]
+        public void TestJsonUnionWithLogicalTypesPlainJson(String value)
+        {
+            Schema schema = Schema.Parse(
+                "[\"null\",\n" +
+                "    { \"type\": \"int\", \"logicalType\": \"date\" },\n" +
+                "    { \"type\": \"string\", \"logicalType\": \"uuid\" }\n" +
+                "]");
+            GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
+            Decoder decoder = new JsonDecoder(schema, value, JsonMode.PlainJson);
+            object o = reader.Read(null, decoder);
+
+            Assert.AreEqual(value, fromDatumToJson(o, schema, true, JsonMode.PlainJson));
         }
 
         [TestCase("{\"int\":123}")]
@@ -246,7 +341,44 @@ namespace Avro.Test
             Decoder decoder = new JsonDecoder(schema, value);
             object o = reader.Read(null, decoder);
 
-            Assert.AreEqual(value, fromDatumToJson(o, schema, true));
+            Assert.AreEqual(value, fromDatumToJson(o, schema, true, JsonMode.AvroJson));
+        }
+
+        [TestCase("\"2024-05-01\"")]
+        [TestCase("{\"f1\":123}")]
+        [TestCase("null")]
+        public void TestJsonUnionWithRecordPlainJson(String value)
+        {
+            Schema schema = Schema.Parse(
+                "[\"null\",\n" +
+                "    { \"type\": \"int\", \"logicalType\": \"date\" },\n" +
+                "    {\"type\":\"record\",\"name\":\"myrecord\", \"namespace\":\"com\"," +
+                "        \"fields\":[{\"name\":\"f1\",\"type\": \"int\"}]}" +
+                "]");
+            GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
+            Decoder decoder = new JsonDecoder(schema, value, JsonMode.PlainJson);
+            object o = reader.Read(null, decoder);
+
+            Assert.AreEqual(value, fromDatumToJson(o, schema, true, JsonMode.PlainJson));
+        }
+
+        
+        [TestCase("{\"f1\":123}")]
+        [TestCase("{\"f1\":\"abc\"}")]
+        public void TestJsonRecordUnionPlainJson(String value)
+        {
+            Schema schema = Schema.Parse(
+                "[" +
+                "    {\"type\":\"record\",\"name\":\"myrecord1\", \"namespace\":\"com\"," +
+                "        \"fields\":[{\"name\":\"f1\",\"type\": \"int\"}]}," +
+                "    {\"type\":\"record\",\"name\":\"myrecord2\", \"namespace\":\"com\"," +
+                "        \"fields\":[{\"name\":\"f1\",\"type\": \"string\"}]}" +
+                "]");
+            GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
+            Decoder decoder = new JsonDecoder(schema, value, JsonMode.PlainJson);
+            object o = reader.Read(null, decoder);
+
+            Assert.AreEqual(value, fromDatumToJson(o, schema, true, JsonMode.PlainJson));
         }
 
         [TestCase("int", 1)]
@@ -268,81 +400,121 @@ namespace Avro.Test
             }
         }
 
+        [Test]
+        public void TestJsonDecoderDecimalPlainJson()
+        {
+            decimal value = 1.0M;
+            string def = "{\"type\":\"record\",\"name\":\"X\",\"fields\": [{\"type\":{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":16},\"name\":\"n\"}]}";
+            Schema schema = Schema.Parse(def);
+            DatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>(schema, schema);
+
+            string[] records = { "{\"n\":1}", "{\"n\":1.0}" };
+
+            foreach (GenericRecord g in records.Select(r => reader.Read(null, new JsonDecoder(schema, r, JsonMode.PlainJson))))
+            {
+                decimal d = (decimal)(AvroDecimal)g["n"];
+                Assert.AreEqual(value, d);
+            }
+        }
+
         // Ensure that even if the order of fields in JSON is different from the order in schema, it works.
         [Test]
         public void TestJsonDecoderReorderFields()
         {
-            String w = "{\"type\":\"record\",\"name\":\"R\",\"fields\":" + "[{\"type\":\"long\",\"name\":\"l\"},"
+            foreach (JsonMode mode in new[] { JsonMode.AvroJson, JsonMode.PlainJson })
+            {
+                String w = "{\"type\":\"record\",\"name\":\"R\",\"fields\":" + "[{\"type\":\"long\",\"name\":\"l\"},"
                                                                          + "{\"type\":{\"type\":\"array\",\"items\":\"int\"},\"name\":\"a\"}" +
                                                                          "]}";
-            Schema ws = Schema.Parse(w);
-            String data = "{\"a\":[1,2],\"l\":100}";
-            JsonDecoder decoder = new JsonDecoder(ws, data);
-            Assert.AreEqual(100, decoder.ReadLong());
-            decoder.SkipArray();
-            data = "{\"l\": 200, \"a\":[1,2]}";
-            decoder = new JsonDecoder(ws, data);
-            Assert.AreEqual(200, decoder.ReadLong());
-            decoder.SkipArray();
+                Schema ws = Schema.Parse(w);
+                String data = "{\"a\":[1,2],\"l\":100}";
+                JsonDecoder decoder = new JsonDecoder(ws, data, mode);
+                Assert.AreEqual(100, decoder.ReadLong());
+                decoder.SkipArray();
+                data = "{\"l\": 200, \"a\":[1,2]}";
+                decoder = new JsonDecoder(ws, data, mode);
+                Assert.AreEqual(200, decoder.ReadLong());
+                decoder.SkipArray();
+            }
         }
 
         [Test]
         public void TestJsonDecoderSpecificDatumWriterWithArrayAndMap()
         {
-            Root data = new Root();
-            Item item = new Item { id = 123456 };
-            data.myarray = new List<Item> { item };
-            data.mymap = new Dictionary<string, int> { { "1", 1 }, { "2", 2 }, { "3", 3 }, { "4", 4 } };
-
-            DatumWriter<Root> writer = new SpecificDatumWriter<Root>(data.Schema);
-
-            ByteBufferOutputStream bbos = new ByteBufferOutputStream();
-
-            Encoder encoder = new JsonEncoder(data.Schema, bbos);
-            writer.Write(data, encoder);
-            encoder.Flush();
-
-            List<MemoryStream> listStreams = bbos.GetBufferList();
-
-            using (StreamReader reader = new StreamReader(listStreams[0]))
+            foreach (JsonMode mode in new[] { JsonMode.AvroJson, JsonMode.PlainJson })
             {
-                String output = reader.ReadToEnd();
-                Assert.AreEqual("{\"myarray\":[{\"id\":123456}],\"mymap\":{\"map\":{\"1\":1,\"2\":2,\"3\":3,\"4\":4}}}", output);
+                Root data = new Root();
+                Item item = new Item { id = 123456 };
+                data.myarray = new List<Item> { item };
+                data.mymap = new Dictionary<string, int> { { "1", 1 }, { "2", 2 }, { "3", 3 }, { "4", 4 } };
+
+                DatumWriter<Root> writer = new SpecificDatumWriter<Root>(data.Schema);
+
+                ByteBufferOutputStream bbos = new ByteBufferOutputStream();
+
+                Encoder encoder = new JsonEncoder(data.Schema, bbos, mode);
+                writer.Write(data, encoder);
+                encoder.Flush();
+
+                List<MemoryStream> listStreams = bbos.GetBufferList();
+
+                using (StreamReader reader = new StreamReader(listStreams[0]))
+                {
+                    String output = reader.ReadToEnd();
+                    if ( mode == JsonMode.AvroJson)
+                    {
+                        Assert.AreEqual("{\"myarray\":[{\"id\":123456}],\"mymap\":{\"map\":{\"1\":1,\"2\":2,\"3\":3,\"4\":4}}}", output);
+                    }
+                    else
+                    {
+                        Assert.AreEqual("{\"myarray\":[{\"id\":123456}],\"mymap\":{\"1\":1,\"2\":2,\"3\":3,\"4\":4}}", output);
+                    }   
+                }
             }
         }
 
         [Test]
         public void TestJsonDecoderSpecificDefaultWriterWithArrayAndMap()
         {
-            Root data = new Root();
-            Item item = new Item { id = 123456 };
-            data.myarray = new List<Item> { item };
-            data.mymap = new Dictionary<string, int> { { "1", 1 }, { "2", 2 }, { "3", 3 }, { "4", 4 } };
-
-            SpecificDefaultWriter writer = new SpecificDefaultWriter(data.Schema);
-
-            ByteBufferOutputStream bbos = new ByteBufferOutputStream();
-
-            Encoder encoder = new JsonEncoder(data.Schema, bbos);
-            writer.Write(data, encoder);
-            encoder.Flush();
-
-            List<MemoryStream> listStreams = bbos.GetBufferList();
-
-            using (StreamReader reader = new StreamReader(listStreams[0]))
+            foreach (JsonMode mode in new[] { JsonMode.AvroJson, JsonMode.PlainJson })
             {
-                String output = reader.ReadToEnd();
-                Assert.AreEqual("{\"myarray\":[{\"id\":123456}],\"mymap\":{\"map\":{\"1\":1,\"2\":2,\"3\":3,\"4\":4}}}", output);
+                Root data = new Root();
+                Item item = new Item { id = 123456 };
+                data.myarray = new List<Item> { item };
+                data.mymap = new Dictionary<string, int> { { "1", 1 }, { "2", 2 }, { "3", 3 }, { "4", 4 } };
+
+                SpecificDefaultWriter writer = new SpecificDefaultWriter(data.Schema);
+
+                ByteBufferOutputStream bbos = new ByteBufferOutputStream();
+
+                Encoder encoder = new JsonEncoder(data.Schema, bbos, mode);
+                writer.Write(data, encoder);
+                encoder.Flush();
+
+                List<MemoryStream> listStreams = bbos.GetBufferList();
+
+                using (StreamReader reader = new StreamReader(listStreams[0]))
+                {
+                    String output = reader.ReadToEnd();
+                    if (mode == JsonMode.AvroJson)
+                    {
+                        Assert.AreEqual("{\"myarray\":[{\"id\":123456}],\"mymap\":{\"map\":{\"1\":1,\"2\":2,\"3\":3,\"4\":4}}}", output);
+                    }
+                    else
+                    {
+                        Assert.AreEqual("{\"myarray\":[{\"id\":123456}],\"mymap\":{\"1\":1,\"2\":2,\"3\":3,\"4\":4}}", output);
+                    }
+                }
             }
         }
 
-        private byte[] fromJsonToAvro(string json, Schema schema)
+        private byte[] fromJsonToAvro(string json, Schema schema, JsonMode mode)
         {
             DatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
             GenericDatumWriter<object> writer = new GenericDatumWriter<object>(schema);
             MemoryStream output = new MemoryStream();
 
-            Decoder decoder = new JsonDecoder(schema, json);
+            Decoder decoder = new JsonDecoder(schema, json, mode);
             Encoder encoder = new BinaryEncoder(output);
 
             object datum = reader.Read(null, decoder);
@@ -354,21 +526,21 @@ namespace Avro.Test
             return output.ToArray();
         }
 
-        private string fromAvroToJson(byte[] avroBytes, Schema schema, bool includeNamespace)
+        private string fromAvroToJson(byte[] avroBytes, Schema schema, bool includeNamespace, JsonMode mode)
         {
             GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
 
             Decoder decoder = new BinaryDecoder(new MemoryStream(avroBytes));
             object datum = reader.Read(null, decoder);
-            return fromDatumToJson(datum, schema, includeNamespace);
+            return fromDatumToJson(datum, schema, includeNamespace, mode);
         }
 
-        private string fromDatumToJson(object datum, Schema schema, bool includeNamespace)
+        private string fromDatumToJson(object datum, Schema schema, bool includeNamespace, JsonMode mode)
         {
             DatumWriter<object> writer = new GenericDatumWriter<object>(schema);
             MemoryStream output = new MemoryStream();
 
-            JsonEncoder encoder = new JsonEncoder(schema, output);
+            JsonEncoder encoder = new JsonEncoder(schema, output, mode);
             encoder.IncludeNamespace = includeNamespace;
             writer.Write(datum, encoder);
             encoder.Flush();

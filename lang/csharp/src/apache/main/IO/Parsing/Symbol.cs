@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -907,6 +907,10 @@ namespace Avro.IO.Parsing
         /// String
         /// </summary>
         public static Symbol String { get; } = new Terminal("string");
+        /// <summary>
+        /// JsonDateTime
+        /// </summary>
+        public static Symbol JsonDateTime { get; } = new Terminal("string");
         /// <summary>
         /// Bytes
         /// </summary>

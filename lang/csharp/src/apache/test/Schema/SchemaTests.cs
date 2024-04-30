@@ -311,6 +311,7 @@ namespace Avro.Test
             IEnumerable<Field> recordFields = fieldsNames.Select((fieldName, i) => new Field(PrimitiveSchema.Create(fieldsTypes[i]),
                 fieldName,
                 fieldsAliases[i] == null? null: new List<string> { fieldsAliases[i] },
+                null,
                 i,
                 fieldsDocs[i],
                 fieldsDefaultValues[i].ToString(),
@@ -346,6 +347,7 @@ namespace Avro.Test
             var recordField = new Field(PrimitiveSchema.Create(Schema.Type.Long),
                 "value",
                 new List<string> { "oldName" },
+                null,
                 0,
                 null,
                 "100",
@@ -366,6 +368,7 @@ namespace Avro.Test
                 {
                     new Field(PrimitiveSchema.Create(Schema.Type.Long),
                         "歳以上",
+                        null,
                         null,
                         0,
                         null,
@@ -390,6 +393,7 @@ namespace Avro.Test
                 {
                     new Field(PrimitiveSchema.Create(Schema.Type.Long),
                         "value",
+                        null,
                         null,
                         0,
                         null,
@@ -430,6 +434,7 @@ namespace Avro.Test
                 symbols,
                 space,
                 aliases,
+                null,
                 usePropertyMap == true ? propertyMap : null,
                 doc,
                 defaultSymbol);
@@ -483,7 +488,7 @@ namespace Avro.Test
         [TestCase("name", new string[] { "_A1B2_", "B4324" }, null, new[] { "L1", "L2" }, "underscore in symbols", "_A1B2_", "name", null)]
         public void TestEnumCreation(string name, string[] symbols, string space, string[] aliases, string doc, string defaultSymbol, string expectedName, string expectedNamespace)
         {
-            EnumSchema enumSchema = EnumSchema.Create(name, symbols, space, aliases, null, doc, defaultSymbol);
+            EnumSchema enumSchema = EnumSchema.Create(name, symbols, space, aliases, null, null, doc, defaultSymbol);
 
             Assert.AreEqual(expectedName, enumSchema.Name);
             CollectionAssert.AreEqual(symbols, enumSchema.Symbols);
@@ -670,7 +675,7 @@ namespace Avro.Test
         [TestCase("a", "o.a.h", ExpectedResult = "o.a.h.a")]
         public string testFullname(string s1, string s2)
         {
-            var name = new SchemaName(s1, s2, null, null);
+            var name = new SchemaName(s1, s2, null, null, null);
             return name.Fullname;
         }
 

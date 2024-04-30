@@ -39,7 +39,17 @@ namespace Avro.Util
         /// <inheritdoc />
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
-            return logicalValue.ToString();
+            return ConvertToBaseValue<string>(logicalValue, schema);
+        }
+
+        /// <inheritdoc />
+        override public T ConvertToBaseValue<T>(object logicalValue, LogicalSchema schema)
+        {
+            if (typeof(T) == typeof(string))
+            {
+                return (T)(object)logicalValue.ToString();
+            }
+            throw new AvroTypeException($"Unsupported type: {typeof(T)}");
         }
 
         /// <inheritdoc />

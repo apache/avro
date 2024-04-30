@@ -59,14 +59,21 @@ namespace Avro
         public String Namespace { get { return string.IsNullOrEmpty(this.Space) ? this.EncSpace : this.Space; } }
 
         /// <summary>
+        /// Dictionary of alternate names for this schema name
+        /// </summary>
+        public IDictionary<string, string> AlternateNames { get; private set; }
+
+        /// <summary>
         /// Constructor for SchemaName
         /// </summary>
         /// <param name="name">name of the schema</param>
         /// <param name="space">namespace of the schema</param>
         /// <param name="encspace">enclosing namespace of the schema</param>
         /// <param name="documentation">documentation of the schema</param>
-        public SchemaName(string name, string space, string encspace, string documentation)
+        /// <param name="alternateNames">alternate names for the schema</param>
+        public SchemaName(string name, string space, string encspace, string documentation, IDictionary<string, string> alternateNames)
         {
+            AlternateNames = alternateNames;
             if (name == null)
             {                         // anonymous
                 Name = Space = null;
@@ -115,6 +122,17 @@ namespace Avro
                     JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.Space);
                 else if (!String.IsNullOrEmpty(this.EncSpace)) // need to put enclosing name space for code generated classes
                     JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.EncSpace);
+            }
+            if (null != this.AlternateNames)
+            {
+                writer.WritePropertyName("altnames");
+                writer.WriteStartObject();
+                foreach (KeyValuePair<string, string> altname in this.AlternateNames)
+                {
+                    writer.WritePropertyName(altname.Key);
+                    writer.WriteValue(altname.Value);
+                }
+                writer.WriteEndObject();                
             }
         }
 
@@ -216,11 +234,12 @@ namespace Avro
         /// <param name="space">namespace of the schema</param>
         /// <param name="encspace">enclosing namespace of the schema</param>
         /// <param name="documentation">documentation for the schema</param>
+        /// <param name="alternateNames">alternate names for the schema</param>
         /// <param name="schema">schema object found</param>
         /// <returns>true if name is found in the map, false otherwise</returns>
-        public bool TryGetValue(string name, string space, string encspace, string documentation, out NamedSchema schema)
+        public bool TryGetValue(string name, string space, string encspace, string documentation, IDictionary<string, string> alternateNames, out NamedSchema schema)
         {
-            SchemaName schemaname = new SchemaName(name, space, encspace, documentation);
+            SchemaName schemaname = new SchemaName(name, space, encspace, documentation, alternateNames);
             return Names.TryGetValue(schemaname, out schema);
         }
 
