@@ -17,24 +17,17 @@
  */
 package org.apache.avro;
 
-public class JsonSchemaFormatterFactory implements SchemaFormatterFactory {
+public class JsonSchemaFormatter implements SchemaFormatter {
+  private final boolean prettyPrinted;
 
-  public static final String VARIANT_NAME_PRETTY = "pretty";
-  public static final String VARIANT_NAME_INLINE = "inline";
-
-  @Override
-  public SchemaFormatter getDefaultFormatter() {
-    return getFormatterForVariant(VARIANT_NAME_PRETTY);
+  public JsonSchemaFormatter(boolean prettyPrinted) {
+    this.prettyPrinted = prettyPrinted;
   }
 
   @Override
-  public SchemaFormatter getFormatterForVariant(String variantName) {
-    if (VARIANT_NAME_PRETTY.equals(variantName)) {
-      return new JsonSchemaFormatter(true);
-    } else if (VARIANT_NAME_INLINE.equals(variantName)) {
-      return new JsonSchemaFormatter(false);
-    } else {
-      throw new AvroRuntimeException("Unknown JSON variant: " + variantName);
-    }
+  public String format(Schema schema) {
+    // TODO: Move the toString implementation here and have Schema#toString()
+    // use SchemaFormatter with the formats "json/pretty" and "json/inline"
+    return schema.toString(prettyPrinted);
   }
 }
