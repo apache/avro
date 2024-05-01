@@ -42,10 +42,7 @@ class IdlSchemaFormatterFactoryTest {
     try (InputStream stream = getClass().getResourceAsStream(schemaResourceName)) {
       Schema happyFlowSchema = new SchemaParser().parse(formattedHappyFlowSchema).mainSchema();
       // The Avro project indents .avdl files less than common
-      String formatted = idlFormatter.format(happyFlowSchema)
-          .replaceAll("    ", "\t")
-          .replaceAll("\t", "  ")
-          ;
+      String formatted = idlFormatter.format(happyFlowSchema).replaceAll("    ", "\t").replaceAll("\t", "  ");
       assertEquals(formattedHappyFlowSchema, formatted);
     }
   }

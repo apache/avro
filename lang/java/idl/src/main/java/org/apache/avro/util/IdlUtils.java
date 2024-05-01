@@ -207,8 +207,7 @@ public final class IdlUtils {
   }
 
   public static void writeIdlProtocol(Writer writer, JsonProperties properties, String protocolNameSpace,
-                                      String protocolName, Collection<Schema> schemas,
-                                      Collection<Protocol.Message> messages) throws IOException {
+      String protocolName, Collection<Schema> schemas, Collection<Protocol.Message> messages) throws IOException {
     if (protocolNameSpace != null) {
       writer.append("@namespace(\"").append(protocolNameSpace).append("\")").append(NEWLINE);
     }
@@ -245,7 +244,7 @@ public final class IdlUtils {
   }
 
   private static void writeSchema(Schema schema, boolean insideProtocol, Writer writer, String defaultNamespace,
-                                  Set<String> alreadyDeclared, Set<Schema> toDeclare) throws IOException {
+      Set<String> alreadyDeclared, Set<Schema> toDeclare) throws IOException {
     String indent = insideProtocol ? "    " : "";
     Schema.Type type = schema.getType();
     writeSchemaAttributes(indent, schema, writer);
@@ -292,7 +291,7 @@ public final class IdlUtils {
   }
 
   private static void writeField(String namespace, Schema.Field field, Writer writer, Set<String> alreadyDeclared,
-                                 Set<Schema> toDeclare, FieldIndent fieldIndent) throws IOException {
+      Set<Schema> toDeclare, FieldIndent fieldIndent) throws IOException {
     // Note: indentField must not be NONE if any field of the containing
     // record/method has documentation
     switch (fieldIndent) {
@@ -356,7 +355,7 @@ public final class IdlUtils {
   }
 
   private static void writeFieldSchema(Schema schema, Writer writer, Set<String> alreadyDeclared, Set<Schema> toDeclare,
-                                       String recordNameSpace) throws IOException {
+      String recordNameSpace) throws IOException {
     Schema.Type type = schema.getType();
     if (type == Schema.Type.RECORD || type == Schema.Type.ENUM || type == Schema.Type.FIXED) {
       if (Objects.equals(recordNameSpace, schema.getNamespace())) {
@@ -456,7 +455,7 @@ public final class IdlUtils {
   }
 
   private static void writeJsonProperties(JsonProperties props, Set<String> propertiesToSkip, Writer writer,
-                                          String indent) throws IOException {
+      String indent) throws IOException {
     Map<String, Object> objectProps = props.getObjectProps();
     for (Map.Entry<String, Object> entry : objectProps.entrySet()) {
       if (propertiesToSkip.contains(entry.getKey())) {
@@ -472,7 +471,7 @@ public final class IdlUtils {
   }
 
   private static void writeMessage(Protocol.Message message, Writer writer, String protocolNameSpace,
-                                   Set<String> alreadyDeclared) throws IOException {
+      Set<String> alreadyDeclared) throws IOException {
     writeMessageAttributes(message, writer);
     final Set<Schema> toDeclare = Collections.unmodifiableSet(new HashSet<>()); // Crash if a type hasn't been declared
     // yet.

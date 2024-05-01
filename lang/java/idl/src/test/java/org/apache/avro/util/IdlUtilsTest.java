@@ -45,8 +45,8 @@ public class IdlUtilsTest {
   @Test
   public void idlUtilsUtilitiesThrowRuntimeExceptionsOnProgrammerError() {
     assertThrows(IllegalStateException.class, () -> IdlUtils.getField(Object.class, "noSuchField"), "Programmer error");
-    assertThrows(IllegalStateException.class, () -> IdlUtils.getFieldValue(String.class.getDeclaredField("value"), "anything"),
-        "Programmer error");
+    assertThrows(IllegalStateException.class,
+        () -> IdlUtils.getFieldValue(String.class.getDeclaredField("value"), "anything"), "Programmer error");
 
     assertEquals("foo", IdlUtils.uncheckExceptions(() -> "foo"));
     assertThrows(IllegalArgumentException.class, () -> IdlUtils.uncheckExceptions(() -> {

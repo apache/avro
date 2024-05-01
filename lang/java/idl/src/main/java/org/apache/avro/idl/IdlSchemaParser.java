@@ -27,16 +27,16 @@ import java.net.URI;
 import java.util.regex.Pattern;
 
 public class IdlSchemaParser implements FormattedSchemaParser {
-  private static final Pattern START_OF_IDL_PATTERN = Pattern.compile(
-      "\\A" + // Start of input
+  private static final Pattern START_OF_IDL_PATTERN = Pattern.compile("\\A" + // Start of input
       "(?:\\s*|/\\*(?:[^*]|\\*(?!/))*\\*/|//(?:(?!\\R).)*\\R)*" + // Initial whitespace & comments
       "(?:@|(?:namespace|schema|protocol|record|enum|fixed|import)\\s)", // First keyword mor @
-      Pattern.UNICODE_CHARACTER_CLASS|Pattern.MULTILINE);
+      Pattern.UNICODE_CHARACTER_CLASS | Pattern.MULTILINE);
 
   @Override
   public Schema parse(ParseContext parseContext, URI baseUri, CharSequence formattedSchema)
       throws IOException, SchemaParseException {
-    // This pattern matches initial whitespace/comments, plus all possible starting keywords
+    // This pattern matches initial whitespace/comments, plus all possible starting
+    // keywords
     boolean valid = START_OF_IDL_PATTERN.matcher(formattedSchema).find();
     if (valid) {
       IdlReader idlReader = new IdlReader(parseContext);
