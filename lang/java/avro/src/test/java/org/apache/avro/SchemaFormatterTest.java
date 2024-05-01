@@ -52,7 +52,6 @@ class SchemaFormatterTest {
 
   @Test
   void checkThatJsonHasNoExtraVariant() {
-    Schema schema = Schema.createFixed("ns.Fixed", null, null, 16);
     assertThrows(AvroRuntimeException.class, () -> SchemaFormatter.getInstance("json/extra"));
   }
 
