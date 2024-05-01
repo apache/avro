@@ -393,7 +393,16 @@ public abstract class Schema extends JsonProperties implements Serializable {
     throw new AvroRuntimeException("Not fixed: " + this);
   }
 
-  /** Render this as <a href="https://json.org/">JSON</a>. */
+  /**
+   * <p>
+   * Render this as <a href="https://json.org/">JSON</a>.
+   * </p>
+   *
+   * <p>
+   * This method is equivalent to:
+   * {@code SchemaFormatter.getInstance("json").format(this)}
+   * </p>
+   */
   @Override
   public String toString() {
     return toString(false);
@@ -403,7 +412,10 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * Render this as <a href="https://json.org/">JSON</a>.
    *
    * @param pretty if true, pretty-print JSON.
+   * @deprecated Use {@link SchemaFormatter#format(Schema)} instead, using the
+   *             format {@code json/pretty} or {@code json/inline}
    */
+  @Deprecated
   public String toString(boolean pretty) {
     return toString(new HashSet<String>(), pretty);
   }
@@ -427,6 +439,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     return toString(knownNames, pretty);
   }
 
+  @Deprecated
   String toString(Set<String> knownNames, boolean pretty) {
     try {
       StringWriter writer = new StringWriter();
@@ -441,6 +454,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
   }
 
+  @Deprecated
   void toJson(Set<String> knownNames, String namespace, JsonGenerator gen) throws IOException {
     if (!hasProps()) { // no props defined
       gen.writeString(getName()); // just write name
@@ -452,6 +466,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
   }
 
+  @Deprecated
   void fieldsToJson(Set<String> knownNames, String namespace, JsonGenerator gen) throws IOException {
     throw new AvroRuntimeException("Not a record: " + this);
   }
@@ -1012,6 +1027,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     @Override
+    @Deprecated
     void toJson(Set<String> knownNames, String currentNamespace, JsonGenerator gen) throws IOException {
       if (writeNameRef(knownNames, currentNamespace, gen))
         return;
@@ -1033,6 +1049,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     @Override
+    @Deprecated
     void fieldsToJson(Set<String> knownNames, String namespace, JsonGenerator gen) throws IOException {
       gen.writeStartArray();
       for (Field f : fields) {
@@ -1120,6 +1137,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     @Override
+    @Deprecated
     void toJson(Set<String> knownNames, String currentNamespace, JsonGenerator gen) throws IOException {
       if (writeNameRef(knownNames, currentNamespace, gen))
         return;
@@ -1169,6 +1187,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     @Override
+    @Deprecated
     void toJson(Set<String> knownNames, String namespace, JsonGenerator gen) throws IOException {
       gen.writeStartObject();
       gen.writeStringField("type", "array");
@@ -1208,6 +1227,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     @Override
+    @Deprecated
     void toJson(Set<String> knownNames, String currentNamespace, JsonGenerator gen) throws IOException {
       gen.writeStartObject();
       gen.writeStringField("type", "map");
@@ -1285,6 +1305,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     @Override
+    @Deprecated
     void toJson(Set<String> knownNames, String currentNamespace, JsonGenerator gen) throws IOException {
       gen.writeStartArray();
       for (Schema type : types)
@@ -1329,6 +1350,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     @Override
+    @Deprecated
     void toJson(Set<String> knownNames, String currentNamespace, JsonGenerator gen) throws IOException {
       if (writeNameRef(knownNames, currentNamespace, gen))
         return;
