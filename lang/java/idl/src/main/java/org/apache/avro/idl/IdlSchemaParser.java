@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 
 public class IdlSchemaParser implements FormattedSchemaParser {
   private static final Pattern START_OF_IDL_PATTERN = Pattern.compile("\\A" + // Start of input
-      "(?:\\s*|/\\*(?:[^*]|\\*(?!/))*\\*/|//(?:(?!\\R).)*\\R)*" + // Initial whitespace & comments
+      "(?:\\s*+|/\\*(?:[^*]|\\*(?!/))*+\\*/|//(?:(?!\\R).)*+\\R)*+" + // Initial whitespace & comments
       "(?:@|(?:namespace|schema|protocol|record|enum|fixed|import)\\s)", // First keyword mor @
       Pattern.UNICODE_CHARACTER_CLASS | Pattern.MULTILINE);
 
