@@ -706,9 +706,7 @@ public class ReflectData extends SpecificData {
         AvroDoc annotatedDoc = c.getAnnotation(AvroDoc.class); // Docstring
         String doc = (annotatedDoc != null) ? annotatedDoc.value() : null;
         String name = c.getSimpleName();
-        String space = c.getPackage() == null ? "" : c.getPackage().getName();
-        if (c.getEnclosingClass() != null) // nested class
-          space = c.getEnclosingClass().getName().replace('$', '.');
+        String space = getNamespace(c);
         Union union = c.getAnnotation(Union.class);
         if (union != null) { // union annotated
           return getAnnotatedUnion(union, names);
@@ -800,6 +798,21 @@ public class ReflectData extends SpecificData {
     }
 
     return simpleName;
+  }
+
+  /*
+   * Function checks if there is @AvroTypeName annotation on the class. If present
+   * then returns the value of the annotation else returns the package of the
+   * class
+   */
+  private String getNamespace(Class<?> c) {
+    AvroTypeName avroTypeName = c.getAnnotation(AvroTypeName.class);
+    if (avroTypeName != null) {
+      return avroTypeName.value();
+    }
+    if (c.getEnclosingClass() != null) // nested class
+      return c.getEnclosingClass().getName().replace('$', '.');
+    return c.getPackage() == null ? "" : c.getPackage().getName();
   }
 
   private static final Schema THROWABLE_MESSAGE = makeNullable(Schema.create(Schema.Type.STRING));

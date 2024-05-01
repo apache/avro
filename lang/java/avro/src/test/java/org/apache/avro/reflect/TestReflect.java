@@ -1415,4 +1415,24 @@ public class TestReflect {
             + "{\"name\":\"foo\",\"type\":\"int\",\"doc\":\"Some Documentation\"}" + "]}");
   }
 
+  @AvroTypeName("org.apache.avro.reflect.OverrideNamespace")
+  private static class NamespaceTest {
+
+    @AvroTypeName("org.apache.avro.reflect.InnerOverrideNamespace")
+    private static class InnerNamespaceTest {
+    }
+  }
+
+  @Test
+  void avroOverrideNamespaceTest() {
+    check(NamespaceTest.class,
+        "{\"type\":\"record\",\"name\":\"NamespaceTest\",\"namespace\":\"org.apache.avro.reflect.OverrideNamespace\",\"fields\":[]}");
+  }
+
+  @Test
+  void avroOverrideInnerNamespaceTest() {
+    check(NamespaceTest.InnerNamespaceTest.class,
+        "{\"type\":\"record\",\"name\":\"InnerNamespaceTest\",\"namespace\":\"org.apache.avro.reflect.InnerOverrideNamespace\",\"fields\":[]}");
+  }
+
 }
