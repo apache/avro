@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -224,6 +224,20 @@ namespace Avro.IO.Parsing
         public virtual void Reset()
         {
             Pos = 1;
+        }
+
+        /// <summary>
+        ///  Clones the stack.
+        /// </summary>
+        /// <returns>A copy of the stack</returns>
+        public Symbol[] CloneStack()
+        {
+            var newStack = new Symbol[Pos];
+            for (int i = 0; i < Pos; i++)
+            {
+                newStack[i] = Stack[i];
+            }
+            return newStack;
         }
     }
 }

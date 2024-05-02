@@ -654,6 +654,32 @@ namespace Avro.IO.Parsing
         }
 
         /// <summary>
+        /// The const check action.
+        /// </summary>
+        public class ConstCheckAction : Symbol
+        {
+            /// <summary>
+            /// The value.
+            /// </summary>
+            public object Value { get; private set; }
+
+            /// <summary>
+            /// Constructor
+            /// </summary>
+            /// <param name="value"></param>
+            public ConstCheckAction(object value) : base(Kind.ExplicitAction)
+            {
+                Value = value;
+                Production = new Symbol[0];
+            }
+
+            internal bool Check(object value)
+            {
+                return Value.Equals(value);
+            }
+        }
+
+        /// <summary>
         /// The writer union action.
         /// </summary>
         public class WriterUnionAction : ImplicitAction

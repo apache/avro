@@ -362,7 +362,7 @@ namespace Avro.Test
             Assert.AreEqual(value, fromDatumToJson(o, schema, true, JsonMode.PlainJson));
         }
 
-        
+
         [TestCase("{\"f1\":123}")]
         [TestCase("{\"f1\":\"abc\"}")]
         public void TestJsonRecordUnionPlainJson(String value)
@@ -379,6 +379,112 @@ namespace Avro.Test
             object o = reader.Read(null, decoder);
 
             Assert.AreEqual(value, fromDatumToJson(o, schema, true, JsonMode.PlainJson));
+        }
+
+        [TestCase("{\"f1\":\"abc\",\"type\":\"r1\"}")]
+        [TestCase("{\"f1\":\"abc\",\"type\":\"r2\"}")]
+        public void TestJsonRecordUnionConstPlainJson(String value)
+        {
+            Schema schema = Schema.Parse(
+                "[" +
+                "    {\"type\":\"record\",\"name\":\"myrecord1\", \"namespace\":\"com\"," +
+                "        \"fields\":[{\"name\":\"f1\",\"type\": \"string\"},{\"name\":\"type\",\"type\": \"string\", \"const\":\"r1\"}]}," +
+                "    {\"type\":\"record\",\"name\":\"myrecord2\", \"namespace\":\"com\"," +
+                "        \"fields\":[{\"name\":\"f1\",\"type\": \"string\"},{\"name\":\"type\",\"type\": \"string\", \"const\":\"r2\"}]}" +
+                "]");
+            GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
+            Decoder decoder = new JsonDecoder(schema, value, JsonMode.PlainJson);
+            object o = reader.Read(null, decoder);
+
+            Assert.AreEqual(value, fromDatumToJson(o, schema, true, JsonMode.PlainJson));
+        }
+
+        [TestCase("{\"f1\":[1,2,3]}")]
+        [TestCase("{\"f1\":[\"a\",\"b\",\"c\"]}")]
+        public void TestJsonRecordUnionWithArrayPlainJson(String value)
+        {
+            Schema schema = Schema.Parse(
+                "[" +
+                "    {\"type\":\"record\",\"name\":\"myrecord1\", \"namespace\":\"com\"," +
+                "        \"fields\":[{\"name\":\"f1\",\"type\": {\"type\":\"array\", \"items\":\"int\"}}]}," +
+                "    {\"type\":\"record\",\"name\":\"myrecord2\", \"namespace\":\"com\"," +
+                "        \"fields\":[{\"name\":\"f1\",\"type\": {\"type\":\"array\", \"items\":\"string\"}}]}" +
+                "]");
+            GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
+            Decoder decoder = new JsonDecoder(schema, value, JsonMode.PlainJson);
+            object o = reader.Read(null, decoder);
+
+            Assert.AreEqual(value, fromDatumToJson(o, schema, true, JsonMode.PlainJson));
+        }
+
+        [TestCase("{\"f1\":{\"f2\":123},\"f3\":\"abc\"}")]
+        [TestCase("{\"f1\":{\"f2\":\"abc\"},\"f3\":\"abc\"}")]
+        public void TestJsonRecordUnionWithNestedRecordPlainJson(String value)
+        {
+            Schema schema = Schema.Parse(
+                "[" +
+                "    {\"type\":\"record\",\"name\":\"myrecord1\", \"namespace\":\"com\"," +
+                "        \"fields\":[{\"name\":\"f1\",\"type\": "+
+                "            {\"type\":\"record\",\"name\":\"myrecord11\", \"namespace\":\"com\"," +
+                "             \"fields\":[{\"name\":\"f2\",\"type\":\"int\"}]}},"+
+                "                    {\"name\":\"f3\", \"type\":\"string\"}]}," +
+                "    {\"type\":\"record\",\"name\":\"myrecord2\", \"namespace\":\"com\"," +
+                "        \"fields\":[{\"name\":\"f1\",\"type\": "+
+                "        {\"type\":\"record\",\"name\":\"myrecord12\", \"namespace\":\"com\"," +
+                "             \"fields\":[{\"name\":\"f2\",\"type\":\"string\"}]}}," +
+                "                    {\"name\":\"f3\", \"type\":\"string\"}]}" +
+                "]");
+            GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
+            Decoder decoder = new JsonDecoder(schema, value, JsonMode.PlainJson);
+            object o = reader.Read(null, decoder);
+
+            Assert.AreEqual(value, fromDatumToJson(o, schema, true, JsonMode.PlainJson));
+        }
+
+        [TestCase("{\"f1\":[{\"f2\":123}],\"f3\":\"abc\"}")]
+        [TestCase("{\"f1\":[{\"f2\":\"abc\"}],\"f3\":\"abc\"}")]
+        public void TestJsonRecordUnionWithNestedRecordArrayPlainJson(String value)
+        {
+            Schema schema = Schema.Parse(
+                "[" +
+                "    {\"type\":\"record\",\"name\":\"myrecord1\", \"namespace\":\"com\"," +
+                "        \"fields\":[{\"name\":\"f1\",\"type\": " +
+                "            {\"type\":\"array\", \"items\": " +
+                "            {\"type\":\"record\",\"name\":\"myrecord11\", \"namespace\":\"com\"," +
+                "             \"fields\":[{\"name\":\"f2\",\"type\":\"int\"}]}}}," +
+                "                    {\"name\":\"f3\", \"type\":\"string\"}]}," +
+                "    {\"type\":\"record\",\"name\":\"myrecord2\", \"namespace\":\"com\"," +
+                "        \"fields\":[{\"name\":\"f1\",\"type\": " +
+                "        {\"type\":\"array\", \"items\": " +
+                "        {\"type\":\"record\",\"name\":\"myrecord12\", \"namespace\":\"com\"," +
+                "             \"fields\":[{\"name\":\"f2\",\"type\":\"string\"}]}}}," +
+                "                    {\"name\":\"f3\", \"type\":\"string\"}]}" +
+                "]");
+            GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
+            Decoder decoder = new JsonDecoder(schema, value, JsonMode.PlainJson);
+            object o = reader.Read(null, decoder);
+
+            Assert.AreEqual(value, fromDatumToJson(o, schema, true, JsonMode.PlainJson));
+        }
+
+        [TestCase("{\"f1\":123, \"f2\":\"abc\"}")]
+        [TestCase("{\"f2\":\"abc\", \"f1\": 123}")]
+        [TestCase("{\"f1\":\"abc\", \"f2\": 123}")]
+        [TestCase("{\"f2\":123, \"f1\":\"abc\"}")]
+        public void TestJsonRecordUnionSwappedFieldOrderPlainJson(String value)
+        {
+            Schema schema = Schema.Parse(
+                "[" +
+                "    {\"type\":\"record\",\"name\":\"myrecord1\", \"namespace\":\"com\"," +
+                "        \"fields\":[{\"name\":\"f1\",\"type\": \"int\"}, {\"name\":\"f2\",\"type\": \"string\"}]}," +
+                "    {\"type\":\"record\",\"name\":\"myrecord2\", \"namespace\":\"com\"," +
+                "        \"fields\":[{\"name\":\"f1\",\"type\": \"string\"}, {\"name\":\"f2\",\"type\": \"int\"}]}" +
+                "]");
+            GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
+            Decoder decoder = new JsonDecoder(schema, value, JsonMode.PlainJson);
+            object o = reader.Read(null, decoder);
+
+            AssertEquivalent(value, fromDatumToJson(o, schema, true, JsonMode.PlainJson));
         }
 
         [TestCase("int", 1)]
@@ -547,6 +653,11 @@ namespace Avro.Test
             output.Flush();
 
             return Encoding.UTF8.GetString(output.ToArray());
+        }
+
+        private void AssertEquivalent(string json1, string json2)
+        {
+            Assert.IsTrue(JToken.DeepEquals(JToken.Parse(json1), JToken.Parse(json2)));
         }
     }
 

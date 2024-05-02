@@ -19,12 +19,16 @@
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 using Avro.IO.Parsing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace Avro.IO
 {
@@ -244,6 +248,22 @@ namespace Avro.IO
         public override string ReadString()
         {
             Advance(Symbol.String);
+            if (Parser.TopSymbol() is Symbol.ConstCheckAction)
+            {
+                Symbol.ConstCheckAction top = (Symbol.ConstCheckAction)Parser.PopSymbol();
+                string expected = (string)top.Value;
+                if (reader.TokenType != JsonToken.String)
+                {
+                    throw TypeError("string");
+                }
+                string readResult = Convert.ToString(reader.Value);
+                if (!expected.Equals(readResult))
+                {
+                    throw new AvroTypeException("Expected constant value: " + expected + " but received: " + readResult);
+                }
+                reader.Read();
+                return readResult;
+            }
             if (Parser.TopSymbol() == Symbol.MapKeyMarker)
             {
                 Parser.Advance(Symbol.MapKeyMarker);
@@ -734,55 +754,93 @@ namespace Avro.IO
             return n;
         }
 
-        private bool IsRecordMatch(Symbol symbol, JsonReader objectReader) 
+        private bool IsRecordMatch(Symbol symbol, JTokenReader objectReader) 
         {
+            // to determine whether a record matches, we need to read the object and compare it to the schema
+            // this is done by creating a new JsonDecoder on top of the reader and advancing it through the schema
+            // if the schema matches, we return true, otherwise false
             JsonDecoder innerDecoder = new JsonDecoder(symbol, objectReader, JsonMode.PlainJson);
+
+            // the required start condition is that the reader is at the start of the object
+            // and that the symbol is a Sequence
+            if ( symbol.SymKind != Symbol.Kind.Sequence || objectReader.CurrentToken.Type != JTokenType.Object)
+            {
+                return false;
+            }
+            // advance the inner decoder to the start of the record
+            innerDecoder.Parser.Advance(Symbol.RecordStart);
+            // read the first token of the object
+            innerDecoder.reader.Read();
+            // we're now at the start of the record, so we can start processing the fields
+            // but we need to do so in the Avro schema field order, so we grab the stack
+            // of the parser and clone it
+            var stack = new Stack<Symbol>(innerDecoder.Parser.CloneStack());
             try
             {
-                
-                while( objectReader.TokenType != JsonToken.None )
+                while ( stack.Count > 0 )
                 {
-                    switch(objectReader.TokenType)
+                    var currentSymbol = stack.Pop();
+                    if (currentSymbol == Symbol.ArrayStart)
                     {
-                        case JsonToken.PropertyName:
-                            break;
-                        case JsonToken.Integer:
-                            innerDecoder.Advance(Symbol.Int);
-                            break;
-                        case JsonToken.Float:
-                            innerDecoder.Advance(Symbol.Float);
-                            break;
-                        case JsonToken.Boolean:
-                            innerDecoder.Advance(Symbol.Boolean);
-                            break;
-                        case JsonToken.Date:
-                            innerDecoder.Advance(Symbol.JsonDateTime);
-                            break;
-                        case JsonToken.String:
-                            innerDecoder.Advance(Symbol.String);
-                            break;
-                        case JsonToken.Null:
-                            innerDecoder.Advance(Symbol.Null);
-                            break;
-                        case JsonToken.Bytes:
-                            innerDecoder.Advance(Symbol.Bytes);
-                            break;
-                        case JsonToken.StartObject:
-                            innerDecoder.Advance(Symbol.RecordStart);
-                            break;
-                        case JsonToken.EndObject:
-                            break;
-                        case JsonToken.StartArray:
-                            innerDecoder.Advance(Symbol.ArrayStart);
-                            break;
-                        case JsonToken.EndArray:
-                            innerDecoder.Advance(Symbol.ArrayEnd);
-                            break;
-                        default:
-                            break;
+                        innerDecoder.ReadArrayStart();
                     }
-                    objectReader.Read();
+                    else if (currentSymbol == Symbol.ItemEnd)
+                    {
+                        if ( innerDecoder.ReadArrayNext() == 0 )
+                        {
+                            // pop the repeater
+                            stack.Pop();
+                        }
+                    }
+                    else if ( currentSymbol == Symbol.MapStart)
+                    {
+                        innerDecoder.SkipMap();
+                        innerDecoder.reader.Read();
+                    }
+                    else
+                    {
+                        switch (currentSymbol)
+                        {
+                            case Symbol.FieldAdjustAction fa:
+                                break;
+                            case Symbol.ImplicitAction ia:
+                                break;
+                            case Symbol.Repeater r:
+                                foreach(var s in r.Production)
+                                {
+                                    stack.Push(s);
+                                }
+                                break;
+                            default:
+                                innerDecoder.Advance(currentSymbol);
+                                if ( currentSymbol == Symbol.String && stack.Peek() is Symbol.ConstCheckAction)
+                                {
+                                    var constCheck = (Symbol.ConstCheckAction)stack.Pop();
+                                    if ( innerDecoder.reader.TokenType != JsonToken.String || !constCheck.Check(innerDecoder.reader.Value))
+                                    {
+                                        return false;
+                                    }
+                                }
+                                else
+                                if ((currentSymbol == Symbol.Boolean && innerDecoder.reader.TokenType != JsonToken.Boolean) ||
+                                    (currentSymbol == Symbol.Int && innerDecoder.reader.TokenType != JsonToken.Integer) ||
+                                    (currentSymbol == Symbol.Long && innerDecoder.reader.TokenType != JsonToken.Integer) ||
+                                    (currentSymbol == Symbol.Float && innerDecoder.reader.TokenType != JsonToken.Float) ||
+                                    (currentSymbol == Symbol.Double && innerDecoder.reader.TokenType != JsonToken.Float) ||
+                                    (currentSymbol == Symbol.String && innerDecoder.reader.TokenType != JsonToken.String) ||
+                                    (currentSymbol == Symbol.Bytes && innerDecoder.reader.TokenType != JsonToken.String) ||
+                                    (currentSymbol == Symbol.JsonDateTime && innerDecoder.reader.TokenType != JsonToken.Date) ||
+                                    (currentSymbol == Symbol.Fixed && innerDecoder.reader.TokenType != JsonToken.String) ||
+                                    (currentSymbol == Symbol.Enum && innerDecoder.reader.TokenType != JsonToken.String))
+                                {
+                                    return false;
+                                }
+                                innerDecoder.reader.Read();
+                                break;
+                        }
+                    }
                 }
+                innerDecoder.Parser.ProcessTrailingImplicitActions();
             }
             catch (AvroTypeException)
             {
@@ -998,7 +1056,14 @@ namespace Avro.IO
                             .Aggregate((x, y) => x + ", " + y));
                     }
 
-                    currentReorderBuffer = reorderBuffers.Pop();
+                    if (reorderBuffers.Count > 0)
+                    {
+                        currentReorderBuffer = reorderBuffers.Pop();
+                    }
+                    else
+                    {
+                        currentReorderBuffer = null;
+                    }
                 }
 
                 // AVRO-2034 advance beyond the end object for the next record.

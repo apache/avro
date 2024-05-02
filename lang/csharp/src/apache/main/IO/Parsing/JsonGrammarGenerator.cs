@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using Avro.Util;
+using Newtonsoft.Json;
 
 namespace Avro.IO.Parsing
 {
@@ -100,7 +101,16 @@ namespace Avro.IO.Parsing
                                     name = jsonName;
                                 }
                                 production[--i] = new Symbol.FieldAdjustAction(n, name, f.Aliases);
-                                production[--i] = Generate(f.Schema, seen);
+                                string constValue = f.GetProperty("const");
+                                if (constValue != null)
+                                {
+                                    var constObj = JsonConvert.DeserializeObject(constValue);
+                                    production[--i] = Symbol.NewSeq(new Symbol.ConstCheckAction(constObj), Generate(f.Schema, seen));
+                                }
+                                else
+                                {
+                                    production[--i] = Generate(f.Schema, seen);
+                                }
                                 production[--i] = Symbol.FieldEnd;
                                 n++;
                             }
