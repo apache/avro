@@ -56,6 +56,21 @@ namespace Avro
         public int Count { get { return Fields.Count; } }
 
         /// <summary>
+        /// Whether the record has a root field
+        /// </summary>
+        public bool HasRootField => Fields?.Any(f => f.Root)??false;
+
+        /// <summary>
+        /// Gets the root field of the record, if any
+        /// </summary>
+        /// <returns>Root field schema</returns>
+        public bool TryGetRootField(out Field field)
+        {
+            field = Fields?.FirstOrDefault(f => f.Root);
+            return field != null;
+        }
+
+        /// <summary>
         /// Map of field name and Field object for faster field lookups
         /// </summary>
         private IDictionary<string, Field> fieldLookup;
@@ -276,18 +291,21 @@ namespace Avro
             var alternateNames = Field.GetAlternateNames(jfield);
             var props = Schema.GetProperties(jfield);
             var defaultValue = jfield["default"];
+            var root = JsonHelper.GetOptionalBoolean(jfield, "root")??false;
 
             JToken jtype = jfield["type"];
             if (null == jtype)
                 throw new SchemaParseException($"'type' was not found for field: name at '{jfield.Path}'");
             var schema = Schema.ParseJson(jtype, names, encspace);
-            return new Field(schema, name, aliases, alternateNames, pos, doc, defaultValue, sortorder, props);
+            return new Field(schema, name, aliases, alternateNames, root, pos, doc, defaultValue, sortorder, props);
         }
 
         private static void addToFieldMap(Dictionary<string, Field> map, string name, Field field)
         {
             if (map.ContainsKey(name))
                 throw new AvroException("field or alias " + name + " is a duplicate name");
+            if ((field.Root && map.Count > 0) || map.Values.Any(f => f.Root))
+                throw new AvroException("When 'root': true is set on a field, no other fields may exist");
             map.Add(name, field);
         }
 

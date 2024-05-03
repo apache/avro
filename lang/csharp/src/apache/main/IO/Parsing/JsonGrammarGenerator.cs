@@ -86,38 +86,44 @@ namespace Avro.IO.Parsing
                         LitS wsc = new LitS(sc);
                         if (!seen.TryGetValue(wsc, out Symbol rresult))
                         {
-                            Symbol[] production = new Symbol[((RecordSchema)sc).Fields.Count * 3 + 2];
-                            rresult = Symbol.NewSeq(production);
-                            seen[wsc] = rresult;
-
-                            int i = production.Length;
-                            int n = 0;
-                            production[--i] = Symbol.RecordStart;
-                            foreach (Field f in ((RecordSchema)sc).Fields)
+                            RecordSchema recordSchema = (RecordSchema)sc;
+                            if (recordSchema.TryGetRootField(out var rootField))
                             {
-                                var name = f.Name;
-                                if (f.AlternateNames != null && f.AlternateNames.TryGetValue("json", out string jsonName))
-                                {
-                                    name = jsonName;
-                                }
-                                production[--i] = new Symbol.FieldAdjustAction(n, name, f.Aliases);
-                                string constValue = f.GetProperty("const");
-                                if (constValue != null)
-                                {
-                                    var constObj = JsonConvert.DeserializeObject(constValue);
-                                    production[--i] = Symbol.NewSeq(new Symbol.ConstCheckAction(constObj), Generate(f.Schema, seen));
-                                }
-                                else
-                                {
-                                    production[--i] = Generate(f.Schema, seen);
-                                }
-                                production[--i] = Symbol.FieldEnd;
-                                n++;
+                                return Generate(rootField.Schema, seen);
                             }
+                            else
+                            {
+                                Symbol[] production = new Symbol[recordSchema.Fields.Count * 3 + 2];
+                                rresult = Symbol.NewSeq(production);
+                                seen[wsc] = rresult;
 
-                            production[i - 1] = Symbol.RecordEnd;
+                                int i = production.Length;
+                                int n = 0;
+                                production[--i] = Symbol.RecordStart;
+                                foreach (Field f in recordSchema.Fields)
+                                {
+                                    var name = f.Name;
+                                    if (f.AlternateNames != null && f.AlternateNames.TryGetValue("json", out string jsonName))
+                                    {
+                                        name = jsonName;
+                                    }
+                                    production[--i] = new Symbol.FieldAdjustAction(n, name, f.Aliases);
+                                    string constValue = f.GetProperty("const");
+                                    if (constValue != null)
+                                    {
+                                        var constObj = JsonConvert.DeserializeObject(constValue);
+                                        production[--i] = Symbol.NewSeq(new Symbol.ConstCheckAction(constObj), Generate(f.Schema, seen));
+                                    }
+                                    else
+                                    {
+                                        production[--i] = Generate(f.Schema, seen);
+                                    }
+                                    production[--i] = Symbol.FieldEnd;
+                                    n++;
+                                }
+                                production[i - 1] = Symbol.RecordEnd;
+                            }
                         }
-
                         return rresult;
                     }
                 case Schema.Type.Logical:

@@ -292,6 +292,8 @@ namespace Avro.Test
             }
         }
 
+
+
         [TestCase("{\"int\":123}")]
         [TestCase("{\"string\":\"12345678-1234-5678-1234-123456789012\"}")]
         [TestCase("null")]
@@ -658,6 +660,56 @@ namespace Avro.Test
         private void AssertEquivalent(string json1, string json2)
         {
             Assert.IsTrue(JToken.DeepEquals(JToken.Parse(json1), JToken.Parse(json2)));
+        }
+
+        [Test]
+        public void TestRootFeatureWithArray()
+        {
+            string schemaStr = "{ \"type\": \"record\", \"name\": \"r\", \"fields\": [ " +
+                               "{ \"name\" : \"rootField\", \"type\": { \"type\": \"array\", \"items\": \"int\" }, \"root\": true } " +
+                               "] }";
+            string json = "[1,2,3]";
+
+            Schema schema = Schema.Parse(schemaStr);
+            byte[] avroBytes = fromJsonToAvro(json, schema, JsonMode.PlainJson);
+            Assert.IsNotNull(avroBytes);
+            string convertedJson = fromAvroToJson(avroBytes, schema, false, JsonMode.PlainJson);
+            Assert.AreEqual(json, convertedJson);
+        }
+
+        [Test]
+        public void TestRootFeatureWithMap()
+        {
+            string schemaStr = "{ \"type\": \"record\", \"name\": \"r\", \"fields\": [ " +
+                               "{ \"name\" : \"rootField\", \"type\": { \"type\": \"map\", \"values\": \"string\" }, \"root\": true } " +
+                               "] }";
+            string json = "{\"key1\":\"value1\",\"key2\":\"value2\"}";
+
+            Schema schema = Schema.Parse(schemaStr);
+            byte[] avroBytes = fromJsonToAvro(json, schema, JsonMode.PlainJson);
+            Assert.IsNotNull(avroBytes);
+            string convertedJson = fromAvroToJson(avroBytes, schema, false, JsonMode.PlainJson);
+            Assert.AreEqual(json, convertedJson);
+        }
+
+        [Test]
+        public void TestRootFeatureWithMultipleRootFields()
+        {
+            string schemaStr = "{ \"type\": \"record\", \"name\": \"r\", \"fields\": [ " +
+                               "{ \"name\" : \"rootField1\", \"type\": { \"type\": \"array\", \"items\": \"int\" }, \"root\": true }, " +
+                               "{ \"name\" : \"rootField2\", \"type\": { \"type\": \"map\", \"values\": \"string\" }, \"root\": true } " +
+                               "] }";
+            Assert.Throws<SchemaParseException>(() => Schema.Parse(schemaStr));
+        }
+
+        [Test]
+        public void TestRootFeatureWithAdditionalField()
+        {
+            string schemaStr = "{ \"type\": \"record\", \"name\": \"r\", \"fields\": [ " +
+                               "{ \"name\" : \"rootField\", \"type\": { \"type\": \"array\", \"items\": \"int\" }, \"root\": true }, " +
+                               "{ \"name\" : \"additionalField\", \"type\": \"string\" } " +
+                               "] }";
+            Assert.Throws<SchemaParseException>(() => Schema.Parse(schemaStr));
         }
     }
 
