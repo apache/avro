@@ -3555,6 +3555,290 @@ error:
 	return NULL;
 }
 
+/*-----------------------------------------------------------------------
+ * decimal
+ */
+
+typedef struct avro_generic_decimal_value_iface {
+	avro_generic_value_iface_t  parent;
+	volatile int  refcount;
+	avro_schema_t  schema;
+} avro_generic_decimal_value_iface_t;
+
+
+static avro_value_iface_t *
+avro_generic_decimal_incref_iface(avro_value_iface_t *viface)
+{
+	avro_generic_decimal_value_iface_t  *iface =
+	    container_of(viface, avro_generic_decimal_value_iface_t, parent);
+	avro_refcount_inc(&iface->refcount);
+	return viface;
+}
+
+static void
+avro_generic_decimal_decref_iface(avro_value_iface_t *viface)
+{
+	avro_generic_decimal_value_iface_t  *iface =
+	    container_of(viface, avro_generic_decimal_value_iface_t, parent);
+	if (avro_refcount_dec(&iface->refcount)) {
+		avro_schema_decref(iface->schema);
+		avro_freet(avro_generic_decimal_value_iface_t, iface);
+	}
+}
+
+static int
+avro_generic_decimal_reset(const avro_value_iface_t *viface, void *vself)
+{
+	const avro_generic_decimal_value_iface_t  *iface =
+	    container_of(viface, avro_generic_decimal_value_iface_t, parent);
+	const avro_schema_t underlying =
+	    avro_schema_logical_underlying(iface->schema);
+	if (underlying == NULL) {
+		return EINVAL;
+	}
+	switch (underlying->type) {
+	case AVRO_FIXED:
+		memset(vself, 0, avro_schema_fixed_size(underlying));
+		return 0;
+	case AVRO_BYTES:
+		avro_raw_string_clear((avro_raw_string_t *) vself);
+		return 0;
+	default:
+		return EINVAL;
+	}
+}
+
+static avro_type_t
+avro_generic_decimal_get_type(const avro_value_iface_t *iface,
+			      const void *vself)
+{
+	AVRO_UNUSED(iface);
+	AVRO_UNUSED(vself);
+	return AVRO_DECIMAL;
+}
+
+static avro_schema_t
+avro_generic_decimal_get_schema(const avro_value_iface_t *viface,
+				const void *vself)
+{
+	const avro_generic_decimal_value_iface_t  *iface =
+	    container_of(viface, avro_generic_decimal_value_iface_t, parent);
+	AVRO_UNUSED(vself);
+	return iface->schema;
+}
+
+static int
+avro_generic_decimal_get(const avro_value_iface_t *viface, const void *vself,
+			 const void **buf, size_t *size)
+{
+	const avro_generic_decimal_value_iface_t  *iface =
+	    container_of(viface, avro_generic_decimal_value_iface_t, parent);
+	const avro_schema_t underlying =
+	    avro_schema_logical_underlying(iface->schema);
+	if (buf != NULL) {
+		if (is_avro_fixed(underlying)) {
+			*buf = vself;
+		} else {
+			*buf = avro_raw_string_get(
+			    (const avro_raw_string_t *) vself);
+		}
+	}
+	if (size != NULL) {
+		if (is_avro_fixed(underlying)) {
+			*size = avro_schema_fixed_size(underlying);
+		} else {
+			*size = avro_raw_string_length(
+			    (const avro_raw_string_t *) vself);
+		}
+	}
+	return 0;
+}
+
+static int
+avro_generic_decimal_grab(const avro_value_iface_t *viface, const void *vself,
+			  avro_wrapped_buffer_t *dest)
+{
+	const avro_generic_decimal_value_iface_t  *iface =
+	    container_of(viface, avro_generic_decimal_value_iface_t, parent);
+	const avro_schema_t underlying =
+	    avro_schema_logical_underlying(iface->schema);
+	if (is_avro_fixed(underlying)) {
+		return avro_wrapped_buffer_new(
+		    dest, vself, avro_schema_fixed_size(underlying));
+	}
+
+	return avro_raw_string_grab((const avro_raw_string_t *) vself, dest);
+}
+
+static int
+avro_generic_decimal_set(const avro_value_iface_t *viface, void *vself,
+			 void *buf, size_t size)
+{
+	check_param(EINVAL, buf != NULL, "decimal contents");
+	const avro_generic_decimal_value_iface_t  *iface =
+	    container_of(viface, avro_generic_decimal_value_iface_t, parent);
+	const avro_schema_t underlying =
+	    avro_schema_logical_underlying(iface->schema);
+	if (is_avro_fixed(underlying)) {
+		int64_t fixed_size = avro_schema_fixed_size(underlying);
+		if (size > (size_t) fixed_size) {
+			avro_set_error("Decimal schema with fixed size %zu"
+				       " cannot store buffer of size %zu",
+				       fixed_size, size);
+			return EINVAL;
+		}
+
+		size_t size_diff = fixed_size - size;
+		uint8_t byte = 0;
+		if ((((uint8_t *) buf)[0] & 0x80) != 0) {
+			/* Extend sign bit if set. */
+			byte = 0xFF;
+		}
+		memset(vself, byte, size_diff);
+		memcpy(((uint8_t *) vself) + size_diff, buf, size);
+		return 0;
+	}
+
+	avro_raw_string_set_length((avro_raw_string_t *) vself, buf, size);
+	return 0;
+}
+
+static int
+avro_generic_decimal_give(const avro_value_iface_t *viface, void *vself,
+			  avro_wrapped_buffer_t *buf)
+{
+	const avro_generic_decimal_value_iface_t  *iface =
+	    container_of(viface, avro_generic_decimal_value_iface_t, parent);
+	const avro_schema_t underlying =
+	    avro_schema_logical_underlying(iface->schema);
+	if (is_avro_fixed(underlying)) {
+		int rval = avro_generic_decimal_set(
+		    viface, vself, (void *) buf->buf, buf->size);
+		avro_wrapped_buffer_free(buf);
+		return rval;
+	}
+
+	avro_raw_string_give((avro_raw_string_t *) vself, buf);
+	return 0;
+}
+
+static size_t
+avro_generic_decimal_instance_size(const avro_value_iface_t *viface)
+{
+	const avro_generic_decimal_value_iface_t  *iface =
+	    container_of(viface, avro_generic_decimal_value_iface_t, parent);
+	const avro_schema_t underlying =
+	    avro_schema_logical_underlying(iface->schema);
+	if (is_avro_fixed(underlying)) {
+		return avro_schema_fixed_size(underlying);
+	}
+
+	return sizeof(avro_raw_string_t);
+}
+
+static int
+avro_generic_decimal_init(const avro_value_iface_t *viface, void *vself)
+{
+	const avro_generic_decimal_value_iface_t  *iface =
+	    container_of(viface, avro_generic_decimal_value_iface_t, parent);
+	const avro_schema_t underlying =
+	    avro_schema_logical_underlying(iface->schema);
+	if (is_avro_fixed(underlying)) {
+		memset(vself, 0, avro_schema_fixed_size(underlying));
+	} else {
+		avro_raw_string_init((avro_raw_string_t *) vself);
+	}
+
+	return 0;
+}
+
+static void
+avro_generic_decimal_done(const avro_value_iface_t *viface, void *vself)
+{
+	const avro_generic_decimal_value_iface_t  *iface =
+	    container_of(viface, avro_generic_decimal_value_iface_t, parent);
+	const avro_schema_t underlying =
+	    avro_schema_logical_underlying(iface->schema);
+	if (is_avro_fixed(underlying)) {
+		return;
+	}
+
+	avro_raw_string_done((avro_raw_string_t *) vself);
+}
+
+static avro_generic_value_iface_t  AVRO_GENERIC_DECIMAL_CLASS =
+{
+	{
+		/* "class" methods */
+		avro_generic_decimal_incref_iface,
+		avro_generic_decimal_decref_iface,
+		/* general "instance" methods */
+		avro_generic_value_incref,
+		avro_generic_value_decref,
+		avro_generic_decimal_reset,
+		avro_generic_decimal_get_type,
+		avro_generic_decimal_get_schema,
+		/* primitive getters */
+		NULL, /* get_boolean */
+		avro_generic_decimal_get,
+		avro_generic_decimal_grab,
+		NULL, /* get_double */
+		NULL, /* get_float */
+		NULL, /* get_int */
+		NULL, /* get_long */
+		NULL, /* get_null */
+		NULL, /* get_string */
+		NULL, /* grab_string */
+		NULL, /* get_enum */
+		avro_generic_decimal_get,
+		avro_generic_decimal_grab,
+		/* primitive setters */
+		NULL, /* set_boolean */
+		avro_generic_decimal_set,
+		avro_generic_decimal_give,
+		NULL, /* set_double */
+		NULL, /* set_float */
+		NULL, /* set_int */
+		NULL, /* set_long */
+		NULL, /* set_null */
+		NULL, /* set_string */
+		NULL, /* set_string_length */
+		NULL, /* give_string_length */
+		NULL, /* set_enum */
+		avro_generic_decimal_set,
+		avro_generic_decimal_give,
+		/* compound getters */
+		NULL, /* get_size */
+		NULL, /* get_by_index */
+		NULL, /* get_by_name */
+		NULL, /* get_discriminant */
+		NULL, /* get_current_branch */
+		/* compound setters */
+		NULL, /* append */
+		NULL, /* add */
+		NULL  /* set_branch */
+	},
+	avro_generic_decimal_instance_size,
+	avro_generic_decimal_init,
+	avro_generic_decimal_done
+};
+
+static avro_generic_value_iface_t *
+avro_generic_decimal_class(avro_schema_t schema)
+{
+	avro_generic_decimal_value_iface_t  *iface =
+	    (avro_generic_decimal_value_iface_t *) avro_new(
+		avro_generic_decimal_value_iface_t);
+	if (iface == NULL) {
+		return NULL;
+	}
+
+	iface->parent = AVRO_GENERIC_DECIMAL_CLASS;
+	iface->refcount = 1;
+	iface->schema = avro_schema_incref(schema);
+	return &iface->parent;
+}
+
 
 /*-----------------------------------------------------------------------
  * Schema type dispatcher
@@ -3634,6 +3918,10 @@ avro_generic_class_from_schema_memoized(avro_schema_t schema,
 			result = &lresult->parent;
 			break;
 		}
+
+	case AVRO_DECIMAL:
+		result = avro_generic_decimal_class(schema);
+		break;
 
 	default:
 		avro_set_error("Unknown schema type");

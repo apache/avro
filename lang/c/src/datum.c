@@ -1152,6 +1152,12 @@ static void avro_datum_free(avro_datum_t datum)
 				/* TODO */
 			}
 			break;
+		case AVRO_DECIMAL:
+			/*
+			 * Datums are not created from logical schemas, only
+			 * their underlying schemas.
+			 */
+			break;
 		}
 	}
 }

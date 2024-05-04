@@ -164,6 +164,13 @@ schema_link_equal(struct avro_link_schema_t *a, struct avro_link_schema_t *b)
 	return (strcmp(avro_schema_name(a->to), avro_schema_name(b->to)) == 0);
 }
 
+static int
+schema_decimal_equal(struct avro_decimal_schema_t *a,
+		     struct avro_decimal_schema_t *b)
+{
+	return a->precision == b->precision && a->scale == b->scale;
+}
+
 int avro_schema_equal(avro_schema_t a, avro_schema_t b)
 {
 	if (!a || !b) {
@@ -199,6 +206,9 @@ int avro_schema_equal(avro_schema_t a, avro_schema_t b)
 	} else if (is_avro_link(a)) {
 		return schema_link_equal(avro_schema_to_link(a),
 					 avro_schema_to_link(b));
+	} else if (is_avro_decimal(a)) {
+		return schema_decimal_equal(avro_schema_to_decimal(a),
+					    avro_schema_to_decimal(b));
 	}
 	return 1;
 }

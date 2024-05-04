@@ -192,6 +192,41 @@ read_record(avro_reader_t reader, const avro_encoding_t * enc,
 	return 0;
 }
 
+static int
+read_bytes(avro_reader_t reader, const avro_encoding_t *enc, char **bytes,
+	   int64_t *len)
+{
+	int rval;
+	check_prefix(rval, enc->read_bytes(reader, bytes, len),
+		     "Cannot read bytes value: ");
+	return rval;
+}
+
+static int
+read_fixed(avro_reader_t reader, avro_schema_t fixed_schema, char **out_bytes,
+	   int64_t *out_size)
+{
+	int rval;
+	char *bytes;
+	int64_t size = avro_schema_to_fixed(fixed_schema)->size;
+
+	bytes = (char *) avro_malloc(size);
+	if (!bytes) {
+		avro_prefix_error("Cannot allocate new fixed value");
+		return ENOMEM;
+	}
+	rval = avro_read(reader, bytes, size);
+	if (rval) {
+		avro_prefix_error("Cannot read fixed value: ");
+		avro_free(bytes, size);
+		return rval;
+	}
+
+	*out_bytes = bytes;
+	*out_size = size;
+	return rval;
+}
+
 int
 avro_consume_binary(avro_reader_t reader, avro_consumer_t *consumer, void *ud)
 {
@@ -267,33 +302,22 @@ avro_consume_binary(avro_reader_t reader, avro_consumer_t *consumer, void *ud)
 		{
 			char *bytes;
 			int64_t len;
-			check_prefix(rval, enc->read_bytes(reader, &bytes, &len),
-				     "Cannot read bytes value: ");
-			check(rval, avro_consumer_call(consumer, bytes_value, bytes, len, ud));
+			check(rval, read_bytes(reader, enc, &bytes, &len));
+			check(rval, avro_consumer_call(consumer, bytes_value,
+						       bytes, len, ud));
 		}
 		break;
 
 	case AVRO_FIXED:
 		{
 			char *bytes;
-			int64_t size =
-			    avro_schema_to_fixed(consumer->schema)->size;
-
-			bytes = (char *) avro_malloc(size);
-			if (!bytes) {
-				avro_prefix_error("Cannot allocate new fixed value");
-				return ENOMEM;
-			}
-			rval = avro_read(reader, bytes, size);
+			int64_t len;
+			check(rval, read_fixed(reader, consumer->schema,
+					       &bytes, &len));
+			rval = avro_consumer_call(consumer, fixed_value, bytes,
+						  len, ud);
 			if (rval) {
-				avro_prefix_error("Cannot read fixed value: ");
-				avro_free(bytes, size);
-				return rval;
-			}
-
-			rval = avro_consumer_call(consumer, fixed_value, bytes, size, ud);
-			if (rval) {
-				avro_free(bytes, size);
+				avro_free(bytes, len);
 				return rval;
 			}
 		}
@@ -325,6 +349,34 @@ avro_consume_binary(avro_reader_t reader, avro_consumer_t *consumer, void *ud)
 	case AVRO_INVALID:
 		avro_set_error("Consumer can't consume an invalid schema");
 		return EINVAL;
+
+	case AVRO_DECIMAL:
+		{
+			char *bytes;
+			int should_free = 0;
+			int64_t len;
+			avro_schema_t underlying =
+			    avro_schema_logical_underlying(consumer->schema);
+			if (is_avro_fixed(underlying)) {
+				check(rval, read_fixed(reader, underlying,
+						       &bytes, &len));
+				should_free = 1;
+			} else {
+				check(rval, read_bytes(reader, enc, &bytes,
+						       &len));
+				should_free = 0;
+			}
+
+			rval = avro_consumer_call(consumer, decimal_value,
+						  bytes, len, ud);
+			if (rval) {
+				if (should_free) {
+					avro_free(bytes, len);
+				}
+				return rval;
+			}
+		}
+		break;
 	}
 
 	return 0;

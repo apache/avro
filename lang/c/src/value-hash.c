@@ -133,6 +133,7 @@ avro_value_hash_fast(avro_value_t *value, uint32_t start)
 		}
 
 		case AVRO_BYTES:
+		case AVRO_DECIMAL:
 		{
 			const void  *buf;
 			size_t  size;
