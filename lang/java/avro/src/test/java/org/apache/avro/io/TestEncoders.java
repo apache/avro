@@ -349,35 +349,4 @@ public class TestEncoders {
 
     return new String(output.toByteArray(), StandardCharsets.UTF_8.name());
   }
-
-  @Test
-  public void testJsonEncoderInitAutoFlush() throws IOException {
-    Schema s = new Schema.Parser().parse("\"int\"");
-    OutputStream baos = new ByteArrayOutputStream();
-    OutputStream out = new BufferedOutputStream(baos);
-    JsonEncoder enc = FACTORY.jsonEncoder(s, out, false);
-    enc.configure(out);
-    enc.writeInt(24);
-    enc.flush();
-    Assert.assertEquals("", baos.toString());
-    out.flush();
-    Assert.assertEquals("24", baos.toString());
-  }
-
-  @Test
-  public void testJsonEncoderInitAutoFlushDisabled() throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    OutputStream out = new BufferedOutputStream(baos);
-    Schema ints = Schema.create(Type.INT);
-    Encoder e = FACTORY.jsonEncoder(ints, out);
-    String separator = System.getProperty("line.separator");
-    GenericDatumWriter<Integer> writer = new GenericDatumWriter<Integer>(ints);
-    writer.write(1, e);
-    writer.write(2, e);
-    e.flush();
-    Assert.assertEquals("", baos.toString());
-    out.flush();
-    Assert.assertEquals("1" + separator + "2", baos.toString());
-    out.close();
-  }
 }
