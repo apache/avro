@@ -33,6 +33,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
@@ -72,6 +73,8 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   private byte[] sync; // 16 random bytes
   private int syncInterval = DataFileConstants.DEFAULT_SYNC_INTERVAL;
+  private Function<OutputStream, BinaryEncoder> initEncoder = out -> new EncoderFactory().directBinaryEncoder(out,
+      null);
 
   private boolean isOpen;
   private Codec codec;
@@ -126,6 +129,17 @@ public class DataFileWriter<D> implements Closeable, Flushable {
       throw new IllegalArgumentException("Invalid syncInterval value: " + syncInterval);
     }
     this.syncInterval = syncInterval;
+    return this;
+  }
+
+  /**
+   * Allows setting a different encoder than the default DirectBinaryEncoder.
+   *
+   * @param initEncoderFunc Function to create a binary encoder
+   * @return this DataFileWriter
+   */
+  public DataFileWriter<D> setEncoder(Function<OutputStream, BinaryEncoder> initEncoderFunc) {
+    this.initEncoder = initEncoderFunc;
     return this;
   }
 
@@ -241,7 +255,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     this.vout = efactory.directBinaryEncoder(out, null);
     dout.setSchema(schema);
     buffer = new NonCopyingByteArrayOutputStream(Math.min((int) (syncInterval * 1.25), Integer.MAX_VALUE / 2 - 1));
-    this.bufOut = efactory.directBinaryEncoder(buffer, null);
+    this.bufOut = this.initEncoder.apply(buffer);
     if (this.codec == null) {
       this.codec = CodecFactory.nullCodec().createInstance();
     }
