@@ -1057,6 +1057,36 @@ test_decimal_from_json(const char *json)
 	}
 	avro_wrapped_buffer_free(&wbuf);
 
+	int64_t unscaled = 1234;
+	int64_t lhs = 0;
+	uint64_t rhs = 0;
+	try(avro_value_set_decimal(&val, &unscaled, NULL, NULL),
+	    "Cannot set decimal from unscaled");
+	try(avro_value_get_decimal(&val, &unscaled, &lhs, &rhs),
+	    "Cannot get decimal");
+	if (unscaled != 1234 || lhs != 12 || rhs != 34) {
+		fprintf(stderr,
+			"Decimal has (unscaled, lhs, rhs) of"
+			" (%lld, %lld, %llu), not (1234, 12, 34)\n",
+			unscaled, lhs, rhs);
+		return EXIT_FAILURE;
+	}
+
+	unscaled = 0;
+	lhs = -12;
+	rhs = 34;
+	try(avro_value_set_decimal(&val, NULL, &lhs, &rhs),
+	    "Cannot set decimal from lhs and rhs");
+	try(avro_value_get_decimal(&val, &unscaled, &lhs, &rhs),
+	    "Cannot get decimal");
+	if (unscaled != -1234 || lhs != -12 || rhs != 34) {
+		fprintf(stderr,
+			"Decimal has (unscaled, lhs, rhs) of"
+			" (%lld, %lld, %llu), not (-1234, -12, 34)\n",
+			unscaled, lhs, rhs);
+		return EXIT_FAILURE;
+	}
+
 	check_invalid_methods("decimal", &val);
 	check_write_read(&val);
 	check_copy(&val);

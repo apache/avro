@@ -535,6 +535,26 @@ avro_generic_link_set_branch(const avro_value_iface_t *iface,
 	return avro_value_set_branch(self, discriminant, branch);
 }
 
+static int
+avro_generic_link_get_decimal(const avro_value_iface_t *iface,
+			      const void *vself, int64_t *unscaled,
+			      int64_t *lhs, uint64_t *rhs)
+{
+	AVRO_UNUSED(iface);
+	const avro_value_t  *self = (const avro_value_t *) vself;
+	return avro_value_get_decimal(self, unscaled, lhs, rhs);
+}
+
+static int
+avro_generic_link_set_decimal(const avro_value_iface_t *iface,
+			      void *vself, const int64_t *unscaled,
+			      const int64_t *lhs, const uint64_t *rhs)
+{
+	AVRO_UNUSED(iface);
+	avro_value_t  *self = (avro_value_t *) vself;
+	return avro_value_set_decimal(self, unscaled, lhs, rhs);
+}
+
 static size_t
 avro_generic_link_instance_size(const avro_value_iface_t *viface)
 {
@@ -639,7 +659,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_LINK_CLASS =
 		/* compound setters */
 		avro_generic_link_append,
 		avro_generic_link_add,
-		avro_generic_link_set_branch
+		avro_generic_link_set_branch,
+		avro_generic_link_get_decimal,
+		avro_generic_link_set_decimal,
 	},
 	avro_generic_link_instance_size,
 	avro_generic_link_init,
@@ -790,7 +812,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_BOOLEAN_CLASS =
 		/* compound setters */
 		NULL, /* append */
 		NULL, /* add */
-		NULL  /* set_branch */
+		NULL, /* set_branch */
+		NULL, /* get_decimal */
+		NULL, /* set_decimal */
 	},
 	avro_generic_boolean_instance_size,
 	avro_generic_boolean_init,
@@ -959,7 +983,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_BYTES_CLASS =
 		/* compound setters */
 		NULL, /* append */
 		NULL, /* add */
-		NULL  /* set_branch */
+		NULL, /* set_branch */
+		NULL, /* get_decimal */
+		NULL, /* set_decimal */
 	},
 	avro_generic_bytes_instance_size,
 	avro_generic_bytes_init,
@@ -1102,7 +1128,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_DOUBLE_CLASS =
 		/* compound setters */
 		NULL, /* append */
 		NULL, /* add */
-		NULL  /* set_branch */
+		NULL, /* set_branch */
+		NULL, /* get_decimal */
+		NULL, /* set_decimal */
 	},
 	avro_generic_double_instance_size,
 	avro_generic_double_init,
@@ -1245,7 +1273,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_FLOAT_CLASS =
 		/* compound setters */
 		NULL, /* append */
 		NULL, /* add */
-		NULL  /* set_branch */
+		NULL, /* set_branch */
+		NULL, /* get_decimal */
+		NULL, /* set_decimal */
 	},
 	avro_generic_float_instance_size,
 	avro_generic_float_init,
@@ -1388,7 +1418,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_INT_CLASS =
 		/* compound setters */
 		NULL, /* append */
 		NULL, /* add */
-		NULL  /* set_branch */
+		NULL, /* set_branch */
+		NULL, /* get_decimal */
+		NULL, /* set_decimal */
 	},
 	avro_generic_int_instance_size,
 	avro_generic_int_init,
@@ -1531,7 +1563,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_LONG_CLASS =
 		/* compound setters */
 		NULL, /* append */
 		NULL, /* add */
-		NULL  /* set_branch */
+		NULL, /* set_branch */
+		NULL, /* get_decimal */
+		NULL, /* set_decimal */
 	},
 	avro_generic_long_instance_size,
 	avro_generic_long_init,
@@ -1670,7 +1704,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_NULL_CLASS =
 		/* compound setters */
 		NULL, /* append */
 		NULL, /* add */
-		NULL  /* set_branch */
+		NULL, /* set_branch */
+		NULL, /* get_decimal */
+		NULL, /* set_decimal */
 	},
 	avro_generic_null_instance_size,
 	avro_generic_null_init,
@@ -1869,7 +1905,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_STRING_CLASS =
 		/* compound setters */
 		NULL, /* append */
 		NULL, /* add */
-		NULL  /* set_branch */
+		NULL, /* set_branch */
+		NULL, /* get_decimal */
+		NULL, /* set_decimal */
 	},
 	avro_generic_string_instance_size,
 	avro_generic_string_init,
@@ -2112,7 +2150,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_ARRAY_CLASS =
 	/* compound setters */
 	avro_generic_array_append,
 	NULL, /* add */
-	NULL  /* set_branch */
+	NULL, /* set_branch */
+	NULL, /* get_decimal */
+	NULL, /* set_decimal */
 },
 	avro_generic_array_instance_size,
 	avro_generic_array_init,
@@ -2306,7 +2346,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_ENUM_CLASS =
 		/* compound setters */
 		NULL, /* append */
 		NULL, /* add */
-		NULL  /* set_branch */
+		NULL, /* set_branch */
+		NULL, /* get_decimal */
+		NULL, /* set_decimal */
 	},
 	avro_generic_enum_instance_size,
 	avro_generic_enum_init,
@@ -2510,7 +2552,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_FIXED_CLASS =
 		/* compound setters */
 		NULL, /* append */
 		NULL, /* add */
-		NULL  /* set_branch */
+		NULL, /* set_branch */
+		NULL, /* get_decimal */
+		NULL, /* set_decimal */
 	},
 	avro_generic_fixed_instance_size,
 	avro_generic_fixed_init,
@@ -2768,7 +2812,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_MAP_CLASS =
 		/* compound setters */
 		NULL, /* append */
 		avro_generic_map_add,
-		NULL  /* set_branch */
+		NULL, /* set_branch */
+		NULL, /* get_decimal */
+		NULL, /* set_decimal */
 	},
 	avro_generic_map_instance_size,
 	avro_generic_map_init,
@@ -3081,7 +3127,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_RECORD_CLASS =
 		/* compound setters */
 		NULL, /* append */
 		NULL, /* add */
-		NULL  /* set_branch */
+		NULL, /* set_branch */
+		NULL, /* get_decimal */
+		NULL, /* set_decimal */
 	},
 	avro_generic_record_instance_size,
 	avro_generic_record_init,
@@ -3474,7 +3522,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_UNION_CLASS =
 		/* compound setters */
 		NULL, /* append */
 		NULL, /* add */
-		avro_generic_union_set_branch
+		avro_generic_union_set_branch,
+		NULL, /* get_decimal */
+		NULL, /* set_decimal */
 	},
 	avro_generic_union_instance_size,
 	avro_generic_union_init,
@@ -3722,6 +3772,159 @@ avro_generic_decimal_give(const avro_value_iface_t *viface, void *vself,
 	return 0;
 }
 
+static int64_t bytes2unscaled(const uint8_t *bytes, size_t size)
+{
+	/* At this point, bytes has been validated to fit within int64_t. */
+	uint64_t unsigned_unscaled = 0;
+	if ((bytes[0] & 0x80) != 0) {
+		unsigned_unscaled = UINT64_MAX;
+	}
+	for (size_t i = 0; i < size; ++i) {
+		size_t shift = (size - i - 1) * 8;
+		unsigned_unscaled &= ~(((uint64_t) 0xFF) << shift);
+		unsigned_unscaled |= ((uint64_t) bytes[i]) << shift;
+	}
+
+	int64_t signed_unscaled;
+	if ((bytes[0] & 0x80) != 0) {
+		signed_unscaled = (~unsigned_unscaled + 1) * -1;
+	} else {
+		signed_unscaled = unsigned_unscaled;
+	}
+
+	return signed_unscaled;
+}
+
+static void unscaled2bytes(int64_t signed_unscaled, uint8_t *bytes,
+			   size_t size)
+{
+	/* At this point, signed_unscaled has been verified to fit in bytes. */
+	uint64_t unsigned_unscaled;
+	if (signed_unscaled < 0) {
+		unsigned_unscaled = ~(signed_unscaled * -1) + 1;
+	} else {
+		unsigned_unscaled = signed_unscaled;
+	}
+
+	for (size_t i = 0; i < size; ++i) {
+		size_t shift = (size - i - 1) * 8;
+		bytes[i] = unsigned_unscaled >> shift;
+	}
+}
+
+static size_t uint_pow(size_t base, size_t exponent)
+{
+	size_t value = 1;
+	while (exponent != 0) {
+		if (exponent % 2 != 0) {
+			value *= base;
+		}
+
+		exponent /= 2;
+		base *= base;
+	}
+
+	return value;
+}
+
+static int
+avro_generic_decimal_get_decimal(const avro_value_iface_t *viface,
+				 const void *vself, int64_t *unscaled,
+				 int64_t *lhs, uint64_t *rhs)
+{
+	const uint8_t *buf = NULL;
+	size_t size = 0;
+	int rval = avro_generic_decimal_get(viface, vself,
+					    (const void **) &buf, &size);
+	if (rval != 0) {
+		return rval;
+	}
+
+	if (size > 8) {
+		return EOVERFLOW;
+	}
+
+	int64_t signed_unscaled = bytes2unscaled(buf, size);
+	if (unscaled != NULL) {
+		*unscaled = signed_unscaled;
+	}
+
+	const avro_generic_decimal_value_iface_t  *iface =
+	    container_of(viface, avro_generic_decimal_value_iface_t, parent);
+	size_t scale = avro_schema_decimal_scale(iface->schema);
+	int64_t denominator = uint_pow(10, scale);
+
+	if (lhs != NULL) {
+		*lhs = signed_unscaled / denominator;
+	}
+
+	if (rhs != NULL) {
+		int sign = signed_unscaled < 0 ? -1 : 1;
+		*rhs = (sign * signed_unscaled) % denominator;
+	}
+
+	return 0;
+}
+
+static int
+avro_generic_decimal_set_decimal(const avro_value_iface_t *viface,
+				 void *vself, const int64_t *unscaled,
+				 const int64_t *lhs, const uint64_t *rhs)
+{
+	const avro_generic_decimal_value_iface_t  *iface =
+	    container_of(viface, avro_generic_decimal_value_iface_t, parent);
+	const avro_schema_t underlying =
+	    avro_schema_logical_underlying(iface->schema);
+	size_t scale = avro_schema_decimal_scale(iface->schema);
+	int64_t denominator = uint_pow(10, scale);
+
+	int64_t signed_unscaled;
+	if (unscaled != NULL) {
+		signed_unscaled = *unscaled;
+	} else if (lhs != NULL && rhs != NULL) {
+		signed_unscaled = *lhs * denominator;
+		if (*lhs < 0) {
+			signed_unscaled -= *rhs;
+		} else {
+			signed_unscaled += *rhs;
+		}
+
+		int sign = *lhs < 0 ? -1 : 1;
+		if (*lhs != signed_unscaled / denominator) {
+			return EOVERFLOW;
+		}
+		if (*rhs !=
+		        (uint64_t) (sign * signed_unscaled) % denominator) {
+			return EOVERFLOW;
+		}
+	} else {
+		return EINVAL;
+	}
+
+	size_t min_size = 8;
+	if (is_avro_fixed(underlying)) {
+		size_t size = avro_schema_fixed_size(underlying);
+		if (size < min_size) {
+			min_size = size;
+		}
+	}
+
+	uint64_t boundary = ((uint64_t) 1) << (8 * min_size - 1);
+	if (signed_unscaled > 0 &&
+	    (uint64_t) signed_unscaled > (boundary - 1)) {
+		return ERANGE;
+	}
+
+	if (signed_unscaled < 0 &&
+	    (uint64_t) (-1 * signed_unscaled) > boundary) {
+		return ERANGE;
+	}
+
+	uint8_t buf[8];
+	unscaled2bytes(signed_unscaled, buf, min_size);
+	return avro_generic_decimal_set(viface, vself, buf, min_size);
+}
+
 static size_t
 avro_generic_decimal_instance_size(const avro_value_iface_t *viface)
 {
@@ -3816,7 +4019,9 @@ static avro_generic_value_iface_t  AVRO_GENERIC_DECIMAL_CLASS =
 		/* compound setters */
 		NULL, /* append */
 		NULL, /* add */
-		NULL  /* set_branch */
+		NULL, /* set_branch */
+		avro_generic_decimal_get_decimal, /* get_decimal */
+		avro_generic_decimal_set_decimal, /* set_decimal */
 	},
 	avro_generic_decimal_instance_size,
 	avro_generic_decimal_init,

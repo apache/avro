@@ -3248,6 +3248,17 @@ avro_resolved_reader_grab_decimal(const avro_value_iface_t *viface,
 	return avro_value_grab_bytes(src, dest);
 }
 
+static int
+avro_resolved_reader_get_decoded_decimal(const avro_value_iface_t *viface,
+					 const void *vself, int64_t *unscaled,
+					 int64_t *lhs, uint64_t *rhs)
+{
+	AVRO_UNUSED(viface);
+	const avro_value_t  *src = (const avro_value_t *) vself;
+	DEBUG("Calling get_decimal from %p", vself);
+	return avro_value_get_decimal(src, unscaled, lhs, rhs);
+}
+
 static avro_resolved_reader_t *
 try_decimal(memoize_state_t *state, avro_schema_t wschema,
 	    avro_schema_t rschema)
@@ -3260,6 +3271,8 @@ try_decimal(memoize_state_t *state, avro_schema_t wschema,
 		self->parent.grab_bytes = avro_resolved_reader_grab_decimal;
 		self->parent.get_fixed = avro_resolved_reader_get_decimal;
 		self->parent.grab_fixed = avro_resolved_reader_grab_decimal;
+		self->parent.get_decimal =
+	            avro_resolved_reader_get_decoded_decimal;
 		return self;
 	}
 	avro_set_error("Writer %s not compatible with reader %s",

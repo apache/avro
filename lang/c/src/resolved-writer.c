@@ -2791,6 +2791,21 @@ avro_resolved_writer_give_decimal(const avro_value_iface_t *viface,
 }
 
 static int
+avro_resolved_writer_set_decoded_decimal(const avro_value_iface_t *viface,
+					 void *vself, const int64_t *unscaled,
+					 const int64_t *lhs,
+					 const uint64_t *rhs)
+{
+	int  rval;
+	const avro_resolved_writer_t  *iface =
+	    container_of(viface, avro_resolved_writer_t, parent);
+	avro_value_t  *self = (avro_value_t *) vself;
+	avro_value_t  dest;
+	check(rval, avro_resolved_writer_get_real_dest(iface, self, &dest));
+	return avro_value_set_decimal(&dest, unscaled, lhs, rhs);
+}
+
+static int
 try_decimal(memoize_state_t *state, avro_resolved_writer_t **self,
 	    avro_schema_t wschema, avro_schema_t rschema,
 	    avro_schema_t root_rschema)
@@ -2802,6 +2817,8 @@ try_decimal(memoize_state_t *state, avro_resolved_writer_t **self,
 		(*self)->parent.give_bytes = avro_resolved_writer_give_decimal;
 		(*self)->parent.set_fixed = avro_resolved_writer_set_decimal;
 		(*self)->parent.give_fixed = avro_resolved_writer_give_decimal;
+		(*self)->parent.set_decimal =
+		    avro_resolved_writer_set_decoded_decimal;
 	}
 
 	return 0;
