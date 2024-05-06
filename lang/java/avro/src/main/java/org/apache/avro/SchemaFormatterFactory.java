@@ -90,7 +90,7 @@ public interface SchemaFormatterFactory {
    * Get a formatter for the specified schema format variant, if multiple variants
    * are supported. Instances should be thread-safe, as they may be cached.
    *
-   * @param variantName The name of the format variant (lower case), if specified
+   * @param variantName the name of the format variant (lower case), if specified
    * @return if the factory supports the format, a schema writer; {@code null}
    *         otherwise
    */

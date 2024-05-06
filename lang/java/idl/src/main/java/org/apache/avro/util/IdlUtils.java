@@ -405,6 +405,7 @@ public final class IdlUtils {
       } else {
         String logicalName = schema.getLogicalType().getName();
         switch (logicalName) {
+        // TODO: Use constants from org.apache.avro.LogicalTypes
         case "date":
         case "time-millis":
         case "timestamp-millis":

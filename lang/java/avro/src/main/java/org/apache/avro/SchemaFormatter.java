@@ -17,14 +17,15 @@
  */
 package org.apache.avro;
 
+import java.util.Locale;
 import java.util.ServiceLoader;
 
 /**
  * Interface and factory to format schemas to text.
  *
  * <p>
- * Schema formats have a name, and optionally a variant. The Avro library
- * supports a few formats out of the box:
+ * Schema formats have a name, and optionally a variant (all lowercase). The
+ * Avro library supports a few formats out of the box:
  * </p>
  *
  * <dl>
@@ -77,11 +78,16 @@ public interface SchemaFormatter {
    */
   static SchemaFormatter getInstance(String name) {
     int slashPos = name.indexOf("/");
+    // SchemaFormatterFactory.getFormatterForVariant(String) receives the name of
+    // the variant in lowercase (as stated in its javadoc). We're doing a
+    // case-insensitive comparison on the format name instead, so we don't have to
+    // convert the format name provided by the factory to lower case.
+    // This ensures the least amount of assumptions about implementations.
     String formatName = slashPos < 0 ? name : name.substring(0, slashPos);
-    String variantName = slashPos < 0 ? null : name.substring(slashPos + 1);
+    String variantName = slashPos < 0 ? null : name.substring(slashPos + 1).toLowerCase(Locale.ROOT);
 
     for (SchemaFormatterFactory formatterFactory : SchemaFormatterCache.LOADER) {
-      if (formatName.equals(formatterFactory.formatName())) {
+      if (formatName.equalsIgnoreCase(formatterFactory.formatName())) {
         if (variantName == null) {
           return formatterFactory.getDefaultFormatter();
         } else {
