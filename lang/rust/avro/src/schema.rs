@@ -1271,7 +1271,7 @@ impl Parser {
         let name = Name::new(name)?;
         let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
 
-        if self.parsed_schemas.get(&fully_qualified_name).is_some() {
+        if self.parsed_schemas.contains_key(&fully_qualified_name) {
             return Ok(Schema::Ref {
                 name: fully_qualified_name,
             });
