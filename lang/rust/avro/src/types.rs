@@ -1367,6 +1367,7 @@ mod tests {
             name: Name::new("some_fixed").unwrap(),
             aliases: None,
             doc: None,
+            default: None,
             attributes: Default::default(),
         });
 
@@ -1722,6 +1723,7 @@ Field with name '"b"' is not a member of the map items"#,
                     aliases: None,
                     size: 20,
                     doc: None,
+                    default: None,
                     attributes: Default::default(),
                 }))
             }))
@@ -3036,6 +3038,7 @@ Field with name '"b"' is not a member of the map items"#,
                 aliases: None,
                 doc: None,
                 size: 3,
+                default: None,
                 attributes: Default::default()
             }))?,
             Value::Fixed(3, vec![97, 98, 99])
@@ -3048,6 +3051,7 @@ Field with name '"b"' is not a member of the map items"#,
                 aliases: None,
                 doc: None,
                 size: 3,
+                default: None,
                 attributes: Default::default()
             }))
             .is_err(),);
@@ -3059,6 +3063,7 @@ Field with name '"b"' is not a member of the map items"#,
                 aliases: None,
                 doc: None,
                 size: 3,
+                default: None,
                 attributes: Default::default()
             }))
             .is_err(),);

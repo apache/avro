@@ -790,6 +790,7 @@ mod tests {
             aliases: None,
             doc: None,
             size,
+            default: None,
             attributes: Default::default(),
         });
         let value = vec![0u8; size];
@@ -830,6 +831,7 @@ mod tests {
             aliases: None,
             doc: None,
             size: 12,
+            default: None,
             attributes: Default::default(),
         });
         let value = Value::Duration(Duration::new(

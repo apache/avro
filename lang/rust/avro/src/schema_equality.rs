@@ -424,6 +424,7 @@ mod tests {
             name: Name::from("fixed"),
             doc: None,
             size: 10,
+            default: None,
             aliases: None,
             attributes: BTreeMap::new(),
         });
@@ -434,6 +435,7 @@ mod tests {
             name: Name::from("fixed"),
             doc: None,
             size: 10,
+            default: None,
             aliases: None,
             attributes: BTreeMap::new(),
         });
