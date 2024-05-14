@@ -88,18 +88,14 @@ public:
 
     void checkTypeExpected(Type type) {
         if (!typeIsExpected(type)) {
-            throw Exception(
-                boost::format("Type %1% does not match schema %2%")
-                % type % nextType_);
+            throw Exception("Type {} does not match schema {}", type, nextType_);
         }
         advance();
     }
 
     void checkFixedSizeExpected(int size) {
         if (nextSizeExpected() != size) {
-            throw Exception(
-                boost::format("Wrong size for fixed, got %1%, expected %2%")
-                % size % nextSizeExpected());
+            throw Exception("Wrong size for fixed, got {}, expected {}", size, nextSizeExpected());
         }
         checkTypeExpected(AVRO_FIXED);
     }

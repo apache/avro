@@ -18,6 +18,30 @@
                 "values": "long",
                 "default": {}
             }
+        },
+        {
+            "name": "nested_arr",
+            "type": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": "string",
+                  "default": []
+                },
+                "default": []
+            }
+        },
+        {
+            "name": "nested_map",
+            "type": {
+                "type": "map",
+                "values": {
+                    "type": "map",
+                    "values": "long",
+                    "default": {}
+                },
+                "default": {}
+            }
         }
     ]
 }

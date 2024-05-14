@@ -277,7 +277,7 @@ class AVRO_DECL JsonGenerator {
             escapeUnicode16(((c >> 10) & 0x3ff) | 0xd800);
             escapeUnicode16((c & 0x3ff) | 0xdc00);
         } else {
-            throw Exception(boost::format("Invalid code-point: %1%") % c);
+            throw Exception("Invalid code-point: {}", c);
         }
     }
     void doEncodeString(const char *b, size_t len, bool binary) {

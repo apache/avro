@@ -48,7 +48,7 @@ public class DirectBinaryEncoder extends BinaryEncoder {
    * Create a writer that sends its output to the underlying stream
    * <code>out</code>.
    **/
-  public DirectBinaryEncoder(OutputStream out) {
+  protected DirectBinaryEncoder(OutputStream out) {
     configure(out);
   }
 

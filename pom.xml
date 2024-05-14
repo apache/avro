@@ -40,8 +40,8 @@
        Java artifacts are copied to the final build destination with a custom profile.
        -->
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.release>8</maven.compiler.release>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.release>11</maven.compiler.release>
     <main.basedir>${project.basedir}</main.basedir>
     <avro.distDir>dist</avro.distDir>
     <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>
@@ -51,16 +51,16 @@
     <checkstyle-plugin.version>3.3.1</checkstyle-plugin.version>
     <checkstyle.version>10.15.0</checkstyle.version>
     <enforcer-plugin.version>3.4.1</enforcer-plugin.version>
-    <extra-enforcer-rules.version>1.7.0</extra-enforcer-rules.version>
+    <extra-enforcer-rules.version>1.8.0</extra-enforcer-rules.version>
     <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <maven-gpg-plugin.version>3.2.3</maven-gpg-plugin.version>
     <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
     <maven-plugin-plugin.version>3.12.0</maven-plugin-plugin.version>
     <maven-remote-resources-plugin.version>3.2.0</maven-remote-resources-plugin.version>
-    <maven-shade-plugin.version>3.5.2</maven-shade-plugin.version>
+    <maven-shade-plugin.version>3.5.3</maven-shade-plugin.version>
     <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
-    <maven-toolchains-plugin.version>3.1.0</maven-toolchains-plugin.version>
+    <maven-toolchains-plugin.version>3.2.0</maven-toolchains-plugin.version>
     <plugin-tools-javadoc.version>3.5.2</plugin-tools-javadoc.version>
     <spotless-maven-plugin.version>2.43.0</spotless-maven-plugin.version>
     <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
@@ -181,19 +181,6 @@
         <artifactId>maven-toolchains-plugin</artifactId>
         <executions>
           <execution>
-            <id>Ensure ToolChain for JDK 8 is available</id>
-            <goals>
-              <goal>toolchain</goal>
-            </goals>
-            <configuration>
-              <toolchains>
-                <jdk>
-                  <version>8</version>
-                </jdk>
-              </toolchains>
-            </configuration>
-          </execution>
-          <execution>
             <id>Ensure ToolChain for JDK 11 is available</id>
             <goals>
               <goal>toolchain</goal>
@@ -248,13 +235,13 @@
             <configuration>
               <rules>
                 <enforceBytecodeVersion>
-                  <maxJdkVersion>8</maxJdkVersion>
+                  <maxJdkVersion>11</maxJdkVersion>
                   <ignoredScopes>
                     <ignoredScope>test</ignoredScope>
                     <ignoredScope>provided</ignoredScope>
                   </ignoredScopes>
                   <!--
-                    Multi release jars that are Java 8 compatible should pass,
+                    Multi release jars that are Java 11 compatible should pass,
                     but the extra-enforcer-plugin does not detect them
                     correctly so we should ignore them explicitly.
                     -->

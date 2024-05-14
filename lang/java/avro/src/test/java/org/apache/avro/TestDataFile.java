@@ -25,9 +25,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.avro.file.CodecFactory;
@@ -40,7 +42,9 @@ import org.apache.avro.file.Syncable;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.RandomData;
 
 import org.junit.jupiter.api.Test;
@@ -93,22 +97,32 @@ public class TestDataFile {
   @ParameterizedTest
   @MethodSource("codecs")
   public void runTestsInOrder(CodecFactory codec) throws Exception {
-    LOG.info("Running with codec: " + codec);
-    testGenericWrite(codec);
-    testGenericRead(codec);
-    testSplits(codec);
-    testSyncDiscovery(codec);
-    testGenericAppend(codec);
-    testReadWithHeader(codec);
-    testFSync(codec, false);
-    testFSync(codec, true);
+    // Run for both encoders, but the MethodSource didn't really like it,
+    // so it is just a loop within the test
+    List<Function<OutputStream, BinaryEncoder>> encoders = new ArrayList<>();
+    encoders.add(b -> new EncoderFactory().directBinaryEncoder(b, null));
+    encoders.add(b -> new EncoderFactory().blockingDirectBinaryEncoder(b, null));
+
+    for (Function<OutputStream, BinaryEncoder> encoder : encoders) {
+      LOG.info("Running with codec: {}", codec);
+      testGenericWrite(codec, encoder);
+      testGenericRead(codec);
+      testSplits(codec);
+      testSyncDiscovery(codec);
+      testGenericAppend(codec, encoder);
+      testReadWithHeader(codec);
+      testFSync(codec, encoder, false);
+      testFSync(codec, encoder, true);
+    }
   }
 
-  private void testGenericWrite(CodecFactory codec) throws IOException {
+  private void testGenericWrite(CodecFactory codec, Function<OutputStream, BinaryEncoder> encoderFunc)
+      throws IOException {
     DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>()).setSyncInterval(100);
     if (codec != null) {
       writer.setCodec(codec);
     }
+    writer.setEncoder(encoderFunc);
     writer.create(SCHEMA, makeFile(codec));
     try {
       int count = 0;
@@ -210,10 +224,12 @@ public class TestDataFile {
     }
   }
 
-  private void testGenericAppend(CodecFactory codec) throws IOException {
+  private void testGenericAppend(CodecFactory codec, Function<OutputStream, BinaryEncoder> encoderFunc)
+      throws IOException {
     File file = makeFile(codec);
     long start = file.length();
     try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>()).appendTo(file)) {
+      writer.setEncoder(encoderFunc);
       for (Object datum : new RandomData(SCHEMA, COUNT, SEED + 1)) {
         writer.append(datum);
       }
@@ -254,11 +270,8 @@ public class TestDataFile {
           assertEquals(validPos, sin.tell(), "Should not move from sync point on reopen");
           assertNotNull(readerFalse.next(), "Should be able to reopen at sync point");
         }
-
       }
-
     }
-
   }
 
   @Test
@@ -306,8 +319,10 @@ public class TestDataFile {
     assertTrue(out.flushCount < currentCount && out.flushCount >= flushCounter);
   }
 
-  private void testFSync(CodecFactory codec, boolean useFile) throws IOException {
+  private void testFSync(CodecFactory codec, Function<OutputStream, BinaryEncoder> encoderFunc, boolean useFile)
+      throws IOException {
     try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>())) {
+      writer.setEncoder(encoderFunc);
       writer.setFlushOnEveryBlock(false);
       TestingByteArrayOutputStream out = new TestingByteArrayOutputStream();
       if (useFile) {

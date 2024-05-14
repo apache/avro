@@ -40,19 +40,19 @@
     <ant.version>1.10.14</ant.version>
     <commons-cli.version>1.7.0</commons-cli.version>
     <commons-compress.version>1.26.1</commons-compress.version>
-    <commons-text.version>1.11.0</commons-text.version>
+    <commons-text.version>1.12.0</commons-text.version>
     <commons-lang3.version>3.14.0</commons-lang3.version>
     <grpc.version>1.63.0</grpc.version>
     <hadoop.version>3.3.6</hadoop.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <jackson-bom.version>2.17.0</jackson-bom.version>
+    <jackson-bom.version>2.17.1</jackson-bom.version>
     <jetty.version>9.4.54.v20240208</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit5.version>5.10.2</junit5.version>
     <maven-core.version>3.9.6</maven-core.version>
-    <mockito.version>5.11.0</mockito.version>
-    <netty.version>4.1.108.Final</netty.version>
-    <protobuf.version>3.25.3</protobuf.version>
+    <mockito.version>5.12.0</mockito.version>
+    <netty.version>4.1.109.Final</netty.version>
+    <protobuf.version>4.26.1</protobuf.version>
     <reload4j.version>1.2.25</reload4j.version>
     <servlet-api.version>4.0.1</servlet-api.version>
     <slf4j.version>2.0.13</slf4j.version>
@@ -60,7 +60,7 @@
     <thrift.version>0.20.0</thrift.version>
     <tukaani.version>1.9</tukaani.version>
     <velocity.version>2.3</velocity.version>
-    <zstd-jni.version>1.5.6-2</zstd-jni.version>
+    <zstd-jni.version>1.5.6-3</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.1</archetype-plugin.version>
     <bundle-plugin-version>5.1.9</bundle-plugin-version>
@@ -200,7 +200,6 @@
           <artifactId>maven-javadoc-plugin</artifactId>
           <configuration>
             <links>
-              <link>https://docs.oracle.com/javase/8/docs/api/</link>
               <link>https://hadoop.apache.org/docs/current/api/</link>
             </links>
             <tagletArtifacts>
