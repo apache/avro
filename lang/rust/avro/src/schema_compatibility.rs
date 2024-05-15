@@ -393,6 +393,7 @@ impl SchemaCompatibility {
                         aliases: _,
                         doc: _w_doc,
                         size: w_size,
+                        default: _w_default,
                         attributes: _,
                     }) = writers_schema
                     {
@@ -401,6 +402,7 @@ impl SchemaCompatibility {
                             aliases: _,
                             doc: _r_doc,
                             size: r_size,
+                            default: _r_default,
                             attributes: _,
                         }) = readers_schema
                         {
