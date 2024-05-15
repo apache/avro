@@ -370,6 +370,9 @@ pub enum Error {
     #[error("Fixed schema has no `size`")]
     GetFixedSizeField,
 
+    #[error("Fixed schema's default value length ({0}) does not match its size ({1})")]
+    FixedDefaultLenSizeMismatch(usize, u64),
+
     #[error("Failed to compress with flate")]
     DeflateCompress(#[source] std::io::Error),
 
