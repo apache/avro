@@ -1,0 +1,13 @@
+{"namespace": "test",
+ "protocol": "CustomConversion",
+ "types": [
+     {"name": "Event", "type": "record",
+      "fields": [
+          {"name": "name",   "type": "string"},
+          {"name": "start", "type": {"type": "long", "logicalType": "timestamp-millis"} },
+          {"name": "timezone", "type": {"type": "string", "logicalType": "timezone"} }
+      ]
+     }
+ ],
+ "messages": { }
+}

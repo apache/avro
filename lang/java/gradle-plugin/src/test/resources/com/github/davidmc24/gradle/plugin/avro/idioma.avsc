@@ -1,0 +1,13 @@
+{
+    "namespace": "example.avro",
+    "type": "enum",
+    "symbols": [
+        "alemán",
+        "chino",
+        "español",
+        "francés",
+        "inglés",
+        "japonés"
+    ],
+    "name": "Idioma"
+}

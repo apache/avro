@@ -1,0 +1,16 @@
+{
+    "name": "Dog",
+    "namespace": "example",
+    "type": "record",
+    "fields": [
+        { "name": "name", "type": "string" },
+        {
+            "name": "gender",
+            "type": {
+                "name": "Gender",
+                "type": "enum",
+                "symbols": [ "MALE", "FEMALE" ]
+            }
+        }
+    ]
+}

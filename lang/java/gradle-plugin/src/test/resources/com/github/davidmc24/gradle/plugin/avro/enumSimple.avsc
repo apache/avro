@@ -1,0 +1,11 @@
+{
+    "namespace": "example.avro",
+    "type": "enum",
+    "symbols": [
+        "zero",
+        "int",
+        "two",
+        "three"
+    ],
+    "name": "MyEnum"
+}

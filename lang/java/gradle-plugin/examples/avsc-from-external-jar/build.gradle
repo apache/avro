@@ -1,0 +1,14 @@
+plugins {
+    id "com.github.davidmc24.gradle.plugin.avro" version "1.2.1"
+}
+
+repositories {
+    mavenCentral()
+}
+dependencies {
+    implementation "org.apache.avro:avro:1.10.1"
+}
+
+generateAvroJava {
+    source zipTree("external-libs/schema.jar")
+}
