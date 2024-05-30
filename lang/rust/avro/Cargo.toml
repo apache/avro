@@ -91,7 +91,7 @@ pretty_assertions = { default-features = false, version = "1.4.0", features = ["
 serial_test = "3.1.1"
 sha2 = { default-features = false, version = "0.10.8" }
 paste = { default-features = false, version = "1.0.15" }
-rstest = { default-features = false, version = "0.19.0" }
+rstest = { default-features = false, version = "0.20.0" }
 
 [package.metadata.docs.rs]
 all-features = true
