@@ -71,7 +71,7 @@ string escape(const string &unescaped) {
 // Wrap an indentation in a struct for ostream operator<<
 struct indent {
     explicit indent(size_t depth) : d(depth) {}
-    int d;
+    size_t d;
 };
 
 /// ostream operator for indent
@@ -83,7 +83,7 @@ std::ostream &operator<<(std::ostream &os, indent x) {
     return os;
 }
 
-void printCustomAttributes(const CustomAttributes &customAttributes, int depth,
+void printCustomAttributes(const CustomAttributes &customAttributes, size_t depth,
                            std::ostream &os) {
     std::map<std::string, std::string>::const_iterator iter =
         customAttributes.attributes().begin();
@@ -531,9 +531,9 @@ void NodeEnum::printJson(std::ostream &os, size_t depth) const {
     printName(os, nameAttribute_.get(), depth);
     os << indent(depth) << "\"symbols\": [\n";
 
-    int names = leafNameAttributes_.size();
+    size_t names = leafNameAttributes_.size();
     ++depth;
-    for (int i = 0; i < names; ++i) {
+    for (size_t i = 0; i < names; ++i) {
         if (i > 0) {
             os << ",\n";
         }
@@ -577,9 +577,9 @@ NodeMap::NodeMap() : NodeImplMap(AVRO_MAP) {
 
 void NodeUnion::printJson(std::ostream &os, size_t depth) const {
     os << "[\n";
-    int fields = leafAttributes_.size();
+    size_t fields = leafAttributes_.size();
     ++depth;
-    for (int i = 0; i < fields; ++i) {
+    for (size_t i = 0; i < fields; ++i) {
         if (i > 0) {
             os << ",\n";
         }

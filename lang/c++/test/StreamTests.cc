@@ -51,7 +51,7 @@ struct Fill1 {
         StreamWriter w;
         w.reset(os);
         for (size_t i = 0; i < len; ++i) {
-            w.write(i % 10 + '0');
+            w.write(static_cast<uint8_t>(i % 10 + '0'));
         }
         w.flush();
     }
@@ -65,7 +65,7 @@ struct Fill2 {
             os.next(&b, &n);
             size_t j = 0;
             for (; i < len && j < n; ++j, ++i, ++b) {
-                *b = i % 10 + '0';
+                *b = static_cast<uint8_t>(i % 10 + '0');
             }
             if (i == len) {
                 os.backup(n - j);
@@ -125,7 +125,7 @@ void testNonEmpty_memoryStream(const TestData &td) {
 void testNonEmpty2(const TestData &td) {
     std::vector<uint8_t> v;
     for (size_t i = 0; i < td.dataSize; ++i) {
-        v.push_back(i % 10 + '0');
+        v.push_back(static_cast<uint8_t>(i % 10 + '0'));
     }
 
     uint8_t v2 = 0;
