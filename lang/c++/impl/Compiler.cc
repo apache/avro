@@ -338,7 +338,7 @@ static LogicalType makeLogicalType(const Entity &e, const Object &m) {
         return LogicalType(LogicalType::NONE);
     }
 
-    const std::string &typeField = getStringField(e, m, "logicalType");
+    string typeField = getStringField(e, m, "logicalType");
 
     if (typeField == "decimal") {
         LogicalType decimalType(LogicalType::DECIMAL);
@@ -428,7 +428,7 @@ static NodePtr makeMapNode(const Entity &e, const Object &m,
 }
 
 static Name getName(const Entity &e, const Object &m, const string &ns) {
-    const string &name = getStringField(e, m, "name");
+    string name = getStringField(e, m, "name");
 
     Name result;
     if (isFullName(name)) {
@@ -458,7 +458,7 @@ static Name getName(const Entity &e, const Object &m, const string &ns) {
 
 static NodePtr makeNode(const Entity &e, const Object &m,
                         SymbolTable &st, const string &ns) {
-    const string &type = getStringField(e, m, "type");
+    string type = getStringField(e, m, "type");
     NodePtr result;
     if (type == "record" || type == "error" || type == "enum" || type == "fixed") {
         Name nm = getName(e, m, ns);
