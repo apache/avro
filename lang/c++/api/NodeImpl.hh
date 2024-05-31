@@ -30,9 +30,9 @@
 #include <sstream>
 #include <utility>
 
+#include "CustomAttributes.hh"
 #include "Node.hh"
 #include "NodeConcepts.hh"
-#include "CustomAttributes.hh"
 
 namespace avro {
 
@@ -161,7 +161,7 @@ protected:
     void setLeafToSymbolic(size_t index, const NodePtr &node) override;
 
     void doAddCustomAttribute(const CustomAttributes &customAttributes) override {
-      customAttributes_.add(customAttributes);
+        customAttributes_.add(customAttributes);
     }
 
     SchemaResolution furtherResolution(const Node &reader) const {
@@ -325,10 +325,7 @@ public:
     void printJson(std::ostream &os, size_t depth) const override;
 
     bool isValid() const override {
-        return ((nameAttribute_.size() == 1) &&
-            (leafAttributes_.size() == leafNameAttributes_.size()) &&
-            (customAttributes_.size() == 0 ||
-            customAttributes_.size() == leafAttributes_.size()));
+        return ((nameAttribute_.size() == 1) && (leafAttributes_.size() == leafNameAttributes_.size()) && (customAttributes_.size() == 0 || customAttributes_.size() == leafAttributes_.size()));
     }
 
     const GenericDatum &defaultValueAt(size_t index) override {

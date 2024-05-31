@@ -366,7 +366,9 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
                 if (writerType == AVRO_INT || writerType == AVRO_LONG
                     || writerType == AVRO_FLOAT) {
                     return make_shared<Production>(1,
-                                                   Symbol::resolveSymbol(writerType == AVRO_INT ? Symbol::Kind::Int : writerType == AVRO_LONG ? Symbol::Kind::Long : Symbol::Kind::Float, Symbol::Kind::Double));
+                                                   Symbol::resolveSymbol(writerType == AVRO_INT ? Symbol::Kind::Int : writerType == AVRO_LONG ? Symbol::Kind::Long
+                                                                                                                                              : Symbol::Kind::Float,
+                                                                         Symbol::Kind::Double));
                 }
                 break;
 
@@ -511,13 +513,16 @@ int64_t ResolvingDecoderImpl<P>::decodeLong() {
 template<typename P>
 float ResolvingDecoderImpl<P>::decodeFloat() {
     Symbol::Kind k = parser_.advance(Symbol::Kind::Float);
-    return k == Symbol::Kind::Int ? base_->decodeInt() : k == Symbol::Kind::Long ? base_->decodeLong() : base_->decodeFloat();
+    return k == Symbol::Kind::Int ? base_->decodeInt() : k == Symbol::Kind::Long ? base_->decodeLong()
+                                                                                 : base_->decodeFloat();
 }
 
 template<typename P>
 double ResolvingDecoderImpl<P>::decodeDouble() {
     Symbol::Kind k = parser_.advance(Symbol::Kind::Double);
-    return k == Symbol::Kind::Int ? base_->decodeInt() : k == Symbol::Kind::Long ? base_->decodeLong() : k == Symbol::Kind::Float ? base_->decodeFloat() : base_->decodeDouble();
+    return k == Symbol::Kind::Int ? base_->decodeInt() : k == Symbol::Kind::Long ? base_->decodeLong()
+        : k == Symbol::Kind::Float                                               ? base_->decodeFloat()
+                                                                                 : base_->decodeDouble();
 }
 
 template<typename P>

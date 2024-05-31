@@ -1286,7 +1286,7 @@ static const TestData3 data3[] = {
         {"name": "f1", "type": "boolean"},
         {"name": "f2", "type": "double"}]})",
      "IBD",
-    R"({"type":"record", "name":"s", "aliases":["r"], "fields":[
+     R"({"type":"record", "name":"s", "aliases":["r"], "fields":[
         {"name":"g0", "type":"int", "aliases":["f0"]},
         {"name":"g1", "type":"boolean", "aliases":["f1"]},
         {"name":"f2", "type":"double", "aliases":["g2"]}]})",
@@ -1346,8 +1346,7 @@ static const TestData4 data4[] = {
         "RS10S10RS10S10",
         {"s1", "s2", "t1", "t2", nullptr},
         1,
-        2
-    },
+        2},
 
     // Reordered fields
     {
@@ -1372,8 +1371,7 @@ static const TestData4 data4[] = {
         "RLS10",
         {"10", "hello", nullptr},
         1,
-        1
-    },
+        1},
 
     // Default values
     {
@@ -1388,14 +1386,12 @@ static const TestData4 data4[] = {
         "RI",
         {"100", nullptr},
         1,
-        1
-    },
+        1},
 
-    {
-        R"({"type": "record", "name": "r", "fields": [{"name": "f2", "type": "int"}]})",
-        "I",
-        {"10", nullptr},
-        R"({
+    {R"({"type": "record", "name": "r", "fields": [{"name": "f2", "type": "int"}]})",
+     "I",
+     {"10", nullptr},
+     R"({
             "type": "record",
             "name": "r",
             "fields": [
@@ -1403,11 +1399,10 @@ static const TestData4 data4[] = {
                 {"name": "f2", "type": "int"}
             ]
         })",
-        "RII",
-        {"10", "101", nullptr},
-        1,
-        1
-    },
+     "RII",
+     {"10", "101", nullptr},
+     1,
+     1},
 
     {
         R"({
@@ -1452,8 +1447,7 @@ static const TestData4 data4[] = {
         "RRIIL",
         {"10", "101", "11", nullptr},
         1,
-        1
-    },
+        1},
 
     // Default value for a record.
     {
@@ -1510,8 +1504,7 @@ static const TestData4 data4[] = {
         "RRLILRLI",
         {"10", "12", "13", "15", "101", nullptr},
         1,
-        1
-    },
+        1},
 
     {
         R"({
@@ -1560,10 +1553,9 @@ static const TestData4 data4[] = {
         "RRLILRLI",
         {"10", "12", "13", "15", "101", nullptr},
         1,
-        1
-    },
+        1},
 
-// TODO mkmkme HERE
+    // TODO mkmkme HERE
     {
         R"({
             "type": "record",
@@ -1586,8 +1578,7 @@ static const TestData4 data4[] = {
         "[c1sI]",
         {"100", nullptr},
         1,
-        1
-    },
+        1},
 
     {
         R"({
@@ -1611,8 +1602,7 @@ static const TestData4 data4[] = {
         "[Rc1sI]",
         {"100", nullptr},
         1,
-        1
-    },
+        1},
 
     // Record of array of record with deleted field as last field
     {
@@ -1658,8 +1648,7 @@ static const TestData4 data4[] = {
         "R[c1sI]",
         {"10", nullptr},
         2,
-        1
-    },
+        1},
 
     // Enum resolution
     {
@@ -1670,19 +1659,16 @@ static const TestData4 data4[] = {
         "e1",
         {nullptr},
         1,
-        1
-    },
+        1},
 
-    {
-        R"({"type": "enum", "name": "e", "symbols": ["x", "y"]})",
-        "e1",
-        {nullptr},
-        R"({"type": "enum", "name": "e", "symbols": ["y", "z"]})",
-        "e0",
-        {nullptr},
-        1,
-        1
-    },
+    {R"({"type": "enum", "name": "e", "symbols": ["x", "y"]})",
+     "e1",
+     {nullptr},
+     R"({"type": "enum", "name": "e", "symbols": ["y", "z"]})",
+     "e0",
+     {nullptr},
+     1,
+     1},
 
     // Union
     {
@@ -1693,19 +1679,16 @@ static const TestData4 data4[] = {
         "U1I",
         {"100", nullptr},
         1,
-        1
-    },
+        1},
 
-    {
-        R"(["long", "int"])",
-        "U1I",
-        {"100", nullptr},
-        R"("int")",
-        "I",
-        {"100", nullptr},
-        1,
-        1
-    },
+    {R"(["long", "int"])",
+     "U1I",
+     {"100", nullptr},
+     R"("int")",
+     "I",
+     {"100", nullptr},
+     1,
+     1},
 
     // Arrray of unions
     {
@@ -1716,8 +1699,7 @@ static const TestData4 data4[] = {
         "[c2sIsI]",
         {"100", "100", nullptr},
         2,
-        1
-    },
+        1},
 
     // Map of unions
     {
@@ -1728,8 +1710,7 @@ static const TestData4 data4[] = {
         "{c2sS10IsS10I}",
         {"k1", "100", "k2", "100", nullptr},
         2,
-        1
-    },
+        1},
 
     // Union + promotion
     {
@@ -1740,19 +1721,16 @@ static const TestData4 data4[] = {
         "U0L",
         {"100", nullptr},
         1,
-        1
-    },
+        1},
 
-    {
-        R"(["int", "string"])",
-        "U0I",
-        {"100", nullptr},
-        R"("long")",
-        "L",
-        {"100", nullptr},
-        1,
-        1
-    },
+    {R"(["int", "string"])",
+     "U0I",
+     {"100", nullptr},
+     R"("long")",
+     "L",
+     {"100", nullptr},
+     1,
+     1},
 
     // Record where union field is skipped.
     {
@@ -1780,8 +1758,7 @@ static const TestData4 data4[] = {
         "BLD",
         {"1", "100", "10.75", nullptr},
         1,
-        1
-    },
+        1},
 };
 
 static const TestData4 data4BinaryOnly[] = {
@@ -1796,8 +1773,7 @@ static const TestData4 data4BinaryOnly[] = {
         R"({"type":"array", "items": "int"})",
         "[c1sIc1sI]",
         {"100", "100", nullptr},
-        2
-    },
+        2},
 
     // Map of unions
     {
@@ -1807,8 +1783,7 @@ static const TestData4 data4BinaryOnly[] = {
         R"({"type":"map", "values": "int"})",
         "{c1sS10Ic1sS10I}",
         {"k1", "100", "k2", "100", nullptr},
-        2
-    },
+        2},
 };
 
 #define COUNTOF(x) sizeof(x) / sizeof(x[0])
