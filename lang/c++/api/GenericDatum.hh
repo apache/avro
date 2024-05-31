@@ -553,11 +553,13 @@ inline Type GenericDatum::type() const {
 inline LogicalType GenericDatum::logicalType() const {
     return (type_ == AVRO_UNION) ?
 #if __cplusplus >= 201703L
-        std::any_cast<GenericUnion>(&value_)->datum().logicalType() :
+                                 std::any_cast<GenericUnion>(&value_)->datum().logicalType()
+                                 :
 #else
-        boost::any_cast<GenericUnion>(&value_)->datum().logicalType() :
+                                 boost::any_cast<GenericUnion>(&value_)->datum().logicalType()
+                                 :
 #endif
-        logicalType_;
+                                 logicalType_;
 }
 
 template<typename T>

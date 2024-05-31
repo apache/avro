@@ -55,7 +55,8 @@ void JsonParser::expectToken(Token tk) {
             if (cur() == Token::String
                 && (sv == "Infinity" || sv == "-Infinity" || sv == "NaN")) {
                 curToken = Token::Double;
-                dv = sv == "Infinity" ? std::numeric_limits<double>::infinity() : sv == "-Infinity" ? -std::numeric_limits<double>::infinity() : std::numeric_limits<double>::quiet_NaN();
+                dv = sv == "Infinity" ? std::numeric_limits<double>::infinity() : sv == "-Infinity" ? -std::numeric_limits<double>::infinity()
+                                                                                                    : std::numeric_limits<double>::quiet_NaN();
                 return;
             } else if (cur() == Token::Long) {
                 dv = double(lv);
@@ -146,7 +147,8 @@ JsonParser::Token JsonParser::tryNumber(char ch) {
     sv.push_back(ch);
 
     hasNext = false;
-    int state = (ch == '-') ? 0 : (ch == '0') ? 1 : 2;
+    int state = (ch == '-') ? 0 : (ch == '0') ? 1
+                                              : 2;
     for (;;) {
         switch (state) {
             case 0:
@@ -313,7 +315,6 @@ JsonParser::Token JsonParser::tryString() {
         }
     }
 }
-
 
 // Decode the given string and return contents as UTF8-encoded bytes.
 // The input does not have the enclosing double-quotes.

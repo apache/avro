@@ -50,10 +50,10 @@ public:
     Name();
     explicit Name(const std::string &name);
     Name(std::string simpleName, std::string ns);
-    Name(const Name& other);
-    Name& operator=(const Name& other);
-    Name(Name&& other);
-    Name& operator=(Name&& other);
+    Name(const Name &other);
+    Name &operator=(const Name &other);
+    Name(Name &&other);
+    Name &operator=(Name &&other);
     ~Name();
 
     std::string fullname() const;
@@ -162,7 +162,7 @@ public:
     }
     virtual size_t fixedSize() const = 0;
 
-    void addCustomAttributesForField(const CustomAttributes& customAttributes) {
+    void addCustomAttributesForField(const CustomAttributes &customAttributes) {
         checkLock();
         doAddCustomAttribute(customAttributes);
     }
@@ -199,7 +199,7 @@ protected:
     virtual void doAddLeaf(const NodePtr &newLeaf) = 0;
     virtual void doAddName(const std::string &name) = 0;
     virtual void doSetFixedSize(size_t size) = 0;
-    virtual void doAddCustomAttribute(const CustomAttributes& customAttributes) = 0;
+    virtual void doAddCustomAttribute(const CustomAttributes &customAttributes) = 0;
 
 private:
     const Type type_;
@@ -216,8 +216,9 @@ inline std::ostream &operator<<(std::ostream &os, const avro::Node &n) {
 }
 } // namespace std
 
-template <> struct fmt::formatter<avro::Name> : fmt::formatter<std::string> {
-    template <typename FormatContext>
+template<>
+struct fmt::formatter<avro::Name> : fmt::formatter<std::string> {
+    template<typename FormatContext>
     auto format(const avro::Name &n, FormatContext &ctx) {
         return fmt::formatter<std::string>::format(n.fullname(), ctx);
     }

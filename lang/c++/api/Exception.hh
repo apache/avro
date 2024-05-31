@@ -20,8 +20,8 @@
 #define avro_Exception_hh__
 
 #include "Config.hh"
-#include <stdexcept>
 #include <fmt/core.h>
+#include <stdexcept>
 
 namespace avro {
 
@@ -32,9 +32,9 @@ class AVRO_DECL Exception : public virtual std::runtime_error {
 public:
     explicit Exception(const std::string &msg) : std::runtime_error(msg) {}
 
-    template <typename... Args>
-    Exception(fmt::format_string<Args...> fmt, Args&&... args)
-        : std::runtime_error(fmt::format(fmt, std::forward<Args>(args)...) ) {}
+    template<typename... Args>
+    Exception(fmt::format_string<Args...> fmt, Args &&...args)
+        : std::runtime_error(fmt::format(fmt, std::forward<Args>(args)...)) {}
 };
 
 } // namespace avro

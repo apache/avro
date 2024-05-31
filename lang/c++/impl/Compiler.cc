@@ -152,15 +152,15 @@ struct Field {
     const GenericDatum defaultValue;
     const CustomAttributes customAttributes;
 
-    Field(string n, vector<string> a, NodePtr v, GenericDatum dv, const CustomAttributes& ca)
+    Field(string n, vector<string> a, NodePtr v, GenericDatum dv, const CustomAttributes &ca)
         : name(std::move(n)), aliases(std::move(a)), schema(std::move(v)), defaultValue(std::move(dv)), customAttributes(ca) {}
 };
 
 static void assertType(const Entity &e, EntityType et) {
     if (e.type() != et) {
         throw Exception(
-                "Unexpected type for default value: Expected {}, but found {} in line {}",
-                json::typeToString(et), json::typeToString(e.type()), e.line());
+            "Unexpected type for default value: Expected {}, but found {} in line {}",
+            json::typeToString(et), json::typeToString(e.type()), e.line());
     }
 }
 
@@ -220,8 +220,8 @@ static GenericDatum makeGenericDatum(NodePtr n,
                 auto it = v.find(n->nameAt(i));
                 if (it == v.end()) {
                     throw Exception(
-                            "No value found in default for {}",
-                            n->nameAt(i));
+                        "No value found in default for {}",
+                        n->nameAt(i));
                 }
                 result.setFieldAt(i,
                                   makeGenericDatum(n->leafAt(i), it->second, st));
@@ -263,24 +263,23 @@ static GenericDatum makeGenericDatum(NodePtr n,
     }
 }
 
-static const std::unordered_set<std::string>& getKnownFields() {
+static const std::unordered_set<std::string> &getKnownFields() {
     // return known fields
     static const std::unordered_set<std::string> kKnownFields =
         {"name", "type", "aliases", "default", "doc", "size", "logicalType",
          "values", "precision", "scale", "namespace"};
-      return kKnownFields;
+    return kKnownFields;
 }
 
-static void getCustomAttributes(const Object& m, CustomAttributes &customAttributes)
-{
-  // Don't add known fields on primitive type and fixed type into custom
-  // fields.
-  const std::unordered_set<std::string>& kKnownFields = getKnownFields();
-  for (const auto &entry : m) {
-    if (kKnownFields.find(entry.first) == kKnownFields.end()) {
-      customAttributes.addAttribute(entry.first, entry.second.stringValue());
+static void getCustomAttributes(const Object &m, CustomAttributes &customAttributes) {
+    // Don't add known fields on primitive type and fixed type into custom
+    // fields.
+    const std::unordered_set<std::string> &kKnownFields = getKnownFields();
+    for (const auto &entry : m) {
+        if (kKnownFields.find(entry.first) == kKnownFields.end()) {
+            customAttributes.addAttribute(entry.first, entry.second.stringValue());
+        }
     }
-  }
 }
 
 static Field makeField(const Entity &e, SymbolTable &st, const string &ns) {
@@ -439,8 +438,8 @@ static Name getName(const Entity &e, const Object &m, const string &ns) {
         if (it != m.end()) {
             if (it->second.type() != json::type_traits<string>::type()) {
                 throw Exception(
-                        "Json field \"namespace\" is not a string: {}",
-                        it->second.toString());
+                    "Json field \"namespace\" is not a string: {}",
+                    it->second.toString());
             }
             result = Name(name, it->second.stringValue());
         } else {

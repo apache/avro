@@ -83,14 +83,15 @@ std::ostream &operator<<(std::ostream &os, indent x) {
     return os;
 }
 
-void printCustomAttributes(const CustomAttributes& customAttributes, int depth,
-                       std::ostream &os) {
+void printCustomAttributes(const CustomAttributes &customAttributes, int depth,
+                           std::ostream &os) {
     std::map<std::string, std::string>::const_iterator iter =
         customAttributes.attributes().begin();
     while (iter != customAttributes.attributes().end()) {
-      os << ",\n" << indent(depth);
-      customAttributes.printJson(os, iter->first);
-      ++iter;
+        os << ",\n"
+           << indent(depth);
+        customAttributes.printJson(os, iter->first);
+        ++iter;
     }
 }
 
@@ -302,10 +303,10 @@ void NodeRecord::printJson(std::ostream &os, size_t depth) const {
                     os << ',';
                 }
                 os << '\n'
-                << indent(depth) << "\"" << fieldsAliases_[i][j] << "\"";
+                   << indent(depth) << "\"" << fieldsAliases_[i][j] << "\"";
             }
             os << '\n'
-            << indent(--depth) << ']';
+               << indent(--depth) << ']';
         }
 
         // Serialize "default" field:
@@ -320,8 +321,8 @@ void NodeRecord::printJson(std::ostream &os, size_t depth) const {
             }
         }
 
-        if(customAttributes_.size() == fields) {
-          printCustomAttributes(customAttributes_.get(i), depth, os);
+        if (customAttributes_.size() == fields) {
+            printCustomAttributes(customAttributes_.get(i), depth, os);
         }
 
         os << '\n';

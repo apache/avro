@@ -106,7 +106,7 @@ void Validator::unionAdvance() {
         } else {
             throw Exception(
                 "Union selection out of range, got {}, expecting 0-{}",
-                            count_, node->leaves() - 1);
+                count_, node->leaves() - 1);
         }
     }
 }

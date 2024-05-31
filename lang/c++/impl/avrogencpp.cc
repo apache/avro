@@ -111,11 +111,10 @@ public:
             std::string schemaFile, std::string headerFile,
             std::string guardString,
             std::string includePrefix, bool noUnion, bool useCpp17) : unionNumber_(0), os_(os), inNamespace_(false), ns_(std::move(ns)),
-                                                       schemaFile_(std::move(schemaFile)), headerFile_(std::move(headerFile)),
-                                                       includePrefix_(std::move(includePrefix)), noUnion_(noUnion), useCpp17_(useCpp17),
-                                                       guardString_(std::move(guardString)),
-                                                       random_(static_cast<uint32_t>(::time(nullptr)))
-    {
+                                                                      schemaFile_(std::move(schemaFile)), headerFile_(std::move(headerFile)),
+                                                                      includePrefix_(std::move(includePrefix)), noUnion_(noUnion), useCpp17_(useCpp17),
+                                                                      guardString_(std::move(guardString)),
+                                                                      random_(static_cast<uint32_t>(::time(nullptr))) {
 #if __cplusplus >= 201703L
         anyNs = "std";
 #else
@@ -323,7 +322,7 @@ string CodeGen::unionName() {
 
 static void generateGetterAndSetter(ostream &os,
                                     const string &structName, const string &type, const string &name,
-                                    size_t idx, const std::string& anyNs) {
+                                    size_t idx, const std::string &anyNs) {
     string sn = " " + structName + "::";
 
     os << "inline\n";
@@ -823,14 +822,7 @@ int main(int argc, char **argv) {
     const string NO_UNION_TYPEDEF("no-union-typedef");
 
     po::options_description desc("Allowed options");
-    desc.add_options()("help,h", "produce help message")
-        ("version,V", "produce version information")
-        ("include-prefix,p", po::value<string>()->default_value("avro"), "prefix for include headers, - for none, default: avro")
-        ("no-union-typedef,U", "do not generate typedefs for unions in records")
-        ("namespace,n", po::value<string>(), "set namespace for generated code")
-        ("cpp17", "use c++17 instead of boost")
-        ("input,i", po::value<string>(), "input file")
-        ("output,o", po::value<string>(), "output file to generate");
+    desc.add_options()("help,h", "produce help message")("version,V", "produce version information")("include-prefix,p", po::value<string>()->default_value("avro"), "prefix for include headers, - for none, default: avro")("no-union-typedef,U", "do not generate typedefs for unions in records")("namespace,n", po::value<string>(), "set namespace for generated code")("cpp17", "use c++17 instead of boost")("input,i", po::value<string>(), "input file")("output,o", po::value<string>(), "output file to generate");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);

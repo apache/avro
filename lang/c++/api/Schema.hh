@@ -20,8 +20,8 @@
 #define avro_Schema_hh__
 
 #include "Config.hh"
-#include "NodeImpl.hh"
 #include "CustomAttributes.hh"
+#include "NodeImpl.hh"
 #include <string>
 
 /// \file
