@@ -25,7 +25,7 @@
 #include "Specific.hh"
 #include "ValidSchema.hh"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <cstdint>
 #include <functional>
 #include <stack>
@@ -335,7 +335,7 @@ struct StackElement {
 };
 } // namespace
 
-static vector<string>::const_iterator skipCalls(Scanner &sc, Decoder &d,
+static vector<string>::const_iterator skipCalls(Scanner &sc, Decoder &,
                                                 vector<string>::const_iterator it, bool isArray) {
     char end = isArray ? ']' : '}';
     int level = 0;
@@ -364,7 +364,7 @@ static vector<string>::const_iterator skipCalls(Scanner &sc, Decoder &d,
             case 'K':
             case 'b':
             case 'f':
-            case 'e': ++it; // Fall through.
+            case 'e': ++it; [[fallthrough]];
             case 'c':
             case 'U':
                 sc.extractInt();
@@ -594,7 +594,6 @@ struct TestData4 {
     const char *readerCalls;
     const char *readerValues[100];
     unsigned int depth;
-    size_t recordCount;
 };
 
 void appendSentinel(OutputStream &os) {
@@ -1345,8 +1344,7 @@ static const TestData4 data4[] = {
         })",
         "RS10S10RS10S10",
         {"s1", "s2", "t1", "t2", nullptr},
-        1,
-        2},
+        1},
 
     // Reordered fields
     {
@@ -1370,7 +1368,6 @@ static const TestData4 data4[] = {
         })",
         "RLS10",
         {"10", "hello", nullptr},
-        1,
         1},
 
     // Default values
@@ -1385,7 +1382,6 @@ static const TestData4 data4[] = {
         })",
         "RI",
         {"100", nullptr},
-        1,
         1},
 
     {R"({"type": "record", "name": "r", "fields": [{"name": "f2", "type": "int"}]})",
@@ -1401,7 +1397,6 @@ static const TestData4 data4[] = {
         })",
      "RII",
      {"10", "101", nullptr},
-     1,
      1},
 
     {
@@ -1446,7 +1441,6 @@ static const TestData4 data4[] = {
         })",
         "RRIIL",
         {"10", "101", "11", nullptr},
-        1,
         1},
 
     // Default value for a record.
@@ -1503,7 +1497,6 @@ static const TestData4 data4[] = {
         })",
         "RRLILRLI",
         {"10", "12", "13", "15", "101", nullptr},
-        1,
         1},
 
     {
@@ -1552,7 +1545,6 @@ static const TestData4 data4[] = {
         })",
         "RRLILRLI",
         {"10", "12", "13", "15", "101", nullptr},
-        1,
         1},
 
     // TODO mkmkme HERE
@@ -1577,7 +1569,6 @@ static const TestData4 data4[] = {
         })",
         "[c1sI]",
         {"100", nullptr},
-        1,
         1},
 
     {
@@ -1601,7 +1592,6 @@ static const TestData4 data4[] = {
         })",
         "[Rc1sI]",
         {"100", nullptr},
-        1,
         1},
 
     // Record of array of record with deleted field as last field
@@ -1647,8 +1637,7 @@ static const TestData4 data4[] = {
         })",
         "R[c1sI]",
         {"10", nullptr},
-        2,
-        1},
+        2},
 
     // Enum resolution
     {
@@ -1658,7 +1647,6 @@ static const TestData4 data4[] = {
         R"({"type": "enum", "name": "e", "symbols": ["y", "z"]})",
         "e1",
         {nullptr},
-        1,
         1},
 
     {R"({"type": "enum", "name": "e", "symbols": ["x", "y"]})",
@@ -1667,7 +1655,6 @@ static const TestData4 data4[] = {
      R"({"type": "enum", "name": "e", "symbols": ["y", "z"]})",
      "e0",
      {nullptr},
-     1,
      1},
 
     // Union
@@ -1678,7 +1665,6 @@ static const TestData4 data4[] = {
         R"(["long", "int"])",
         "U1I",
         {"100", nullptr},
-        1,
         1},
 
     {R"(["long", "int"])",
@@ -1687,7 +1673,6 @@ static const TestData4 data4[] = {
      R"("int")",
      "I",
      {"100", nullptr},
-     1,
      1},
 
     // Arrray of unions
@@ -1698,8 +1683,7 @@ static const TestData4 data4[] = {
         R"({"type":"array", "items": "int"})",
         "[c2sIsI]",
         {"100", "100", nullptr},
-        2,
-        1},
+        2},
 
     // Map of unions
     {
@@ -1709,8 +1693,7 @@ static const TestData4 data4[] = {
         R"({"type":"map", "values": "int"})",
         "{c2sS10IsS10I}",
         {"k1", "100", "k2", "100", nullptr},
-        2,
-        1},
+        2},
 
     // Union + promotion
     {
@@ -1720,7 +1703,6 @@ static const TestData4 data4[] = {
         R"(["long", "string"])",
         "U0L",
         {"100", nullptr},
-        1,
         1},
 
     {R"(["int", "string"])",
@@ -1729,7 +1711,6 @@ static const TestData4 data4[] = {
      R"("long")",
      "L",
      {"100", nullptr},
-     1,
      1},
 
     // Record where union field is skipped.
@@ -1757,7 +1738,6 @@ static const TestData4 data4[] = {
         })",
         "BLD",
         {"1", "100", "10.75", nullptr},
-        1,
         1},
 };
 
@@ -1801,13 +1781,13 @@ Test testWithData(const Test &test, const Data &) {
         testWithData(&testFunc<Factory>, data), data, data + COUNTOF(data)))
 
 struct BinaryEncoderFactory {
-    static EncoderPtr newEncoder(const ValidSchema &schema) {
+    static EncoderPtr newEncoder(const ValidSchema &) {
         return binaryEncoder();
     }
 };
 
 struct BinaryDecoderFactory {
-    static DecoderPtr newDecoder(const ValidSchema &schema) {
+    static DecoderPtr newDecoder(const ValidSchema &) {
         return binaryDecoder();
     }
 };
@@ -2068,7 +2048,7 @@ static void testByteCount() {
 } // namespace avro
 
 boost::unit_test::test_suite *
-init_unit_test_suite(int argc, char *argv[]) {
+init_unit_test_suite(int, char *[]) {
     using namespace boost::unit_test;
 
     auto *ts = BOOST_TEST_SUITE("Avro C++ unit tests for codecs");

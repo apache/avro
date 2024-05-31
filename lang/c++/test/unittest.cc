@@ -274,7 +274,7 @@ struct TestSchema {
         out << is.rdbuf();
     }
 
-    void printNext(Parser<Reader> &p) {
+    void printNext(Parser<Reader> &) {
         // no-op printer
     }
 

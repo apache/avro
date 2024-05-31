@@ -45,8 +45,7 @@ void testCommonSchema(const std::filesystem::path &dir_path) {
     DataFileWriter<GenericDatum> writer(outputDataFile.c_str(), schema);
 
     while (reader.read(datum)) {
-        avro::GenericRecord &rec = datum.value<avro::GenericRecord>();
-        BOOST_CHECK(rec.fieldCount() >= 0);
+        datum.value<avro::GenericRecord>();
         writer.write(datum);
     }
     writer.close();

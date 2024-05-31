@@ -219,16 +219,16 @@ void testNamespace() {
     twPoint.set_AvroPoint(point);
 }
 
-void setRecord(uau::r1 &r) {
+void setRecord(uau::r1 &) {
 }
 
-void check(const uau::r1 &r1, const uau::r1 &r2) {
+void check(const uau::r1 &, const uau::r1 &) {
 }
 
-void setRecord(umu::r1 &r) {
+void setRecord(umu::r1 &) {
 }
 
-void check(const umu::r1 &r1, const umu::r1 &r2) {
+void check(const umu::r1 &, const umu::r1 &) {
 }
 
 template<typename T>
