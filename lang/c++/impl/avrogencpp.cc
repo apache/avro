@@ -247,6 +247,10 @@ string CodeGen::generateRecordType(const NodePtr &n) {
                     << ' ' << n->nameAt(i) << "_t;\n";
                 types[i] = n->nameAt(i) + "_t";
             }
+            if (n->leafAt(i)->type() == avro::AVRO_ARRAY && n->leafAt(i)->leafAt(0)->type() == avro::AVRO_UNION) {
+                os_ << "    typedef " << types[i] << "::value_type"
+                    << ' ' << n->nameAt(i) << "_item_t;\n";
+            }
         }
     }
     for (size_t i = 0; i < c; ++i) {
