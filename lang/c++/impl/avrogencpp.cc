@@ -545,7 +545,13 @@ void CodeGen::generateRecordTraits(const NodePtr &n) {
 
     if (c == 0) {
         os_ << "    static void encode(Encoder&, const " << fn << "&) {}\n";
-        os_ << "    static void decode(Decoder&, " << fn << "&) {}\n";
+        // ResolvingDecoder::fieldOrder mutates the state of the decoder, so if that decoder is
+        // passed in, we need to call the method even though it will return an empty vector.
+        os_ << "    static void decode(Decoder& d, " << fn << "&) {\n";
+        os_ << "        if (avro::ResolvingDecoder *rd = dynamic_cast<avro::ResolvingDecoder *>(&d)) {\n";
+        os_ << "            rd->fieldOrder();\n";
+        os_ << "        }\n";
+        os_ << "    }\n";
         os_ << "};\n";
         return;
     }

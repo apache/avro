@@ -283,7 +283,7 @@ void testEmptyRecord() {
     compileJsonSchema(ifs, s);
 
     unique_ptr<OutputStream> os = memoryOutputStream();
-    EncoderPtr e = binaryEncoder(); // FIXME: validatingEncoder seems to incorrectly reject this
+    EncoderPtr e = validatingEncoder(s, binaryEncoder());
     e->init(*os);
     avro::encode(*e, calc);
     e->flush();
