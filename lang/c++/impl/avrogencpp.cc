@@ -537,8 +537,16 @@ void CodeGen::generateRecordTraits(const NodePtr &n) {
     }
 
     string fn = fullname(decorate(n->name()));
-    os_ << "template<> struct codec_traits<" << fn << "> {\n"
-        << "    static void encode(Encoder& e, const " << fn << "& v) {\n";
+    os_ << "template<> struct codec_traits<" << fn << "> {\n";
+
+    if (c == 0) {
+        os_ << "    static void encode(Encoder&, const " << fn << "&) {}\n";
+        os_ << "    static void decode(Decoder&, " << fn << "&) {}\n";
+        os_ << "};\n";
+        return;
+    }
+
+    os_ << "    static void encode(Encoder& e, const " << fn << "& v) {\n";
 
     for (size_t i = 0; i < c; ++i) {
         // the nameAt(i) does not take c++ reserved words into account
