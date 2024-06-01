@@ -429,16 +429,6 @@ public class ReflectData extends SpecificData {
     return null;
   }
 
-  /** @deprecated Replaced by {@link SpecificData#CLASS_PROP} */
-  @Deprecated
-  static final String CLASS_PROP = "java-class";
-  /** @deprecated Replaced by {@link SpecificData#KEY_CLASS_PROP} */
-  @Deprecated
-  static final String KEY_CLASS_PROP = "java-key-class";
-  /** @deprecated Replaced by {@link SpecificData#ELEMENT_PROP} */
-  @Deprecated
-  static final String ELEMENT_PROP = "java-element-class";
-
   private static final Map<String, Class> CLASS_CACHE = new ConcurrentHashMap<>();
 
   static Class getClassProp(Schema schema, String prop) {
