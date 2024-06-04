@@ -16,5 +16,6 @@ jobs:
           java-version: ${{ matrix.java }}
       - uses: gradle/gradle-build-action@v2
         with:
+          build-root-directory: lang/java/gradle-plugin
           gradle-executable: lang/java/gradle-plugin/gradlew
-          arguments: test --info --project-dir lang/java/gradle-plugin
+          arguments: test --info
