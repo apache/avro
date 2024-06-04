@@ -18,7 +18,8 @@ jobs:
           java-version: ${{ matrix.java }}
       - uses: gradle/gradle-build-action@v2
         with:
-          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+          gradle-executable: lang/java/gradle-plugin/gradlew
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} --project-dir lang/java/gradle-plugin
   java17:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
@@ -35,7 +36,8 @@ jobs:
           java-version: ${{ matrix.java }}
       - uses: gradle/gradle-build-action@v2
         with:
-          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+          gradle-executable: lang/java/gradle-plugin/gradlew
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} --project-dir lang/java/gradle-plugin
   java18:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
@@ -52,7 +54,8 @@ jobs:
           java-version: ${{ matrix.java }}
       - uses: gradle/gradle-build-action@v2
         with:
-          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+          gradle-executable: lang/java/gradle-plugin/gradlew
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} --project-dir lang/java/gradle-plugin
   java-19:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
@@ -70,7 +73,8 @@ jobs:
       - uses: gradle/gradle-build-action@v2
         continue-on-error: true
         with:
-          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+          gradle-executable: lang/java/gradle-plugin/gradlew
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} --project-dir lang/java/gradle-plugin
   java-ea:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
@@ -89,4 +93,5 @@ jobs:
       - uses: gradle/gradle-build-action@v2
         continue-on-error: true
         with:
-          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+          gradle-executable: lang/java/gradle-plugin/gradlew
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} --project-dir lang/java/gradle-plugin
