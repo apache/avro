@@ -6,14 +6,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        java: [8] # Minimum supported major version
+        java: [11]
         os: [ubuntu-latest, windows-latest, macOS-latest] # All supported OS
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-java@v3
-      with:
-        distribution: "zulu"
-        java-version: ${{ matrix.java }}
-    - uses: gradle/gradle-build-action@v2
-      with:
-        arguments: test
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: ${{ matrix.java }}
+      - uses: gradle/gradle-build-action@v2
+        with:
+          build-root-directory: lang/java/gradle-plugin
+          gradle-executable: lang/java/gradle-plugin/gradlew
+          arguments: test

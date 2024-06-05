@@ -18,6 +18,8 @@ jobs:
           java-version: ${{ matrix.java }}
       - uses: gradle/gradle-build-action@v2
         with:
+          build-root-directory: lang/java/gradle-plugin
+          gradle-executable: lang/java/gradle-plugin/gradlew
           arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
   java17:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
@@ -35,6 +37,8 @@ jobs:
           java-version: ${{ matrix.java }}
       - uses: gradle/gradle-build-action@v2
         with:
+          build-root-directory: lang/java/gradle-plugin
+          gradle-executable: lang/java/gradle-plugin/gradlew
           arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
   java18:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
@@ -52,6 +56,8 @@ jobs:
           java-version: ${{ matrix.java }}
       - uses: gradle/gradle-build-action@v2
         with:
+          build-root-directory: lang/java/gradle-plugin
+          gradle-executable: lang/java/gradle-plugin/gradlew
           arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
   java-19:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
@@ -70,6 +76,8 @@ jobs:
       - uses: gradle/gradle-build-action@v2
         continue-on-error: true
         with:
+          build-root-directory: lang/java/gradle-plugin
+          gradle-executable: lang/java/gradle-plugin/gradlew
           arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
   java-ea:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
@@ -89,4 +97,6 @@ jobs:
       - uses: gradle/gradle-build-action@v2
         continue-on-error: true
         with:
+          build-root-directory: lang/java/gradle-plugin
+          gradle-executable: lang/java/gradle-plugin/gradlew
           arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
