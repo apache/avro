@@ -646,7 +646,7 @@ public class TestSchema {
 
   /**
    * Tests when a user tries to write a record with an invalid enum symbol value that the exception returned is more
-   * descriptive than juut NULL.
+   * descriptive than just a NPE or an incorrect mention of an unspecified non-null field.
    */
   @Test
   void enumWriteUnknownField() throws IOException {
