@@ -12,5 +12,6 @@ jobs:
           java-version: 8
       - uses: gradle/gradle-build-action@v2
         with:
+          build-root-directory: lang/java/gradle-plugin
           gradle-executable: lang/java/gradle-plugin/gradlew
-          arguments: build --project-dir lang/java/gradle-plugin
+          arguments: build
