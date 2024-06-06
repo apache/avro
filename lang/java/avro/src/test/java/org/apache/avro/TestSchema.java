@@ -645,8 +645,9 @@ public class TestSchema {
   }
 
   /**
-   * Tests when a user tries to write a record with an invalid enum symbol value that the exception returned is more
-   * descriptive than just a NPE or an incorrect mention of an unspecified non-null field.
+   * Tests when a user tries to write a record with an invalid enum symbol value
+   * that the exception returned is more descriptive than just a NPE or an
+   * incorrect mention of an unspecified non-null field.
    */
   @Test
   void enumWriteUnknownField() throws IOException {
@@ -655,7 +656,7 @@ public class TestSchema {
     Schema enumSchema = Schema.createEnum("enum1", "doc", "", Arrays.asList(goodValue));
     Field field1 = new Field("field1", enumSchema);
     schema.setFields(Collections.singletonList(field1));
-    
+
     GenericDatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<>(schema);
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().binaryEncoder(byteArrayOutputStream, null);
@@ -667,8 +668,8 @@ public class TestSchema {
       datumWriter.write(record, encoder);
       fail("should have thrown");
     } catch (AvroTypeException ate) {
-        assertTrue(ate.getMessage().contains(goodValue));
-        assertTrue(ate.getMessage().contains(badValue));
+      assertTrue(ate.getMessage().contains(goodValue));
+      assertTrue(ate.getMessage().contains(badValue));
     }
   }
 }

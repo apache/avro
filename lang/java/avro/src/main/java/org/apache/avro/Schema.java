@@ -1119,7 +1119,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
         throw new TracingAvroTypeException(
             new AvroTypeException("enum value '" + symbol + "' is not in the enum symbol set: " + symbols));
       }
-      return ordinal; 
+      return ordinal;
     }
 
     @Override
