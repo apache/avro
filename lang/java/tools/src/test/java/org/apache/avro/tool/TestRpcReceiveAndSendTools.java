@@ -17,14 +17,14 @@
  */
 package org.apache.avro.tool;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestRpcReceiveAndSendTools {
 
@@ -32,7 +32,7 @@ public class TestRpcReceiveAndSendTools {
    * Starts a server (using the tool) and sends a single message to it.
    */
   @Test
-  public void testServeAndSend() throws Exception {
+  void serveAndSend() throws Exception {
     String protocolFile = System.getProperty("share.dir", "../../../share") + "/test/schemas/simple.avpr";
     ByteArrayOutputStream baos1 = new ByteArrayOutputStream();
     PrintStream p1 = new PrintStream(baos1);

@@ -17,10 +17,7 @@
  */
 package org.apache.avro.specific;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -33,7 +30,7 @@ import org.apache.avro.test.http.QueryParameter;
 import org.apache.avro.test.http.Request;
 import org.apache.avro.test.http.UserAgent;
 import org.apache.avro.test.nullable.RecordWithNullables;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestSpecificBuilderTree {
 
@@ -57,20 +54,22 @@ public class TestSpecificBuilderTree {
     return requestBuilder;
   }
 
-  @Test(expected = AvroMissingFieldException.class)
-  public void failOnIncompleteTree() {
-    try {
-      createPartialBuilder().build();
-    } catch (AvroMissingFieldException amfe) {
-      assertEquals("Field networkAddress type:STRING pos:1 not set and has no default value", amfe.getMessage());
-      assertEquals("Path in schema: --> connection --> networkAddress", amfe.toString());
-      throw amfe;
-    }
-    fail("Should NEVER get here");
+  @Test
+  void failOnIncompleteTree() {
+    assertThrows(AvroMissingFieldException.class, () -> {
+      try {
+        createPartialBuilder().build();
+      } catch (AvroMissingFieldException amfe) {
+        assertEquals("Field networkAddress type:STRING pos:1 not set and has no default value", amfe.getMessage());
+        assertEquals("Path in schema: --> connection --> networkAddress", amfe.toString());
+        throw amfe;
+      }
+      fail("Should NEVER get here");
+    });
   }
 
   @Test
-  public void copyBuilder() {
+  void copyBuilder() {
     Request.Builder requestBuilder1 = createPartialBuilder();
 
     Request.Builder requestBuilder2 = Request.newBuilder(requestBuilder1);
@@ -106,7 +105,7 @@ public class TestSpecificBuilderTree {
   }
 
   @Test
-  public void createBuilderFromInstance() {
+  void createBuilderFromInstance() {
     Request.Builder requestBuilder1 = createPartialBuilder();
     requestBuilder1.getConnectionBuilder().setNetworkAddress("1.1.1.1");
 
@@ -155,7 +154,7 @@ public class TestSpecificBuilderTree {
   }
 
   @Test
-  public void lastOneWins_Setter() {
+  void lastOneWins_Setter() {
     Request.Builder requestBuilder = createLastOneTestsBuilder();
 
     requestBuilder.getHttpRequestBuilder().getURIBuilder().setMethod(HttpMethod.GET).setPath("/index.html");
@@ -178,7 +177,7 @@ public class TestSpecificBuilderTree {
   }
 
   @Test
-  public void lastOneWins_Builder() {
+  void lastOneWins_Builder() {
     Request.Builder requestBuilder = createLastOneTestsBuilder();
 
     HttpRequest httpRequest = HttpRequest.newBuilder().setUserAgent(new UserAgent("Bar", "Firefox 321"))
@@ -202,7 +201,7 @@ public class TestSpecificBuilderTree {
   }
 
   @Test
-  public void copyBuilderWithNullables() {
+  void copyBuilderWithNullables() {
     RecordWithNullables.Builder builder = RecordWithNullables.newBuilder();
 
     assertFalse(builder.hasNullableRecordBuilder());
@@ -227,7 +226,7 @@ public class TestSpecificBuilderTree {
   }
 
   @Test
-  public void copyBuilderWithNullablesAndSetToNull() {
+  void copyBuilderWithNullablesAndSetToNull() {
     // Create builder with all values default to null, yet unset.
     RecordWithNullables.Builder builder = RecordWithNullables.newBuilder();
 
@@ -279,7 +278,7 @@ public class TestSpecificBuilderTree {
   }
 
   @Test
-  public void getBuilderForRecordWithNullRecord() {
+  void getBuilderForRecordWithNullRecord() {
     // Create a record with all nullable fields set to the default value : null
     RecordWithNullables recordWithNullables = RecordWithNullables.newBuilder().build();
 
@@ -291,19 +290,19 @@ public class TestSpecificBuilderTree {
   }
 
   @Test
-  public void getBuilderForNullRecord() {
+  void getBuilderForNullRecord() {
     // In the past this caused an NPE
     RecordWithNullables.newBuilder((RecordWithNullables) null);
   }
 
   @Test
-  public void getBuilderForNullBuilder() {
+  void getBuilderForNullBuilder() {
     // In the past this caused an NPE
     RecordWithNullables.newBuilder((RecordWithNullables.Builder) null);
   }
 
   @Test
-  public void validateBrowsingOptionals() {
+  void validateBrowsingOptionals() {
     Request.Builder requestBuilder = Request.newBuilder();
     requestBuilder.setTimestamp(1234567890);
 

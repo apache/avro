@@ -30,10 +30,8 @@ extern crate serde;
 
 #[cfg(test)]
 mod test_derive {
-    use std::{
-        borrow::{Borrow, Cow},
-        sync::Mutex,
-    };
+    use apache_avro::schema::{Alias, EnumSchema, RecordSchema};
+    use std::{borrow::Cow, sync::Mutex};
 
     use super::*;
 
@@ -59,7 +57,7 @@ mod test_derive {
         let schema = T::get_schema();
         let mut writer = Writer::new(&schema, Vec::new());
         if let Err(e) = writer.append_ser(obj) {
-            panic!("{:?}", e);
+            panic!("{e:?}");
         }
         writer.into_inner().unwrap()
     }
@@ -70,19 +68,19 @@ mod test_derive {
     {
         assert!(!encoded.is_empty());
         let schema = T::get_schema();
-        let reader = Reader::with_schema(&schema, &encoded[..]).unwrap();
-        for res in reader {
+        let mut reader = Reader::with_schema(&schema, &encoded[..]).unwrap();
+        if let Some(res) = reader.next() {
             match res {
                 Ok(value) => {
                     return from_value::<T>(&value).unwrap();
                 }
-                Err(e) => panic!("{:?}", e),
+                Err(e) => panic!("{e:?}"),
             }
         }
         unreachable!()
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestBasic {
         a: i32,
         b: String,
@@ -116,7 +114,7 @@ mod test_derive {
         serde_assert(test);
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.namespace")]
     struct TestBasicNamespace {
         a: i32,
@@ -143,14 +141,14 @@ mod test_derive {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         assert_eq!(schema, TestBasicNamespace::get_schema());
-        if let Schema::Record { name, .. } = TestBasicNamespace::get_schema() {
+        if let Schema::Record(RecordSchema { name, .. }) = TestBasicNamespace::get_schema() {
             assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap())
         } else {
             panic!("TestBasicNamespace schema must be a record schema")
         }
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.complex.namespace")]
     struct TestComplexNamespace {
         a: TestBasicNamespace,
@@ -190,7 +188,9 @@ mod test_derive {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         assert_eq!(schema, TestComplexNamespace::get_schema());
-        if let Schema::Record { name, fields, .. } = TestComplexNamespace::get_schema() {
+        if let Schema::Record(RecordSchema { name, fields, .. }) =
+            TestComplexNamespace::get_schema()
+        {
             assert_eq!(
                 "com.testing.complex.namespace".to_owned(),
                 name.namespace.unwrap()
@@ -200,7 +200,7 @@ mod test_derive {
                 .filter(|field| field.name == "a")
                 .map(|field| &field.schema)
                 .next();
-            if let Some(Schema::Record { name, .. }) = inner_schema {
+            if let Some(Schema::Record(RecordSchema { name, .. })) = inner_schema {
                 assert_eq!(
                     "com.testing.namespace".to_owned(),
                     name.namespace.clone().unwrap()
@@ -387,7 +387,7 @@ mod test_derive {
         serde_assert(inner_struct);
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestOptional {
         a: Option<i32>,
     }
@@ -580,7 +580,7 @@ mod test_derive {
         serde_assert(test_generic);
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     enum TestAllowedEnum {
         A,
         B,
@@ -588,7 +588,7 @@ mod test_derive {
         D,
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestAllowedEnumNested {
         a: TestAllowedEnum,
         b: String,
@@ -723,7 +723,7 @@ mod test_derive {
         serde_assert(list)
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestSimpleArray {
         a: [i32; 4],
     }
@@ -804,7 +804,7 @@ mod test_derive {
         serde_assert(test)
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct Testu8 {
         a: Vec<u8>,
         b: [u8; 2],
@@ -822,10 +822,8 @@ mod test_derive {
     }}
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema)]
-    #[allow(unknown_lints)] // Rust 1.51.0 (MSRV) does not support #[allow(clippy::box_collection)]
-    #[allow(clippy::box_collection)]
     struct TestSmartPointers<'a> {
-        a: Box<String>,
+        a: String,
         b: Mutex<Vec<i64>>,
         c: Cow<'a, i32>,
     }
@@ -858,14 +856,14 @@ mod test_derive {
         let schema = Schema::parse_str(schema).unwrap();
         assert_eq!(schema, TestSmartPointers::get_schema());
         let test = TestSmartPointers {
-            a: Box::new("hey".into()),
+            a: "hey".into(),
             b: Mutex::new(vec![42]),
             c: Cow::Owned(32),
         };
         // test serde with manual equality for mutex
         let test = serde(test);
-        assert_eq!(Box::new("hey".into()), test.a);
-        assert_eq!(vec![42], *test.b.borrow().lock().unwrap());
+        assert_eq!("hey", test.a);
+        assert_eq!(vec![42], *test.b.lock().unwrap());
         assert_eq!(Cow::Owned::<i32>(32), test.c);
     }
 
@@ -914,7 +912,7 @@ mod test_derive {
         ser(test);
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.namespace", doc = "A Documented Record")]
     struct TestBasicWithAttributes {
         #[avro(doc = "Milliseconds since Queen released Bohemian Rhapsody")]
@@ -945,7 +943,9 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, doc, .. } = TestBasicWithAttributes::get_schema() {
+        if let Schema::Record(RecordSchema { name, doc, .. }) =
+            TestBasicWithAttributes::get_schema()
+        {
             assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap());
             assert_eq!("A Documented Record", doc.unwrap())
         } else {
@@ -954,7 +954,7 @@ mod test_derive {
         assert_eq!(schema, TestBasicWithAttributes::get_schema());
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.namespace")]
     /// A Documented Record
     struct TestBasicWithOuterDocAttributes {
@@ -986,16 +986,17 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, doc, .. } = TestBasicWithOuterDocAttributes::get_schema() {
+        let derived_schema = TestBasicWithOuterDocAttributes::get_schema();
+        assert_eq!(&schema, &derived_schema);
+        if let Schema::Record(RecordSchema { name, doc, .. }) = derived_schema {
             assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap());
             assert_eq!("A Documented Record", doc.unwrap())
         } else {
             panic!("TestBasicWithOuterDocAttributes schema must be a record schema")
         }
-        assert_eq!(schema, TestBasicWithOuterDocAttributes::get_schema());
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.namespace")]
     /// A Documented Record
     /// that spans
@@ -1029,7 +1030,8 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, doc, .. } = TestBasicWithLargeDoc::get_schema() {
+        if let Schema::Record(RecordSchema { name, doc, .. }) = TestBasicWithLargeDoc::get_schema()
+        {
             assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap());
             assert_eq!(
                 "A Documented Record\nthat spans\nmultiple lines",
@@ -1041,7 +1043,45 @@ mod test_derive {
         assert_eq!(schema, TestBasicWithLargeDoc::get_schema());
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
+    struct TestBasicWithBool {
+        a: bool,
+        b: Option<bool>,
+    }
+
+    proptest! {
+    #[test]
+    fn avro_3634_test_basic_with_bool(a in any::<bool>(), b in any::<Option<bool>>()) {
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicWithBool",
+            "fields":[
+                {
+                    "name":"a",
+                    "type":"boolean"
+                },
+                {
+                    "name":"b",
+                    "type":["null","boolean"]
+                }
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let derived_schema = TestBasicWithBool::get_schema();
+
+        if let Schema::Record(RecordSchema { name, .. }) = derived_schema {
+            assert_eq!("TestBasicWithBool", name.fullname(None))
+        } else {
+            panic!("TestBasicWithBool schema must be a record schema")
+        }
+        assert_eq!(schema, TestBasicWithBool::get_schema());
+
+        serde_assert(TestBasicWithBool { a, b });
+    }}
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestBasicWithU32 {
         a: u32,
     }
@@ -1062,7 +1102,7 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, .. } = TestBasicWithU32::get_schema() {
+        if let Schema::Record(RecordSchema { name, .. }) = TestBasicWithU32::get_schema() {
             assert_eq!("TestBasicWithU32", name.fullname(None))
         } else {
             panic!("TestBasicWithU32 schema must be a record schema")
@@ -1072,7 +1112,7 @@ mod test_derive {
         serde_assert(TestBasicWithU32 { a });
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(alias = "a", alias = "b", alias = "c")]
     struct TestBasicStructWithAliases {
         a: i32,
@@ -1094,10 +1134,16 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, aliases, .. } = TestBasicStructWithAliases::get_schema() {
+        if let Schema::Record(RecordSchema { name, aliases, .. }) =
+            TestBasicStructWithAliases::get_schema()
+        {
             assert_eq!("TestBasicStructWithAliases", name.fullname(None));
             assert_eq!(
-                Some(vec!["a".to_owned(), "b".to_owned(), "c".to_owned()]),
+                Some(vec![
+                    Alias::new("a").unwrap(),
+                    Alias::new("b").unwrap(),
+                    Alias::new("c").unwrap()
+                ]),
                 aliases
             );
         } else {
@@ -1108,7 +1154,7 @@ mod test_derive {
         serde_assert(TestBasicStructWithAliases { a: i32::MAX });
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(alias = "d")]
     #[avro(alias = "e")]
     #[avro(alias = "f")]
@@ -1132,10 +1178,16 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, aliases, .. } = TestBasicStructWithAliases2::get_schema() {
+        if let Schema::Record(RecordSchema { name, aliases, .. }) =
+            TestBasicStructWithAliases2::get_schema()
+        {
             assert_eq!("TestBasicStructWithAliases2", name.fullname(None));
             assert_eq!(
-                Some(vec!["d".to_owned(), "e".to_owned(), "f".to_owned()]),
+                Some(vec![
+                    Alias::new("d").unwrap(),
+                    Alias::new("e").unwrap(),
+                    Alias::new("f").unwrap()
+                ]),
                 aliases
             );
         } else {
@@ -1146,7 +1198,7 @@ mod test_derive {
         serde_assert(TestBasicStructWithAliases2 { a: i32::MAX });
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(alias = "a", alias = "b", alias = "c")]
     enum TestBasicEnumWithAliases {
         A,
@@ -1167,10 +1219,16 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Enum { name, aliases, .. } = TestBasicEnumWithAliases::get_schema() {
+        if let Schema::Enum(EnumSchema { name, aliases, .. }) =
+            TestBasicEnumWithAliases::get_schema()
+        {
             assert_eq!("TestBasicEnumWithAliases", name.fullname(None));
             assert_eq!(
-                Some(vec!["a".to_owned(), "b".to_owned(), "c".to_owned()]),
+                Some(vec![
+                    Alias::new("a").unwrap(),
+                    Alias::new("b").unwrap(),
+                    Alias::new("c").unwrap()
+                ]),
                 aliases
             );
         } else {
@@ -1181,7 +1239,7 @@ mod test_derive {
         serde_assert(TestBasicEnumWithAliases::A);
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(alias = "d")]
     #[avro(alias = "e")]
     #[avro(alias = "f")]
@@ -1204,10 +1262,16 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Enum { name, aliases, .. } = TestBasicEnumWithAliases2::get_schema() {
+        if let Schema::Enum(EnumSchema { name, aliases, .. }) =
+            TestBasicEnumWithAliases2::get_schema()
+        {
             assert_eq!("TestBasicEnumWithAliases2", name.fullname(None));
             assert_eq!(
-                Some(vec!["d".to_owned(), "e".to_owned(), "f".to_owned()]),
+                Some(vec![
+                    Alias::new("d").unwrap(),
+                    Alias::new("e").unwrap(),
+                    Alias::new("f").unwrap()
+                ]),
                 aliases
             );
         } else {
@@ -1220,7 +1284,7 @@ mod test_derive {
 
     #[test]
     fn test_basic_struct_with_defaults() {
-        #[derive(Debug, Deserialize, Serialize, AvroSchema, Clone, PartialEq)]
+        #[derive(Debug, Deserialize, Serialize, AvroSchema, Clone, PartialEq, Eq)]
         enum MyEnum {
             Foo,
             Bar,
@@ -1304,7 +1368,8 @@ mod test_derive {
         "#;
 
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, fields, .. } = TestBasicStructWithDefaultValues::get_schema()
+        if let Schema::Record(RecordSchema { name, fields, .. }) =
+            TestBasicStructWithDefaultValues::get_schema()
         {
             assert_eq!("TestBasicStructWithDefaultValues", name.fullname(None));
             use serde_json::json;
@@ -1346,5 +1411,188 @@ mod test_derive {
             array: vec![4, 5, 6],
             myenum: MyEnum::Bar,
         });
+    }
+
+    #[test]
+    fn avro_3633_test_basic_struct_with_skip_attribute() {
+        // Note: If using the skip attribute together with serialization,
+        // the serde's skip attribute needs also to be added
+
+        #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq)]
+        struct TestBasicStructNoSchema {
+            field: bool,
+        }
+
+        #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+        struct TestBasicStructWithSkipAttribute {
+            #[avro(skip)]
+            #[serde(skip)]
+            condition: bool,
+            #[avro(skip = false)]
+            a: f64,
+            #[avro(skip)]
+            #[serde(skip)]
+            map: HashMap<String, i32>,
+            array: Vec<i32>,
+            #[avro(skip = true)]
+            #[serde(skip)]
+            mystruct: TestBasicStructNoSchema,
+            b: i32,
+        }
+
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicStructWithSkipAttribute",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":"double"
+                },
+                {
+                    "name":"array",
+                    "type":{
+                        "type":"array",
+                        "items":"int"
+                    }
+                },
+                {
+                    "name":"b",
+                    "type":"int"
+                }
+            ]
+        }
+        "#;
+
+        let schema = Schema::parse_str(schema).unwrap();
+        let derived_schema = TestBasicStructWithSkipAttribute::get_schema();
+        if let Schema::Record(RecordSchema { name, fields, .. }) = &derived_schema {
+            assert_eq!("TestBasicStructWithSkipAttribute", name.fullname(None));
+            for field in fields {
+                match field.name.as_str() {
+                    "condition" => panic!("Unexpected field 'condition'"),
+                    "mystruct" => panic!("Unexpected field 'mystruct'"),
+                    "map" => panic!("Unexpected field 'map'"),
+                    _ => {}
+                }
+            }
+        } else {
+            panic!(
+                "TestBasicStructWithSkipAttribute schema must be a record schema: {derived_schema:?}"
+            )
+        }
+        assert_eq!(schema, derived_schema);
+
+        // Note: If serde's `skip` attribute is used on a field, the field's type
+        // needs the trait 'Default' to be implemented, since it is skipping the serialization process.
+        // Copied or cloned objects within 'serde_assert()' doesn't "copy" (serialize/deserialze)
+        // these fields, so no values are initialized here for skipped fields.
+        serde_assert(TestBasicStructWithSkipAttribute {
+            condition: bool::default(), // <- skipped
+            a: 987.654,
+            map: HashMap::default(), // <- skipped
+            array: vec![4, 5, 6],
+            mystruct: TestBasicStructNoSchema::default(), // <- skipped
+            b: 321,
+        });
+    }
+
+    #[test]
+    fn avro_3633_test_basic_struct_with_rename_attribute() {
+        #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+        struct TestBasicStructWithRenameAttribute {
+            #[avro(rename = "a1")]
+            #[serde(rename = "a1")]
+            a: bool,
+            b: i32,
+            #[avro(rename = "c1")]
+            #[serde(rename = "c1")]
+            c: f32,
+        }
+
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicStructWithRenameAttribute",
+            "fields": [
+                {
+                    "name":"a1",
+                    "type":"boolean"
+                },
+                {
+                    "name":"b",
+                    "type":"int"
+                },
+                {
+                    "name":"c1",
+                    "type":"float"
+                }
+            ]
+        }
+        "#;
+
+        let schema = Schema::parse_str(schema).unwrap();
+        let derived_schema = TestBasicStructWithRenameAttribute::get_schema();
+        if let Schema::Record(RecordSchema { name, fields, .. }) = &derived_schema {
+            assert_eq!("TestBasicStructWithRenameAttribute", name.fullname(None));
+            for field in fields {
+                match field.name.as_str() {
+                    "a" => panic!("Unexpected field name 'a': must be 'a1'"),
+                    "c" => panic!("Unexpected field name 'c': must be 'c1'"),
+                    _ => {}
+                }
+            }
+        } else {
+            panic!(
+                "TestBasicStructWithRenameAttribute schema must be a record schema: {derived_schema:?}"
+            )
+        }
+        assert_eq!(schema, derived_schema);
+
+        serde_assert(TestBasicStructWithRenameAttribute {
+            a: true,
+            b: 321,
+            c: 987.654,
+        });
+    }
+
+    #[test]
+    fn test_avro_3663_raw_identifier_field_name() {
+        #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+        struct TestRawIdent {
+            r#type: bool,
+        }
+
+        let derived_schema = TestRawIdent::get_schema();
+        if let Schema::Record(RecordSchema { fields, .. }) = derived_schema {
+            let field = fields.first().expect("TestRawIdent must contain a field");
+            assert_eq!(field.name, "type");
+        } else {
+            panic!("Unexpected schema type for {derived_schema:?}")
+        }
+    }
+
+    #[test]
+    fn avro_3962_fields_documentation() {
+        /// Foo docs
+        #[derive(AvroSchema)]
+        #[allow(dead_code)]
+        struct Foo {
+            /// a's Rustdoc
+            a: i32,
+            /// b's Rustdoc
+            #[avro(doc = "attribute doc has priority over Rustdoc")]
+            b: i32,
+        }
+
+        if let Schema::Record(RecordSchema { fields, .. }) = Foo::get_schema() {
+            assert_eq!(fields[0].doc, Some("a's Rustdoc".to_string()));
+            assert_eq!(
+                fields[1].doc,
+                Some("attribute doc has priority over Rustdoc".to_string())
+            );
+        } else {
+            panic!("Unexpected schema type for Foo")
+        }
     }
 }

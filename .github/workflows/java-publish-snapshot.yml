@@ -19,7 +19,7 @@ name: "Publish Snapshot to Maven"
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ main ]
     paths:
       - .github/workflows/java-publish-snapshot.yml
       - lang/java/**
@@ -37,26 +37,35 @@ jobs:
   publish-snapshot:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Setup Java
-        uses: actions/setup-java@v2
+      - name: 'Setup Temurin JDK 8, 11, 17 & 21'
+        uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
         with:
-          distribution: 'adopt'
-          java-version: 8
+          distribution: 'temurin'
+          java-version: |
+            8
+            11
+            17
+            21
 
-      - name: Deploy Maven snapshots
+      - name: 'Setup Maven 3.9.6'
+        uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
+        with:
+          maven-version: 3.9.6
+
+      - name: 'Deploy Maven snapshots'
         env:
           ASF_USERNAME: ${{ secrets.NEXUS_USER }}
           ASF_PASSWORD: ${{ secrets.NEXUS_PW }}
         run: |
           echo "<settings><servers><server><id>apache.snapshots.https</id><username>$ASF_USERNAME</username><password>$ASF_PASSWORD</password></server></servers></settings>" > settings.xml
-          mvn --settings settings.xml -U -B -e -fae -ntp -DskipTests deploy
+          mvn --settings settings.xml -U -B -e -fae -ntp -PskipQuality deploy

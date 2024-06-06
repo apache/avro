@@ -16,27 +16,27 @@
 // under the License.
 
 //! Implementation of the Rabin fingerprint algorithm
-use byteorder::{ByteOrder, LittleEndian};
 use digest::{
     consts::U8, core_api::OutputSizeUser, generic_array::GenericArray, FixedOutput,
     FixedOutputReset, HashMarker, Output, Reset, Update,
 };
-use lazy_static::lazy_static;
+use std::sync::OnceLock;
 
 const EMPTY: i64 = -4513414715797952619;
 
-lazy_static! {
-    static ref FPTABLE: [i64; 256] = {
+fn fp_table() -> &'static [i64; 256] {
+    static FPTABLE_ONCE: OnceLock<[i64; 256]> = OnceLock::new();
+    FPTABLE_ONCE.get_or_init(|| {
         let mut fp_table: [i64; 256] = [0; 256];
         for i in 0..256 {
             let mut fp = i;
             for _ in 0..8 {
                 fp = (fp as u64 >> 1) as i64 ^ (EMPTY & -(fp & 1));
             }
-            fp_table[i as usize] = fp
+            fp_table[i as usize] = fp;
         }
         fp_table
-    };
+    })
 }
 
 /// Implementation of the Rabin fingerprint algorithm using the Digest trait as described in [schema_fingerprints](https://avro.apache.org/docs/current/spec.html#schema_fingerprints).
@@ -61,7 +61,7 @@ lazy_static! {
 /// assert_eq!(result[..], hex!("60335ba6d0415528"));
 /// ```
 ///
-/// To convert the digest to the commonly used 64-bit integer value, you can use the byteorder crate:
+/// To convert the digest to the commonly used 64-bit integer value, you can use the i64::from_le_bytes() function
 ///
 /// ```rust
 /// # use apache_avro::rabin::Rabin;
@@ -75,9 +75,8 @@ lazy_static! {
 /// # let result = hasher.finalize();
 ///
 /// # assert_eq!(result[..], hex!("60335ba6d0415528"));
-/// use byteorder::{ByteOrder, LittleEndian};
 ///
-/// let i = LittleEndian::read_i64(&result.to_vec());
+/// let i = i64::from_le_bytes(result.try_into().unwrap());
 ///
 /// assert_eq!(i, 2906301498937520992)
 /// ```
@@ -96,14 +95,14 @@ impl Update for Rabin {
     fn update(&mut self, data: &[u8]) {
         for b in data {
             self.result = (self.result as u64 >> 8) as i64
-                ^ FPTABLE[((self.result ^ *b as i64) & 0xff) as usize];
+                ^ fp_table()[((self.result ^ *b as i64) & 0xff) as usize];
         }
     }
 }
 
 impl FixedOutput for Rabin {
     fn finalize_into(self, out: &mut GenericArray<u8, Self::OutputSize>) {
-        LittleEndian::write_i64(out, self.result);
+        out.copy_from_slice(&self.result.to_le_bytes());
     }
 }
 
@@ -123,7 +122,7 @@ impl HashMarker for Rabin {}
 
 impl FixedOutputReset for Rabin {
     fn finalize_into_reset(&mut self, out: &mut Output<Self>) {
-        LittleEndian::write_i64(out, self.result);
+        out.copy_from_slice(&self.result.to_le_bytes());
         self.reset();
     }
 }
@@ -131,12 +130,13 @@ impl FixedOutputReset for Rabin {
 #[cfg(test)]
 mod tests {
     use super::Rabin;
-    use byteorder::{ByteOrder, LittleEndian};
+    use apache_avro_test_helper::TestResult;
     use digest::Digest;
+    use pretty_assertions::assert_eq;
 
-    // See: https://github.com/apache/avro/blob/master/share/test/data/schema-tests.txt
+    // See: https://github.com/apache/avro/blob/main/share/test/data/schema-tests.txt
     #[test]
-    fn test1() {
+    fn test1() -> TestResult {
         let data: &[(&str, i64)] = &[
             (r#""null""#, 7195948357588979594),
             (r#""boolean""#, -6970731678124411036),
@@ -154,8 +154,11 @@ mod tests {
 
         for (s, fp) in data {
             hasher.update(s.as_bytes());
-            let result = LittleEndian::read_i64(&hasher.finalize_reset());
+            let res: &[u8] = &hasher.finalize_reset();
+            let result = i64::from_le_bytes(res.try_into()?);
             assert_eq!(*fp, result);
         }
+
+        Ok(())
     }
 }

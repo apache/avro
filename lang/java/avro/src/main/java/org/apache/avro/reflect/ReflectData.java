@@ -71,6 +71,9 @@ public class ReflectData extends SpecificData {
 
   private static final String STRING_OUTER_PARENT_REFERENCE = "this$0";
 
+  /**
+   * Always false since custom coders are not available for {@link ReflectData}.
+   */
   @Override
   public boolean useCustomCoders() {
     return false;
@@ -357,8 +360,8 @@ public class ReflectData extends SpecificData {
   static class ClassAccessorData {
     private final Class<?> clazz;
     private final Map<String, FieldAccessor> byName = new HashMap<>();
-    // getAccessorsFor is already synchronized, no need to wrap
-    final Map<Schema, FieldAccessor[]> bySchema = new WeakHashMap<>();
+    // getAccessorsFor replaces this map with each modification
+    volatile Map<Schema, FieldAccessor[]> bySchema = new WeakHashMap<>();
 
     private ClassAccessorData(Class<?> c) {
       clazz = c;
@@ -376,12 +379,14 @@ public class ReflectData extends SpecificData {
      * Return the field accessors as an array, indexed by the field index of the
      * given schema.
      */
-    private synchronized FieldAccessor[] getAccessorsFor(Schema schema) {
-      // if synchronized is removed from this method, adjust bySchema appropriately
+    private FieldAccessor[] getAccessorsFor(Schema schema) {
+      // to avoid synchronization, we replace the map for each modification
       FieldAccessor[] result = bySchema.get(schema);
       if (result == null) {
         result = createAccessorsFor(schema);
+        Map<Schema, FieldAccessor[]> bySchema = new WeakHashMap<>(this.bySchema);
         bySchema.put(schema, result);
+        this.bySchema = bySchema;
       }
       return result;
     }
@@ -614,11 +619,8 @@ public class ReflectData extends SpecificData {
     AvroDefault defaultAnnotation = field.getAnnotation(AvroDefault.class);
     defaultValue = (defaultAnnotation == null) ? null : Schema.parseJsonToObject(defaultAnnotation.value());
 
-    if (defaultValue == null && fieldSchema.getType() == Schema.Type.UNION) {
-      Schema defaultType = fieldSchema.getTypes().get(0);
-      if (defaultType.getType() == Schema.Type.NULL) {
-        defaultValue = JsonProperties.NULL_VALUE;
-      }
+    if (defaultValue == null && fieldSchema.isNullable()) {
+      defaultValue = JsonProperties.NULL_VALUE;
     }
     return defaultValue;
   }
@@ -758,7 +760,7 @@ public class ReflectData extends SpecificData {
 
               AvroMeta[] metadata = field.getAnnotationsByType(AvroMeta.class); // add metadata
               for (AvroMeta meta : metadata) {
-                if (recordField.getObjectProps().containsKey(meta.key())) {
+                if (recordField.propsContainsKey(meta.key())) {
                   throw new AvroTypeException("Duplicate field prop key: " + meta.key());
                 }
                 recordField.addProp(meta.key(), meta.value());
@@ -777,7 +779,7 @@ public class ReflectData extends SpecificData {
           schema.setFields(fields);
           AvroMeta[] metadata = c.getAnnotationsByType(AvroMeta.class);
           for (AvroMeta meta : metadata) {
-            if (schema.getObjectProps().containsKey(meta.key())) {
+            if (schema.propsContainsKey(meta.key())) {
               throw new AvroTypeException("Duplicate type prop key: " + meta.key());
             }
             schema.addProp(meta.key(), meta.value());

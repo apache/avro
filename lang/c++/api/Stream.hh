@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <vector>
 
 #include "boost/utility.hpp"
 

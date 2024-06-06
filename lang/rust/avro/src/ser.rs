@@ -181,9 +181,9 @@ impl<'b> ser::Serializer for &'b mut Serializer {
         Ok(Value::from(None::<Self::Ok>))
     }
 
-    fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Self::Ok, Self::Error>
+    fn serialize_some<T>(self, value: &T) -> Result<Self::Ok, Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         let v = value.serialize(&mut Serializer::default())?;
         Ok(Value::from(Some(v)))
@@ -200,24 +200,24 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     fn serialize_unit_variant(
         self,
         _: &'static str,
-        index: u32,
+        _variant_index: u32,
         variant: &'static str,
     ) -> Result<Self::Ok, Self::Error> {
-        Ok(Value::Enum(index, variant.to_string()))
+        Ok(Value::String(variant.to_string()))
     }
 
-    fn serialize_newtype_struct<T: ?Sized>(
+    fn serialize_newtype_struct<T>(
         self,
         _: &'static str,
         value: &T,
     ) -> Result<Self::Ok, Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         value.serialize(self)
     }
 
-    fn serialize_newtype_variant<T: ?Sized>(
+    fn serialize_newtype_variant<T>(
         self,
         _: &'static str,
         index: u32,
@@ -225,7 +225,7 @@ impl<'b> ser::Serializer for &'b mut Serializer {
         value: &T,
     ) -> Result<Self::Ok, Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         Ok(Value::Record(vec![
             ("type".to_owned(), Value::Enum(index, variant.to_owned())),
@@ -283,15 +283,19 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     ) -> Result<Self::SerializeStructVariant, Self::Error> {
         Ok(StructVariantSerializer::new(index, variant, len))
     }
+
+    fn is_human_readable(&self) -> bool {
+        crate::util::is_human_readable()
+    }
 }
 
-impl<'a> ser::SerializeSeq for SeqSerializer {
+impl ser::SerializeSeq for SeqSerializer {
     type Ok = Value;
     type Error = Error;
 
-    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    fn serialize_element<T>(&mut self, value: &T) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         self.items
             .push(value.serialize(&mut Serializer::default())?);
@@ -303,13 +307,13 @@ impl<'a> ser::SerializeSeq for SeqSerializer {
     }
 }
 
-impl<'a> ser::SerializeTuple for SeqSerializer {
+impl ser::SerializeTuple for SeqSerializer {
     type Ok = Value;
     type Error = Error;
 
-    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    fn serialize_element<T>(&mut self, value: &T) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         ser::SerializeSeq::serialize_element(self, value)
     }
@@ -323,9 +327,9 @@ impl ser::SerializeTupleStruct for SeqSerializer {
     type Ok = Value;
     type Error = Error;
 
-    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    fn serialize_field<T>(&mut self, value: &T) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         ser::SerializeSeq::serialize_element(self, value)
     }
@@ -339,9 +343,9 @@ impl<'a> ser::SerializeSeq for SeqVariantSerializer<'a> {
     type Ok = Value;
     type Error = Error;
 
-    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    fn serialize_element<T>(&mut self, value: &T) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         self.items.push(Value::Union(
             self.index,
@@ -365,9 +369,9 @@ impl<'a> ser::SerializeTupleVariant for SeqVariantSerializer<'a> {
     type Ok = Value;
     type Error = Error;
 
-    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    fn serialize_field<T>(&mut self, value: &T) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         ser::SerializeSeq::serialize_element(self, value)
     }
@@ -381,9 +385,9 @@ impl ser::SerializeMap for MapSerializer {
     type Ok = Value;
     type Error = Error;
 
-    fn serialize_key<T: ?Sized>(&mut self, key: &T) -> Result<(), Self::Error>
+    fn serialize_key<T>(&mut self, key: &T) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         let key = key.serialize(&mut Serializer::default())?;
 
@@ -395,9 +399,9 @@ impl ser::SerializeMap for MapSerializer {
         }
     }
 
-    fn serialize_value<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    fn serialize_value<T>(&mut self, value: &T) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         self.values
             .push(value.serialize(&mut Serializer::default())?);
@@ -420,13 +424,9 @@ impl ser::SerializeStruct for StructSerializer {
     type Ok = Value;
     type Error = Error;
 
-    fn serialize_field<T: ?Sized>(
-        &mut self,
-        name: &'static str,
-        value: &T,
-    ) -> Result<(), Self::Error>
+    fn serialize_field<T>(&mut self, name: &'static str, value: &T) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         self.fields.push((
             name.to_owned(),
@@ -444,13 +444,9 @@ impl<'a> ser::SerializeStructVariant for StructVariantSerializer<'a> {
     type Ok = Value;
     type Error = Error;
 
-    fn serialize_field<T: ?Sized>(
-        &mut self,
-        name: &'static str,
-        value: &T,
-    ) -> Result<(), Self::Error>
+    fn serialize_field<T>(&mut self, name: &'static str, value: &T) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         self.fields.push((
             name.to_owned(),
@@ -485,7 +481,11 @@ pub fn to_value<S: Serialize>(value: S) -> Result<Value, Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use apache_avro_test_helper::TestResult;
+    use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
+    use serial_test::serial;
+    use std::sync::atomic::Ordering;
 
     #[derive(Debug, Deserialize, Serialize, Clone)]
     struct Test {
@@ -677,7 +677,7 @@ mod tests {
     }
 
     #[test]
-    fn test_to_value() {
+    fn test_to_value() -> TestResult {
         let test = Test {
             a: 27,
             b: "foo".to_owned(),
@@ -687,7 +687,7 @@ mod tests {
             ("b".to_owned(), Value::String("foo".to_owned())),
         ]);
 
-        assert_eq!(to_value(test.clone()).unwrap(), expected);
+        assert_eq!(to_value(test.clone())?, expected);
 
         let test_inner = TestInner { a: test, b: 35 };
 
@@ -702,19 +702,21 @@ mod tests {
             ("b".to_owned(), Value::Int(35)),
         ]);
 
-        assert_eq!(to_value(test_inner).unwrap(), expected_inner);
+        assert_eq!(to_value(test_inner)?, expected_inner);
+
+        Ok(())
     }
 
     #[test]
-    fn test_to_value_unit_enum() {
+    fn test_to_value_unit_enum() -> TestResult {
         let test = TestUnitExternalEnum {
             a: UnitExternalEnum::Val1,
         };
 
-        let expected = Value::Record(vec![("a".to_owned(), Value::Enum(0, "Val1".to_owned()))]);
+        let expected = Value::Record(vec![("a".to_owned(), Value::String("Val1".to_owned()))]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "Error serializing unit external enum"
         );
@@ -729,7 +731,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "Error serializing unit internal enum"
         );
@@ -744,7 +746,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "Error serializing unit adjacent enum"
         );
@@ -756,14 +758,16 @@ mod tests {
         let expected = Value::Record(vec![("a".to_owned(), Value::Null)]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "Error serializing unit untagged enum"
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_to_value_single_value_enum() {
+    fn test_to_value_single_value_enum() -> TestResult {
         let test = TestSingleValueExternalEnum {
             a: SingleValueExternalEnum::Double(64.0),
         };
@@ -780,7 +784,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "Error serializing single value external enum"
         );
@@ -805,7 +809,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "Error serializing single value adjacent enum"
         );
@@ -817,14 +821,16 @@ mod tests {
         let expected = Value::Record(vec![("a".to_owned(), Value::Double(64.0))]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "Error serializing single value untagged enum"
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_to_value_struct_enum() {
+    fn test_to_value_struct_enum() -> TestResult {
         let test = TestStructExternalEnum {
             a: StructExternalEnum::Val1 { x: 1.0, y: 2.0 },
         };
@@ -846,7 +852,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing struct external enum"
         );
@@ -866,7 +872,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing struct internal enum"
         );
@@ -889,7 +895,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing struct adjacent enum"
         );
@@ -906,7 +912,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing struct untagged enum"
         );
@@ -928,14 +934,16 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing struct untagged enum variant"
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_to_value_tuple_enum() {
+    fn test_to_value_tuple_enum() -> TestResult {
         let test = TestTupleExternalEnum {
             a: TupleExternalEnum::Val2(1.0, 2.0, 3.0),
         };
@@ -956,7 +964,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing tuple external enum"
         );
@@ -977,7 +985,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing tuple adjacent enum"
         );
@@ -992,9 +1000,35 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing tuple untagged enum"
         );
+
+        Ok(())
+    }
+
+    #[test]
+    #[serial(avro_3747)]
+    fn avro_3747_human_readable_false() {
+        use serde::ser::Serializer as SerdeSerializer;
+
+        crate::util::SERDE_HUMAN_READABLE.store(false, Ordering::Release);
+
+        let ser = &mut Serializer {};
+
+        assert_eq!(ser.is_human_readable(), false);
+    }
+
+    #[test]
+    #[serial(avro_3747)]
+    fn avro_3747_human_readable_true() {
+        use serde::ser::Serializer as SerdeSerializer;
+
+        crate::util::SERDE_HUMAN_READABLE.store(true, Ordering::Release);
+
+        let ser = &mut Serializer {};
+
+        assert!(ser.is_human_readable());
     }
 }

@@ -17,6 +17,34 @@
 
 [workspace]
 members = [
+    "avro_test_helper",
+    "avro_derive",
     "avro",
-    "avro_derive"
+    "wasm-demo"
 ]
+exclude = [
+    "fuzz"
+]
+
+resolver = "2"
+
+[workspace.package]
+version = "0.17.0"
+authors = ["Apache Avro team <dev@avro.apache.org>"]
+license = "Apache-2.0"
+repository = "https://github.com/apache/avro"
+edition = "2021"
+rust-version = "1.70.0"
+keywords = ["avro", "data", "serialization"]
+categories = ["encoding"]
+documentation = "https://docs.rs/apache-avro"
+
+# dependencies used by more than one members
+[workspace.dependencies]
+log = { default-features = false, version = "0.4.21" }
+serde = { default-features = false, version = "1.0.203", features = ["derive"] }
+serde_json = { default-features = false, version = "1.0.117", features = ["std"] }
+
+[profile.release.package.hello-wasm]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"

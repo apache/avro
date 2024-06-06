@@ -51,6 +51,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -108,6 +109,8 @@ public class SpecificData extends GenericData {
   public static final String KEY_CLASS_PROP = "java-key-class";
   public static final String ELEMENT_PROP = "java-element-class";
 
+  public static final char RESERVED_WORD_ESCAPE_CHAR = '$';
+
   /**
    * Reserved words from
    * https://docs.oracle.com/javase/specs/jls/se16/html/jls-3.html require
@@ -125,6 +128,32 @@ public class SpecificData extends GenericData {
       // Note that module-related restricted keywords can still be used.
       // Class names used internally by the avro code generator
       "Builder"));
+
+  /* Reserved words for accessor/mutator methods */
+  public static final Set<String> ACCESSOR_MUTATOR_RESERVED_WORDS = new HashSet<>(
+      Arrays.asList("class", "schema", "classSchema"));
+
+  static {
+    // Add reserved words to accessor/mutator reserved words
+    ACCESSOR_MUTATOR_RESERVED_WORDS.addAll(RESERVED_WORDS);
+  }
+
+  /* Reserved words for type identifiers */
+  public static final Set<String> TYPE_IDENTIFIER_RESERVED_WORDS = new HashSet<>(
+      Arrays.asList("var", "yield", "record"));
+
+  static {
+    // Add reserved words to type identifier reserved words
+    TYPE_IDENTIFIER_RESERVED_WORDS.addAll(RESERVED_WORDS);
+  }
+
+  /* Reserved words for error types */
+  public static final Set<String> ERROR_RESERVED_WORDS = new HashSet<>(Arrays.asList("message", "cause"));
+
+  static {
+    // Add accessor/mutator reserved words to error reserved words
+    ERROR_RESERVED_WORDS.addAll(ACCESSOR_MUTATOR_RESERVED_WORDS);
+  }
 
   /**
    * Read/write some common builtin classes as strings. Representing these as
@@ -167,16 +196,16 @@ public class SpecificData extends GenericData {
   }
 
   /**
-   * For RECORD type schemas, this method returns the SpecificData instance of the
-   * class associated with the schema, in order to get the right conversions for
-   * any logical types used.
+   * For RECORD and UNION type schemas, this method returns the SpecificData
+   * instance of the class associated with the schema, in order to get the right
+   * conversions for any logical types used.
    *
    * @param reader the reader schema
    * @return the SpecificData associated with the schema's class, or the default
    *         instance.
    */
   public static SpecificData getForSchema(Schema reader) {
-    if (reader != null && reader.getType() == Type.RECORD) {
+    if (reader != null && (reader.getType() == Type.RECORD || reader.getType() == Type.UNION)) {
       final Class<?> clazz = SpecificData.get().getClass(reader);
       if (clazz != null) {
         return getForClass(clazz);
@@ -209,7 +238,7 @@ public class SpecificData extends GenericData {
 
   /**
    * Retrieve the current value of the custom-coders feature flag. Defaults to
-   * <code>true</code>, but this default can be overridden using the system
+   * <code>false</code>, but this default can be overridden using the system
    * property <code>org.apache.avro.specific.use_custom_coders</code>, and can be
    * set dynamically by {@link SpecificData#useCustomCoders()}. See <a
    * href="https://avro.apache.org/docs/current/gettingstartedjava.html#Beta+feature:+Generating+faster+code"Getting
@@ -253,12 +282,110 @@ public class SpecificData extends GenericData {
   }.getClass());
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
 
+  /**
+   * Utility to mangle the fully qualified class name into a valid symbol.
+   */
+  public static String mangleFullyQualified(String fullName) {
+    int lastDot = fullName.lastIndexOf('.');
+
+    if (lastDot < 0) {
+      return mangleTypeIdentifier(fullName);
+    } else {
+      String namespace = fullName.substring(0, lastDot);
+      String typeName = fullName.substring(lastDot + 1);
+
+      return mangle(namespace) + "." + mangleTypeIdentifier(typeName);
+    }
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words.
+   */
+  public static String mangle(String word) {
+    return mangle(word, false);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words.
+   */
+  public static String mangle(String word, boolean isError) {
+    return mangle(word, isError ? ERROR_RESERVED_WORDS : RESERVED_WORDS);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words in type
+   * identifiers.
+   */
+  public static String mangleTypeIdentifier(String word) {
+    return mangleTypeIdentifier(word, false);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words in type
+   * identifiers.
+   */
+  public static String mangleTypeIdentifier(String word, boolean isError) {
+    return mangle(word, isError ? ERROR_RESERVED_WORDS : TYPE_IDENTIFIER_RESERVED_WORDS);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words.
+   */
+  public static String mangle(String word, Set<String> reservedWords) {
+    return mangle(word, reservedWords, false);
+  }
+
+  public static String mangleMethod(String word, boolean isError) {
+    return mangle(word, isError ? ERROR_RESERVED_WORDS : ACCESSOR_MUTATOR_RESERVED_WORDS, true);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words.
+   */
+  public static String mangle(String word, Set<String> reservedWords, boolean isMethod) {
+    if (isBlank(word)) {
+      return word;
+    }
+    if (word.contains(".")) {
+      // If the 'word' is really a full path of a class we must mangle just the
+      String[] packageWords = word.split("\\.");
+      String[] newPackageWords = new String[packageWords.length];
+
+      for (int i = 0; i < packageWords.length; i++) {
+        String oldName = packageWords[i];
+        newPackageWords[i] = mangle(oldName, reservedWords, false);
+      }
+
+      return String.join(".", newPackageWords);
+    }
+    if (reservedWords.contains(word) || (isMethod && reservedWords
+        .contains(Character.toLowerCase(word.charAt(0)) + ((word.length() > 1) ? word.substring(1) : "")))) {
+      return word + "$";
+    }
+    return word;
+  }
+
   /** Undoes mangling for reserved words. */
   protected static String unmangle(String word) {
     while (word.endsWith("$")) {
       word = word.substring(0, word.length() - 1);
     }
     return word;
+  }
+
+  private static boolean isBlank(CharSequence cs) {
+    int strLen = cs == null ? 0 : cs.length();
+    if (strLen == 0) {
+      return true;
+    } else {
+      for (int i = 0; i < strLen; ++i) {
+        if (!Character.isWhitespace(cs.charAt(i))) {
+          return false;
+        }
+      }
+
+      return true;
+    }
   }
 
   /** Return the class that implements a schema, or null if none exists. */
@@ -425,7 +552,7 @@ public class SpecificData extends GenericData {
     if (namespace == null || "".equals(namespace))
       return name;
     String dot = namespace.endsWith("$") ? "" : "."; // back-compatibly handle $
-    return namespace + dot + name;
+    return mangle(namespace) + dot + mangleTypeIdentifier(name);
   }
 
   // cache for schemas created from Class objects. Use ClassValue to avoid
@@ -480,6 +607,8 @@ public class SpecificData extends GenericData {
         if (!(key instanceof Class && CharSequence.class.isAssignableFrom((Class<?>) key)))
           throw new AvroTypeException("Map key class not CharSequence: " + SchemaUtil.describe(key));
         return Schema.createMap(createSchema(value, names));
+      } else if (Optional.class.isAssignableFrom(raw)) {
+        return Schema.createUnion(Schema.create(Schema.Type.NULL), createSchema(params[0], names));
       } else {
         return createSchema(raw, names);
       }

@@ -15,19 +15,31 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::{
-    schema::{Aliases, Documentation},
-    AvroResult, Error,
-};
+use crate::{schema::Documentation, AvroResult, Error};
 use serde_json::{Map, Value};
-use std::{convert::TryFrom, i64, io::Read, sync::Once};
+use std::{
+    i64,
+    io::Read,
+    sync::{
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+        Once,
+    },
+};
 
 /// Maximum number of bytes that can be allocated when decoding
 /// Avro-encoded values. This is a protection against ill-formed
 /// data, whose length field might be interpreted as enormous.
 /// See max_allocation_bytes to change this limit.
-pub static mut MAX_ALLOCATION_BYTES: usize = 512 * 1024 * 1024;
+pub const DEFAULT_MAX_ALLOCATION_BYTES: usize = 512 * 1024 * 1024;
+static MAX_ALLOCATION_BYTES: AtomicUsize = AtomicUsize::new(DEFAULT_MAX_ALLOCATION_BYTES);
 static MAX_ALLOCATION_BYTES_ONCE: Once = Once::new();
+
+/// Whether to set serialization & deserialization traits
+/// as `human_readable` or not.
+/// See [set_serde_human_readable] to change this value.
+// crate-visible for testing
+pub(crate) static SERDE_HUMAN_READABLE: AtomicBool = AtomicBool::new(true);
+static SERDE_HUMAN_READABLE_ONCE: Once = Once::new();
 
 pub trait MapHelper {
     fn string(&self, key: &str) -> Option<String>;
@@ -40,7 +52,7 @@ pub trait MapHelper {
         self.string("doc")
     }
 
-    fn aliases(&self) -> Aliases;
+    fn aliases(&self) -> Option<Vec<String>>;
 }
 
 impl MapHelper for Map<String, Value> {
@@ -50,7 +62,7 @@ impl MapHelper for Map<String, Value> {
             .map(|v| v.to_string())
     }
 
-    fn aliases(&self) -> Aliases {
+    fn aliases(&self) -> Option<Vec<String>> {
         // FIXME no warning when aliases aren't a json array of json strings
         self.get("aliases")
             .and_then(|aliases| aliases.as_array())
@@ -134,16 +146,14 @@ fn decode_variable<R: Read>(reader: &mut R) -> AvroResult<u64> {
 /// to set the limit either when calling this method, or when decoding for
 /// the first time.
 pub fn max_allocation_bytes(num_bytes: usize) -> usize {
-    unsafe {
-        MAX_ALLOCATION_BYTES_ONCE.call_once(|| {
-            MAX_ALLOCATION_BYTES = num_bytes;
-        });
-        MAX_ALLOCATION_BYTES
-    }
+    MAX_ALLOCATION_BYTES_ONCE.call_once(|| {
+        MAX_ALLOCATION_BYTES.store(num_bytes, Ordering::Release);
+    });
+    MAX_ALLOCATION_BYTES.load(Ordering::Acquire)
 }
 
 pub fn safe_len(len: usize) -> AvroResult<usize> {
-    let max_bytes = max_allocation_bytes(512 * 1024 * 1024);
+    let max_bytes = max_allocation_bytes(DEFAULT_MAX_ALLOCATION_BYTES);
 
     if len <= max_bytes {
         Ok(len)
@@ -155,9 +165,29 @@ pub fn safe_len(len: usize) -> AvroResult<usize> {
     }
 }
 
+/// Set whether serializing/deserializing is marked as human readable in serde traits.
+/// This will adjust the return value of `is_human_readable()` for both.
+/// Once called, the value cannot be changed.
+///
+/// **NOTE** This function must be called before serializing/deserializing **any** data. The
+/// library leverages [`std::sync::Once`](https://doc.rust-lang.org/std/sync/struct.Once.html)
+/// to set the limit either when calling this method, or when decoding for
+/// the first time.
+pub fn set_serde_human_readable(human_readable: bool) {
+    SERDE_HUMAN_READABLE_ONCE.call_once(|| {
+        SERDE_HUMAN_READABLE.store(human_readable, Ordering::Release);
+    });
+}
+
+pub(crate) fn is_human_readable() -> bool {
+    SERDE_HUMAN_READABLE.load(Ordering::Acquire)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use apache_avro_test_helper::TestResult;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_zigzag() {
@@ -250,8 +280,10 @@ mod tests {
     }
 
     #[test]
-    fn test_safe_len() {
-        assert_eq!(42usize, safe_len(42usize).unwrap());
+    fn test_safe_len() -> TestResult {
+        assert_eq!(42usize, safe_len(42usize)?);
         assert!(safe_len(1024 * 1024 * 1024).is_err());
+
+        Ok(())
     }
 }

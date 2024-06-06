@@ -23,7 +23,7 @@ struct InteropMessage;
 
 impl AvroSchema for InteropMessage {
     fn get_schema() -> apache_avro::Schema {
-        let schema = std::fs::read_to_string(format!("{}/test_schema.avsc", RESOURCES_FOLDER))
+        let schema = std::fs::read_to_string(format!("{RESOURCES_FOLDER}/test_schema.avsc"))
             .expect("File should exist with schema inside");
         apache_avro::Schema::parse_str(schema.as_str())
             .expect("File should exist with schema inside")
@@ -49,12 +49,27 @@ impl From<InteropMessage> for Value {
 }
 
 fn main() {
-    let file_message = std::fs::read(format!("{}/test_message.bin", RESOURCES_FOLDER))
-        .expect("File with single object not found or error occurred while reading");
-    let mut generated_encoding: Vec<u8> = Vec::new();
-    apache_avro::SingleObjectWriter::<InteropMessage>::with_capacity(1024)
-        .expect("resolve expected")
-        .write_value(InteropMessage, &mut generated_encoding)
-        .expect("Should encode");
-    assert_eq!(file_message, generated_encoding)
+    let single_object = std::fs::read(format!("{RESOURCES_FOLDER}/test_message.bin"))
+        .expect("File with single object not found or error occurred while reading it.");
+    test_write(&single_object);
+    test_read(single_object);
+}
+
+fn test_write(expected: &[u8]) {
+    let mut encoded: Vec<u8> = Vec::new();
+    apache_avro::SpecificSingleObjectWriter::<InteropMessage>::with_capacity(1024)
+        .expect("Resolving failed")
+        .write_value(InteropMessage, &mut encoded)
+        .expect("Encoding failed");
+    assert_eq!(expected, &encoded)
+}
+
+fn test_read(encoded: Vec<u8>) {
+    let mut encoded = &encoded[..];
+    let read_message = apache_avro::GenericSingleObjectReader::new(InteropMessage::get_schema())
+        .expect("Resolving failed")
+        .read_value(&mut encoded)
+        .expect("Decoding failed");
+    let expected_value: Value = InteropMessage.into();
+    assert_eq!(expected_value, read_message)
 }

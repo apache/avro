@@ -17,7 +17,8 @@
  */
 package org.apache.avro.tool;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -39,12 +40,10 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericDatumReader;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 @SuppressWarnings("deprecation")
 public class TestTextFileTools {
@@ -55,14 +54,14 @@ public class TestTextFileTools {
   private static ByteBuffer[] lines;
   static Schema schema;
 
-  @ClassRule
-  public static TemporaryFolder DIR = new TemporaryFolder();
+  @TempDir
+  public static File DIR;
 
-  @BeforeClass
+  @BeforeAll
   public static void writeRandomFile() throws IOException {
     schema = Schema.create(Type.BYTES);
     lines = new ByteBuffer[COUNT];
-    linesFile = new File(DIR.getRoot(), "random.lines");
+    linesFile = new File(DIR, "random.lines");
 
     OutputStream out = new BufferedOutputStream(new FileOutputStream(linesFile));
     Random rand = new Random();
@@ -83,7 +82,7 @@ public class TestTextFileTools {
   }
 
   private void fromText(String name, String... args) throws Exception {
-    File avroFile = new File(DIR.getRoot(), name + ".avro");
+    File avroFile = new File(DIR, name + ".avro");
 
     ArrayList<String> arglist = new ArrayList<>(Arrays.asList(args));
     arglist.add(linesFile.toString());
@@ -104,13 +103,13 @@ public class TestTextFileTools {
   }
 
   @Test
-  public void testFromText() throws Exception {
+  void fromText() throws Exception {
     fromText("null", "--codec", "null");
     fromText("deflate", "--codec", "deflate");
     fromText("snappy", "--codec", "snappy");
   }
 
-  @AfterClass
+  @AfterAll
   public static void testToText() throws Exception {
     toText("null");
     toText("deflate");
@@ -118,8 +117,8 @@ public class TestTextFileTools {
   }
 
   private static void toText(String name) throws Exception {
-    File avroFile = new File(DIR.getRoot(), name + ".avro");
-    File outFile = new File(DIR.getRoot(), name + ".lines");
+    File avroFile = new File(DIR, name + ".avro");
+    File outFile = new File(DIR, name + ".lines");
 
     ArrayList<String> arglist = new ArrayList<>();
     arglist.add(avroFile.toString());
@@ -140,11 +139,11 @@ public class TestTextFileTools {
   }
 
   @Test
-  public void testDefaultCodec() throws Exception {
+  void defaultCodec() throws Exception {
     // The default codec for fromtext is deflate
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintStream err = new PrintStream(baos);
     new FromTextTool().run(null, null, err, Collections.emptyList());
-    Assert.assertTrue(baos.toString().contains("Compression codec (default: deflate)"));
+    assertTrue(baos.toString().contains("Compression codec (default: deflate)"));
   }
 }

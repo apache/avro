@@ -23,7 +23,7 @@ import org.apache.avro.grpc.test.Kind;
 import org.apache.avro.grpc.test.MD5;
 import org.apache.avro.grpc.test.TestRecord;
 import org.apache.avro.grpc.test.TestService;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,7 +35,7 @@ import java.util.Random;
 
 import io.grpc.Drainable;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestAvroMarshaller {
   private final TestRecord record = TestRecord.newBuilder().setName("foo").setKind(Kind.FOO)
@@ -60,7 +60,7 @@ public class TestAvroMarshaller {
   }
 
   @Test
-  public void testAvroRequestReadPartialAndDrain() throws IOException {
+  void avroRequestReadPartialAndDrain() throws IOException {
     AvroRequestMarshaller requestMarshaller = new AvroRequestMarshaller(message);
     InputStream requestInputStream = requestMarshaller.stream(new Object[] { record });
     ByteArrayOutputStream requestOutputStream = new ByteArrayOutputStream();
@@ -72,7 +72,7 @@ public class TestAvroMarshaller {
   }
 
   @Test
-  public void testAvroResponseReadPartialAndDrain() throws IOException {
+  void avroResponseReadPartialAndDrain() throws IOException {
     AvroResponseMarshaller responseMarshaller = new AvroResponseMarshaller(message);
     InputStream responseInputStream = responseMarshaller.stream(record);
     ByteArrayOutputStream responseOutputStream = new ByteArrayOutputStream();

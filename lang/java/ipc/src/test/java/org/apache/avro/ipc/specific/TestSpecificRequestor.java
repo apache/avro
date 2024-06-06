@@ -17,7 +17,7 @@
  */
 package org.apache.avro.ipc.specific;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.net.URL;
@@ -25,8 +25,8 @@ import java.net.URL;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.ipc.HttpTransceiver;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class TestSpecificRequestor {
   public interface SampleSpecificProtocol {
@@ -36,7 +36,7 @@ public class TestSpecificRequestor {
 
   static Object proxy;
 
-  @BeforeClass
+  @BeforeAll
   public static void initializeProxy() throws Exception {
     HttpTransceiver client = new HttpTransceiver(new URL("http://localhost"));
     SpecificRequestor requestor = new SpecificRequestor(SampleSpecificProtocol.class, client);
@@ -44,7 +44,7 @@ public class TestSpecificRequestor {
   }
 
   @Test
-  public void testHashCode() throws IOException {
+  void testHashCode() throws IOException {
     try {
       proxy.hashCode();
     } catch (AvroRuntimeException e) {
@@ -53,7 +53,7 @@ public class TestSpecificRequestor {
   }
 
   @Test
-  public void testEquals() throws IOException {
+  void testEquals() throws IOException {
     try {
       proxy.equals(proxy);
     } catch (AvroRuntimeException e) {
@@ -62,7 +62,7 @@ public class TestSpecificRequestor {
   }
 
   @Test
-  public void testToString() throws IOException {
+  void testToString() throws IOException {
     try {
       proxy.toString();
     } catch (AvroRuntimeException e) {

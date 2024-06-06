@@ -18,6 +18,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -555,7 +556,6 @@ namespace Avro.Test.File
         /// position in stream
         /// </summary>
         /// <param name="schemaStr"></param>
-        /// <param name="value"></param>
         /// <param name="codecType"></param>
         [TestCaseSource(nameof(TestPartialReadSource))]
         public void TestPartialRead(string schemaStr, Codec.Type codecType, int position, int expectedRecords)

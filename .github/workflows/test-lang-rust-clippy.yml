@@ -19,12 +19,18 @@ name: Rust Clippy Check
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths:
       - .github/workflows/test-lang-rust-clippy.yml
       - lang/rust/**
+
+permissions:
+  contents: read
+
+env:
+  RUSTFLAGS: -Dwarnings
 
 defaults:
   run:
@@ -37,14 +43,15 @@ concurrency:
 jobs:
   clippy_check:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - 'stable'
+          - '1.70.0'  # MSRV
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: stable
+          toolchain: ${{ matrix.rust }}
           components: clippy
-          override: true
-      - uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --manifest-path lang/rust/Cargo.toml  --all-features --all-targets -- -Dclippy::all -Dunused_imports
+      - run: cargo clippy --all-features --all-targets -- -Dclippy::all -Dunused_imports

@@ -23,11 +23,12 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecordBase;
-import org.junit.Assert;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 abstract class AbstractSpecificRecordTest {
 
@@ -46,14 +47,14 @@ abstract class AbstractSpecificRecordTest {
       SpecificDatumWriter<T> datumWriter, SpecificDatumReader<T> datumReader) {
     final byte[] serialized = serialize(original, datumWriter);
     final T copy = deserialize(serialized, datumReader);
-    Assert.assertEquals(original, copy);
+    assertEquals(original, copy);
     // In addition to equals() tested above, make sure the other methods that use
     // SpecificData work as intended
     // compareTo() throws an exception for maps, otherwise we would have tested it
     // here
     // Assert.assertEquals(0, original.compareTo(copy));
-    Assert.assertEquals(original.hashCode(), copy.hashCode());
-    Assert.assertEquals(original.toString(), copy.toString());
+    assertEquals(original.hashCode(), copy.hashCode());
+    assertEquals(original.toString(), copy.toString());
   }
 
   private <T extends SpecificRecordBase> byte[] serialize(T object, SpecificDatumWriter<T> datumWriter) {

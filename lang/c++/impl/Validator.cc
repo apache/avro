@@ -71,7 +71,7 @@ bool Validator::countingSetup() {
 
 void Validator::countingAdvance() {
     if (countingSetup()) {
-        auto index = (compoundStack_.back().pos)++;
+        size_t index = (compoundStack_.back().pos)++;
         const NodePtr &node = compoundStack_.back().node;
 
         if (index < node->leaves()) {
@@ -105,9 +105,8 @@ void Validator::unionAdvance() {
             setupOperation(node->leafAt(static_cast<int>(count_)));
         } else {
             throw Exception(
-                boost::format("Union selection out of range, got %1%,"
-                              " expecting 0-%2%")
-                % count_ % (node->leaves() - 1));
+                "Union selection out of range, got {}, expecting 0-{}",
+                count_, node->leaves() - 1);
         }
     }
 }

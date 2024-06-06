@@ -22,6 +22,7 @@ use apache_avro::{
 };
 use std::{
     collections::HashMap,
+    error::Error,
     io::{BufWriter, Write},
 };
 use strum::IntoEnumIterator;
@@ -74,7 +75,7 @@ fn create_datum(schema: &Schema) -> Record {
     datum
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<(), Box<dyn Error>> {
     let schema_str = std::fs::read_to_string("../../share/test/schemas/interop.avsc")
         .expect("Unable to read the interop Avro schema");
     let schema = Schema::parse_str(schema_str.as_str())?;
@@ -86,10 +87,10 @@ fn main() -> anyhow::Result<()> {
         let suffix = if codec_name == "null" {
             "".to_owned()
         } else {
-            format!("_{}", codec_name)
+            format!("_{codec_name}")
         };
 
-        let file_name = format!("{}/rust{}.avro", data_folder, suffix);
+        let file_name = format!("{data_folder}/rust{suffix}.avro");
         let output_file = std::fs::File::create(&file_name)?;
 
         let mut writer = Writer::with_codec(&schema, BufWriter::new(output_file), codec);
@@ -98,13 +99,13 @@ fn main() -> anyhow::Result<()> {
         let datum = create_datum(&schema);
         writer.append(datum)?;
         writer.flush()?;
-        println!("Wrote {}", file_name);
+        println!("Wrote {file_name}");
     }
 
     Ok(())
 }
 
-fn write_user_metadata<W: Write>(writer: &mut Writer<BufWriter<W>>) -> anyhow::Result<()> {
+fn write_user_metadata<W: Write>(writer: &mut Writer<BufWriter<W>>) -> Result<(), Box<dyn Error>> {
     writer.add_user_metadata("user_metadata".to_string(), b"someByteArray")?;
 
     Ok(())

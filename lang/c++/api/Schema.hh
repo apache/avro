@@ -20,6 +20,7 @@
 #define avro_Schema_hh__
 
 #include "Config.hh"
+#include "CustomAttributes.hh"
 #include "NodeImpl.hh"
 #include <string>
 
@@ -100,6 +101,9 @@ class AVRO_DECL RecordSchema : public Schema {
 public:
     explicit RecordSchema(const std::string &name);
     void addField(const std::string &name, const Schema &fieldSchema);
+    // Add a field with custom attributes
+    void addField(const std::string &name, const Schema &fieldSchema,
+                  const CustomAttributes &customAttributes);
 
     std::string getDoc() const;
     void setDoc(const std::string &);

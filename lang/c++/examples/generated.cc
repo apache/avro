@@ -16,14 +16,11 @@
  * limitations under the License.
  */
 
-#include "cpx.hh"
-#include "avro/Encoder.hh"
 #include "avro/Decoder.hh"
+#include "avro/Encoder.hh"
+#include "cpx.hh"
 
-
-int
-main()
-{
+int main() {
     std::unique_ptr<avro::OutputStream> out = avro::memoryOutputStream();
     avro::EncoderPtr e = avro::binaryEncoder();
     e->init(*out);
@@ -41,4 +38,3 @@ main()
     std::cout << '(' << c2.re << ", " << c2.im << ')' << std::endl;
     return 0;
 }
-

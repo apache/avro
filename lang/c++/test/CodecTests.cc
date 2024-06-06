@@ -34,7 +34,7 @@
 
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/random/mersenne_twister.hpp>
-#include <boost/test/included/unit_test_framework.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <boost/test/parameterized_test.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -963,6 +963,11 @@ static const TestData data[] = {
     {R"({"type":"map", "values": "boolean"})",
      "{c1sK5Bc2sK5BsK5B}", 2},
 
+    // Record with no fields
+    {"{\"type\":\"record\",\"name\":\"empty\",\"fields\":[]}",
+     "", 1},
+
+    // Single-field records
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f\", \"type\":\"boolean\"}]}",
      "B", 1},
@@ -1002,6 +1007,16 @@ static const TestData data[] = {
      "{\"name\":\"f7\", \"type\":\"bytes\"}]}",
      "NBILFDS10b25", 1},
     // record of records
+    {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+     "{\"name\":\"f1\",\"type\":\"boolean\"},"
+     "{\"name\":\"f2\", \"type\":{\"type\":\"record\","
+     "\"name\":\"inner\",\"fields\":[]}}]}",
+     "B", 1},
+    {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+     "{\"name\":\"f1\",\"type\":\"boolean\"},"
+     "{\"name\":\"f2\", \"type\":{\"type\":\"array\","
+     "\"items\":\"r\"}}]}",
+     "B[]", 1},
     {"{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
      "{\"name\":\"f1\", \"type\":{\"type\":\"record\", "
      "\"name\":\"inner\", \"fields\":["
@@ -1264,249 +1279,511 @@ static const TestData3 data3[] = {
 
     {R"(["boolean", "int"])", "U1I", R"(["boolean", "long"])", "U1L", 1},
     {R"(["boolean", "int"])", "U1I", R"(["long", "boolean"])", "U0L", 1},
+
+    // Aliases
+    {R"({"type": "record", "name": "r", "fields": [
+        {"name": "f0", "type": "int"},
+        {"name": "f1", "type": "boolean"},
+        {"name": "f2", "type": "double"}]})",
+     "IBD",
+     R"({"type":"record", "name":"s", "aliases":["r"], "fields":[
+        {"name":"g0", "type":"int", "aliases":["f0"]},
+        {"name":"g1", "type":"boolean", "aliases":["f1"]},
+        {"name":"f2", "type":"double", "aliases":["g2"]}]})",
+     "IBD",
+     1},
+    {R"({"type": "record", "name": "r", "namespace": "n", "fields": [
+     {"name": "f0", "type": "int"}]})",
+     "I",
+     R"({"type": "record", "name": "s", "namespace": "n2", "aliases": ["t", "n.r"], "fields":[
+       {"name": "f0", "type": "int"}]})",
+     "I",
+     1},
+    {R"({"type": "enum", "name": "e", "symbols": ["a", "b"]})",
+     "e1",
+     R"({"type": "enum", "name": "f", "aliases": ["e"], "symbols":["a", "b", "c"]})",
+     "e1",
+     1},
+    {R"({"type": "enum", "name": "e", "namespace": "n", "symbols": ["a", "b"]})",
+     "e1",
+     R"({"type": "enum", "name": "f", "namespace": "n2", "aliases": ["g", "n.e"], "symbols": ["a", "b"]})",
+     "e1",
+     1},
+    {R"({"type": "fixed", "name": "f", "size": 8})",
+     "f8",
+     R"({"type": "fixed", "name": "g", "aliases": ["f"], "size": 8})",
+     "f8",
+     1},
+    {R"({"type": "fixed", "name": "f", "namespace": "n", "size": 8})",
+     "f8",
+     R"({"type": "fixed", "name": "g", "namespace": "n2", "aliases": ["h", "n.f"], "size": 8})",
+     "f8",
+     1},
 };
 
 static const TestData4 data4[] = {
     // Projection
-    {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f1\", \"type\":\"string\"},"
-     "{\"name\":\"f2\", \"type\":\"string\"},"
-     "{\"name\":\"f3\", \"type\":\"int\"}]}",
-     "S10S10IS10S10I",
-     {"s1", "s2", "100", "t1", "t2", "200", nullptr},
-     "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f1\", \"type\":\"string\" },"
-     "{\"name\":\"f2\", \"type\":\"string\"}]}",
-     "RS10S10RS10S10",
-     {"s1", "s2", "t1", "t2", nullptr},
-     1,
-     2},
+    {
+        R"({
+            "type": "record",
+            "name": "r",
+            "fields": [
+                {"name": "f1", "type": "string"},
+                {"name": "f2", "type": "string"},
+                {"name": "f3", "type": "int"}
+            ]
+        })",
+        "S10S10IS10S10I",
+        {"s1", "s2", "100", "t1", "t2", "200", nullptr},
+        R"({
+            "type": "record",
+            "name": "r",
+            "fields": [
+                {"name": "f1", "type": "string"},
+                {"name": "f2", "type": "string"}
+            ]
+        })",
+        "RS10S10RS10S10",
+        {"s1", "s2", "t1", "t2", nullptr},
+        1,
+        2},
 
     // Reordered fields
-    {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f1\", \"type\":\"int\"},"
-     "{\"name\":\"f2\", \"type\":\"string\"}]}",
-     "IS10",
-     {"10", "hello", nullptr},
-     "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f2\", \"type\":\"string\" },"
-     "{\"name\":\"f1\", \"type\":\"long\"}]}",
-     "RLS10",
-     {"10", "hello", nullptr},
-     1,
-     1},
+    {
+        R"({
+            "type": "record",
+            "name": "r",
+            "fields": [
+                {"name": "f1", "type": "int"},
+                {"name": "f2", "type": "string"}
+            ]
+        })",
+        "IS10",
+        {"10", "hello", nullptr},
+        R"({
+            "type": "record",
+            "name": "r",
+            "fields": [
+                {"name": "f2", "type": "string" },
+                {"name": "f1", "type": "long"}
+            ]
+        })",
+        "RLS10",
+        {"10", "hello", nullptr},
+        1,
+        1},
 
     // Default values
-    {R"({"type":"record","name":"r","fields":[]})", "", {nullptr}, "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-                                                                   "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]}",
-     "RI",
-     {"100", nullptr},
-     1,
-     1},
+    {
+        R"({"type": "record", "name": "r", "fields": []})",
+        "",
+        {nullptr},
+        R"({
+            "type": "record",
+            "name": "r",
+            "fields": [{"name": "f", "type": "int", "default": 100}]
+        })",
+        "RI",
+        {"100", nullptr},
+        1,
+        1},
 
-    {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f2\", \"type\":\"int\"}]}",
+    {R"({"type": "record", "name": "r", "fields": [{"name": "f2", "type": "int"}]})",
      "I",
      {"10", nullptr},
-     "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
-     "{\"name\":\"f2\", \"type\":\"int\"}]}",
+     R"({
+            "type": "record",
+            "name": "r",
+            "fields": [
+                {"name": "f1", "type": "int", "default": 101},
+                {"name": "f2", "type": "int"}
+            ]
+        })",
      "RII",
      {"10", "101", nullptr},
      1,
      1},
 
-    {"{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
-     "{\"name\": \"g1\", "
-     "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
-     "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
-     "{\"name\": \"g2\", \"type\": \"long\"}]}",
-     "IL",
-     {"10", "11", nullptr},
-     "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
-     "{\"name\": \"g1\", "
-     "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
-     "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
-     "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
-     "{\"name\": \"g2\", \"type\": \"long\"}]}}",
-     "RRIIL",
-     {"10", "101", "11", nullptr},
-     1,
-     1},
+    {
+        R"({
+            "type": "record",
+            "name": "outer",
+            "fields": [
+                {
+                    "name": "g1",
+                    "type": {
+                        "type": "record",
+                        "name": "inner",
+                        "fields": [{"name": "f2", "type": "int"}]
+                    }
+                },
+                {"name": "g2", "type": "long"}
+            ]
+        })",
+        "IL",
+        {"10", "11", nullptr},
+        R"({
+            "type": "record",
+            "name": "outer",
+            "fields": [
+                {
+                    "name": "g1",
+                    "type": {
+                        "type": "record",
+                        "name": "inner",
+                        "fields": [
+                            {
+                                "name": "f1",
+                                "type": "int",
+                                "default": 101
+                            },
+                            {"name": "f2", "type": "int"}
+                        ]
+                    }
+                },
+                {"name": "g2", "type": "long"}
+            ]
+        })",
+        "RRIIL",
+        {"10", "101", "11", nullptr},
+        1,
+        1},
 
     // Default value for a record.
-    {"{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
-     "{\"name\": \"g1\", "
-     "\"type\":{\"type\":\"record\",\"name\":\"inner1\",\"fields\":["
-     "{\"name\":\"f1\", \"type\":\"long\" },"
-     "{\"name\":\"f2\", \"type\":\"int\"}] } }, "
-     "{\"name\": \"g2\", \"type\": \"long\"}]}",
-     "LIL",
-     {"10", "12", "13", nullptr},
-     "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
-     "{\"name\": \"g1\", "
-     "\"type\":{\"type\":\"record\",\"name\":\"inner1\",\"fields\":["
-     "{\"name\":\"f1\", \"type\":\"long\" },"
-     "{\"name\":\"f2\", \"type\":\"int\"}] } }, "
-     "{\"name\": \"g2\", \"type\": \"long\"},"
-     "{\"name\": \"g3\", "
-     "\"type\":{\"type\":\"record\",\"name\":\"inner2\",\"fields\":["
-     "{\"name\":\"f1\", \"type\":\"long\" },"
-     "{\"name\":\"f2\", \"type\":\"int\"}] }, "
-     "\"default\": { \"f1\": 15, \"f2\": 101 } }] } ",
-     "RRLILRLI",
-     {"10", "12", "13", "15", "101", nullptr},
-     1,
-     1},
+    {
+        R"({
+            "type": "record",
+            "name": "outer",
+            "fields": [
+                {
+                    "name": "g1",
+                    "type": {
+                        "type": "record",
+                        "name": "inner1",
+                        "fields": [
+                            {"name": "f1", "type": "long"},
+                            {"name": "f2", "type": "int"}
+                        ]
+                    }
+                },
+                {"name": "g2", "type": "long"}
+            ]
+        })",
+        "LIL",
+        {"10", "12", "13", nullptr},
+        R"({
+            "type": "record",
+            "name": "outer",
+            "fields": [
+                {
+                    "name": "g1",
+                    "type": {
+                        "type": "record",
+                        "name": "inner1",
+                        "fields": [
+                            {"name": "f1", "type": "long"},
+                            {"name": "f2", "type": "int"}
+                        ]
+                    }
+                },
+                {"name": "g2", "type": "long"},
+                {
+                    "name": "g3",
+                    "type": {
+                        "type": "record",
+                        "name": "inner2",
+                        "fields": [
+                            {"name": "f1", "type": "long"},
+                            {"name": "f2", "type": "int"}
+                        ]
+                    },
+                    "default": {"f1": 15, "f2": 101}
+                }
+            ]
+        })",
+        "RRLILRLI",
+        {"10", "12", "13", "15", "101", nullptr},
+        1,
+        1},
 
-    {"{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
-     "{\"name\": \"g1\", "
-     "\"type\":{\"type\":\"record\",\"name\":\"inner1\",\"fields\":["
-     "{\"name\":\"f1\", \"type\":\"long\" },"
-     "{\"name\":\"f2\", \"type\":\"int\"}] } }, "
-     "{\"name\": \"g2\", \"type\": \"long\"}]}",
-     "LIL",
-     {"10", "12", "13", nullptr},
-     "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
-     "{\"name\": \"g1\", "
-     "\"type\":{\"type\":\"record\",\"name\":\"inner1\",\"fields\":["
-     "{\"name\":\"f1\", \"type\":\"long\" },"
-     "{\"name\":\"f2\", \"type\":\"int\"}] } }, "
-     "{\"name\": \"g2\", \"type\": \"long\"},"
-     "{\"name\": \"g3\", "
-     "\"type\":\"inner1\", "
-     "\"default\": { \"f1\": 15, \"f2\": 101 } }] } ",
-     "RRLILRLI",
-     {"10", "12", "13", "15", "101", nullptr},
-     1,
-     1},
+    {
+        R"({
+            "type": "record",
+            "name": "outer",
+            "fields": [
+                {
+                    "name": "g1",
+                    "type": {
+                        "type": "record",
+                        "name": "inner1",
+                        "fields": [
+                            {"name": "f1", "type": "long"},
+                            {"name": "f2", "type": "int"}
+                        ]
+                    }
+                },
+                {"name": "g2", "type": "long"}
+            ]
+        })",
+        "LIL",
+        {"10", "12", "13", nullptr},
+        R"({
+            "type": "record",
+            "name": "outer",
+            "fields": [
+                {
+                    "name": "g1",
+                    "type": {
+                        "type": "record",
+                        "name": "inner1",
+                        "fields": [
+                            {"name": "f1", "type": "long"},
+                            {"name": "f2", "type": "int"}
+                        ]
+                    }
+                },
+                {"name": "g2", "type": "long"},
+                {
+                    "name": "g3",
+                    "type": "inner1",
+                    "default": {"f1": 15, "f2": 101}
+                }
+            ]
+        })",
+        "RRLILRLI",
+        {"10", "12", "13", "15", "101", nullptr},
+        1,
+        1},
 
-    {R"({"type":"record","name":"r","fields":[]})", "", {nullptr}, "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-                                                                   "{\"name\":\"f\", \"type\":{ \"type\": \"array\", \"items\": \"int\" },"
-                                                                   "\"default\": [100]}]}",
-     "[c1sI]",
-     {"100", nullptr},
-     1,
-     1},
+    // TODO mkmkme HERE
+    {
+        R"({
+            "type": "record",
+            "name": "r",
+            "fields": []
+        })",
+        "",
+        {nullptr},
+        R"({
+            "type": "record",
+            "name": "r",
+            "fields": [
+                {
+                    "name": "f",
+                    "type": {"type": "array", "items": "int"},
+                    "default": [100]
+                }
+            ]
+        })",
+        "[c1sI]",
+        {"100", nullptr},
+        1,
+        1},
 
-    {"{ \"type\": \"array\", \"items\": {\"type\":\"record\","
-     "\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f0\", \"type\": \"int\"}]} }",
-     "[c1sI]",
-     {"99", nullptr},
-     "{ \"type\": \"array\", \"items\": {\"type\":\"record\","
-     "\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]} }",
-     "[Rc1sI]",
-     {"100", nullptr},
-     1,
-     1},
+    {
+        R"({
+            "type": "array",
+            "items": {
+                "type": "record",
+                "name": "r",
+                "fields": [{"name": "f0", "type": "int"}]
+            }
+        })",
+        "[c1sI]",
+        {"99", nullptr},
+        R"({
+            "type": "array",
+            "items": {
+                "type": "record",
+                "name": "r",
+                "fields": [{"name": "f", "type": "int", "default": 100}]
+            }
+        })",
+        "[Rc1sI]",
+        {"100", nullptr},
+        1,
+        1},
 
     // Record of array of record with deleted field as last field
-    {"{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
-     "{\"name\": \"g1\","
-     "\"type\":{\"type\":\"array\",\"items\":{"
-     "\"name\":\"item\",\"type\":\"record\",\"fields\":["
-     "{\"name\":\"f1\", \"type\":\"int\"},"
-     "{\"name\":\"f2\", \"type\": \"long\", \"default\": 0}]}}}]}",
-     "[c1sIL]",
-     {"10", "11", nullptr},
-     "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
-     "{\"name\": \"g1\","
-     "\"type\":{\"type\":\"array\",\"items\":{"
-     "\"name\":\"item\",\"type\":\"record\",\"fields\":["
-     "{\"name\":\"f1\", \"type\":\"int\"}]}}}]}",
-     "R[c1sI]",
-     {"10", nullptr},
-     2,
-     1},
+    {
+        R"({
+            "type": "record",
+            "name": "outer",
+            "fields":[
+                {
+                    "name": "g1",
+                    "type": {
+                        "type": "array",
+                        "items": {
+                            "name": "item",
+                            "type": "record",
+                            "fields": [
+                                {"name": "f1", "type": "int"},
+                                {"name": "f2", "type": "long", "default": 0}
+                            ]
+                        }
+                    }
+                }
+            ]
+        })",
+        "[c1sIL]",
+        {"10", "11", nullptr},
+        R"({
+            "type": "record",
+            "name": "outer",
+            "fields": [
+                {
+                    "name": "g1",
+                    "type": {
+                        "type": "array",
+                        "items": {
+                            "name": "item",
+                            "type": "record",
+                            "fields": [{"name": "f1", "type": "int"}]
+                        }
+                    }
+                }
+            ]
+        })",
+        "R[c1sI]",
+        {"10", nullptr},
+        2,
+        1},
 
     // Enum resolution
-    {R"({"type":"enum","name":"e","symbols":["x","y","z"]})",
-     "e2",
-     {nullptr},
-     R"({"type":"enum","name":"e","symbols":[ "y", "z" ]})",
-     "e1",
-     {nullptr},
-     1,
-     1},
+    {
+        R"({"type":"enum","name":"e","symbols":["x","y","z"]})",
+        "e2",
+        {nullptr},
+        R"({"type": "enum", "name": "e", "symbols": ["y", "z"]})",
+        "e1",
+        {nullptr},
+        1,
+        1},
 
-    {R"({"type":"enum","name":"e","symbols":[ "x", "y" ]})",
+    {R"({"type": "enum", "name": "e", "symbols": ["x", "y"]})",
      "e1",
      {nullptr},
-     R"({"type":"enum","name":"e","symbols":[ "y", "z" ]})",
+     R"({"type": "enum", "name": "e", "symbols": ["y", "z"]})",
      "e0",
      {nullptr},
      1,
      1},
 
     // Union
-    {"\"int\"", "I", {"100", nullptr}, R"([ "long", "int"])", "U1I", {"100", nullptr}, 1, 1},
+    {
+        R"("int")",
+        "I",
+        {"100", nullptr},
+        R"(["long", "int"])",
+        "U1I",
+        {"100", nullptr},
+        1,
+        1},
 
-    {R"([ "long", "int"])", "U1I", {"100", nullptr}, "\"int\"", "I", {"100", nullptr}, 1, 1},
-
-    // Arrray of unions
-    {R"({"type":"array", "items":[ "long", "int"]})",
-     "[c2sU1IsU1I]",
-     {"100", "100", nullptr},
-     R"({"type":"array", "items": "int"})",
-     "[c2sIsI]",
-     {"100", "100", nullptr},
-     2,
-     1},
-
-    // Map of unions
-    {R"({"type":"map", "values":[ "long", "int"]})",
-     "{c2sS10U1IsS10U1I}",
-     {"k1", "100", "k2", "100", nullptr},
-     R"({"type":"map", "values": "int"})",
-     "{c2sS10IsS10I}",
-     {"k1", "100", "k2", "100", nullptr},
-     2,
-     1},
-
-    // Union + promotion
-    {"\"int\"", "I", {"100", nullptr}, R"([ "long", "string"])", "U0L", {"100", nullptr}, 1, 1},
-
-    {R"([ "int", "string"])", "U0I", {"100", nullptr}, "\"long\"", "L", {"100", nullptr}, 1, 1},
-
-    // Record where union field is skipped.
-    {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f0\", \"type\":\"boolean\"},"
-     "{\"name\":\"f1\", \"type\":\"int\"},"
-     "{\"name\":\"f2\", \"type\":[\"int\", \"long\"]},"
-     "{\"name\":\"f3\", \"type\":\"float\"}"
-     "]}",
-     "BIU0IF",
-     {"1", "100", "121", "10.75", nullptr},
-     "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f0\", \"type\":\"boolean\"},"
-     "{\"name\":\"f1\", \"type\":\"long\"},"
-     "{\"name\":\"f3\", \"type\":\"double\"}]}",
-     "BLD",
-     {"1", "100", "10.75", nullptr},
+    {R"(["long", "int"])",
+     "U1I",
+     {"100", nullptr},
+     R"("int")",
+     "I",
+     {"100", nullptr},
      1,
      1},
+
+    // Arrray of unions
+    {
+        R"({"type": "array", "items": ["long", "int"]})",
+        "[c2sU1IsU1I]",
+        {"100", "100", nullptr},
+        R"({"type":"array", "items": "int"})",
+        "[c2sIsI]",
+        {"100", "100", nullptr},
+        2,
+        1},
+
+    // Map of unions
+    {
+        R"({"type": "map", "values": ["long", "int"]})",
+        "{c2sS10U1IsS10U1I}",
+        {"k1", "100", "k2", "100", nullptr},
+        R"({"type":"map", "values": "int"})",
+        "{c2sS10IsS10I}",
+        {"k1", "100", "k2", "100", nullptr},
+        2,
+        1},
+
+    // Union + promotion
+    {
+        R"("int")",
+        "I",
+        {"100", nullptr},
+        R"(["long", "string"])",
+        "U0L",
+        {"100", nullptr},
+        1,
+        1},
+
+    {R"(["int", "string"])",
+     "U0I",
+     {"100", nullptr},
+     R"("long")",
+     "L",
+     {"100", nullptr},
+     1,
+     1},
+
+    // Record where union field is skipped.
+    {
+        R"({
+            "type": "record",
+            "name": "r",
+            "fields": [
+                {"name": "f0", "type": "boolean"},
+                {"name": "f1", "type": "int"},
+                {"name": "f2", "type": ["int", "long"]},
+                {"name": "f3", "type": "float"}
+            ]
+        })",
+        "BIU0IF",
+        {"1", "100", "121", "10.75", nullptr},
+        R"({
+            "type": "record",
+            "name": "r",
+            "fields": [
+                {"name": "f0", "type": "boolean"},
+                {"name": "f1", "type": "long"},
+                {"name": "f3", "type": "double"}
+            ]
+        })",
+        "BLD",
+        {"1", "100", "10.75", nullptr},
+        1,
+        1},
 };
 
 static const TestData4 data4BinaryOnly[] = {
     // Arrray of unions
-    {R"({"type":"array", "items":[ "long", "int"]})",
-     "[c1sU1Ic1sU1I]",
-     {"100", "100", nullptr},
-     R"({"type":"array", "items": "int"})",
-     "[c1sIc1sI]",
-     {"100", "100", nullptr},
-     2},
+    {
+        R"({
+            "type":"array",
+            "items": ["long", "int"]
+        })",
+        "[c1sU1Ic1sU1I]",
+        {"100", "100", nullptr},
+        R"({"type":"array", "items": "int"})",
+        "[c1sIc1sI]",
+        {"100", "100", nullptr},
+        2},
 
     // Map of unions
-    {R"({"type":"map", "values":[ "long", "int"]})",
-     "{c1sS10U1Ic1sS10U1I}",
-     {"k1", "100", "k2", "100", nullptr},
-     R"({"type":"map", "values": "int"})",
-     "{c1sS10Ic1sS10I}",
-     {"k1", "100", "k2", "100", nullptr},
-     2},
+    {
+        R"({"type":"map", "values":[ "long", "int"]})",
+        "{c1sS10U1Ic1sS10U1I}",
+        {"k1", "100", "k2", "100", nullptr},
+        R"({"type":"map", "values": "int"})",
+        "{c1sS10Ic1sS10I}",
+        {"k1", "100", "k2", "100", nullptr},
+        2},
 };
 
 #define COUNTOF(x) sizeof(x) / sizeof(x[0])

@@ -19,9 +19,9 @@ use crate::{
     schema::{Name, SchemaKind},
     types::ValueKind,
 };
-use std::fmt;
+use std::{error::Error as _, fmt};
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error)]
 pub enum Error {
     #[error("Bad Snappy CRC32; expected {expected:x} but got {actual:x}")]
     SnappyCrc32 { expected: u32, actual: u32 },
@@ -46,6 +46,9 @@ pub enum Error {
 
     #[error("Invalid utf-8 string")]
     ConvertToUtf8(#[source] std::string::FromUtf8Error),
+
+    #[error("Invalid utf-8 string")]
+    ConvertToUtf8Error(#[source] std::str::Utf8Error),
 
     /// Describes errors happened while validating Avro data.
     #[error("Value does not match schema")]
@@ -86,6 +89,12 @@ pub enum Error {
     #[error("Failed to convert &str to UUID")]
     ConvertStrToUuid(#[source] uuid::Error),
 
+    #[error("Failed to convert Fixed bytes to UUID. It must be exactly 16 bytes, got {0}")]
+    ConvertFixedToUuid(usize),
+
+    #[error("Failed to convert Fixed bytes to UUID")]
+    ConvertSliceToUuid(#[source] uuid::Error),
+
     #[error("Map key is not a string; key type is {0:?}")]
     MapKeyType(ValueKind),
 
@@ -111,6 +120,9 @@ pub enum Error {
 
     #[error("expected UUID, got: {0:?}")]
     GetUuid(ValueKind),
+
+    #[error("expected BigDecimal, got: {0:?}")]
+    GetBigdecimal(ValueKind),
 
     #[error("Fixed bytes of size 12 expected, got Fixed of size {0}")]
     GetDecimalFixedBytes(usize),
@@ -147,6 +159,18 @@ pub enum Error {
 
     #[error("TimestampMicros expected, got {0:?}")]
     GetTimestampMicros(ValueKind),
+
+    #[error("TimestampNanos expected, got {0:?}")]
+    GetTimestampNanos(ValueKind),
+
+    #[error("LocalTimestampMillis expected, got {0:?}")]
+    GetLocalTimestampMillis(ValueKind),
+
+    #[error("LocalTimestampMicros expected, got {0:?}")]
+    GetLocalTimestampMicros(ValueKind),
+
+    #[error("LocalTimestampNanos expected, got {0:?}")]
+    GetLocalTimestampNanos(ValueKind),
 
     #[error("Null expected, got {0:?}")]
     GetNull(ValueKind),
@@ -196,6 +220,9 @@ pub enum Error {
     #[error("Could not find matching type in union")]
     FindUnionVariant,
 
+    #[error("Union type should not be empty")]
+    EmptyUnion,
+
     #[error("Array({expected:?}) expected, got {other:?}")]
     GetArray {
         expected: SchemaKind,
@@ -226,6 +253,12 @@ pub enum Error {
     #[error("Unions cannot contain duplicate types")]
     GetUnionDuplicate,
 
+    #[error("One union type {0:?} must match the `default`'s value type {1:?}")]
+    GetDefaultUnion(SchemaKind, ValueKind),
+
+    #[error("`default`'s value type of field {0:?} in {1:?} must be {2:?}")]
+    GetDefaultRecordField(String, String, String),
+
     #[error("JSON value {0} claims to be u64 but cannot be converted")]
     GetU64FromJson(serde_json::Number),
 
@@ -250,17 +283,35 @@ pub enum Error {
     #[error("Failed to parse schema from JSON")]
     ParseSchemaJson(#[source] serde_json::Error),
 
+    #[error("Failed to read schema")]
+    ReadSchemaFromReader(#[source] std::io::Error),
+
     #[error("Must be a JSON string, object or array")]
     ParseSchemaFromValidJson,
 
     #[error("Unknown primitive type: {0}")]
     ParsePrimitive(String),
 
-    #[error("invalid JSON for {key:?}: {precision:?}")]
-    GetDecimalPrecisionFromJson {
+    #[error("invalid JSON for {key:?}: {value:?}")]
+    GetDecimalMetadataValueFromJson {
         key: String,
-        precision: serde_json::Value,
+        value: serde_json::Value,
     },
+
+    #[error("The decimal precision ({precision}) must be bigger or equal to the scale ({scale})")]
+    DecimalPrecisionLessThanScale { precision: usize, scale: usize },
+
+    #[error("The decimal precision ({precision}) must be a positive number")]
+    DecimalPrecisionMuBePositive { precision: usize },
+
+    #[error("Unreadable big decimal sign")]
+    BigDecimalSign,
+
+    #[error("Unreadable length for big decimal inner bytes: {0}")]
+    BigDecimalLen(#[source] Box<Error>),
+
+    #[error("Unreadable big decimal scale")]
+    BigDecimalScale,
 
     #[error("Unexpected `type` {0} variant for `logicalType`")]
     GetLogicalTypeVariant(serde_json::Value),
@@ -268,8 +319,8 @@ pub enum Error {
     #[error("No `type` field found for `logicalType`")]
     GetLogicalTypeField,
 
-    #[error("logicalType must be a string")]
-    GetLogicalTypeFieldType,
+    #[error("logicalType must be a string, but is {0:?}")]
+    GetLogicalTypeFieldType(serde_json::Value),
 
     #[error("Unknown complex type: {0}")]
     GetComplexType(serde_json::Value),
@@ -289,11 +340,23 @@ pub enum Error {
     #[error("Invalid enum symbol name {0}")]
     EnumSymbolName(String),
 
+    #[error("Invalid field name {0}")]
+    FieldName(String),
+
+    #[error("Duplicate field name {0}")]
+    FieldNameDuplicate(String),
+
     #[error("Invalid schema name {0}. It must match the regex '{1}'")]
     InvalidSchemaName(String, &'static str),
 
+    #[error("Invalid namespace {0}. It must match the regex '{1}'")]
+    InvalidNamespace(String, &'static str),
+
     #[error("Duplicate enum symbol {0}")]
     EnumSymbolDuplicate(String),
+
+    #[error("Default value for enum must be a string! Got: {0}")]
+    EnumDefaultWrongType(serde_json::Value),
 
     #[error("No `items` in array")]
     GetArrayItemsField,
@@ -301,14 +364,20 @@ pub enum Error {
     #[error("No `values` in map")]
     GetMapValuesField,
 
-    #[error("No `size` in fixed")]
+    #[error("Fixed schema `size` value must be a positive integer: {0}")]
+    GetFixedSizeFieldPositive(serde_json::Value),
+
+    #[error("Fixed schema has no `size`")]
     GetFixedSizeField,
+
+    #[error("Fixed schema's default value length ({0}) does not match its size ({1})")]
+    FixedDefaultLenSizeMismatch(usize, u64),
 
     #[error("Failed to compress with flate")]
     DeflateCompress(#[source] std::io::Error),
 
     #[error("Failed to finish flate compressor")]
-    DeflateCompressFinish(std::io::Error),
+    DeflateCompressFinish(#[source] std::io::Error),
 
     #[error("Failed to decompress with flate")]
     DeflateDecompress(#[source] std::io::Error),
@@ -336,6 +405,9 @@ pub enum Error {
 
     #[error("wrong magic in header")]
     HeaderMagic,
+
+    #[error("Message Header mismatch. Expected: {0:?}. Actual: {1:?}")]
+    SingleObjectHeaderMismatch([u8; 10], [u8; 10]),
 
     #[error("Failed to get JSON from avro.schema key in map")]
     GetAvroSchemaFromMap,
@@ -403,7 +475,7 @@ pub enum Error {
     #[error("Signed decimal bytes length {0} not equal to fixed schema size {1}.")]
     EncodeDecimalAsFixedError(usize, usize),
 
-    #[error("There is no entry for {0} in the lookup table: {1}.")]
+    #[error("There is no entry for '{0}' in the lookup table: {1}.")]
     NoEntryInLookupTable(String, String),
 
     #[error("Can only encode value type {value_kind:?} as one of {supported_schema:?}")]
@@ -415,6 +487,53 @@ pub enum Error {
         "Internal buffer not drained properly. Re-initialize the single object writer struct!"
     )]
     IllegalSingleObjectWriterState,
+
+    #[error("Codec '{0}' is not supported/enabled")]
+    CodecNotSupported(String),
+
+    #[error("Invalid Avro data! Cannot read codec type from value that is not Value::Bytes.")]
+    BadCodecMetadata,
+}
+
+#[derive(thiserror::Error, PartialEq)]
+pub enum CompatibilityError {
+    #[error("Incompatible schema types! Writer schema is '{writer_schema_type}', but reader schema is '{reader_schema_type}'")]
+    WrongType {
+        writer_schema_type: String,
+        reader_schema_type: String,
+    },
+
+    #[error("Incompatible schema types! The {schema_type} should have been {expected_type:?}")]
+    TypeExpected {
+        schema_type: String,
+        expected_type: Vec<SchemaKind>,
+    },
+
+    #[error("Incompatible schemata! Field '{0}' in reader schema does not match the type in the writer schema")]
+    FieldTypeMismatch(String, #[source] Box<CompatibilityError>),
+
+    #[error("Incompatible schemata! Field '{0}' in reader schema must have a default value")]
+    MissingDefaultValue(String),
+
+    #[error("Incompatible schemata! Reader's symbols must contain all writer's symbols")]
+    MissingSymbols,
+
+    #[error("Incompatible schemata! All elements in union must match for both schemas")]
+    MissingUnionElements,
+
+    #[error("Incompatible schemata! Name and size don't match for fixed")]
+    FixedMismatch,
+
+    #[error("Incompatible schemata! The name must be the same for both schemas. Writer's name {writer_name} and reader's name {reader_name}")]
+    NameMismatch {
+        writer_name: String,
+        reader_name: String,
+    },
+
+    #[error(
+        "Incompatible schemata! Unknown type for '{0}'. Make sure that the type is a valid one"
+    )]
+    Inconclusive(String),
 }
 
 impl serde::ser::Error for Error {
@@ -426,5 +545,25 @@ impl serde::ser::Error for Error {
 impl serde::de::Error for Error {
     fn custom<T: fmt::Display>(msg: T) -> Self {
         Error::DeserializeValue(msg.to_string())
+    }
+}
+
+impl fmt::Debug for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut msg = self.to_string();
+        if let Some(e) = self.source() {
+            msg.extend([": ", &e.to_string()]);
+        }
+        write!(f, "{}", msg)
+    }
+}
+
+impl fmt::Debug for CompatibilityError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut msg = self.to_string();
+        if let Some(e) = self.source() {
+            msg.extend([": ", &e.to_string()]);
+        }
+        write!(f, "{}", msg)
     }
 }

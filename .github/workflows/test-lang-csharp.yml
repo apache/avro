@@ -17,9 +17,9 @@ name: 'Test C#'
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths:
     - .github/workflows/test-lang-csharp.yml
     - lang/csharp/**
@@ -36,21 +36,23 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Add libzstd
         shell: bash
         run: sudo apt-get install -y libzstd-dev
 
       - name: Install .NET SDKs
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
             3.1.x
             5.0.x
             6.0.x
+            7.0.x
+            8.0.x
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
@@ -63,47 +65,51 @@ jobs:
       - name: Test
         run: ./build.sh test
 
-      # Build and test against .NET 7
-      # .NET 7 is not released yet, however this is a good way to test if the project is ready for the release
-      # Once .NET 7 is officially released, this can be removed and 7.0.x can be used instead above
-      - name: Install .NET SDK 7.0 (pre-release)
-        uses: actions/setup-dotnet@v1
-        with:
-          include-prerelease: true
-          dotnet-version: |
-            7.0.x
-      
-      - name: Test .NET 7.0 (pre-release)
-        run: ./build.sh test
-
   interop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Add libzstd
         shell: bash
         run: sudo apt-get install -y libzstd-dev
 
       - name: Install .NET SDKs
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
             3.1.x
             5.0.x
             6.0.x
+            7.0.x
+            8.0.x
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: 'Setup Temurin JDK 8, 11, 17 & 21'
+        uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
+        with:
+          distribution: 'temurin'
+          java-version: |
+            8
+            11
+            17
+            21
+
+      - name: 'Setup Maven 3.9.6'
+        uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
+        with:
+          maven-version: 3.9.6
+
       - name: Install Java Avro for Interop Test
         working-directory: .
-        run: mvn -B install -DskipTests
+        run: mvn -B install -PskipQuality
 
       - name: Create Interop Data Directory
         working-directory: .

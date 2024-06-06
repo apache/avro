@@ -88,7 +88,10 @@ import org.apache.commons.text.StringEscapeUtils;
  *
  * Note: each instance is not thread-safe, but multiple separate
  * instances are safely independent.
+ *
+ * @deprecated Use the new org.apache.avro.idl.IdlReader from avro-idl instead.
  */
+@Deprecated
 public class Idl implements Closeable {
   static JsonNodeFactory FACTORY = JsonNodeFactory.instance;
   private static final String OPTIONAL_NULLABLE_TYPE_PROPERTY = "org.apache.avro.compiler.idl.Idl.NullableType.optional";
@@ -174,7 +177,7 @@ public class Idl implements Closeable {
     File file = "file".equals(uri.getScheme()) ? new File(uri.getPath()) : null;
     URL result = null;
     if (file != null && file.exists())
-      result = file.toURI().toURL();
+      result = new URL("file:" + file.getPath());
     else if (this.resourceLoader != null)
       if ("classpath".equals(uri.getScheme()))
         result = this.resourceLoader.getResource(uri.getPath().substring(1));
@@ -289,6 +292,7 @@ TOKEN :
 | < TIME: "time_ms" >
 | < TIMESTAMP: "timestamp_ms" >
 | < DECIMAL: "decimal" >
+| < BIG_DECIMAL: "big_decimal" >
 | < LOCAL_TIMESTAMP: "local_timestamp_ms" >
 | < UUID: "uuid" >
 }
@@ -1283,8 +1287,10 @@ Schema ImportSchema() : {
   <SCHEMA> importFile = JsonString() ";"
     {
       try (InputStream stream=findFile(importFile).openStream()){
+        // This usage of Schema.Parser should not be changed.
+        // Remove this whole (old) IDL parser instead.
         Parser parser = new Schema.Parser();
-        parser.addTypes(names);                   // inherit names
+        parser.addTypes(names.values());          // inherit names
         Schema value = parser.parse(stream);
         names = parser.getTypes();                // update names
         return value;
@@ -1584,6 +1590,7 @@ Schema PrimitiveType():
 | "timestamp_ms" { return LogicalTypes.timestampMillis().addToSchema(Schema.create(Type.LONG)); }
 | "local_timestamp_ms" { return LogicalTypes.localTimestampMillis().addToSchema(Schema.create(Type.LONG)); }
 | "decimal" s = DecimalTypeProperties() { return s; }
+| "big_decimal"  { return LogicalTypes.bigDecimal().addToSchema(Schema.create(Type.BYTES)); }
 | "uuid" {return LogicalTypes.uuid().addToSchema(Schema.create(Type.STRING));}
 }
 
@@ -1674,6 +1681,7 @@ Token AnyIdentifier():
    t = <TIMESTAMP> |
    t = <LOCAL_TIMESTAMP> |
    t = <DECIMAL> |
+   t = <BIG_DECIMAL> |
    t = <IDENTIFIER>)
   {
     return t;

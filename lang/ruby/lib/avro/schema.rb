@@ -111,7 +111,7 @@ module Avro
       elsif PRIMITIVE_TYPES.include? json_obj
         return PrimitiveSchema.new(json_obj)
       else
-        raise UnknownSchemaError.new(json_obj)
+        raise UnknownSchemaError.new(json_obj, default_namespace)
       end
     end
 
@@ -126,6 +126,7 @@ module Avro
     def initialize(type, logical_type=nil)
       @type_sym = type.is_a?(Symbol) ? type : type.to_sym
       @logical_type = logical_type
+      @type_adapter = nil
     end
 
     attr_reader :type_sym
@@ -571,6 +572,7 @@ module Avro
         @order = order
         @doc = doc
         @aliases = aliases
+        @type_adapter = nil
         validate_aliases! if aliases
         validate_default! if default? && !Avro.disable_field_default_validation
       end
@@ -599,8 +601,16 @@ module Avro
                            else
                              type
                            end
-
-        Avro::SchemaValidator.validate!(type_for_default, default)
+        case type_for_default.logical_type
+        when DECIMAL_LOGICAL_TYPE
+          # https://avro.apache.org/docs/1.11.1/specification/#schema-record
+          # Default values for bytes and fixed fields are JSON strings, where Unicode code points 0-255 are mapped to unsigned 8-bit byte values 0-255
+          options = SchemaValidator::DEFAULT_VALIDATION_OPTIONS.dup
+          options[:encoded] = true
+          Avro::SchemaValidator.validate!(type_for_default, default, options)
+        else
+          Avro::SchemaValidator.validate!(type_for_default, default)
+        end
       rescue Avro::SchemaValidator::ValidationError => e
         raise Avro::SchemaParseError, "Error validating default for #{name}: #{e.message}"
       end
@@ -611,9 +621,11 @@ module Avro
 
   class UnknownSchemaError < SchemaParseError
     attr_reader :type_name
+    attr_reader :default_namespace
 
-    def initialize(type)
+    def initialize(type, default_namespace)
       @type_name = type
+      @default_namespace = default_namespace
       super("#{type.inspect} is not a schema we know about.")
     end
   end

@@ -33,7 +33,7 @@ void LogicalType::setPrecision(int precision) {
         throw Exception("Only logical type DECIMAL can have precision");
     }
     if (precision <= 0) {
-        throw Exception(boost::format("Precision cannot be: %1%") % precision);
+        throw Exception("Precision cannot be: {}", precision);
     }
     precision_ = precision;
 }
@@ -43,7 +43,7 @@ void LogicalType::setScale(int scale) {
         throw Exception("Only logical type DECIMAL can have scale");
     }
     if (scale < 0) {
-        throw Exception(boost::format("Scale cannot be: %1%") % scale);
+        throw Exception("Scale cannot be: {}", scale);
     }
     scale_ = scale;
 }

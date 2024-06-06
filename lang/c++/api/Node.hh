@@ -26,6 +26,7 @@
 #include <memory>
 #include <utility>
 
+#include "CustomAttributes.hh"
 #include "Exception.hh"
 #include "LogicalType.hh"
 #include "SchemaResolution.hh"
@@ -39,30 +40,38 @@ class GenericDatum;
 using NodePtr = std::shared_ptr<Node>;
 
 class AVRO_DECL Name {
+    struct Aliases;
+
     std::string ns_;
     std::string simpleName_;
+    std::unique_ptr<Aliases> aliases_;
 
 public:
-    Name() = default;
-    explicit Name(const std::string &fullname);
-    Name(std::string simpleName, std::string ns) : ns_(std::move(ns)), simpleName_(std::move(simpleName)) { check(); }
+    Name();
+    explicit Name(const std::string &name);
+    Name(std::string simpleName, std::string ns);
+    Name(const Name &other);
+    Name &operator=(const Name &other);
+    Name(Name &&other);
+    Name &operator=(Name &&other);
+    ~Name();
 
     std::string fullname() const;
     const std::string &ns() const { return ns_; }
     const std::string &simpleName() const { return simpleName_; }
+    const std::vector<std::string> &aliases() const;
 
     void ns(std::string n) { ns_ = std::move(n); }
     void simpleName(std::string n) { simpleName_ = std::move(n); }
     void fullname(const std::string &n);
+    void addAlias(const std::string &alias);
 
     bool operator<(const Name &n) const;
     void check() const;
     bool operator==(const Name &n) const;
     bool operator!=(const Name &n) const { return !((*this) == n); }
-    void clear() {
-        ns_.clear();
-        simpleName_.clear();
-    }
+    bool equalOrAliasedBy(const Name &n) const;
+    void clear();
     explicit operator std::string() const {
         return fullname();
     }
@@ -135,7 +144,7 @@ public:
     virtual size_t leaves() const = 0;
     virtual const NodePtr &leafAt(size_t index) const = 0;
     virtual const GenericDatum &defaultValueAt(size_t index) {
-        throw Exception(boost::format("No default value at: %1%") % index);
+        throw Exception("No default value at: {}", index);
     }
 
     void addName(const std::string &name) {
@@ -152,6 +161,11 @@ public:
         doSetFixedSize(size);
     }
     virtual size_t fixedSize() const = 0;
+
+    void addCustomAttributesForField(const CustomAttributes &customAttributes) {
+        checkLock();
+        doAddCustomAttribute(customAttributes);
+    }
 
     virtual bool isValid() const = 0;
 
@@ -185,6 +199,7 @@ protected:
     virtual void doAddLeaf(const NodePtr &newLeaf) = 0;
     virtual void doAddName(const std::string &name) = 0;
     virtual void doSetFixedSize(size_t size) = 0;
+    virtual void doAddCustomAttribute(const CustomAttributes &customAttributes) = 0;
 
 private:
     const Type type_;
@@ -200,5 +215,13 @@ inline std::ostream &operator<<(std::ostream &os, const avro::Node &n) {
     return os;
 }
 } // namespace std
+
+template<>
+struct fmt::formatter<avro::Name> : fmt::formatter<std::string> {
+    template<typename FormatContext>
+    auto format(const avro::Name &n, FormatContext &ctx) {
+        return fmt::formatter<std::string>::format(n.fullname(), ctx);
+    }
+};
 
 #endif

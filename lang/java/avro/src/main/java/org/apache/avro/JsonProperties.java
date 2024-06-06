@@ -24,12 +24,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 
 import java.io.IOException;
+import java.util.function.BiConsumer;
 
 import org.apache.avro.util.internal.Accessor;
 import org.apache.avro.util.internal.Accessor.JsonPropertiesAccessor;
@@ -241,6 +243,11 @@ public abstract class JsonProperties {
     return JacksonUtils.toObject(props.get(name));
   }
 
+  public Object getObjectProp(String name, Object defaultValue) {
+    final JsonNode json = props.get(name);
+    return json != null ? JacksonUtils.toObject(json) : defaultValue;
+  }
+
   /**
    * Adds a property with the given name <tt>name</tt> and value <tt>value</tt>.
    * Neither <tt>name</tt> nor <tt>value</tt> can be <tt>null</tt>. It is illegal
@@ -307,6 +314,17 @@ public abstract class JsonProperties {
     return Collections.unmodifiableMap(result);
   }
 
+  public boolean propsContainsKey(String key) {
+    return this.props.containsKey(key);
+  }
+
+  public void forEachProperty(BiConsumer<String, Object> consumer) {
+    for (Map.Entry<String, JsonNode> entry : this.props.entrySet()) {
+      final Object value = JacksonUtils.toObject(entry.getValue());
+      consumer.accept(entry.getKey(), value);
+    }
+  }
+
   void writeProps(JsonGenerator gen) throws IOException {
     for (Map.Entry<String, JsonNode> e : props.entrySet())
       gen.writeObjectField(e.getKey(), e.getValue());
@@ -317,7 +335,7 @@ public abstract class JsonProperties {
   }
 
   boolean propsEqual(JsonProperties np) {
-    return props.equals(np.props);
+    return Objects.equals(props, np.props);
   }
 
   public boolean hasProps() {

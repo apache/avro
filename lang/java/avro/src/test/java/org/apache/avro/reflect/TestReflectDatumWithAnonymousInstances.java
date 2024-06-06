@@ -17,8 +17,8 @@
  */
 package org.apache.avro.reflect;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -29,8 +29,8 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * https://issues.apache.org/jira/browse/AVRO-1851
@@ -38,7 +38,7 @@ import org.junit.Test;
 public class TestReflectDatumWithAnonymousInstances {
   private static Pojo pojo;
 
-  @BeforeClass
+  @BeforeAll
   public static void init() {
     // 1. Anonymous instance
     pojo = new Pojo() {
@@ -59,7 +59,7 @@ public class TestReflectDatumWithAnonymousInstances {
   // Properly serializes and deserializes a POJO with an enum instance
   // (TestEnum#V)
   @Test
-  public void handleProperlyEnumInstances() throws IOException {
+  void handleProperlyEnumInstances() throws IOException {
     byte[] output = serialize(pojo);
     Pojo deserializedPojo = deserialize(output);
     assertEquals(pojo, deserializedPojo);

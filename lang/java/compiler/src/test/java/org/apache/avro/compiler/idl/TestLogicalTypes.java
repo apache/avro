@@ -21,14 +21,16 @@ import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class TestLogicalTypes {
   private Schema logicalTypeFields;
 
-  @Before
+  @BeforeEach
   public void setup() throws ParseException {
     final ClassLoader cl = Thread.currentThread().getContextClassLoader();
     Idl idl = new Idl(cl.getResourceAsStream("logicalTypes.avdl"), "UTF-8");
@@ -38,53 +40,53 @@ public class TestLogicalTypes {
   }
 
   @Test
-  public void testDateBecomesLogicalType() {
-    Assert.assertEquals(LogicalTypes.date(), logicalTypeOfField("aDate"));
+  void dateBecomesLogicalType() {
+    assertEquals(LogicalTypes.date(), logicalTypeOfField("aDate"));
   }
 
   @Test
-  public void testTimeMsBecomesLogicalType() {
-    Assert.assertEquals(LogicalTypes.timeMillis(), logicalTypeOfField("aTime"));
+  void timeMsBecomesLogicalType() {
+    assertEquals(LogicalTypes.timeMillis(), logicalTypeOfField("aTime"));
   }
 
   @Test
-  public void testTimestampMsBecomesLogicalType() {
-    Assert.assertEquals(LogicalTypes.timestampMillis(), logicalTypeOfField("aTimestamp"));
+  void timestampMsBecomesLogicalType() {
+    assertEquals(LogicalTypes.timestampMillis(), logicalTypeOfField("aTimestamp"));
   }
 
   @Test
-  public void testLocalTimestampMsBecomesLogicalType() {
-    Assert.assertEquals(LogicalTypes.localTimestampMillis(), logicalTypeOfField("aLocalTimestamp"));
+  void localTimestampMsBecomesLogicalType() {
+    assertEquals(LogicalTypes.localTimestampMillis(), logicalTypeOfField("aLocalTimestamp"));
   }
 
   @Test
-  public void testDecimalBecomesLogicalType() {
-    Assert.assertEquals(LogicalTypes.decimal(6, 2), logicalTypeOfField("pocketMoney"));
+  void decimalBecomesLogicalType() {
+    assertEquals(LogicalTypes.decimal(6, 2), logicalTypeOfField("pocketMoney"));
   }
 
   @Test
-  public void testUuidBecomesLogicalType() {
-    Assert.assertEquals(LogicalTypes.uuid(), logicalTypeOfField("identifier"));
+  void uuidBecomesLogicalType() {
+    assertEquals(LogicalTypes.uuid(), logicalTypeOfField("identifier"));
   }
 
   @Test
-  public void testAnnotatedLongBecomesLogicalType() {
-    Assert.assertEquals(LogicalTypes.timestampMicros(), logicalTypeOfField("anotherTimestamp"));
+  void annotatedLongBecomesLogicalType() {
+    assertEquals(LogicalTypes.timestampMicros(), logicalTypeOfField("anotherTimestamp"));
   }
 
   @Test
-  public void testAnnotatedBytesFieldBecomesLogicalType() {
-    Assert.assertEquals(LogicalTypes.decimal(6, 2), logicalTypeOfField("allowance"));
+  void annotatedBytesFieldBecomesLogicalType() {
+    assertEquals(LogicalTypes.decimal(6, 2), logicalTypeOfField("allowance"));
   }
 
   @Test
-  public void testIncorrectlyAnnotatedBytesFieldHasNoLogicalType() {
+  void incorrectlyAnnotatedBytesFieldHasNoLogicalType() {
     Schema fieldSchema = logicalTypeFields.getField("byteArray").schema();
 
-    Assert.assertNull(fieldSchema.getLogicalType());
-    Assert.assertEquals("decimal", fieldSchema.getObjectProp("logicalType"));
-    Assert.assertEquals(3000000000L, fieldSchema.getObjectProp("precision")); // Not an int, so not a valid precision
-    Assert.assertEquals(0, fieldSchema.getObjectProp("scale"));
+    assertNull(fieldSchema.getLogicalType());
+    assertEquals("decimal", fieldSchema.getObjectProp("logicalType"));
+    assertEquals(3000000000L, fieldSchema.getObjectProp("precision")); // Not an int, so not a valid precision
+    assertEquals(0, fieldSchema.getObjectProp("scale"));
   }
 
   private LogicalType logicalTypeOfField(String name) {

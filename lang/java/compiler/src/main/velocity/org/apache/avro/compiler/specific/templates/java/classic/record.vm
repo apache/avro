@@ -19,7 +19,6 @@
 package $this.mangle($schema.getNamespace());
 #end
 
-import org.apache.avro.generic.GenericArray;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.util.Utf8;
 #if (!$schema.isError())
@@ -36,7 +35,7 @@ import org.apache.avro.message.SchemaStore;
 @$annotation
 #end
 @org.apache.avro.specific.AvroGenerated
-public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError()) extends org.apache.avro.specific.SpecificExceptionBase#else extends org.apache.avro.specific.SpecificRecordBase#end implements org.apache.avro.specific.SpecificRecord {
+public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getSchemaParentClass($schema.isError())} implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = ${this.fingerprint64($schema)}L;
 
 #set ($schemaString = $this.javaSplit($schema.toString()))
@@ -161,7 +160,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #end
 #end
    */
-  public ${this.mangleTypeIdentifier($schema.getName())}(#foreach($field in $schema.getFields())${this.javaType($field.schema())} ${this.mangle($field.name())}#if($foreach.count < $schema.getFields().size()), #end#end) {
+  public ${this.mangleTypeIdentifier($schema.getName())}(#foreach($field in $schema.getFields())#if(${this.createNullSafeAnnotations})#if(${field.schema().isNullable()})@org.jetbrains.annotations.Nullable#else@org.jetbrains.annotations.NotNull#end #end${this.javaType($field.schema())} ${this.mangle($field.name())}#if($foreach.count < $schema.getFields().size()), #end#end) {
 #foreach ($field in $schema.getFields())
     ${this.generateSetterCode($field.schema(), ${this.mangle($field.name())}, ${this.mangle($field.name())})}
 #end
@@ -177,9 +176,14 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #end
 
 #end
+  @Override
   public org.apache.avro.specific.SpecificData getSpecificData() { return MODEL$; }
+
+  @Override
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
+
   // Used by DatumWriter.  Applications should not call.
+  @Override
   public java.lang.Object get(int field$) {
     switch (field$) {
 #set ($i = 0)
@@ -207,6 +211,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 
 #end
   // Used by DatumReader.  Applications should not call.
+  @Override
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
@@ -222,10 +227,10 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #foreach ($field in $schema.getFields())
 #if (${this.gettersReturnOptional} && (!${this.optionalGettersForNullableFieldsOnly} || ${field.schema().isNullable()}))
   /**
-   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
-#if ($field.doc())      * $field.doc()
+   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.escapeForJavadoc(${this.javaType($field.schema())})}&gt;.
+#if ($field.doc())   * $field.doc()
 #end
-   * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
+   * @return The value wrapped in an Optional&lt;${this.escapeForJavadoc(${this.javaType($field.schema())})}&gt;.
    */
   public Optional<${this.javaType($field.schema())}> ${this.generateGetMethod($schema, $field)}() {
     return Optional.<${this.javaType($field.schema())}>ofNullable(${this.mangle($field.name(), $schema.isError())});
@@ -237,6 +242,13 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #else   * @return The value of the '${this.mangle($field.name(), $schema.isError())}' field.
 #end
    */
+#if(${this.createNullSafeAnnotations})
+#if (${field.schema().isNullable()})
+  @org.jetbrains.annotations.Nullable
+#else
+  @org.jetbrains.annotations.NotNull
+#end
+#end
   public ${this.javaUnbox($field.schema(), false)} ${this.generateGetMethod($schema, $field)}() {
     return ${this.mangle($field.name(), $schema.isError())};
   }
@@ -244,10 +256,10 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 
 #if (${this.createOptionalGetters})
   /**
-   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
-#if ($field.doc())      * $field.doc()
+   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.escapeForJavadoc(${this.javaType($field.schema())})}&gt;.
+#if ($field.doc())   * $field.doc()
 #end
-   * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
+   * @return The value wrapped in an Optional&lt;${this.escapeForJavadoc(${this.javaType($field.schema())})}&gt;.
    */
   public Optional<${this.javaType($field.schema())}> ${this.generateGetOptionalMethod($schema, $field)}() {
     return Optional.<${this.javaType($field.schema())}>ofNullable(${this.mangle($field.name(), $schema.isError())});
@@ -261,7 +273,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #end
    * @param value the value to set.
    */
-  public void ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema(), false)} value) {
+  public void ${this.generateSetMethod($schema, $field)}(#if(${this.createNullSafeAnnotations})#if(${field.schema().isNullable()})@org.jetbrains.annotations.Nullable#else@org.jetbrains.annotations.NotNull#end #end${this.javaUnbox($field.schema(), false)} value) {
     ${this.generateSetterCode($field.schema(), ${this.mangle($field.name(), $schema.isError())}, "value")}
   }
 #end
@@ -400,10 +412,10 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 
 #if (${this.createOptionalGetters})
     /**
-      * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
+      * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.escapeForJavadoc(${this.javaType($field.schema())})}&gt;.
 #if ($field.doc())      * $field.doc()
 #end
-      * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
+      * @return The value wrapped in an Optional&lt;${this.escapeForJavadoc(${this.javaType($field.schema())})}&gt;.
       */
     public Optional<${this.javaType($field.schema())}> ${this.generateGetOptionalMethod($schema, $field)}() {
       return Optional.<${this.javaType($field.schema())}>ofNullable(${this.mangle($field.name(), $schema.isError())});
@@ -417,7 +429,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
       * @param value The value of '${this.mangle($field.name(), $schema.isError())}'.
       * @return This builder.
       */
-    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema(), false)} value) {
+    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(#if(${this.createNullSafeAnnotations})#if(${field.schema().isNullable()})@org.jetbrains.annotations.Nullable#else@org.jetbrains.annotations.NotNull#end #end${this.javaUnbox($field.schema(), false)} value) {
       validate(fields()[$field.pos()], value);
 #if (${this.hasBuilder($field.schema())})
       this.${this.mangle($field.name(), $schema.isError())}Builder = null;
@@ -831,7 +843,7 @@ $I    }
 $I    long size${nv} = in.readMapStart();
 $I    $t m${nv} = ${var}; // Need fresh name due to limitation of macro system
 $I    if (m${nv} == null) {
-$I      m${nv} = new java.util.HashMap<${kt},${vt}>((int)size${nv});
+$I      m${nv} = new java.util.HashMap<${kt},${vt}>((int)(size${nv} * 4)/3 + 1);
 $I      $var = m${nv};
 $I    } else m${nv}.clear();
 $I    for ( ; 0 < size${nv}; size${nv} = in.mapNext()) {

@@ -26,14 +26,15 @@ import java.time.temporal.Temporal;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.ServiceLoader;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.AvroRuntimeException;
@@ -58,6 +59,9 @@ import org.apache.avro.util.Utf8;
 import org.apache.avro.util.internal.Accessor;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.avro.util.springframework.ConcurrentReferenceHashMap;
+
+import static org.apache.avro.util.springframework.ConcurrentReferenceHashMap.ReferenceType.WEAK;
 
 /**
  * Utilities for generic Java data. See {@link GenericRecordBuilder} for a
@@ -114,11 +118,23 @@ public class GenericData {
   /** For subclasses. GenericData does not use a ClassLoader. */
   public GenericData(ClassLoader classLoader) {
     this.classLoader = (classLoader != null) ? classLoader : getClass().getClassLoader();
+    loadConversions();
   }
 
   /** Return the class loader that's used (by subclasses). */
   public ClassLoader getClassLoader() {
     return classLoader;
+  }
+
+  /**
+   * Use the Java 6 ServiceLoader to load conversions.
+   *
+   * @see #addLogicalTypeConversion(Conversion)
+   */
+  private void loadConversions() {
+    for (Conversion<?> conversion : ServiceLoader.load(Conversion.class, classLoader)) {
+      addLogicalTypeConversion(conversion);
+    }
   }
 
   private Map<String, Conversion<?>> conversions = new HashMap<>();
@@ -131,19 +147,17 @@ public class GenericData {
 
   /**
    * Registers the given conversion to be used when reading and writing with this
-   * data model.
+   * data model. Conversions can also be registered automatically, as documented
+   * on the class {@link Conversion Conversion&lt;T&gt;}.
    *
    * @param conversion a logical type Conversion.
    */
   public void addLogicalTypeConversion(Conversion<?> conversion) {
     conversions.put(conversion.getLogicalTypeName(), conversion);
     Class<?> type = conversion.getConvertedType();
-    Map<String, Conversion<?>> conversions = conversionsByClass.get(type);
-    if (conversions == null) {
-      conversions = new LinkedHashMap<>();
-      conversionsByClass.put(type, conversions);
-    }
-    conversions.put(conversion.getLogicalTypeName(), conversion);
+    Map<String, Conversion<?>> conversionsForClass = conversionsByClass.computeIfAbsent(type,
+        k -> new LinkedHashMap<>());
+    conversionsForClass.put(conversion.getLogicalTypeName(), conversion);
   }
 
   /**
@@ -184,11 +198,11 @@ public class GenericData {
    * @return the conversion for the logical type, or null
    */
   @SuppressWarnings("unchecked")
-  public Conversion<Object> getConversionFor(LogicalType logicalType) {
+  public <T> Conversion<T> getConversionFor(LogicalType logicalType) {
     if (logicalType == null) {
       return null;
     }
-    return (Conversion<Object>) conversions.get(logicalType.getName());
+    return (Conversion<T>) conversions.get(logicalType.getName());
   }
 
   public static final String FAST_READER_PROP = "org.apache.avro.fastread";
@@ -303,30 +317,16 @@ public class GenericData {
     }
   }
 
-  /** Default implementation of an array. */
-  @SuppressWarnings(value = "unchecked")
-  public static class Array<T> extends AbstractList<T> implements GenericArray<T>, Comparable<GenericArray<T>> {
-    private static final Object[] EMPTY = new Object[0];
+  public static abstract class AbstractArray<T> extends AbstractList<T>
+      implements GenericArray<T>, Comparable<GenericArray<T>> {
     private final Schema schema;
-    private int size;
-    private Object[] elements = EMPTY;
 
-    public Array(int capacity, Schema schema) {
+    protected int size = 0;
+
+    public AbstractArray(Schema schema) {
       if (schema == null || !Type.ARRAY.equals(schema.getType()))
         throw new AvroRuntimeException("Not an array schema: " + schema);
       this.schema = schema;
-      if (capacity != 0)
-        elements = new Object[capacity];
-    }
-
-    public Array(Schema schema, Collection<T> c) {
-      if (schema == null || !Type.ARRAY.equals(schema.getType()))
-        throw new AvroRuntimeException("Not an array schema: " + schema);
-      this.schema = schema;
-      if (c != null) {
-        elements = new Object[c.size()];
-        addAll(c);
-      }
     }
 
     @Override
@@ -340,22 +340,26 @@ public class GenericData {
     }
 
     @Override
-    public void clear() {
-      // Let GC do its work
-      Arrays.fill(elements, 0, size, null);
-      size = 0;
-    }
-
-    @Override
     public void reset() {
       size = 0;
     }
 
     @Override
-    public void prune() {
-      if (size < elements.length) {
-        Arrays.fill(elements, size, elements.length, null);
+    public int compareTo(GenericArray<T> that) {
+      return GenericData.get().compare(this, that, this.getSchema());
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+      if (!(o instanceof Collection)) {
+        return false;
       }
+      return GenericData.get().compare(this, o, this.getSchema()) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+      return super.hashCode();
     }
 
     @Override
@@ -370,7 +374,7 @@ public class GenericData {
 
         @Override
         public T next() {
-          return (T) elements[position++];
+          return AbstractArray.this.get(position++);
         }
 
         @Override
@@ -378,6 +382,57 @@ public class GenericData {
           throw new UnsupportedOperationException();
         }
       };
+    }
+
+    @Override
+    public void reverse() {
+      int left = 0;
+      int right = size - 1;
+
+      while (left < right) {
+        this.swap(left, right);
+
+        left++;
+        right--;
+      }
+    }
+
+    protected abstract void swap(int index1, int index2);
+  }
+
+  /** Default implementation of an array. */
+  @SuppressWarnings(value = "unchecked")
+  public static class Array<T> extends AbstractArray<T> {
+    private static final Object[] EMPTY = new Object[0];
+
+    private Object[] elements = EMPTY;
+
+    public Array(int capacity, Schema schema) {
+      super(schema);
+      if (capacity != 0)
+        elements = new Object[capacity];
+    }
+
+    public Array(Schema schema, Collection<T> c) {
+      super(schema);
+      if (c != null) {
+        elements = new Object[c.size()];
+        addAll(c);
+      }
+    }
+
+    @Override
+    public void clear() {
+      // Let GC do its work
+      Arrays.fill(elements, 0, size, null);
+      size = 0;
+    }
+
+    @Override
+    public void prune() {
+      if (size < elements.length) {
+        Arrays.fill(elements, size, elements.length, null);
+      }
     }
 
     @Override
@@ -428,23 +483,10 @@ public class GenericData {
     }
 
     @Override
-    public int compareTo(GenericArray<T> that) {
-      return GenericData.get().compare(this, that, this.getSchema());
-    }
-
-    @Override
-    public void reverse() {
-      int left = 0;
-      int right = elements.length - 1;
-
-      while (left < right) {
-        Object tmp = elements[left];
-        elements[left] = elements[right];
-        elements[right] = tmp;
-
-        left++;
-        right--;
-      }
+    protected void swap(final int index1, final int index2) {
+      Object tmp = elements[index1];
+      elements[index1] = elements[index2];
+      elements[index2] = tmp;
     }
   }
 
@@ -704,7 +746,7 @@ public class GenericData {
       ByteBuffer bytes = ((ByteBuffer) datum).duplicate();
       writeEscapedString(StandardCharsets.ISO_8859_1.decode(bytes), buffer);
       buffer.append("\"");
-    } else if (isNanOrInfinity(datum) || isTemporal(datum)) {
+    } else if (isNanOrInfinity(datum) || isTemporal(datum) || datum instanceof UUID) {
       buffer.append("\"");
       buffer.append(datum);
       buffer.append("\"");
@@ -1092,39 +1134,62 @@ public class GenericData {
    * {@link #compare(Object,Object,Schema)}.
    */
   public int hashCode(Object o, Schema s) {
-    if (o == null)
-      return 0; // incomplete datum
-    int hashCode = 1;
-    switch (s.getType()) {
-    case RECORD:
-      for (Field f : s.getFields()) {
-        if (f.order() == Field.Order.IGNORE)
-          continue;
-        hashCode = hashCodeAdd(hashCode, getField(o, f.name(), f.pos()), f.schema());
-      }
-      return hashCode;
-    case ARRAY:
-      Collection<?> a = (Collection<?>) o;
-      Schema elementType = s.getElementType();
-      for (Object e : a)
-        hashCode = hashCodeAdd(hashCode, e, elementType);
-      return hashCode;
-    case UNION:
-      return hashCode(o, s.getTypes().get(resolveUnion(s, o)));
-    case ENUM:
-      return s.getEnumOrdinal(o.toString());
-    case NULL:
-      return 0;
-    case STRING:
-      return (o instanceof Utf8 ? o : new Utf8(o.toString())).hashCode();
-    default:
-      return o.hashCode();
-    }
+    HashCodeCalculator calculator = new HashCodeCalculator();
+    return calculator.hashCode(o, s);
   }
 
-  /** Add the hash code for an object into an accumulated hash code. */
-  protected int hashCodeAdd(int hashCode, Object o, Schema s) {
-    return 31 * hashCode + hashCode(o, s);
+  class HashCodeCalculator {
+    private int counter = 10;
+
+    private int currentHashCode = 1;
+
+    public int hashCode(Object o, Schema s) {
+      if (o == null)
+        return 0; // incomplete datum
+
+      switch (s.getType()) {
+      case RECORD:
+        for (Field f : s.getFields()) {
+          if (this.shouldStop()) {
+            return this.currentHashCode;
+          }
+          if (f.order() == Field.Order.IGNORE)
+            continue;
+          Object fieldValue = ((IndexedRecord) o).get(f.pos());
+          this.currentHashCode = this.hashCodeAdd(fieldValue, f.schema());
+        }
+        return currentHashCode;
+      case ARRAY:
+        Collection<?> a = (Collection<?>) o;
+        Schema elementType = s.getElementType();
+        for (Object e : a) {
+          if (this.shouldStop()) {
+            return currentHashCode;
+          }
+          currentHashCode = this.hashCodeAdd(e, elementType);
+        }
+        return currentHashCode;
+      case UNION:
+        return hashCode(o, s.getTypes().get(GenericData.this.resolveUnion(s, o)));
+      case ENUM:
+        return s.getEnumOrdinal(o.toString());
+      case NULL:
+        return 0;
+      case STRING:
+        return (o instanceof Utf8 ? o : new Utf8(o.toString())).hashCode();
+      default:
+        return o.hashCode();
+      }
+    }
+
+    /** Add the hash code for an object into an accumulated hash code. */
+    protected int hashCodeAdd(Object o, Schema s) {
+      return 31 * this.currentHashCode + hashCode(o, s);
+    }
+
+    private boolean shouldStop() {
+      return --counter <= 0;
+    }
   }
 
   /**
@@ -1134,6 +1199,73 @@ public class GenericData {
    */
   public int compare(Object o1, Object o2, Schema s) {
     return compare(o1, o2, s, false);
+  }
+
+  protected int compareMaps(final Map<?, ?> m1, final Map<?, ?> m2) {
+    if (m1 == m2) {
+      return 0;
+    }
+
+    if (m1.isEmpty() && m2.isEmpty()) {
+      return 0;
+    }
+
+    if (m1.size() != m2.size()) {
+      return 1;
+    }
+
+    /**
+     * Peek at keys, assuming they're all the same type within a Map
+     */
+    final Object key1 = m1.keySet().iterator().next();
+    final Object key2 = m2.keySet().iterator().next();
+    boolean utf8ToString = false;
+    boolean stringToUtf8 = false;
+
+    if (key1 instanceof Utf8 && key2 instanceof String) {
+      utf8ToString = true;
+    } else if (key1 instanceof String && key2 instanceof Utf8) {
+      stringToUtf8 = true;
+    }
+
+    try {
+      for (Map.Entry e : m1.entrySet()) {
+        final Object key = e.getKey();
+        Object lookupKey = key;
+        if (utf8ToString) {
+          lookupKey = key.toString();
+        } else if (stringToUtf8) {
+          lookupKey = new Utf8((String) lookupKey);
+        }
+        final Object value = e.getValue();
+        if (value == null) {
+          if (!(m2.get(lookupKey) == null && m2.containsKey(lookupKey))) {
+            return 1;
+          }
+        } else {
+          final Object value2 = m2.get(lookupKey);
+          if (value instanceof Utf8 && value2 instanceof String) {
+            if (!value.toString().equals(value2)) {
+              return 1;
+            }
+          } else if (value instanceof String && value2 instanceof Utf8) {
+            if (!new Utf8((String) value).equals(value2)) {
+              return 1;
+            }
+          } else {
+            if (!value.equals(value2)) {
+              return 1;
+            }
+          }
+        }
+      }
+    } catch (ClassCastException unused) {
+      return 1;
+    } catch (NullPointerException unused) {
+      return 1;
+    }
+
+    return 0;
   }
 
   /**
@@ -1172,7 +1304,7 @@ public class GenericData {
       return e1.hasNext() ? 1 : (e2.hasNext() ? -1 : 0);
     case MAP:
       if (equals)
-        return o1.equals(o2) ? 0 : 1;
+        return compareMaps((Map) o1, (Map) o2);
       throw new AvroRuntimeException("Can't compare maps!");
     case UNION:
       int i1 = resolveUnion(s, o1);
@@ -1189,7 +1321,7 @@ public class GenericData {
     }
   }
 
-  private final Map<Field, Object> defaultValueCache = Collections.synchronizedMap(new WeakHashMap<>());
+  private final ConcurrentMap<Field, Object> defaultValueCache = new ConcurrentReferenceHashMap<>(128, WEAK);
 
   /**
    * Gets the default value of the given field, if any.
@@ -1209,28 +1341,20 @@ public class GenericData {
     }
 
     // Check the cache
-    Object defaultValue = defaultValueCache.get(field);
-
     // If not cached, get the default Java value by encoding the default JSON
     // value and then decoding it:
-    if (defaultValue == null)
+    return defaultValueCache.computeIfAbsent(field, fieldToGetValueFor -> {
       try {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
-        Accessor.encode(encoder, field.schema(), json);
+        Accessor.encode(encoder, fieldToGetValueFor.schema(), json);
         encoder.flush();
         BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);
-        defaultValue = createDatumReader(field.schema()).read(null, decoder);
-
-        // this MAY result in two threads creating the same defaultValue
-        // and calling put. The last thread will win. However,
-        // that's not an issue.
-        defaultValueCache.put(field, defaultValue);
+        return createDatumReader(fieldToGetValueFor.schema()).read(null, decoder);
       } catch (IOException e) {
         throw new AvroRuntimeException(e);
       }
-
-    return defaultValue;
+    });
   }
 
   private static final Schema STRINGS = Schema.create(Type.STRING);
@@ -1403,8 +1527,24 @@ public class GenericData {
     } else if (old instanceof Collection) {
       ((Collection<?>) old).clear();
       return old;
-    } else
+    } else {
+      if (schema.getElementType().getType() == Type.INT) {
+        return new PrimitivesArrays.IntArray(size, schema);
+      }
+      if (schema.getElementType().getType() == Type.BOOLEAN) {
+        return new PrimitivesArrays.BooleanArray(size, schema);
+      }
+      if (schema.getElementType().getType() == Type.LONG) {
+        return new PrimitivesArrays.LongArray(size, schema);
+      }
+      if (schema.getElementType().getType() == Type.FLOAT) {
+        return new PrimitivesArrays.FloatArray(size, schema);
+      }
+      if (schema.getElementType().getType() == Type.DOUBLE) {
+        return new PrimitivesArrays.DoubleArray(size, schema);
+      }
       return new GenericData.Array<Object>(size, schema);
+    }
   }
 
   /**

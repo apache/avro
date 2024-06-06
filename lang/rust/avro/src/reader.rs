@@ -16,35 +16,46 @@
 // under the License.
 
 //! Logic handling reading from Avro format at user level.
-use crate::{decode::decode, schema::Schema, types::Value, util, AvroResult, Codec, Error};
+use crate::{
+    decode::{decode, decode_internal},
+    from_value,
+    rabin::Rabin,
+    schema::{AvroSchema, Names, ResolvedOwnedSchema, ResolvedSchema, Schema},
+    types::Value,
+    util, AvroResult, Codec, Error,
+};
+use serde::de::DeserializeOwned;
 use serde_json::from_slice;
 use std::{
     collections::HashMap,
     io::{ErrorKind, Read},
+    marker::PhantomData,
     str::FromStr,
 };
 
-// Internal Block reader.
+/// Internal Block reader.
 #[derive(Debug, Clone)]
-struct Block<R> {
+struct Block<'r, R> {
     reader: R,
-    // Internal buffering to reduce allocation.
+    /// Internal buffering to reduce allocation.
     buf: Vec<u8>,
     buf_idx: usize,
-    // Number of elements expected to exist within this block.
+    /// Number of elements expected to exist within this block.
     message_count: usize,
     marker: [u8; 16],
     codec: Codec,
     writer_schema: Schema,
+    schemata: Vec<&'r Schema>,
     user_metadata: HashMap<String, Vec<u8>>,
 }
 
-impl<R: Read> Block<R> {
-    fn new(reader: R) -> AvroResult<Block<R>> {
+impl<'r, R: Read> Block<'r, R> {
+    fn new(reader: R, schemata: Vec<&'r Schema>) -> AvroResult<Block<R>> {
         let mut block = Block {
             reader,
             codec: Codec::Null,
             writer_schema: Schema::Null,
+            schemata,
             buf: vec![],
             buf_idx: 0,
             message_count: 0,
@@ -59,7 +70,7 @@ impl<R: Read> Block<R> {
     /// Try to read the header and to set the writer `Schema`, the `Codec` and the marker based on
     /// its content.
     fn read_header(&mut self) -> AvroResult<()> {
-        let meta_schema = Schema::Map(Box::new(Schema::Bytes));
+        let meta_schema = Schema::map(Schema::Bytes);
 
         let mut buf = [0u8; 4];
         self.reader
@@ -72,7 +83,7 @@ impl<R: Read> Block<R> {
 
         if let Value::Map(metadata) = decode(&meta_schema, &mut self.reader)? {
             self.read_writer_schema(&metadata)?;
-            self.read_codec(&metadata);
+            self.codec = read_codec(&metadata)?;
 
             for (key, value) in metadata {
                 if key == "avro.schema" || key == "avro.codec" {
@@ -104,7 +115,7 @@ impl<R: Read> Block<R> {
         //    We need to resize to ensure that the buffer len is safe to read `n` elements.
         //
         // TODO: Figure out a way to avoid having to truncate for the second case.
-        self.buf.resize(n, 0);
+        self.buf.resize(util::safe_len(n)?, 0);
         self.reader
             .read_exact(&mut self.buf)
             .map_err(Error::ReadIntoBuf)?;
@@ -168,14 +179,24 @@ impl<R: Read> Block<R> {
 
         let mut block_bytes = &self.buf[self.buf_idx..];
         let b_original = block_bytes.len();
-        let item = from_avro_datum(&self.writer_schema, &mut block_bytes, read_schema)?;
+        let schemata = if self.schemata.is_empty() {
+            vec![&self.writer_schema]
+        } else {
+            self.schemata.clone()
+        };
+        let item =
+            from_avro_datum_schemata(&self.writer_schema, schemata, &mut block_bytes, read_schema)?;
+        if b_original == block_bytes.len() {
+            // from_avro_datum did not consume any bytes, so return an error to avoid an infinite loop
+            return Err(Error::ReadBlock);
+        }
         self.buf_idx += b_original - block_bytes.len();
         self.message_count -= 1;
         Ok(Some(item))
     }
 
     fn read_writer_schema(&mut self, metadata: &HashMap<String, Value>) -> AvroResult<()> {
-        let json = metadata
+        let json: serde_json::Value = metadata
             .get("avro.schema")
             .and_then(|bytes| {
                 if let Value::Bytes(ref bytes) = *bytes {
@@ -185,24 +206,18 @@ impl<R: Read> Block<R> {
                 }
             })
             .ok_or(Error::GetAvroSchemaFromMap)?;
-        self.writer_schema = Schema::parse(&json)?;
-        Ok(())
-    }
-
-    fn read_codec(&mut self, metadata: &HashMap<String, Value>) {
-        if let Some(codec) = metadata
-            .get("avro.codec")
-            .and_then(|codec| {
-                if let Value::Bytes(ref bytes) = *codec {
-                    std::str::from_utf8(bytes.as_ref()).ok()
-                } else {
-                    None
-                }
-            })
-            .and_then(|codec| Codec::from_str(codec).ok())
-        {
-            self.codec = codec;
+        if !self.schemata.is_empty() {
+            let rs = ResolvedSchema::try_from(self.schemata.clone())?;
+            let names: Names = rs
+                .get_names()
+                .iter()
+                .map(|(name, schema)| (name.clone(), (*schema).clone()))
+                .collect();
+            self.writer_schema = Schema::parse_with_names(&json, names)?;
+        } else {
+            self.writer_schema = Schema::parse(&json)?;
         }
+        Ok(())
     }
 
     fn read_user_metadata(&mut self, key: String, value: Value) {
@@ -217,6 +232,33 @@ impl<R: Read> Block<R> {
                 );
             }
         }
+    }
+}
+
+fn read_codec(metadata: &HashMap<String, Value>) -> AvroResult<Codec> {
+    let result = metadata
+        .get("avro.codec")
+        .map(|codec| {
+            if let Value::Bytes(ref bytes) = *codec {
+                match std::str::from_utf8(bytes.as_ref()) {
+                    Ok(utf8) => Ok(utf8),
+                    Err(utf8_error) => Err(Error::ConvertToUtf8Error(utf8_error)),
+                }
+            } else {
+                Err(Error::BadCodecMetadata)
+            }
+        })
+        .map(|codec_res| match codec_res {
+            Ok(codec) => match Codec::from_str(codec) {
+                Ok(codec) => Ok(codec),
+                Err(_) => Err(Error::CodecNotSupported(codec.to_owned())),
+            },
+            Err(err) => Err(err),
+        });
+
+    match result {
+        Some(res) => res,
+        None => Ok(Codec::Null),
     }
 }
 
@@ -236,7 +278,7 @@ impl<R: Read> Block<R> {
 /// }
 /// ```
 pub struct Reader<'a, R> {
-    block: Block<R>,
+    block: Block<'a, R>,
     reader_schema: Option<&'a Schema>,
     errored: bool,
     should_resolve_schema: bool,
@@ -248,7 +290,7 @@ impl<'a, R: Read> Reader<'a, R> {
     ///
     /// **NOTE** The avro header is going to be read automatically upon creation of the `Reader`.
     pub fn new(reader: R) -> AvroResult<Reader<'a, R>> {
-        let block = Block::new(reader)?;
+        let block = Block::new(reader, vec![])?;
         let reader = Reader {
             block,
             reader_schema: None,
@@ -263,7 +305,28 @@ impl<'a, R: Read> Reader<'a, R> {
     ///
     /// **NOTE** The avro header is going to be read automatically upon creation of the `Reader`.
     pub fn with_schema(schema: &'a Schema, reader: R) -> AvroResult<Reader<'a, R>> {
-        let block = Block::new(reader)?;
+        let block = Block::new(reader, vec![schema])?;
+        let mut reader = Reader {
+            block,
+            reader_schema: Some(schema),
+            errored: false,
+            should_resolve_schema: false,
+        };
+        // Check if the reader and writer schemas disagree.
+        reader.should_resolve_schema = reader.writer_schema() != schema;
+        Ok(reader)
+    }
+
+    /// Creates a `Reader` given a reader `Schema` and something implementing the `io::Read` trait
+    /// to read from.
+    ///
+    /// **NOTE** The avro header is going to be read automatically upon creation of the `Reader`.
+    pub fn with_schemata(
+        schema: &'a Schema,
+        schemata: Vec<&'a Schema>,
+        reader: R,
+    ) -> AvroResult<Reader<'a, R>> {
+        let block = Block::new(reader, schemata)?;
         let mut reader = Reader {
             block,
             reader_schema: Some(schema),
@@ -343,10 +406,130 @@ pub fn from_avro_datum<R: Read>(
     }
 }
 
+/// Decode a `Value` encoded in Avro format given the provided `Schema` and anything implementing `io::Read`
+/// to read from.
+/// If the writer schema is incomplete, i.e. contains `Schema::Ref`s then it will use the provided
+/// schemata to resolve any dependencies.
+///
+/// In case a reader `Schema` is provided, schema resolution will also be performed.
+pub fn from_avro_datum_schemata<R: Read>(
+    writer_schema: &Schema,
+    schemata: Vec<&Schema>,
+    reader: &mut R,
+    reader_schema: Option<&Schema>,
+) -> AvroResult<Value> {
+    let rs = ResolvedSchema::try_from(schemata)?;
+    let value = decode_internal(writer_schema, rs.get_names(), &None, reader)?;
+    match reader_schema {
+        Some(schema) => value.resolve(schema),
+        None => Ok(value),
+    }
+}
+
+pub struct GenericSingleObjectReader {
+    write_schema: ResolvedOwnedSchema,
+    expected_header: [u8; 10],
+}
+
+impl GenericSingleObjectReader {
+    pub fn new(schema: Schema) -> AvroResult<GenericSingleObjectReader> {
+        let fingerprint = schema.fingerprint::<Rabin>();
+        let expected_header = [
+            0xC3,
+            0x01,
+            fingerprint.bytes[0],
+            fingerprint.bytes[1],
+            fingerprint.bytes[2],
+            fingerprint.bytes[3],
+            fingerprint.bytes[4],
+            fingerprint.bytes[5],
+            fingerprint.bytes[6],
+            fingerprint.bytes[7],
+        ];
+        Ok(GenericSingleObjectReader {
+            write_schema: ResolvedOwnedSchema::try_from(schema)?,
+            expected_header,
+        })
+    }
+
+    pub fn read_value<R: Read>(&self, reader: &mut R) -> AvroResult<Value> {
+        let mut header: [u8; 10] = [0; 10];
+        match reader.read_exact(&mut header) {
+            Ok(_) => {
+                if self.expected_header == header {
+                    decode_internal(
+                        self.write_schema.get_root_schema(),
+                        self.write_schema.get_names(),
+                        &None,
+                        reader,
+                    )
+                } else {
+                    Err(Error::SingleObjectHeaderMismatch(
+                        self.expected_header,
+                        header,
+                    ))
+                }
+            }
+            Err(io_error) => Err(Error::ReadHeader(io_error)),
+        }
+    }
+}
+
+pub struct SpecificSingleObjectReader<T>
+where
+    T: AvroSchema,
+{
+    inner: GenericSingleObjectReader,
+    _model: PhantomData<T>,
+}
+
+impl<T> SpecificSingleObjectReader<T>
+where
+    T: AvroSchema,
+{
+    pub fn new() -> AvroResult<SpecificSingleObjectReader<T>> {
+        Ok(SpecificSingleObjectReader {
+            inner: GenericSingleObjectReader::new(T::get_schema())?,
+            _model: PhantomData,
+        })
+    }
+}
+
+impl<T> SpecificSingleObjectReader<T>
+where
+    T: AvroSchema + From<Value>,
+{
+    pub fn read_from_value<R: Read>(&self, reader: &mut R) -> AvroResult<T> {
+        self.inner.read_value(reader).map(|v| v.into())
+    }
+}
+
+impl<T> SpecificSingleObjectReader<T>
+where
+    T: AvroSchema + DeserializeOwned,
+{
+    pub fn read<R: Read>(&self, reader: &mut R) -> AvroResult<T> {
+        from_value::<T>(&self.inner.read_value(reader)?)
+    }
+}
+
+/// Reads the marker bytes from Avro bytes generated earlier by a `Writer`
+pub fn read_marker(bytes: &[u8]) -> [u8; 16] {
+    assert!(
+        bytes.len() > 16,
+        "The bytes are too short to read a marker from them"
+    );
+    let mut marker = [0_u8; 16];
+    marker.clone_from_slice(&bytes[(bytes.len() - 16)..]);
+    marker
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{from_value, types::Record, Reader};
+    use crate::{encode::encode, types::Record};
+    use apache_avro_test_helper::TestResult;
+    use pretty_assertions::assert_eq;
     use serde::Deserialize;
     use std::io::Cursor;
 
@@ -386,8 +569,8 @@ mod tests {
     ];
 
     #[test]
-    fn test_from_avro_datum() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_from_avro_datum() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let mut encoded: &'static [u8] = &[54, 6, 102, 111, 111];
 
         let mut record = Record::new(&schema).unwrap();
@@ -395,14 +578,13 @@ mod tests {
         record.put("b", "foo");
         let expected = record.into();
 
-        assert_eq!(
-            from_avro_datum(&schema, &mut encoded, None).unwrap(),
-            expected
-        );
+        assert_eq!(from_avro_datum(&schema, &mut encoded, None)?, expected);
+
+        Ok(())
     }
 
     #[test]
-    fn test_from_avro_datum_with_union_to_struct() {
+    fn test_from_avro_datum_with_union_to_struct() -> TestResult {
         const TEST_RECORD_SCHEMA_3240: &str = r#"
     {
       "type": "record",
@@ -435,7 +617,7 @@ mod tests {
       ]
     }
     "#;
-        #[derive(Default, Debug, Deserialize, PartialEq)]
+        #[derive(Default, Debug, Deserialize, PartialEq, Eq)]
         struct TestRecord3240 {
             a: i64,
             b: String,
@@ -445,7 +627,7 @@ mod tests {
             a_nullable_string: Option<String>,
         }
 
-        let schema = Schema::parse_str(TEST_RECORD_SCHEMA_3240).unwrap();
+        let schema = Schema::parse_str(TEST_RECORD_SCHEMA_3240)?;
         let mut encoded: &'static [u8] = &[54, 6, 102, 111, 111];
 
         let expected_record: TestRecord3240 = TestRecord3240 {
@@ -455,33 +637,36 @@ mod tests {
             a_nullable_string: None,
         };
 
-        let avro_datum = from_avro_datum(&schema, &mut encoded, None).unwrap();
+        let avro_datum = from_avro_datum(&schema, &mut encoded, None)?;
         let parsed_record: TestRecord3240 = match &avro_datum {
-            Value::Record(_) => from_value::<TestRecord3240>(&avro_datum).unwrap(),
-            unexpected => panic!(
-                "could not map avro data to struct, found unexpected: {:?}",
-                unexpected
-            ),
+            Value::Record(_) => from_value::<TestRecord3240>(&avro_datum)?,
+            unexpected => {
+                panic!("could not map avro data to struct, found unexpected: {unexpected:?}")
+            }
         };
 
         assert_eq!(parsed_record, expected_record);
+
+        Ok(())
     }
 
     #[test]
-    fn test_null_union() {
-        let schema = Schema::parse_str(UNION_SCHEMA).unwrap();
+    fn test_null_union() -> TestResult {
+        let schema = Schema::parse_str(UNION_SCHEMA)?;
         let mut encoded: &'static [u8] = &[2, 0];
 
         assert_eq!(
-            from_avro_datum(&schema, &mut encoded, None).unwrap(),
+            from_avro_datum(&schema, &mut encoded, None)?,
             Value::Union(1, Box::new(Value::Long(0)))
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_reader_iterator() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
-        let reader = Reader::with_schema(&schema, ENCODED).unwrap();
+    fn test_reader_iterator() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
+        let reader = Reader::with_schema(&schema, ENCODED)?;
 
         let mut record1 = Record::new(&schema).unwrap();
         record1.put("a", 27i64);
@@ -491,23 +676,27 @@ mod tests {
         record2.put("a", 42i64);
         record2.put("b", "bar");
 
-        let expected = vec![record1.into(), record2.into()];
+        let expected = [record1.into(), record2.into()];
 
         for (i, value) in reader.enumerate() {
-            assert_eq!(value.unwrap(), expected[i]);
+            assert_eq!(value?, expected[i]);
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_reader_invalid_header() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_reader_invalid_header() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let invalid = ENCODED.iter().copied().skip(1).collect::<Vec<u8>>();
         assert!(Reader::with_schema(&schema, &invalid[..]).is_err());
+
+        Ok(())
     }
 
     #[test]
-    fn test_reader_invalid_block() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_reader_invalid_block() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let invalid = ENCODED
             .iter()
             .copied()
@@ -517,32 +706,38 @@ mod tests {
             .into_iter()
             .rev()
             .collect::<Vec<u8>>();
-        let reader = Reader::with_schema(&schema, &invalid[..]).unwrap();
+        let reader = Reader::with_schema(&schema, &invalid[..])?;
         for value in reader {
             assert!(value.is_err());
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_reader_empty_buffer() {
+    fn test_reader_empty_buffer() -> TestResult {
         let empty = Cursor::new(Vec::new());
         assert!(Reader::new(empty).is_err());
+
+        Ok(())
     }
 
     #[test]
-    fn test_reader_only_header() {
+    fn test_reader_only_header() -> TestResult {
         let invalid = ENCODED.iter().copied().take(165).collect::<Vec<u8>>();
-        let reader = Reader::new(&invalid[..]).unwrap();
+        let reader = Reader::new(&invalid[..])?;
         for value in reader {
             assert!(value.is_err());
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_avro_3405_read_user_metadata_success() {
+    fn test_avro_3405_read_user_metadata_success() -> TestResult {
         use crate::writer::Writer;
 
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+        let schema = Schema::parse_str(SCHEMA)?;
         let mut writer = Writer::new(&schema, Vec::new());
 
         let mut user_meta_data: HashMap<String, Vec<u8>> = HashMap::new();
@@ -554,19 +749,236 @@ mod tests {
         user_meta_data.insert("vecKey".to_string(), vec![1, 2, 3]);
 
         for (k, v) in user_meta_data.iter() {
-            writer.add_user_metadata(k.to_string(), v).unwrap();
+            writer.add_user_metadata(k.to_string(), v)?;
         }
 
         let mut record = Record::new(&schema).unwrap();
         record.put("a", 27i64);
         record.put("b", "foo");
 
-        writer.append(record.clone()).unwrap();
-        writer.append(record.clone()).unwrap();
-        writer.flush().unwrap();
-        let result = writer.into_inner().unwrap();
+        writer.append(record.clone())?;
+        writer.append(record.clone())?;
+        writer.flush()?;
+        let result = writer.into_inner()?;
 
-        let reader = Reader::new(&result[..]).unwrap();
+        let reader = Reader::new(&result[..])?;
         assert_eq!(reader.user_metadata(), &user_meta_data);
+
+        Ok(())
+    }
+
+    #[derive(Deserialize, Clone, PartialEq, Debug)]
+    struct TestSingleObjectReader {
+        a: i64,
+        b: f64,
+        c: Vec<String>,
+    }
+
+    impl AvroSchema for TestSingleObjectReader {
+        fn get_schema() -> Schema {
+            let schema = r#"
+            {
+                "type":"record",
+                "name":"TestSingleObjectWrtierSerialize",
+                "fields":[
+                    {
+                        "name":"a",
+                        "type":"long"
+                    },
+                    {
+                        "name":"b",
+                        "type":"double"
+                    },
+                    {
+                        "name":"c",
+                        "type":{
+                            "type":"array",
+                            "items":"string"
+                        }
+                    }
+                ]
+            }
+            "#;
+            Schema::parse_str(schema).unwrap()
+        }
+    }
+
+    impl From<Value> for TestSingleObjectReader {
+        fn from(obj: Value) -> TestSingleObjectReader {
+            if let Value::Record(fields) = obj {
+                let mut a = None;
+                let mut b = None;
+                let mut c = vec![];
+                for (field_name, v) in fields {
+                    match (field_name.as_str(), v) {
+                        ("a", Value::Long(i)) => a = Some(i),
+                        ("b", Value::Double(d)) => b = Some(d),
+                        ("c", Value::Array(v)) => {
+                            for inner_val in v {
+                                if let Value::String(s) = inner_val {
+                                    c.push(s);
+                                }
+                            }
+                        }
+                        (key, value) => panic!("Unexpected pair: {key:?} -> {value:?}"),
+                    }
+                }
+                TestSingleObjectReader {
+                    a: a.unwrap(),
+                    b: b.unwrap(),
+                    c,
+                }
+            } else {
+                panic!("Expected a Value::Record but was {obj:?}")
+            }
+        }
+    }
+
+    impl From<TestSingleObjectReader> for Value {
+        fn from(obj: TestSingleObjectReader) -> Value {
+            Value::Record(vec![
+                ("a".into(), obj.a.into()),
+                ("b".into(), obj.b.into()),
+                (
+                    "c".into(),
+                    Value::Array(obj.c.into_iter().map(|s| s.into()).collect()),
+                ),
+            ])
+        }
+    }
+
+    #[test]
+    fn test_avro_3507_single_object_reader() -> TestResult {
+        let obj = TestSingleObjectReader {
+            a: 42,
+            b: 3.33,
+            c: vec!["cat".into(), "dog".into()],
+        };
+        let mut to_read = Vec::<u8>::new();
+        to_read.extend_from_slice(&[0xC3, 0x01]);
+        to_read.extend_from_slice(
+            &TestSingleObjectReader::get_schema()
+                .fingerprint::<Rabin>()
+                .bytes[..],
+        );
+        encode(
+            &obj.clone().into(),
+            &TestSingleObjectReader::get_schema(),
+            &mut to_read,
+        )
+        .expect("Encode should succeed");
+        let mut to_read = &to_read[..];
+        let generic_reader = GenericSingleObjectReader::new(TestSingleObjectReader::get_schema())
+            .expect("Schema should resolve");
+        let val = generic_reader
+            .read_value(&mut to_read)
+            .expect("Should read");
+        let expected_value: Value = obj.into();
+        assert_eq!(expected_value, val);
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3642_test_single_object_reader_incomplete_reads() -> TestResult {
+        let obj = TestSingleObjectReader {
+            a: 42,
+            b: 3.33,
+            c: vec!["cat".into(), "dog".into()],
+        };
+        // The two-byte marker, to show that the message uses this single-record format
+        let to_read_1 = [0xC3, 0x01];
+        let mut to_read_2 = Vec::<u8>::new();
+        to_read_2.extend_from_slice(
+            &TestSingleObjectReader::get_schema()
+                .fingerprint::<Rabin>()
+                .bytes[..],
+        );
+        let mut to_read_3 = Vec::<u8>::new();
+        encode(
+            &obj.clone().into(),
+            &TestSingleObjectReader::get_schema(),
+            &mut to_read_3,
+        )
+        .expect("Encode should succeed");
+        let mut to_read = (&to_read_1[..]).chain(&to_read_2[..]).chain(&to_read_3[..]);
+        let generic_reader = GenericSingleObjectReader::new(TestSingleObjectReader::get_schema())
+            .expect("Schema should resolve");
+        let val = generic_reader
+            .read_value(&mut to_read)
+            .expect("Should read");
+        let expected_value: Value = obj.into();
+        assert_eq!(expected_value, val);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3507_reader_parity() -> TestResult {
+        let obj = TestSingleObjectReader {
+            a: 42,
+            b: 3.33,
+            c: vec!["cat".into(), "dog".into()],
+        };
+
+        let mut to_read = Vec::<u8>::new();
+        to_read.extend_from_slice(&[0xC3, 0x01]);
+        to_read.extend_from_slice(
+            &TestSingleObjectReader::get_schema()
+                .fingerprint::<Rabin>()
+                .bytes[..],
+        );
+        encode(
+            &obj.clone().into(),
+            &TestSingleObjectReader::get_schema(),
+            &mut to_read,
+        )
+        .expect("Encode should succeed");
+        let generic_reader = GenericSingleObjectReader::new(TestSingleObjectReader::get_schema())
+            .expect("Schema should resolve");
+        let specific_reader = SpecificSingleObjectReader::<TestSingleObjectReader>::new()
+            .expect("schema should resolve");
+        let mut to_read1 = &to_read[..];
+        let mut to_read2 = &to_read[..];
+        let mut to_read3 = &to_read[..];
+
+        let val = generic_reader
+            .read_value(&mut to_read1)
+            .expect("Should read");
+        let read_obj1 = specific_reader
+            .read_from_value(&mut to_read2)
+            .expect("Should read from value");
+        let read_obj2 = specific_reader
+            .read(&mut to_read3)
+            .expect("Should read from deserilize");
+        let expected_value: Value = obj.clone().into();
+        assert_eq!(obj, read_obj1);
+        assert_eq!(obj, read_obj2);
+        assert_eq!(val, expected_value);
+
+        Ok(())
+    }
+
+    #[cfg(not(feature = "snappy"))]
+    #[test]
+    fn test_avro_3549_read_not_enabled_codec() {
+        let snappy_compressed_avro = vec![
+            79, 98, 106, 1, 4, 22, 97, 118, 114, 111, 46, 115, 99, 104, 101, 109, 97, 210, 1, 123,
+            34, 102, 105, 101, 108, 100, 115, 34, 58, 91, 123, 34, 110, 97, 109, 101, 34, 58, 34,
+            110, 117, 109, 34, 44, 34, 116, 121, 112, 101, 34, 58, 34, 115, 116, 114, 105, 110,
+            103, 34, 125, 93, 44, 34, 110, 97, 109, 101, 34, 58, 34, 101, 118, 101, 110, 116, 34,
+            44, 34, 110, 97, 109, 101, 115, 112, 97, 99, 101, 34, 58, 34, 101, 120, 97, 109, 112,
+            108, 101, 110, 97, 109, 101, 115, 112, 97, 99, 101, 34, 44, 34, 116, 121, 112, 101, 34,
+            58, 34, 114, 101, 99, 111, 114, 100, 34, 125, 20, 97, 118, 114, 111, 46, 99, 111, 100,
+            101, 99, 12, 115, 110, 97, 112, 112, 121, 0, 213, 209, 241, 208, 200, 110, 164, 47,
+            203, 25, 90, 235, 161, 167, 195, 177, 2, 20, 4, 12, 6, 49, 50, 51, 115, 38, 58, 0, 213,
+            209, 241, 208, 200, 110, 164, 47, 203, 25, 90, 235, 161, 167, 195, 177,
+        ];
+
+        if let Err(err) = Reader::new(snappy_compressed_avro.as_slice()) {
+            assert_eq!("Codec 'snappy' is not supported/enabled", err.to_string());
+        } else {
+            panic!("Expected an error in the reading of the codec!");
+        }
     }
 }

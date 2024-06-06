@@ -181,7 +181,18 @@ namespace Avro.Test.AvroGen
             if (typeNamesToCheck != null)
             {
                 // Check if the compiled code has the same number of types defined as the check list
-                Assert.That(typeNamesToCheck.Count(), Is.EqualTo(assembly.DefinedTypes.Count()));
+                // Note: Ignore types which are injected by the compiler (System.* and Microsoft.*), e.g. Microsoft.CodeAnalysis.EmbeddedAttribute
+                Assert.That(
+                    typeNamesToCheck.Count(),
+                    Is.EqualTo(
+                        assembly
+                        .DefinedTypes
+                        .Where(t =>
+                        {
+                            return !t.Namespace.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase) &&
+                                   !t.Namespace.StartsWith("System.", StringComparison.OrdinalIgnoreCase);
+                        })
+                        .Count()));
 
                 // Check if types available in compiled assembly
                 foreach (string typeName in typeNamesToCheck)

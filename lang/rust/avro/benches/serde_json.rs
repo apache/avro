@@ -17,7 +17,7 @@
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use serde_json::Value;
-use std::{collections::HashMap, iter::FromIterator};
+use std::collections::HashMap;
 
 fn make_big_json_record() -> Value {
     let address = HashMap::<_, _>::from_iter(vec![
@@ -65,7 +65,7 @@ fn bench_read_json(
 fn bench_big_schema_json_read_10_000_record(c: &mut Criterion) {
     bench_read_json(
         c,
-        &make_big_json_record,
+        make_big_json_record,
         10_000,
         "big schema, read 10k JSON records",
     );

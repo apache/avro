@@ -324,8 +324,10 @@ public class SchemaCompatibility {
 
         // Reader compatible with all branches of a writer union is compatible
         if (writer.getType() == Schema.Type.UNION) {
+          int index = 0;
           for (Schema s : writer.getTypes()) {
-            result = result.mergedWith(getCompatibility(reader, s));
+            result = result.mergedWith(getCompatibility(Integer.toString(index), reader, s, location));
+            index++;
           }
           return result;
         }

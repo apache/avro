@@ -17,48 +17,34 @@
  */
 package org.apache.avro.io;
 
+import org.apache.avro.Schema;
+import org.apache.avro.io.TestValidatingIO.Encoding;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.stream.Stream;
 
-import org.apache.avro.Schema;
-import org.apache.avro.io.TestValidatingIO.Encoding;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
-@RunWith(Parameterized.class)
 public class TestResolvingIO {
 
-  protected final Encoding eEnc;
-  protected final int iSkipL;
-  protected final String sJsWrtSchm;
-  protected final String sWrtCls;
-  protected final String sJsRdrSchm;
-  protected final String sRdrCls;
-
-  public TestResolvingIO(Encoding encoding, int skipLevel, String jsonWriterSchema, String writerCalls,
-      String jsonReaderSchema, String readerCalls) {
-    this.eEnc = encoding;
-    this.iSkipL = skipLevel;
-    this.sJsWrtSchm = jsonWriterSchema;
-    this.sWrtCls = writerCalls;
-    this.sJsRdrSchm = jsonReaderSchema;
-    this.sRdrCls = readerCalls;
-  }
-
-  @Test
-  public void testIdentical() throws IOException {
-    performTest(eEnc, iSkipL, sJsWrtSchm, sWrtCls, sJsWrtSchm, sWrtCls);
+  @ParameterizedTest
+  @MethodSource("data2")
+  public void testIdentical(Encoding encoding, int skip, String jsonWriterSchema, String writerCalls,
+      String jsonReaderSchema, String readerCalls) throws IOException {
+    performTest(encoding, skip, jsonWriterSchema, writerCalls, jsonWriterSchema, writerCalls);
   }
 
   private static final int COUNT = 10;
 
-  @Test
-  public void testCompatible() throws IOException {
-    performTest(eEnc, iSkipL, sJsWrtSchm, sWrtCls, sJsRdrSchm, sRdrCls);
+  @ParameterizedTest
+  @MethodSource("data2")
+  public void testCompatible(Encoding encoding, int skip, String jsonWriterSchema, String writerCalls,
+      String jsonReaderSchema, String readerCalls) throws IOException {
+    performTest(encoding, skip, jsonWriterSchema, writerCalls, jsonReaderSchema, readerCalls);
   }
 
   private void performTest(Encoding encoding, int skipLevel, String jsonWriterSchema, String writerCalls,
@@ -100,9 +86,8 @@ public class TestResolvingIO {
     TestValidatingIO.check(msg, vi, calls, values, skipLevel);
   }
 
-  @Parameterized.Parameters
-  public static Collection<Object[]> data2() {
-    return Arrays.asList(TestValidatingIO.convertTo2dArray(encodings, skipLevels, testSchemas()));
+  public static Stream<Arguments> data2() {
+    return TestValidatingIO.convertTo2dStream(encodings, skipLevels, testSchemas());
   }
 
   static Object[][] encodings = new Object[][] { { Encoding.BINARY }, { Encoding.BLOCKING_BINARY }, { Encoding.JSON } };

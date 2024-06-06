@@ -89,17 +89,7 @@ import datetime
 import decimal
 import struct
 import warnings
-from typing import (
-    IO,
-    Deque,
-    Generator,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Union,
-)
+from typing import IO, Generator, Iterable, List, Mapping, Optional, Sequence, Union
 
 import avro.constants
 import avro.errors
@@ -266,7 +256,7 @@ class BinaryDecoder:
         """
         A float is written as 4 bytes.
         The float is converted into a 32-bit integer using a method equivalent to
-        Java's floatToIntBits and then encoded in little-endian format.
+        Java's floatToRawIntBits and then encoded in little-endian format.
         """
         return float(STRUCT_FLOAT.unpack(self.read(4))[0])
 
@@ -274,7 +264,7 @@ class BinaryDecoder:
         """
         A double is written as 8 bytes.
         The double is converted into a 64-bit integer using a method equivalent to
-        Java's doubleToLongBits and then encoded in little-endian format.
+        Java's doubleToRawLongBits and then encoded in little-endian format.
         """
         return float(STRUCT_DOUBLE.unpack(self.read(8))[0])
 
@@ -435,7 +425,6 @@ class BinaryEncoder:
         """
         null is written as zero bytes
         """
-        pass
 
     def write_boolean(self, datum: bool) -> None:
         """
@@ -464,7 +453,7 @@ class BinaryEncoder:
         """
         A float is written as 4 bytes.
         The float is converted into a 32-bit integer using a method equivalent to
-        Java's floatToIntBits and then encoded in little-endian format.
+        Java's floatToRawIntBits and then encoded in little-endian format.
         """
         self.write(STRUCT_FLOAT.pack(datum))
 
@@ -472,7 +461,7 @@ class BinaryEncoder:
         """
         A double is written as 8 bytes.
         The double is converted into a 64-bit integer using a method equivalent to
-        Java's doubleToLongBits and then encoded in little-endian format.
+        Java's doubleToRawLongBits and then encoded in little-endian format.
         """
         self.write(STRUCT_DOUBLE.pack(datum))
 
@@ -482,7 +471,7 @@ class BinaryEncoder:
         signed long is 8, 8 bytes are written.
         """
         sign, digits, exp = datum.as_tuple()
-        if (-1 * exp) > scale:
+        if (-1 * int(exp)) > scale:
             raise avro.errors.AvroOutOfScaleException(scale, datum, exp)
 
         unscaled_datum = 0
@@ -508,7 +497,7 @@ class BinaryEncoder:
         Decimal in fixed are encoded as size of fixed bytes.
         """
         sign, digits, exp = datum.as_tuple()
-        if (-1 * exp) > scale:
+        if (-1 * int(exp)) > scale:
             raise avro.errors.AvroOutOfScaleException(scale, datum, exp)
 
         unscaled_datum = 0
@@ -699,8 +688,8 @@ class DatumReader:
                     warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal precision {precision}. Must be a positive integer."))
                     return decoder.read_bytes()
                 scale = writers_schema.get_prop("scale")
-                if not (isinstance(scale, int) and scale > 0):
-                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a positive integer."))
+                if not (isinstance(scale, int) and scale >= 0):
+                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a non-negative integer."))
                     return decoder.read_bytes()
                 return decoder.read_decimal_from_bytes(precision, scale)
             return decoder.read_bytes()
@@ -711,8 +700,8 @@ class DatumReader:
                     warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal precision {precision}. Must be a positive integer."))
                     return self.read_fixed(writers_schema, readers_schema, decoder)
                 scale = writers_schema.get_prop("scale")
-                if not (isinstance(scale, int) and scale > 0):
-                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a positive integer."))
+                if not (isinstance(scale, int) and scale >= 0):
+                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a non-negative integer."))
                     return self.read_fixed(writers_schema, readers_schema, decoder)
                 return decoder.read_decimal_from_fixed(precision, scale, writers_schema.size)
             return self.read_fixed(writers_schema, readers_schema, decoder)
@@ -810,7 +799,7 @@ class DatumReader:
         while block_count != 0:
             if block_count < 0:
                 block_count = -block_count
-                block_size = decoder.read_long()
+                decoder.skip_long()
             for i in range(block_count):
                 read_items.append(self.read_data(writers_schema.items, readers_schema.items, decoder))
             block_count = decoder.read_long()
@@ -847,7 +836,7 @@ class DatumReader:
         while block_count != 0:
             if block_count < 0:
                 block_count = -block_count
-                block_size = decoder.read_long()
+                decoder.skip_long()
             for i in range(block_count):
                 key = decoder.read_utf8()
                 read_items[key] = self.read_data(writers_schema.values, readers_schema.values, decoder)
@@ -1067,8 +1056,8 @@ class DatumWriter:
         if writers_schema.type == "bytes":
             if logical_type == "decimal":
                 scale = writers_schema.get_prop("scale")
-                if not (isinstance(scale, int) and scale > 0):
-                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a positive integer."))
+                if not (isinstance(scale, int) and scale >= 0):
+                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a non-negative integer."))
                 elif not isinstance(datum, decimal.Decimal):
                     warnings.warn(avro.errors.IgnoredLogicalType(f"{datum} is not a decimal type"))
                 else:
@@ -1080,8 +1069,8 @@ class DatumWriter:
             if logical_type == "decimal":
                 scale = writers_schema.get_prop("scale")
                 size = writers_schema.size
-                if not (isinstance(scale, int) and scale > 0):
-                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a positive integer."))
+                if not (isinstance(scale, int) and scale >= 0):
+                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a non-negative integer."))
                 elif not isinstance(datum, decimal.Decimal):
                     warnings.warn(avro.errors.IgnoredLogicalType(f"{datum} is not a decimal type"))
                 else:
