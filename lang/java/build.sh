@@ -19,7 +19,7 @@ set -e
 set -x
 
 usage() {
-  echo "Usage: $0 {lint|test|testJava17|dist|clean}"
+  echo "Usage: $0 {lint|test|dist|clean}"
   exit 1
 }
 
@@ -35,11 +35,6 @@ main() {
         mvn -B verify
         # Test the modules that depend on hadoop using Hadoop 2
         mvn -Dmaven.build.cache.enabled=false -B test -Phadoop2
-        ;;
-      testJava17)
-        mvn -DdisableJava17=false -B test
-        # Test the modules that depend on hadoop using Hadoop 2
-        mvn -B test -Phadoop2
         ;;
       dist)
         mvn -P dist package -DskipTests javadoc:aggregate
