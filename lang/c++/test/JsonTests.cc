@@ -65,7 +65,9 @@ TestData<const char *> stringData[] = {
     {R"("\U000a")", EntityType::String, "\n", R"("\n")"},
     {R"("\u000a")", EntityType::String, "\n", R"("\n")"},
     {R"("\"")", EntityType::String, "\"", R"("\"")"},
-    {R"("\/")", EntityType::String, "/", R"("\/")"},
+    // While a solidus may be escaped according to the JSON standard, it need not be escaped.
+    {R"("/\/")", EntityType::String, "//", R"("//")"},
+    {R"("\b\f\n\r\t")", EntityType::String, "\b\f\n\r\t", R"("\b\f\n\r\t")"},
     {R"("\u20ac")", EntityType::String, "\xe2\x82\xac", R"("\u20ac")"},
     {R"("\u03c0")", EntityType::String, "\xcf\x80", R"("\u03c0")"},
     {R"("hello\n")", EntityType::String, "hello\n", R"("hello\n")"},
