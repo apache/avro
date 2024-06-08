@@ -204,9 +204,7 @@ public class TestJavaRecordAndCustomEncoder {
 
     @Override
     protected void write(Object datum, Encoder out) throws IOException {
-      CustomWrite c = (CustomWrite) datum;
       out.writeString("Override");
-
     }
 
     @Override
@@ -224,9 +222,7 @@ public class TestJavaRecordAndCustomEncoder {
 
     @Override
     protected void write(Object datum, Encoder out) throws IOException {
-      CustomWrite c = (CustomWrite) datum;
       out.writeString("Override2");
-
     }
 
     @Override
