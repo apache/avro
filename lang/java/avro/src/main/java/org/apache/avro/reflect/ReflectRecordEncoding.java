@@ -18,6 +18,7 @@
 package org.apache.avro.reflect;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -87,19 +88,46 @@ public class ReflectRecordEncoding extends CustomEncoding<Object> {
       throw new RuntimeException(e);
     }
 
-    this.reader = schema.getFields().stream().map(field -> {
-      int offset = offsets.get(field.name());
+    var reader = schema.getFields().stream().map(field -> {
+      int offset = offsets.remove(field.name());
 
       try {
         Field classField = type.getDeclaredField(field.name());
         AvroEncode enc = classField.getAnnotation(AvroEncode.class);
         if (enc != null)
-          return new CustomEncodedFieldReader(offset, enc.using().getDeclaredConstructor().newInstance());
+          return new CustomEncodedFieldReader(offset, enc.using().getDeclaredConstructor().newInstance(),
+              field.schema());
         return new ReflectFieldReader(offset, field.schema());
       } catch (ReflectiveOperationException e) {
         throw new AvroRuntimeException("Could not instantiate custom Encoding");
       }
     }).collect(Collectors.toList());
+
+    // got a new field, set to default value
+    if (!offsets.isEmpty()) {
+      var defaultReader = new ArrayList<>(reader);
+
+      offsets.forEach((field, offset) -> {
+        try {
+
+          var fieldType = type.getDeclaredField(field).getType();
+          if (fieldType.isPrimitive()) {
+            var defaultValue = Array.get(Array.newInstance(fieldType, 1), 0);
+            defaultReader.add(new DefaultReader(offset, defaultValue));
+
+          } else {
+            defaultReader.add(new DefaultReader(offset, null));
+          }
+        } catch (ReflectiveOperationException e) {
+          throw new AvroRuntimeException(e);
+        }
+      });
+
+      reader = defaultReader;
+
+    }
+    this.reader = reader;
+
   }
 
   @Override
@@ -207,14 +235,31 @@ public class ReflectRecordEncoding extends CustomEncoding<Object> {
     }
   }
 
+  private static class DefaultReader implements FieldReader {
+
+    private final int constructorOffset;
+    private final Object defaultValue;
+
+    public DefaultReader(int constructorOffset, Object defaultValue) {
+      this.constructorOffset = constructorOffset;
+      this.defaultValue = defaultValue;
+    }
+
+    @Override
+    public void read(ResolvingDecoder in, ReflectDatumReader reader, Object[] constructorArgs) throws IOException {
+      constructorArgs[constructorOffset] = defaultValue;
+    }
+  }
+
   private static class CustomEncodedFieldReader implements FieldReader {
 
     private final int constructorOffset;
     private final CustomEncoding<?> encoding;
 
-    public CustomEncodedFieldReader(int constructorOffset, CustomEncoding<?> encoding) {
+    public CustomEncodedFieldReader(int constructorOffset, CustomEncoding<?> encoding, Schema schema) {
       this.constructorOffset = constructorOffset;
       this.encoding = encoding;
+      encoding.setSchema(schema);
     }
 
     @Override
