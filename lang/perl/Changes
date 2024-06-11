@@ -1,5 +1,8 @@
 Revision history for Perl extension Avro
 
+        - Switch from JSON::XS to JSON::MaybeXS to support
+          multiple JSON backends
+
 1.00  Fri Jan 17 15:00:00 2014
         - Relicense under apache license 2.0
 

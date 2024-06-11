@@ -35,7 +35,7 @@ requires 'Compress::Zstd';
 requires 'Encode';
 requires 'Error::Simple';
 requires 'IO::String';
-requires 'JSON::XS';
+requires 'JSON::MaybeXS';
 requires 'Object::Tiny';
 requires 'Regexp::Common';
 requires 'Try::Tiny';

@@ -23,9 +23,9 @@ use warnings;
 use Avro::DataFileReader;
 use Carp;
 use IO::File;
-use JSON::XS;
+use JSON::MaybeXS ();
 
-my $j = JSON::XS->new->allow_nonref;
+my $j = JSON::MaybeXS->new->allow_nonref;
 
 my $fh = IO::File->new(shift || croak "specify a file");
 my $reader = Avro::DataFileReader->new(
