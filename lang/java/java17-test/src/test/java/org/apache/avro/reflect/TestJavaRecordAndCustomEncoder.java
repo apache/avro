@@ -18,6 +18,8 @@
 
 package org.apache.avro.reflect;
 
+import static org.apache.avro.reflect.RecordReadWriteUtil.read;
+import static org.apache.avro.reflect.RecordReadWriteUtil.write;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -75,29 +77,6 @@ public class TestJavaRecordAndCustomEncoder {
 
     assertNotNull(decoded);
     assertEquals("Fixed2", decoded.field().getField());
-  }
-
-  private <T> T read(byte[] toDecode) throws IOException {
-    DatumReader<T> datumReader = new ReflectDatumReader<>();
-    try (DataFileStream<T> dataFileReader = new DataFileStream<>(new ByteArrayInputStream(toDecode, 0, toDecode.length),
-        datumReader);) {
-      dataFileReader.hasNext();
-      return dataFileReader.next();
-    }
-  }
-
-  private <T> byte[] write(T custom) {
-    Schema schema = ReflectData.get().getSchema(custom.getClass());
-    ReflectDatumWriter<T> datumWriter = new ReflectDatumWriter<>();
-    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataFileWriter<T> writer = new DataFileWriter<>(datumWriter)) {
-      writer.create(schema, baos);
-      writer.append(custom);
-      writer.flush();
-      return baos.toByteArray();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
   }
 
   @AvroEncode(using = CustomEncoderWrite.class)

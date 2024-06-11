@@ -34,13 +34,9 @@ import org.apache.avro.file.DataFileWriter.AppendWriteException;
 import org.apache.avro.io.DatumReader;
 import org.junit.Test;
 
-/**
- * Simulates a record in behavior only. This way it can run on all supported
- * version of java To simulate has a class with final variables and a single
- * constructor matching variables This class has the RecordEncoding annotation
- * attached
- *
- */
+import static org.apache.avro.reflect.RecordReadWriteUtil.read;
+import static org.apache.avro.reflect.RecordReadWriteUtil.write;
+
 public class TestJavaRecordEncoder {
 
   @Test
@@ -72,33 +68,10 @@ public class TestJavaRecordEncoder {
     });
   }
 
-  private <T> T read(byte[] toDecode) throws IOException {
-    DatumReader<T> datumReader = new ReflectDatumReader<>();
-    try (DataFileStream<T> dataFileReader = new DataFileStream<>(new ByteArrayInputStream(toDecode, 0, toDecode.length),
-        datumReader);) {
-      dataFileReader.hasNext();
-      return dataFileReader.next();
-    }
+  public record Custom(String field) {
   }
 
-  private <T> byte[] write(T custom) {
-    Schema schema = ReflectData.get().getSchema(custom.getClass());
-    ReflectDatumWriter<T> datumWriter = new ReflectDatumWriter<>();
-    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataFileWriter<T> writer = new DataFileWriter<>(datumWriter)) {
-      writer.create(schema, baos);
-      writer.append(custom);
-      writer.flush();
-      return baos.toByteArray();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-  }
-
-  public static record Custom(String field) {
-  }
-
-  public static record CustomWithNull(String field, @Nullable String field2) {
+  public record CustomWithNull(String field, @Nullable String field2) {
   }
 
 }

@@ -34,6 +34,9 @@ import java.io.UncheckedIOException;
 
 import static org.junit.Assert.*;
 
+import static org.apache.avro.reflect.RecordReadWriteUtil.read;
+import static org.apache.avro.reflect.RecordReadWriteUtil.write;
+
 public class TestJavaRecordEncoderChanges {
 
   @Test
@@ -96,41 +99,6 @@ public class TestJavaRecordEncoderChanges {
     Base in = new Base("hello world", 42);
     byte[] encoded = write(in, BaseWithFieldRemovedClass.class);
     assertThrows(NullPointerException.class, () -> read(encoded)); // exceptions don't match
-  }
-
-  private <T> T read(byte[] toDecode) throws IOException {
-    DatumReader<T> datumReader = new ReflectDatumReader<>();
-    try (DataFileStream<T> dataFileReader = new DataFileStream<>(new ByteArrayInputStream(toDecode, 0, toDecode.length),
-        datumReader);) {
-      dataFileReader.hasNext();
-      return dataFileReader.next();
-    }
-  }
-
-  private <T> byte[] write(T custom, Class<?> asName) {
-    var schema = ReflectData.get().getSchema(custom.getClass());
-
-    var schemaAs = ReflectData.get().getSchema(asName);
-
-    var fields = schema.getFields().stream()
-        .map(field -> new Schema.Field(field.name(), field.schema(), field.doc(), field.defaultVal(), field.order()))
-        .toList();
-
-    schemaAs = Schema.createRecord(schemaAs.getName(), schemaAs.getDoc(), schemaAs.getNamespace(), schemaAs.isError(),
-        fields);
-
-    ReflectDatumWriter<T> datumWriter = new ReflectDatumWriter<>();
-
-    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataFileWriter<T> writer = new DataFileWriter<>(datumWriter)) {
-      writer.create(schemaAs, baos);
-      datumWriter.setSchema(schema);
-      writer.append(custom);
-      writer.flush();
-      return baos.toByteArray();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
   }
 
   public record Base(String field, long field2) {
