@@ -321,7 +321,6 @@ class AVRO_DECL JsonGenerator {
                 switch (*p) {
                     case '\\':
                     case '"':
-                    case '/':
                         escape(*p, b, p);
                         break;
                     case '\b':
