@@ -32,6 +32,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -53,7 +54,7 @@ public class TestEncoders {
   private static final int ENCODER_BUFFER_SIZE = 32;
   private static final int EXAMPLE_DATA_SIZE = 17;
 
-  private static EncoderFactory factory = EncoderFactory.get();
+  private static final EncoderFactory FACTORY = EncoderFactory.get();
 
   @Rule
   public TemporaryFolder DIR = new TemporaryFolder();
@@ -61,65 +62,92 @@ public class TestEncoders {
   @Test
   public void testBinaryEncoderInit() throws IOException {
     OutputStream out = new ByteArrayOutputStream();
-    BinaryEncoder enc = factory.binaryEncoder(out, null);
-    Assert.assertSame(enc, factory.binaryEncoder(out, enc));
+    BinaryEncoder enc = FACTORY.binaryEncoder(out, null);
+    Assert.assertSame(enc, FACTORY.binaryEncoder(out, enc));
   }
 
   @Test(expected = NullPointerException.class)
   public void testBadBinaryEncoderInit() {
-    factory.binaryEncoder(null, null);
+    FACTORY.binaryEncoder(null, null);
   }
 
   @Test
   public void testBlockingBinaryEncoderInit() throws IOException {
     OutputStream out = new ByteArrayOutputStream();
     BinaryEncoder reuse = null;
-    reuse = factory.blockingBinaryEncoder(out, reuse);
-    Assert.assertSame(reuse, factory.blockingBinaryEncoder(out, reuse));
+    reuse = FACTORY.blockingBinaryEncoder(out, reuse);
+    Assert.assertSame(reuse, FACTORY.blockingBinaryEncoder(out, reuse));
     // comparison
   }
 
   @Test(expected = NullPointerException.class)
   public void testBadBlockintBinaryEncoderInit() {
-    factory.binaryEncoder(null, null);
+    OutputStream out = new ByteArrayOutputStream();
+
+    FACTORY.binaryEncoder(null, null);
+    BinaryEncoder enc = FACTORY.binaryEncoder(out, null);
+    Assert.assertSame(enc, FACTORY.binaryEncoder(out, enc));
+  }
+
+  @Test
+  public void blockingBinaryEncoderInit() throws IOException {
+    OutputStream out = new ByteArrayOutputStream();
+    BinaryEncoder reuse = null;
+    reuse = FACTORY.blockingBinaryEncoder(out, reuse);
+    Assert.assertSame(reuse, FACTORY.blockingBinaryEncoder(out, reuse));
+    // comparison
   }
 
   @Test
   public void testDirectBinaryEncoderInit() throws IOException {
     OutputStream out = new ByteArrayOutputStream();
-    BinaryEncoder enc = factory.directBinaryEncoder(out, null);
-    Assert.assertSame(enc, factory.directBinaryEncoder(out, enc));
+    BinaryEncoder enc = FACTORY.directBinaryEncoder(out, null);
+    Assert.assertSame(enc, FACTORY.directBinaryEncoder(out, enc));
   }
 
   @Test(expected = NullPointerException.class)
   public void testBadDirectBinaryEncoderInit() {
-    factory.directBinaryEncoder(null, null);
+    FACTORY.directBinaryEncoder(null, null);
   }
 
   @Test
   public void testJsonEncoderInit() throws IOException {
+    OutputStream out = new ByteArrayOutputStream();
+    BinaryEncoder enc = FACTORY.directBinaryEncoder(out, null);
+    Assert.assertSame(enc, FACTORY.directBinaryEncoder(out, enc));
+  }
+
+  @Test
+  public void testBlokingDirectBinaryEncoderInit() throws IOException {
+    OutputStream out = new ByteArrayOutputStream();
+    BinaryEncoder enc = FACTORY.blockingDirectBinaryEncoder(out, null);
+    Assert.assertSame(enc, FACTORY.blockingDirectBinaryEncoder(out, enc));
+  }
+
+  @Test
+  public void jsonEncoderInit() throws IOException {
     Schema s = new Schema.Parser().parse("\"int\"");
     OutputStream out = new ByteArrayOutputStream();
-    factory.jsonEncoder(s, out);
-    JsonEncoder enc = factory.jsonEncoder(s, new JsonFactory().createGenerator(out, JsonEncoding.UTF8));
+    FACTORY.jsonEncoder(s, out);
+    JsonEncoder enc = FACTORY.jsonEncoder(s, new JsonFactory().createGenerator(out, JsonEncoding.UTF8));
     enc.configure(out);
   }
 
   @Test(expected = NullPointerException.class)
   public void testBadJsonEncoderInitOS() throws IOException {
-    factory.jsonEncoder(Schema.create(Type.INT), (OutputStream) null);
+    FACTORY.jsonEncoder(Schema.create(Type.INT), (OutputStream) null);
   }
 
   @Test(expected = NullPointerException.class)
   public void testBadJsonEncoderInit() throws IOException {
-    factory.jsonEncoder(Schema.create(Type.INT), (JsonGenerator) null);
+    FACTORY.jsonEncoder(Schema.create(Type.INT), (JsonGenerator) null);
   }
 
   @Test
   public void testJsonEncoderNewlineDelimited() throws IOException {
     OutputStream out = new ByteArrayOutputStream();
     Schema ints = Schema.create(Type.INT);
-    Encoder e = factory.jsonEncoder(ints, out);
+    Encoder e = FACTORY.jsonEncoder(ints, out);
     String separator = System.getProperty("line.separator");
     GenericDatumWriter<Integer> writer = new GenericDatumWriter<>(ints);
     writer.write(1, e);
@@ -158,8 +186,8 @@ public class TestEncoders {
   public void testValidatingEncoderInit() throws IOException {
     Schema s = new Schema.Parser().parse("\"int\"");
     OutputStream out = new ByteArrayOutputStream();
-    Encoder e = factory.directBinaryEncoder(out, null);
-    factory.validatingEncoder(s, e).configure(e);
+    Encoder e = FACTORY.directBinaryEncoder(out, null);
+    FACTORY.validatingEncoder(s, e).configure(e);
   }
 
   @Test
@@ -311,7 +339,7 @@ public class TestEncoders {
     DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
     ByteArrayOutputStream output = new ByteArrayOutputStream();
 
-    JsonEncoder encoder = factory.jsonEncoder(schema, output);
+    JsonEncoder encoder = FACTORY.jsonEncoder(schema, output);
     encoder.setIncludeNamespace(includeNamespace);
     Decoder decoder = DecoderFactory.get().binaryDecoder(avroBytes, null);
     Object datum = reader.read(null, decoder);

@@ -217,6 +217,49 @@ public class EncoderFactory {
   }
 
   /**
+   * Creates or reinitializes a {@link BlockingDirectBinaryEncoder} with the
+   * OutputStream provided as the destination for written data. If <i>reuse</i> is
+   * provided, an attempt will be made to reconfigure <i>reuse</i> rather than
+   * construct a new instance, but this is not guaranteed, a new instance may be
+   * returned.
+   * <p/>
+   * The {@link BinaryEncoder} implementation returned does not buffer its output,
+   * calling {@link Encoder#flush()} will simply cause the wrapped OutputStream to
+   * be flushed.
+   * <p/>
+   * The {@link BlockingDirectBinaryEncoder} will write the block sizes for the
+   * arrays and maps so efficient skipping can be done.
+   * <p/>
+   * Performance of unbuffered writes can be significantly slower than buffered
+   * writes. {@link #binaryEncoder(OutputStream, BinaryEncoder)} returns
+   * BinaryEncoder instances that are tuned for performance but may buffer output.
+   * The unbuffered, 'direct' encoder may be desired when buffering semantics are
+   * problematic, or if the lifetime of the encoder is so short that the buffer
+   * would not be useful.
+   * <p/>
+   * {@link BinaryEncoder} instances returned by this method are not thread-safe.
+   *
+   * @param out   The OutputStream to initialize to. Cannot be null.
+   * @param reuse The BinaryEncoder to <i>attempt</i> to reuse given the factory
+   *              configuration. A BinaryEncoder implementation may not be
+   *              compatible with reuse, causing a new instance to be returned. If
+   *              null, a new instance is returned.
+   * @return A BinaryEncoder that uses <i>out</i> as its data output. If
+   *         <i>reuse</i> is null, this will be a new instance. If <i>reuse</i> is
+   *         not null, then the returned instance may be a new instance or
+   *         <i>reuse</i> reconfigured to use <i>out</i>.
+   * @see DirectBinaryEncoder
+   * @see Encoder
+   */
+  public BinaryEncoder blockingDirectBinaryEncoder(OutputStream out, BinaryEncoder reuse) {
+    if (null == reuse || !reuse.getClass().equals(BlockingDirectBinaryEncoder.class)) {
+      return new BlockingDirectBinaryEncoder(out);
+    } else {
+      return ((DirectBinaryEncoder) reuse).configure(out);
+    }
+  }
+
+  /**
    * Creates or reinitializes a {@link BinaryEncoder} with the OutputStream
    * provided as the destination for written data. If <i>reuse</i> is provided, an
    * attempt will be made to reconfigure <i>reuse</i> rather than construct a new
