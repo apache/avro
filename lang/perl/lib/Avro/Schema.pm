@@ -20,12 +20,12 @@ use strict;
 use warnings;
 
 use Carp;
-use JSON::XS();
+use JSON::MaybeXS ();
 use Try::Tiny;
 
 our $VERSION = '++MODULE_VERSION++';
 
-my $json = JSON::XS->new->allow_nonref;
+my $json = JSON::MaybeXS->new->allow_nonref;
 
 sub parse {
     my $schema      = shift;
