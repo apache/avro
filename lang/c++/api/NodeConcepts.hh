@@ -159,11 +159,11 @@ private:
 template<typename T>
 struct NameIndexConcept {
 
-    bool lookup(const std::string &name, size_t &index) const {
+    bool lookup(const std::string &, size_t &) const {
         throw Exception("Name index does not exist");
     }
 
-    bool add(const ::std::string &name, size_t) {
+    bool add(const ::std::string &, size_t) {
         throw Exception("Name index does not exist");
     }
 };

@@ -152,7 +152,7 @@ ProductionPtr ValidatingGrammarGenerator::doGenerate(const NodePtr &n,
 }
 
 struct DummyHandler {
-    static size_t handle(const Symbol &s) {
+    static size_t handle(const Symbol &) {
         return 0;
     }
 };

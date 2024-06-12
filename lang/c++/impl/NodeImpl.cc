@@ -113,7 +113,7 @@ NodePrimitive::resolve(const Node &reader) const {
                 return RESOLVE_PROMOTABLE_TO_LONG;
             }
 
-            // fall-through intentional
+            [[fallthrough]];
 
         case AVRO_LONG:
 
@@ -121,7 +121,7 @@ NodePrimitive::resolve(const Node &reader) const {
                 return RESOLVE_PROMOTABLE_TO_FLOAT;
             }
 
-            // fall-through intentional
+            [[fallthrough]];
 
         case AVRO_FLOAT:
 
@@ -334,7 +334,7 @@ void NodeRecord::printJson(std::ostream &os, size_t depth) const {
 }
 
 void NodePrimitive::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                       size_t depth) const {
+                                       size_t) const {
     assert(isPrimitive(g.type()));
 
     switch (g.type()) {
@@ -375,13 +375,13 @@ void NodePrimitive::printDefaultToJson(const GenericDatum &g, std::ostream &os,
 }
 
 void NodeEnum::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                  size_t depth) const {
+                                  size_t) const {
     assert(g.type() == AVRO_ENUM);
     os << "\"" << g.value<GenericEnum>().symbol() << "\"";
 }
 
 void NodeFixed::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                   size_t depth) const {
+                                   size_t) const {
     assert(g.type() == AVRO_FIXED);
     // ex: "\uOOff"
     // Convert to a string

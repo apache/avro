@@ -286,8 +286,9 @@ static Field makeField(const Entity &e, SymbolTable &st, const string &ns) {
     const Object &m = e.objectValue();
     string n = getStringField(e, m, "name");
     vector<string> aliases;
-    if (containsField(m, "aliases")) {
-        for (const auto &alias : getArrayField(e, m, "aliases")) {
+    string aliasesName = "aliases";
+    if (containsField(m, aliasesName)) {
+        for (const auto &alias : getArrayField(e, m, aliasesName)) {
             aliases.emplace_back(alias.stringValue());
         }
     }
@@ -313,7 +314,8 @@ static NodePtr makeRecordNode(const Entity &e, const Name &name,
     concepts::MultiAttribute<NodePtr> fieldValues;
     concepts::MultiAttribute<CustomAttributes> customAttributes;
     vector<GenericDatum> defaultValues;
-    for (const auto &it : getArrayField(e, m, "fields")) {
+    string fields = "fields";
+    for (const auto &it : getArrayField(e, m, fields)) {
         Field f = makeField(it, st, ns);
         fieldNames.add(f.name);
         fieldAliases.push_back(f.aliases);
@@ -375,7 +377,8 @@ static LogicalType makeLogicalType(const Entity &e, const Object &m) {
 
 static NodePtr makeEnumNode(const Entity &e,
                             const Name &name, const Object &m) {
-    const Array &v = getArrayField(e, m, "symbols");
+    string symbolsName = "symbols";
+    const Array &v = getArrayField(e, m, symbolsName);
     concepts::MultiAttribute<string> symbols;
     for (const auto &it : v) {
         if (it.type() != json::EntityType::String) {
@@ -447,8 +450,9 @@ static Name getName(const Entity &e, const Object &m, const string &ns) {
         }
     }
 
-    if (containsField(m, "aliases")) {
-        for (const auto &alias : getArrayField(e, m, "aliases")) {
+    std::string aliases = "aliases";
+    if (containsField(m, aliases)) {
+        for (const auto &alias : getArrayField(e, m, aliases)) {
             result.addAlias(alias.stringValue());
         }
     }
@@ -502,7 +506,7 @@ static NodePtr makeNode(const Entity &e, const Object &m,
     throw Exception("Unknown type definition: %1%", e.toString());
 }
 
-static NodePtr makeNode(const Entity &e, const Array &m,
+static NodePtr makeNode(const Entity &, const Array &m,
                         SymbolTable &st, const string &ns) {
     concepts::MultiAttribute<NodePtr> mm;
     for (const auto &it : m) {
