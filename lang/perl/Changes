@@ -2,6 +2,8 @@ Revision history for Perl extension Avro
 
         - Switch from JSON::XS to JSON::MaybeXS to support
           multiple JSON backends
+        - Drop dependency on IO::String, since we don't need
+          it now we depend on Perl 5.10.1 or greater
 
 1.00  Fri Jan 17 15:00:00 2014
         - Relicense under apache license 2.0

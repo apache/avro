@@ -52,7 +52,6 @@ jobs:
           cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
                                                        Encode \
                                                        Error::Simple \
-                                                       IO::String \
                                                        Module::Install::ReadmeFromPod \
                                                        Object::Tiny \
                                                        Perl::Critic \
@@ -90,7 +89,6 @@ jobs:
                                                        Compress::Zstd \
                                                        Encode \
                                                        Error::Simple \
-                                                       IO::String \
                                                        Module::Install::ReadmeFromPod \
                                                        Object::Tiny \
                                                        Perl::Critic \

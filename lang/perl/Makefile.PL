@@ -41,7 +41,6 @@ requires 'Compress::Zlib';
 requires 'Compress::Zstd';
 requires 'Encode';
 requires 'Error::Simple';
-requires 'IO::String';
 requires 'JSON::MaybeXS';
 requires 'Object::Tiny';
 requires 'Regexp::Common';
