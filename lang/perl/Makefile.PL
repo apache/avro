@@ -33,10 +33,10 @@ repository {
 bugtracker { web => 'http://issues.apache.org/jira/browse/AVRO/' };
 readme_from 'lib/Avro.pm';
 all_from 'lib/Avro.pm';
-build_requires 'Test::More', 0.88;
 test_requires 'Math::BigInt';
 test_requires 'Perl::Critic';
 test_requires 'Test::Exception';
+test_requires 'Test::More', 0.88;
 test_requires 'Test::Pod';
 requires 'Compress::Zlib';
 requires 'Compress::Zstd';

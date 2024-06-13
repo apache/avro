@@ -57,6 +57,7 @@ jobs:
                                                        Perl::Critic \
                                                        Regexp::Common \
                                                        Test::Exception \
+                                                       Test::More \
                                                        Test::Pod \
                                                        Try::Tiny \
                                                        inc::Module::Install
@@ -94,6 +95,7 @@ jobs:
                                                        Perl::Critic \
                                                        Regexp::Common \
                                                        Test::Exception \
+                                                       Test::More \
                                                        Test::Pod \
                                                        Try::Tiny \
                                                        inc::Module::Install
