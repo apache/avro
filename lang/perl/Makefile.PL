@@ -37,6 +37,7 @@ build_requires 'Test::More', 0.88;
 test_requires 'Math::BigInt';
 test_requires 'Perl::Critic';
 test_requires 'Test::Exception';
+test_requires 'Test::Pod';
 requires 'Compress::Zlib';
 requires 'Compress::Zstd';
 requires 'Encode';
