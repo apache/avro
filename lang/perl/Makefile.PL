@@ -24,6 +24,13 @@ chomp $version;
 
 license 'apache';
 version $version;
+homepage 'http://avro.apache.org/';
+repository {
+    type => 'git',
+    url  => 'git://git.apache.org/avro.git',
+    web  => 'http://github.com/apache/avro',
+};
+bugtracker { web => 'http://issues.apache.org/jira/browse/AVRO/' };
 readme_from 'lib/Avro.pm';
 all_from 'lib/Avro.pm';
 build_requires 'Test::More', 0.88;
@@ -43,7 +50,6 @@ requires 'parent';
 unless ($Config{use64bitint}) {
     requires 'Math::BigInt';
 }
-auto_set_repository();
 
 my %packages = (
     'Avro'                    => 'lib/Avro.pm',
