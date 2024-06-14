@@ -245,6 +245,7 @@ string CodeGen::generateRecordType(const NodePtr &n) {
             if (n->leafAt(i)->type() == avro::AVRO_UNION) {
                 os_ << "    typedef " << types[i]
                     << ' ' << n->nameAt(i) << "_t;\n";
+                types[i] = n->nameAt(i) + "_t";
             }
         }
     }
@@ -252,11 +253,7 @@ string CodeGen::generateRecordType(const NodePtr &n) {
         // the nameAt(i) does not take c++ reserved words into account
         // so we need to call decorate on it
         std::string decoratedNameAt = decorate(n->nameAt(i));
-        if (!noUnion_ && n->leafAt(i)->type() == avro::AVRO_UNION) {
-            os_ << "    " << decoratedNameAt << "_t";
-        } else {
-            os_ << "    " << types[i];
-        }
+        os_ << "    " << types[i];
         os_ << ' ' << decoratedNameAt << ";\n";
     }
 
@@ -270,13 +267,7 @@ string CodeGen::generateRecordType(const NodePtr &n) {
         // so we need to call decorate on it
         std::string decoratedNameAt = decorate(n->nameAt(i));
         os_ << "        " << decoratedNameAt << "(";
-        if (!noUnion_ && n->leafAt(i)->type() == avro::AVRO_UNION) {
-            // the nameAt(i) does not take c++ reserved words into account
-            // so we need to call decorate on it
-            os_ << decoratedNameAt << "_t";
-        } else {
-            os_ << types[i];
-        }
+        os_ << types[i];
         os_ << "())";
         if (i != (c - 1)) {
             os_ << ',';

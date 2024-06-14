@@ -158,7 +158,7 @@ macro (gen file ns)
         COMMAND avrogencpp
             -p -
             -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/${file}
-            -o ${file}.hh -n ${ns} -U
+            -o ${file}.hh -n ${ns}
         DEPENDS avrogencpp ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/${file})
     add_custom_target (${file}_hh DEPENDS ${file}.hh)
 endmacro (gen)
@@ -179,6 +179,7 @@ gen (tree2 tr2)
 gen (crossref cr)
 gen (primitivetypes pt)
 gen (cpp_reserved_words cppres)
+gen (cpp_reserved_words_union_typedef cppres_union)
 
 add_executable (avrogencpp impl/avrogencpp.cc)
 target_link_libraries (avrogencpp avrocpp_s ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
@@ -212,7 +213,7 @@ add_dependencies (AvrogencppTests bigrecord_hh bigrecord_r_hh bigrecord2_hh
     tweet_hh
     union_array_union_hh union_map_union_hh union_conflict_hh
     recursive_hh reuse_hh circulardep_hh tree1_hh tree2_hh crossref_hh
-    primitivetypes_hh empty_record_hh)
+    primitivetypes_hh empty_record_hh cpp_reserved_words_union_typedef_hh)
 
 include (InstallRequiredSystemLibraries)
 
