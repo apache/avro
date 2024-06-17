@@ -72,7 +72,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>@maven-compiler-plugin.version@</version>
+        <version>@version.maven-compiler-plugin@</version>
         <executions>
           <execution>
           <id>default-compile</id>
@@ -92,7 +92,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>@maven-surefire-plugin.version@</version>
+        <version>@version.maven-surefire@</version>
         <configuration>
           <useModulePath>false</useModulePath>
           <failIfNoTests>true</failIfNoTests>
