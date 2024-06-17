@@ -15,6 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
+// for Rust versions older than 1.79.0
+#![allow(unknown_lints)]
+// Allow until https://github.com/TedDriggs/darling/pull/292 is resolved
+#![allow(clippy::manual_unwrap_or_default)]
 use darling::FromAttributes;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
