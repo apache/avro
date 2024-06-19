@@ -24,7 +24,6 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.ResolvingDecoder;
 import org.apache.avro.util.ClassUtils;
 import java.io.IOException;
-import java.lang.SecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
