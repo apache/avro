@@ -24,6 +24,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.ResolvingDecoder;
 import org.apache.avro.util.ClassUtils;
 import java.io.IOException;
+import java.lang.SecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,7 +42,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
         "java.lang,java.math,java.io,java.net,org.apache.avro.reflect").split(",");
   }
 
-  private List<String> trustedPackages = new ArrayList<>();
+  private final List<String> trustedPackages = new ArrayList<>();
 
   public SpecificDatumReader() {
     this(null, null, SpecificData.get());
@@ -124,7 +125,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
   }
 
   private boolean trustAllPackages() {
-    return (trustedPackages.size() == 1 && trustedPackages.get(0).equals("*"));
+    return (trustedPackages.size() == 1 && "*".equals(trustedPackages.get(0)));
   }
 
   private void checkSecurity(Class clazz) throws ClassNotFoundException {
@@ -148,7 +149,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     }
   }
 
-  public List<String> getTrustedPackages() {
+  public final List<String> getTrustedPackages() {
     return trustedPackages;
   }
 
