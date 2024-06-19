@@ -143,7 +143,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
         }
       }
       if (!found) {
-        throw new ClassNotFoundException("Forbidden " + clazz
+        throw new SecurityException("Forbidden " + clazz
             + "! This class is not trusted to be included in Avro schema using java-class. Please set org.apache.avro.SERIALIZABLE_PACKAGES system property with the packages you trust.");
       }
     }
