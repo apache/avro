@@ -904,7 +904,7 @@ impl UnionSchema {
     pub fn is_nullable(&self) -> bool {
         self.schemas.iter().any(|x| match x {
             Schema::Null => true,
-            _ => false
+            _ => false,
         })
     }
 
