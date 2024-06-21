@@ -52,6 +52,7 @@ jobs:
           cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
                                                        Encode \
                                                        Error::Simple \
+                                                       JSON::MaybeXS \
                                                        Module::Install \
                                                        Module::Install::ReadmeFromPod \
                                                        Object::Tiny \
@@ -90,6 +91,7 @@ jobs:
                                                        Compress::Zstd \
                                                        Encode \
                                                        Error::Simple \
+                                                       JSON::MaybeXS \
                                                        Module::Install \
                                                        Module::Install::ReadmeFromPod \
                                                        Object::Tiny \
