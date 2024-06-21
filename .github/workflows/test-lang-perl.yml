@@ -64,14 +64,14 @@ jobs:
                                                             libtest-pod-perl
           cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
                                                        Error::Simple \
-                                                       Module::Install::Repository \
-                                                       Regexp::Common \
-                                                       Try::Tiny \
-                                                       inc::Module::Install \
-                                                       Module::Install::ReadmeFromPod \
-                                                       Test::Exception \
                                                        IO::String \
-                                                       Object::Tiny
+                                                       Module::Install::ReadmeFromPod \
+                                                       Module::Install::Repository \
+                                                       Object::Tiny \
+                                                       Regexp::Common \
+                                                       Test::Exception \
+                                                       Try::Tiny \
+                                                       inc::Module::Install
 
       - name: Lint
         run: ./build.sh lint
