@@ -4,6 +4,9 @@ Revision history for Perl extension Avro
           multiple JSON backends
         - Drop dependency on IO::String, since we don't need
           it now we depend on Perl 5.10.1 or greater
+        - Support object containers without an explicit
+          codec. It will be assumed to be 'null' as mandated
+          by the spec.
 
 1.00  Fri Jan 17 15:00:00 2014
         - Relicense under apache license 2.0
