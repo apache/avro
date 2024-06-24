@@ -902,7 +902,7 @@ impl UnionSchema {
 
     /// Returns true if the any of the variants of this `UnionSchema` is `Null`.
     pub fn is_nullable(&self) -> bool {
-        !self.schemas.is_empty() && self.schemas.iter().any(|s| s == &Schema::Null)
+        self.schemas.iter().any(|x| matches!(x, Schema::Null))
     }
 
     /// Optionally returns a reference to the schema matched by this value, as well as its position
