@@ -49,29 +49,19 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          sudo apt-get -qqy install --no-install-recommends libjansson-dev \
-                                                            libcompress-raw-zlib-perl \
-                                                            libcpan-uploader-perl \
-                                                            libencode-perl \
-                                                            libio-string-perl \
-                                                            libjson-xs-perl \
-                                                            libmodule-install-perl \
-                                                            libmodule-install-readmefrompod-perl \
-                                                            libobject-tiny-perl \
-                                                            libperl-critic-perl \
-                                                            libsnappy-dev \
-                                                            libtest-exception-perl \
-                                                            libtest-pod-perl
           cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
+                                                       Encode \
                                                        Error::Simple \
-                                                       Module::Install::Repository \
-                                                       Regexp::Common \
-                                                       Try::Tiny \
-                                                       inc::Module::Install \
+                                                       JSON::MaybeXS \
+                                                       Module::Install \
                                                        Module::Install::ReadmeFromPod \
+                                                       Object::Tiny \
+                                                       Perl::Critic \
+                                                       Regexp::Common \
                                                        Test::Exception \
-                                                       IO::String \
-                                                       Object::Tiny
+                                                       Test::More \
+                                                       Test::Pod \
+                                                       Try::Tiny
 
       - name: Lint
         run: ./build.sh lint
@@ -95,25 +85,22 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          sudo apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
-                                                            libcpan-uploader-perl \
-                                                            libencode-perl \
-                                                            libio-string-perl \
-                                                            libjansson-dev \
-                                                            libjson-xs-perl \
-                                                            libmodule-install-perl \
-                                                            libmodule-install-readmefrompod-perl \
-                                                            libobject-tiny-perl \
-                                                            libsnappy-dev \
-                                                            libtest-exception-perl \
-                                                            libtest-pod-perl
-          cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
+          sudo apt-get -qqy install --no-install-recommends libjansson-dev \
+                                                            libsnappy-dev
+          cpanm --mirror https://www.cpan.org/ install CPAN::Uploader \
+                                                       Compress::Zstd \
+                                                       Encode \
                                                        Error::Simple \
-                                                       Module::Install::Repository \
+                                                       JSON::MaybeXS \
+                                                       Module::Install \
+                                                       Module::Install::ReadmeFromPod \
                                                        Object::Tiny \
+                                                       Perl::Critic \
                                                        Regexp::Common \
-                                                       Try::Tiny \
-                                                       inc::Module::Install
+                                                       Test::Exception \
+                                                       Test::More \
+                                                       Test::Pod \
+                                                       Try::Tiny
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v4

@@ -49,9 +49,9 @@ The schema we want to use to decode the data.
 
 =item * reader
 
-An object implementing a straightforward interface. C<read($buf, $nbytes)> and
-C<seek($nbytes, $whence)> are expected. Typically a IO::String object or a
-IO::File object. It is expected that this calls will block the decoder, if not
+A file handle, or an object implementing a similar interface, like L<IO::File>.
+Specifically, it must support C<read($buf, $nbytes)> and
+C<seek($nbytes, $whence)>. These calls will block the decoder if not
 enough data is available for read.
 
 =back

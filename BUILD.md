@@ -15,8 +15,8 @@ The following packages must be installed before Avro can be built:
  - Perl: Perl 5.24.1 or greater, gmake, Module::Install,
    Module::Install::ReadmeFromPod, Module::Install::Repository,
    Math::BigInt, JSON::MaybeXS, Try::Tiny, Regexp::Common, Encode,
-   IO::String, Object::Tiny, Compress::ZLib, Error::Simple,
-   Test::More, Test::Exception, Test::Pod
+   Object::Tiny, Compress::ZLib, Error::Simple, Test::More,
+   Test::Exception, Test::Pod
  - Rust: rustc and Cargo 1.65.0 or greater
  - Apache Ant 1.7
  - md5sum, sha1sum, used by top-level dist target
