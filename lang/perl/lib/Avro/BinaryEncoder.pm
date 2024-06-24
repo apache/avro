@@ -26,17 +26,22 @@ use Regexp::Common qw(number);
 
 our $VERSION = '++MODULE_VERSION++';
 
-our $max64;
-our $complement = ~0x7F;
-if ($Config{use64bitint}) {
-    $max64 = 9223372036854775807;
-}
-else {
+# Private function deleted below, should be a lexical sub
+sub _bigint {
     require Math::BigInt;
-    $complement = Math::BigInt->new("0b" . ("1" x 57) . ("0" x 7));
-    $max64      = Math::BigInt->new("0b0" . ("1" x 63));
+    my $val = Math::BigInt->new(shift);
+
+    $Config{use64bitint}
+        ? 0 + $val->bstr() # numify() loses precision
+        : $val;
 }
 
+# Avro type limits
+# Private constants deleted below
+use constant INT_MAX => 0x7FFF_FFFF;
+use constant INT_MIN => -0x8000_0000;
+use constant LONG_MAX => _bigint('0x7FFF_FFFF_FFFF_FFFF');
+use constant LONG_MIN => _bigint('-0x8000_0000_0000_0000');
 
 =head2 encode(%param)
 
@@ -95,8 +100,8 @@ sub encode_int {
     if ($data !~ /^$RE{num}{int}$/) {
         throw Avro::BinaryEncoder::Error("cannot convert '$data' to integer");
     }
-    if (abs($data) > 0x7fffffff) {
-        throw Avro::BinaryEncoder::Error("int ($data) should be <= 32bits");
+    if ($data > INT_MAX || $data < INT_MIN) {
+        throw Avro::BinaryEncoder::Error("data ($data) out of range for Avro 'int'");
     }
 
     my $enc = unsigned_varint(zigzag($data));
@@ -109,8 +114,8 @@ sub encode_long {
     if ($data !~ /^$RE{num}{int}$/) {
         throw Avro::BinaryEncoder::Error("cannot convert '$data' to long integer");
     }
-    if (abs($data) > $max64) {
-        throw Avro::BinaryEncoder::Error("int ($data) should be <= 64bits");
+    if ($data > LONG_MAX || $data < LONG_MIN) {
+        throw Avro::BinaryEncoder::Error("data ($data) out of range for Avro 'long'");
     }
     my $enc = unsigned_varint(zigzag($data));
     $cb->(\$enc);
@@ -283,13 +288,16 @@ sub zigzag {
 
 sub unsigned_varint {
     my @bytes;
-    while ($_[0] & $complement) {           # mask with continuation bit
-        push @bytes, ($_[0] & 0x7F) | 0x80; # out and set continuation bit
-        $_[0] >>= 7;                        # next please
+    while ($_[0] > 0x7F) {                  # while more than 7 bits to encode
+        push @bytes, ($_[0] & 0x7F) | 0x80; # append continuation bit and 7 data bits
+        $_[0] >>= 7;                        # get next 7 bits
     }
     push @bytes, $_[0]; # last byte
     return pack "C*", @bytes;
 }
+
+# Delete private symbols to avoid adding them to the API
+delete $Avro::BinaryEncoder::{$_} for '_bigint', <{INT,LONG}_{MIN,MAX}>;
 
 package Avro::BinaryEncoder::Error;
 use parent 'Error::Simple';
