@@ -228,7 +228,8 @@ public class TestDataFile {
         reader.seek(sync);
         assertNotNull(reader.next());
       }
-      // Lastly, confirm that reading (but not decoding) all blocks results in the same sync points
+      // Lastly, confirm that reading (but not decoding) all blocks results in the
+      // same sync points
       reader.sync(0);
       ArrayList<Long> syncs2 = new ArrayList<>();
       while (reader.hasNext()) {
