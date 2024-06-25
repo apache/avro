@@ -2167,7 +2167,12 @@ fn pcf_map(schema: &Map<String, Value>) -> String {
         }
 
         // Strip out unused fields ([STRIP] rule)
-        if field_ordering_position(k).is_none() || k == "default" || k == "doc" || k == "aliases" {
+        if field_ordering_position(k).is_none()
+            || k == "default"
+            || k == "doc"
+            || k == "aliases"
+            || k == "logicalType"
+        {
             continue;
         }
 
@@ -2443,6 +2448,7 @@ pub mod derive {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::rabin::Rabin;
     use apache_avro_test_helper::{
         logger::{assert_logged, assert_not_logged},
         TestResult,
@@ -3415,16 +3421,16 @@ mod tests {
 
         let schema = Schema::parse_str(raw_schema)?;
         assert_eq!(
-            "abf662f831715ff78f88545a05a9262af75d6406b54e1a8a174ff1d2b75affc4",
+            "7eb3b28d73dfc99bdd9af1848298b40804a2f8ad5d2642be2ecc2ad34842b987",
             format!("{}", schema.fingerprint::<Sha256>())
         );
 
         assert_eq!(
-            "6e21c350f71b1a34e9efe90970f1bc69",
+            "cb11615e412ee5d872620d8df78ff6ae",
             format!("{}", schema.fingerprint::<Md5>())
         );
         assert_eq!(
-            "28cf0a67d9937bb3",
+            "92f2ccef718c6754",
             format!("{}", schema.fingerprint::<Rabin>())
         );
 
@@ -6762,6 +6768,31 @@ mod tests {
             }
         }
 
+        Ok(())
+    }
+
+    #[test]
+    fn avro_4004_canonical_form_strip_logical_types() -> TestResult {
+        let schema_str = r#"
+      {
+        "type": "record",
+        "name": "test",
+        "fields": [
+            {"name": "a", "type": "long", "default": 42, "doc": "The field a"},
+            {"name": "b", "type": "string", "namespace": "test.a"},
+            {"name": "c", "type": "long", "logicalType": "timestamp-micros"}
+        ]
+    }"#;
+
+        let schema = Schema::parse_str(schema_str)?;
+
+        let canonical_form = schema.canonical_form();
+        let fp_rabin = schema.fingerprint::<Rabin>();
+        assert_eq!(
+            r#"{"name":"test","type":"record","fields":[{"name":"a","type":"long"},{"name":"test.a.b","type":"string"},{"name":"c","type":{"type":"long"}}]}"#,
+            canonical_form
+        );
+        assert_eq!("f4e6a3c026f4fd2a", fp_rabin.to_string());
         Ok(())
     }
 }
