@@ -21,6 +21,7 @@
 #include "bigrecord_r.hh"
 #include "tweet.hh"
 #include "union_array_union.hh"
+#include "union_empty_record.hh"
 #include "union_map_union.hh"
 
 #include <boost/test/included/unit_test.hpp>
@@ -267,13 +268,45 @@ void testEncoding2() {
     check(t2, t1);
 }
 
-boost::unit_test::test_suite *
-init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
+void testEmptyRecord() {
+    uer::StackCalculator calc;
+    uer::StackCalculator::stack_item_t item;
+    item.set_int(3);
+    calc.stack.push_back(item);
+    item.set_Dup(uer::Dup());
+    calc.stack.push_back(item);
+    item.set_Add(uer::Add());
+    calc.stack.push_back(item);
+
+    ValidSchema s;
+    ifstream ifs("jsonschemas/union_empty_record");
+    compileJsonSchema(ifs, s);
+
+    unique_ptr<OutputStream> os = memoryOutputStream();
+    EncoderPtr e = validatingEncoder(s, binaryEncoder());
+    e->init(*os);
+    avro::encode(*e, calc);
+    e->flush();
+
+    DecoderPtr d = validatingDecoder(s, binaryDecoder());
+    unique_ptr<InputStream> is = memoryInputStream(*os);
+    d->init(*is);
+    uer::StackCalculator calc2;
+    avro::decode(*d, calc2);
+
+    BOOST_CHECK_EQUAL(calc.stack.size(), calc2.stack.size());
+    BOOST_CHECK_EQUAL(calc2.stack[0].idx(), 0);
+    BOOST_CHECK_EQUAL(calc2.stack[1].idx(), 1);
+    BOOST_CHECK_EQUAL(calc2.stack[2].idx(), 2);
+}
+
+boost::unit_test::test_suite *init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     auto *ts = BOOST_TEST_SUITE("Code generator tests");
     ts->add(BOOST_TEST_CASE(testEncoding));
     ts->add(BOOST_TEST_CASE(testResolution));
     ts->add(BOOST_TEST_CASE(testEncoding2<uau::r1>));
     ts->add(BOOST_TEST_CASE(testEncoding2<umu::r1>));
     ts->add(BOOST_TEST_CASE(testNamespace));
+    ts->add(BOOST_TEST_CASE(testEmptyRecord));
     return ts;
 }

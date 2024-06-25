@@ -171,6 +171,7 @@ gen (tweet testgen3)
 gen (union_array_union uau)
 gen (union_map_union umu)
 gen (union_conflict uc)
+gen (union_empty_record uer)
 gen (recursive rec)
 gen (reuse ru)
 gen (circulardep cd)
@@ -213,7 +214,8 @@ add_dependencies (AvrogencppTests bigrecord_hh bigrecord_r_hh bigrecord2_hh
     tweet_hh
     union_array_union_hh union_map_union_hh union_conflict_hh
     recursive_hh reuse_hh circulardep_hh tree1_hh tree2_hh crossref_hh
-    primitivetypes_hh empty_record_hh cpp_reserved_words_union_typedef_hh)
+    primitivetypes_hh empty_record_hh cpp_reserved_words_union_typedef_hh
+    union_empty_record_hh)
 
 include (InstallRequiredSystemLibraries)
 

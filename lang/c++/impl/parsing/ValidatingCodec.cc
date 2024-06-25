@@ -502,6 +502,7 @@ void ValidatingEncoder<P>::setItemCount(size_t count) {
 
 template<typename P>
 void ValidatingEncoder<P>::startItem() {
+    parser_.processImplicitActions();
     if (parser_.top() != Symbol::Kind::Repeater) {
         throw Exception("startItem at not an item boundary");
     }
