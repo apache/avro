@@ -17,21 +17,6 @@
  */
 package org.apache.avro;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.function.Function;
-import java.util.stream.Stream;
-
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
@@ -46,15 +31,28 @@ import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.RandomData;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestDataFile {
   private static final Logger LOG = LoggerFactory.getLogger(TestDataFile.class);
@@ -89,6 +87,14 @@ public class TestDataFile {
   private static final String SCHEMA_JSON = "{\"type\": \"record\", \"name\": \"Test\", \"fields\": ["
       + "{\"name\":\"stringField\", \"type\":\"string\"}," + "{\"name\":\"longField\", \"type\":\"long\"}]}";
   private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
+  private static final Object LAST_RECORD;
+  static {
+    Object lastValue = null;
+    for (Object object : new RandomData(SCHEMA, COUNT, SEED)) {
+      lastValue = object;
+    }
+    LAST_RECORD = lastValue;
+  }
 
   private File makeFile(CodecFactory codec) {
     return new File(DIR, "test-" + codec + ".avro");
@@ -109,6 +115,7 @@ public class TestDataFile {
       testGenericRead(codec);
       testSplits(codec);
       testSyncDiscovery(codec);
+      testReadLastRecord(codec);
       testGenericAppend(codec, encoder);
       testReadWithHeader(codec);
       testFSync(codec, encoder, false);
@@ -221,6 +228,37 @@ public class TestDataFile {
         reader.seek(sync);
         assertNotNull(reader.next());
       }
+      // Lastly, confirm that reading (but not decoding) all blocks results in the
+      // same sync points
+      reader.sync(0);
+      ArrayList<Long> syncs2 = new ArrayList<>();
+      while (reader.hasNext()) {
+        syncs2.add(reader.previousSync());
+        reader.nextBlock();
+      }
+      assertEquals(syncs, syncs2);
+    }
+  }
+
+  private void testReadLastRecord(CodecFactory codec) throws IOException {
+    File file = makeFile(codec);
+    try (DataFileReader<Object> reader = new DataFileReader<>(file, new GenericDatumReader<>())) {
+      long lastBlockStart = -1;
+      while (reader.hasNext()) {
+        // This algorithm can be made more efficient by checking if the underlying
+        // SeekableFileInput has been fully read: if so, the last block is in
+        // memory, and calls to next() will decode it.
+        // NOTE: this depends on the current implementation of DataFileReader.
+        lastBlockStart = reader.previousSync();
+        reader.nextBlock();
+      }
+      reader.seek(lastBlockStart);
+
+      Object lastRecord = null;
+      while (reader.hasNext()) {
+        lastRecord = reader.next(lastRecord);
+      }
+      assertEquals(LAST_RECORD, lastRecord);
     }
   }
 
