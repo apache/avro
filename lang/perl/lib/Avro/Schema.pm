@@ -276,6 +276,14 @@ sub is_data_valid {
     my $schema = shift;
     my $data = shift;
     my $type = $schema->{type};
+
+    if ($type eq 'null') {
+        return ! defined $data;
+    }
+
+    # undef isn't valid for any other types
+    return 0 unless defined $data;
+
     if ($type eq 'int') {
         no warnings;
         my $packed_int = pack "l", $data;
@@ -306,10 +314,7 @@ sub is_data_valid {
         $data =~ /^$RE{num}{real}$/ ? return 1 : 0;
     }
     if ($type eq "bytes" or $type eq "string") {
-        return 1 unless !defined $data or ref $data;
-    }
-    if ($type eq 'null') {
-        return defined $data ? 0 : 1;
+        return 1 unless ref $data;
     }
     if ($type eq 'boolean') {
         return 0 if ref $data; # sometimes risky

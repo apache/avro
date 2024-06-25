@@ -19,7 +19,7 @@ use strict;
 use warnings;
 
 use Test::More;
-plan tests => 130;
+plan tests => 137;
 use Test::Exception;
 use_ok 'Avro::Schema';
 
@@ -455,6 +455,12 @@ EOJ
     isa_ok $s, 'Avro::Schema::Record';
     is $s->fields->[0]{name}, 'a', 'a';
     isa_ok $s->fields->[0]{type}, 'Avro::Schema::Union';
+}
+
+## is_data_valid for primitives
+for my $type ( qw( int long float double string bytes boolean ) ) {
+    my $schema = Avro::Schema->parse(qq[{ "type": "$type" }]);
+    is $schema->is_data_valid(undef), 0, "$type is_data_valid undef";
 }
 
 sub match_ok {

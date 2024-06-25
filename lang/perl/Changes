@@ -9,6 +9,8 @@ Revision history for Perl extension Avro
           by the spec.
         - Fixed an issue that meant the minimum accepted values
           for int and long types were off by one
+        - Silenced a spurious warning that was raised when
+          validating an undefined value for some data types
 
 1.00  Fri Jan 17 15:00:00 2014
         - Relicense under apache license 2.0
