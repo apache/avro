@@ -313,7 +313,11 @@ sub is_data_valid {
     if ($type eq 'float' or $type eq 'double') {
         $data =~ /^$RE{num}{real}$/ ? return 1 : 0;
     }
-    if ($type eq "bytes" or $type eq "string") {
+    if ($type eq 'bytes') {
+        return 0 if ref $data;
+        return 1 unless utf8::is_utf8($data) and $data =~ /[^\x00-\xFF]/;
+    }
+    if ($type eq 'string') {
         return 1 unless ref $data;
     }
     if ($type eq 'boolean') {
@@ -807,11 +811,10 @@ sub new {
 }
 
 sub is_data_valid {
-    my $schema = shift;
-    my $default = shift;
-    my $size = $schema->{size};
-    return 1 if $default && bytes::length $default == $size;
-    return 0;
+    my ( $schema, $data ) = @_;
+
+    return 0 if utf8::is_utf8($data) && $data =~ /[^\x00-\xFF]/;
+    return $data && length($data) == $schema->{size};
 }
 
 sub size {
