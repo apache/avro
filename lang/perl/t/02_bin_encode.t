@@ -67,21 +67,27 @@ sub primitive_ok {
     ## BigInt values still work
     primitive_ok int     => Math::BigInt->new(-65), $p;
 
-    throws_ok {
-        my $toobig;
-        if ($Config{use64bitint}) {
-            $toobig = 1<<32;
-        }
-        else {
-            require Math::BigInt;
-            $toobig = Math::BigInt->new(1)->blsft(32);
-        }
-        primitive_ok int => $toobig, undef;
-    } "Avro::BinaryEncoder::Error", "33 bits";
+    # test extremes
+    primitive_ok int     =>  Math::BigInt->new(2)**31 - 1, "\xfe\xff\xff\xff\x0f";
+    primitive_ok int     => -Math::BigInt->new(2)**31, "\xff\xff\xff\xff\x0f";
+    primitive_ok long    =>  Math::BigInt->new(2)**63 - 1, "\xfe\xff\xff\xff\xff\xff\xff\xff\xff\x01";
+    primitive_ok long    => -Math::BigInt->new(2)**63, "\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01";
 
     throws_ok {
-        primitive_ok int => Math::BigInt->new(1)->blsft(63), undef;
-    } "Avro::BinaryEncoder::Error", "65 bits";
+        primitive_ok int => Math::BigInt->new(2)**31;
+    } "Avro::BinaryEncoder::Error", "32-bit signed int overflow";
+
+    throws_ok {
+        primitive_ok int => -Math::BigInt->new(2)**31 - 1;
+    } "Avro::BinaryEncoder::Error", "32-bit signed int underflow";
+
+    throws_ok {
+        primitive_ok int => Math::BigInt->new(2)**63;
+    } "Avro::BinaryEncoder::Error", "64-bit signed int overflow";
+
+    throws_ok {
+        primitive_ok long => -Math::BigInt->new(2)**63 - 1;
+    } "Avro::BinaryEncoder::Error", "64-bit signed int underflow";
 
     for (qw(long int)) {
         throws_ok {

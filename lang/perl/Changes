@@ -7,6 +7,8 @@ Revision history for Perl extension Avro
         - Support object containers without an explicit
           codec. It will be assumed to be 'null' as mandated
           by the spec.
+        - Fixed an issue that meant the minimum accepted values
+          for int and long types were off by one
 
 1.00  Fri Jan 17 15:00:00 2014
         - Relicense under apache license 2.0
