@@ -321,9 +321,9 @@ sub is_data_valid {
         return 1 unless ref $data;
     }
     if ($type eq 'boolean') {
+        return 1 if JSON::PP::is_bool($data);
         return 0 if ref $data; # sometimes risky
-        return 1 if $data =~ m{yes|no|y|n|t|f|true|false}i;
-        return 0;
+        return $data =~ m{^(?:yes|no|y|n|t|f|true|false|0|1)$}i;
     }
     return 0;
 }
