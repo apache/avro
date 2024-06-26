@@ -35,7 +35,7 @@ public class SeekableByteArrayInput extends ByteArrayInputStream implements Seek
   @Override
   public void seek(long p) throws IOException {
     this.reset();
-    this.skip(p);
+    this.skip(p - tell());
   }
 
   @Override
