@@ -138,7 +138,9 @@ sub encode_double {
 sub encode_bytes {
     my $class = shift;
     my ($schema, $data, $cb) = @_;
-    encode_long($class, undef, bytes::length($data), $cb);
+    throw Avro::BinaryEncoder::Error("Invalid data given for 'bytes': Contains values >255")
+        unless utf8::downgrade($data, 1);
+    encode_long($class, undef, length($data), $cb);
     $cb->(\$data);
 }
 
@@ -146,7 +148,7 @@ sub encode_string {
     my $class = shift;
     my ($schema, $data, $cb) = @_;
     my $bytes = Encode::encode_utf8($data);
-    encode_long($class, undef, bytes::length($bytes), $cb);
+    encode_long($class, undef, length($bytes), $cb);
     $cb->(\$bytes);
 }
 
@@ -270,11 +272,16 @@ sub encode_union {
 sub encode_fixed {
     my $class = shift;
     my ($schema, $data, $cb) = @_;
-    if (bytes::length $data != $schema->size) {
-        my $s1 = bytes::length $data;
-        my $s2 = $schema->size;
-        throw Avro::BinaryEncoder::Error("Fixed size doesn't match $s1!=$s2");
-    }
+
+    throw Avro::BinaryEncoder::Error("Invalid data given for 'fixed': Contains values >255")
+        unless utf8::downgrade($data, 1);
+
+    my $length = length $data;
+    my $size   = $schema->size;
+
+    throw Avro::BinaryEncoder::Error("Fixed size doesn't match $length!=$size")
+        unless $length == $size;
+
     $cb->(\$data);
 }
 

@@ -11,6 +11,10 @@ Revision history for Perl extension Avro
           for int and long types were off by one
         - Silenced a spurious warning that was raised when
           validating an undefined value for some data types
+        - Make sure Unicode strings are downgraded when they
+          are encoded in fields of type 'byte' or 'fixed'.
+          Errors resulting from this process will be raised as
+          Avro::BinaryEncoder::Error exceptions
 
 1.00  Fri Jan 17 15:00:00 2014
         - Relicense under apache license 2.0
