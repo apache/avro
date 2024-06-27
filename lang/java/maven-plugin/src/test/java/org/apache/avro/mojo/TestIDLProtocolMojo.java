@@ -111,6 +111,7 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
     final Path idlUserFilePath = outputDirPath.resolve("IdlUser.java");
     final FileTime idlUserModificationTime = Files.getLastModifiedTime(idlUserFilePath);
 
+    Thread.sleep(1000);
     mojo.execute();
 
     // Asserting contents is done in previous tests so just assert existence.
