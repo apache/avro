@@ -23,6 +23,7 @@ use Config;
 use Encode();
 use Error::Simple;
 use Regexp::Common qw(number);
+use JSON::PP; # For is_bool
 
 our $VERSION = '++MODULE_VERSION++';
 
@@ -91,7 +92,28 @@ sub encode_null {
 sub encode_boolean {
     my $class = shift;
     my ($schema, $data, $cb) = @_;
-    $cb->( $data ? \"\x1" : \"\x0" );
+
+    throw Avro::BinaryEncoder::Error( "<UNDEF> is not a valid boolean value")
+        unless defined $data;
+
+    if ( my $type = ref $data ) {
+        throw Avro::BinaryEncoder::Error("cannot encode a '$type' reference as boolean")
+            unless $type eq 'JSON::PP::Boolean';
+    }
+    else {
+        throw Avro::BinaryEncoder::Error( "'$data' is not a valid boolean value")
+            unless $data eq '' # For Perl versions without builtin::is_bool
+                || JSON::PP::is_bool($data)
+                || $data =~ /^(?:true|t|false|f|yes|y|no|n|0|1)$/i;
+    }
+
+    # Some values might be false but evaluate to "truthy" for Perl,
+    # like the string 'false'. For these known exceptions, which
+    # would otherwise be false, we read a false value. For everything
+    # else, we rely on their value evaluated in a boolean context.
+    my $true = $data =~ /^(?:no|n|false|f)$/i ? 0 : !!$data;
+
+    $cb->( $true ? \"\x1" : \"\x0" );
 }
 
 sub encode_int {
