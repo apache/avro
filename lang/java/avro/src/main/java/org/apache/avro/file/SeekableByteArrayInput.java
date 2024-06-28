@@ -18,6 +18,7 @@
 package org.apache.avro.file;
 
 import java.io.ByteArrayInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 
 /** A {@link SeekableInput} backed with data in a byte array. */
@@ -34,8 +35,12 @@ public class SeekableByteArrayInput extends ByteArrayInputStream implements Seek
 
   @Override
   public void seek(long p) throws IOException {
-    this.reset();
-    this.skip(p);
+    if (p >= this.count) {
+      throw new EOFException();
+    }
+    if (p >= 0) {
+      this.pos = (int) p;
+    }
   }
 
   @Override
