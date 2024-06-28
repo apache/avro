@@ -38,7 +38,7 @@
 
     <!-- version properties for dependencies -->
     <hadoop.version>3.3.6</hadoop.version>
-    <jackson-bom.version>2.14.2</jackson-bom.version>
+    <jackson-bom.version>2.14.3</jackson-bom.version>
     <servlet-api.version>4.0.1</servlet-api.version>
     <jetty.version>9.4.54.v20240208</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
@@ -48,12 +48,12 @@
     <thrift.version>0.16.0</thrift.version>
     <slf4j.version>1.7.36</slf4j.version>
     <reload4j.version>1.2.25</reload4j.version>
-    <snappy.version>1.1.10.4</snappy.version>
+    <snappy.version>1.1.10.5</snappy.version>
     <velocity.version>2.3</velocity.version>
     <maven-core.version>3.3.9</maven-core.version>
     <ant.version>1.10.14</ant.version>
     <commons-cli.version>1.6.0</commons-cli.version>
-    <commons-compress.version>1.26.0</commons-compress.version>
+    <commons-compress.version>1.26.2</commons-compress.version>
     <commons-text.version>1.10.0</commons-text.version>
     <tukaani.version>1.9</tukaani.version>
     <mockito.version>4.11.0</mockito.version>
