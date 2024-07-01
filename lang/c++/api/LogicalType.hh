@@ -47,17 +47,17 @@ public:
     // Precision must be positive and scale must be either positive or zero. The
     // setters will throw an exception if they are called on any type other
     // than DECIMAL.
-    void setPrecision(int precision);
-    int precision() const { return precision_; }
-    void setScale(int scale);
-    int scale() const { return scale_; }
+    void setPrecision(int32_t precision);
+    int32_t precision() const { return precision_; }
+    void setScale(int32_t scale);
+    int32_t scale() const { return scale_; }
 
     void printJson(std::ostream &os) const;
 
 private:
     Type type_;
-    int precision_;
-    int scale_;
+    int32_t precision_;
+    int32_t scale_;
 };
 
 } // namespace avro

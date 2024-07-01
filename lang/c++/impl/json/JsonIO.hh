@@ -34,7 +34,7 @@ namespace avro {
 namespace json {
 
 inline char toHex(unsigned int n) {
-    return (n < 10) ? (n + '0') : (n + 'a' - 10);
+    return static_cast<char>((n < 10) ? (n + '0') : (n + 'a' - 10));
 }
 
 class AVRO_DECL JsonParser : boost::noncopyable {
@@ -266,8 +266,8 @@ class AVRO_DECL JsonGenerator {
     void escapeUnicode16(uint32_t c) {
         out_.write('\\');
         out_.write('u');
-        writeHex((c >> 8) & 0xff);
-        writeHex(c & 0xff);
+        writeHex(static_cast<char>((c >> 8) & 0xff));
+        writeHex(static_cast<char>(c & 0xff));
     }
     void escapeUnicode(uint32_t c) {
         if (c < 0x10000) {

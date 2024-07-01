@@ -219,7 +219,7 @@ void TestDiscard() {
             BOOST_CHECK_EQUAL(ob.freeSpace(), kDefaultBlockSize / 2);
             BOOST_CHECK_EQUAL(ob.numChunks(), 1);
 
-            int chunks = 3 - (discarded / kDefaultBlockSize);
+            size_t chunks = 3 - (discarded / kDefaultBlockSize);
             BOOST_CHECK_EQUAL(ob.numDataChunks(), chunks);
         }
 
@@ -331,7 +331,7 @@ void TestExtractToInput() {
             BOOST_CHECK_EQUAL(ob.freeSpace(), kDefaultBlockSize / 2);
             BOOST_CHECK_EQUAL(ob.numChunks(), 1);
 
-            int chunks = 3 - (extracted / kDefaultBlockSize);
+            size_t chunks = 3 - (extracted / kDefaultBlockSize);
             BOOST_CHECK_EQUAL(ob.numDataChunks(), chunks);
         }
 
@@ -526,7 +526,7 @@ void TestSeek() {
         avro::InputBuffer buf(tmp1);
 
         cout << "Starting string: " << str << '\n';
-        BOOST_CHECK_EQUAL(static_cast<std::string::size_type>(buf.size()), str.size());
+        BOOST_CHECK_EQUAL(buf.size(), str.size());
 
         avro::istream is(buf);
 

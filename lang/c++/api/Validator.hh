@@ -35,7 +35,7 @@ public:
     explicit NullValidator(const ValidSchema &) {}
     NullValidator() = default;
 
-    void setCount(int64_t) {}
+    void setCount(size_t) {}
 
     static bool typeIsExpected(Type) {
         return true;
@@ -45,7 +45,7 @@ public:
         return AVRO_UNKNOWN;
     }
 
-    static int nextSizeExpected() {
+    static size_t nextSizeExpected() {
         return 0;
     }
 
@@ -58,7 +58,7 @@ public:
     }
 
     void checkTypeExpected(Type) {}
-    void checkFixedSizeExpected(int) {}
+    void checkFixedSizeExpected(size_t) {}
 };
 
 /// This class is used by both the ValidatingSerializer and ValidationParser
@@ -71,7 +71,7 @@ class AVRO_DECL Validator : private boost::noncopyable {
 public:
     explicit Validator(ValidSchema schema);
 
-    void setCount(int64_t val);
+    void setCount(size_t val);
 
     bool typeIsExpected(Type type) const {
         return (expectedTypesFlag_ & typeToFlag(type)) != 0;
@@ -81,7 +81,7 @@ public:
         return nextType_;
     }
 
-    int nextSizeExpected() const;
+    size_t nextSizeExpected() const;
 
     bool getCurrentRecordName(std::string &name) const;
     bool getNextFieldName(std::string &name) const;
@@ -93,7 +93,7 @@ public:
         advance();
     }
 
-    void checkFixedSizeExpected(int size) {
+    void checkFixedSizeExpected(size_t size) {
         if (nextSizeExpected() != size) {
             throw Exception("Wrong size for fixed, got {}, expected {}", size, nextSizeExpected());
         }
@@ -104,7 +104,7 @@ private:
     using flag_t = uint32_t;
 
     static flag_t typeToFlag(Type type) {
-        flag_t flag = (1L << type);
+        flag_t flag = (1L << static_cast<flag_t>(type));
         return flag;
     }
 
@@ -129,7 +129,7 @@ private:
     flag_t expectedTypesFlag_;
     bool compoundStarted_;
     bool waitingForCount_;
-    int64_t count_;
+    size_t count_;
 
     struct CompoundType {
         explicit CompoundType(NodePtr n) : node(std::move(n)), pos(0) {}

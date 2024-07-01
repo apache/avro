@@ -47,7 +47,7 @@ hexPrint(std::ostream &os, BufferReader &reader) {
     std::ios_base::fmtflags savedFlags = os.flags();
 
     char sixteenBytes[16];
-    int offset = 0;
+    size_t offset = 0;
 
     os << std::setfill('0');
     os << std::hex;

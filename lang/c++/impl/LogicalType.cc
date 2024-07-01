@@ -28,7 +28,7 @@ LogicalType::Type LogicalType::type() const {
     return type_;
 }
 
-void LogicalType::setPrecision(int precision) {
+void LogicalType::setPrecision(int32_t precision) {
     if (type_ != DECIMAL) {
         throw Exception("Only logical type DECIMAL can have precision");
     }
@@ -38,7 +38,7 @@ void LogicalType::setPrecision(int precision) {
     precision_ = precision;
 }
 
-void LogicalType::setScale(int scale) {
+void LogicalType::setScale(int32_t scale) {
     if (type_ != DECIMAL) {
         throw Exception("Only logical type DECIMAL can have scale");
     }

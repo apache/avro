@@ -378,7 +378,7 @@ string JsonParser::decodeString(const string &s, bool binary) {
                         if (n > 0xff) {
                             throw Exception("Invalid byte for binary: {}{}", ch, string(startSeq, ++it));
                         } else {
-                            result.push_back(n);
+                            result.push_back(static_cast<char>(n));
                             continue;
                         }
                     }
@@ -400,19 +400,19 @@ string JsonParser::decodeString(const string &s, bool binary) {
                         throw Exception("Invalid unicode sequence: {}", string(startSeq, it));
                     }
                     if (n < 0x80) {
-                        result.push_back(n);
+                        result.push_back(static_cast<char>(n));
                     } else if (n < 0x800) {
-                        result.push_back((n >> 6) | 0xc0);
-                        result.push_back((n & 0x3f) | 0x80);
+                        result.push_back(static_cast<char>((n >> 6) | 0xc0));
+                        result.push_back(static_cast<char>((n & 0x3f) | 0x80));
                     } else if (n < 0x10000) {
-                        result.push_back((n >> 12) | 0xe0);
-                        result.push_back(((n >> 6) & 0x3f) | 0x80);
-                        result.push_back((n & 0x3f) | 0x80);
+                        result.push_back(static_cast<char>((n >> 12) | 0xe0));
+                        result.push_back(static_cast<char>(((n >> 6) & 0x3f) | 0x80));
+                        result.push_back(static_cast<char>((n & 0x3f) | 0x80));
                     } else if (n < 0x110000) {
-                        result.push_back((n >> 18) | 0xf0);
-                        result.push_back(((n >> 12) & 0x3f) | 0x80);
-                        result.push_back(((n >> 6) & 0x3f) | 0x80);
-                        result.push_back((n & 0x3f) | 0x80);
+                        result.push_back(static_cast<char>((n >> 18) | 0xf0));
+                        result.push_back(static_cast<char>(((n >> 12) & 0x3f) | 0x80));
+                        result.push_back(static_cast<char>(((n >> 6) & 0x3f) | 0x80));
+                        result.push_back(static_cast<char>((n & 0x3f) | 0x80));
                     } else {
                         throw Exception("Invalid unicode value: {}{}", n, string(startSeq, ++it));
                     }

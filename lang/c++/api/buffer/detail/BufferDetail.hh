@@ -481,13 +481,13 @@ public:
     }
 
     /// The number of chunks containing data.  Used for debugging.
-    int numDataChunks() const {
+    size_t numDataChunks() const {
         return readChunks_.size();
     }
 
     /// The number of chunks containing free space (note that an entire chunk
     /// may not be free).  Used for debugging.
-    int numFreeChunks() const {
+    size_t numFreeChunks() const {
         return writeChunks_.size();
     }
 

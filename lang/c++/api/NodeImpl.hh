@@ -226,8 +226,8 @@ using LeafNames = concepts::MultiAttribute<std::string>;
 using MultiAttributes = concepts::MultiAttribute<CustomAttributes>;
 using NoAttributes = concepts::NoAttribute<CustomAttributes>;
 
-using NoSize = concepts::NoAttribute<int>;
-using HasSize = concepts::SingleAttribute<int>;
+using NoSize = concepts::NoAttribute<size_t>;
+using HasSize = concepts::SingleAttribute<size_t>;
 
 using NodeImplPrimitive = NodeImpl<NoName, NoLeaves, NoLeafNames, MultiAttributes, NoSize>;
 using NodeImplSymbolic = NodeImpl<HasName, NoLeaves, NoLeafNames, NoAttributes, NoSize>;
