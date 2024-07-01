@@ -523,6 +523,11 @@ public class ReflectData extends SpecificData {
         return Short.TYPE;
       if (Character.class.getName().equals(intClass))
         return Character.TYPE;
+    case RECORD:
+    case ENUM:
+      Class className = getClassProp(schema, CLASS_PROP);
+      if (className != null)
+        return className;
     default:
       return super.getClass(schema);
     }
@@ -698,9 +703,7 @@ public class ReflectData extends SpecificData {
         AvroDoc annotatedDoc = c.getAnnotation(AvroDoc.class); // Docstring
         String doc = (annotatedDoc != null) ? annotatedDoc.value() : null;
         String name = c.getSimpleName();
-        String space = c.getPackage() == null ? "" : c.getPackage().getName();
-        if (c.getEnclosingClass() != null) // nested class
-          space = c.getEnclosingClass().getName().replace('$', '.');
+        String space = getNamespace(c);
         Union union = c.getAnnotation(Union.class);
         if (union != null) { // union annotated
           return getAnnotatedUnion(union, names);
@@ -714,10 +717,12 @@ public class ReflectData extends SpecificData {
           for (Enum constant : constants)
             symbols.add(constant.name());
           schema = Schema.createEnum(name, doc, space, symbols);
+          schema.addProp(CLASS_PROP, c.getName());
           consumeAvroAliasAnnotation(c, schema);
         } else if (GenericFixed.class.isAssignableFrom(c)) { // fixed
           int size = c.getAnnotation(FixedSize.class).value();
           schema = Schema.createFixed(name, doc, space, size);
+          schema.addProp(CLASS_PROP, c.getName());
           consumeAvroAliasAnnotation(c, schema);
         } else if (IndexedRecord.class.isAssignableFrom(c)) { // specific
           return super.createSchema(type, names);
@@ -725,6 +730,7 @@ public class ReflectData extends SpecificData {
           List<Schema.Field> fields = new ArrayList<>();
           boolean error = Throwable.class.isAssignableFrom(c);
           schema = Schema.createRecord(name, doc, space, error);
+          schema.addProp(CLASS_PROP, c.getName());
           consumeAvroAliasAnnotation(c, schema);
           names.put(c.getName(), schema);
           for (Field field : getCachedFields(c))
@@ -792,6 +798,27 @@ public class ReflectData extends SpecificData {
     }
 
     return simpleName;
+  }
+
+  /*
+   * Function checks if there is @AvroTypeName annotation on the class. If present
+   * then returns the value of the annotation else returns the package of the
+   * class
+   */
+  private String getNamespace(Class<?> c) {
+    AvroNamespace avroNamespace = c.getAnnotation(AvroNamespace.class);
+    if (avroNamespace != null) {
+      return avroNamespace.value();
+    }
+    if (c.getEnclosingClass() != null) { // nested class
+      AvroNamespace enclosingClassAvroNamespace = c.getEnclosingClass().getAnnotation(AvroNamespace.class);
+      if (enclosingClassAvroNamespace != null) {
+        return enclosingClassAvroNamespace.value();
+      }
+      return c.getEnclosingClass().getName().replace('$', '.');
+    }
+
+    return c.getPackage() == null ? "" : c.getPackage().getName();
   }
 
   private static final Schema THROWABLE_MESSAGE = makeNullable(Schema.create(Schema.Type.STRING));
