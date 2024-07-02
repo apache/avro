@@ -531,9 +531,19 @@ impl<'s> ResolvedSchema<'s> {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct ResolvedOwnedSchema {
     names: Names,
     root_schema: Schema,
+}
+
+impl Default for ResolvedOwnedSchema {
+    fn default() -> Self {
+        Self {
+            names: Default::default(),
+            root_schema: Schema::Null,
+        }
+    }
 }
 
 impl TryFrom<Schema> for ResolvedOwnedSchema {

@@ -44,7 +44,7 @@ struct Block<'r, R> {
     message_count: usize,
     marker: [u8; 16],
     codec: Codec,
-    writer_schema: Schema,
+    writer_schema: ResolvedOwnedSchema,
     schemata: Vec<&'r Schema>,
     user_metadata: HashMap<String, Vec<u8>>,
 }
@@ -54,7 +54,7 @@ impl<'r, R: Read> Block<'r, R> {
         let mut block = Block {
             reader,
             codec: Codec::Null,
-            writer_schema: Schema::Null,
+            writer_schema: Default::default(),
             schemata,
             buf: vec![],
             buf_idx: 0,
@@ -179,13 +179,18 @@ impl<'r, R: Read> Block<'r, R> {
 
         let mut block_bytes = &self.buf[self.buf_idx..];
         let b_original = block_bytes.len();
-        let schemata = if self.schemata.is_empty() {
-            vec![&self.writer_schema]
-        } else {
-            self.schemata.clone()
+
+        let item = decode_internal(
+            self.writer_schema.get_root_schema(),
+            self.writer_schema.get_names(),
+            &None,
+            &mut block_bytes,
+        )?;
+        let item = match read_schema {
+            Some(schema) => item.resolve(schema)?,
+            None => item,
         };
-        let item =
-            from_avro_datum_schemata(&self.writer_schema, schemata, &mut block_bytes, read_schema)?;
+
         if b_original == block_bytes.len() {
             // from_avro_datum did not consume any bytes, so return an error to avoid an infinite loop
             return Err(Error::ReadBlock);
@@ -206,17 +211,18 @@ impl<'r, R: Read> Block<'r, R> {
                 }
             })
             .ok_or(Error::GetAvroSchemaFromMap)?;
-        if !self.schemata.is_empty() {
+        let writer_schema = if !self.schemata.is_empty() {
             let rs = ResolvedSchema::try_from(self.schemata.clone())?;
             let names: Names = rs
                 .get_names()
                 .iter()
                 .map(|(name, schema)| (name.clone(), (*schema).clone()))
                 .collect();
-            self.writer_schema = Schema::parse_with_names(&json, names)?;
+            Schema::parse_with_names(&json, names)?
         } else {
-            self.writer_schema = Schema::parse(&json)?;
-        }
+            Schema::parse(&json)?
+        };
+        self.writer_schema = ResolvedOwnedSchema::try_from(writer_schema)?;
         Ok(())
     }
 
@@ -341,7 +347,7 @@ impl<'a, R: Read> Reader<'a, R> {
     /// Get a reference to the writer `Schema`.
     #[inline]
     pub fn writer_schema(&self) -> &Schema {
-        &self.block.writer_schema
+        self.block.writer_schema.get_root_schema()
     }
 
     /// Get a reference to the optional reader `Schema`.
