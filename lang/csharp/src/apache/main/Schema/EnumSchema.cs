@@ -34,6 +34,11 @@ namespace Avro
         public IList<string> Symbols { get; private set; }
 
         /// <summary>
+        /// Map of maps of alternate names for the enum symbols
+        /// </summary>
+        public IDictionary<string, IDictionary<string, string>> AlternateSymbols { get; private set; }
+
+        /// <summary>
         /// The default token to use when deserializing an enum when the provided token is not found
         /// </summary>
         public string Default { get; private set; }
@@ -54,22 +59,27 @@ namespace Avro
         /// <param name="name">Name of enum</param>
         /// <param name="space">Namespace of enum</param>
         /// <param name="aliases">List of aliases for the name</param>
+        /// <param name="alternateNames">Dictionary of alternate names for this schema name</param>
         /// <param name="symbols">List of enum symbols</param>
         /// <param name="customProperties">Custom properties on this schema</param>
         /// <param name="doc">Documentation for this named schema</param>
         /// <param name="defaultSymbol"></param>
+        /// <param name="altsymbols">Map of alternate names for the enum symbols</param>
         public static EnumSchema Create(string name,
             IEnumerable<string> symbols,
             string space = null,
             IEnumerable<string> aliases = null,
+            IDictionary<string, string> alternateNames = null,
             PropertyMap customProperties = null,
             string doc = null,
-            string defaultSymbol = null)
+            string defaultSymbol = null,
+            IDictionary<string, IDictionary<string, string>> altsymbols = null)
         {
-            return new EnumSchema(new SchemaName(name, space, null, doc),
+            return new EnumSchema(new SchemaName(name, space, null, doc, alternateNames),
                   Aliases.GetSchemaNames(aliases, name, space),
                   symbols.ToList(),
                   CreateSymbolsMap(symbols),
+                  altsymbols,
                   customProperties,
                   new SchemaNames(),
                   doc,
@@ -88,10 +98,12 @@ namespace Avro
         {
             SchemaName name = NamedSchema.GetName(jtok, encspace);
             var aliases = NamedSchema.GetAliases(jtok, name.Space, name.EncSpace);
-
+            
             JArray jsymbols = jtok["symbols"] as JArray;
             if (null == jsymbols)
                 throw new SchemaParseException($"Enum has no symbols: {name} at '{jtok.Path}'");
+            
+            var altsymbols = GetAlternateSymbols(jtok);
 
             List<string> symbols = new List<string>();
             IDictionary<string, int> symbolMap = new Dictionary<string, int>();
@@ -107,7 +119,7 @@ namespace Avro
             }
             try
             {
-                return new EnumSchema(name, aliases, symbols, symbolMap, props, names,
+                return new EnumSchema(name, aliases, symbols, symbolMap, altsymbols, props, names,
                     JsonHelper.GetOptionalString(jtok, "doc"), JsonHelper.GetOptionalString(jtok, "default"));
             }
             catch (AvroException e)
@@ -123,18 +135,22 @@ namespace Avro
         /// <param name="aliases">list of aliases for the name</param>
         /// <param name="symbols">list of enum symbols</param>
         /// <param name="symbolMap">map of enum symbols and value</param>
+        /// <param name="altsymbols">map of alternate names for the enum symbols</param>
         /// <param name="props">custom properties on this schema</param>
         /// <param name="names">list of named schema already read</param>
         /// <param name="doc">documentation for this named schema</param>
         /// <param name="defaultSymbol">default symbol</param>
         private EnumSchema(SchemaName name, IList<SchemaName> aliases, List<string> symbols,
-                            IDictionary<String, int> symbolMap, PropertyMap props, SchemaNames names,
+                            IDictionary<String, int> symbolMap, 
+                            IDictionary<string, IDictionary<string, string>> altsymbols, 
+                            PropertyMap props, SchemaNames names,
                             string doc, string defaultSymbol)
                             : base(Type.Enumeration, name, aliases, props, names, doc)
         {
             if (null == name.Name) throw new AvroException("name cannot be null for enum schema.");
             this.Symbols = symbols;
             this.symbolMap = symbolMap;
+            this.AlternateSymbols = altsymbols;
 
             if (null != defaultSymbol && !symbolMap.ContainsKey(defaultSymbol))
                 throw new AvroException($"Default symbol: {defaultSymbol} not found in symbols");
@@ -175,6 +191,39 @@ namespace Avro
             }
         }
 
+
+        /// <summary>
+        /// Parses the 'altnames' property from the given JSON token
+        /// </summary>
+        /// <param name="jtok">JSON object to read</param>
+        /// <returns>Dictionary of alternate names. If no 'altnames' specified, then it returns null.</returns>
+        protected static IDictionary<string, IDictionary<string, string>> GetAlternateSymbols(JToken jtok)
+        {
+            JToken jaltsymbols = jtok["altsymbols"];
+            if (null == jaltsymbols)
+                return null;
+
+            if (jaltsymbols.Type != JTokenType.Object)
+                throw new SchemaParseException($"Aliases must be of format JSON object at '{jtok.Path}'");
+
+            var altsymbols = new Dictionary<string, IDictionary<string, string>>();
+            foreach (JProperty jmap in jaltsymbols.Children())
+            {
+                if (jmap.Value.Type != JTokenType.Object)
+                    throw new SchemaParseException($"Aliases must be of format JSON object at '{jtok.Path}'");
+                Dictionary<string, string> altmap = new Dictionary<string, string>();
+                foreach (JProperty jalt in jmap.Value.Children())
+                {
+                    if (jalt.Value.Type != JTokenType.String)
+                        throw new SchemaParseException($"Alternate symbol must be of type string at '{jtok.Path}'");
+
+                    altmap.Add(jmap.Name, (string)jalt.Value);
+                }
+                altsymbols.Add(jmap.Name, altmap);
+            }
+            return altsymbols;
+        }
+
         /// <summary>
         /// Writes enum schema in JSON format
         /// </summary>
@@ -190,6 +239,23 @@ namespace Avro
             foreach (string s in this.Symbols)
                 writer.WriteValue(s);
             writer.WriteEndArray();
+            if (null != AlternateSymbols)
+            {
+                writer.WritePropertyName("altsymbols");
+                writer.WriteStartObject();
+                foreach (var entry in AlternateSymbols)
+                {
+                    writer.WritePropertyName(entry.Key);
+                    writer.WriteStartObject();
+                    foreach (var alt in entry.Value)
+                    {
+                        writer.WritePropertyName(alt.Key);
+                        writer.WriteValue(alt.Value);
+                    }
+                    writer.WriteEndObject();
+                }
+                writer.WriteEndObject();
+            }
             if (null != Default)
             {
                 writer.WritePropertyName("default");

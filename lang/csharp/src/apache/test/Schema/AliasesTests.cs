@@ -25,25 +25,25 @@ namespace Avro.Test
         [TestCase]
         public void TestNoNamespace()
         {
-            CollectionAssert.AreEqual(new[] { new SchemaName("alias", null, null, null) }, Aliases.GetSchemaNames(new[] { "alias" }, "name", null));
+            CollectionAssert.AreEqual(new[] { new SchemaName("alias", null, null, null, null) }, Aliases.GetSchemaNames(new[] { "alias" }, "name", null));
         }
 
         [TestCase]
         public void TestTypeWithNamespace()
         {
-            CollectionAssert.AreEqual(new[] { new SchemaName("space.alias", null, null, null) }, Aliases.GetSchemaNames(new[] { "alias" }, "name", "space"));
+            CollectionAssert.AreEqual(new[] { new SchemaName("space.alias", null, null, null, null) }, Aliases.GetSchemaNames(new[] { "alias" }, "name", "space"));
         }
 
         [TestCase]
         public void TestTypeWithNamespaceInName()
         {
-            CollectionAssert.AreEqual(new[] { new SchemaName("space.alias", null, null, null) }, Aliases.GetSchemaNames(new[] { "alias" }, "space.name", null));
+            CollectionAssert.AreEqual(new[] { new SchemaName("space.alias", null, null, null, null) }, Aliases.GetSchemaNames(new[] { "alias" }, "space.name", null));
         }
 
         [TestCase]
         public void TestAliasWithNamespace()
         {
-            CollectionAssert.AreEqual(new[] { new SchemaName("name.alias", null, null, null) }, Aliases.GetSchemaNames(new[] { "name.alias" }, "space.name", null));
+            CollectionAssert.AreEqual(new[] { new SchemaName("name.alias", null, null, null, null) }, Aliases.GetSchemaNames(new[] { "name.alias" }, "space.name", null));
         }
     }
 }

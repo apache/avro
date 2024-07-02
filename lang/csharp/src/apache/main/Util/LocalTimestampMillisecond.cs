@@ -49,14 +49,50 @@ namespace Avro.Util
         /// <inheritdoc/>
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
-            DateTime date = ((DateTime)logicalValue).ToUniversalTime();
-            return (long)(date - UnixEpochDateTime).TotalMilliseconds;
+            return ConvertToBaseValue<long>(logicalValue, schema);
+        }
+
+        /// <inheritdoc/>
+        public override T ConvertToBaseValue<T>(object logicalValue, LogicalSchema schema)
+        {
+            if (typeof(T) == typeof(long))
+            {
+                DateTime date = ((DateTime)logicalValue).ToUniversalTime();
+                return (T)(object)(long)(date - UnixEpochDateTime).TotalMilliseconds;
+            }
+            else if (typeof(T) == typeof(DateTime))
+            {
+                return (T)(object)((DateTime)logicalValue).ToUniversalTime();
+            }
+            else if (typeof(T) == typeof(string))
+            {
+                return (T)(object)((DateTime)logicalValue).ToString("O");
+            }
+            else
+            {
+                throw new AvroTypeException($"Unsupported conversion to {typeof(T)}");
+            }
         }
 
         /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
-            return UnixEpochDateTime.AddMilliseconds((long)baseValue).ToLocalTime();
+            if (baseValue is long || baseValue is int )
+            {
+                return UnixEpochDateTime.AddMilliseconds((long)baseValue).ToLocalTime();
+            }
+            else if (baseValue is DateTime)
+            {
+                return (DateTime)baseValue;
+            }
+            else if (baseValue is string)
+            {
+                return DateTime.Parse((string)baseValue).ToLocalTime();
+            }
+            else
+            {
+                throw new AvroTypeException($"Unsupported conversion from {baseValue.GetType()}");
+            }
         }
     }
 }

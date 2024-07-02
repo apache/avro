@@ -15,22 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.Collections.Generic;
-using System.Linq;
 
-namespace Avro
+namespace Avro.IO
 {
-    internal static class Aliases
+    /// <summary>
+    /// The mode of encoding JSON data.
+    /// </summary>
+    public enum JsonMode
     {
-        internal static IList<SchemaName> GetSchemaNames(IEnumerable<string> aliases, string enclosingTypeName, string enclosingTypeNamespace)
-        {
-            if (aliases == null)
-            {
-                return null;
-            }
-
-            SchemaName enclosingSchemaName = new SchemaName(enclosingTypeName, enclosingTypeNamespace, null, null, null);
-            return aliases.Select(alias => new SchemaName(alias, enclosingSchemaName.Namespace, null, null, null)).ToList();
-        }
+        /// <summary>
+        /// Avro's JSON data encoding.
+        /// </summary>
+        AvroJson,
+        /// <summary>
+        /// Plain JSON data encoding.
+        /// </summary>
+        PlainJson
     }
 }
