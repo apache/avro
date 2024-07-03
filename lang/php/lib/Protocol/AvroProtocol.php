@@ -22,6 +22,7 @@ namespace Apache\Avro\Protocol;
 
 use Apache\Avro\Schema\AvroNamedSchemata;
 use Apache\Avro\Schema\AvroSchema;
+use Apache\Avro\Schema\AvroSchemaParseException;
 
 /**
  * Avro library for protocols
@@ -29,11 +30,17 @@ use Apache\Avro\Schema\AvroSchema;
  */
 class AvroProtocol
 {
+    public $doc;
     public $name;
     public $namespace;
     public $schemata;
     public $messages;
 
+    /**
+     * @param $json
+     * @return AvroProtocol
+     * @throws AvroProtocolParseException|AvroSchemaParseException
+     */
     public static function parse($json)
     {
         if (is_null($json)) {
@@ -45,6 +52,11 @@ class AvroProtocol
         return $protocol;
     }
 
+    /**
+     * @param $avro
+     * @throws AvroProtocolParseException
+     * @throws AvroSchemaParseException
+     */
     public function realParse($avro)
     {
         $this->protocol = $avro["protocol"];
@@ -62,5 +74,41 @@ class AvroProtocol
                 $this->messages[$messageName] = $message;
             }
         }
+    }
+
+    public function md5()
+    {
+        return md5((string) $this, true);
+    }
+
+    /**
+     * +   * @returns string the JSON-encoded representation of this Avro schema.
+     * +   */
+    public function __toString()
+    {
+        return (string) json_encode($this->toAvro());
+    }
+
+    /**
+     * Internal represention of this Avro Protocol.
+     * @returns mixed
+     */
+    public function toAvro()
+    {
+        $avro = array("protocol" => $this->name, "namespace" => $this->namespace);
+
+        if (!is_null($this->doc)) {
+            $avro["doc"] = $this->doc;
+        }
+
+        $avro["types"] = method_exists($this->schemata, 'toAvro') ? $this->schemata->toAvro() : [];
+
+        $messages = array();
+        foreach ($this->messages as $name => $msg) {
+            $messages[$name] = $msg->toAvro();
+        }
+        $avro["messages"] = $messages;
+
+        return $avro;
     }
 }
