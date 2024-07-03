@@ -20,6 +20,7 @@
 namespace Apache\Avro\Tests;
 
 use Apache\Avro\DataFile\AvroDataIO;
+use DateTime;
 use PHPUnit\Framework\TestCase;
 
 class DataFileTest extends TestCase
@@ -61,7 +62,7 @@ class DataFileTest extends TestCase
 
     public static function current_timestamp()
     {
-        return strftime("%Y%m%dT%H%M%S");
+        return date_format(new DateTime, 'Y-m-d H:i:s');
     }
 
     public function test_write_read_null_round_trip()
