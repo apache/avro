@@ -20,7 +20,10 @@ use crate::{
     decode::{decode, decode_internal},
     from_value,
     rabin::Rabin,
-    schema::{AvroSchema, Names, ResolvedOwnedSchema, ResolvedSchema, Schema},
+    schema::{
+        resolve_names, resolve_names_with_schemata, AvroSchema, Names, ResolvedOwnedSchema,
+        ResolvedSchema, Schema,
+    },
     types::Value,
     util, AvroResult, Codec, Error,
 };
@@ -47,6 +50,7 @@ struct Block<'r, R> {
     writer_schema: Schema,
     schemata: Vec<&'r Schema>,
     user_metadata: HashMap<String, Vec<u8>>,
+    names_refs: Names,
 }
 
 impl<'r, R: Read> Block<'r, R> {
@@ -61,6 +65,7 @@ impl<'r, R: Read> Block<'r, R> {
             message_count: 0,
             marker: [0; 16],
             user_metadata: Default::default(),
+            names_refs: Default::default(),
         };
 
         block.read_header()?;
@@ -179,13 +184,18 @@ impl<'r, R: Read> Block<'r, R> {
 
         let mut block_bytes = &self.buf[self.buf_idx..];
         let b_original = block_bytes.len();
-        let schemata = if self.schemata.is_empty() {
-            vec![&self.writer_schema]
-        } else {
-            self.schemata.clone()
+
+        let item = decode_internal(
+            &self.writer_schema,
+            &self.names_refs,
+            &None,
+            &mut block_bytes,
+        )?;
+        let item = match read_schema {
+            Some(schema) => item.resolve(schema)?,
+            None => item,
         };
-        let item =
-            from_avro_datum_schemata(&self.writer_schema, schemata, &mut block_bytes, read_schema)?;
+
         if b_original == block_bytes.len() {
             // from_avro_datum did not consume any bytes, so return an error to avoid an infinite loop
             return Err(Error::ReadBlock);
@@ -214,8 +224,10 @@ impl<'r, R: Read> Block<'r, R> {
                 .map(|(name, schema)| (name.clone(), (*schema).clone()))
                 .collect();
             self.writer_schema = Schema::parse_with_names(&json, names)?;
+            resolve_names_with_schemata(&self.schemata, &mut self.names_refs, &None)?;
         } else {
             self.writer_schema = Schema::parse(&json)?;
+            resolve_names(&self.writer_schema, &mut self.names_refs, &None)?;
         }
         Ok(())
     }
