@@ -17,16 +17,16 @@
  */
 package org.apache.avro.io;
 
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.InvalidNumberEncodingException;
+import org.apache.avro.SystemLimitException;
+import org.apache.avro.util.Utf8;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.InvalidNumberEncodingException;
-import org.apache.avro.SystemLimitException;
-import org.apache.avro.util.Utf8;
 
 /**
  * An {@link Decoder} for binary-format data.
@@ -338,6 +338,9 @@ public class BinaryDecoder extends Decoder {
   }
 
   protected void doSkipBytes(long length) throws IOException {
+    if (length <= 0) {
+      return;
+    }
     int remaining = limit - pos;
     if (length <= remaining) {
       pos = (int) (pos + length);
