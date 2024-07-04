@@ -294,13 +294,19 @@ fn default_enum_variant(
         .variants
         .iter()
         .filter(|v| v.attrs.iter().any(is_default_attr))
-        .collect::<Vec<_>>()[..]
+        .collect::<Vec<_>>()
     {
-        [] => Ok(None),
-        [default] => Ok(Some(default.ident.to_string())),
-        _ => Err(vec![syn::Error::new(
+        variants if variants.is_empty() => Ok(None),
+        single if single.len() == 1 => Ok(Some(single[0].ident.to_string())),
+        multiple => Err(vec![syn::Error::new(
             error_span,
-            "Multiple defaults defined",
+            format!(
+                "Multiple defaults defined: {:?}",
+                multiple
+                    .iter()
+                    .map(|v| v.ident.to_string())
+                    .collect::<Vec<String>>()
+            ),
         )]),
     }
 }
@@ -462,7 +468,7 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_enum_with_default() {
+    fn avro_3687_basic_enum_with_default() {
         let basic_enum = quote! {
             enum Basic {
                 #[default]
@@ -523,7 +529,7 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_enum_with_default_twice() {
+    fn avro_3687_basic_enum_with_default_twice() {
         let non_basic_enum = quote! {
             enum Basic {
                 #[default]
@@ -535,9 +541,18 @@ mod tests {
             }
         };
         match syn::parse2::<DeriveInput>(non_basic_enum) {
-            Ok(mut input) => {
-                assert!(derive_avro_schema(&mut input).is_err())
-            }
+            Ok(mut input) => match derive_avro_schema(&mut input) {
+                Ok(_) => {
+                    panic!("Should not be able to derive schema for enum with multiple defaults")
+                }
+                Err(errors) => {
+                    assert_eq!(errors.len(), 1);
+                    assert_eq!(
+                        errors[0].to_string(),
+                        r#"Multiple defaults defined: ["A", "C"]"#
+                    );
+                }
+            },
             Err(error) => panic!(
                 "Failed to parse as derive input when it should be able to. Error: {error:?}"
             ),
