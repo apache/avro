@@ -30,9 +30,9 @@
 #include <sstream>
 #include <utility>
 
+#include "CustomAttributes.hh"
 #include "Node.hh"
 #include "NodeConcepts.hh"
-#include "CustomAttributes.hh"
 
 namespace avro {
 
@@ -129,7 +129,7 @@ protected:
 
     void doAddName(const std::string &name) override {
         if (!nameIndex_.add(name, leafNameAttributes_.size())) {
-            throw Exception(boost::format("Cannot add duplicate name: %1%") % name);
+            throw Exception("Cannot add duplicate name: {}", name);
         }
         leafNameAttributes_.add(name);
     }
@@ -161,7 +161,7 @@ protected:
     void setLeafToSymbolic(size_t index, const NodePtr &node) override;
 
     void doAddCustomAttribute(const CustomAttributes &customAttributes) override {
-      customAttributes_.add(customAttributes);
+        customAttributes_.add(customAttributes);
     }
 
     SchemaResolution furtherResolution(const Node &reader) const {
@@ -280,7 +280,7 @@ public:
     NodePtr getNode() const {
         NodePtr node = actualNode_.lock();
         if (!node) {
-            throw Exception(boost::format("Could not follow symbol %1%") % name());
+            throw Exception("Could not follow symbol {}", name());
         }
         return node;
     }
@@ -325,10 +325,7 @@ public:
     void printJson(std::ostream &os, size_t depth) const override;
 
     bool isValid() const override {
-        return ((nameAttribute_.size() == 1) &&
-            (leafAttributes_.size() == leafNameAttributes_.size()) &&
-            (customAttributes_.size() == 0 ||
-            customAttributes_.size() == leafAttributes_.size()));
+        return ((nameAttribute_.size() == 1) && (leafAttributes_.size() == leafNameAttributes_.size()) && (customAttributes_.size() == 0 || customAttributes_.size() == leafAttributes_.size()));
     }
 
     const GenericDatum &defaultValueAt(size_t index) override {
@@ -345,7 +342,7 @@ public:
     NodeEnum(const HasName &name, const LeafNames &symbols) : NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoAttributes(), NoSize()) {
         for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
             if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
-                throw Exception(boost::format("Cannot add duplicate enum: %1%") % leafNameAttributes_.get(i));
+                throw Exception("Cannot add duplicate enum: {}", leafNameAttributes_.get(i));
             }
         }
     }

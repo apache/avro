@@ -545,7 +545,7 @@ impl TryFrom<Schema> for ResolvedOwnedSchema {
             names,
             root_schema: schema,
         };
-        Self::from_internal(&rs.root_schema, &mut rs.names, &None)?;
+        resolve_names(&rs.root_schema, &mut rs.names, &None)?;
         Ok(rs)
     }
 }
@@ -557,57 +557,68 @@ impl ResolvedOwnedSchema {
     pub(crate) fn get_names(&self) -> &Names {
         &self.names
     }
+}
 
-    fn from_internal(
-        schema: &Schema,
-        names: &mut Names,
-        enclosing_namespace: &Namespace,
-    ) -> AvroResult<()> {
-        match schema {
-            Schema::Array(schema) => Self::from_internal(&schema.items, names, enclosing_namespace),
-            Schema::Map(schema) => Self::from_internal(&schema.types, names, enclosing_namespace),
-            Schema::Union(UnionSchema { schemas, .. }) => {
-                for schema in schemas {
-                    Self::from_internal(schema, names, enclosing_namespace)?
+pub(crate) fn resolve_names(
+    schema: &Schema,
+    names: &mut Names,
+    enclosing_namespace: &Namespace,
+) -> AvroResult<()> {
+    match schema {
+        Schema::Array(schema) => resolve_names(&schema.items, names, enclosing_namespace),
+        Schema::Map(schema) => resolve_names(&schema.types, names, enclosing_namespace),
+        Schema::Union(UnionSchema { schemas, .. }) => {
+            for schema in schemas {
+                resolve_names(schema, names, enclosing_namespace)?
+            }
+            Ok(())
+        }
+        Schema::Enum(EnumSchema { name, .. }) | Schema::Fixed(FixedSchema { name, .. }) => {
+            let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+            if names
+                .insert(fully_qualified_name.clone(), schema.clone())
+                .is_some()
+            {
+                Err(Error::AmbiguousSchemaDefinition(fully_qualified_name))
+            } else {
+                Ok(())
+            }
+        }
+        Schema::Record(RecordSchema { name, fields, .. }) => {
+            let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+            if names
+                .insert(fully_qualified_name.clone(), schema.clone())
+                .is_some()
+            {
+                Err(Error::AmbiguousSchemaDefinition(fully_qualified_name))
+            } else {
+                let record_namespace = fully_qualified_name.namespace;
+                for field in fields {
+                    resolve_names(&field.schema, names, &record_namespace)?
                 }
                 Ok(())
             }
-            Schema::Enum(EnumSchema { name, .. }) | Schema::Fixed(FixedSchema { name, .. }) => {
-                let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
-                if names
-                    .insert(fully_qualified_name.clone(), schema.clone())
-                    .is_some()
-                {
-                    Err(Error::AmbiguousSchemaDefinition(fully_qualified_name))
-                } else {
-                    Ok(())
-                }
-            }
-            Schema::Record(RecordSchema { name, fields, .. }) => {
-                let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
-                if names
-                    .insert(fully_qualified_name.clone(), schema.clone())
-                    .is_some()
-                {
-                    Err(Error::AmbiguousSchemaDefinition(fully_qualified_name))
-                } else {
-                    let record_namespace = fully_qualified_name.namespace;
-                    for field in fields {
-                        Self::from_internal(&field.schema, names, &record_namespace)?
-                    }
-                    Ok(())
-                }
-            }
-            Schema::Ref { name } => {
-                let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
-                names
-                    .get(&fully_qualified_name)
-                    .map(|_| ())
-                    .ok_or(Error::SchemaResolutionError(fully_qualified_name))
-            }
-            _ => Ok(()),
         }
+        Schema::Ref { name } => {
+            let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+            names
+                .get(&fully_qualified_name)
+                .map(|_| ())
+                .ok_or(Error::SchemaResolutionError(fully_qualified_name))
+        }
+        _ => Ok(()),
     }
+}
+
+pub(crate) fn resolve_names_with_schemata(
+    schemata: &Vec<&Schema>,
+    names: &mut Names,
+    enclosing_namespace: &Namespace,
+) -> AvroResult<()> {
+    for schema in schemata {
+        resolve_names(schema, names, enclosing_namespace)?;
+    }
+    Ok(())
 }
 
 /// Represents a `field` in a `record` Avro schema.
@@ -817,6 +828,8 @@ pub struct FixedSchema {
     pub doc: Documentation,
     /// The size of the fixed schema
     pub size: usize,
+    /// An optional default symbol used for compatibility
+    pub default: Option<String>,
     /// The custom attributes of the schema
     pub attributes: BTreeMap<String, Value>,
 }
@@ -900,7 +913,7 @@ impl UnionSchema {
 
     /// Returns true if the any of the variants of this `UnionSchema` is `Null`.
     pub fn is_nullable(&self) -> bool {
-        !self.schemas.is_empty() && self.schemas.iter().any(|s| s == &Schema::Null)
+        self.schemas.iter().any(|x| matches!(x, Schema::Null))
     }
 
     /// Optionally returns a reference to the schema matched by this value, as well as its position
@@ -1271,7 +1284,7 @@ impl Parser {
         let name = Name::new(name)?;
         let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
 
-        if self.parsed_schemas.get(&fully_qualified_name).is_some() {
+        if self.parsed_schemas.contains_key(&fully_qualified_name) {
             return Ok(Schema::Ref {
                 name: fully_qualified_name,
             });
@@ -1832,6 +1845,18 @@ impl Parser {
             None => Err(Error::GetFixedSizeField),
         }?;
 
+        let default = complex.get("default").and_then(|v| match &v {
+            Value::String(ref default) => Some(default.clone()),
+            _ => None,
+        });
+
+        if default.is_some() {
+            let len = default.clone().unwrap().len();
+            if len != size as usize {
+                return Err(Error::FixedDefaultLenSizeMismatch(len, size));
+            }
+        }
+
         let fully_qualified_name = Name::parse(complex, enclosing_namespace)?;
         let aliases = fix_aliases_namespace(complex.aliases(), &fully_qualified_name.namespace);
 
@@ -1840,6 +1865,7 @@ impl Parser {
             aliases: aliases.clone(),
             doc,
             size: size as usize,
+            default,
             attributes: self.get_custom_attributes(complex, vec!["size"]),
         });
 
@@ -2080,6 +2106,7 @@ impl Serialize for Schema {
                     aliases: None,
                     doc: None,
                     size: 12,
+                    default: None,
                     attributes: Default::default(),
                 });
                 map.serialize_entry("type", &inner)?;
@@ -3192,6 +3219,7 @@ mod tests {
                         aliases: None,
                         doc: None,
                         size: 456,
+                        default: None,
                         attributes: Default::default(),
                     }),
                     order: RecordFieldOrder::Ascending,
@@ -3211,6 +3239,7 @@ mod tests {
                         aliases: None,
                         doc: None,
                         size: 456,
+                        default: None,
                         attributes: Default::default(),
                     }),
                     order: RecordFieldOrder::Ascending,
@@ -3285,7 +3314,8 @@ mod tests {
             name: Name::new("test")?,
             aliases: None,
             doc: None,
-            size: 16usize,
+            size: 16_usize,
+            default: None,
             attributes: Default::default(),
         });
 
@@ -3304,7 +3334,8 @@ mod tests {
             name: Name::new("test")?,
             aliases: None,
             doc: Some(String::from("FixedSchema documentation")),
-            size: 16usize,
+            size: 16_usize,
+            default: None,
             attributes: Default::default(),
         });
 
@@ -6256,6 +6287,7 @@ mod tests {
             aliases: None,
             doc: None,
             size: 1,
+            default: None,
             attributes: attributes.clone(),
         });
         let serialized = serde_json::to_string(&schema)?;
@@ -6380,11 +6412,12 @@ mod tests {
                 aliases: None,
                 doc: None,
                 size: 6,
+                default: None,
                 attributes: BTreeMap::from([("logicalType".to_string(), "uuid".into())]),
             })
         );
         assert_logged(
-            r#"Ignoring uuid logical type for a Fixed schema because its size (6) is not 16! Schema: Fixed(FixedSchema { name: Name { name: "FixedUUID", namespace: None }, aliases: None, doc: None, size: 6, attributes: {"logicalType": String("uuid")} })"#,
+            r#"Ignoring uuid logical type for a Fixed schema because its size (6) is not 16! Schema: Fixed(FixedSchema { name: Name { name: "FixedUUID", namespace: None }, aliases: None, doc: None, size: 6, default: None, attributes: {"logicalType": String("uuid")} })"#,
         );
 
         Ok(())
@@ -6524,6 +6557,7 @@ mod tests {
                 aliases: None,
                 doc: None,
                 size: 16,
+                default: None,
                 attributes: Default::default(),
             })),
         });
@@ -6705,6 +6739,28 @@ mod tests {
                     Please enable debug logging to find out which Record schema \
                     declares the union with 'RUST_LOG=apache_avro::schema=debug'.",
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3965_fixed_schema_with_default_bigger_than_size() -> TestResult {
+        match Schema::parse_str(
+            r#"{
+                "type": "fixed",
+                "name": "test",
+                "size": 1,
+                "default": "123456789"
+               }"#,
+        ) {
+            Ok(_schema) => panic!("Must fail!"),
+            Err(err) => {
+                assert_eq!(
+                    err.to_string(),
+                    "Fixed schema's default value length (9) does not match its size (1)"
+                );
+            }
+        }
 
         Ok(())
     }

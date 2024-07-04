@@ -19,16 +19,11 @@
 #ifndef avro_GenericDatum_hh__
 #define avro_GenericDatum_hh__
 
+#include <any>
 #include <cstdint>
 #include <map>
 #include <string>
 #include <vector>
-
-#if __cplusplus >= 201703L
-#include <any>
-#else
-#include "boost/any.hpp"
-#endif
 
 #include "LogicalType.hh"
 #include "Node.hh"
@@ -62,11 +57,7 @@ class AVRO_DECL GenericDatum {
 protected:
     Type type_;
     LogicalType logicalType_;
-#if __cplusplus >= 201703L
     std::any value_;
-#else
-    boost::any value_;
-#endif
 
     explicit GenericDatum(Type t)
         : type_(t), logicalType_(LogicalType::NONE) {}
@@ -192,11 +183,7 @@ public:
     template<typename T>
     GenericDatum(const NodePtr &schema, const T &v) : type_(schema->type()), logicalType_(schema->logicalType()) {
         init(schema);
-#if __cplusplus >= 201703L
         *std::any_cast<T>(&value_) = v;
-#else
-        *boost::any_cast<T>(&value_) = v;
-#endif
     }
 
     /**
@@ -539,65 +526,33 @@ public:
 };
 
 inline Type GenericDatum::type() const {
-    return (type_ == AVRO_UNION) ?
-#if __cplusplus >= 201703L
-                                 std::any_cast<GenericUnion>(&value_)->datum().type()
-                                 :
-#else
-                                 boost::any_cast<GenericUnion>(&value_)->datum().type()
-                                 :
-#endif
-                                 type_;
+    return (type_ == AVRO_UNION) ? std::any_cast<GenericUnion>(&value_)->datum().type()
+                                 : type_;
 }
 
 inline LogicalType GenericDatum::logicalType() const {
-    return (type_ == AVRO_UNION) ?
-#if __cplusplus >= 201703L
-        std::any_cast<GenericUnion>(&value_)->datum().logicalType() :
-#else
-        boost::any_cast<GenericUnion>(&value_)->datum().logicalType() :
-#endif
-        logicalType_;
+    return (type_ == AVRO_UNION) ? std::any_cast<GenericUnion>(&value_)->datum().logicalType()
+                                 : logicalType_;
 }
 
 template<typename T>
 T &GenericDatum::value() {
-    return (type_ == AVRO_UNION) ?
-#if __cplusplus >= 201703L
-                                 std::any_cast<GenericUnion>(&value_)->datum().value<T>()
+    return (type_ == AVRO_UNION) ? std::any_cast<GenericUnion>(&value_)->datum().value<T>()
                                  : *std::any_cast<T>(&value_);
-#else
-                                 boost::any_cast<GenericUnion>(&value_)->datum().value<T>()
-                                 : *boost::any_cast<T>(&value_);
-#endif
 }
 
 template<typename T>
 const T &GenericDatum::value() const {
-    return (type_ == AVRO_UNION) ?
-#if __cplusplus >= 201703L
-                                 std::any_cast<GenericUnion>(&value_)->datum().value<T>()
+    return (type_ == AVRO_UNION) ? std::any_cast<GenericUnion>(&value_)->datum().value<T>()
                                  : *std::any_cast<T>(&value_);
-#else
-                                 boost::any_cast<GenericUnion>(&value_)->datum().value<T>()
-                                 : *boost::any_cast<T>(&value_);
-#endif
 }
 
 inline size_t GenericDatum::unionBranch() const {
-#if __cplusplus >= 201703L
     return std::any_cast<GenericUnion>(&value_)->currentBranch();
-#else
-    return boost::any_cast<GenericUnion>(&value_)->currentBranch();
-#endif
 }
 
 inline void GenericDatum::selectBranch(size_t branch) {
-#if __cplusplus >= 201703L
     std::any_cast<GenericUnion>(&value_)->selectBranch(branch);
-#else
-    boost::any_cast<GenericUnion>(&value_)->selectBranch(branch);
-#endif
 }
 
 } // namespace avro

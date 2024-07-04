@@ -217,7 +217,7 @@ public:
 #endif
 
     void testWriteWithCodec(avro::Codec codec) {
-        avro::DataFileWriter<ComplexInteger> df(filename, writerSchema, 100);
+        avro::DataFileWriter<ComplexInteger> df(filename, writerSchema, 100, codec);
         int64_t re = 3;
         int64_t im = 5;
         for (int i = 0; i < count; ++i, re *= im, im += 3) {
@@ -1004,7 +1004,7 @@ void testReadRecordEfficientlyUsingLastSyncSnappyCodec() {
 #endif
 
 test_suite *
-init_unit_test_suite(int argc, char *argv[]) {
+init_unit_test_suite(int, char *[]) {
     {
         auto *ts = BOOST_TEST_SUITE("DataFile tests: test0.df");
         shared_ptr<DataFileTest> t1(new DataFileTest("test1.d0", sch, isch, 0));

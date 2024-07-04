@@ -17,8 +17,6 @@
  */
 package org.apache.avro;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -44,13 +42,27 @@ import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
-
+import org.apache.avro.generic.GenericData.EnumSymbol;
+import org.apache.avro.generic.GenericData.Record;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.GenericRecordBuilder;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import static java.util.Objects.requireNonNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestSchema {
   @Test
@@ -583,26 +595,27 @@ public class TestSchema {
 
   @Test
   void testParseMultipleFile() throws IOException {
-    URL directory = Thread.currentThread().getContextClassLoader().getResource("multipleFile");
+    URL directory = requireNonNull(Thread.currentThread().getContextClassLoader().getResource("multipleFile"));
     File f1 = new File(directory.getPath(), "ApplicationEvent.avsc");
     File f2 = new File(directory.getPath(), "DocumentInfo.avsc");
     File f3 = new File(directory.getPath(), "MyResponse.avsc");
     Assertions.assertTrue(f1.exists(), "File not exist for test " + f1.getPath());
     Assertions.assertTrue(f2.exists(), "File not exist for test " + f2.getPath());
     Assertions.assertTrue(f3.exists(), "File not exist for test " + f3.getPath());
-
-    final List<Schema> schemas = new Schema.Parser().parse(Arrays.asList(f1, f2, f3));
+    SchemaParser parser = new SchemaParser();
+    parser.parse(f1);
+    parser.parse(f2);
+    parser.parse(f3);
+    final List<Schema> schemas = parser.getParsedNamedSchemas();
     Assertions.assertEquals(3, schemas.size());
     Schema schemaAppEvent = schemas.get(0);
     Schema schemaDocInfo = schemas.get(1);
     Schema schemaResponse = schemas.get(2);
-
     Assertions.assertNotNull(schemaAppEvent);
     Assertions.assertEquals(3, schemaAppEvent.getFields().size());
     Field documents = schemaAppEvent.getField("documents");
     Schema docSchema = documents.schema().getTypes().get(1).getElementType();
     Assertions.assertEquals(docSchema, schemaDocInfo);
-
     Assertions.assertNotNull(schemaDocInfo);
     Assertions.assertNotNull(schemaResponse);
   }
@@ -610,9 +623,9 @@ public class TestSchema {
   @Test
   void add_types() {
     String schemaRecord2 = "{\"type\":\"record\", \"name\":\"record2\", \"fields\": ["
-        + "  {\"name\":\"f1\", \"type\":\"record1\" }" + "]}";
-    // register schema1 in schema.
+        + "  {\"name\":\"f1\", \"type\":\"record1\" }" + "]}"; // register schema1 in schema.
     Schema schemaRecord1 = Schema.createRecord("record1", "doc", "", false);
+    schemaRecord1.setFields(Collections.singletonList(new Field("name", Schema.create(Type.STRING))));
     Schema.Parser parser = new Schema.Parser().addTypes(Collections.singleton(schemaRecord1));
 
     // parse schema for record2 that contains field for schema1.
@@ -628,6 +641,35 @@ public class TestSchema {
    */
   @Test
   void testParserNullValidate() {
-    new Schema.Parser(null).parse("{\"type\":\"record\",\"name\":\"\",\"fields\":[]}"); // Empty name
+    new Schema.Parser((NameValidator) null).parse("{\"type\":\"record\",\"name\":\"\",\"fields\":[]}"); // Empty name
+  }
+
+  /**
+   * Tests when a user tries to write a record with an invalid enum symbol value
+   * that the exception returned is more descriptive than just a NPE or an
+   * incorrect mention of an unspecified non-null field.
+   */
+  @Test
+  void enumWriteUnknownField() throws IOException {
+    Schema schema = Schema.createRecord("record1", "doc", "", false);
+    String goodValue = "HELLO";
+    Schema enumSchema = Schema.createEnum("enum1", "doc", "", Arrays.asList(goodValue));
+    Field field1 = new Field("field1", enumSchema);
+    schema.setFields(Collections.singletonList(field1));
+
+    GenericDatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<>(schema);
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    Encoder encoder = EncoderFactory.get().binaryEncoder(byteArrayOutputStream, null);
+    GenericRecordBuilder builder = new GenericRecordBuilder(schema);
+    String badValue = "GOODBYE";
+    builder.set(field1, new EnumSymbol(enumSchema, badValue));
+    Record record = builder.build();
+    try {
+      datumWriter.write(record, encoder);
+      fail("should have thrown");
+    } catch (AvroTypeException ate) {
+      assertTrue(ate.getMessage().contains(goodValue));
+      assertTrue(ate.getMessage().contains(badValue));
+    }
   }
 }

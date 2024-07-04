@@ -137,7 +137,7 @@ static void avro_schema_free(avro_schema_t schema)
 				if (record->space) {
 					avro_str_free(record->space);
 				}
-				st_foreach(record->fields, HASH_FUNCTION_CAST record_free_foreach,
+				st_foreach(record->fields, (hash_function_foreach) record_free_foreach,
 					   0);
 				st_free_table(record->fields_byname);
 				st_free_table(record->fields);
@@ -152,7 +152,7 @@ static void avro_schema_free(avro_schema_t schema)
 				if (enump->space) {
 					avro_str_free(enump->space);
 				}
-				st_foreach(enump->symbols, HASH_FUNCTION_CAST enum_free_foreach,
+				st_foreach(enump->symbols, (hash_function_foreach) enum_free_foreach,
 					   0);
 				st_free_table(enump->symbols);
 				st_free_table(enump->symbols_byname);
@@ -189,7 +189,7 @@ static void avro_schema_free(avro_schema_t schema)
 		case AVRO_UNION:{
 				struct avro_union_schema_t *unionp;
 				unionp = avro_schema_to_union(schema);
-				st_foreach(unionp->branches, HASH_FUNCTION_CAST union_free_foreach,
+				st_foreach(unionp->branches, (hash_function_foreach) union_free_foreach,
 					   0);
 				st_free_table(unionp->branches);
 				st_free_table(unionp->branches_byname);
@@ -1239,7 +1239,7 @@ avro_schema_from_json_root(json_t *root, avro_schema_t *schema)
 	/* json_dumpf(root, stderr, 0); */
 	rval = avro_schema_from_json_t(root, schema, named_schemas, NULL);
 	json_decref(root);
-	st_foreach(named_schemas, HASH_FUNCTION_CAST named_schema_free_foreach, 0);
+	st_foreach(named_schemas, (hash_function_foreach) named_schema_free_foreach, 0);
 	st_free_table(named_schemas);
 	return rval;
 }
@@ -1455,7 +1455,7 @@ avro_schema_t avro_schema_copy(avro_schema_t schema)
 	}
 
 	new_schema = avro_schema_copy_root(schema, named_schemas);
-	st_foreach(named_schemas, HASH_FUNCTION_CAST named_schema_free_foreach, 0);
+	st_foreach(named_schemas, (hash_function_foreach) named_schema_free_foreach, 0);
 	st_free_table(named_schemas);
 	return new_schema;
 }

@@ -54,6 +54,9 @@
           <include>org/apache/avro/data/Json.avsc</include>
         </includes>
       </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
     </resources>
     <testResources>
       <testResource>
@@ -148,26 +151,6 @@
             <goals>
               <goal>install</goal>
             </goals>
-          </execution>
-
-          <execution>
-            <id>Run all tests under Java 8</id>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <filterProperties>
-                <integrationTestingJDK>8</integrationTestingJDK>
-                <!-- Mockito 5 (used in all other cases) requires Java 11 -->
-                <!-- This is the last version that still runs on Java 8 -->
-                <mockito.version>4.11.0</mockito.version>
-              </filterProperties>
-              <properties>
-                <maven.compiler.release/>
-                <maven.compiler.target>8</maven.compiler.target>
-              </properties>
-              <cloneProjectsTo>${project.build.directory}/it-jdk-8</cloneProjectsTo>
-            </configuration>
           </execution>
 
           <execution>

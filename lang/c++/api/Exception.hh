@@ -20,19 +20,21 @@
 #define avro_Exception_hh__
 
 #include "Config.hh"
-#include <boost/format.hpp>
+#include <fmt/core.h>
 #include <stdexcept>
 
 namespace avro {
 
 /// Wrapper for std::runtime_error that provides convenience constructor
-/// for boost::format objects
+/// for formatted messages
 
 class AVRO_DECL Exception : public virtual std::runtime_error {
 public:
     explicit Exception(const std::string &msg) : std::runtime_error(msg) {}
 
-    explicit Exception(const boost::format &msg) : std::runtime_error(boost::str(msg)) {}
+    template<typename... Args>
+    Exception(fmt::format_string<Args...> fmt, Args &&...args)
+        : std::runtime_error(fmt::format(fmt, std::forward<Args>(args)...)) {}
 };
 
 } // namespace avro

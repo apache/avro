@@ -24,6 +24,10 @@ if (NOT DEFINED CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 17)
 endif()
 
+if (CMAKE_CXX_STANDARD LESS 17)
+    message(FATAL_ERROR "Avro requires at least C++17")
+endif()
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (APPLE)
@@ -64,7 +68,7 @@ if (WIN32 AND NOT CYGWIN AND NOT MSYS)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Werror")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Werror")
 if (AVRO_ADD_PROTECTOR_FLAGS)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fstack-protector-all -D_GLIBCXX_DEBUG")
     # Unset _GLIBCXX_DEBUG for avrogencpp.cc because using Boost Program Options
@@ -77,6 +81,16 @@ endif ()
 
 find_package (Boost 1.38 REQUIRED
     COMPONENTS filesystem iostreams program_options regex system)
+
+include(FetchContent)
+FetchContent_Declare(
+        fmt
+        GIT_REPOSITORY  https://github.com/fmtlib/fmt.git
+        GIT_TAG         10.2.1
+        GIT_PROGRESS    TRUE
+        USES_TERMINAL_DOWNLOAD TRUE
+)
+FetchContent_MakeAvailable(fmt)
 
 find_package(Snappy)
 if (SNAPPY_FOUND)
@@ -121,6 +135,7 @@ set_property (TARGET avrocpp
 
 add_library (avrocpp_s STATIC ${AVRO_SOURCE_FILES})
 target_include_directories(avrocpp_s PRIVATE ${SNAPPY_INCLUDE_DIR})
+target_link_libraries(avrocpp_s fmt::fmt-header-only)
 
 set_property (TARGET avrocpp avrocpp_s
     APPEND PROPERTY COMPILE_DEFINITIONS AVRO_SOURCE)
@@ -131,7 +146,7 @@ set_target_properties (avrocpp PROPERTIES
 set_target_properties (avrocpp_s PROPERTIES
     VERSION ${AVRO_VERSION_MAJOR}.${AVRO_VERSION_MINOR}.${AVRO_VERSION_PATCH})
 
-target_link_libraries (avrocpp ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
+target_link_libraries (avrocpp ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES} fmt::fmt-header-only)
 target_include_directories(avrocpp PRIVATE ${SNAPPY_INCLUDE_DIR})
 
 add_executable (precompile test/precompile.cc)
@@ -143,7 +158,7 @@ macro (gen file ns)
         COMMAND avrogencpp
             -p -
             -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/${file}
-            -o ${file}.hh -n ${ns} -U
+            -o ${file}.hh -n ${ns}
         DEPENDS avrogencpp ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/${file})
     add_custom_target (${file}_hh DEPENDS ${file}.hh)
 endmacro (gen)
@@ -156,6 +171,7 @@ gen (tweet testgen3)
 gen (union_array_union uau)
 gen (union_map_union umu)
 gen (union_conflict uc)
+gen (union_empty_record uer)
 gen (recursive rec)
 gen (reuse ru)
 gen (circulardep cd)
@@ -164,6 +180,7 @@ gen (tree2 tr2)
 gen (crossref cr)
 gen (primitivetypes pt)
 gen (cpp_reserved_words cppres)
+gen (cpp_reserved_words_union_typedef cppres_union)
 
 add_executable (avrogencpp impl/avrogencpp.cc)
 target_link_libraries (avrogencpp avrocpp_s ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
@@ -197,7 +214,8 @@ add_dependencies (AvrogencppTests bigrecord_hh bigrecord_r_hh bigrecord2_hh
     tweet_hh
     union_array_union_hh union_map_union_hh union_conflict_hh
     recursive_hh reuse_hh circulardep_hh tree1_hh tree2_hh crossref_hh
-    primitivetypes_hh empty_record_hh)
+    primitivetypes_hh empty_record_hh cpp_reserved_words_union_typedef_hh
+    union_empty_record_hh)
 
 include (InstallRequiredSystemLibraries)
 

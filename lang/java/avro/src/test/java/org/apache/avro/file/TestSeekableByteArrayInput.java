@@ -17,12 +17,6 @@
  */
 package org.apache.avro.file;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
@@ -33,6 +27,18 @@ import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.Utf8;
 import org.junit.jupiter.api.Test;
+
+import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestSeekableByteArrayInput {
 
@@ -68,7 +74,34 @@ public class TestSeekableByteArrayInput {
       result = dfr.next();
     }
     assertNotNull(result);
-    assertTrue(result instanceof GenericRecord);
+    assertInstanceOf(GenericRecord.class, result);
     assertEquals(new Utf8("testValue"), ((GenericRecord) result).get("name"));
+  }
+
+  @Test
+  void readingData() throws IOException {
+    byte[] data = "0123456789ABCD".getBytes(StandardCharsets.UTF_8);
+    byte[] result = new byte[16];
+    try (SeekableInput in = new SeekableByteArrayInput(data)) {
+      in.read(result, 0, 8);
+      in.seek(4);
+      in.read(result, 8, 8);
+      assertEquals(12, in.tell());
+      assertEquals(data.length, in.length());
+      assertEquals("01234567456789AB", new String(result, StandardCharsets.UTF_8));
+    }
+  }
+
+  @Test
+  void illegalSeeks() throws IOException {
+    byte[] data = "0123456789ABCD".getBytes(StandardCharsets.UTF_8);
+    try (SeekableInput in = new SeekableByteArrayInput(data)) {
+      byte[] buf = new byte[2];
+      in.read(buf, 0, buf.length);
+      in.seek(-4);
+      assertEquals(2, in.tell());
+
+      assertThrows(EOFException.class, () -> in.seek(64));
+    }
   }
 }

@@ -149,6 +149,7 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
                         name: "uuid".into(),
                         aliases: None,
                         doc: None,
+                        default: None,
                         attributes: Default::default(),
                     }),
                     names,
@@ -323,7 +324,7 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
             Ok(if let Value::Int(raw_index) = decode_int(reader)? {
                 let index = usize::try_from(raw_index)
                     .map_err(|e| Error::ConvertI32ToUsize(e, raw_index))?;
-                if (0..=symbols.len()).contains(&index) {
+                if (0..symbols.len()).contains(&index) {
                     let symbol = symbols[index].clone();
                     Value::Enum(raw_index as u32, symbol)
                 } else {
@@ -419,6 +420,7 @@ mod tests {
             doc: None,
             name: Name::new("decimal")?,
             aliases: None,
+            default: None,
             attributes: Default::default(),
         }));
         let schema = Schema::Decimal(DecimalSchema {
@@ -448,6 +450,7 @@ mod tests {
             name: Name::new("decimal")?,
             aliases: None,
             doc: None,
+            default: None,
             attributes: Default::default(),
         }));
         let schema = Schema::Decimal(DecimalSchema {
@@ -893,6 +896,7 @@ mod tests {
             name: "uuid".into(),
             aliases: None,
             doc: None,
+            default: None,
             attributes: Default::default(),
         });
         let value = Value::Uuid(Uuid::parse_str("550e8400-e29b-41d4-a716-446655440000")?);

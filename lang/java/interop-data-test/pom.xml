@@ -69,23 +69,6 @@
             </execution>
 
             <execution>
-              <id>${invoker-action} under Java 8</id>
-              <goals>
-                <goal>run</goal>
-              </goals>
-              <configuration>
-                <filterProperties>
-                  <integrationTestingJDK>8</integrationTestingJDK>
-                </filterProperties>
-                <properties>
-                  <maven.compiler.release/>
-                  <maven.compiler.target>8</maven.compiler.target>
-                </properties>
-                <cloneProjectsTo>${project.build.directory}/it-jdk-8</cloneProjectsTo>
-              </configuration>
-            </execution>
-
-            <execution>
               <id>${invoker-action} under Java 11</id>
               <goals>
                 <goal>run</goal>

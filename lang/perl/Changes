@@ -1,5 +1,33 @@
 Revision history for Perl extension Avro
 
+        - Switch from JSON::XS to JSON::MaybeXS to support
+          multiple JSON backends
+        - Drop dependency on IO::String, since we don't need
+          it now we depend on Perl 5.10.1 or greater
+        - Support object containers without an explicit
+          codec. It will be assumed to be 'null' as mandated
+          by the spec.
+        - Fixed an issue that meant the minimum accepted values
+          for int and long types were off by one
+        - Silenced a spurious warning that was raised when
+          validating an undefined value for some data types
+        - Make sure Unicode strings are downgraded when they
+          are encoded in fields of type 'byte' or 'fixed'.
+          Errors resulting from this process will be raised as
+          Avro::BinaryEncoder::Error exceptions
+        - Fixed a bug with the detection of valid boolean values
+          which was not using anchors in a regular expression.
+          Valid values are (case insensitively) 'yes', 'y', 'no',
+          'n', 'true', 't', 'false', 'f', 0, 1, and anything that
+          is accepted by JSON::PP::is_bool. References rejected by
+          this last function are not valid
+        - Fixed some issues around the binary encoding of boolean
+          values. In particular, Avro::BinaryEncoder now correctly
+          encodes all the values that Avro::Schema accepts as
+          valid boolean values, which before were blindly evaluated
+          in boolean context resulting in strings like 'false'
+          being serialised as if they were true
+
 1.00  Fri Jan 17 15:00:00 2014
         - Relicense under apache license 2.0
 

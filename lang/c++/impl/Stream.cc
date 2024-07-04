@@ -129,7 +129,7 @@ public:
     ~MemoryOutputStream() final {
         for (std::vector<uint8_t *>::const_iterator it = data_.begin();
              it != data_.end(); ++it) {
-            delete[] * it;
+            delete[] *it;
         }
     }
 

@@ -83,14 +83,15 @@ std::ostream &operator<<(std::ostream &os, indent x) {
     return os;
 }
 
-void printCustomAttributes(const CustomAttributes& customAttributes, int depth,
-                       std::ostream &os) {
+void printCustomAttributes(const CustomAttributes &customAttributes, int depth,
+                           std::ostream &os) {
     std::map<std::string, std::string>::const_iterator iter =
         customAttributes.attributes().begin();
     while (iter != customAttributes.attributes().end()) {
-      os << ",\n" << indent(depth);
-      customAttributes.printJson(os, iter->first);
-      ++iter;
+        os << ",\n"
+           << indent(depth);
+        customAttributes.printJson(os, iter->first);
+        ++iter;
     }
 }
 
@@ -112,7 +113,7 @@ NodePrimitive::resolve(const Node &reader) const {
                 return RESOLVE_PROMOTABLE_TO_LONG;
             }
 
-            // fall-through intentional
+            [[fallthrough]];
 
         case AVRO_LONG:
 
@@ -120,7 +121,7 @@ NodePrimitive::resolve(const Node &reader) const {
                 return RESOLVE_PROMOTABLE_TO_FLOAT;
             }
 
-            // fall-through intentional
+            [[fallthrough]];
 
         case AVRO_FLOAT:
 
@@ -302,10 +303,10 @@ void NodeRecord::printJson(std::ostream &os, size_t depth) const {
                     os << ',';
                 }
                 os << '\n'
-                << indent(depth) << "\"" << fieldsAliases_[i][j] << "\"";
+                   << indent(depth) << "\"" << fieldsAliases_[i][j] << "\"";
             }
             os << '\n'
-            << indent(--depth) << ']';
+               << indent(--depth) << ']';
         }
 
         // Serialize "default" field:
@@ -320,8 +321,8 @@ void NodeRecord::printJson(std::ostream &os, size_t depth) const {
             }
         }
 
-        if(customAttributes_.size() == fields) {
-          printCustomAttributes(customAttributes_.get(i), depth, os);
+        if (customAttributes_.size() == fields) {
+            printCustomAttributes(customAttributes_.get(i), depth, os);
         }
 
         os << '\n';
@@ -333,7 +334,7 @@ void NodeRecord::printJson(std::ostream &os, size_t depth) const {
 }
 
 void NodePrimitive::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                       size_t depth) const {
+                                       size_t) const {
     assert(isPrimitive(g.type()));
 
     switch (g.type()) {
@@ -374,13 +375,13 @@ void NodePrimitive::printDefaultToJson(const GenericDatum &g, std::ostream &os,
 }
 
 void NodeEnum::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                  size_t depth) const {
+                                  size_t) const {
     assert(g.type() == AVRO_ENUM);
     os << "\"" << g.value<GenericEnum>().symbol() << "\"";
 }
 
 void NodeFixed::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                   size_t depth) const {
+                                   size_t) const {
     assert(g.type() == AVRO_FIXED);
     // ex: "\uOOff"
     // Convert to a string
@@ -482,13 +483,13 @@ NodeRecord::NodeRecord(const HasName &name, const HasDoc &doc, const MultiLeaves
 
     for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
         if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
-            throw Exception(boost::format("Cannot add duplicate field: %1%") % leafNameAttributes_.get(i));
+            throw Exception("Cannot add duplicate field: {}", leafNameAttributes_.get(i));
         }
 
         if (!fieldsAliases_.empty()) {
             for (const auto &alias : fieldsAliases_[i]) {
                 if (!nameIndex_.add(alias, i)) {
-                    throw Exception(boost::format("Cannot add duplicate field: %1%") % alias);
+                    throw Exception("Cannot add duplicate field: {}", alias);
                 }
             }
         }

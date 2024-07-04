@@ -51,7 +51,7 @@ class PrimitiveSkipper : public Resolver {
 public:
     PrimitiveSkipper() : Resolver() {}
 
-    void parse(Reader &reader, uint8_t *address) const final {
+    void parse(Reader &reader, uint8_t *) const final {
         T val;
         reader.readValue(val);
         DEBUG_OUT("Skipping " << val);
@@ -93,7 +93,7 @@ private:
         DEBUG_OUT("Promoting " << val);
     }
 
-    void parseIt(Reader &reader, uint8_t *, const std::false_type &) const {}
+    void parseIt(Reader &, uint8_t *, const std::false_type &) const {}
 
     template<typename T>
     void parseIt(Reader &reader, uint8_t *address) const {
@@ -108,7 +108,7 @@ class PrimitiveSkipper<std::vector<uint8_t>> : public Resolver {
 public:
     PrimitiveSkipper() : Resolver() {}
 
-    void parse(Reader &reader, uint8_t *address) const final {
+    void parse(Reader &reader, uint8_t *) const final {
         std::vector<uint8_t> val;
         reader.readBytes(val);
         DEBUG_OUT("Skipping bytes");
@@ -276,9 +276,9 @@ protected:
 
 class EnumSkipper : public Resolver {
 public:
-    EnumSkipper(ResolverFactory &factory, const NodePtr &writer) : Resolver() {}
+    EnumSkipper(ResolverFactory &, const NodePtr &) : Resolver() {}
 
-    void parse(Reader &reader, uint8_t *address) const final {
+    void parse(Reader &reader, uint8_t *) const final {
         int64_t val = reader.readEnum();
         DEBUG_OUT("Skipping enum" << val);
     }
@@ -290,9 +290,9 @@ public:
         VAL
     };
 
-    EnumParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets) : Resolver(),
-                                                                                                                        offset_(offsets.at(0).offset()),
-                                                                                                                        readerSize_(reader->names()) {
+    EnumParser(ResolverFactory &, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets) : Resolver(),
+                                                                                                                 offset_(offsets.at(0).offset()),
+                                                                                                                 readerSize_(reader->names()) {
         const size_t writerSize = writer->names();
 
         mapping_.reserve(writerSize);
@@ -413,11 +413,11 @@ protected:
 
 class FixedSkipper : public Resolver {
 public:
-    FixedSkipper(ResolverFactory &factory, const NodePtr &writer) : Resolver() {
+    FixedSkipper(ResolverFactory &, const NodePtr &writer) : Resolver() {
         size_ = writer->fixedSize();
     }
 
-    void parse(Reader &reader, uint8_t *address) const final {
+    void parse(Reader &reader, uint8_t *) const final {
         DEBUG_OUT("Skipping fixed");
         std::unique_ptr<uint8_t[]> val(new uint8_t[size_]);
         reader.readFixed(&val[0], size_);
@@ -429,7 +429,7 @@ protected:
 
 class FixedParser : public Resolver {
 public:
-    FixedParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets) : Resolver() {
+    FixedParser(ResolverFactory &, const NodePtr &writer, const NodePtr &, const CompoundLayout &offsets) : Resolver() {
         size_ = writer->fixedSize();
         offset_ = offsets.at(0).offset();
     }
@@ -449,7 +449,7 @@ class ResolverFactory : private boost::noncopyable {
 
     template<typename T>
     unique_ptr<Resolver>
-    constructPrimitiveSkipper(const NodePtr &writer) {
+    constructPrimitiveSkipper(const NodePtr &) {
         return unique_ptr<Resolver>(new PrimitiveSkipper<T>());
     }
 

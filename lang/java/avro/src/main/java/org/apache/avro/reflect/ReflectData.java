@@ -360,8 +360,8 @@ public class ReflectData extends SpecificData {
   static class ClassAccessorData {
     private final Class<?> clazz;
     private final Map<String, FieldAccessor> byName = new HashMap<>();
-    // getAccessorsFor is already synchronized, no need to wrap
-    final Map<Schema, FieldAccessor[]> bySchema = new WeakHashMap<>();
+    // getAccessorsFor replaces this map with each modification
+    volatile Map<Schema, FieldAccessor[]> bySchema = new WeakHashMap<>();
 
     private ClassAccessorData(Class<?> c) {
       clazz = c;
@@ -379,12 +379,14 @@ public class ReflectData extends SpecificData {
      * Return the field accessors as an array, indexed by the field index of the
      * given schema.
      */
-    private synchronized FieldAccessor[] getAccessorsFor(Schema schema) {
-      // if synchronized is removed from this method, adjust bySchema appropriately
+    private FieldAccessor[] getAccessorsFor(Schema schema) {
+      // to avoid synchronization, we replace the map for each modification
       FieldAccessor[] result = bySchema.get(schema);
       if (result == null) {
         result = createAccessorsFor(schema);
+        Map<Schema, FieldAccessor[]> bySchema = new WeakHashMap<>(this.bySchema);
         bySchema.put(schema, result);
+        this.bySchema = bySchema;
       }
       return result;
     }
@@ -426,16 +428,6 @@ public class ReflectData extends SpecificData {
     }
     return null;
   }
-
-  /** @deprecated Replaced by {@link SpecificData#CLASS_PROP} */
-  @Deprecated
-  static final String CLASS_PROP = "java-class";
-  /** @deprecated Replaced by {@link SpecificData#KEY_CLASS_PROP} */
-  @Deprecated
-  static final String KEY_CLASS_PROP = "java-key-class";
-  /** @deprecated Replaced by {@link SpecificData#ELEMENT_PROP} */
-  @Deprecated
-  static final String ELEMENT_PROP = "java-element-class";
 
   private static final Map<String, Class> CLASS_CACHE = new ConcurrentHashMap<>();
 

@@ -24,18 +24,27 @@ chomp $version;
 
 license 'apache';
 version $version;
+homepage 'http://avro.apache.org/';
+repository {
+    type => 'git',
+    url  => 'git://git.apache.org/avro.git',
+    web  => 'http://github.com/apache/avro',
+};
+bugtracker { web => 'http://issues.apache.org/jira/browse/AVRO/' };
 readme_from 'lib/Avro.pm';
 all_from 'lib/Avro.pm';
-build_requires 'Test::More', 0.88;
+configure_requires 'Module::Install';
+configure_requires 'Module::Install::ReadmeFromPod';
 test_requires 'Math::BigInt';
 test_requires 'Perl::Critic';
 test_requires 'Test::Exception';
+test_requires 'Test::More', 0.88;
+test_requires 'Test::Pod';
 requires 'Compress::Zlib';
 requires 'Compress::Zstd';
 requires 'Encode';
 requires 'Error::Simple';
-requires 'IO::String';
-requires 'JSON::XS';
+requires 'JSON::MaybeXS';
 requires 'Object::Tiny';
 requires 'Regexp::Common';
 requires 'Try::Tiny';
@@ -43,7 +52,6 @@ requires 'parent';
 unless ($Config{use64bitint}) {
     requires 'Math::BigInt';
 }
-auto_set_repository();
 
 my %packages = (
     'Avro'                    => 'lib/Avro.pm',
