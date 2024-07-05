@@ -132,8 +132,8 @@ RUN curl -sSL https://deb.nodesource.com/setup_14.x \
  && npm cache clean --force
 
 # Install PHP-snappy and PHP-zstd
-ENV PHP7_VERSION=7.4
-RUN mkdir -p "/etc/php/${PHP7_VERSION}/cli/conf.d"
+ENV PHP8_VERSION=8.1
+RUN mkdir -p "/etc/php/${PHP8_VERSION}/cli/conf.d"
 RUN mkdir tmp && cd tmp \
  && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-zstd.git \
  && cd php-ext-zstd \
@@ -141,7 +141,7 @@ RUN mkdir tmp && cd tmp \
  && ./configure \
  && make \
  && make install \
- && echo "extension=zstd.so" > "/etc/php/${PHP7_VERSION}/cli/conf.d/10-zstd.ini" \
+ && echo "extension=zstd.so" > "/etc/php/${PHP8_VERSION}/cli/conf.d/10-zstd.ini" \
  && cd .. && rm -rf php-ext-zstd \
  && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-snappy.git \
  && cd php-ext-snappy \
@@ -149,7 +149,7 @@ RUN mkdir tmp && cd tmp \
  && ./configure \
  && make \
  && make install \
- && echo "extension=snappy.so" > "/etc/php/${PHP7_VERSION}/cli/conf.d/10-snappy.ini" \
+ && echo "extension=snappy.so" > "/etc/php/${PHP8_VERSION}/cli/conf.d/10-snappy.ini" \
  && cd .. && rm -rf php-ext-snappy \
  && php -m \
  && apt-get -qqy clean
