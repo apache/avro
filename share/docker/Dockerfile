@@ -188,7 +188,7 @@ RUN apt-get -qqy install ruby-full \
 RUN mkdir -p /tmp/lang/ruby/lib/avro && mkdir -p /tmp/share
 COPY lang/ruby/* /tmp/lang/ruby/
 COPY share/VERSION.txt /tmp/share/
-RUN gem install bundler --no-document && \
+RUN gem install bundler -v 2.4.22 --no-document && \
     apt-get install -qqy libyaml-dev && \
     cd /tmp/lang/ruby && bundle install
 
