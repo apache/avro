@@ -661,6 +661,7 @@ public class TestBinaryDecoder {
       // booleans are one byte, array trailer is one byte
       bd.skipFixed((int) leftover + 1);
       bd.skipFixed(0);
+      bd.skipFixed(-8); // Should be a no-op; see AVRO-3635
       bd.readLong();
     }
     EOFException eof = null;
