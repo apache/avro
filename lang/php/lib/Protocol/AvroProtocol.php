@@ -29,6 +29,7 @@ use Apache\Avro\Schema\AvroSchema;
  */
 class AvroProtocol
 {
+    public $protocol;
     public $name;
     public $namespace;
     public $schemata;

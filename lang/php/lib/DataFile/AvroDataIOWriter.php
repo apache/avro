@@ -66,6 +66,10 @@ class AvroDataIOWriter
      * @var string compression codec
      */
     private $codec;
+    /**
+     * @var string sync marker
+     */
+    private $sync_marker;
 
     /**
      * @param AvroIO $io
