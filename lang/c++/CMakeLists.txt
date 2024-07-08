@@ -108,7 +108,7 @@ add_definitions (${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 
 add_definitions (-DAVRO_VERSION="${AVRO_VERSION_MAJOR}.${AVRO_VERSION_MINOR}.${AVRO_VERSION_PATCH}")
 
-include_directories (api ${CMAKE_CURRENT_BINARY_DIR} ${Boost_INCLUDE_DIRS})
+include_directories (include/avro ${CMAKE_CURRENT_BINARY_DIR} ${Boost_INCLUDE_DIRS})
 
 set (AVRO_SOURCE_FILES
         impl/Compiler.cc impl/Node.cc impl/LogicalType.cc
@@ -135,7 +135,7 @@ set_property (TARGET avrocpp
 
 add_library (avrocpp_s STATIC ${AVRO_SOURCE_FILES})
 target_include_directories(avrocpp_s PRIVATE ${SNAPPY_INCLUDE_DIR})
-target_link_libraries(avrocpp_s fmt::fmt-header-only)
+target_link_libraries(avrocpp_s ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES} fmt::fmt-header-only)
 
 set_property (TARGET avrocpp avrocpp_s
     APPEND PROPERTY COMPILE_DEFINITIONS AVRO_SOURCE)
@@ -151,7 +151,7 @@ target_include_directories(avrocpp PRIVATE ${SNAPPY_INCLUDE_DIR})
 
 add_executable (precompile test/precompile.cc)
 
-target_link_libraries (precompile avrocpp_s ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
+target_link_libraries (precompile avrocpp_s)
 
 macro (gen file ns)
     add_custom_command (OUTPUT ${file}.hh
@@ -183,7 +183,16 @@ gen (cpp_reserved_words cppres)
 gen (cpp_reserved_words_union_typedef cppres_union)
 
 add_executable (avrogencpp impl/avrogencpp.cc)
-target_link_libraries (avrogencpp avrocpp_s ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
+target_link_libraries (avrogencpp avrocpp_s)
+
+target_include_directories(avrocpp_s PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+target_include_directories(avrocpp PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
 
 enable_testing()
 
@@ -230,7 +239,7 @@ install (TARGETS avrocpp avrocpp_s
 
 install (TARGETS avrogencpp RUNTIME DESTINATION bin)
 
-install (DIRECTORY api/ DESTINATION include/avro
+install (DIRECTORY include/avro DESTINATION include
     FILES_MATCHING PATTERN *.hh)
 
 if (NOT CMAKE_BUILD_TYPE)
