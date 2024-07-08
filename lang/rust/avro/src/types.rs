@@ -31,7 +31,7 @@ use serde_json::{Number, Value as JsonValue};
 use std::{
     borrow::Borrow,
     collections::{BTreeMap, HashMap},
-    fmt::Debug,
+    fmt::{Debug, Display, Formatter},
     hash::BuildHasher,
     str::FromStr,
 };
@@ -124,6 +124,13 @@ pub enum Value {
     /// Universally unique identifier.
     Uuid(Uuid),
 }
+
+impl Display for Value {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
 /// Any structure implementing the [ToAvro](trait.ToAvro.html) trait will be usable
 /// from a [Writer](../writer/struct.Writer.html).
 #[deprecated(

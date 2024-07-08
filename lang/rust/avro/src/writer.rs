@@ -542,7 +542,11 @@ fn write_value_ref_resolved(
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
     match value.validate_internal(schema, resolved_schema.get_names(), &schema.namespace()) {
-        Some(err) => Err(Error::ValidationWithReason(err)),
+        Some(err) => Err(Error::ValidationWithReason {
+            value: value.clone(),
+            schema: schema.clone(),
+            reason: err,
+        }),
         None => encode_internal(
             value,
             schema,
@@ -564,7 +568,11 @@ fn write_value_ref_owned_resolved(
         resolved_schema.get_names(),
         &root_schema.namespace(),
     ) {
-        return Err(Error::ValidationWithReason(err));
+        return Err(Error::ValidationWithReason {
+            value: value.clone(),
+            schema: root_schema.clone(),
+            reason: err,
+        });
     }
     encode_internal(
         value,
