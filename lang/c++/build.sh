@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -x
 set -e # exit on error
 
 function usage {
@@ -59,7 +60,7 @@ function do_dist() {
   rm -rf $BUILD_CPP/
   mkdir -p $BUILD_CPP
   cp -r api AUTHORS build.sh CMakeLists.txt ChangeLog \
-    LICENSE NOTICE impl jsonschemas NEWS parser README test examples \
+    LICENSE NOTICE impl jsonschemas NEWS README test examples \
     $BUILD_CPP
   find $BUILD_CPP -name '.svn' | xargs rm -rf
   cp ../../share/VERSION.txt $BUILD_CPP
