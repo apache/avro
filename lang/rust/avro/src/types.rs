@@ -127,7 +127,7 @@ pub enum Value {
 
 impl Display for Value {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "{}", self)
+        write!(f, "{:?}", self)
     }
 }
 
