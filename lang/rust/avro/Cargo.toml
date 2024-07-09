@@ -70,7 +70,7 @@ strum = { default-features = false, version = "0.26.3" }
 strum_macros = { default-features = false, version = "0.26.4" }
 thiserror = { default-features = false, version = "1.0.61" }
 typed-builder = { default-features = false, version = "0.18.2" }
-uuid = { default-features = false, version = "1.9.1", features = ["serde", "std"] }
+uuid = { default-features = false, version = "1.10.0", features = ["serde", "std"] }
 xz2 = { default-features = false, version = "0.1.7", optional = true }
 zstd = { default-features = false, version = "0.13.2", optional = true }
 
