@@ -960,7 +960,7 @@ impl UnionSchema {
                     enclosing_namespace,
                     &collected_names,
                 )
-                    .expect("Schema didn't successfully parse");
+                .expect("Schema didn't successfully parse");
                 let resolved_names = resolved_schema.names_ref;
 
                 // extend known schemas with just resolved names
@@ -1951,13 +1951,13 @@ impl Serialize for Schema {
                 seq.end()
             }
             Schema::Record(RecordSchema {
-                               ref name,
-                               ref aliases,
-                               ref doc,
-                               ref fields,
-                               ref attributes,
-                               ..
-                           }) => {
+                ref name,
+                ref aliases,
+                ref doc,
+                ref fields,
+                ref attributes,
+                ..
+            }) => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "record")?;
                 if let Some(ref n) = name.namespace {
@@ -1977,12 +1977,12 @@ impl Serialize for Schema {
                 map.end()
             }
             Schema::Enum(EnumSchema {
-                             ref name,
-                             ref symbols,
-                             ref aliases,
-                             ref attributes,
-                             ..
-                         }) => {
+                ref name,
+                ref symbols,
+                ref aliases,
+                ref attributes,
+                ..
+            }) => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "enum")?;
                 if let Some(ref n) = name.namespace {
@@ -2005,10 +2005,10 @@ impl Serialize for Schema {
                 map.end()
             }
             Schema::Decimal(DecimalSchema {
-                                ref scale,
-                                ref precision,
-                                ref inner,
-                            }) => {
+                ref scale,
+                ref precision,
+                ref inner,
+            }) => {
                 let mut map = serializer.serialize_map(None)?;
                 match inner.as_ref() {
                     Schema::Fixed(fixed_schema) => {
@@ -2311,7 +2311,7 @@ pub mod derive {
     /// ```
     pub trait AvroSchemaComponent {
         fn get_schema_in_ctxt(named_schemas: &mut Names, enclosing_namespace: &Namespace)
-                              -> Schema;
+            -> Schema;
     }
 
     impl<T> AvroSchema for T
@@ -5750,7 +5750,7 @@ mod tests {
             "ns.record1".to_string(),
             r#""int""#.to_string(),
         )
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5793,7 +5793,7 @@ mod tests {
             r#"{"name":"ns.record2","type":"record","fields":[{"name":"f1_1","type":"int"}]}"#
                 .to_string(),
         )
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5830,7 +5830,7 @@ mod tests {
             "ns.record1".to_string(),
             r#"{"name":"ns.enum1","type":"enum","symbols":["a","b","c"]}"#.to_string(),
         )
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5867,7 +5867,7 @@ mod tests {
             "ns.record1".to_string(),
             r#"{"name":"ns.fixed1","type":"fixed","size":3}"#.to_string(),
         )
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5901,7 +5901,7 @@ mod tests {
             "ns.record1".to_string(),
             r#"{"type":"array","items":"int"}"#.to_string(),
         )
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5935,7 +5935,7 @@ mod tests {
             "ns.record1".to_string(),
             r#"{"type":"map","values":"string"}"#.to_string(),
         )
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5980,7 +5980,7 @@ mod tests {
             "ns.record1".to_string(),
             r#""ns.record2""#.to_string(),
         )
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -6025,7 +6025,7 @@ mod tests {
             symbol: "d".to_string(),
             symbols: vec!["a".to_string(), "b".to_string(), "c".to_string()],
         }
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result

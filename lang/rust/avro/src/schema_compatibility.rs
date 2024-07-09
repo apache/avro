@@ -86,17 +86,17 @@ impl Checker {
 
         if w_type != SchemaKind::Union
             && (r_type.is_primitive()
-            || r_type == SchemaKind::Fixed
-            || r_type == SchemaKind::Uuid
-            || r_type == SchemaKind::Date
-            || r_type == SchemaKind::TimeMillis
-            || r_type == SchemaKind::TimeMicros
-            || r_type == SchemaKind::TimestampMillis
-            || r_type == SchemaKind::TimestampMicros
-            || r_type == SchemaKind::TimestampNanos
-            || r_type == SchemaKind::LocalTimestampMillis
-            || r_type == SchemaKind::LocalTimestampMicros
-            || r_type == SchemaKind::LocalTimestampNanos)
+                || r_type == SchemaKind::Fixed
+                || r_type == SchemaKind::Uuid
+                || r_type == SchemaKind::Date
+                || r_type == SchemaKind::TimeMillis
+                || r_type == SchemaKind::TimeMicros
+                || r_type == SchemaKind::TimestampMillis
+                || r_type == SchemaKind::TimestampMicros
+                || r_type == SchemaKind::TimestampNanos
+                || r_type == SchemaKind::LocalTimestampMillis
+                || r_type == SchemaKind::LocalTimestampMicros
+                || r_type == SchemaKind::LocalTimestampNanos)
         {
             return Ok(());
         }
@@ -140,12 +140,12 @@ impl Checker {
             SchemaKind::Enum => {
                 // reader's symbols must contain all writer's symbols
                 if let Schema::Enum(EnumSchema {
-                                        symbols: w_symbols, ..
-                                    }) = writers_schema
+                    symbols: w_symbols, ..
+                }) = writers_schema
                 {
                     if let Schema::Enum(EnumSchema {
-                                            symbols: r_symbols, ..
-                                        }) = readers_schema
+                        symbols: r_symbols, ..
+                    }) = readers_schema
                     {
                         if w_symbols.iter().all(|e| r_symbols.contains(e)) {
                             return Ok(());
@@ -184,14 +184,14 @@ impl Checker {
         }
 
         if let Schema::Record(RecordSchema {
-                                  fields: w_fields,
-                                  lookup: w_lookup,
-                                  ..
-                              }) = writers_schema
+            fields: w_fields,
+            lookup: w_lookup,
+            ..
+        }) = writers_schema
         {
             if let Schema::Record(RecordSchema {
-                                      fields: r_fields, ..
-                                  }) = readers_schema
+                fields: r_fields, ..
+            }) = readers_schema
             {
                 for field in r_fields.iter() {
                     // get all field names in a vector (field.name + aliases)
@@ -389,22 +389,22 @@ impl SchemaCompatibility {
                 }
                 SchemaKind::Fixed => {
                     if let Schema::Fixed(FixedSchema {
-                                             name: w_name,
-                                             aliases: _,
-                                             doc: _w_doc,
-                                             size: w_size,
-                                             default: _w_default,
-                                             attributes: _,
-                                         }) = writers_schema
+                        name: w_name,
+                        aliases: _,
+                        doc: _w_doc,
+                        size: w_size,
+                        default: _w_default,
+                        attributes: _,
+                    }) = writers_schema
                     {
                         if let Schema::Fixed(FixedSchema {
-                                                 name: r_name,
-                                                 aliases: _,
-                                                 doc: _r_doc,
-                                                 size: r_size,
-                                                 default: _r_default,
-                                                 attributes: _,
-                                             }) = readers_schema
+                            name: r_name,
+                            aliases: _,
+                            doc: _r_doc,
+                            size: r_size,
+                            default: _r_default,
+                            attributes: _,
+                        }) = readers_schema
                         {
                             return (w_name.name == r_name.name && w_size == r_size)
                                 .then_some(())
@@ -582,14 +582,14 @@ mod tests {
         Schema::parse_str(
             r#"{"type":"record", "name":"Record1", "fields":[{"name":"a", "type":"int"}]}"#,
         )
-            .unwrap()
+        .unwrap()
     }
 
     fn a_long_record1_schema() -> Schema {
         Schema::parse_str(
             r#"{"type":"record", "name":"Record1", "fields":[{"name":"a", "type":"long"}]}"#,
         )
-            .unwrap()
+        .unwrap()
     }
 
     fn a_int_b_int_record1_schema() -> Schema {
@@ -630,7 +630,7 @@ mod tests {
       ]}
 "#,
         )
-            .unwrap()
+        .unwrap()
     }
 
     fn union_schema(schemas: Vec<Schema>) -> Schema {
@@ -748,65 +748,65 @@ mod tests {
     )]
     // Fixed type test
     #[case(
-    r#"{"type": "fixed", "name": "EmployeeId", "size": 16}"#,
-    r#"{"type": "fixed", "name": "EmployeeId", "size": 16, "default": "u00ffffffffffffx"}"#
+        r#"{"type": "fixed", "name": "EmployeeId", "size": 16}"#,
+        r#"{"type": "fixed", "name": "EmployeeId", "size": 16, "default": "u00ffffffffffffx"}"#
     )]
     // Enum type test
     #[case(
-    r#"{"type": "enum", "name":"Enum1", "symbols": ["A","B"]}"#,
-    r#"{"type": "enum", "name":"Enum1", "symbols": ["A","B", "C"], "default": "C"}"#
+        r#"{"type": "enum", "name":"Enum1", "symbols": ["A","B"]}"#,
+        r#"{"type": "enum", "name":"Enum1", "symbols": ["A","B", "C"], "default": "C"}"#
     )]
     // Map type test
     #[case(
-    r#"{"type": "map", "values": "int"}"#,
-    r#"{"type": "map", "values": "long"}"#
+        r#"{"type": "map", "values": "int"}"#,
+        r#"{"type": "map", "values": "long"}"#
     )]
     // Date type
     #[case(r#"{"type": "int"}"#, r#"{"type": "int", "logicalType": "date"}"#)]
     // time-millis type
     #[case(
-    r#"{"type": "int"}"#,
-    r#"{"type": "int", "logicalType": "time-millis"}"#
+        r#"{"type": "int"}"#,
+        r#"{"type": "int", "logicalType": "time-millis"}"#
     )]
     // time-millis type
     #[case(
-    r#"{"type": "long"}"#,
-    r#"{"type": "long", "logicalType": "time-micros"}"#
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "time-micros"}"#
     )]
     // timetimestamp-nanos type
     #[case(
-    r#"{"type": "long"}"#,
-    r#"{"type": "long", "logicalType": "timestamp-nanos"}"#
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "timestamp-nanos"}"#
     )]
     // timestamp-millis type
     #[case(
-    r#"{"type": "long"}"#,
-    r#"{"type": "long", "logicalType": "timestamp-millis"}"#
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "timestamp-millis"}"#
     )]
     // timestamp-micros type
     #[case(
-    r#"{"type": "long"}"#,
-    r#"{"type": "long", "logicalType": "timestamp-micros"}"#
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "timestamp-micros"}"#
     )]
     // local-timestamp-millis type
     #[case(
-    r#"{"type": "long"}"#,
-    r#"{"type": "long", "logicalType": "local-timestamp-millis"}"#
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "local-timestamp-millis"}"#
     )]
     // local-timestamp-micros type
     #[case(
-    r#"{"type": "long"}"#,
-    r#"{"type": "long", "logicalType": "local-timestamp-micros"}"#
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "local-timestamp-micros"}"#
     )]
     // local-timestamp-nanos type
     #[case(
-    r#"{"type": "long"}"#,
-    r#"{"type": "long", "logicalType": "local-timestamp-nanos"}"#
+        r#"{"type": "long"}"#,
+        r#"{"type": "long", "logicalType": "local-timestamp-nanos"}"#
     )]
     // Array type test
     #[case(
-    r#"{"type": "array", "items": "int"}"#,
-    r#"{"type": "array", "items": "long"}"#
+        r#"{"type": "array", "items": "int"}"#,
+        r#"{"type": "array", "items": "long"}"#
     )]
     fn test_avro_3950_match_schemas_ok(
         #[case] writer_schema_str: &str,
@@ -827,8 +827,8 @@ mod tests {
     )]
     // Fixed type test
     #[case(
-    r#"{"type": "fixed", "name": "EmployeeId", "size": 16}"#,
-    r#"{"type": "fixed", "name": "EmployeeId", "size": 20}"#,
+        r#"{"type": "fixed", "name": "EmployeeId", "size": 16}"#,
+        r#"{"type": "fixed", "name": "EmployeeId", "size": 20}"#,
         CompatibilityError::FixedMismatch
     )]
     // Enum type test
@@ -984,8 +984,8 @@ mod tests {
     // )]
     // When comparing different types we always get Inconclusive
     #[case(
-    r#"{"type": "record", "name":"record_b", "fields": [{"type": "long", "name": "date"}]}"#,
-    r#"{"type": "fixed", "name": "EmployeeId", "size": 16}"#,
+        r#"{"type": "record", "name":"record_b", "fields": [{"type": "long", "name": "date"}]}"#,
+        r#"{"type": "fixed", "name": "EmployeeId", "size": 16}"#,
         CompatibilityError::Inconclusive(String::from("writers_schema"))
     )]
     fn test_avro_3950_match_schemas_error(
@@ -1082,7 +1082,7 @@ mod tests {
       ]}
 "#,
         )
-            .unwrap()
+        .unwrap()
     }
 
     #[test]
@@ -1282,7 +1282,7 @@ mod tests {
       ]}
     "#,
         )
-            .unwrap()
+        .unwrap()
     }
 
     fn point_2d_fullname_schema() -> Schema {
@@ -1294,7 +1294,7 @@ mod tests {
       ]}
     "#,
         )
-            .unwrap()
+        .unwrap()
     }
 
     fn point_3d_no_default_schema() -> Schema {
@@ -1307,7 +1307,7 @@ mod tests {
       ]}
     "#,
         )
-            .unwrap()
+        .unwrap()
     }
 
     fn point_3d_schema() -> Schema {
@@ -1320,7 +1320,7 @@ mod tests {
       ]}
     "#,
         )
-            .unwrap()
+        .unwrap()
     }
 
     fn point_3d_match_name_schema() -> Schema {
@@ -1333,7 +1333,7 @@ mod tests {
       ]}
     "#,
         )
-            .unwrap()
+        .unwrap()
     }
 
     #[test]
