@@ -41,6 +41,12 @@ jobs:
       - name: Install Dependencies
         run: sudo apt update && sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev libfmt-dev cmake
 
+      - name: Print Versions
+        run: |
+          gcc --version
+          cmake --version
+          cppcheck --version
+
       - name: Clean
         run: ./build.sh clean
 
