@@ -542,7 +542,11 @@ fn write_value_ref_resolved(
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
     match value.validate_internal(schema, resolved_schema.get_names(), &schema.namespace()) {
-        Some(err) => Err(Error::ValidationWithReason(err)),
+        Some(reason) => Err(Error::ValidationWithReason {
+            value: value.clone(),
+            schema: schema.clone(),
+            reason,
+        }),
         None => encode_internal(
             value,
             schema,
@@ -559,12 +563,16 @@ fn write_value_ref_owned_resolved(
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
     let root_schema = resolved_schema.get_root_schema();
-    if let Some(err) = value.validate_internal(
+    if let Some(reason) = value.validate_internal(
         root_schema,
         resolved_schema.get_names(),
         &root_schema.namespace(),
     ) {
-        return Err(Error::ValidationWithReason(err));
+        return Err(Error::ValidationWithReason {
+            value: value.clone(),
+            schema: root_schema.clone(),
+            reason,
+        });
     }
     encode_internal(
         value,
@@ -1372,6 +1380,44 @@ mod tests {
 
         assert_eq!(198, bytes);
 
+        Ok(())
+    }
+
+    #[test]
+    fn avro_4014_validation_returns_a_detailed_error() -> TestResult {
+        const SCHEMA: &str = r#"
+  {
+      "type": "record",
+      "name": "Conference",
+      "fields": [
+          {"type": "string", "name": "name"},
+          {"type": ["null", "long"], "name": "date", "aliases" : [ "time2", "time" ]}
+      ]
+  }"#;
+
+        #[derive(Debug, PartialEq, Clone, Serialize)]
+        pub struct Conference {
+            pub name: String,
+            pub time: Option<f64>, // wrong type: f64 instead of i64
+        }
+
+        let conf = Conference {
+            name: "RustConf".to_string(),
+            time: Some(12345678.90),
+        };
+
+        let schema = Schema::parse_str(SCHEMA)?;
+        let mut writer = Writer::new(&schema, Vec::new());
+
+        match writer.append_ser(conf) {
+            Ok(bytes) => panic!("Expected an error, but got {} bytes written", bytes),
+            Err(e) => {
+                assert_eq!(
+                    e.to_string(),
+                    r#"Value Record([("name", String("RustConf")), ("time", Union(1, Double(12345678.9)))]) does not match schema Record(RecordSchema { name: Name { name: "Conference", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: "name", doc: None, aliases: None, default: None, schema: String, order: Ascending, position: 0, custom_attributes: {} }, RecordField { name: "date", doc: None, aliases: Some(["time2", "time"]), default: None, schema: Union(UnionSchema { schemas: [Null, Long], variant_index: {Null: 0, Long: 1} }), order: Ascending, position: 1, custom_attributes: {} }], lookup: {"date": 1, "name": 0, "time": 1, "time2": 1}, attributes: {} }): Reason: Unsupported value-schema combination! Value: Double(12345678.9), schema: Long"#
+                );
+            }
+        }
         Ok(())
     }
 }
