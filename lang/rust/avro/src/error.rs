@@ -55,7 +55,7 @@ pub enum Error {
     Validation,
 
     /// Describes errors happened while validating Avro data.
-    #[error("Value {value} does not match schema {schema}: Reason: {reason}")]
+    #[error("Value {value:?} does not match schema {schema:?}: Reason: {reason}")]
     ValidationWithReason {
         value: Value,
         schema: Schema,
