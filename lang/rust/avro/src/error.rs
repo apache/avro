@@ -16,8 +16,8 @@
 // under the License.
 
 use crate::{
-    schema::{Name, SchemaKind},
-    types::ValueKind,
+    schema::{Name, Schema, SchemaKind},
+    types::{Value, ValueKind},
 };
 use std::{error::Error as _, fmt};
 
@@ -55,8 +55,12 @@ pub enum Error {
     Validation,
 
     /// Describes errors happened while validating Avro data.
-    #[error("Value does not match schema: Reason: {0}")]
-    ValidationWithReason(String),
+    #[error("Value {value:?} does not match schema {schema:?}: Reason: {reason}")]
+    ValidationWithReason {
+        value: Value,
+        schema: Schema,
+        reason: String,
+    },
 
     #[error("Unable to allocate {desired} bytes (maximum allowed: {maximum})")]
     MemoryAllocation { desired: usize, maximum: usize },
