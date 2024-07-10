@@ -123,7 +123,7 @@ static ValidSchema makeValidSchema(const char *schema) {
     istringstream iss(schema);
     ValidSchema vs;
     compileJsonSchema(iss, vs);
-    return ValidSchema(vs);
+    return vs;
 }
 
 static const char sch[] = "{\"type\": \"record\","

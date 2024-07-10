@@ -525,7 +525,7 @@ ValidSchema makeValidSchema(const char *schema) {
     istringstream iss(schema);
     ValidSchema vs;
     compileJsonSchema(iss, vs);
-    return ValidSchema(vs);
+    return vs;
 }
 
 void testEncoder(const EncoderPtr &e, const char *writerCalls,
