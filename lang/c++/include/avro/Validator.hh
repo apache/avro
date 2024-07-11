@@ -104,7 +104,7 @@ private:
     using flag_t = uint32_t;
 
     static flag_t typeToFlag(Type type) {
-        flag_t flag = (1L << static_cast<flag_t>(type));
+        flag_t flag = 1u << static_cast<flag_t>(type);
         return flag;
     }
 
