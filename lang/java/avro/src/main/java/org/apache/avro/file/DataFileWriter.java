@@ -17,24 +17,6 @@
  */
 package org.apache.avro.file;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import java.io.BufferedOutputStream;
-import java.io.Closeable;
-import java.io.File;
-import java.io.FilterOutputStream;
-import java.io.Flushable;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.function.Function;
-
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileStream.DataBlock;
@@ -45,6 +27,22 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.NonCopyingByteArrayOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
+import java.io.BufferedOutputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FilterOutputStream;
+import java.io.Flushable;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  * Stores in a file a sequence of data conforming to a schema. The schema is
  * stored in the file with the data. Each datum in a file is of the same schema.
@@ -52,7 +50,7 @@ import org.apache.commons.compress.utils.IOUtils;
  * <i>blocks</i>. A synchronization marker is written between blocks, so that
  * files may be split. Blocks may be compressed. Extensible metadata is stored
  * at the end of the file. Files may be appended to.
- * 
+ *
  * @see DataFileReader
  */
 public class DataFileWriter<D> implements Closeable, Flushable {
@@ -195,7 +193,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
    * sync marker is written. By default, the writer will flush the buffer each
    * time a sync marker is written (if the block size limit is reached or the
    * {@linkplain #sync()} is called.
-   * 
+   *
    * @param flushOnEveryBlock - If set to false, this writer will not flush the
    *                          block to the stream until {@linkplain #flush()} is
    *                          explicitly called.
@@ -225,7 +223,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   /**
    * Open a writer appending to an existing file. <strong>Since 1.9.0 this method
    * does not close in.</strong>
-   * 
+   *
    * @param in  reading the existing file.
    * @param out positioned at the end of the existing file.
    */
@@ -262,15 +260,12 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     this.isOpen = true;
   }
 
+  private static final SecureRandom RNG = new SecureRandom();
+
   private static byte[] generateSync() {
-    try {
-      MessageDigest digester = MessageDigest.getInstance("MD5");
-      long time = System.currentTimeMillis();
-      digester.update((UUID.randomUUID() + "@" + time).getBytes(UTF_8));
-      return digester.digest();
-    } catch (NoSuchAlgorithmException e) {
-      throw new RuntimeException(e);
-    }
+    byte[] sync = new byte[16];
+    RNG.nextBytes(sync);
+    return sync;
   }
 
   private DataFileWriter<D> setMetaInternal(String key, byte[] value) {
@@ -318,7 +313,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /**
    * Append a datum to the file.
-   * 
+   *
    * @see AppendWriteException
    */
   public void append(D datum) throws IOException {
@@ -379,7 +374,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
    * at compression level 7. If <i>recompress</i> is false, blocks will be copied
    * without changing the compression level. If true, they will be converted to
    * the new compression level.
-   * 
+   *
    * @param otherFile
    * @param recompress
    * @throws IOException
