@@ -433,17 +433,15 @@ pub const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
          }"#,
         true,
     ),
-    // mgrigorov: commented out because Bytes schema does not preserve custom attributes
-    // and avro/tests/schema_equality_tests.rs::test_equivalence_after_round_trip() fails
-    // (
-    //     r#"{
-    //          "type": "bytes",
-    //          "logicalType": "decimal",
-    //          "precision": 4,
-    //          "scale": 2
-    //      }"#,
-    //     true,
-    // ),
+    (
+        r#"{
+             "type": "bytes",
+             "logicalType": "decimal",
+             "precision": 4,
+             "scale": 2
+         }"#,
+        true,
+    ),
     (
         r#"{
              "type": "bytes",
@@ -503,28 +501,6 @@ pub const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
              "size": -2
          }"#,
         false,
-    ),
-];
-
-pub const DECIMAL_LOGICAL_TYPE_ATTRIBUTES: &[(&str, bool)] = &[
-    (
-        r#"{
-            "type": "fixed",
-            "logicalType": "decimal",
-            "name": "TestDecimal",
-            "precision": 4,
-            "scale": 2,
-            "size": 2
-        }"#,
-        true,
-    ),
-    (
-        r#"{
-            "type": "bytes",
-            "logicalType": "decimal",
-            "precision": 4
-        }"#,
-        true,
     ),
 ];
 
@@ -633,24 +609,23 @@ pub fn examples() -> &'static Vec<(&'static str, bool)> {
         Vec::new()
             .iter()
             .copied()
-            // .chain(PRIMITIVE_EXAMPLES.iter().copied())
-            // .chain(FIXED_EXAMPLES.iter().copied())
-            // .chain(ENUM_EXAMPLES.iter().copied())
-            // .chain(ARRAY_EXAMPLES.iter().copied())
-            // .chain(MAP_EXAMPLES.iter().copied())
-            // .chain(UNION_EXAMPLES.iter().copied())
-            // .chain(RECORD_EXAMPLES.iter().copied())
-            // .chain(DOC_EXAMPLES.iter().copied())
-            // .chain(OTHER_ATTRIBUTES_EXAMPLES.iter().copied())
+            .chain(PRIMITIVE_EXAMPLES.iter().copied())
+            .chain(FIXED_EXAMPLES.iter().copied())
+            .chain(ENUM_EXAMPLES.iter().copied())
+            .chain(ARRAY_EXAMPLES.iter().copied())
+            .chain(MAP_EXAMPLES.iter().copied())
+            .chain(UNION_EXAMPLES.iter().copied())
+            .chain(RECORD_EXAMPLES.iter().copied())
+            .chain(DOC_EXAMPLES.iter().copied())
+            .chain(OTHER_ATTRIBUTES_EXAMPLES.iter().copied())
             .chain(DECIMAL_LOGICAL_TYPE.iter().copied())
-            // .chain(DECIMAL_LOGICAL_TYPE_ATTRIBUTES.iter().copied())
-            // .chain(DATE_LOGICAL_TYPE.iter().copied())
-            // .chain(TIMEMILLIS_LOGICAL_TYPE.iter().copied())
-            // .chain(TIMEMICROS_LOGICAL_TYPE.iter().copied())
-            // .chain(TIMESTAMPMILLIS_LOGICAL_TYPE.iter().copied())
-            // .chain(TIMESTAMPMICROS_LOGICAL_TYPE.iter().copied())
-            // .chain(LOCAL_TIMESTAMPMILLIS_LOGICAL_TYPE.iter().copied())
-            // .chain(LOCAL_TIMESTAMPMICROS_LOGICAL_TYPE.iter().copied())
+            .chain(DATE_LOGICAL_TYPE.iter().copied())
+            .chain(TIMEMILLIS_LOGICAL_TYPE.iter().copied())
+            .chain(TIMEMICROS_LOGICAL_TYPE.iter().copied())
+            .chain(TIMESTAMPMILLIS_LOGICAL_TYPE.iter().copied())
+            .chain(TIMESTAMPMICROS_LOGICAL_TYPE.iter().copied())
+            .chain(LOCAL_TIMESTAMPMILLIS_LOGICAL_TYPE.iter().copied())
+            .chain(LOCAL_TIMESTAMPMICROS_LOGICAL_TYPE.iter().copied())
             .collect()
     })
 }
