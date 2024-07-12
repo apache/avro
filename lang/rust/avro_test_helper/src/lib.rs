@@ -26,6 +26,7 @@ thread_local! {
     pub(crate) static LOG_MESSAGES: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
 }
 
+pub mod data;
 pub mod logger;
 
 #[cfg(not(target_arch = "wasm32"))]
