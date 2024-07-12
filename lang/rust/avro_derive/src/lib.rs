@@ -19,7 +19,10 @@ use darling::FromAttributes;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 
-use syn::{parse_macro_input, spanned::Spanned, AttrStyle, Attribute, DeriveInput, Type, TypePath};
+use syn::{
+    parse_macro_input, spanned::Spanned, AttrStyle, Attribute, DeriveInput, Ident, Meta, Type,
+    TypePath,
+};
 
 #[derive(darling::FromAttributes)]
 #[darling(attributes(avro))]
@@ -210,6 +213,8 @@ fn get_data_enum_schema_def(
     let doc = preserve_optional(doc);
     let enum_aliases = preserve_vec(aliases);
     if e.variants.iter().all(|v| syn::Fields::Unit == v.fields) {
+        let default_value = default_enum_variant(e, error_span)?;
+        let default = preserve_optional(default_value);
         let symbols: Vec<String> = e
             .variants
             .iter()
@@ -221,7 +226,7 @@ fn get_data_enum_schema_def(
                 aliases: #enum_aliases,
                 doc: #doc,
                 symbols: vec![#(#symbols.to_owned()),*],
-                default: None,
+                default: #default,
                 attributes: Default::default(),
             })
         })
@@ -275,6 +280,35 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<syn::Error>> {
             format!("Unable to generate schema for type: {ty:?}"),
         )])
     }
+}
+
+fn default_enum_variant(
+    data_enum: &syn::DataEnum,
+    error_span: Span,
+) -> Result<Option<String>, Vec<syn::Error>> {
+    match data_enum
+        .variants
+        .iter()
+        .filter(|v| v.attrs.iter().any(is_default_attr))
+        .collect::<Vec<_>>()
+    {
+        variants if variants.is_empty() => Ok(None),
+        single if single.len() == 1 => Ok(Some(single[0].ident.to_string())),
+        multiple => Err(vec![syn::Error::new(
+            error_span,
+            format!(
+                "Multiple defaults defined: {:?}",
+                multiple
+                    .iter()
+                    .map(|v| v.ident.to_string())
+                    .collect::<Vec<String>>()
+            ),
+        )]),
+    }
+}
+
+fn is_default_attr(attr: &Attribute) -> bool {
+    matches!(attr, Attribute { meta: Meta::Path(path), .. } if path.get_ident().map(Ident::to_string).as_deref() == Some("default"))
 }
 
 /// Generates the schema def expression for fully qualified type paths using the associated function
@@ -423,6 +457,98 @@ mod tests {
             Ok(mut input) => {
                 assert!(derive_avro_schema(&mut input).is_ok())
             }
+            Err(error) => panic!(
+                "Failed to parse as derive input when it should be able to. Error: {error:?}"
+            ),
+        };
+    }
+
+    #[test]
+    fn avro_3687_basic_enum_with_default() {
+        let basic_enum = quote! {
+            enum Basic {
+                #[default]
+                A,
+                B,
+                C,
+                D
+            }
+        };
+        match syn::parse2::<DeriveInput>(basic_enum) {
+            Ok(mut input) => {
+                let derived = derive_avro_schema(&mut input);
+                assert!(derived.is_ok());
+                assert_eq!(derived.unwrap().to_string(), quote! {
+                    impl apache_avro::schema::derive::AvroSchemaComponent for Basic {
+                        fn get_schema_in_ctxt(
+                            named_schemas: &mut std::collections::HashMap<
+                                apache_avro::schema::Name,
+                                apache_avro::schema::Schema
+                            >,
+                            enclosing_namespace: &Option<String>
+                        ) -> apache_avro::schema::Schema {
+                            let name = apache_avro::schema::Name::new("Basic")
+                                .expect(&format!("Unable to parse schema name {}", "Basic")[..])
+                                .fully_qualified_name(enclosing_namespace);
+                            let enclosing_namespace = &name.namespace;
+                            if named_schemas.contains_key(&name) {
+                                apache_avro::schema::Schema::Ref { name: name.clone() }
+                            } else {
+                                named_schemas.insert(
+                                    name.clone(),
+                                    apache_avro::schema::Schema::Ref { name: name.clone() }
+                                );
+                                apache_avro::schema::Schema::Enum(apache_avro::schema::EnumSchema {
+                                    name: apache_avro::schema::Name::new("Basic").expect(
+                                        &format!("Unable to parse enum name for schema {}", "Basic")[..]
+                                    ),
+                                    aliases: None,
+                                    doc: None,
+                                    symbols: vec![
+                                        "A".to_owned(),
+                                        "B".to_owned(),
+                                        "C".to_owned(),
+                                        "D".to_owned()
+                                    ],
+                                    default: Some("A".into()),
+                                    attributes: Default::default(),
+                                })
+                            }
+                        }
+                    }
+                }.to_string());
+            }
+            Err(error) => panic!(
+                "Failed to parse as derive input when it should be able to. Error: {error:?}"
+            ),
+        };
+    }
+
+    #[test]
+    fn avro_3687_basic_enum_with_default_twice() {
+        let non_basic_enum = quote! {
+            enum Basic {
+                #[default]
+                A,
+                B,
+                #[default]
+                C,
+                D
+            }
+        };
+        match syn::parse2::<DeriveInput>(non_basic_enum) {
+            Ok(mut input) => match derive_avro_schema(&mut input) {
+                Ok(_) => {
+                    panic!("Should not be able to derive schema for enum with multiple defaults")
+                }
+                Err(errors) => {
+                    assert_eq!(errors.len(), 1);
+                    assert_eq!(
+                        errors[0].to_string(),
+                        r#"Multiple defaults defined: ["A", "C"]"#
+                    );
+                }
+            },
             Err(error) => panic!(
                 "Failed to parse as derive input when it should be able to. Error: {error:?}"
             ),

@@ -38,21 +38,21 @@
 
     <!-- version properties for dependencies -->
     <ant.version>1.10.14</ant.version>
-    <commons-cli.version>1.7.0</commons-cli.version>
+    <commons-cli.version>1.8.0</commons-cli.version>
     <commons-compress.version>1.26.2</commons-compress.version>
     <commons-text.version>1.12.0</commons-text.version>
     <commons-lang3.version>3.14.0</commons-lang3.version>
-    <grpc.version>1.64.0</grpc.version>
+    <grpc.version>1.65.0</grpc.version>
     <hadoop.version>3.3.6</hadoop.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <jackson-bom.version>2.17.1</jackson-bom.version>
-    <jetty.version>9.4.54.v20240208</jetty.version>
+    <jackson-bom.version>2.17.2</jackson-bom.version>
+    <jetty.version>9.4.55.v20240627</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
-    <junit5.version>5.10.2</junit5.version>
+    <junit5.version>5.10.3</junit5.version>
     <maven-core.version>3.9.6</maven-core.version>
     <mockito.version>5.12.0</mockito.version>
-    <netty.version>4.1.110.Final</netty.version>
-    <protobuf.version>4.27.0</protobuf.version>
+    <netty.version>4.1.111.Final</netty.version>
+    <protobuf.version>4.27.2</protobuf.version>
     <reload4j.version>1.2.25</reload4j.version>
     <servlet-api.version>4.0.1</servlet-api.version>
     <slf4j.version>2.0.13</slf4j.version>
@@ -103,7 +103,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
-          <version>3.5.0</version>
+          <version>3.6.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

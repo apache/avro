@@ -32,7 +32,7 @@ namespace avro {
 
 class AVRO_DECL NullValidator : private boost::noncopyable {
 public:
-    explicit NullValidator(const ValidSchema &schema) {}
+    explicit NullValidator(const ValidSchema &) {}
     NullValidator() = default;
 
     void setCount(int64_t) {}
@@ -49,11 +49,11 @@ public:
         return 0;
     }
 
-    static bool getCurrentRecordName(std::string &name) {
+    static bool getCurrentRecordName(std::string &) {
         return true;
     }
 
-    static bool getNextFieldName(std::string &name) {
+    static bool getNextFieldName(std::string &) {
         return true;
     }
 

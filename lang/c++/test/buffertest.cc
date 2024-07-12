@@ -18,7 +18,7 @@
 
 #include <boost/test/included/unit_test.hpp>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #ifdef HAVE_BOOST_ASIO
 #include <boost/asio.hpp>

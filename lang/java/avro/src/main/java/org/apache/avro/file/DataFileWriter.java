@@ -17,7 +17,15 @@
  */
 package org.apache.avro.file;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
+import org.apache.avro.file.DataFileStream.DataBlock;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.NonCopyingByteArrayOutputStream;
+import org.apache.commons.compress.utils.IOUtils;
 
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
@@ -29,22 +37,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Function;
 
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.Schema;
-import org.apache.avro.file.DataFileStream.DataBlock;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.util.NonCopyingByteArrayOutputStream;
-import org.apache.commons.compress.utils.IOUtils;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Stores in a file a sequence of data conforming to a schema. The schema is
@@ -263,15 +261,12 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     this.isOpen = true;
   }
 
+  private static final SecureRandom RNG = new SecureRandom();
+
   private static byte[] generateSync() {
-    try {
-      MessageDigest digester = MessageDigest.getInstance("MD5");
-      long time = System.currentTimeMillis();
-      digester.update((UUID.randomUUID() + "@" + time).getBytes(UTF_8));
-      return digester.digest();
-    } catch (NoSuchAlgorithmException e) {
-      throw new RuntimeException(e);
-    }
+    byte[] sync = new byte[16];
+    RNG.nextBytes(sync);
+    return sync;
   }
 
   private DataFileWriter<D> setMetaInternal(String key, byte[] value) {

@@ -55,9 +55,9 @@ One should be able to build Avro C++ on (1) any UNIX flavor including cygwin for
 
 In order to build Avro C++, one needs the following:
 <ul>
-    <li>A C++ compiler and runtime libraries.
+    <li>A C++17 or later compiler and runtime libraries.
     <li>Boost library version 1.38 or later. Apart from the header-only libraries of Boost, Avro C++ requires filesystem, iostreams, system and program_options libraries. Please see <a href="https://www.boost.org/">https://www.boost.org</a> or your platform's documentation for details on how to set up Boost for your platform.
-    <li>CMake build tool version 2.6 or later. Please see <a href="https://www.cmake.org">https://www.cmake.org</a> or your platform's documentation for details on how to set up CMake for your system.
+    <li>CMake build tool version 3.5 or later. Please see <a href="https://www.cmake.org">https://www.cmake.org</a> or your platform's documentation for details on how to set up CMake for your system.
     <li>Python. If not already present, please consult your platform-specific documentation on how to install Python on your system.
 </ul>
 

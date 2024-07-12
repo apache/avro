@@ -33,16 +33,16 @@ readme = "README.md"
 proc-macro = true
 
 [dependencies]
-darling = { default-features = false, version = "0.20.9" }
-proc-macro2 = { default-features = false, version = "1.0.85" }
+darling = { default-features = false, version = "0.20.10" }
+proc-macro2 = { default-features = false, version = "1.0.86" }
 quote = { default-features = false, version = "1.0.36" }
 serde_json = { workspace = true }
-syn = { default-features = false, version = "2.0.66", features = ["full", "fold"] }
+syn = { default-features = false, version = "2.0.70", features = ["full", "fold"] }
 
 [dev-dependencies]
 apache-avro = { default-features = false, path = "../avro", features = ["derive"] }
-proptest = { default-features = false, version = "1.4.0", features = ["std"] }
-serde = { default-features = false, version = "1.0.203", features = ["derive"] }
+proptest = { default-features = false, version = "1.5.0", features = ["std"] }
+serde = { default-features = false, version = "1.0.204", features = ["derive"] }
 
 
 [package.metadata.docs.rs]
