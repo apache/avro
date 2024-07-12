@@ -2156,6 +2156,7 @@ fn parsing_canonical_form(schema: &Value) -> String {
 fn pcf_map(schema: &Map<String, Value>) -> String {
     // Look for the namespace variant up front.
     let ns = schema.get("namespace").and_then(|v| v.as_str());
+    let typ = schema.get("type").and_then(|v| v.as_str());
     let mut fields = Vec::new();
     for (k, v) in schema {
         // Reduce primitive types to their simple form. ([PRIMITIVE] rule)
@@ -2181,7 +2182,9 @@ fn pcf_map(schema: &Map<String, Value>) -> String {
             // Invariant: Only valid schemas. Must be a string.
             let name = v.as_str().unwrap();
             let n = match ns {
-                Some(namespace) if !name.contains('.') => Cow::Owned(format!("{namespace}.{name}")),
+                Some(namespace) if is_named_type(typ) && !name.contains('.') => {
+                    Cow::Owned(format!("{namespace}.{name}"))
+                }
                 _ => Cow::Borrowed(name),
             };
 
@@ -2214,6 +2217,13 @@ fn pcf_map(schema: &Map<String, Value>) -> String {
         .collect::<Vec<_>>()
         .join(",");
     format!("{{{inter}}}")
+}
+
+fn is_named_type(typ: Option<&str>) -> bool {
+    matches!(
+        typ,
+        Some("record") | Some("enum") | Some("fixed") | Some("ref")
+    )
 }
 
 fn pcf_array(arr: &[Value]) -> String {
@@ -6785,14 +6795,13 @@ mod tests {
     }"#;
 
         let schema = Schema::parse_str(schema_str)?;
-
         let canonical_form = schema.canonical_form();
         let fp_rabin = schema.fingerprint::<Rabin>();
         assert_eq!(
-            r#"{"name":"test","type":"record","fields":[{"name":"a","type":"long"},{"name":"test.a.b","type":"string"},{"name":"c","type":{"type":"long"}}]}"#,
+            r#"{"name":"test","type":"record","fields":[{"name":"a","type":"long"},{"name":"b","type":"string"},{"name":"c","type":{"type":"long"}}]}"#,
             canonical_form
         );
-        assert_eq!("f4e6a3c026f4fd2a", fp_rabin.to_string());
+        assert_eq!("92f2ccef718c6754", fp_rabin.to_string());
         Ok(())
     }
 }
