@@ -34,19 +34,18 @@ using detail::kMinBlockSize;
 using std::cout;
 using std::endl;
 
+// Make a string of repeating 0123456789ABCDEF0123456789...
 std::string makeString(size_t len) {
-    std::string newstring;
-    newstring.reserve(len);
+    std::string result;
+    result.reserve(len);
+
+    constexpr auto chars = "0123456789ABCDEF";
 
     for (size_t i = 0; i < len; ++i) {
-        char newchar = '0' + i % 16;
-        if (newchar > '9') {
-            newchar += 7;
-        }
-        newstring.push_back(newchar);
+        result.push_back(chars[i % 16]);
     }
 
-    return newstring;
+    return result;
 }
 
 void printBuffer(const InputBuffer &buf) {
