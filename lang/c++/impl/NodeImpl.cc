@@ -531,7 +531,7 @@ void NodeEnum::printJson(std::ostream &os, size_t depth) const {
     printName(os, nameAttribute_.get(), depth);
     os << indent(depth) << "\"symbols\": [\n";
 
-    size_t names = leafNameAttributes_.size();
+    auto names = leafNameAttributes_.size();
     ++depth;
     for (size_t i = 0; i < names; ++i) {
         if (i > 0) {
@@ -577,7 +577,7 @@ NodeMap::NodeMap() : NodeImplMap(AVRO_MAP) {
 
 void NodeUnion::printJson(std::ostream &os, size_t depth) const {
     os << "[\n";
-    size_t fields = leafAttributes_.size();
+    auto fields = leafAttributes_.size();
     ++depth;
     for (size_t i = 0; i < fields; ++i) {
         if (i > 0) {

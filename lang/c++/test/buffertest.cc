@@ -39,7 +39,7 @@ std::string makeString(size_t len) {
     std::string result;
     result.reserve(len);
 
-    constexpr auto chars = "0123456789ABCDEF";
+    constexpr char chars[] = "0123456789ABCDEF";
 
     for (size_t i = 0; i < len; ++i) {
         result.push_back(chars[i % 16]);
