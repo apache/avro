@@ -135,7 +135,11 @@ protected:
                 memcpy(c, gptr(), toCopy);
                 c += toCopy;
                 bytesCopied += toCopy;
-                gbump(toCopy);
+                while (toCopy > static_cast<size_t>(std::numeric_limits<int>::max())) {
+                    gbump(std::numeric_limits<int>::max());
+                    toCopy -= static_cast<size_t>(std::numeric_limits<int>::max());
+                }
+                gbump(static_cast<int>(toCopy));
             }
 
             if (bytesCopied < len) {

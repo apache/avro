@@ -123,7 +123,7 @@ static ValidSchema makeValidSchema(const char *schema) {
     istringstream iss(schema);
     ValidSchema vs;
     compileJsonSchema(iss, vs);
-    return ValidSchema(vs);
+    return vs;
 }
 
 static const char sch[] = "{\"type\": \"record\","
@@ -405,7 +405,7 @@ public:
         }
         std::set<pair<int64_t, int64_t>> actual;
         int num = 0;
-        for (int i = sync_points.size() - 2; i >= 0; --i) {
+        for (ssize_t i = sync_points.size() - 2; i >= 0; --i) {
             df.seek(sync_points[i]);
             ComplexInteger ci;
             // Subtract avro::SyncSize here because sync and pastSync
@@ -473,7 +473,7 @@ public:
         avro::DataFileReader<ComplexInteger> df(filename, writerSchema);
         std::ifstream just_for_length(
             filename, std::ifstream::ate | std::ifstream::binary);
-        int length = just_for_length.tellg();
+        int length = static_cast<int>(just_for_length.tellg());
         int splits = 10;
         int end = length;     // end of split
         int remaining = end;  // bytes remaining
@@ -575,7 +575,7 @@ public:
         }
         {
             avro::DataFileReader<ComplexInteger> reader(filename, dschema);
-            std::vector<int> found;
+            std::vector<int64_t> found;
             ComplexInteger record;
             while (reader.read(record)) {
                 found.push_back(record.re);
@@ -948,7 +948,7 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
         std::unique_ptr<avro::InputStream>
             inputStream = avro::memoryInputStream(stitchedData.data(), stitchedData.size());
 
-        int recordsUptoRecordToRead = recordToRead - recordsUptoLastSync;
+        size_t recordsUptoRecordToRead = recordToRead - recordsUptoLastSync;
 
         // Ensure this is not the first record in the chunk.
         BOOST_CHECK_GT(recordsUptoRecordToRead, 0);
@@ -956,7 +956,7 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
         avro::DataFileReader<TestRecord> df(std::move(inputStream));
         TestRecord readRecord("", 0);
         //::printf("\nReading %d rows until specific record is reached", recordsUptoRecordToRead);
-        for (int index = 0; index < recordsUptoRecordToRead; index++) {
+        for (size_t index = 0; index < recordsUptoRecordToRead; index++) {
             BOOST_CHECK_EQUAL(df.read(readRecord), true);
 
             int64_t expectedId = (recordToRead - recordsUptoRecordToRead + index);

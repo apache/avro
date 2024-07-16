@@ -345,9 +345,10 @@ static LogicalType makeLogicalType(const Entity &e, const Object &m) {
     if (typeField == "decimal") {
         LogicalType decimalType(LogicalType::DECIMAL);
         try {
-            decimalType.setPrecision(getLongField(e, m, "precision"));
+            // Precision probably won't go over 38 and scale beyond -77/+77
+            decimalType.setPrecision(static_cast<int32_t>(getLongField(e, m, "precision")));
             if (containsField(m, "scale")) {
-                decimalType.setScale(getLongField(e, m, "scale"));
+                decimalType.setScale(static_cast<int32_t>(getLongField(e, m, "scale")));
             }
         } catch (Exception &ex) {
             // If any part of the logical type is malformed, per the standard we
@@ -395,12 +396,12 @@ static NodePtr makeEnumNode(const Entity &e,
 
 static NodePtr makeFixedNode(const Entity &e,
                              const Name &name, const Object &m) {
-    int v = static_cast<int>(getLongField(e, m, "size"));
+    int64_t v = getLongField(e, m, "size");
     if (v <= 0) {
         throw Exception("Size for fixed is not positive: {}", e.toString());
     }
     NodePtr node =
-        NodePtr(new NodeFixed(asSingleAttribute(name), asSingleAttribute(v)));
+        NodePtr(new NodeFixed(asSingleAttribute(name), asSingleAttribute(static_cast<size_t>(v))));
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }

@@ -307,7 +307,7 @@ public:
 
     void parse(Reader &reader, uint8_t *address) const final {
         auto val = static_cast<size_t>(reader.readEnum());
-        assert(static_cast<size_t>(val) < mapping_.size());
+        assert(val < mapping_.size());
 
         if (mapping_[val] < readerSize_) {
             auto *location = reinterpret_cast<EnumRepresentation *>(address + offset_);
@@ -349,7 +349,7 @@ public:
 
         *readerChoice = choiceMapping_[writerChoice];
         auto *setter = reinterpret_cast<GenericUnionSetter *>(address + setFuncOffset_);
-        auto *value = reinterpret_cast<uint8_t *>(address + offset_);
+        uint8_t *value = address + offset_;
         uint8_t *location = (*setter)(value, *readerChoice);
 
         resolvers_[writerChoice]->parse(reader, location);
@@ -397,7 +397,7 @@ public:
         auto *choice = reinterpret_cast<int64_t *>(address + choiceOffset_);
         *choice = choice_;
         auto *setter = reinterpret_cast<GenericUnionSetter *>(address + setFuncOffset_);
-        auto *value = reinterpret_cast<uint8_t *>(address + offset_);
+        uint8_t *value = address + offset_;
         uint8_t *location = (*setter)(value, choice_);
 
         resolver_->parse(reader, location);
@@ -424,7 +424,7 @@ public:
     }
 
 protected:
-    int size_;
+    size_t size_;
 };
 
 class FixedParser : public Resolver {
@@ -436,12 +436,12 @@ public:
 
     void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Reading fixed");
-        auto *location = reinterpret_cast<uint8_t *>(address + offset_);
+        uint8_t *location = address + offset_;
         reader.readFixed(location, size_);
     }
 
 protected:
-    int size_;
+    size_t size_;
     size_t offset_;
 };
 

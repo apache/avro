@@ -276,7 +276,7 @@ public:
      * Returns the number of chunks that contain free space.
      **/
 
-    int numChunks() const {
+    size_t numChunks() const {
         return pimpl_->numFreeChunks();
     }
 
@@ -284,7 +284,7 @@ public:
      * Returns the number of chunks that contain data
      **/
 
-    int numDataChunks() const {
+    size_t numDataChunks() const {
         return pimpl_->numDataChunks();
     }
 
@@ -384,7 +384,7 @@ public:
      * Returns the number of chunks containing data.
      **/
 
-    int numChunks() const {
+    size_t numChunks() const {
         return pimpl_->numDataChunks();
     }
 
@@ -476,10 +476,10 @@ inline InputBuffer OutputBuffer::extractData(size_type bytes) {
 
 template<class BufferType>
 inline void toIovec(BufferType &buf, std::vector<struct iovec> &iov) {
-    const int chunks = buf.numChunks();
+    const size_t chunks = buf.numChunks();
     iov.resize(chunks);
     typename BufferType::const_iterator iter = buf.begin();
-    for (int i = 0; i < chunks; ++i) {
+    for (size_t i = 0; i < chunks; ++i) {
         iov[i].iov_base = const_cast<typename BufferType::data_type *>(iter->data());
         iov[i].iov_len = iter->size();
         ++iter;

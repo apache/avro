@@ -83,7 +83,7 @@ case "$target" in
     ;;
 
   test)
-    (cmake -S. -Bbuild -D CMAKE_BUILD_TYPE=Debug -D AVRO_ADD_PROTECTOR_FLAGS=1 && cmake --build build \
+    (cmake -S. -Bbuild -D CMAKE_BUILD_TYPE=Debug -D AVRO_ADD_PROTECTOR_FLAGS=1 && cmake --build build -- -k \
       && ./build/buffertest \
       && ./build/unittest \
       && ./build/AvrogencppTestReservedWords \

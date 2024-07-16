@@ -160,7 +160,7 @@ static string randomString(size_t len) {
         if (c == '\0') {
             c = '\x7f';
         }
-        result.push_back(c);
+        result.push_back(static_cast<char>(c));
     }
     return result;
 }
@@ -169,7 +169,7 @@ static vector<uint8_t> randomBytes(size_t len) {
     vector<uint8_t> result;
     result.reserve(len);
     for (size_t i = 0; i < len; ++i) {
-        result.push_back(rnd());
+        result.push_back(static_cast<uint8_t>(rnd()));
     }
     return result;
 }
@@ -525,7 +525,7 @@ ValidSchema makeValidSchema(const char *schema) {
     istringstream iss(schema);
     ValidSchema vs;
     compileJsonSchema(iss, vs);
-    return ValidSchema(vs);
+    return vs;
 }
 
 void testEncoder(const EncoderPtr &e, const char *writerCalls,
