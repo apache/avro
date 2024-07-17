@@ -1373,6 +1373,7 @@ mod tests {
             name: Name::new("some_fixed").unwrap(),
             aliases: None,
             doc: None,
+            default: None,
             attributes: Default::default(),
         });
 
@@ -1728,6 +1729,7 @@ Field with name '"b"' is not a member of the map items"#,
                     aliases: None,
                     size: 20,
                     doc: None,
+                    default: None,
                     attributes: Default::default(),
                 }))
             }))
@@ -3039,6 +3041,7 @@ Field with name '"b"' is not a member of the map items"#,
                 name: "test".into(),
                 aliases: None,
                 doc: None,
+                default: None,
                 size: 3,
                 attributes: Default::default()
             }))?,
@@ -3051,6 +3054,7 @@ Field with name '"b"' is not a member of the map items"#,
                 name: "test".into(),
                 aliases: None,
                 doc: None,
+                default: None,
                 size: 3,
                 attributes: Default::default()
             }))
@@ -3062,6 +3066,7 @@ Field with name '"b"' is not a member of the map items"#,
                 name: "test".into(),
                 aliases: None,
                 doc: None,
+                default: None,
                 size: 3,
                 attributes: Default::default()
             }))
@@ -3117,8 +3122,6 @@ Field with name '"b"' is not a member of the map items"#,
 
     #[test]
     fn avro_3631_test_serialize_fixed_fields() {
-        use crate::{avro_serialize_bytes, avro_serialize_fixed};
-
         #[derive(Debug, Serialize, Deserialize)]
         struct TestStructFixedField {
             #[serde(with = "serde_bytes")]

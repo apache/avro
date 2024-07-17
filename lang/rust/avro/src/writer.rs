@@ -1414,7 +1414,7 @@ mod tests {
             Err(e) => {
                 assert_eq!(
                     e.to_string(),
-                    r#"Value Record([("name", String("RustConf")), ("time", Union(1, Double(12345678.9)))]) does not match schema Record(RecordSchema { name: Name { name: "Conference", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: "name", doc: None, aliases: None, default: None, schema: String, order: Ascending, position: 0, custom_attributes: {} }, RecordField { name: "date", doc: None, aliases: Some(["time2", "time"]), default: None, schema: Union(UnionSchema { schemas: [Null, Long], variant_index: {Null: 0, Long: 1} }), order: Ascending, position: 1, custom_attributes: {} }], lookup: {"date": 1, "name": 0, "time": 1, "time2": 1}, attributes: {} }): Reason: Unsupported value-schema combination! Value: Double(12345678.9), schema: Long"#
+                    r#"Value Record([("name", String("RustConf")), ("time", Union(1, Double(12345678.9)))]) does not match schema Record(RecordSchema { name: Name { name: "Conference", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: "name", doc: None, aliases: None, default: None, schema: String, order: Ascending, position: 0, custom_attributes: {} }, RecordField { name: "date", doc: None, aliases: Some(["time2", "time"]), default: None, schema: Union(UnionSchema { schemas: [Null, Long], variant_index: {Null: 0, Long: 1} }), order: Ascending, position: 1, custom_attributes: {} }], lookup: {"date": 1, "name": 0, "time": 1, "time2": 1}, attributes: {} }): Reason: Unsupported value-schema combination"#
                 );
             }
         }
