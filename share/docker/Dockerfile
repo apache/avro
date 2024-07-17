@@ -17,7 +17,9 @@
 # Dockerfile for installing the necessary dependencies for building Avro.
 # See BUILD.md.
 
-FROM ubuntu:22.04
+ARG BUILDPLATFORM
+
+FROM --platform=$BUILDPLATFORM ubuntu:22.04
 WORKDIR /root
 
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
