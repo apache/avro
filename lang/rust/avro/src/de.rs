@@ -16,7 +16,7 @@
 // under the License.
 
 //! Logic for serde-compatible deserialization.
-use crate::{types::Value, Error};
+use crate::{bytes::DE_BYTES_BORROWED, types::Value, Error};
 use serde::{
     de::{self, DeserializeSeed, Visitor},
     forward_to_deserialize_any, Deserialize,
@@ -356,7 +356,13 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
     {
         match *self.input {
             Value::String(ref s) => visitor.visit_bytes(s.as_bytes()),
-            Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => visitor.visit_bytes(bytes),
+            Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => {
+                if DE_BYTES_BORROWED.get() {
+                    visitor.visit_borrowed_bytes(bytes)
+                } else {
+                    visitor.visit_bytes(bytes)
+                }
+            }
             Value::Uuid(ref u) => visitor.visit_bytes(u.as_bytes()),
             Value::Decimal(ref d) => visitor.visit_bytes(&d.to_vec()?),
             _ => Err(de::Error::custom(format!(
