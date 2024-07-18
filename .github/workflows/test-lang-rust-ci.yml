@@ -31,7 +31,6 @@ permissions:
 
 env:
   RUSTFLAGS: -Dwarnings
-  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: 'git' # TODO: remove this env var once MSRV is 1.70.0+
 
 defaults:
   run:
@@ -50,7 +49,7 @@ jobs:
           - 'stable'
           - 'beta'
           - 'nightly'
-          - '1.70.0'  # MSRV
+          - '1.73.0'  # MSRV
         target:
           - x86_64-unknown-linux-gnu
           - wasm32-unknown-unknown

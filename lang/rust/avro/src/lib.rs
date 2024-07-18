@@ -841,6 +841,7 @@
 //!
 
 mod bigdecimal;
+mod bytes;
 mod codec;
 mod de;
 mod decimal;
@@ -860,7 +861,10 @@ pub mod schema_equality;
 pub mod types;
 pub mod validator;
 
-pub use crate::bigdecimal::BigDecimal;
+pub use crate::{
+    bigdecimal::BigDecimal,
+    bytes::{serde_avro_bytes, serde_avro_fixed, serde_avro_slice},
+};
 pub use codec::Codec;
 pub use de::from_value;
 pub use decimal::Decimal;

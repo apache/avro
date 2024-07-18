@@ -1853,7 +1853,7 @@ Field with name '"b"' is not a member of the map items"#,
                 {
                     "name": "event",
                     "type": [
-                        "null", 
+                        "null",
                         {
                             "type": "record",
                             "name": "event",
