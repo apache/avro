@@ -31,7 +31,6 @@ permissions:
 
 env:
   RUSTFLAGS: -Dwarnings
-  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: 'git' # TODO: remove this env var once MSRV is 1.70.0+
 
 defaults:
   run:

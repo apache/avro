@@ -16,7 +16,11 @@
 // under the License.
 
 //! Logic for serde-compatible serialization.
-use crate::{types::Value, Error};
+use crate::{
+    bytes::{BytesType, SER_BYTES_TYPE},
+    types::Value,
+    Error,
+};
 use serde::{ser, Serialize};
 use std::{collections::HashMap, iter::once};
 
@@ -174,7 +178,10 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     }
 
     fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
-        Ok(Value::Bytes(v.to_owned()))
+        match SER_BYTES_TYPE.get() {
+            BytesType::Bytes => Ok(Value::Bytes(v.to_owned())),
+            BytesType::Fixed => Ok(Value::Fixed(v.len(), v.to_owned())),
+        }
     }
 
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
