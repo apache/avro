@@ -211,7 +211,7 @@ RUN gem install bundler --no-document && \
     cd /tmp/lang/ruby && bundle install
 
 # Install Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.70.0
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.73.0
 
 # Note: This "ubertool" container has 4 JDK versions:
 # - OpenJDK 8
