@@ -842,7 +842,7 @@ The following schemas represent a uuid:
 ```json
 {
   "type": "fixed",
-  "size": "16",
+  "size": 16,
   "logicalType": "uuid"
 }
 ```
