@@ -863,7 +863,10 @@ pub mod validator;
 
 pub use crate::{
     bigdecimal::BigDecimal,
-    bytes::{serde_avro_bytes, serde_avro_fixed, serde_avro_slice},
+    bytes::{
+        serde_avro_bytes, serde_avro_bytes_opt, serde_avro_fixed, serde_avro_fixed_opt,
+        serde_avro_slice, serde_avro_slice_opt,
+    },
 };
 pub use codec::Codec;
 pub use de::from_value;
