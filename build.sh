@@ -309,9 +309,11 @@ do
         echo "RUN getent passwd $USER_ID || useradd -g $GROUP_ID -u $USER_ID -k /root -m $USER_NAME"
         echo "RUN mkdir -p /home/$USER_NAME/.m2/repository"
       } > Dockerfile
+
+      export BUILDPLATFORM=$(docker info --format "{{.OSType}}/{{.Architecture}}")
       # Include the ruby gemspec for preinstallation.
       # shellcheck disable=SC2086
-      tar -cf- Dockerfile $DOCKER_EXTRA_CONTEXT | DOCKER_BUILDKIT=1 docker build $DOCKER_BUILD_XTRA_ARGS -t "$DOCKER_IMAGE_NAME" -
+      tar -cf- Dockerfile $DOCKER_EXTRA_CONTEXT | DOCKER_BUILDKIT=1 docker build $DOCKER_BUILD_XTRA_ARGS --build-arg="BUILDPLATFORM=${BUILDPLATFORM}" -t "$DOCKER_IMAGE_NAME" -
       rm Dockerfile
       # By mapping the .m2/repository directory you can do an mvn install from
       # within the container and use the result on your normal
