@@ -351,9 +351,11 @@ do
       ;;
 
     docker-test)
-      export DOCKER_DEFAULT_PLATFORM="$(docker info --format "{{.OSType}}/{{.Architecture}}")"
+      if [ -z "$BUILDPLATFORM" ]; then
+        export BUILDPLATFORM=$(docker info --format "{{.OSType}}/{{.Architecture}}")
+      fi
       tar -cf- share/docker/Dockerfile $DOCKER_EXTRA_CONTEXT |
-        DOCKER_BUILDKIT=1 docker build -t avro-test --build-arg BUILDPLATFORM="${DOCKER_DEFAULT_PLATFORM}" -f share/docker/Dockerfile -
+        DOCKER_BUILDKIT=1 docker build -t avro-test --build-arg BUILDPLATFORM="${BUILDPLATFORM}" -f share/docker/Dockerfile -
       docker run --rm \
         --volume "${PWD}:/avro${DOCKER_MOUNT_FLAG}" \
         --volume "${PWD}/share/docker/m2/:/root/.m2/" \

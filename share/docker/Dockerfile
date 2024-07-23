@@ -95,20 +95,12 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
                                                  php-dev
 
 # Required for Dotnet
-#RUN ARCH="$(dpkg --print-architecture)"
-#ENV LIBSSL_DEB="libssl1.1_1.1.1f-1ubuntu2_$ARCH.deb"
-#RUN if [ "$ARCH" == "amd64" ] || [ "$ARCH" == "i386" ]; then \
-#      LIBSSL_URL="https://security.ubuntu.com/ubuntu/pool/main/o/openssl/$LIBSSL_DEB" \
-#  else \
-#      LIBSSL_URL="https://ports.ubuntu.com/ubuntu-ports/pool/main/o/openssl/$LIBSSL_DEB" \
-#  fi \
-#  wget "$LIBSSL_URL" \
-#  dpkg -i "$LIBSSL_DEB" \
-#  rm -f "$LIBSSL_DEB"
-RUN wget -q https://www.openssl.org/source/openssl-1.1.1q.tar.gz && \
-    tar -xzf openssl-1.1.1q.tar.gz && \
-    cd openssl-1.1.1q && \
-    ./config && make install
+RUN export ARCH="$(dpkg --print-architecture)"; \
+  export LIBSSL_DEB="libssl1.1_1.1.1f-1ubuntu2.22_$ARCH.deb"; \
+  wget -q "http://security.ubuntu.com/ubuntu/pool/main/o/openssl/$LIBSSL_DEB" || \
+    wget -q "http://ports.ubuntu.com/ubuntu-ports/pool/main/o/openssl/$LIBSSL_DEB"; \
+  dpkg -i "$LIBSSL_DEB"; \
+  rm "$LIBSSL_DEB"
 
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/bbb9892e165d40fb35fa19f38929effc5d0c709b/Dockerfile#L30
@@ -143,7 +135,7 @@ ENV PATH="/opt/maven/bin:${PATH}"
 # The node deprecation warnings cause a 20 second sleep.
 # But mom, I'm not even tired!
 RUN curl -sSL https://deb.nodesource.com/setup_14.x \
-  | sed 's/sleep 20/echo "But mom!"/' \
+  | sed 's/sleep/echo "But mom!"/' \
   | bash \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
