@@ -63,7 +63,6 @@ RUN apt-get -qqy update \
                                                  perl \
                                                  python3 \
                                                  python3-pip \
-                                                 python3-distutils \
                                                  python3-setuptools \
                                                  python3-snappy \
                                                  python3-venv \
@@ -74,9 +73,7 @@ RUN apt-get -qqy update \
                                                  python3.7 \
                                                  python3.7-distutils \
                                                  python3.8 \
-                                                 python3.8-distutils \
                                                  python3.9 \
-                                                 python3.9-distutils \
                                                  source-highlight \
                                                  subversion \
                                                  valgrind \
@@ -248,3 +245,7 @@ ENV PATH $PATH:/opt/dotnet
 RUN update-java-alternatives  -s "java-1.21.*"
 
 CMD ["/bin/bash", "-i"]
+ENV HOME /home/fokko.driesprong
+RUN getent group 50 || groupadd -g 50 fokko.driesprong
+RUN getent passwd 1000 || useradd -g 50 -u 1000 -k /root -m fokko.driesprong
+RUN mkdir -p /home/fokko.driesprong/.m2/repository
