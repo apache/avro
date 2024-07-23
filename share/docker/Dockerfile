@@ -92,10 +92,16 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
                                                  php-dev
 
 # Required for Dotnet
-RUN wget -q https://www.openssl.org/source/openssl-1.1.1q.tar.gz && \
-    tar -xzf openssl-1.1.1q.tar.gz && \
-    cd openssl-1.1.1q && \
-    ./config && make install
+RUN ARCH="$(dpkg --print-architecture)"
+ENV LIBSSL_DEB="libssl1.1_1.1.1f-1ubuntu2_$ARCH.deb"
+RUN if [ "$ARCH" == "amd64" ] || [ "$ARCH" == "i386" ]; then \
+    LIBSSL_URL="http://security.ubuntu.com/ubuntu/pool/main/o/openssl/$LIBSSL_DEB" \
+else \
+    LIBSSL_URL="http://ports.ubuntu.com/ubuntu-ports/pool/main/o/openssl/$LIBSSL_DEB" \
+fi \
+wget "$LIBSSL_URL" \
+dpkg -i "$LIBSSL_DEB" \
+rm -f "$LIBSSL_DEB"
 
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/bbb9892e165d40fb35fa19f38929effc5d0c709b/Dockerfile#L30
@@ -168,7 +174,7 @@ RUN apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
                                                  libcpan-uploader-perl \
                                                  libencode-perl \
                                                  libio-string-perl \
-                                                 libjson-xs-perl \
+                                                 libjson-maybexs-perl \
                                                  libmodule-install-perl \
                                                  libmodule-install-readmefrompod-perl \
                                                  libobject-tiny-perl \
