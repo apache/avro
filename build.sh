@@ -310,7 +310,9 @@ do
         echo "RUN mkdir -p /home/$USER_NAME/.m2/repository"
       } > Dockerfile
 
-      export BUILDPLATFORM=$(docker info --format "{{.OSType}}/{{.Architecture}}")
+      if [ -z "$BUILDPLATFORM" ]; then
+        export BUILDPLATFORM=$(docker info --format "{{.OSType}}/{{.Architecture}}")
+      fi
       # Include the ruby gemspec for preinstallation.
       # shellcheck disable=SC2086
       tar -cf- Dockerfile $DOCKER_EXTRA_CONTEXT | DOCKER_BUILDKIT=1 docker build $DOCKER_BUILD_XTRA_ARGS --build-arg="BUILDPLATFORM=${BUILDPLATFORM}" -t "$DOCKER_IMAGE_NAME" -
