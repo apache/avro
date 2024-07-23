@@ -57,7 +57,6 @@ RUN apt-get -qqy update \
                                                  libssl-dev \
                                                  make \
                                                  mypy \
-                                                 openjdk-8-jdk \
                                                  openjdk-11-jdk \
                                                  openjdk-17-jdk \
                                                  openjdk-21-jdk \
@@ -92,6 +91,7 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
                                                  php-mbstring \
                                                  php-dev
 
+# Required for Dotnet
 RUN wget -q https://www.openssl.org/source/openssl-1.1.1q.tar.gz && \
     tar -xzf openssl-1.1.1q.tar.gz && \
     cd openssl-1.1.1q && \
@@ -219,15 +219,6 @@ RUN gem install bundler --no-document && \
 
 # Install Rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.73.0
-
-# Note: This "ubertool" container has 4 JDK versions:
-# - OpenJDK 8
-# - OpenJDK 11
-# - OpenJDK 17
-# - OpenJDK 21
-# - The root build.sh script switches between the versions according to
-#   the JAVA environment variable.
-
 
 # Install .NET SDK
 RUN cd /opt ; \
