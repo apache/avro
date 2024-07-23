@@ -92,6 +92,11 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
                                                  php-mbstring \
                                                  php-dev
 
+RUN wget -q https://www.openssl.org/source/openssl-1.1.1q.tar.gz && \
+    tar -xzf openssl-1.1.1q.tar.gz && \
+    cd openssl-1.1.1q && \
+    ./config && make install
+
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/bbb9892e165d40fb35fa19f38929effc5d0c709b/Dockerfile#L30
 ENV MAVEN_VERSION 3.9.6
