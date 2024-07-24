@@ -359,7 +359,7 @@ do
       docker run --rm \
         --volume "${PWD}:/avro${DOCKER_MOUNT_FLAG}" \
         --volume "${PWD}/share/docker/m2/:/root/.m2/" \
-        --env "JAVA=${JAVA:-8}" avro-test /avro/share/docker/run-tests.sh
+        --env "JAVA=${JAVA:-11}" avro-test /avro/share/docker/run-tests.sh
       ;;
 
     *)
