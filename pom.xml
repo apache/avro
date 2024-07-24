@@ -134,6 +134,7 @@
           <version>${maven-javadoc-plugin.version}</version>
           <configuration>
             <notimestamp>true</notimestamp>
+            <legacyMode>true</legacyMode>
           </configuration>
         </plugin>
         <plugin>
