@@ -4,8 +4,8 @@
 
 The following packages must be installed before Avro can be built:
 
- - Java: JDK 8, 11, 17 and 21 with the appropriate toolchain config, Maven 3.9.6 or better, protobuf-compile
- - PHP: php7, phpunit, php7-gmp
+ - Java: 11, 17 and 21 with the appropriate toolchain config, Maven 3.9.6 or better, protobuf-compile
+ - PHP: php8, phpunit, php8-gmp
  - Python 3: 3.7 or greater, tox (tox will install other dependencies as needed)
  - C: gcc, cmake, asciidoc, source-highlight, Jansson, pkg-config
  - C++: cmake 3.7.2 or greater, g++, flex, bison, libboost-dev
