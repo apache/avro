@@ -58,7 +58,7 @@ function do_doc() {
 function do_dist() {
   rm -rf $BUILD_CPP/
   mkdir -p $BUILD_CPP
-  cp -r api AUTHORS build.sh CMakeLists.txt ChangeLog \
+  cp -r AUTHORS build.sh CMakeLists.txt ChangeLog \
     LICENSE NOTICE impl jsonschemas NEWS README test examples \
     $BUILD_CPP
   find $BUILD_CPP -name '.svn' | xargs rm -rf
