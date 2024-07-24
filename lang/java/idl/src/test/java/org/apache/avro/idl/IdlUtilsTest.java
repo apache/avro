@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro.util;
+package org.apache.avro.idl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,8 +31,6 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
-import org.apache.avro.idl.IdlFile;
-import org.apache.avro.idl.IdlReader;
 import org.junit.jupiter.api.Test;
 
 import static java.util.Collections.emptyList;
