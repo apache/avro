@@ -20,19 +20,10 @@
   <toolchain>
     <type>jdk</type>
     <provides>
-      <version>8</version>
-    </provides>
-    <configuration>
-      <jdkHome>/usr/lib/jvm/java-8-openjdk-amd64</jdkHome>
-    </configuration>
-  </toolchain>
-  <toolchain>
-    <type>jdk</type>
-    <provides>
       <version>11</version>
     </provides>
     <configuration>
-      <jdkHome>/usr/lib/jvm/java-11-openjdk-amd64</jdkHome>
+      <jdkHome>/usr/lib/jvm/openjdk-11</jdkHome>
     </configuration>
   </toolchain>
   <toolchain>
@@ -41,7 +32,7 @@
       <version>17</version>
     </provides>
     <configuration>
-      <jdkHome>/usr/lib/jvm/java-17-openjdk-amd64</jdkHome>
+      <jdkHome>/usr/lib/jvm/openjdk-17</jdkHome>
     </configuration>
   </toolchain>
   <toolchain>
@@ -50,7 +41,7 @@
       <version>21</version>
     </provides>
     <configuration>
-      <jdkHome>/usr/lib/jvm/java-21-openjdk-amd64</jdkHome>
+      <jdkHome>/usr/lib/jvm/openjdk-21</jdkHome>
     </configuration>
   </toolchain>
 </toolchains>

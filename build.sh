@@ -353,9 +353,15 @@ do
       ;;
 
     docker-test)
+      if [ -z "$BUILDPLATFORM" ]; then
+        export BUILDPLATFORM=$(docker info --format "{{.OSType}}/{{.Architecture}}")
+      fi
       tar -cf- share/docker/Dockerfile $DOCKER_EXTRA_CONTEXT |
-        DOCKER_BUILDKIT=1 docker build -t avro-test -f share/docker/Dockerfile -
-      docker run --rm -v "${PWD}:/avro${DOCKER_MOUNT_FLAG}" --env "JAVA=${JAVA:-8}" avro-test /avro/share/docker/run-tests.sh
+        DOCKER_BUILDKIT=1 docker build -t avro-test --build-arg BUILDPLATFORM="${BUILDPLATFORM}" -f share/docker/Dockerfile -
+      docker run --rm \
+        --volume "${PWD}:/avro${DOCKER_MOUNT_FLAG}" \
+        --volume "${PWD}/share/docker/m2/:/root/.m2/" \
+        --env "JAVA=${JAVA:-11}" avro-test /avro/share/docker/run-tests.sh
       ;;
 
     *)
