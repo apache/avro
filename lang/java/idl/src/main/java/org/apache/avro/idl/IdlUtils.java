@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro.util;
+package org.apache.avro.idl;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
@@ -57,6 +57,9 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Objects.requireNonNull;
 
+/**
+ * Utils for IDL
+ */
 public final class IdlUtils {
   static final ObjectMapper MAPPER;
   private static final Function<Schema.Field, JsonNode> DEFAULT_VALUE;
