@@ -330,11 +330,15 @@ void testUnionMethods() {
     avro::decode(*decoder, decoded_record);
 
     // check that a reference can be obtained from a union
+    const auto myunion_branch = static_cast<testgen::RootRecord::myunion_t::Branch>(decoded_record.myunion.idx());
+    BOOST_CHECK(myunion_branch == testgen::RootRecord::myunion_t::Branch::map);
     const std::map<std::string, int32_t> &read_map = decoded_record.myunion.get_map();
     BOOST_CHECK_EQUAL(read_map.size(), 2);
     BOOST_CHECK_EQUAL(read_map.at("zero"), 0);
     BOOST_CHECK_EQUAL(read_map.at("one"), 1);
 
+    const auto anotherunion_branch = static_cast<testgen::RootRecord::anotherunion_t::Branch>(decoded_record.anotherunion.idx());
+    BOOST_CHECK(anotherunion_branch == testgen::RootRecord::anotherunion_t::Branch::bytes);
     const std::vector<uint8_t> read_bytes = decoded_record.anotherunion.get_bytes();
     const std::vector<uint8_t> expected_bytes{1, 2, 3, 4};
     BOOST_CHECK_EQUAL_COLLECTIONS(read_bytes.begin(), read_bytes.end(), expected_bytes.begin(), expected_bytes.end());
@@ -344,7 +348,6 @@ void testUnionBranchEnum() {
     big_union::RootRecord record;
 
     using Branch = big_union::RootRecord::big_union_t::Branch;
-    ;
 
     BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::null));
     record.big_union.set_null();
