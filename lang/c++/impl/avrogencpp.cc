@@ -392,8 +392,32 @@ string CodeGen::generateUnionType(const NodePtr &n) {
         << "private:\n"
         << "    size_t idx_;\n"
         << "    std::any value_;\n"
-        << "public:\n"
-        << "    size_t idx() const { return idx_; }\n";
+        << "public:\n";
+
+    os_ << "    /** enum representing union branches as returned by the idx() function */\n"
+        << "    enum class Branch: size_t {\n";
+
+    // generate a enum that maps the branch name to the corresponding index (as returned by idx())
+    std::set<std::string> used_branch_names;
+    for (size_t i = 0; i < c; ++i) {
+        // escape reserved literals for c++
+        auto branch_name = decorate(names[i]);
+        // avoid rare collisions, e.g. somone might name their struct int_
+        if (used_branch_names.find(branch_name) != used_branch_names.end()) {
+            size_t postfix = 2;
+            std::string escaped_name = branch_name + "_" + std::to_string(postfix);
+            while (used_branch_names.find(escaped_name) != used_branch_names.end()) {
+                ++postfix;
+                escaped_name = branch_name + "_" + std::to_string(postfix);
+            }
+            branch_name = escaped_name;
+        }
+        os_ << "        " << branch_name << " = " << i << ",\n";
+        used_branch_names.insert(branch_name);
+    }
+    os_ << "    };\n";
+
+    os_ << "    size_t idx() const { return idx_; }\n";
 
     for (size_t i = 0; i < c; ++i) {
         const NodePtr &nn = n->leafAt(i);

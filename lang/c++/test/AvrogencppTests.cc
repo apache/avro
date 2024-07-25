@@ -17,6 +17,7 @@
  */
 
 #include "Compiler.hh"
+#include "big_union.hh"
 #include "bigrecord.hh"
 #include "bigrecord_r.hh"
 #include "tweet.hh"
@@ -339,6 +340,65 @@ void testUnionMethods() {
     BOOST_CHECK_EQUAL_COLLECTIONS(read_bytes.begin(), read_bytes.end(), expected_bytes.begin(), expected_bytes.end());
 }
 
+void testUnionBranchEnum() {
+    big_union::RootRecord record;
+
+    using Branch = big_union::RootRecord::big_union_t::Branch;
+    ;
+
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::null));
+    record.big_union.set_null();
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::null));
+
+    record.big_union.set_bool(false);
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::bool_));
+
+    record.big_union.set_int(123);
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::int_));
+
+    record.big_union.set_long(456);
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::long_));
+
+    record.big_union.set_float(555.555f);
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::float_));
+
+    record.big_union.set_double(777.777);
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::double_));
+
+    record.big_union.set_MD5({});
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::MD5));
+
+    record.big_union.set_string("test");
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::string));
+
+    record.big_union.set_Vec2({});
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::Vec2));
+
+    record.big_union.set_Vec3({});
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::Vec3));
+
+    record.big_union.set_Suit(big_union::Suit::CLUBS);
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::Suit));
+
+    record.big_union.set_array({});
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::array));
+
+    record.big_union.set_map({});
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::map));
+
+    record.big_union.set_int_({});
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::int__2));
+
+    record.big_union.set_int__({});
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::int__));
+
+    record.big_union.set_Int({});
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::Int));
+
+    record.big_union.set__Int({});
+    BOOST_CHECK_EQUAL(record.big_union.idx(), static_cast<size_t>(Branch::_Int));
+}
+
 boost::unit_test::test_suite *init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     auto *ts = BOOST_TEST_SUITE("Code generator tests");
     ts->add(BOOST_TEST_CASE(testEncoding));
@@ -348,5 +408,6 @@ boost::unit_test::test_suite *init_unit_test_suite(int /*argc*/, char * /*argv*/
     ts->add(BOOST_TEST_CASE(testNamespace));
     ts->add(BOOST_TEST_CASE(testEmptyRecord));
     ts->add(BOOST_TEST_CASE(testUnionMethods));
+    ts->add(BOOST_TEST_CASE(testUnionBranchEnum));
     return ts;
 }
