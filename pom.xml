@@ -589,7 +589,7 @@
                   <fileset dir="lang/java/target/site/apidocs"/>
                 </copy>
                 <copy todir="build/avro-doc-${project.version}/trevni">
-                  <fileset dir="lang/java/trevni/doc/target/site"/>
+                  <fileset dir="lang/java/trevni/target/site"/>
                 </copy>
               </target>
             </configuration>
