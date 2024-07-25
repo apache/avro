@@ -336,6 +336,13 @@ static void generateGetterAndSetter(ostream &os,
        << "    idx_ = " << idx << ";\n"
        << "    value_ = v;\n"
        << "}\n\n";
+
+    os << "inline\n"
+       << "void" << sn << "set_" << name
+       << "(" << type << "&& v) {\n"
+       << "    idx_ = " << idx << ";\n"
+       << "    value_ = std::move(v);\n"
+       << "}\n\n";
 }
 
 static void generateConstructor(ostream &os,
@@ -404,7 +411,8 @@ string CodeGen::generateUnionType(const NodePtr &n) {
             os_ << "    "
                 << "const " << type << "& get_" << name << "() const;\n"
                 << "    " << type << "& get_" << name << "();\n"
-                << "    void set_" << name << "(const " << type << "& v);\n";
+                << "    void set_" << name << "(const " << type << "& v);\n"
+                << "    void set_" << name << "(" << type << "&& v);\n";
             pendingGettersAndSetters.emplace_back(result, type, name, i);
         }
     }
@@ -740,6 +748,7 @@ void CodeGen::generate(const ValidSchema &schema) {
 
     os_ << "#include <sstream>\n"
         << "#include <any>\n"
+        << "#include <utility>\n"
         << "#include \"" << includePrefix_ << "Specific.hh\"\n"
         << "#include \"" << includePrefix_ << "Encoder.hh\"\n"
         << "#include \"" << includePrefix_ << "Decoder.hh\"\n"

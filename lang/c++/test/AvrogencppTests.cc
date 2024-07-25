@@ -311,6 +311,11 @@ void testUnionMethods() {
     record.myunion.get_map()["zero"] = 0;
     record.myunion.get_map()["one"] = 1;
 
+    std::vector<uint8_t> bytes{1, 2, 3, 4};
+    record.anotherunion.set_bytes(std::move(bytes));
+    // after move assignment the local variable should be empty
+    BOOST_CHECK(bytes.empty());
+
     unique_ptr<OutputStream> out_stream = memoryOutputStream();
     EncoderPtr encoder = validatingEncoder(schema, binaryEncoder());
     encoder->init(*out_stream);
@@ -324,10 +329,14 @@ void testUnionMethods() {
     avro::decode(*decoder, decoded_record);
 
     // check that a reference can be obtained from a union
-    const std::map<std::string, int32_t> &map = decoded_record.myunion.get_map();
-    BOOST_CHECK_EQUAL(map.size(), 2);
-    BOOST_CHECK_EQUAL(map.at("zero"), 0);
-    BOOST_CHECK_EQUAL(map.at("one"), 1);
+    const std::map<std::string, int32_t> &read_map = decoded_record.myunion.get_map();
+    BOOST_CHECK_EQUAL(read_map.size(), 2);
+    BOOST_CHECK_EQUAL(read_map.at("zero"), 0);
+    BOOST_CHECK_EQUAL(read_map.at("one"), 1);
+
+    const std::vector<uint8_t> read_bytes = decoded_record.anotherunion.get_bytes();
+    const std::vector<uint8_t> expected_bytes{1, 2, 3, 4};
+    BOOST_CHECK_EQUAL_COLLECTIONS(read_bytes.begin(), read_bytes.end(), expected_bytes.begin(), expected_bytes.end());
 }
 
 boost::unit_test::test_suite *init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
