@@ -300,6 +300,36 @@ void testEmptyRecord() {
     BOOST_CHECK_EQUAL(calc2.stack[2].idx(), 2);
 }
 
+void testUnionMethods() {
+    ValidSchema schema;
+    ifstream ifs_w("jsonschemas/bigrecord");
+    compileJsonSchema(ifs_w, schema);
+
+    testgen::RootRecord record;
+    // initialize the map and set values with getter
+    record.myunion.set_map({});
+    record.myunion.get_map()["zero"] = 0;
+    record.myunion.get_map()["one"] = 1;
+
+    unique_ptr<OutputStream> out_stream = memoryOutputStream();
+    EncoderPtr encoder = validatingEncoder(schema, binaryEncoder());
+    encoder->init(*out_stream);
+    avro::encode(*encoder, record);
+    encoder->flush();
+
+    DecoderPtr decoder = validatingDecoder(schema, binaryDecoder());
+    unique_ptr<InputStream> is = memoryInputStream(*out_stream);
+    decoder->init(*is);
+    testgen::RootRecord decoded_record;
+    avro::decode(*decoder, decoded_record);
+
+    // check that a reference can be obtained from a union
+    const std::map<std::string, int32_t> &map = decoded_record.myunion.get_map();
+    BOOST_CHECK_EQUAL(map.size(), 2);
+    BOOST_CHECK_EQUAL(map.at("zero"), 0);
+    BOOST_CHECK_EQUAL(map.at("one"), 1);
+}
+
 boost::unit_test::test_suite *init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     auto *ts = BOOST_TEST_SUITE("Code generator tests");
     ts->add(BOOST_TEST_CASE(testEncoding));
@@ -308,5 +338,6 @@ boost::unit_test::test_suite *init_unit_test_suite(int /*argc*/, char * /*argv*/
     ts->add(BOOST_TEST_CASE(testEncoding2<umu::r1>));
     ts->add(BOOST_TEST_CASE(testNamespace));
     ts->add(BOOST_TEST_CASE(testEmptyRecord));
+    ts->add(BOOST_TEST_CASE(testUnionMethods));
     return ts;
 }
