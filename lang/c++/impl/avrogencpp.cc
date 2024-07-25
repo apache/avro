@@ -663,7 +663,7 @@ void CodeGen::generateUnionTraits(const NodePtr &n) {
             os_ << "            {\n"
                 << "                " << cppTypeOf(nn) << " vv;\n"
                 << "                avro::decode(d, vv);\n"
-                << "                v.set_" << cppNameOf(nn) << "(vv);\n"
+                << "                v.set_" << cppNameOf(nn) << "(std::move(vv));\n"
                 << "            }\n";
         }
         os_ << "            break;\n";
