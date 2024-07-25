@@ -313,12 +313,12 @@ static void generateGetterAndSetter(ostream &os,
 
     os << "inline\n";
 
-    os << type << sn << "get_" << name << "() const {\n"
+    os << "const " << type << "&" << sn << "get_" << name << "() const {\n"
        << "    if (idx_ != " << idx << ") {\n"
        << "        throw avro::Exception(\"Invalid type for "
        << "union " << structName << "\");\n"
        << "    }\n"
-       << "    return std::any_cast<" << type << " >(value_);\n"
+       << "    return *std::any_cast<" << type << " >(&value_);\n"
        << "}\n\n";
 
     os << "inline\n"
@@ -392,7 +392,7 @@ string CodeGen::generateUnionType(const NodePtr &n) {
         } else {
             const string &type = types[i];
             const string &name = names[i];
-            os_ << "    " << type << " get_" << name << "() const;\n"
+            os_ << "    " << "const " << type << "& get_" << name << "() const;\n"
                                                         "    void set_"
                 << name << "(const " << type << "& v);\n";
             pendingGettersAndSetters.emplace_back(result, type, name, i);
