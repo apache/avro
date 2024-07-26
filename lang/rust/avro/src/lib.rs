@@ -38,8 +38,7 @@
 //! There are basically two ways of handling Avro data in Rust:
 //!
 //! * **as Avro-specialized data types** based on an Avro schema;
-//! * **as generic Rust serde-compatible types** implementing/deriving `Serialize` and
-//! `Deserialize`;
+//! * **as generic Rust serde-compatible types** implementing/deriving `Serialize` and `Deserialize`;
 //!
 //! **apache-avro** provides a way to read and write both these data representations easily and
 //! efficiently.
@@ -279,15 +278,15 @@
 //!
 //! * **Null**: leaves data uncompressed;
 //! * **Deflate**: writes the data block using the deflate algorithm as specified in RFC 1951, and
-//! typically implemented using the zlib library. Note that this format (unlike the "zlib format" in
-//! RFC 1950) does not have a checksum.
+//!   typically implemented using the zlib library. Note that this format (unlike the "zlib format" in
+//!   RFC 1950) does not have a checksum.
 //! * **Snappy**: uses Google's [Snappy](http://google.github.io/snappy/) compression library. Each
-//! compressed block is followed by the 4-byte, big-endianCRC32 checksum of the uncompressed data in
-//! the block. You must enable the `snappy` feature to use this codec.
+//!   compressed block is followed by the 4-byte, big-endianCRC32 checksum of the uncompressed data in
+//!   the block. You must enable the `snappy` feature to use this codec.
 //! * **Zstandard**: uses Facebook's [Zstandard](https://facebook.github.io/zstd/) compression library.
-//! You must enable the `zstandard` feature to use this codec.
+//!   You must enable the `zstandard` feature to use this codec.
 //! * **Bzip2**: uses [BZip2](https://sourceware.org/bzip2/) compression library.
-//! You must enable the `bzip` feature to use this codec.
+//!   You must enable the `bzip` feature to use this codec.
 //! * **Xz**: uses [xz2](https://github.com/alexcrichton/xz2-rs) compression library.
 //!   You must enable the `xz` feature to use this codec.
 //!
@@ -644,7 +643,7 @@
 //!
 //!     let mut record = Record::new(writer.schema()).unwrap();
 //!     record.put("decimal_fixed", Decimal::from(9936.to_bigint().unwrap().to_signed_bytes_be()));
-//!     record.put("decimal_var", Decimal::from((-32442.to_bigint().unwrap()).to_signed_bytes_be()));
+//!     record.put("decimal_var", Decimal::from(((-32442).to_bigint().unwrap()).to_signed_bytes_be()));
 //!     record.put("uuid", uuid::Uuid::parse_str("550e8400-e29b-41d4-a716-446655440000").unwrap());
 //!     record.put("date", Value::Date(1));
 //!     record.put("time_millis", Value::TimeMillis(2));
@@ -803,14 +802,14 @@
 //!
 //! The library provides two implementations of schema equality comparators:
 //! 1. `SpecificationEq` - a comparator that serializes the schemas to their
-//! canonical forms (i.e. JSON) and compares them as strings. It is the only implementation
-//! until apache_avro 0.16.0.
-//! See the [Avro specification](https://avro.apache.org/docs/1.11.1/specification/#parsing-canonical-form-for-schemas)
-//! for more information!
+//!    canonical forms (i.e. JSON) and compares them as strings. It is the only implementation
+//!    until apache_avro 0.16.0.
+//!    See the [Avro specification](https://avro.apache.org/docs/1.11.1/specification/#parsing-canonical-form-for-schemas)
+//!    for more information!
 //! 2. `StructFieldEq` - a comparator that compares the schemas structurally.
-//! It is faster than the `SpecificationEq` because it returns `false` as soon as a difference
-//! is found and is recommended for use!
-//! It is the default comparator since apache_avro 0.17.0.
+//!    It is faster than the `SpecificationEq` because it returns `false` as soon as a difference
+//!    is found and is recommended for use!
+//!    It is the default comparator since apache_avro 0.17.0.
 //!
 //! To use a custom comparator, you need to implement the `SchemataEq` trait and set it using the
 //! `set_schemata_equality_comparator` function:
