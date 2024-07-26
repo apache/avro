@@ -418,6 +418,7 @@ string CodeGen::generateUnionType(const NodePtr &n) {
     os_ << "    };\n";
 
     os_ << "    size_t idx() const { return idx_; }\n";
+    os_ << "    Branch branch() const { return static_cast<Branch>(idx_); }\n";
 
     for (size_t i = 0; i < c; ++i) {
         const NodePtr &nn = n->leafAt(i);
