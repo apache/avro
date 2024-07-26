@@ -157,6 +157,9 @@ do
       # runs RAT on artifacts
       mvn -N -P rat antrun:run verify
 
+      # install java artifacts required by other builds and interop tests
+      mvn -B install -DskipTests
+
       mkdir -p dist
       (cd build; tar czf "../dist/${SRC_DIR}.tar.gz" "${SRC_DIR}")
 
