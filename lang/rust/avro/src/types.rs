@@ -46,7 +46,7 @@ fn max_prec_for_len(len: usize) -> Result<usize, Error> {
 /// A valid Avro value.
 ///
 /// More information about Avro values can be found in the [Avro
-/// Specification](https://avro.apache.org/docs/current/spec.html#schemas)
+/// Specification](https://avro.apache.org/docs/current/specification/#schema-declaration)
 #[derive(Clone, Debug, PartialEq, strum_macros::EnumDiscriminants)]
 #[strum_discriminants(name(ValueKind))]
 pub enum Value {
@@ -366,7 +366,7 @@ impl TryFrom<Value> for JsonValue {
 impl Value {
     /// Validate the value against the given [Schema](../schema/enum.Schema.html).
     ///
-    /// See the [Avro specification](https://avro.apache.org/docs/current/spec.html)
+    /// See the [Avro specification](https://avro.apache.org/docs/current/specification)
     /// for the full set of rules of schema validation.
     pub fn validate(&self, schema: &Schema) -> bool {
         self.validate_schemata(vec![schema])
@@ -623,7 +623,7 @@ impl Value {
     /// Attempt to perform schema resolution on the value, with the given
     /// [Schema](../schema/enum.Schema.html).
     ///
-    /// See [Schema Resolution](https://avro.apache.org/docs/current/spec.html#Schema+Resolution)
+    /// See [Schema Resolution](https://avro.apache.org/docs/current/specification/#schema-resolution)
     /// in the Avro specification for the full set of rules of schema
     /// resolution.
     pub fn resolve(self, schema: &Schema) -> AvroResult<Self> {
@@ -635,7 +635,7 @@ impl Value {
     /// Attempt to perform schema resolution on the value, with the given
     /// [Schema](../schema/enum.Schema.html) and set of schemas to use for Refs resolution.
     ///
-    /// See [Schema Resolution](https://avro.apache.org/docs/current/spec.html#Schema+Resolution)
+    /// See [Schema Resolution](https://avro.apache.org/docs/current/specification/#schema-resolution)
     /// in the Avro specification for the full set of rules of schema
     /// resolution.
     pub fn resolve_schemata(self, schema: &Schema, schemata: Vec<&Schema>) -> AvroResult<Self> {
