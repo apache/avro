@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <unordered_set>
+#include <vector>
 
 #include "Node.hh"
 
@@ -186,6 +187,18 @@ void Node::setLogicalType(LogicalType logicalType) {
         case LogicalType::TIMESTAMP_MICROS:
             if (type_ != AVRO_LONG) {
                 throw Exception("TIMESTAMP-MICROS logical type can only annotate "
+                                "LONG type");
+            }
+            break;
+        case LogicalType::LOCAL_TIMESTAMP_MILLIS:
+            if (type_ != AVRO_LONG) {
+                throw Exception("LOCAL_TIMESTAMP-MILLIS logical type can only annotate "
+                                "LONG type");
+            }
+            break;
+        case LogicalType::LOCAL_TIMESTAMP_MICROS:
+            if (type_ != AVRO_LONG) {
+                throw Exception("LOCAL_TIMESTAMP-MICROS logical type can only annotate "
                                 "LONG type");
             }
             break;
