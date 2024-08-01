@@ -768,5 +768,7 @@ avro_value_iface_t  AVRO_DATUM_VALUE_CLASS =
 	/* compound setters */
 	avro_datum_value_append,
 	avro_datum_value_add,
-	avro_datum_value_set_branch
+	avro_datum_value_set_branch,
+	NULL, /* get_decimal */
+	NULL, /* set_decimal */
 };
