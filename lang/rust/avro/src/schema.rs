@@ -1022,7 +1022,7 @@ impl Schema {
     /// Converts `self` into its [Parsing Canonical Form].
     ///
     /// [Parsing Canonical Form]:
-    /// https://avro.apache.org/docs/1.8.2/specification/#parsing-canonical-form-for-schemas
+    /// https://avro.apache.org/docs/current/specification/#parsing-canonical-form-for-schemas
     pub fn canonical_form(&self) -> String {
         let json = serde_json::to_value(self)
             .unwrap_or_else(|e| panic!("Cannot parse Schema from JSON: {e}"));
@@ -1032,7 +1032,7 @@ impl Schema {
     /// Generate [fingerprint] of Schema's [Parsing Canonical Form].
     ///
     /// [Parsing Canonical Form]:
-    /// https://avro.apache.org/docs/1.8.2/specification/#parsing-canonical-form-for-schemas
+    /// https://avro.apache.org/docs/current/specification/#parsing-canonical-form-for-schemas
     /// [fingerprint]:
     /// https://avro.apache.org/docs/current/specification/#schema-fingerprints
     pub fn fingerprint<D: Digest>(&self) -> SchemaFingerprint {
@@ -2143,7 +2143,7 @@ impl Serialize for RecordField {
 }
 
 /// Parses a **valid** avro schema into the Parsing Canonical Form.
-/// https://avro.apache.org/docs/1.8.2/specification/#parsing-canonical-form-for-schemas
+/// https://avro.apache.org/docs/current/specification/#parsing-canonical-form-for-schemas
 fn parsing_canonical_form(schema: &Value) -> String {
     match schema {
         Value::Object(map) => pcf_map(map),
