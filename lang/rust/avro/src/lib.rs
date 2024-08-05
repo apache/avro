@@ -157,7 +157,7 @@
 //!
 //! For more information about schemas and what kind of information you can encapsulate in them,
 //! please refer to the appropriate section of the
-//! [Avro Specification](https://avro.apache.org/docs/current/spec.html#schemas).
+//! [Avro Specification](https://avro.apache.org/docs/current/specification/#schema-declaration).
 //!
 //! # Writing data
 //!
@@ -390,7 +390,7 @@
 //! The library will also automatically perform schema resolution while reading the data.
 //!
 //! For more information about schema compatibility and resolution, please refer to the
-//! [Avro Specification](https://avro.apache.org/docs/current/spec.html#schemas).
+//! [Avro Specification](https://avro.apache.org/docs/current/specification/#schema-declaration).
 //!
 //! As usual, there are two ways to handle Avro data in Rust, as you can see below.
 //!
@@ -538,7 +538,7 @@
 //! }
 //! ```
 //!
-//! `apache-avro` also supports the logical types listed in the [Avro specification](https://avro.apache.org/docs/current/spec.html#Logical+Types):
+//! `apache-avro` also supports the logical types listed in the [Avro specification](https://avro.apache.org/docs/current/specification/#logical-types):
 //!
 //! 1. `Decimal` using the [`num_bigint`](https://docs.rs/num-bigint/latest/num_bigint) crate
 //! 1. UUID using the [`uuid`](https://docs.rs/uuid/latest/uuid) crate
