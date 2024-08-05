@@ -34,5 +34,5 @@ readme = "README.md"
 anyhow = { default-features = false, version = "1.0.86", features = ["std"] }
 better-panic = { default-features = false, version = "0.3.0" }
 ctor = { default-features = false, version = "0.2.8" }
-env_logger = { default-features = false, version = "0.10.2" }
+env_logger = { default-features = false, version = "0.11.5" }
 log = { workspace = true }
