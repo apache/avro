@@ -39,10 +39,10 @@ fn fp_table() -> &'static [i64; 256] {
     })
 }
 
-/// Implementation of the Rabin fingerprint algorithm using the Digest trait as described in [schema_fingerprints](https://avro.apache.org/docs/current/spec.html#schema_fingerprints).
+/// Implementation of the Rabin fingerprint algorithm using the Digest trait as described in [schema_fingerprints](https://avro.apache.org/docs/current/specification/#schema-fingerprints).
 ///
 /// The digest is returned as the 8-byte little-endian encoding of the Rabin hash.
-/// This is what is used for avro [single object encoding](https://avro.apache.org/docs/current/spec.html#single_object_encoding)
+/// This is what is used for avro [single object encoding](https://avro.apache.org/docs/current/specification/#single-object-encoding)
 ///
 /// ```rust
 /// use apache_avro::rabin::Rabin;
@@ -114,7 +114,7 @@ impl Reset for Rabin {
 
 impl OutputSizeUser for Rabin {
     // 8-byte little-endian form of the i64
-    // See: https://avro.apache.org/docs/current/spec.html#single_object_encoding
+    // See: https://avro.apache.org/docs/current/specification/#single-object-encoding
     type OutputSize = U8;
 }
 
