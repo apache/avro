@@ -933,10 +933,10 @@ impl Value {
     /// IEEE 754 NaN and infinities are not valid JSON numbers.
     /// So they are represented in JSON as strings.
     fn parse_special_float(value: &str) -> Option<f32> {
-        match value.trim().to_ascii_lowercase().as_str() {
-            "nan" | "+nan" | "-nan" => Some(f32::NAN),
-            "inf" | "+inf" | "infinity" | "+infinity" => Some(f32::INFINITY),
-            "-inf" | "-infinity" => Some(f32::NEG_INFINITY),
+        match value {
+            "NaN" => Some(f32::NAN),
+            "INF" | "Infinity" => Some(f32::INFINITY),
+            "-INF" | "-Infinity" => Some(f32::NEG_INFINITY),
             _ => None,
         }
     }
@@ -3142,10 +3142,13 @@ Field with name '"b"' is not a member of the map items"#,
     #[test]
     fn avro_4024_resolve_double_from_unknown_string_err() -> TestResult {
         let schema = Schema::parse_str(r#"{"type": "double"}"#)?;
-        let value = Value::String("blah".to_owned());
+        let value = Value::String("unknown".to_owned());
         match value.resolve(&schema) {
             Err(err @ Error::GetDouble(_)) => {
-                assert_eq!(format!("{err:?}"), r#"Double expected, got String("blah")"#);
+                assert_eq!(
+                    format!("{err:?}"),
+                    r#"Double expected, got String("unknown")"#
+                );
             }
             other => {
                 panic!("Expected Error::GetDouble, got {other:?}");
@@ -3157,10 +3160,13 @@ Field with name '"b"' is not a member of the map items"#,
     #[test]
     fn avro_4024_resolve_float_from_unknown_string_err() -> TestResult {
         let schema = Schema::parse_str(r#"{"type": "float"}"#)?;
-        let value = Value::String("blah".to_owned());
+        let value = Value::String("unknown".to_owned());
         match value.resolve(&schema) {
             Err(err @ Error::GetFloat(_)) => {
-                assert_eq!(format!("{err:?}"), r#"Float expected, got String("blah")"#);
+                assert_eq!(
+                    format!("{err:?}"),
+                    r#"Float expected, got String("unknown")"#
+                );
             }
             other => {
                 panic!("Expected Error::GetFloat, got {other:?}");
