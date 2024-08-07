@@ -111,7 +111,10 @@ const char *basicSchemas[] = {
     "[{\"name\": \"f1\",\"type\": \"long\",\"extra field\": \"1\"}]}",
     "{\"type\": \"record\",\"name\": \"Test\",\"fields\": "
     "[{\"name\": \"f1\",\"type\": \"long\","
-    "\"extra field1\": \"1\",\"extra field2\": \"2\"}]}"};
+    "\"extra field1\": \"1\",\"extra field2\": \"2\"}]}"
+    ,R"({"type": "record","name": "Test","fields":
+    [{"name": "f1","type": "string", "extra": {"custom1": "value","custom2": true }}]})"
+};
 
 const char *basicSchemaErrors[] = {
     // Record
