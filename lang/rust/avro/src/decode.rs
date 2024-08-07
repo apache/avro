@@ -106,19 +106,19 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
             Schema::Fixed { .. } => {
                 match decode_internal(inner, names, enclosing_namespace, reader)? {
                     Value::Fixed(_, bytes) => Ok(Value::Decimal(Decimal::from(bytes))),
-                    value => Err(Error::FixedValue(value.into())),
+                    value => Err(Error::FixedValue(value)),
                 }
             }
             Schema::Bytes => match decode_internal(inner, names, enclosing_namespace, reader)? {
                 Value::Bytes(bytes) => Ok(Value::Decimal(Decimal::from(bytes))),
-                value => Err(Error::BytesValue(value.into())),
+                value => Err(Error::BytesValue(value)),
             },
             schema => Err(Error::ResolveDecimalSchema(schema.into())),
         },
         Schema::BigDecimal => {
             match decode_internal(&Schema::Bytes, names, enclosing_namespace, reader)? {
                 Value::Bytes(bytes) => deserialize_big_decimal(&bytes).map(Value::BigDecimal),
-                value => Err(Error::BytesValue(value.into())),
+                value => Err(Error::BytesValue(value)),
             }
         }
         Schema::Uuid => {
@@ -138,7 +138,7 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
                 reader,
             )? {
                 Value::String(ref s) => Uuid::from_str(s).map_err(Error::ConvertStrToUuid),
-                value => Err(Error::GetUuidFromStringValue(value.into())),
+                value => Err(Error::GetUuidFromStringValue(value)),
             };
 
             let uuid: Uuid = if len == 16 {

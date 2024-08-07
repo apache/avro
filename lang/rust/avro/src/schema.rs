@@ -1489,6 +1489,14 @@ impl Parser {
                         |_| -> AvroResult<Schema> { Ok(Schema::TimestampMicros) },
                     );
                 }
+                "timestamp-nanos" => {
+                    return try_convert_to_logical_type(
+                        "timestamp-nanos",
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
+                        &[SchemaKind::Long],
+                        |_| -> AvroResult<Schema> { Ok(Schema::TimestampNanos) },
+                    );
+                }
                 "local-timestamp-millis" => {
                     return try_convert_to_logical_type(
                         "local-timestamp-millis",
@@ -1503,6 +1511,14 @@ impl Parser {
                         parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
                         |_| -> AvroResult<Schema> { Ok(Schema::LocalTimestampMicros) },
+                    );
+                }
+                "local-timestamp-nanos" => {
+                    return try_convert_to_logical_type(
+                        "local-timestamp-nanos",
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
+                        &[SchemaKind::Long],
+                        |_| -> AvroResult<Schema> { Ok(Schema::LocalTimestampNanos) },
                     );
                 }
                 "duration" => {
