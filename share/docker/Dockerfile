@@ -96,7 +96,7 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
 
 # Required for Dotnet
 RUN export ARCH="$(dpkg --print-architecture)"; \
-  export LIBSSL_DEB="libssl1.1_1.1.1f-1ubuntu2.22_$ARCH.deb"; \
+  export LIBSSL_DEB="libssl1.1_1.1.1f-1ubuntu2.23_$ARCH.deb"; \
   wget -q "http://security.ubuntu.com/ubuntu/pool/main/o/openssl/$LIBSSL_DEB" || \
     wget -q "http://ports.ubuntu.com/ubuntu-ports/pool/main/o/openssl/$LIBSSL_DEB"; \
   dpkg -i "$LIBSSL_DEB"; \
