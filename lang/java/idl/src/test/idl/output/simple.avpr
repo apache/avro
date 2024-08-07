@@ -78,6 +78,14 @@
       "name": "prop",
       "type": [ "null" , {"type":"string", "foo.foo.bar": 42, "foo.foo.foo": "3foo"} ],
       "default": null
+    }, {
+      "name": "numbers",
+      "type": {"type: array", "items": "int"},
+      "default": []
+    }, {
+      "name": "dictionary",
+      "type": {"type: map", "items": "string"},
+      "default": {}
     }],
     "my-property" : {
       "key" : 3
