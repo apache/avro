@@ -908,6 +908,10 @@ impl Value {
             Value::Long(n) => Ok(Value::Float(n as f32)),
             Value::Float(x) => Ok(Value::Float(x)),
             Value::Double(x) => Ok(Value::Float(x as f32)),
+            Value::String(x) => match Self::parse_special_float(&x) {
+                Some(f) => Ok(Value::Float(f)),
+                None => Err(Error::GetFloat(ValueKind::String)),
+            },
             other => Err(Error::GetFloat(other.into())),
         }
     }
@@ -918,7 +922,22 @@ impl Value {
             Value::Long(n) => Ok(Value::Double(n as f64)),
             Value::Float(x) => Ok(Value::Double(f64::from(x))),
             Value::Double(x) => Ok(Value::Double(x)),
+            Value::String(x) => match Self::parse_special_float(&x) {
+                Some(f) => Ok(Value::Double(f.into())),
+                None => Err(Error::GetDouble(ValueKind::String)),
+            },
             other => Err(Error::GetDouble(other.into())),
+        }
+    }
+
+    /// IEEE 754 NaN and infinities are not valid JSON numbers.
+    /// So they are represented in JSON as strings.
+    fn parse_special_float(s: &str) -> Option<f32> {
+        match s.trim().to_ascii_lowercase().as_str() {
+            "nan" | "+nan" | "-nan" => Some(f32::NAN),
+            "inf" | "+inf" | "infinity" | "+infinity" => Some(f32::INFINITY),
+            "-inf" | "-infinity" => Some(f32::NEG_INFINITY),
+            _ => None,
         }
     }
 
