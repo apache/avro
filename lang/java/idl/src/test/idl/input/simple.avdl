@@ -65,6 +65,9 @@ protocol Simple {
     @foo.bar.bar("foo.bar2") array<string> a = [];
     // An optional type with a null default value (results in a union with null first).
     @foo.foo.bar(42) @foo.foo.foo("3foo") string? prop = null;
+    // Arrays and maps can have empty defaults
+    array<int> numbers = [];
+    map<string> dictionary = {};
   }
 
   /** An MD5 hash. */
