@@ -138,7 +138,7 @@ unionType: Union LBrace types+=fullType (Comma types+=fullType)* RBrace;
 
 jsonValue: jsonObject | jsonArray | jsonLiteral;
 jsonLiteral: literal=(StringLiteral | IntegerLiteral | FloatingPointLiteral | BTrue | BFalse | Null);
-jsonObject: LBrace jsonPairs+=jsonPair (Comma jsonPairs+=jsonPair)* RBrace;
+jsonObject: LBrace (jsonPairs+=jsonPair (Comma jsonPairs+=jsonPair)*)? RBrace;
 jsonPair: name=StringLiteral Colon value=jsonValue;
 jsonArray: LBracket (jsonValues+=jsonValue (Comma jsonValues+=jsonValue)*)? RBracket;
 
