@@ -441,7 +441,7 @@ struct TestSchema {
         concepts::MultiAttribute<CustomAttributes> customAttributes;
 
         CustomAttributes cf;
-        cf.addAttribute("stringField", std::string("\\\"field value with \\\"double quotes\\\"\\\""));
+        cf.addAttribute("stringField", std::string(R"("\"field value with \"double quotes\"\"")"));
         cf.addAttribute("booleanField", std::string("true"));
         cf.addAttribute("numberField", std::string("1.23"));
         cf.addAttribute("nullField", std::string("null"));
@@ -457,11 +457,11 @@ struct TestSchema {
         std::string expectedJsonWithCustomAttribute =
             "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
             "[{\"name\": \"f1\", \"type\": \"long\", "
-            "\"arrayField\": \"[1]\", "
-            "\"booleanField\": \"true\", "
-            "\"mapField\": \"{\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}\", "
-            "\"nullField\": \"null\", "
-            "\"numberField\": \"1.23\", "
+            "\"arrayField\": [1], "
+            "\"booleanField\": true, "
+            "\"mapField\": {\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}, "
+            "\"nullField\": null, "
+            "\"numberField\": 1.23, "
             "\"stringField\": \"\\\"field value with \\\"double quotes\\\"\\\"\""
             "}]}";
         testNodeRecord(nodeRecordWithCustomAttribute,
