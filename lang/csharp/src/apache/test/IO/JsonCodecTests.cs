@@ -274,7 +274,7 @@ namespace Avro.Test
         [TestCase("float", "1.0", (float)1.0)]
         [TestCase("double", "0", (double)0)]
         [TestCase("double", "1", (double)1)]
-        [TestCase("double", "1.0", (double)1.0)]
+        [TestCase("double", "1.0", 1.0)]
         [TestCase("float", "\"NaN\"", float.NaN)]
         [TestCase("float", "\"Infinity\"", float.PositiveInfinity)]
         [TestCase("float", "\"INF\"", float.PositiveInfinity)]
