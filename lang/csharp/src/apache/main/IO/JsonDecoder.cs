@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -182,10 +182,25 @@ namespace Avro.IO
                 reader.Read();
                 return result;
             }
-            else
+            else if (reader.TokenType == JsonToken.String)
             {
-                throw TypeError("float");
+                string str = Convert.ToString(reader.Value);
+                reader.Read();
+                if (IsNaNString(str))
+                {
+                    return float.NaN;
+                }
+                else if (IsPositiveInfinityString(str))
+                {
+                    return float.PositiveInfinity;
+                }
+                else if (IsNegativeInfinityString(str))
+                {
+                    return float.NegativeInfinity;
+                }
             }
+
+            throw TypeError("float");
         }
 
         /// <inheritdoc />
@@ -198,10 +213,25 @@ namespace Avro.IO
                 reader.Read();
                 return result;
             }
-            else
+            else if (reader.TokenType == JsonToken.String)
             {
-                throw TypeError("double");
+                string str = Convert.ToString(reader.Value);
+                reader.Read();
+                if (IsNaNString(str))
+                {
+                    return double.NaN;
+                }
+                else if (IsPositiveInfinityString(str))
+                {
+                    return double.PositiveInfinity;
+                }
+                else if (IsNegativeInfinityString(str))
+                {
+                    return double.NegativeInfinity;
+                }
             }
+
+            throw TypeError("double");
         }
 
         /// <inheritdoc />
@@ -755,6 +785,23 @@ namespace Avro.IO
                 pos++;
                 return true;
             }
+        }
+
+        private bool IsNaNString(string str)
+        {
+            return str.Equals("NaN", StringComparison.Ordinal);
+        }
+
+        private bool IsPositiveInfinityString(string str)
+        {
+            return str.Equals("Infinity", StringComparison.Ordinal) ||
+                   str.Equals("INF", StringComparison.Ordinal);
+        }
+
+        private bool IsNegativeInfinityString(string str)
+        {
+            return str.Equals("-Infinity", StringComparison.Ordinal) ||
+                   str.Equals("-INF", StringComparison.Ordinal);
         }
 
         private AvroTypeException TypeError(string type)
