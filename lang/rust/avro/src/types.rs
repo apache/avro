@@ -908,11 +908,11 @@ impl Value {
             Value::Long(n) => Ok(Value::Float(n as f32)),
             Value::Float(x) => Ok(Value::Float(x)),
             Value::Double(x) => Ok(Value::Float(x as f32)),
-            Value::String(x) => match Self::parse_special_float(&x) {
+            Value::String(ref x) => match Self::parse_special_float(x) {
                 Some(f) => Ok(Value::Float(f)),
-                None => Err(Error::GetFloat(ValueKind::String)),
+                None => Err(Error::GetFloat(self)),
             },
-            other => Err(Error::GetFloat(other.into())),
+            other => Err(Error::GetFloat(other)),
         }
     }
 
@@ -922,21 +922,21 @@ impl Value {
             Value::Long(n) => Ok(Value::Double(n as f64)),
             Value::Float(x) => Ok(Value::Double(f64::from(x))),
             Value::Double(x) => Ok(Value::Double(x)),
-            Value::String(x) => match Self::parse_special_float(&x) {
-                Some(f) => Ok(Value::Double(f.into())),
-                None => Err(Error::GetDouble(ValueKind::String)),
+            Value::String(ref x) => match Self::parse_special_float(x) {
+                Some(f) => Ok(Value::Double(f64::from(f))),
+                None => Err(Error::GetDouble(self)),
             },
-            other => Err(Error::GetDouble(other.into())),
+            other => Err(Error::GetDouble(other)),
         }
     }
 
     /// IEEE 754 NaN and infinities are not valid JSON numbers.
     /// So they are represented in JSON as strings.
-    fn parse_special_float(s: &str) -> Option<f32> {
-        match s.trim().to_ascii_lowercase().as_str() {
-            "nan" | "+nan" | "-nan" => Some(f32::NAN),
-            "inf" | "+inf" | "infinity" | "+infinity" => Some(f32::INFINITY),
-            "-inf" | "-infinity" => Some(f32::NEG_INFINITY),
+    fn parse_special_float(value: &str) -> Option<f32> {
+        match value {
+            "NaN" => Some(f32::NAN),
+            "INF" | "Infinity" => Some(f32::INFINITY),
+            "-INF" | "-Infinity" => Some(f32::NEG_INFINITY),
             _ => None,
         }
     }
@@ -3137,5 +3137,41 @@ Field with name '"b"' is not a member of the map items"#,
                 .collect()
             )
         );
+    }
+
+    #[test]
+    fn avro_4024_resolve_double_from_unknown_string_err() -> TestResult {
+        let schema = Schema::parse_str(r#"{"type": "double"}"#)?;
+        let value = Value::String("unknown".to_owned());
+        match value.resolve(&schema) {
+            Err(err @ Error::GetDouble(_)) => {
+                assert_eq!(
+                    format!("{err:?}"),
+                    r#"Double expected, got String("unknown")"#
+                );
+            }
+            other => {
+                panic!("Expected Error::GetDouble, got {other:?}");
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn avro_4024_resolve_float_from_unknown_string_err() -> TestResult {
+        let schema = Schema::parse_str(r#"{"type": "float"}"#)?;
+        let value = Value::String("unknown".to_owned());
+        match value.resolve(&schema) {
+            Err(err @ Error::GetFloat(_)) => {
+                assert_eq!(
+                    format!("{err:?}"),
+                    r#"Float expected, got String("unknown")"#
+                );
+            }
+            other => {
+                panic!("Expected Error::GetFloat, got {other:?}");
+            }
+        }
+        Ok(())
     }
 }
