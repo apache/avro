@@ -189,10 +189,10 @@ pub enum Error {
     GetLong(ValueKind),
 
     #[error("Double expected, got {0:?}")]
-    GetDouble(ValueKind),
+    GetDouble(Value),
 
     #[error("Float expected, got {0:?}")]
-    GetFloat(ValueKind),
+    GetFloat(Value),
 
     #[error("Bytes expected, got {0:?}")]
     GetBytes(ValueKind),
