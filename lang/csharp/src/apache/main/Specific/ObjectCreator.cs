@@ -34,9 +34,14 @@ namespace Avro.Specific
         public static ObjectCreator Instance { get; } = new ObjectCreator();
 
         /// <summary>
-        /// Static generic dictionary type used for creating new dictionary instances
+        /// Static generic dictionary type used for creating new Dictionary instances
         /// </summary>
         private readonly Type GenericMapType = typeof(Dictionary<,>);
+
+        /// <summary>
+        /// Static generic dictionary type used for creating new IDictionary instances
+        /// </summary>
+        private readonly Type GenericIMapType = typeof(IDictionary<,>);
 
         /// <summary>
         /// Static generic list type used for creating new array instances
@@ -88,6 +93,14 @@ namespace Avro.Specific
                 if (TryGetIListItemTypeName(name, out var itemTypeName))
                 {
                     return GenericIListType.MakeGenericType(FindType(itemTypeName));
+                }
+
+                if (TryGetIDictionaryItemTypeName(name, out var itemTypesName))
+                {
+                    var key = itemTypesName[0].GetType().Name;
+                    var value = itemTypesName[1];
+
+                    return GenericIMapType.MakeGenericType(FindType(key), FindType(value));
                 }
 
                 if (TryGetNullableItemTypeName(name, out itemTypeName))
@@ -168,6 +181,40 @@ namespace Avro.Specific
             return false;
         }
 
+        private bool TryGetIDictionaryItemTypeName(string name, out string[] itemTypesName)
+        {
+            const string dictionaryPrefix = "IDictionary<";
+            const string fullDictionaryPrefix = "System.Collections.Generic.IDictionary<";
+            string[] separators = { ", ", "," };
+
+            if (!name.EndsWith(">", StringComparison.Ordinal))
+            {
+                itemTypesName = null;
+                return false;
+            }
+
+            if (name.StartsWith(fullDictionaryPrefix, StringComparison.Ordinal))
+            {
+                itemTypesName = name
+                    .Substring(dictionaryPrefix.Length, name.Length - dictionaryPrefix.Length - 1)
+                    .Split(separators, 2, StringSplitOptions.None);
+
+                return true;
+            }
+
+            if (name.StartsWith(dictionaryPrefix, StringComparison.Ordinal))
+            {
+                itemTypesName = name
+                    .Substring(dictionaryPrefix.Length, name.Length - dictionaryPrefix.Length - 1)
+                    .Split(separators, 2, StringSplitOptions.None);
+
+                return true;
+            }
+
+            itemTypesName = null;
+            return false;
+        }
+
         private bool TryGetNullableItemTypeName(string name, out string itemTypeName)
         {
             const string nullablePrefix = "Nullable<";
@@ -201,87 +248,88 @@ namespace Avro.Specific
         /// </exception>
         public Type GetType(Schema schema)
         {
-            switch(schema.Tag) {
-            case Schema.Type.Null:
-                break;
-            case Schema.Type.Boolean:
-                return typeof(bool);
-            case Schema.Type.Int:
-                return typeof(int);
-            case Schema.Type.Long:
-                return typeof(long);
-            case Schema.Type.Float:
-                return typeof(float);
-            case Schema.Type.Double:
-                return typeof(double);
-            case Schema.Type.Bytes:
-                return typeof(byte[]);
-            case Schema.Type.String:
-                return typeof(string);
-            case Schema.Type.Union:
-                {
-                    if (schema is UnionSchema unSchema && unSchema.Count == 2)
+            switch (schema.Tag)
+            {
+                case Schema.Type.Null:
+                    break;
+                case Schema.Type.Boolean:
+                    return typeof(bool);
+                case Schema.Type.Int:
+                    return typeof(int);
+                case Schema.Type.Long:
+                    return typeof(long);
+                case Schema.Type.Float:
+                    return typeof(float);
+                case Schema.Type.Double:
+                    return typeof(double);
+                case Schema.Type.Bytes:
+                    return typeof(byte[]);
+                case Schema.Type.String:
+                    return typeof(string);
+                case Schema.Type.Union:
                     {
-                        Schema s1 = unSchema.Schemas[0];
-                        Schema s2 = unSchema.Schemas[1];
+                        if (schema is UnionSchema unSchema && unSchema.Count == 2)
+                        {
+                            Schema s1 = unSchema.Schemas[0];
+                            Schema s2 = unSchema.Schemas[1];
 
-                        // Nullable ?
-                        Type itemType = null;
-                        if (s1.Tag == Schema.Type.Null)
-                        {
-                            itemType = GetType(s2);
-                        }
-                        else if (s2.Tag == Schema.Type.Null)
-                        {
-                            itemType = GetType(s1);
-                        }
-
-                        if (itemType != null)
-                        {
-                            if (itemType.IsValueType && !itemType.IsEnum)
+                            // Nullable ?
+                            Type itemType = null;
+                            if (s1.Tag == Schema.Type.Null)
                             {
-                                try
-                                {
-                                    return GenericNullableType.MakeGenericType(itemType);
-                                }
-                                catch
-                                {
-                                }
+                                itemType = GetType(s2);
+                            }
+                            else if (s2.Tag == Schema.Type.Null)
+                            {
+                                itemType = GetType(s1);
                             }
 
-                            return itemType;
+                            if (itemType != null)
+                            {
+                                if (itemType.IsValueType && !itemType.IsEnum)
+                                {
+                                    try
+                                    {
+                                        return GenericNullableType.MakeGenericType(itemType);
+                                    }
+                                    catch
+                                    {
+                                    }
+                                }
+
+                                return itemType;
+                            }
                         }
+
+                        return typeof(object);
                     }
-
-                    return typeof(object);
-                }
-            case Schema.Type.Array:
-                {
-                    ArraySchema arrSchema = schema as ArraySchema;
-                    Type itemSchema = GetType(arrSchema.ItemSchema);
-
-                    return GenericListType.MakeGenericType(itemSchema);
-                }
-            case Schema.Type.Map:
-                {
-                    MapSchema mapSchema = schema as MapSchema;
-                    Type itemSchema = GetType(mapSchema.ValueSchema);
-
-                    return GenericMapType.MakeGenericType(typeof(string), itemSchema );
-                }
-            case Schema.Type.Enumeration:
-            case Schema.Type.Record:
-            case Schema.Type.Fixed:
-            case Schema.Type.Error:
-                {
-                    // Should all be named types
-                    if (schema is NamedSchema named)
+                case Schema.Type.Array:
                     {
-                        return FindType(named.Fullname);
-                    }
+                        ArraySchema arrSchema = schema as ArraySchema;
+                        Type itemSchema = GetType(arrSchema.ItemSchema);
 
-                    break;
-                }
+                        return GenericListType.MakeGenericType(itemSchema);
+                    }
+                case Schema.Type.Map:
+                    {
+                        MapSchema mapSchema = schema as MapSchema;
+                        Type itemSchema = GetType(mapSchema.ValueSchema);
+
+                        return GenericMapType.MakeGenericType(typeof(string), itemSchema);
+                    }
+                case Schema.Type.Enumeration:
+                case Schema.Type.Record:
+                case Schema.Type.Fixed:
+                case Schema.Type.Error:
+                    {
+                        // Should all be named types
+                        if (schema is NamedSchema named)
+                        {
+                            return FindType(named.Fullname);
+                        }
+
+                        break;
+                    }
             }
 
             // Fallback
