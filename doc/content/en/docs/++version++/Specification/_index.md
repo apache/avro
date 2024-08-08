@@ -107,7 +107,7 @@ For example, a linked-list of 64-bit values may be defined with:
   ]
 }
 ```
-	  
+
 ### Enums
 Enums use the type name "enum" and support the following attributes:
 
@@ -123,10 +123,11 @@ For example, playing card suits might be defined with:
 {
   "type": "enum",
   "name": "Suit",
-  "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
+  "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"],
+  "default" : "CLUBS"
 }
 ```
-	  
+
 ### Arrays
 Arrays use the type name "array" and support a single attribute:
 
@@ -137,10 +138,9 @@ For example, an array of strings is declared with:
 {
   "type": "array",
   "items" : "string",
-  "default": []
 }
 ```
-    
+
 ### Maps
 Maps use the type name "map" and support one attribute:
 
@@ -153,10 +153,9 @@ For example, a map from string to long is declared with:
 {
   "type": "map",
   "values" : "long",
-  "default": {}
 }
 ```
-    
+
 ### Unions
 Unions, as mentioned above, are represented using JSON arrays. For example, `["null", "string"]` declares a schema which may be either a null or string.
 
@@ -340,7 +339,7 @@ For example, the record schema
   ]
 }
 ```
-	    
+
 An instance of this record whose a field has value 27 (encoded as hex 36) and whose b field has value "foo" (encoded as hex bytes 06 66 6f 6f), would be encoded simply as the concatenation of these, namely the hex byte sequence:
 ```
 36 06 66 6f 6f
@@ -479,7 +478,7 @@ A file header is thus described by the following schema:
   ]
 }
 ```
-      
+
 A file data block consists of:
 
 * A long indicating the count of objects in this block.
@@ -578,7 +577,7 @@ For example, one may define a simple HelloWorld protocol with:
   }
 }
 ```
-        
+
 ## Protocol Wire Format
 
 ### Message Transport
@@ -651,7 +650,7 @@ The handshake process uses the following record schemas:
   ]
 }
 ```
-        
+
 * A client first prefixes each request with a `HandshakeRequest` containing just the hash of its protocol and of the server's protocol (`clientHash!=null, clientProtocol=null, serverHash!=null`), where the hashes are 128-bit MD5 hashes of the JSON protocol text. If a client has never connected to a given server, it sends its hash as a guess of the server's hash, otherwise it sends the hash that it previously obtained from this server.
 The server responds with a HandshakeResponse containing one of:
   * `match=BOTH, serverProtocol=null, serverHash=null` if the client sent the valid hash of the server's protocol and the server knows what protocol corresponds to the client's hash. In this case, the request is complete and the response data immediately follows the HandshakeResponse.
