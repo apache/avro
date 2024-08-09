@@ -65,6 +65,9 @@ jobs:
         with:
           maven-version: 3.9.6
 
+      - name: 'Install Java Avro'
+        run: mvn -B install -PskipQuality -DskipTests
+
       - name: Build
         run: ./build.sh clean test
 #          set -x
