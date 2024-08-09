@@ -70,7 +70,7 @@ checksum = "b3d1d046238990b9cf5bcde22a3fb3584ee5cf65fb2765f454ed428c7a0063da"
 
 [[package]]
 name = "apache-avro"
-version = "0.17.0"
+version = "0.18.0"
 dependencies = [
  "anyhow",
  "apache-avro-derive",
@@ -108,7 +108,7 @@ dependencies = [
 
 [[package]]
 name = "apache-avro-derive"
-version = "0.17.0"
+version = "0.18.0"
 dependencies = [
  "apache-avro",
  "darling",
@@ -122,7 +122,7 @@ dependencies = [
 
 [[package]]
 name = "apache-avro-test-helper"
-version = "0.17.0"
+version = "0.18.0"
 dependencies = [
  "anyhow",
  "better-panic",
