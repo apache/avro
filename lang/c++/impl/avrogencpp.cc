@@ -313,12 +313,21 @@ static void generateGetterAndSetter(ostream &os,
 
     os << "inline\n";
 
-    os << type << sn << "get_" << name << "() const {\n"
+    os << "const " << type << "&" << sn << "get_" << name << "() const {\n"
        << "    if (idx_ != " << idx << ") {\n"
        << "        throw avro::Exception(\"Invalid type for "
        << "union " << structName << "\");\n"
        << "    }\n"
-       << "    return std::any_cast<" << type << " >(value_);\n"
+       << "    return *std::any_cast<" << type << " >(&value_);\n"
+       << "}\n\n";
+
+    os << "inline\n"
+       << type << "&" << sn << "get_" << name << "() {\n"
+       << "    if (idx_ != " << idx << ") {\n"
+       << "        throw avro::Exception(\"Invalid type for "
+       << "union " << structName << "\");\n"
+       << "    }\n"
+       << "    return *std::any_cast<" << type << " >(&value_);\n"
        << "}\n\n";
 
     os << "inline\n"
@@ -326,6 +335,13 @@ static void generateGetterAndSetter(ostream &os,
        << "(const " << type << "& v) {\n"
        << "    idx_ = " << idx << ";\n"
        << "    value_ = v;\n"
+       << "}\n\n";
+
+    os << "inline\n"
+       << "void" << sn << "set_" << name
+       << "(" << type << "&& v) {\n"
+       << "    idx_ = " << idx << ";\n"
+       << "    value_ = std::move(v);\n"
        << "}\n\n";
 }
 
@@ -376,8 +392,33 @@ string CodeGen::generateUnionType(const NodePtr &n) {
         << "private:\n"
         << "    size_t idx_;\n"
         << "    std::any value_;\n"
-        << "public:\n"
-        << "    size_t idx() const { return idx_; }\n";
+        << "public:\n";
+
+    os_ << "    /** enum representing union branches as returned by the idx() function */\n"
+        << "    enum class Branch: size_t {\n";
+
+    // generate a enum that maps the branch name to the corresponding index (as returned by idx())
+    std::set<std::string> used_branch_names;
+    for (size_t i = 0; i < c; ++i) {
+        // escape reserved literals for c++
+        auto branch_name = decorate(names[i]);
+        // avoid rare collisions, e.g. somone might name their struct int_
+        if (used_branch_names.find(branch_name) != used_branch_names.end()) {
+            size_t postfix = 2;
+            std::string escaped_name = branch_name + "_" + std::to_string(postfix);
+            while (used_branch_names.find(escaped_name) != used_branch_names.end()) {
+                ++postfix;
+                escaped_name = branch_name + "_" + std::to_string(postfix);
+            }
+            branch_name = escaped_name;
+        }
+        os_ << "        " << branch_name << " = " << i << ",\n";
+        used_branch_names.insert(branch_name);
+    }
+    os_ << "    };\n";
+
+    os_ << "    size_t idx() const { return idx_; }\n";
+    os_ << "    Branch branch() const { return static_cast<Branch>(idx_); }\n";
 
     for (size_t i = 0; i < c; ++i) {
         const NodePtr &nn = n->leafAt(i);
@@ -392,9 +433,11 @@ string CodeGen::generateUnionType(const NodePtr &n) {
         } else {
             const string &type = types[i];
             const string &name = names[i];
-            os_ << "    " << type << " get_" << name << "() const;\n"
-                                                        "    void set_"
-                << name << "(const " << type << "& v);\n";
+            os_ << "    "
+                << "const " << type << "& get_" << name << "() const;\n"
+                << "    " << type << "& get_" << name << "();\n"
+                << "    void set_" << name << "(const " << type << "& v);\n"
+                << "    void set_" << name << "(" << type << "&& v);\n";
             pendingGettersAndSetters.emplace_back(result, type, name, i);
         }
     }
@@ -645,7 +688,7 @@ void CodeGen::generateUnionTraits(const NodePtr &n) {
             os_ << "            {\n"
                 << "                " << cppTypeOf(nn) << " vv;\n"
                 << "                avro::decode(d, vv);\n"
-                << "                v.set_" << cppNameOf(nn) << "(vv);\n"
+                << "                v.set_" << cppNameOf(nn) << "(std::move(vv));\n"
                 << "            }\n";
         }
         os_ << "            break;\n";
@@ -730,6 +773,7 @@ void CodeGen::generate(const ValidSchema &schema) {
 
     os_ << "#include <sstream>\n"
         << "#include <any>\n"
+        << "#include <utility>\n"
         << "#include \"" << includePrefix_ << "Specific.hh\"\n"
         << "#include \"" << includePrefix_ << "Encoder.hh\"\n"
         << "#include \"" << includePrefix_ << "Decoder.hh\"\n"
