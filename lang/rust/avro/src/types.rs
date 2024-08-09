@@ -724,7 +724,7 @@ impl Value {
             Value::String(ref string) => {
                 Value::Uuid(Uuid::from_str(string).map_err(Error::ConvertStrToUuid)?)
             }
-            other => return Err(Error::GetUuid(other.into())),
+            other => return Err(Error::GetUuid(other)),
         })
     }
 
@@ -732,7 +732,7 @@ impl Value {
         Ok(match self {
             bg @ Value::BigDecimal(_) => bg,
             Value::Bytes(b) => Value::BigDecimal(deserialize_big_decimal(&b).unwrap()),
-            other => return Err(Error::GetBigdecimal(other.into())),
+            other => return Err(Error::GetBigDecimal(other)),
         })
     }
 
@@ -748,7 +748,7 @@ impl Value {
                     bytes[8], bytes[9], bytes[10], bytes[11],
                 ]))
             }
-            other => return Err(Error::ResolveDuration(other.into())),
+            other => return Err(Error::ResolveDuration(other)),
         })
     }
 
@@ -794,21 +794,21 @@ impl Value {
                     Ok(Value::Decimal(Decimal::from(bytes)))
                 }
             }
-            other => Err(Error::ResolveDecimal(other.into())),
+            other => Err(Error::ResolveDecimal(other)),
         }
     }
 
     fn resolve_date(self) -> Result<Self, Error> {
         match self {
             Value::Date(d) | Value::Int(d) => Ok(Value::Date(d)),
-            other => Err(Error::GetDate(other.into())),
+            other => Err(Error::GetDate(other)),
         }
     }
 
     fn resolve_time_millis(self) -> Result<Self, Error> {
         match self {
             Value::TimeMillis(t) | Value::Int(t) => Ok(Value::TimeMillis(t)),
-            other => Err(Error::GetTimeMillis(other.into())),
+            other => Err(Error::GetTimeMillis(other)),
         }
     }
 
@@ -816,7 +816,7 @@ impl Value {
         match self {
             Value::TimeMicros(t) | Value::Long(t) => Ok(Value::TimeMicros(t)),
             Value::Int(t) => Ok(Value::TimeMicros(i64::from(t))),
-            other => Err(Error::GetTimeMicros(other.into())),
+            other => Err(Error::GetTimeMicros(other)),
         }
     }
 
@@ -824,7 +824,7 @@ impl Value {
         match self {
             Value::TimestampMillis(ts) | Value::Long(ts) => Ok(Value::TimestampMillis(ts)),
             Value::Int(ts) => Ok(Value::TimestampMillis(i64::from(ts))),
-            other => Err(Error::GetTimestampMillis(other.into())),
+            other => Err(Error::GetTimestampMillis(other)),
         }
     }
 
@@ -832,7 +832,7 @@ impl Value {
         match self {
             Value::TimestampMicros(ts) | Value::Long(ts) => Ok(Value::TimestampMicros(ts)),
             Value::Int(ts) => Ok(Value::TimestampMicros(i64::from(ts))),
-            other => Err(Error::GetTimestampMicros(other.into())),
+            other => Err(Error::GetTimestampMicros(other)),
         }
     }
 
@@ -840,7 +840,7 @@ impl Value {
         match self {
             Value::TimestampNanos(ts) | Value::Long(ts) => Ok(Value::TimestampNanos(ts)),
             Value::Int(ts) => Ok(Value::TimestampNanos(i64::from(ts))),
-            other => Err(Error::GetTimestampNanos(other.into())),
+            other => Err(Error::GetTimestampNanos(other)),
         }
     }
 
@@ -850,7 +850,7 @@ impl Value {
                 Ok(Value::LocalTimestampMillis(ts))
             }
             Value::Int(ts) => Ok(Value::LocalTimestampMillis(i64::from(ts))),
-            other => Err(Error::GetLocalTimestampMillis(other.into())),
+            other => Err(Error::GetLocalTimestampMillis(other)),
         }
     }
 
@@ -860,7 +860,7 @@ impl Value {
                 Ok(Value::LocalTimestampMicros(ts))
             }
             Value::Int(ts) => Ok(Value::LocalTimestampMicros(i64::from(ts))),
-            other => Err(Error::GetLocalTimestampMicros(other.into())),
+            other => Err(Error::GetLocalTimestampMicros(other)),
         }
     }
 
@@ -868,21 +868,21 @@ impl Value {
         match self {
             Value::LocalTimestampNanos(ts) | Value::Long(ts) => Ok(Value::LocalTimestampNanos(ts)),
             Value::Int(ts) => Ok(Value::LocalTimestampNanos(i64::from(ts))),
-            other => Err(Error::GetLocalTimestampNanos(other.into())),
+            other => Err(Error::GetLocalTimestampNanos(other)),
         }
     }
 
     fn resolve_null(self) -> Result<Self, Error> {
         match self {
             Value::Null => Ok(Value::Null),
-            other => Err(Error::GetNull(other.into())),
+            other => Err(Error::GetNull(other)),
         }
     }
 
     fn resolve_boolean(self) -> Result<Self, Error> {
         match self {
             Value::Boolean(b) => Ok(Value::Boolean(b)),
-            other => Err(Error::GetBoolean(other.into())),
+            other => Err(Error::GetBoolean(other)),
         }
     }
 
@@ -890,7 +890,7 @@ impl Value {
         match self {
             Value::Int(n) => Ok(Value::Int(n)),
             Value::Long(n) => Ok(Value::Int(n as i32)),
-            other => Err(Error::GetInt(other.into())),
+            other => Err(Error::GetInt(other)),
         }
     }
 
@@ -898,7 +898,7 @@ impl Value {
         match self {
             Value::Int(n) => Ok(Value::Long(i64::from(n))),
             Value::Long(n) => Ok(Value::Long(n)),
-            other => Err(Error::GetLong(other.into())),
+            other => Err(Error::GetLong(other)),
         }
     }
 
@@ -951,7 +951,7 @@ impl Value {
                     .map(Value::try_u8)
                     .collect::<Result<Vec<_>, _>>()?,
             )),
-            other => Err(Error::GetBytes(other.into())),
+            other => Err(Error::GetBytes(other)),
         }
     }
 
@@ -961,7 +961,7 @@ impl Value {
             Value::Bytes(bytes) | Value::Fixed(_, bytes) => Ok(Value::String(
                 String::from_utf8(bytes).map_err(Error::ConvertToUtf8)?,
             )),
-            other => Err(Error::GetString(other.into())),
+            other => Err(Error::GetString(other)),
         }
     }
 
@@ -982,7 +982,7 @@ impl Value {
                     Err(Error::CompareFixedSizes { size, n: s.len() })
                 }
             }
-            other => Err(Error::GetStringForFixed(other.into())),
+            other => Err(Error::GetStringForFixed(other)),
         }
     }
 
@@ -1018,7 +1018,7 @@ impl Value {
         match self {
             Value::Enum(_raw_index, s) => validate_symbol(s, symbols),
             Value::String(s) => validate_symbol(s, symbols),
-            other => Err(Error::GetEnum(other.into())),
+            other => Err(Error::GetEnum(other)),
         }
     }
 
@@ -1060,7 +1060,7 @@ impl Value {
             )),
             other => Err(Error::GetArray {
                 expected: schema.into(),
-                other: other.into(),
+                other,
             }),
         }
     }
@@ -1084,7 +1084,7 @@ impl Value {
             )),
             other => Err(Error::GetMap {
                 expected: schema.into(),
-                other: other.into(),
+                other,
             }),
         }
     }
@@ -1103,7 +1103,7 @@ impl Value {
                     .iter()
                     .map(|field| (field.name.clone(), field.schema.clone().into()))
                     .collect(),
-                other: other.into(),
+                other,
             }),
         }?;
 
@@ -1164,7 +1164,7 @@ impl Value {
             }
         }
 
-        Err(Error::GetU8(int.into()))
+        Err(Error::GetU8(int))
     }
 }
 
@@ -3147,7 +3147,7 @@ Field with name '"b"' is not a member of the map items"#,
             Err(err @ Error::GetDouble(_)) => {
                 assert_eq!(
                     format!("{err:?}"),
-                    r#"Double expected, got String("unknown")"#
+                    r#"Expected Value::Double, Value::Float, Value::Int, Value::Long or Value::String ("NaN", "INF", "Infinity", "-INF" or "-Infinity"), got: String("unknown")"#
                 );
             }
             other => {
@@ -3165,11 +3165,56 @@ Field with name '"b"' is not a member of the map items"#,
             Err(err @ Error::GetFloat(_)) => {
                 assert_eq!(
                     format!("{err:?}"),
-                    r#"Float expected, got String("unknown")"#
+                    r#"Expected Value::Float, Value::Double, Value::Int, Value::Long or Value::String ("NaN", "INF", "Infinity", "-INF" or "-Infinity"), got: String("unknown")"#
                 );
             }
             other => {
                 panic!("Expected Error::GetFloat, got {other:?}");
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn avro_4029_resolve_from_unsupported_err() -> TestResult {
+        let data: Vec<(&str, Value, &str)> = vec!(
+            (r#"{ "name": "NAME", "type": "int" }"#, Value::Float(123_f32), "Expected Value::Int, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "fixed", "size": 3 }"#, Value::Float(123_f32), "String expected for fixed, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "bytes" }"#, Value::Float(123_f32), "Expected Value::Bytes, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "string", "logicalType": "uuid" }"#, Value::String("abc-1234".into()), "Failed to convert &str to UUID: invalid group count: expected 5, found 2"),
+            (r#"{ "name": "NAME", "type": "string", "logicalType": "uuid" }"#, Value::Float(123_f32), "Expected Value::Uuid, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "bytes", "logicalType": "big-decimal" }"#, Value::Float(123_f32), "Expected Value::BigDecimal, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "fixed", "size": 12, "logicalType": "duration" }"#, Value::Float(123_f32), "Expected Value::Duration or Value::Fixed(12), got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "bytes", "logicalType": "decimal", "precision": 4, "scale": 3 }"#, Value::Float(123_f32), "Expected Value::Decimal, Value::Bytes or Value::Fixed, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "bytes" }"#, Value::Array(vec!(Value::Long(256_i64))), "Unable to convert to u8, got Int(256)"),
+            (r#"{ "name": "NAME", "type": "int", "logicalType": "date" }"#, Value::Float(123_f32), "Expected Value::Date or Value::Int, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "int", "logicalType": "time-millis" }"#, Value::Float(123_f32), "Expected Value::TimeMillis or Value::Int, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "long", "logicalType": "time-micros" }"#, Value::Float(123_f32), "Expected Value::TimeMicros, Value::Long or Value::Int, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "long", "logicalType": "timestamp-millis" }"#, Value::Float(123_f32), "Expected Value::TimestampMillis, Value::Long or Value::Int, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "long", "logicalType": "timestamp-micros" }"#, Value::Float(123_f32), "Expected Value::TimestampMicros, Value::Long or Value::Int, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "long", "logicalType": "timestamp-nanos" }"#, Value::Float(123_f32), "Expected Value::TimestampNanos, Value::Long or Value::Int, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "long", "logicalType": "local-timestamp-millis" }"#, Value::Float(123_f32), "Expected Value::LocalTimestampMillis, Value::Long or Value::Int, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "long", "logicalType": "local-timestamp-micros" }"#, Value::Float(123_f32), "Expected Value::LocalTimestampMicros, Value::Long or Value::Int, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "long", "logicalType": "local-timestamp-nanos" }"#, Value::Float(123_f32), "Expected Value::LocalTimestampNanos, Value::Long or Value::Int, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "null" }"#, Value::Float(123_f32), "Expected Value::Null, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "boolean" }"#, Value::Float(123_f32), "Expected Value::Boolean, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "int" }"#, Value::Float(123_f32), "Expected Value::Int, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "long" }"#, Value::Float(123_f32), "Expected Value::Long or Value::Int, got: Float(123.0)"),
+            (r#"{ "name": "NAME", "type": "float" }"#, Value::Boolean(false), r#"Expected Value::Float, Value::Double, Value::Int, Value::Long or Value::String ("NaN", "INF", "Infinity", "-INF" or "-Infinity"), got: Boolean(false)"#),
+            (r#"{ "name": "NAME", "type": "double" }"#, Value::Boolean(false), r#"Expected Value::Double, Value::Float, Value::Int, Value::Long or Value::String ("NaN", "INF", "Infinity", "-INF" or "-Infinity"), got: Boolean(false)"#),
+            (r#"{ "name": "NAME", "type": "string" }"#, Value::Boolean(false), "Expected Value::String, Value::Bytes or Value::Fixed, got: Boolean(false)"),
+            (r#"{ "name": "NAME", "type": "enum", "symbols": ["one", "two"] }"#, Value::Boolean(false), "Expected Value::Enum, got: Boolean(false)"),
+        );
+
+        for (schema_str, value, expected_error) in data {
+            let schema = Schema::parse_str(schema_str)?;
+            match value.resolve(&schema) {
+                Err(error) => {
+                    assert_eq!(format!("{error}"), expected_error);
+                }
+                other => {
+                    panic!("Expected '{expected_error}', got {other:?}");
+                }
             }
         }
         Ok(())
