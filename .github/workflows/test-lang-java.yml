@@ -64,7 +64,7 @@ jobs:
           maven-version: 3.9.6
 
       - name: 'Install Java Avro'
-        working-directory: .
+        working-directory: /runner/_work/avro/avro
         run: mvn -B install -PskipQuality -DskipTests
 
       - name: 'Java Lint'
