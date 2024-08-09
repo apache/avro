@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,12 +17,18 @@
  */
 
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 using Avro.IO.Parsing;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace Avro.IO
 {
@@ -35,6 +41,7 @@ namespace Avro.IO
     {
         private JsonReader reader;
         private readonly Stack<ReorderBuffer> reorderBuffers = new Stack<ReorderBuffer>();
+        private readonly JsonMode mode;
         private ReorderBuffer currentReorderBuffer;
 
         private class ReorderBuffer
@@ -45,33 +52,47 @@ namespace Avro.IO
             public JsonReader OrigParser { get; set; }
         }
 
-        private JsonDecoder(Symbol root, Stream stream) : base(root)
+        private JsonDecoder(Symbol root, Stream stream, JsonMode mode) : base(root)
         {
+            this.mode = mode;
             Configure(stream);
         }
 
-        private JsonDecoder(Symbol root, string str) : base(root)
+        private JsonDecoder(Symbol root, string str, JsonMode mode) : base(root)
         {
+            this.mode = mode;
             Configure(str);
         }
 
+        private JsonDecoder(Symbol root, JsonReader reader, JsonMode mode) : base(root)
+        {
+            this.mode = mode;
+            Parser.Reset();
+            reorderBuffers.Clear();
+            currentReorderBuffer = null;
+            this.reader = reader;
+            this.reader.DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind;
+            this.reader.DateParseHandling = DateParseHandling.DateTime;
+            this.reader.Read();            
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonDecoder"/> class.
         /// </summary>
-        public JsonDecoder(Schema schema, Stream stream) : this(GetSymbol(schema), stream)
+        public JsonDecoder(Schema schema, Stream stream, JsonMode mode = JsonMode.AvroJson) : this(GetSymbol(schema, mode), stream, mode)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonDecoder"/> class.
         /// </summary>
-        public JsonDecoder(Schema schema, string str) : this(GetSymbol(schema), str)
+        public JsonDecoder(Schema schema, string str, JsonMode mode = JsonMode.AvroJson) : this(GetSymbol(schema, mode), str, mode)
         {
         }
 
-        private static Symbol GetSymbol(Schema schema)
+        private static Symbol GetSymbol(Schema schema, JsonMode mode)
         {
-            return (new JsonGrammarGenerator()).Generate(schema);
+            return (new JsonGrammarGenerator(mode)).Generate(schema);
         }
 
         /// <summary>
@@ -86,6 +107,8 @@ namespace Avro.IO
             reorderBuffers.Clear();
             currentReorderBuffer = null;
             reader = new JsonTextReader(new StreamReader(stream));
+            reader.DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind;
+            reader.DateParseHandling = DateParseHandling.DateTime;
             reader.Read();
         }
 
@@ -101,6 +124,8 @@ namespace Avro.IO
             reorderBuffers.Clear();
             currentReorderBuffer = null;
             reader = new JsonTextReader(new StringReader(str));
+            reader.DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind;
+            reader.DateParseHandling = DateParseHandling.DateTime;
             reader.Read();
         }
 
@@ -172,6 +197,21 @@ namespace Avro.IO
             }
         }
 
+        private decimal ReadDecimal(Symbol symbol)
+        {
+            Advance(symbol);
+            if (reader.TokenType == JsonToken.Integer || reader.TokenType == JsonToken.Float)
+            {
+                decimal result = Convert.ToDecimal(reader.Value);
+                reader.Read();
+                return result;
+            }
+            else
+            {
+                throw TypeError("decimal");
+            }
+        }
+
         /// <inheritdoc />
         public override float ReadFloat()
         {
@@ -208,6 +248,22 @@ namespace Avro.IO
         public override string ReadString()
         {
             Advance(Symbol.String);
+            if (Parser.TopSymbol() is Symbol.ConstCheckAction)
+            {
+                Symbol.ConstCheckAction top = (Symbol.ConstCheckAction)Parser.PopSymbol();
+                string expected = (string)top.Value;
+                if (reader.TokenType != JsonToken.String)
+                {
+                    throw TypeError("string");
+                }
+                string readResult = Convert.ToString(reader.Value);
+                if (!expected.Equals(readResult))
+                {
+                    throw new AvroTypeException("Expected constant value: " + expected + " but received: " + readResult);
+                }
+                reader.Read();
+                return readResult;
+            }
             if (Parser.TopSymbol() == Symbol.MapKeyMarker)
             {
                 Parser.Advance(Symbol.MapKeyMarker);
@@ -227,6 +283,39 @@ namespace Avro.IO
             string result = Convert.ToString(reader.Value);
             reader.Read();
             return result;
+        }
+
+        private DateTime ReadDateTime()
+        {
+            Advance(Symbol.JsonDateTime);
+            if (reader.TokenType == JsonToken.Date)
+            {
+                DateTime result = (DateTime)reader.Value;
+                reader.Read();
+                return result;
+            }
+            else if (reader.TokenType == JsonToken.String)
+            {
+                string dateString = reader.Value.ToString();
+                if (DateTime.TryParseExact(dateString, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime result))
+                {
+                    reader.Read();
+                    return result;
+                }
+                else if (DateTime.TryParseExact(dateString, "O", null, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime result1))
+                {
+                    reader.Read();
+                    return result1;
+                }
+                else
+                {
+                    throw new AvroTypeException("Error parsing date string");
+                }
+            }
+            else
+            {
+                throw TypeError("date");
+            }
         }
 
         /// <inheritdoc />
@@ -270,9 +359,23 @@ namespace Avro.IO
 
         private byte[] ReadByteArray()
         {
-            Encoding iso = Encoding.GetEncoding("ISO-8859-1");
-            byte[] result = iso.GetBytes(Convert.ToString(reader.Value));
-            return result;
+            if (mode == JsonMode.PlainJson)
+            {
+                try
+                {
+                    return Convert.FromBase64String(Convert.ToString(reader.Value));
+                }
+                catch (FormatException e)
+                {
+                    throw new AvroTypeException("Error decoding base64 string: " + e.Message);
+                }
+            }
+            else
+            {
+                Encoding iso = Encoding.GetEncoding("ISO-8859-1");
+                byte[] result = iso.GetBytes(Convert.ToString(reader.Value));
+                return result;
+            }
         }
 
         /// <inheritdoc />
@@ -492,26 +595,151 @@ namespace Avro.IO
             Advance(Symbol.Union);
             Symbol.Alternative a = (Symbol.Alternative)Parser.PopSymbol();
 
-            string label;
+            string label = null;
             if (reader.TokenType == JsonToken.Null)
             {
                 label = "null";
             }
-            else if (reader.TokenType == JsonToken.StartObject)
+            else if (mode == JsonMode.PlainJson)
             {
-                reader.Read();
-                if (reader.TokenType == JsonToken.PropertyName)
+                var symbolCount = a.Symbols.Length;
+
+                if (reader.TokenType == JsonToken.Boolean)
                 {
-                    label = Convert.ToString(reader.Value);
+                    label = "boolean";
+                }
+                else if (reader.TokenType == JsonToken.Integer)
+                {
+                    for (int i = 0; i < symbolCount; i++)
+                    {
+                        var symbol = a.Symbols[i];
+                        if (symbol == Symbol.Int || symbol == Symbol.Long)
+                        {
+                            label = a.Labels[i];
+                            break;
+                        }
+                    }
+                }
+                else if (reader.TokenType == JsonToken.Float)
+                {
+                    for (int i = 0; i < symbolCount; i++)
+                    {
+                        var symbol = a.Symbols[i];
+                        if (symbol == Symbol.Float || symbol == Symbol.Double || symbol == Symbol.Fixed)
+                        {
+                            label = a.Labels[i];
+                            break;
+                        }
+                    }
+                }
+                else if (reader.TokenType == JsonToken.Bytes)
+                {
+                    for (int i = 0; i < symbolCount; i++)
+                    {
+                        var symbol = a.Symbols[i];
+                        if (symbol == Symbol.Bytes || symbol == Symbol.Fixed)
+                        {
+                            label = a.Labels[i];
+                            break;
+                        }
+                    }
+                }
+                else if (reader.TokenType == JsonToken.Date || reader.TokenType == JsonToken.String)
+                {
+                    if (mode == JsonMode.PlainJson)
+                    {
+                        Symbol pushSymbol = Symbol.String;
+                        string dateString = reader.Value.ToString();
+
+                        if (reader.TokenType == JsonToken.Date ||
+                            DateTime.TryParseExact(dateString, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime _) ||
+                            DateTime.TryParseExact(dateString, "O", null, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime _ ))
+                        {
+                            label = "date";
+                            pushSymbol = Symbol.JsonDateTime;
+                        }
+                        else
+                        {
+                            label = "string";
+                        }
+                        if (label == "date")
+                        {
+                            for (int i = 0; i < symbolCount; i++)
+                            {
+                                var symbol = a.Symbols[i];
+                                if (symbol == Symbol.JsonDateTime)
+                                {
+                                    label = a.Labels[i];
+                                    break;
+                                }
+                            }
+                        }
+                        int n1 = a.FindLabel(label);
+                        if (n1 < 0)
+                        {
+                            throw new AvroTypeException("Unknown union branch " + label);
+                        }
+                        Parser.PushSymbol(pushSymbol);
+                        return n1;
+                    }
+                    else
+                    {
+                        label = "string";
+                    }
+                }
+            }
+
+            if (reader.TokenType == JsonToken.StartObject)
+            {
+                if ( mode == JsonMode.AvroJson)
+                {
+                    // in Avro JSON, the object is tagged with the type
                     reader.Read();
-                    Parser.PushSymbol(Symbol.UnionEnd);
+                    if (reader.TokenType == JsonToken.PropertyName)
+                    {
+                        label = Convert.ToString(reader.Value);
+                        reader.Read();
+                        Parser.PushSymbol(Symbol.UnionEnd);
+                    }
+                    else
+                    {
+                        throw TypeError("start-union");
+                    }
                 }
                 else
                 {
-                    throw TypeError("start-union");
+                    // Plain JSON; read the object and infer the type
+                    var objectToken = JToken.ReadFrom(reader);
+                    int matchIndex = -1;
+                    for (int i = 0; i < a.Symbols.Length; i++)
+                    {
+                        if (a.Symbols[i].SymKind == Symbol.Kind.Sequence)
+                        {
+                            JTokenReader objectReader = new JTokenReader(objectToken);
+                            if (IsRecordMatch(a.Symbols[i], objectReader))
+                            {
+                                if (matchIndex >= 0)
+                                {
+                                    throw new AvroTypeException("Ambiguous union: matches both " + a.Labels[matchIndex] + " and " + a.Labels[i]);
+                                }
+                                matchIndex = i;
+                            }
+                        }
+                    }
+                    reader = new CompositeJsonReader(new JTokenReader(objectToken), reader);
+                    reader.Read();
+                    if (matchIndex >= 0)
+                    {
+                        label = a.Labels[matchIndex];
+                        Parser.PushSymbol(Symbol.UnionEnd);
+                    }
+                    else
+                    {
+                        throw new AvroTypeException("Unknown union branch");
+                    }
                 }
             }
-            else
+            else if ( label == null)
             {
                 throw TypeError("start-union");
             }
@@ -524,6 +752,180 @@ namespace Avro.IO
 
             Parser.PushSymbol(a.GetSymbol(n));
             return n;
+        }
+
+        private bool IsRecordMatch(Symbol symbol, JTokenReader objectReader) 
+        {
+            // to determine whether a record matches, we need to read the object and compare it to the schema
+            // this is done by creating a new JsonDecoder on top of the reader and advancing it through the schema
+            // if the schema matches, we return true, otherwise false
+            JsonDecoder innerDecoder = new JsonDecoder(symbol, objectReader, JsonMode.PlainJson);
+
+            // the required start condition is that the reader is at the start of the object
+            // and that the symbol is a Sequence
+            if ( symbol.SymKind != Symbol.Kind.Sequence || objectReader.CurrentToken.Type != JTokenType.Object)
+            {
+                return false;
+            }
+            // advance the inner decoder to the start of the record
+            innerDecoder.Parser.Advance(Symbol.RecordStart);
+            // read the first token of the object
+            innerDecoder.reader.Read();
+            // we're now at the start of the record, so we can start processing the fields
+            // but we need to do so in the Avro schema field order, so we grab the stack
+            // of the parser and clone it
+            var stack = new Stack<Symbol>(innerDecoder.Parser.CloneStack());
+            try
+            {
+                while ( stack.Count > 0 )
+                {
+                    var currentSymbol = stack.Pop();
+                    if (currentSymbol == Symbol.ArrayStart)
+                    {
+                        innerDecoder.ReadArrayStart();
+                    }
+                    else if (currentSymbol == Symbol.ItemEnd)
+                    {
+                        if ( innerDecoder.ReadArrayNext() == 0 )
+                        {
+                            // pop the repeater
+                            stack.Pop();
+                        }
+                    }
+                    else if ( currentSymbol == Symbol.MapStart)
+                    {
+                        innerDecoder.SkipMap();
+                        innerDecoder.reader.Read();
+                    }
+                    else
+                    {
+                        switch (currentSymbol)
+                        {
+                            case Symbol.FieldAdjustAction fa:
+                                break;
+                            case Symbol.ImplicitAction ia:
+                                break;
+                            case Symbol.Repeater r:
+                                foreach(var s in r.Production)
+                                {
+                                    stack.Push(s);
+                                }
+                                break;
+                            default:
+                                innerDecoder.Advance(currentSymbol);
+                                if ( currentSymbol == Symbol.String && stack.Peek() is Symbol.ConstCheckAction)
+                                {
+                                    var constCheck = (Symbol.ConstCheckAction)stack.Pop();
+                                    if ( innerDecoder.reader.TokenType != JsonToken.String || !constCheck.Check(innerDecoder.reader.Value))
+                                    {
+                                        return false;
+                                    }
+                                }
+                                else
+                                if ((currentSymbol == Symbol.Boolean && innerDecoder.reader.TokenType != JsonToken.Boolean) ||
+                                    (currentSymbol == Symbol.Int && innerDecoder.reader.TokenType != JsonToken.Integer) ||
+                                    (currentSymbol == Symbol.Long && innerDecoder.reader.TokenType != JsonToken.Integer) ||
+                                    (currentSymbol == Symbol.Float && innerDecoder.reader.TokenType != JsonToken.Float) ||
+                                    (currentSymbol == Symbol.Double && innerDecoder.reader.TokenType != JsonToken.Float) ||
+                                    (currentSymbol == Symbol.String && innerDecoder.reader.TokenType != JsonToken.String) ||
+                                    (currentSymbol == Symbol.Bytes && innerDecoder.reader.TokenType != JsonToken.String) ||
+                                    (currentSymbol == Symbol.JsonDateTime && innerDecoder.reader.TokenType != JsonToken.Date) ||
+                                    (currentSymbol == Symbol.Fixed && innerDecoder.reader.TokenType != JsonToken.String) ||
+                                    (currentSymbol == Symbol.Enum && innerDecoder.reader.TokenType != JsonToken.String))
+                                {
+                                    return false;
+                                }
+                                innerDecoder.reader.Read();
+                                break;
+                        }
+                    }
+                }
+                innerDecoder.Parser.ProcessTrailingImplicitActions();
+            }
+            catch (AvroTypeException)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <inheritdoc />
+        public override object ReadLogicalTypeValue(LogicalSchema logicalSchema)
+        {
+            switch (logicalSchema.LogicalType)
+            {
+                case Util.LogicalUnixEpochType<DateTime> dt:
+                    if (mode == JsonMode.PlainJson)
+                    {
+                        return dt.ConvertToLogicalValue(ReadDateTime(), logicalSchema);
+                    }
+                    else
+                    {
+                        if (logicalSchema.BaseSchema.Tag == Schema.Type.Long)
+                        {
+                            return dt.ConvertToLogicalValue(ReadLong(), logicalSchema);
+                        }
+                        else
+                        {
+                            return dt.ConvertToLogicalValue(ReadInt(), logicalSchema);
+                        }
+                    }
+                case Util.LogicalUnixEpochType<TimeSpan> ts:
+                    if (mode == JsonMode.PlainJson)
+                    {
+                        return ts.ConvertToLogicalValue(ReadString(), logicalSchema);
+                    }
+                    else
+                    {
+                        if (logicalSchema.BaseSchema.Tag == Schema.Type.Long)
+                        {
+                            return ts.ConvertToLogicalValue(ReadLong(), logicalSchema);
+                        }
+                        else
+                        {
+                            return ts.ConvertToLogicalValue(ReadInt(), logicalSchema);
+                        }
+                    }
+                case Util.Decimal dec:
+                    if (mode == JsonMode.PlainJson)
+                    {
+                        return dec.ConvertToLogicalValue(ReadDecimal(logicalSchema.BaseSchema.Tag == Schema.Type.Bytes?Symbol.Bytes:Symbol.Fixed), logicalSchema);
+                    }
+                    else
+                    {
+                        if (logicalSchema.BaseSchema.Tag == Schema.Type.Fixed)
+                        {
+                            byte[] fixedValue = new byte[((FixedSchema)logicalSchema.BaseSchema).Size];
+                            ReadFixed(fixedValue);
+                            return dec.ConvertToLogicalValue(fixedValue, logicalSchema);
+                        }
+                        else
+                        {
+                            return dec.ConvertToLogicalValue(ReadBytes(), logicalSchema);
+                        }
+                    }
+                default:
+                    break;
+            }
+
+            Schema baseSchema = logicalSchema.BaseSchema;
+            switch (baseSchema.Tag)
+            {
+                case Schema.Type.Int:
+                    return logicalSchema.LogicalType.ConvertToLogicalValue(ReadInt(), logicalSchema);
+                case Schema.Type.Long:
+                    return logicalSchema.LogicalType.ConvertToLogicalValue(ReadLong(), logicalSchema);
+                case Schema.Type.Bytes:
+                    return logicalSchema.LogicalType.ConvertToLogicalValue(ReadBytes(), logicalSchema);
+                case Schema.Type.String:
+                    return logicalSchema.LogicalType.ConvertToLogicalValue(ReadString(), logicalSchema);
+                case Schema.Type.Fixed:
+                    byte[] fixedValue = new byte[((FixedSchema)baseSchema).Size];
+                    ReadFixed(fixedValue);
+                    return logicalSchema.LogicalType.ConvertToLogicalValue(fixedValue, logicalSchema);
+                default:
+                    throw new AvroException($"Unsupported logical type: {logicalSchema.Tag}");
+            }
         }
 
         /// <inheritdoc />
@@ -651,10 +1053,17 @@ namespace Avro.IO
                     if (currentReorderBuffer != null && currentReorderBuffer.SavedFields.Count > 0)
                     {
                         throw TypeError("Unknown fields: " + currentReorderBuffer.SavedFields.Keys
-                            .Aggregate((x, y) => x + ", " + y ));
+                            .Aggregate((x, y) => x + ", " + y));
                     }
 
-                    currentReorderBuffer = reorderBuffers.Pop();
+                    if (reorderBuffers.Count > 0)
+                    {
+                        currentReorderBuffer = reorderBuffers.Pop();
+                    }
+                    else
+                    {
+                        currentReorderBuffer = null;
+                    }
                 }
 
                 // AVRO-2034 advance beyond the end object for the next record.
@@ -760,6 +1169,44 @@ namespace Avro.IO
         private AvroTypeException TypeError(string type)
         {
             return new AvroTypeException("Expected " + type + ". Got " + reader.TokenType);
+        }
+    }
+
+    class CompositeJsonReader : JsonReader
+    {
+        private readonly JsonReader[] readers;
+        private int currentReader;
+
+        public CompositeJsonReader(JsonReader reader1, JsonReader reader2)
+        {
+            this.readers = new[] { reader1, reader2 };
+            currentReader = 0;
+        }
+
+        public override object Value
+        {
+            get { return readers[currentReader].Value; }
+        }
+
+        public override JsonToken TokenType
+        {
+            get { return readers[currentReader].TokenType; }
+        }
+
+        public override bool Read()
+        {
+            if (readers[currentReader].Read())
+            {
+                return true;
+            }
+
+            currentReader++;
+            if (currentReader < readers.Length)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

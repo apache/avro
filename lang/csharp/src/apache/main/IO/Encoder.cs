@@ -189,6 +189,13 @@ namespace Avro.IO
         void WriteFixed(byte[] data, int start, int len);
 
         /// <summary>
+        /// Writes a logical type value
+        /// </summary>
+        /// <param name="value">Value to be written</param>
+        /// <param name="schema">Logical type schema</param>
+        void WriteLogicalTypeValue(object value, LogicalSchema schema);
+
+        /// <summary>
         /// Flushes the encoder.
         /// </summary>
         void Flush();

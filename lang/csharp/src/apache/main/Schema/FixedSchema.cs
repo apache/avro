@@ -43,7 +43,7 @@ namespace Avro
         /// <param name="doc">Documentation for this named schema</param>
         public static FixedSchema Create(string name, int size, string space = null, IEnumerable<string> aliases = null, PropertyMap customProperties = null, string doc = null)
         {
-            return new FixedSchema(new SchemaName(name, space, null, doc), Aliases.GetSchemaNames(aliases, name, space), size, customProperties, new SchemaNames(), doc);
+            return new FixedSchema(new SchemaName(name, space, null, doc, null), Aliases.GetSchemaNames(aliases, name, space), size, customProperties, new SchemaNames(), doc);
         }
 
         /// <summary>

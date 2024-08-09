@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -73,6 +73,9 @@ namespace Avro.IO
 
         /// <inheritdoc />
         public abstract void ReadFixed(byte[] buffer, int start, int length);
+
+        /// <inheritdoc/>
+        public abstract object ReadLogicalTypeValue(LogicalSchema logicalSchema);
 
         /// <inheritdoc />
         public abstract void SkipNull();

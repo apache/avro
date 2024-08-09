@@ -227,7 +227,8 @@ namespace Avro.Generic
                 case Schema.Type.Union:
                     return ReadUnion(reuse, (UnionSchema)writerSchema, readerSchema, d);
                 case Schema.Type.Logical:
-                    return ReadLogical(reuse, (LogicalSchema)writerSchema, readerSchema, d);
+                    LogicalSchema writerLogicalSchema = writerSchema as LogicalSchema;
+                    return Read<object>(writerSchema.Tag, readerSchema, ()=>d.ReadLogicalTypeValue(writerLogicalSchema));
                 default:
                     throw new AvroException("Unknown schema type: " + writerSchema);
             }
@@ -550,22 +551,6 @@ namespace Avro.Generic
                     throw new AvroException("Schema mismatch. Reader: " + ReaderSchema + ", writer: " + WriterSchema);
 
             return Read(reuse, ws, readerSchema, d);
-        }
-
-        /// <summary>
-        /// Deserializes an object based on the writer's logical schema. Uses the underlying logical type to convert
-        /// the value to the logical type.
-        /// </summary>
-        /// <param name="reuse">If appropriate, uses this object instead of creating a new one.</param>
-        /// <param name="writerSchema">The UnionSchema that the writer used.</param>
-        /// <param name="readerSchema">The schema the reader uses.</param>
-        /// <param name="d">The decoder for serialization.</param>
-        /// <returns>The deserialized object.</returns>
-        protected virtual object ReadLogical(object reuse, LogicalSchema writerSchema, Schema readerSchema, Decoder d)
-        {
-            LogicalSchema ls = (LogicalSchema)readerSchema;
-
-            return writerSchema.LogicalType.ConvertToLogicalValue(Read(reuse, writerSchema.BaseSchema, ls.BaseSchema, d), ls);
         }
 
         /// <summary>

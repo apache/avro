@@ -206,6 +206,38 @@ namespace Avro.IO
             stream.Write(data, start, len);
         }
 
+        /// <inheritdoc/>
+        public void WriteLogicalTypeValue(object value, LogicalSchema schema)
+        {
+            var baseValue = schema.LogicalType.ConvertToBaseValue(value, schema);
+            switch (baseValue)
+            {
+                case int i:
+                    WriteInt(i);
+                    break;
+                case long l:
+                    WriteLong(l);
+                    break;
+                case float f:
+                    WriteFloat(f);
+                    break;
+                case double d:
+                    WriteDouble(d);
+                    break;
+                case byte[] bytes:
+                    WriteBytes(bytes);
+                    break;
+                case string s:
+                    WriteString(s);
+                    break;
+                case Avro.Generic.GenericFixed fixedValue:
+                    WriteFixed(fixedValue.Value);
+                    break;
+                default:
+                    throw new AvroTypeException($"Unsupported conversion from {baseValue.GetType()}");
+            }
+        }
+
         private void writeBytes(byte[] bytes)
         {
             stream.Write(bytes, 0, bytes.Length);

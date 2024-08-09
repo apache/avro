@@ -48,23 +48,53 @@ namespace Avro.Util
         /// <inheritdoc/>
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
-            var time = (TimeSpan)logicalValue;
+            return ConvertToBaseValue<int>(logicalValue, schema);
+        }
 
-            ThrowIfOutOfRange(time, nameof(logicalValue));
+        /// <inheritdoc/>
+        public override T ConvertToBaseValue<T>(object logicalValue, LogicalSchema schema)
+        {
+            if (typeof(T) == typeof(int))
+            {
+                var time = (TimeSpan)logicalValue;
 
-            // Note: UnixEpochDateTime.TimeOfDay is '00:00:00'. This could be 'return time.TotalMilliseconds;
-            return (int)(time - UnixEpochDateTime.TimeOfDay).TotalMilliseconds;
+                ThrowIfOutOfRange(time, nameof(logicalValue));
+
+                // Note: UnixEpochDateTime.TimeOfDay is '00:00:00'. This could be 'return (int)time.TotalMilliseconds;'
+                return (T)(object)(int)(time - UnixEpochDateTime.TimeOfDay).TotalMilliseconds;
+            }
+            else if (typeof(T) == typeof(TimeSpan))
+            {
+                return (T)logicalValue;
+            }
+            else if (typeof(T) == typeof(string))
+            {
+                return (T)(object)((TimeSpan)logicalValue).ToString("c");
+            }
+            throw new AvroTypeException($"'{LogicalTypeName}' can only be converted to 'int'");
         }
 
         /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
-            var time = TimeSpan.FromMilliseconds((int)baseValue);
+            if (baseValue is int)
+            {
+                var time = TimeSpan.FromMilliseconds((int)baseValue);
 
-            ThrowIfOutOfRange(time, nameof(baseValue));
+                ThrowIfOutOfRange(time, nameof(baseValue));
 
-            // Note: UnixEpochDateTime.TimeOfDay is '00:00:00'. This could be 'return time;'
-            return UnixEpochDateTime.TimeOfDay.Add(time);
+                // Note: UnixEpochDateTime.TimeOfDay is '00:00:00'. This could be 'return time;'
+                return UnixEpochDateTime.TimeOfDay.Add(time);
+            }
+            else if (baseValue is TimeSpan)
+            {
+                return baseValue;
+            }
+            else if (baseValue is string)
+            {
+                return TimeSpan.Parse((string)baseValue);
+            }
+            throw new AvroTypeException($"'{LogicalTypeName}' can only be converted from 'int' or 'string'");
         }
 
         private static void ThrowIfOutOfRange(TimeSpan time, string paramName)
