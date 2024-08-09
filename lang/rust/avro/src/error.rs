@@ -30,13 +30,13 @@ pub enum Error {
     BoolValue(u8),
 
     #[error("Not a fixed value, required for decimal with fixed schema: {0:?}")]
-    FixedValue(ValueKind),
+    FixedValue(Value),
 
     #[error("Not a bytes value, required for decimal with bytes schema: {0:?}")]
-    BytesValue(ValueKind),
+    BytesValue(Value),
 
     #[error("Not a string value, required for uuid: {0:?}")]
-    GetUuidFromStringValue(ValueKind),
+    GetUuidFromStringValue(Value),
 
     #[error("Two schemas with the same fullname were given: {0:?}")]
     NameCollision(String),
@@ -69,34 +69,34 @@ pub enum Error {
     #[error("Number of bytes requested for decimal sign extension {requested} is less than the number of bytes needed to decode {needed}")]
     SignExtend { requested: usize, needed: usize },
 
-    #[error("Failed to read boolean bytes")]
+    #[error("Failed to read boolean bytes: {0}")]
     ReadBoolean(#[source] std::io::Error),
 
-    #[error("Failed to read bytes")]
+    #[error("Failed to read bytes: {0}")]
     ReadBytes(#[source] std::io::Error),
 
-    #[error("Failed to read string")]
+    #[error("Failed to read string: {0}")]
     ReadString(#[source] std::io::Error),
 
-    #[error("Failed to read double")]
+    #[error("Failed to read double: {0}")]
     ReadDouble(#[source] std::io::Error),
 
-    #[error("Failed to read float")]
+    #[error("Failed to read float: {0}")]
     ReadFloat(#[source] std::io::Error),
 
-    #[error("Failed to read duration")]
+    #[error("Failed to read duration: {0}")]
     ReadDuration(#[source] std::io::Error),
 
-    #[error("Failed to read fixed number of bytes: {1}")]
+    #[error("Failed to read fixed number of bytes '{1}': : {0}")]
     ReadFixed(#[source] std::io::Error, usize),
 
-    #[error("Failed to convert &str to UUID")]
+    #[error("Failed to convert &str to UUID: {0}")]
     ConvertStrToUuid(#[source] uuid::Error),
 
     #[error("Failed to convert Fixed bytes to UUID. It must be exactly 16 bytes, got {0}")]
     ConvertFixedToUuid(usize),
 
-    #[error("Failed to convert Fixed bytes to UUID")]
+    #[error("Failed to convert Fixed bytes to UUID: {0}")]
     ConvertSliceToUuid(#[source] uuid::Error),
 
     #[error("Map key is not a string; key type is {0:?}")]
@@ -122,26 +122,26 @@ pub enum Error {
     )]
     GetScaleWithFixedSize { size: usize, precision: usize },
 
-    #[error("expected UUID, got: {0:?}")]
-    GetUuid(ValueKind),
+    #[error("Expected Value::Uuid, got: {0:?}")]
+    GetUuid(Value),
 
-    #[error("expected BigDecimal, got: {0:?}")]
-    GetBigdecimal(ValueKind),
+    #[error("Expected Value::BigDecimal, got: {0:?}")]
+    GetBigDecimal(Value),
 
     #[error("Fixed bytes of size 12 expected, got Fixed of size {0}")]
     GetDecimalFixedBytes(usize),
 
-    #[error("Duration expected, got {0:?}")]
-    ResolveDuration(ValueKind),
+    #[error("Expected Value::Duration or Value::Fixed(12), got: {0:?}")]
+    ResolveDuration(Value),
 
-    #[error("Decimal expected, got {0:?}")]
-    ResolveDecimal(ValueKind),
+    #[error("Expected Value::Decimal, Value::Bytes or Value::Fixed, got: {0:?}")]
+    ResolveDecimal(Value),
 
     #[error("Missing field in record: {0:?}")]
     GetField(String),
 
     #[error("Unable to convert to u8, got {0:?}")]
-    GetU8(ValueKind),
+    GetU8(Value),
 
     #[error("Precision {precision} too small to hold decimal values with {num_bytes} bytes")]
     ComparePrecisionAndSize { precision: usize, num_bytes: usize },
@@ -149,65 +149,65 @@ pub enum Error {
     #[error("Cannot convert length to i32: {1}")]
     ConvertLengthToI32(#[source] std::num::TryFromIntError, usize),
 
-    #[error("Date expected, got {0:?}")]
-    GetDate(ValueKind),
+    #[error("Expected Value::Date or Value::Int, got: {0:?}")]
+    GetDate(Value),
 
-    #[error("TimeMillis expected, got {0:?}")]
-    GetTimeMillis(ValueKind),
+    #[error("Expected Value::TimeMillis or Value::Int, got: {0:?}")]
+    GetTimeMillis(Value),
 
-    #[error("TimeMicros expected, got {0:?}")]
-    GetTimeMicros(ValueKind),
+    #[error("Expected Value::TimeMicros, Value::Long or Value::Int, got: {0:?}")]
+    GetTimeMicros(Value),
 
-    #[error("TimestampMillis expected, got {0:?}")]
-    GetTimestampMillis(ValueKind),
+    #[error("Expected Value::TimestampMillis, Value::Long or Value::Int, got: {0:?}")]
+    GetTimestampMillis(Value),
 
-    #[error("TimestampMicros expected, got {0:?}")]
-    GetTimestampMicros(ValueKind),
+    #[error("Expected Value::TimestampMicros, Value::Long or Value::Int, got: {0:?}")]
+    GetTimestampMicros(Value),
 
-    #[error("TimestampNanos expected, got {0:?}")]
-    GetTimestampNanos(ValueKind),
+    #[error("Expected Value::TimestampNanos, Value::Long or Value::Int, got: {0:?}")]
+    GetTimestampNanos(Value),
 
-    #[error("LocalTimestampMillis expected, got {0:?}")]
-    GetLocalTimestampMillis(ValueKind),
+    #[error("Expected Value::LocalTimestampMillis, Value::Long or Value::Int, got: {0:?}")]
+    GetLocalTimestampMillis(Value),
 
-    #[error("LocalTimestampMicros expected, got {0:?}")]
-    GetLocalTimestampMicros(ValueKind),
+    #[error("Expected Value::LocalTimestampMicros, Value::Long or Value::Int, got: {0:?}")]
+    GetLocalTimestampMicros(Value),
 
-    #[error("LocalTimestampNanos expected, got {0:?}")]
-    GetLocalTimestampNanos(ValueKind),
+    #[error("Expected Value::LocalTimestampNanos, Value::Long or Value::Int, got: {0:?}")]
+    GetLocalTimestampNanos(Value),
 
-    #[error("Null expected, got {0:?}")]
-    GetNull(ValueKind),
+    #[error("Expected Value::Null, got: {0:?}")]
+    GetNull(Value),
 
-    #[error("Boolean expected, got {0:?}")]
-    GetBoolean(ValueKind),
+    #[error("Expected Value::Boolean, got: {0:?}")]
+    GetBoolean(Value),
 
-    #[error("Int expected, got {0:?}")]
-    GetInt(ValueKind),
+    #[error("Expected Value::Int, got: {0:?}")]
+    GetInt(Value),
 
-    #[error("Long expected, got {0:?}")]
-    GetLong(ValueKind),
+    #[error("Expected Value::Long or Value::Int, got: {0:?}")]
+    GetLong(Value),
 
-    #[error("Double expected, got {0:?}")]
+    #[error(r#"Expected Value::Double, Value::Float, Value::Int, Value::Long or Value::String ("NaN", "INF", "Infinity", "-INF" or "-Infinity"), got: {0:?}"#)]
     GetDouble(Value),
 
-    #[error("Float expected, got {0:?}")]
+    #[error(r#"Expected Value::Float, Value::Double, Value::Int, Value::Long or Value::String ("NaN", "INF", "Infinity", "-INF" or "-Infinity"), got: {0:?}"#)]
     GetFloat(Value),
 
-    #[error("Bytes expected, got {0:?}")]
-    GetBytes(ValueKind),
+    #[error("Expected Value::Bytes, got: {0:?}")]
+    GetBytes(Value),
 
-    #[error("String expected, got {0:?}")]
-    GetString(ValueKind),
+    #[error("Expected Value::String, Value::Bytes or Value::Fixed, got: {0:?}")]
+    GetString(Value),
 
-    #[error("Enum expected, got {0:?}")]
-    GetEnum(ValueKind),
+    #[error("Expected Value::Enum, got: {0:?}")]
+    GetEnum(Value),
 
-    #[error("Fixed size mismatch, {size} expected, got {n}")]
+    #[error("Fixed size mismatch, expected: {size}, got: {n}")]
     CompareFixedSizes { size: usize, n: usize },
 
-    #[error("String expected for fixed, got {0:?}")]
-    GetStringForFixed(ValueKind),
+    #[error("String expected for fixed, got: {0:?}")]
+    GetStringForFixed(Value),
 
     #[error("Enum default {symbol:?} is not among allowed symbols {symbols:?}")]
     GetEnumDefault {
@@ -228,21 +228,15 @@ pub enum Error {
     EmptyUnion,
 
     #[error("Array({expected:?}) expected, got {other:?}")]
-    GetArray {
-        expected: SchemaKind,
-        other: ValueKind,
-    },
+    GetArray { expected: SchemaKind, other: Value },
 
     #[error("Map({expected:?}) expected, got {other:?}")]
-    GetMap {
-        expected: SchemaKind,
-        other: ValueKind,
-    },
+    GetMap { expected: SchemaKind, other: Value },
 
     #[error("Record with fields {expected:?} expected, got {other:?}")]
     GetRecord {
         expected: Vec<(String, SchemaKind)>,
-        other: ValueKind,
+        other: Value,
     },
 
     #[error("No `name` field")]
@@ -377,34 +371,34 @@ pub enum Error {
     #[error("Fixed schema's default value length ({0}) does not match its size ({1})")]
     FixedDefaultLenSizeMismatch(usize, u64),
 
-    #[error("Failed to compress with flate")]
+    #[error("Failed to compress with flate: {0}")]
     DeflateCompress(#[source] std::io::Error),
 
-    #[error("Failed to finish flate compressor")]
+    #[error("Failed to finish flate compressor: {0}")]
     DeflateCompressFinish(#[source] std::io::Error),
 
-    #[error("Failed to decompress with flate")]
+    #[error("Failed to decompress with flate: {0}")]
     DeflateDecompress(#[source] std::io::Error),
 
     #[cfg(feature = "snappy")]
-    #[error("Failed to compress with snappy")]
+    #[error("Failed to compress with snappy: {0}")]
     SnappyCompress(#[source] snap::Error),
 
     #[cfg(feature = "snappy")]
-    #[error("Failed to get snappy decompression length")]
+    #[error("Failed to get snappy decompression length: {0}")]
     GetSnappyDecompressLen(#[source] snap::Error),
 
     #[cfg(feature = "snappy")]
-    #[error("Failed to decompress with snappy")]
+    #[error("Failed to decompress with snappy: {0}")]
     SnappyDecompress(#[source] snap::Error),
 
-    #[error("Failed to compress with zstd")]
+    #[error("Failed to compress with zstd: {0}")]
     ZstdCompress(#[source] std::io::Error),
 
-    #[error("Failed to decompress with zstd")]
+    #[error("Failed to decompress with zstd: {0}")]
     ZstdDecompress(#[source] std::io::Error),
 
-    #[error("Failed to read header")]
+    #[error("Failed to read header: {0}")]
     ReadHeader(#[source] std::io::Error),
 
     #[error("wrong magic in header")]
@@ -419,13 +413,13 @@ pub enum Error {
     #[error("no metadata in header")]
     GetHeaderMetadata,
 
-    #[error("Failed to read marker bytes")]
+    #[error("Failed to read marker bytes: {0}")]
     ReadMarker(#[source] std::io::Error),
 
-    #[error("Failed to read block marker bytes")]
+    #[error("Failed to read block marker bytes: {0}")]
     ReadBlockMarker(#[source] std::io::Error),
 
-    #[error("Read into buffer failed")]
+    #[error("Read into buffer failed: {0}")]
     ReadIntoBuf(#[source] std::io::Error),
 
     #[error("block marker does not match header marker")]
@@ -434,10 +428,10 @@ pub enum Error {
     #[error("Overflow when decoding integer value")]
     IntegerOverflow,
 
-    #[error("Failed to read bytes for decoding variable length integer")]
+    #[error("Failed to read bytes for decoding variable length integer: {0}")]
     ReadVariableIntegerBytes(#[source] std::io::Error),
 
-    #[error("Decoded integer out of range for i32: {1}")]
+    #[error("Decoded integer out of range for i32: {1}: {0}")]
     ZagI32(#[source] std::num::TryFromIntError, i64),
 
     #[error("unable to read block")]
@@ -449,13 +443,13 @@ pub enum Error {
     #[error("Failed to deserialize Avro value into value: {0}")]
     DeserializeValue(String),
 
-    #[error("Failed to write buffer bytes during flush")]
+    #[error("Failed to write buffer bytes during flush: {0}")]
     WriteBytes(#[source] std::io::Error),
 
-    #[error("Failed to write marker")]
+    #[error("Failed to write marker: {0}")]
     WriteMarker(#[source] std::io::Error),
 
-    #[error("Failed to convert JSON to string")]
+    #[error("Failed to convert JSON to string: {0}")]
     ConvertJsonToString(#[source] serde_json::Error),
 
     /// Error while converting float to json value
