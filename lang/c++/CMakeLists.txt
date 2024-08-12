@@ -218,6 +218,8 @@ unittest (AvrogencppTestReservedWords)
 unittest (CommonsSchemasTests)
 
 add_dependencies (AvrogencppTestReservedWords cpp_reserved_words_hh)
+add_dependencies (AvrogencppTestReservedWords cpp_reserved_words_hh
+    cpp_reserved_words_union_typedef_hh)
 
 add_dependencies (AvrogencppTests bigrecord_hh bigrecord_r_hh bigrecord2_hh
     tweet_hh
