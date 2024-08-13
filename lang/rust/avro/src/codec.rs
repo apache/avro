@@ -19,7 +19,7 @@
 use crate::{types::Value, AvroResult, Error};
 use libflate::deflate::{Decoder, Encoder};
 use std::io::{Read, Write};
-use strum_macros::{EnumIter, EnumString, IntoStaticStr};
+use strum_macros::{EnumIter, EnumString};
 
 #[cfg(feature = "bzip")]
 use bzip2::{
@@ -34,7 +34,7 @@ use crc32fast::Hasher;
 use xz2::read::{XzDecoder, XzEncoder};
 
 /// The compression codec used to compress blocks.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, EnumIter, EnumString, IntoStaticStr)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, EnumIter, EnumString)]
 #[strum(serialize_all = "kebab_case")]
 pub enum Codec {
     /// The `Null` codec simply passes through data uncompressed.
@@ -54,8 +54,7 @@ pub enum Codec {
     Zstandard,
     #[cfg(feature = "zstandard")]
     /// This codec is the same as `Zstandard` but allows specifying the compression level.
-    // Override default to match the enum variant without level as it is irrelevant for decoding
-    #[strum(serialize = "zstandard")] // false positive for unreachable_patterns
+    #[strum(disabled)]
     ZstandardWithLevel(ZstandardLevel),
     #[cfg(feature = "bzip")]
     /// The `BZip2` codec uses [BZip2](https://sourceware.org/bzip2/)
@@ -65,6 +64,23 @@ pub enum Codec {
     /// The `Xz` codec uses [Xz utils](https://tukaani.org/xz/)
     /// compression library.
     Xz,
+}
+
+impl From<Codec> for &str {
+    fn from(value: Codec) -> Self {
+        match value {
+            Codec::Null => "null",
+            Codec::Deflate => "deflate",
+            #[cfg(feature = "snappy")]
+            Codec::Snappy => "snappy",
+            #[cfg(feature = "zstandard")]
+            Codec::Zstandard | Codec::ZstandardWithLevel(_) => "zstandard",
+            #[cfg(feature = "bzip")]
+            Codec::Bzip2 => "bzip2",
+            #[cfg(feature = "xz")]
+            Codec::Xz => "xz",
+        }
+    }
 }
 
 impl From<Codec> for Value {
