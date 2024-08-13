@@ -50,6 +50,10 @@ pub enum Codec {
     Snappy,
     #[cfg(feature = "zstandard")]
     Zstandard,
+    #[cfg(feature = "zstandard")]
+    // Override default to match the enum variant without level as it is irrelevant for decoding
+    #[strum(serialize = "zstandard")] // false positive for unreachable_patterns
+    ZstandardWithLevel(ZstandardLevel),
     #[cfg(feature = "bzip")]
     /// The `BZip2` codec uses [BZip2](https://sourceware.org/bzip2/)
     /// compression library.
@@ -100,6 +104,12 @@ impl Codec {
             #[cfg(feature = "zstandard")]
             Codec::Zstandard => {
                 let mut encoder = zstd::Encoder::new(Vec::new(), 0).unwrap();
+                encoder.write_all(stream).map_err(Error::ZstdCompress)?;
+                *stream = encoder.finish().unwrap();
+            }
+            #[cfg(feature = "zstandard")]
+            Codec::ZstandardWithLevel(level) => {
+                let mut encoder = zstd::Encoder::new(Vec::new(), level as i32).unwrap();
                 encoder.write_all(stream).map_err(Error::ZstdCompress)?;
                 *stream = encoder.finish().unwrap();
             }
@@ -158,7 +168,7 @@ impl Codec {
                 decoded
             }
             #[cfg(feature = "zstandard")]
-            Codec::Zstandard => {
+            Codec::Zstandard | Codec::ZstandardWithLevel(_) => {
                 let mut decoded = Vec::new();
                 let mut decoder = zstd::Decoder::new(&stream[..]).unwrap();
                 std::io::copy(&mut decoder, &mut decoded).map_err(Error::ZstdDecompress)?;
@@ -181,6 +191,35 @@ impl Codec {
         };
         Ok(())
     }
+}
+
+#[cfg(feature = "zstandard")]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, EnumIter)]
+pub enum ZstandardLevel {
+    #[default]
+    Default = 0,
+    Level1,
+    Level2,
+    Level3,
+    Level4,
+    Level5,
+    Level6,
+    Level7,
+    Level8,
+    Level9,
+    Level10,
+    Level11,
+    Level12,
+    Level13,
+    Level14,
+    Level15,
+    Level16,
+    Level17,
+    Level18,
+    Level19,
+    Level20,
+    Level21,
+    Level22,
 }
 
 #[cfg(test)]
@@ -219,6 +258,12 @@ mod tests {
         compress_and_decompress(Codec::Zstandard)
     }
 
+    #[cfg(feature = "zstandard")]
+    #[test]
+    fn zstd_compress_and_decompress_with_level() -> TestResult {
+        compress_and_decompress(Codec::ZstandardWithLevel(ZstandardLevel::Level5))
+    }
+
     #[cfg(feature = "bzip")]
     #[test]
     fn bzip_compress_and_decompress() -> TestResult {
@@ -251,6 +296,12 @@ mod tests {
 
         #[cfg(feature = "zstandard")]
         assert_eq!(<&str>::from(Codec::Zstandard), "zstandard");
+
+        #[cfg(feature = "zstandard")]
+        assert_eq!(
+            <&str>::from(Codec::ZstandardWithLevel(ZstandardLevel::Level5)),
+            <&str>::from(Codec::Zstandard)
+        );
 
         #[cfg(feature = "bzip")]
         assert_eq!(<&str>::from(Codec::Bzip2), "bzip2");
