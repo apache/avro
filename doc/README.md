@@ -3,16 +3,13 @@
 This website is base on [Hugo](https://gohugo.io) and uses the [Docsy](https://www.docsy.dev/) theme.
 Before building the website, you need to initialize submodules.
 
-```
-git submodule update --init --recursive
+```sh
+hugo mod get -u
 ```
 
 ## Previewing the website locally
 
-```
-# From the doc directory, you will need to do this at least once for our SCSS modifications
-(cd doc && npm install)
-
+```sh
 # Serve the website dynamically using extended hugo:
 hugo server --buildDrafts --buildFuture --bind 0.0.0.0 --navigateToChanged
 
@@ -31,7 +28,7 @@ stop with **Build build/staging-web/ manually now. Press a key to continue...**
 
 At this point, from another terminal and in the Avro root directory, you can build the website:
 
-```
+```sh
 # Install the necessary npm packages
 docker run --entrypoint=sh --rm -v $(pwd):/src -p 1313:1313 jakejarvis/hugo-extended:latest \
     -c "cd build/staging-web && npm install"

@@ -29,9 +29,6 @@ enableMissingTranslationPlaceholders = true
 
 enableRobotsTXT = true
 
-# Hugo allows theme composition (and inheritance). The precedence is from left to right.
-theme = ["docsy"]
-
 # Will give values to .Lastmod etc.
 enableGitInfo = true
 
@@ -266,6 +263,10 @@ url = "http://www.apache.org/security/"
   url = "/docs/++version++/"
 
 [[params.versions]]
+version = "1.12.0"
+url = "https://avro.apache.org/docs/1.12.0/"
+
+[[params.versions]]
 version = "1.11.2"
 url = "https://avro.apache.org/docs/1.11.2/"
 
@@ -416,4 +417,10 @@ url = "https://avro.apache.org/docs/1.11.0/"
 [[params.versions]]
   version = "1.0.0"
   url = "https://avro.apache.org/docs/1.0.0/"
-  
+
+[module]
+  [module.hugoVersion]
+    extended = true
+    min = "0.110.0"
+  [[module.imports]]
+    path = "github.com/google/docsy"
