@@ -49,8 +49,11 @@ pub enum Codec {
     /// CRC32 checksum of the uncompressed data in the block.
     Snappy,
     #[cfg(feature = "zstandard")]
+    /// The `Zstandard` codec uses Facebook's [Zstandard](https://facebook.github.io/zstd/) with the
+    /// default compression level.
     Zstandard,
     #[cfg(feature = "zstandard")]
+    /// This codec is the same as `Zstandard` but allows specifying the compression level.
     // Override default to match the enum variant without level as it is irrelevant for decoding
     #[strum(serialize = "zstandard")] // false positive for unreachable_patterns
     ZstandardWithLevel(ZstandardLevel),
@@ -194,6 +197,8 @@ impl Codec {
 }
 
 #[cfg(feature = "zstandard")]
+/// The compression level for Zstandard.
+/// See the [zstd manual](https://facebook.github.io/zstd/zstd_manual.html) for more information.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, EnumIter)]
 pub enum ZstandardLevel {
     #[default]
