@@ -132,7 +132,7 @@ archived_version = false
 # The version number for the version of the docs represented in this doc set.
 # Used in the "version-banner" partial to display a version number for the 
 # current doc set.
-version = "++version++"
+version = "1.12.0"
 
 # A link to latest version of the docs. Used in the "version-banner" partial to
 # point people to the main doc site.
@@ -259,12 +259,12 @@ url = "http://www.apache.org/security/"
   desc = "Discuss development issues around the project"
 
 [[params.versions]]
-  version = "++version++ (Current)"
-  url = "/docs/++version++/"
-
-[[params.versions]]
 version = "1.12.0"
 url = "https://avro.apache.org/docs/1.12.0/"
+
+[[params.versions]]
+version = "1.11.3"
+url = "https://avro.apache.org/docs/1.11.3/"
 
 [[params.versions]]
 version = "1.11.2"

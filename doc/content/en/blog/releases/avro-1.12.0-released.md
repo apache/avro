@@ -1,7 +1,7 @@
 ---
-title: "Avro 1.11.3"
-linkTitle: "Avro 1.11.3"
-date: 2023-09-22
+title: "Avro 1.12.0"
+linkTitle: "Avro 1.12.0"
+date: 2024-08-05
 ---
 
 <!--
@@ -27,10 +27,7 @@ date: 2023-09-22
 
 The Apache Avro community is pleased to announce the release of Avro 1.12.0!
 
-All signed release artifacts, signatures and verification instructions can
-be found <a href="{{< relref "/project/download" >}}">here</a>
-
-This release [addresses 39 Jira issues](https://issues.apache.org/jira/issues/?jql=project%3DAVRO%20AND%20fixVersion%3D1.11.3).
+All signed release artifacts, signatures and verification instructions can be found <a href="{{< relref "/project/download" >}}">here</a>
 
 ## Changes
 
