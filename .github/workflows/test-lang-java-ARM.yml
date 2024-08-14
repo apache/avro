@@ -65,7 +65,8 @@ jobs:
         with:
           maven-version: 3.9.6
 
-      - name: 'Install Java Avro'
+      - name: 'Install Java Avro Toplevel'
+        working-directory: ./
         run: mvn -B install -PskipQuality -DskipTests
 
       - name: Build
