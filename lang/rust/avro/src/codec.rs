@@ -191,7 +191,7 @@ impl Codec {
 }
 
 #[cfg(feature = "bzip")]
-mod bzip {
+pub mod bzip {
     use bzip2::Compression;
 
     #[derive(Clone, Copy, Eq, PartialEq, Debug)]
@@ -219,7 +219,7 @@ mod bzip {
 }
 
 #[cfg(feature = "zstandard")]
-mod zstandard {
+pub mod zstandard {
     #[derive(Clone, Copy, Eq, PartialEq, Debug)]
     pub struct ZstandardSettings {
         pub compression_level: i32,
@@ -239,7 +239,7 @@ mod zstandard {
 }
 
 #[cfg(feature = "xz")]
-mod xz {
+pub mod xz {
     #[derive(Clone, Copy, Eq, PartialEq, Debug)]
     pub struct XzSettings {
         pub compression_level: u32,
