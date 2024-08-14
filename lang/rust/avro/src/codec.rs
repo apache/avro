@@ -19,7 +19,7 @@
 use crate::{types::Value, AvroResult, Error};
 use libflate::deflate::{Decoder, Encoder};
 use std::io::{Read, Write};
-use strum_macros::{EnumIter, EnumString};
+use strum_macros::{EnumIter, EnumString, IntoStaticStr};
 
 #[cfg(feature = "bzip")]
 pub use bzip::Bzip2Settings;
@@ -31,13 +31,16 @@ extern crate crc32fast;
 #[cfg(feature = "snappy")]
 use crc32fast::Hasher;
 
+#[cfg(feature = "zstandard")]
+pub use zstandard::ZstandardSettings;
+
 #[cfg(feature = "xz")]
 pub use xz::XzSettings;
 #[cfg(feature = "xz")]
 use xz2::read::{XzDecoder, XzEncoder};
 
 /// The compression codec used to compress blocks.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, EnumIter, EnumString)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, EnumIter, EnumString, IntoStaticStr)]
 #[strum(serialize_all = "kebab_case")]
 pub enum Codec {
     /// The `Null` codec simply passes through data uncompressed.
@@ -52,13 +55,8 @@ pub enum Codec {
     /// CRC32 checksum of the uncompressed data in the block.
     Snappy,
     #[cfg(feature = "zstandard")]
-    /// The `Zstandard` codec uses Facebook's [Zstandard](https://facebook.github.io/zstd/) with the
-    /// default compression level.
-    Zstandard,
-    #[cfg(feature = "zstandard")]
-    /// This codec is the same as `Zstandard` but allows specifying the compression level.
-    #[strum(disabled)]
-    ZstandardWithLevel(ZstandardLevel),
+    /// The `Zstandard` codec uses Facebook's [Zstandard](https://facebook.github.io/zstd/)
+    Zstandard(ZstandardSettings),
     #[cfg(feature = "bzip")]
     /// The `BZip2` codec uses [BZip2](https://sourceware.org/bzip2/)
     /// compression library.
@@ -67,23 +65,6 @@ pub enum Codec {
     /// The `Xz` codec uses [Xz utils](https://tukaani.org/xz/)
     /// compression library.
     Xz(XzSettings),
-}
-
-impl From<Codec> for &str {
-    fn from(value: Codec) -> Self {
-        match value {
-            Codec::Null => "null",
-            Codec::Deflate => "deflate",
-            #[cfg(feature = "snappy")]
-            Codec::Snappy => "snappy",
-            #[cfg(feature = "zstandard")]
-            Codec::Zstandard | Codec::ZstandardWithLevel(_) => "zstandard",
-            #[cfg(feature = "bzip")]
-            Codec::Bzip2(_) => "bzip2",
-            #[cfg(feature = "xz")]
-            Codec::Xz(_) => "xz",
-        }
-    }
 }
 
 impl From<Codec> for Value {
@@ -124,14 +105,9 @@ impl Codec {
                 *stream = encoded;
             }
             #[cfg(feature = "zstandard")]
-            Codec::Zstandard => {
-                let mut encoder = zstd::Encoder::new(Vec::new(), 0).unwrap();
-                encoder.write_all(stream).map_err(Error::ZstdCompress)?;
-                *stream = encoder.finish().unwrap();
-            }
-            #[cfg(feature = "zstandard")]
-            Codec::ZstandardWithLevel(level) => {
-                let mut encoder = zstd::Encoder::new(Vec::new(), level as i32).unwrap();
+            Codec::Zstandard(settings) => {
+                let mut encoder =
+                    zstd::Encoder::new(Vec::new(), settings.compression_level).unwrap();
                 encoder.write_all(stream).map_err(Error::ZstdCompress)?;
                 *stream = encoder.finish().unwrap();
             }
@@ -189,7 +165,7 @@ impl Codec {
                 decoded
             }
             #[cfg(feature = "zstandard")]
-            Codec::Zstandard | Codec::ZstandardWithLevel(_) => {
+            Codec::Zstandard(_) => {
                 let mut decoded = Vec::new();
                 let mut decoder = zstd::Decoder::new(&stream[..]).unwrap();
                 std::io::copy(&mut decoder, &mut decoded).map_err(Error::ZstdDecompress)?;
@@ -212,37 +188,6 @@ impl Codec {
         };
         Ok(())
     }
-}
-
-#[cfg(feature = "zstandard")]
-/// The compression level for Zstandard.
-/// See the [zstd manual](https://facebook.github.io/zstd/zstd_manual.html) for more information.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, EnumIter)]
-pub enum ZstandardLevel {
-    #[default]
-    Default = 0,
-    Level1,
-    Level2,
-    Level3,
-    Level4,
-    Level5,
-    Level6,
-    Level7,
-    Level8,
-    Level9,
-    Level10,
-    Level11,
-    Level12,
-    Level13,
-    Level14,
-    Level15,
-    Level16,
-    Level17,
-    Level18,
-    Level19,
-    Level20,
-    Level21,
-    Level22,
 }
 
 #[cfg(feature = "bzip")]
@@ -269,6 +214,26 @@ mod bzip {
     impl Default for Bzip2Settings {
         fn default() -> Self {
             Bzip2Settings::new(Compression::best())
+        }
+    }
+}
+
+#[cfg(feature = "zstandard")]
+mod zstandard {
+    #[derive(Clone, Copy, Eq, PartialEq, Debug)]
+    pub struct ZstandardSettings {
+        pub compression_level: i32,
+    }
+
+    impl ZstandardSettings {
+        pub fn new(compression_level: i32) -> Self {
+            Self { compression_level }
+        }
+    }
+
+    impl Default for ZstandardSettings {
+        fn default() -> Self {
+            Self::new(0)
         }
     }
 }
@@ -326,13 +291,7 @@ mod tests {
     #[cfg(feature = "zstandard")]
     #[test]
     fn zstd_compress_and_decompress() -> TestResult {
-        compress_and_decompress(Codec::Zstandard)
-    }
-
-    #[cfg(feature = "zstandard")]
-    #[test]
-    fn zstd_compress_and_decompress_with_level() -> TestResult {
-        compress_and_decompress(Codec::ZstandardWithLevel(ZstandardLevel::Level5))
+        compress_and_decompress(Codec::Zstandard(ZstandardSettings::default()))
     }
 
     #[cfg(feature = "bzip")]
@@ -366,12 +325,9 @@ mod tests {
         assert_eq!(<&str>::from(Codec::Snappy), "snappy");
 
         #[cfg(feature = "zstandard")]
-        assert_eq!(<&str>::from(Codec::Zstandard), "zstandard");
-
-        #[cfg(feature = "zstandard")]
         assert_eq!(
-            <&str>::from(Codec::ZstandardWithLevel(ZstandardLevel::Level5)),
-            <&str>::from(Codec::Zstandard)
+            <&str>::from(Codec::Zstandard(ZstandardSettings::default())),
+            "zstandard"
         );
 
         #[cfg(feature = "bzip")]
@@ -395,7 +351,10 @@ mod tests {
         assert_eq!(Codec::from_str("snappy").unwrap(), Codec::Snappy);
 
         #[cfg(feature = "zstandard")]
-        assert_eq!(Codec::from_str("zstandard").unwrap(), Codec::Zstandard);
+        assert_eq!(
+            Codec::from_str("zstandard").unwrap(),
+            Codec::Zstandard(ZstandardSettings::default())
+        );
 
         #[cfg(feature = "bzip")]
         assert_eq!(

@@ -868,8 +868,6 @@ pub use crate::{
     },
 };
 pub use codec::Codec;
-#[cfg(feature = "zstandard")]
-pub use codec::ZstandardLevel;
 pub use de::from_value;
 pub use decimal::Decimal;
 pub use duration::{Days, Duration, Millis, Months};
