@@ -22,7 +22,7 @@ use std::io::{Read, Write};
 use strum_macros::{EnumIter, EnumString};
 
 #[cfg(feature = "bzip")]
-pub use bzip::CodecSettings;
+pub use bzip::Bzip2Settings;
 #[cfg(feature = "bzip")]
 use bzip2::read::{BzDecoder, BzEncoder};
 
@@ -30,6 +30,9 @@ use bzip2::read::{BzDecoder, BzEncoder};
 extern crate crc32fast;
 #[cfg(feature = "snappy")]
 use crc32fast::Hasher;
+
+#[cfg(feature = "xz")]
+pub use xz::XzSettings;
 #[cfg(feature = "xz")]
 use xz2::read::{XzDecoder, XzEncoder};
 
@@ -59,11 +62,11 @@ pub enum Codec {
     #[cfg(feature = "bzip")]
     /// The `BZip2` codec uses [BZip2](https://sourceware.org/bzip2/)
     /// compression library.
-    Bzip2(CodecSettings),
+    Bzip2(Bzip2Settings),
     #[cfg(feature = "xz")]
     /// The `Xz` codec uses [Xz utils](https://tukaani.org/xz/)
     /// compression library.
-    Xz,
+    Xz(XzSettings),
 }
 
 impl From<Codec> for &str {
@@ -78,7 +81,7 @@ impl From<Codec> for &str {
             #[cfg(feature = "bzip")]
             Codec::Bzip2(_) => "bzip2",
             #[cfg(feature = "xz")]
-            Codec::Xz => "xz",
+            Codec::Xz(_) => "xz",
         }
     }
 }
@@ -140,9 +143,8 @@ impl Codec {
                 *stream = buffer;
             }
             #[cfg(feature = "xz")]
-            Codec::Xz => {
-                let compression_level = 9;
-                let mut encoder = XzEncoder::new(&stream[..], compression_level);
+            Codec::Xz(settings) => {
+                let mut encoder = XzEncoder::new(&stream[..], settings.compression_level);
                 let mut buffer = Vec::new();
                 encoder.read_to_end(&mut buffer).unwrap();
                 *stream = buffer;
@@ -201,7 +203,7 @@ impl Codec {
                 decoded
             }
             #[cfg(feature = "xz")]
-            Codec::Xz => {
+            Codec::Xz(_) => {
                 let mut decoder = XzDecoder::new(&stream[..]);
                 let mut decoded: Vec<u8> = Vec::new();
                 decoder.read_to_end(&mut decoded).unwrap();
@@ -248,11 +250,11 @@ mod bzip {
     use bzip2::Compression;
 
     #[derive(Clone, Copy, Eq, PartialEq, Debug)]
-    pub struct CodecSettings {
+    pub struct Bzip2Settings {
         compression_level: u32,
     }
 
-    impl CodecSettings {
+    impl Bzip2Settings {
         pub fn new(compression: Compression) -> Self {
             Self {
                 compression_level: compression.level(),
@@ -264,9 +266,29 @@ mod bzip {
         }
     }
 
-    impl Default for CodecSettings {
+    impl Default for Bzip2Settings {
         fn default() -> Self {
-            CodecSettings::new(Compression::best())
+            Bzip2Settings::new(Compression::best())
+        }
+    }
+}
+
+#[cfg(feature = "xz")]
+mod xz {
+    #[derive(Clone, Copy, Eq, PartialEq, Debug)]
+    pub struct XzSettings {
+        pub compression_level: u32,
+    }
+
+    impl XzSettings {
+        pub fn new(compression_level: u32) -> Self {
+            Self { compression_level }
+        }
+    }
+
+    impl Default for XzSettings {
+        fn default() -> Self {
+            XzSettings::new(9)
         }
     }
 }
@@ -316,13 +338,13 @@ mod tests {
     #[cfg(feature = "bzip")]
     #[test]
     fn bzip_compress_and_decompress() -> TestResult {
-        compress_and_decompress(Codec::Bzip2(CodecSettings::default()))
+        compress_and_decompress(Codec::Bzip2(Bzip2Settings::default()))
     }
 
     #[cfg(feature = "xz")]
     #[test]
     fn xz_compress_and_decompress() -> TestResult {
-        compress_and_decompress(Codec::Xz)
+        compress_and_decompress(Codec::Xz(XzSettings::default()))
     }
 
     fn compress_and_decompress(codec: Codec) -> TestResult {
@@ -354,12 +376,12 @@ mod tests {
 
         #[cfg(feature = "bzip")]
         assert_eq!(
-            <&str>::from(Codec::Bzip2(CodecSettings::default())),
+            <&str>::from(Codec::Bzip2(Bzip2Settings::default())),
             "bzip2"
         );
 
         #[cfg(feature = "xz")]
-        assert_eq!(<&str>::from(Codec::Xz), "xz");
+        assert_eq!(<&str>::from(Codec::Xz(XzSettings::default())), "xz");
     }
 
     #[test]
@@ -378,11 +400,14 @@ mod tests {
         #[cfg(feature = "bzip")]
         assert_eq!(
             Codec::from_str("bzip2").unwrap(),
-            Codec::Bzip2(CodecSettings::default())
+            Codec::Bzip2(Bzip2Settings::default())
         );
 
         #[cfg(feature = "xz")]
-        assert_eq!(Codec::from_str("xz").unwrap(), Codec::Xz);
+        assert_eq!(
+            Codec::from_str("xz").unwrap(),
+            Codec::Xz(XzSettings::default())
+        );
 
         assert!(Codec::from_str("not a codec").is_err());
     }
