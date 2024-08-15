@@ -867,6 +867,12 @@ pub use crate::{
         serde_avro_slice, serde_avro_slice_opt,
     },
 };
+#[cfg(feature = "bzip")]
+pub use codec::bzip::Bzip2Settings;
+#[cfg(feature = "xz")]
+pub use codec::xz::XzSettings;
+#[cfg(feature = "zstandard")]
+pub use codec::zstandard::ZstandardSettings;
 pub use codec::Codec;
 pub use de::from_value;
 pub use decimal::Decimal;

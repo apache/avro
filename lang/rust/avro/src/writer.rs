@@ -369,6 +369,30 @@ impl<'a, W: Write> Writer<'a, W> {
         let mut metadata = HashMap::with_capacity(2);
         metadata.insert("avro.schema", Value::Bytes(schema_bytes));
         metadata.insert("avro.codec", self.codec.into());
+        match self.codec {
+            #[cfg(feature = "bzip")]
+            Codec::Bzip2(settings) => {
+                metadata.insert(
+                    "avro.codec.compression_level",
+                    Value::Bytes(vec![settings.compression_level]),
+                );
+            }
+            #[cfg(feature = "xz")]
+            Codec::Xz(settings) => {
+                metadata.insert(
+                    "avro.codec.compression_level",
+                    Value::Bytes(vec![settings.compression_level]),
+                );
+            }
+            #[cfg(feature = "zstandard")]
+            Codec::Zstandard(settings) => {
+                metadata.insert(
+                    "avro.codec.compression_level",
+                    Value::Bytes(vec![settings.compression_level]),
+                );
+            }
+            _ => {}
+        }
 
         for (k, v) in &self.user_metadata {
             metadata.insert(k.as_str(), v.clone());
