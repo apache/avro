@@ -248,7 +248,7 @@ namespace Avro.Specific
         /// </exception>
         public Type GetType(Schema schema)
         {
-            switch (schema.Tag) {
+            switch(schema.Tag) {
             case Schema.Type.Null:
                 break;
             case Schema.Type.Boolean:
@@ -284,51 +284,51 @@ namespace Avro.Specific
                         }
 
                         if (itemType != null)
-                            {
-                                if (itemType.IsValueType && !itemType.IsEnum)
-                                {
-                                    try
-                                    {
-                                        return GenericNullableType.MakeGenericType(itemType);
-                                    }
-                                    catch
-                                    {
-                                    }
-                                }
-
-                                return itemType;
-                            }
-                        }
-
-                        return typeof(object);
-                    }
-                case Schema.Type.Array:
-                    {
-                        ArraySchema arrSchema = schema as ArraySchema;
-                        Type itemSchema = GetType(arrSchema.ItemSchema);
-
-                        return GenericListType.MakeGenericType(itemSchema);
-                    }
-                case Schema.Type.Map:
-                    {
-                        MapSchema mapSchema = schema as MapSchema;
-                        Type itemSchema = GetType(mapSchema.ValueSchema);
-
-                        return GenericMapType.MakeGenericType(typeof(string), itemSchema);
-                    }
-                case Schema.Type.Enumeration:
-                case Schema.Type.Record:
-                case Schema.Type.Fixed:
-                case Schema.Type.Error:
-                    {
-                        // Should all be named types
-                        if (schema is NamedSchema named)
                         {
-                            return FindType(named.Fullname);
-                        }
+                            if (itemType.IsValueType && !itemType.IsEnum)
+                            {
+                                try
+                                {
+                                    return GenericNullableType.MakeGenericType(itemType);
+                                }
+                                catch
+                                {
+                                }
+                            }
 
-                        break;
+                            return itemType;
+                        }
                     }
+
+                    return typeof(object);
+                }
+            case Schema.Type.Array:
+                {
+                    ArraySchema arrSchema = schema as ArraySchema;
+                    Type itemSchema = GetType(arrSchema.ItemSchema);
+
+                    return GenericListType.MakeGenericType(itemSchema);
+                }
+            case Schema.Type.Map:
+                {
+                    MapSchema mapSchema = schema as MapSchema;
+                    Type itemSchema = GetType(mapSchema.ValueSchema);
+
+                    return GenericMapType.MakeGenericType(typeof(string), itemSchema );
+                }
+            case Schema.Type.Enumeration:
+            case Schema.Type.Record:
+            case Schema.Type.Fixed:
+            case Schema.Type.Error:
+                {
+                    // Should all be named types
+                    if (schema is NamedSchema named)
+                    {
+                        return FindType(named.Fullname);
+                    }
+
+                    break;
+                }
             }
 
             // Fallback
