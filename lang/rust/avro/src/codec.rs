@@ -32,7 +32,11 @@ extern crate crc32fast;
 use crc32fast::Hasher;
 
 #[cfg(feature = "zstandard")]
+use std::io::BufReader;
+#[cfg(feature = "zstandard")]
 pub use zstandard::ZstandardSettings;
+#[cfg(feature = "zstandard")]
+use zstd::zstd_safe;
 
 #[cfg(feature = "xz")]
 pub use xz::XzSettings;
@@ -56,7 +60,7 @@ pub enum Codec {
     Snappy,
     #[cfg(feature = "zstandard")]
     /// The `Zstandard` codec uses Facebook's [Zstandard](https://facebook.github.io/zstd/)
-    Zstandard(ZstandardSettings),
+    Zstandard(ZstandardSettings<'static>),
     #[cfg(feature = "bzip")]
     /// The `BZip2` codec uses [BZip2](https://sourceware.org/bzip2/)
     /// compression library.
@@ -106,8 +110,12 @@ impl Codec {
             }
             #[cfg(feature = "zstandard")]
             Codec::Zstandard(settings) => {
-                let mut encoder =
-                    zstd::Encoder::new(Vec::new(), settings.compression_level).unwrap();
+                let mut encoder = zstd::Encoder::with_dictionary(
+                    Vec::new(),
+                    settings.compression_level,
+                    settings.dictionary,
+                )
+                .unwrap();
                 encoder.write_all(stream).map_err(Error::ZstdCompress)?;
                 *stream = encoder.finish().unwrap();
             }
@@ -165,9 +173,13 @@ impl Codec {
                 decoded
             }
             #[cfg(feature = "zstandard")]
-            Codec::Zstandard(_) => {
+            Codec::Zstandard(settings) => {
                 let mut decoded = Vec::new();
-                let mut decoder = zstd::Decoder::new(&stream[..]).unwrap();
+                let buffer_size = zstd_safe::DCtx::in_size();
+                let buffer = BufReader::with_capacity(buffer_size, &stream[..]);
+
+                let mut decoder =
+                    zstd::Decoder::with_dictionary(buffer, settings.dictionary).unwrap();
                 std::io::copy(&mut decoder, &mut decoded).map_err(Error::ZstdDecompress)?;
                 decoded
             }
@@ -221,17 +233,25 @@ pub mod bzip {
 #[cfg(feature = "zstandard")]
 pub mod zstandard {
     #[derive(Clone, Copy, Eq, PartialEq, Debug)]
-    pub struct ZstandardSettings {
+    pub struct ZstandardSettings<'a> {
         pub compression_level: i32,
+        pub dictionary: &'a [u8],
     }
 
-    impl ZstandardSettings {
+    impl<'a> ZstandardSettings<'a> {
         pub fn new(compression_level: i32) -> Self {
-            Self { compression_level }
+            Self::with_dictionary(compression_level, &[])
+        }
+
+        pub fn with_dictionary(compression_level: i32, dictionary: &'a [u8]) -> Self {
+            Self {
+                compression_level,
+                dictionary,
+            }
         }
     }
 
-    impl Default for ZstandardSettings {
+    impl Default for ZstandardSettings<'static> {
         fn default() -> Self {
             Self::new(0)
         }
