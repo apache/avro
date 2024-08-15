@@ -63,15 +63,19 @@ jobs:
         with:
           maven-version: 3.9.6
 
+      - name: 'Install Java Avro Toplevel'
+        working-directory: ./
+        run: mvn -B install -PskipQuality -DskipTests
+
       - name: 'Java Lint'
         run: ./build.sh lint
 
       - name: 'Java Test'
         run: ./build.sh test
 
-      - name: 'Install Java Avro for reproducibility test'
+      - name: 'Install Java Avro'
         working-directory: .
-        run: mvn -B clean install -PskipQuality
+        run: mvn -B clean install -PskipQuality -DskipTests
 
       - name: 'Test Reproducible Build'
         working-directory: .
