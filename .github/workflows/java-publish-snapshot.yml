@@ -29,10 +29,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    working-directory: lang/java
-
 jobs:
   publish-snapshot:
     runs-on: ubuntu-latest
@@ -68,5 +64,4 @@ jobs:
           ASF_PASSWORD: ${{ secrets.NEXUS_PW }}
         run: |
           echo "<settings><servers><server><id>apache.snapshots.https</id><username>$ASF_USERNAME</username><password>$ASF_PASSWORD</password></server></servers></settings>" > settings.xml
-          pushd ../.. && mvn --settings settings.xml -B -ntp --non-recursive deploy && popd
           mvn --settings settings.xml -U -B -e -fae -ntp -PskipQuality deploy
