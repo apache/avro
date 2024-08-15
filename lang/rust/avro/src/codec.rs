@@ -60,7 +60,7 @@ pub enum Codec {
     Snappy,
     #[cfg(feature = "zstandard")]
     /// The `Zstandard` codec uses Facebook's [Zstandard](https://facebook.github.io/zstd/)
-    Zstandard(ZstandardSettings<'static>),
+    Zstandard(ZstandardSettings),
     #[cfg(feature = "bzip")]
     /// The `BZip2` codec uses [BZip2](https://sourceware.org/bzip2/)
     /// compression library.
@@ -110,12 +110,9 @@ impl Codec {
             }
             #[cfg(feature = "zstandard")]
             Codec::Zstandard(settings) => {
-                let mut encoder = zstd::Encoder::with_dictionary(
-                    Vec::new(),
-                    settings.compression_level,
-                    settings.dictionary,
-                )
-                .unwrap();
+                dbg!(&settings);
+                let mut encoder =
+                    zstd::Encoder::new(Vec::new(), settings.compression_level as i32).unwrap();
                 encoder.write_all(stream).map_err(Error::ZstdCompress)?;
                 *stream = encoder.finish().unwrap();
             }
@@ -128,7 +125,7 @@ impl Codec {
             }
             #[cfg(feature = "xz")]
             Codec::Xz(settings) => {
-                let mut encoder = XzEncoder::new(&stream[..], settings.compression_level);
+                let mut encoder = XzEncoder::new(&stream[..], settings.compression_level as u32);
                 let mut buffer = Vec::new();
                 encoder.read_to_end(&mut buffer).unwrap();
                 *stream = buffer;
@@ -173,13 +170,11 @@ impl Codec {
                 decoded
             }
             #[cfg(feature = "zstandard")]
-            Codec::Zstandard(settings) => {
+            Codec::Zstandard(_settings) => {
                 let mut decoded = Vec::new();
                 let buffer_size = zstd_safe::DCtx::in_size();
                 let buffer = BufReader::with_capacity(buffer_size, &stream[..]);
-
-                let mut decoder =
-                    zstd::Decoder::with_dictionary(buffer, settings.dictionary).unwrap();
+                let mut decoder = zstd::Decoder::new(buffer).unwrap();
                 std::io::copy(&mut decoder, &mut decoded).map_err(Error::ZstdDecompress)?;
                 decoded
             }
@@ -208,24 +203,22 @@ pub mod bzip {
 
     #[derive(Clone, Copy, Eq, PartialEq, Debug)]
     pub struct Bzip2Settings {
-        compression_level: u32,
+        pub compression_level: u8,
     }
 
     impl Bzip2Settings {
-        pub fn new(compression: Compression) -> Self {
-            Self {
-                compression_level: compression.level(),
-            }
+        pub fn new(compression_level: u8) -> Self {
+            Self { compression_level }
         }
 
         pub(crate) fn compression(&self) -> Compression {
-            Compression::new(self.compression_level)
+            Compression::new(self.compression_level as u32)
         }
     }
 
     impl Default for Bzip2Settings {
         fn default() -> Self {
-            Bzip2Settings::new(Compression::best())
+            Bzip2Settings::new(Compression::best().level() as u8)
         }
     }
 }
@@ -233,25 +226,17 @@ pub mod bzip {
 #[cfg(feature = "zstandard")]
 pub mod zstandard {
     #[derive(Clone, Copy, Eq, PartialEq, Debug)]
-    pub struct ZstandardSettings<'a> {
-        pub compression_level: i32,
-        pub dictionary: &'a [u8],
+    pub struct ZstandardSettings {
+        pub compression_level: u8,
     }
 
-    impl<'a> ZstandardSettings<'a> {
-        pub fn new(compression_level: i32) -> Self {
-            Self::with_dictionary(compression_level, &[])
-        }
-
-        pub fn with_dictionary(compression_level: i32, dictionary: &'a [u8]) -> Self {
-            Self {
-                compression_level,
-                dictionary,
-            }
+    impl ZstandardSettings {
+        pub fn new(compression_level: u8) -> Self {
+            Self { compression_level }
         }
     }
 
-    impl Default for ZstandardSettings<'static> {
+    impl Default for ZstandardSettings {
         fn default() -> Self {
             Self::new(0)
         }
@@ -262,11 +247,11 @@ pub mod zstandard {
 pub mod xz {
     #[derive(Clone, Copy, Eq, PartialEq, Debug)]
     pub struct XzSettings {
-        pub compression_level: u32,
+        pub compression_level: u8,
     }
 
     impl XzSettings {
-        pub fn new(compression_level: u32) -> Self {
+        pub fn new(compression_level: u8) -> Self {
             Self { compression_level }
         }
     }
