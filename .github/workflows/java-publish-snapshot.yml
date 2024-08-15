@@ -62,14 +62,11 @@ jobs:
         with:
           maven-version: 3.9.8
 
-      - name: 'Install Java Avro Toplevel'
-        working-directory: ./
-        run: mvn -B install -PskipQuality -DskipTests  
-
       - name: 'Deploy Maven snapshots'
         env:
           ASF_USERNAME: ${{ secrets.NEXUS_USER }}
           ASF_PASSWORD: ${{ secrets.NEXUS_PW }}
         run: |
           echo "<settings><servers><server><id>apache.snapshots.https</id><username>$ASF_USERNAME</username><password>$ASF_PASSWORD</password></server></servers></settings>" > settings.xml
+          pushd ../.. && mvn --settings settings.xml -B -ntp --non-recursive deploy && popd
           mvn --settings settings.xml -U -B -e -fae -ntp -PskipQuality deploy
