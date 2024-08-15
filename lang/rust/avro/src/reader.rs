@@ -90,7 +90,10 @@ impl<'r, R: Read> Block<'r, R> {
             self.codec = read_codec(&metadata)?;
 
             for (key, value) in metadata {
-                if key == "avro.schema" || key == "avro.codec" || key == "avro.codec.compression_level" {
+                if key == "avro.schema"
+                    || key == "avro.codec"
+                    || key == "avro.codec.compression_level"
+                {
                     // already processed
                 } else if key.starts_with("avro.") {
                     warn!("Ignoring unknown metadata key: {}", key);

@@ -38,7 +38,7 @@ pub enum Codec {
     Snappy,
     #[cfg(feature = "zstandard")]
     /// The `Zstandard` codec uses Facebook's [Zstandard](https://facebook.github.io/zstd/)
-    Zstandard(zstd::ZstandardSettings),
+    Zstandard(zstandard::ZstandardSettings),
     #[cfg(feature = "bzip")]
     /// The `BZip2` codec uses [BZip2](https://sourceware.org/bzip2/)
     /// compression library.
@@ -212,7 +212,7 @@ pub mod bzip {
 }
 
 #[cfg(feature = "zstandard")]
-pub mod zstd {
+pub mod zstandard {
     #[derive(Clone, Copy, Eq, PartialEq, Debug)]
     pub struct ZstandardSettings {
         pub compression_level: u8,
@@ -284,7 +284,7 @@ mod tests {
     #[cfg(feature = "zstandard")]
     #[test]
     fn zstd_compress_and_decompress() -> TestResult {
-        compress_and_decompress(Codec::Zstandard(zstd::ZstandardSettings::default()))
+        compress_and_decompress(Codec::Zstandard(zstandard::ZstandardSettings::default()))
     }
 
     #[cfg(feature = "bzip")]
@@ -319,7 +319,7 @@ mod tests {
 
         #[cfg(feature = "zstandard")]
         assert_eq!(
-            <&str>::from(Codec::Zstandard(zstd::ZstandardSettings::default())),
+            <&str>::from(Codec::Zstandard(zstandard::ZstandardSettings::default())),
             "zstandard"
         );
 
@@ -346,7 +346,7 @@ mod tests {
         #[cfg(feature = "zstandard")]
         assert_eq!(
             Codec::from_str("zstandard").unwrap(),
-            Codec::Zstandard(zstd::ZstandardSettings::default())
+            Codec::Zstandard(zstandard::ZstandardSettings::default())
         );
 
         #[cfg(feature = "bzip")]
