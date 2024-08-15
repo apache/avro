@@ -22,6 +22,15 @@ use apache_avro::{
 use apache_avro_test_helper::TestResult;
 
 #[test]
+fn avro_4032_null_codec_settings() -> TestResult {
+    avro_4032_codec_settings(Codec::Null)
+}
+#[test]
+fn avro_4032_deflate_codec_settings() -> TestResult {
+    avro_4032_codec_settings(Codec::Deflate)
+}
+
+#[test]
 #[cfg(feature = "bzip")]
 fn avro_4032_bzip_codec_settings() -> TestResult {
     use apache_avro::Bzip2Settings;
