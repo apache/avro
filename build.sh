@@ -292,6 +292,7 @@ do
       ;;
 
     docker)
+      echo "NB: for Docker Desktop users on MacOS, the default file sharing implementation (VirtioFS) has issues with some operations. You should better use gRPC FUSE or osxfs."
       if [[ $1 =~ ^--args ]]; then
         DOCKER_RUN_XTRA_ARGS=$2
         shift 2
