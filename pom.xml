@@ -423,6 +423,7 @@
                 <exclude>**/.gitmodules</exclude>
                 <!-- Hugo / Docsy -->
                 <exclude>doc/build/**</exclude>
+                <exclude>doc/content/**</exclude>
                 <exclude>doc/themes/docsy/**</exclude>
                 <exclude>doc/examples/java-example/target/**</exclude>
                 <exclude>doc/examples/mr-example/target/**</exclude>
