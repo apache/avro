@@ -248,43 +248,42 @@ namespace Avro.Specific
         /// </exception>
         public Type GetType(Schema schema)
         {
-            switch (schema.Tag)
-            {
-                case Schema.Type.Null:
-                    break;
-                case Schema.Type.Boolean:
-                    return typeof(bool);
-                case Schema.Type.Int:
-                    return typeof(int);
-                case Schema.Type.Long:
-                    return typeof(long);
-                case Schema.Type.Float:
-                    return typeof(float);
-                case Schema.Type.Double:
-                    return typeof(double);
-                case Schema.Type.Bytes:
-                    return typeof(byte[]);
-                case Schema.Type.String:
-                    return typeof(string);
-                case Schema.Type.Union:
+            switch (schema.Tag) {
+            case Schema.Type.Null:
+                break;
+            case Schema.Type.Boolean:
+                return typeof(bool);
+            case Schema.Type.Int:
+                return typeof(int);
+            case Schema.Type.Long:
+                return typeof(long);
+            case Schema.Type.Float:
+                return typeof(float);
+            case Schema.Type.Double:
+                return typeof(double);
+            case Schema.Type.Bytes:
+                return typeof(byte[]);
+            case Schema.Type.String:
+                return typeof(string);
+            case Schema.Type.Union:
+                {
+                    if (schema is UnionSchema unSchema && unSchema.Count == 2)
                     {
-                        if (schema is UnionSchema unSchema && unSchema.Count == 2)
+                        Schema s1 = unSchema.Schemas[0];
+                        Schema s2 = unSchema.Schemas[1];
+
+                        // Nullable ?
+                        Type itemType = null;
+                        if (s1.Tag == Schema.Type.Null)
                         {
-                            Schema s1 = unSchema.Schemas[0];
-                            Schema s2 = unSchema.Schemas[1];
+                            itemType = GetType(s2);
+                        }
+                        else if (s2.Tag == Schema.Type.Null)
+                        {
+                            itemType = GetType(s1);
+                        }
 
-                            // Nullable ?
-                            Type itemType = null;
-                            if (s1.Tag == Schema.Type.Null)
-                            {
-                                itemType = GetType(s2);
-                            }
-                            else if (s2.Tag == Schema.Type.Null)
-                            {
-                                itemType = GetType(s1);
-                            }
-
-                            if (itemType != null)
+                        if (itemType != null)
                             {
                                 if (itemType.IsValueType && !itemType.IsEnum)
                                 {
