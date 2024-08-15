@@ -18,7 +18,6 @@
 
 #include <cmath>
 #include <unordered_set>
-#include <vector>
 
 #include "Node.hh"
 
