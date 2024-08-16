@@ -22,19 +22,17 @@ use apache_avro::{
 };
 use apache_avro_test_helper::TestResult;
 
+const SCHEMA: &str = r#"{
+    "type": "record",
+    "name": "append_to_existing_file",
+    "fields": [
+        {"name": "a", "type": "int"}
+    ]
+}"#;
+
 #[test]
 fn avro_3630_append_to_an_existing_file() -> TestResult {
-    let schema_str = r#"
-            {
-                "type": "record",
-                "name": "append_to_existing_file",
-                "fields": [
-                    {"name": "a", "type": "int"}
-                ]
-            }
-        "#;
-
-    let schema = Schema::parse_str(schema_str).expect("Cannot parse the schema");
+    let schema = Schema::parse_str(SCHEMA).expect("Cannot parse the schema");
 
     let bytes = get_avro_bytes(&schema);
 
@@ -51,10 +49,34 @@ fn avro_3630_append_to_an_existing_file() -> TestResult {
     let reader = Reader::new(&*new_bytes).expect("Cannot read the new bytes");
     let mut i = 1;
     for value in reader {
-        check(value, i);
+        check(&value, i);
         i += 1
     }
 
+    Ok(())
+}
+
+#[test]
+fn avro_4031_append_to_file_using_multiple_writers() -> TestResult {
+    let schema = Schema::parse_str(SCHEMA).expect("Cannot parse the schema");
+
+    let mut first_writer = Writer::builder().schema(&schema).writer(Vec::new()).build();
+    first_writer.append(create_datum(&schema, -42))?;
+    let mut resulting_bytes = first_writer.into_inner()?;
+    let first_marker = read_marker(&resulting_bytes);
+
+    let mut second_writer = Writer::builder()
+        .schema(&schema)
+        .has_header(true)
+        .marker(first_marker)
+        .writer(Vec::new())
+        .build();
+    second_writer.append(create_datum(&schema, 42))?;
+    resulting_bytes.append(&mut second_writer.into_inner()?);
+
+    let values: Vec<_> = Reader::new(&resulting_bytes[..])?.collect();
+    check(&values[0], -42);
+    check(&values[1], 42);
     Ok(())
 }
 
@@ -75,7 +97,7 @@ fn create_datum(schema: &Schema, value: i32) -> Record {
 }
 
 /// Checks the read values
-fn check(value: AvroResult<Value>, expected: i32) {
+fn check(value: &AvroResult<Value>, expected: i32) {
     match value {
         Ok(value) => match value {
             Value::Record(fields) => match &fields[0] {
