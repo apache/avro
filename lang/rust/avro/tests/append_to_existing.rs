@@ -57,7 +57,7 @@ fn avro_3630_append_to_an_existing_file() -> TestResult {
 }
 
 #[test]
-fn append_to_file_using_multiple_writers() -> TestResult {
+fn avro_4031_append_to_file_using_multiple_writers() -> TestResult {
     let schema = Schema::parse_str(SCHEMA).expect("Cannot parse the schema");
 
     let mut first_writer = Writer::builder().schema(&schema).writer(Vec::new()).build();
