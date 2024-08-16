@@ -49,7 +49,7 @@ pub struct Writer<'a, W> {
     num_values: usize,
     #[builder(default = generate_sync_marker())]
     marker: [u8; 16],
-    #[builder(default = false, setter(skip))]
+    #[builder(default = false)]
     has_header: bool,
     #[builder(default)]
     user_metadata: HashMap<String, Value>,
@@ -114,8 +114,8 @@ impl<'a, W: Write> Writer<'a, W> {
             .writer(writer)
             .codec(codec)
             .marker(marker)
+            .has_header(true)
             .build();
-        w.has_header = true;
         w.resolved_schema = ResolvedSchema::try_from(schema).ok();
         w
     }
@@ -134,8 +134,8 @@ impl<'a, W: Write> Writer<'a, W> {
             .writer(writer)
             .codec(codec)
             .marker(marker)
+            .has_header(true)
             .build();
-        w.has_header = true;
         w.resolved_schema = ResolvedSchema::try_from(schemata).ok();
         w
     }
