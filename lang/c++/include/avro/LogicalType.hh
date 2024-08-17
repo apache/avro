@@ -35,8 +35,10 @@ public:
         TIME_MICROS,
         TIMESTAMP_MILLIS,
         TIMESTAMP_MICROS,
+        TIMESTAMP_NANOS,
         LOCAL_TIMESTAMP_MILLIS,
         LOCAL_TIMESTAMP_MICROS,
+        LOCAL_TIMESTAMP_NANOS,
         DURATION,
         UUID
     };
