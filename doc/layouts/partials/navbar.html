@@ -51,9 +51,6 @@
 				{{ partial "navbar-asf-links.html" . }}
 			</li>
 			{{ if  (gt (len .Site.Home.Translations) 0) }}
-			<li class="nav-item dropdown mr-4 d-none d-lg-block">
-				{{ partial "navbar-lang-selector.html" . }}
-			</li>
 			{{ end }}
 		</ul>
 	</div>

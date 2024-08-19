@@ -19,11 +19,13 @@
 
 -->
 
-<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-	ASF links
-</a>
-<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-	{{ range .Site.Params.asf.links }}
-	<a class="dropdown-item" href="{{ .url }}" target="_blank">{{ .name }}</a>
-	{{ end }}
+<div class="dropdown">
+    <button class="nav-link btn btn-secondary dropdown-toggle" type="button" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+	    ASF links
+    </button>
+    <ul class="dropdown-menu">
+        {{ range .Site.Params.asf.links }}
+        <a class="dropdown-item" href="{{ .url }}" target="_blank">{{ .name }}</a>
+        {{ end }}
+    </ul>
 </div>

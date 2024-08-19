@@ -1,3 +1,10 @@
+---
+title: "C# API"
+linkTitle: "C# API"
+weight: 103
+manualLink: /docs/1.12.0/api/csharp/html/
+---
+
 <!--
 
  Licensed to the Apache Software Foundation (ASF) under one
@@ -19,13 +26,4 @@
 
 -->
 
-<div class="dropdown">
-    <button class="nav-link btn btn-secondary dropdown-toggle" type="button" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-        Documentation
-    </button>
-    <ul class="dropdown-menu">
-        {{ range .Site.Params.versions }}
-        <li><a class="dropdown-item" href="{{ .url }}">{{ .version }}</a></li>
-        {{ end }}
-    </ul>
-</div>
+The C# API documentation can be found <a href="/docs/1.12.0/api/csharp/html/">here</a>.
