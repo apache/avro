@@ -423,11 +423,13 @@
                 <exclude>**/.gitmodules</exclude>
                 <!-- Hugo / Docsy -->
                 <exclude>doc/build/**</exclude>
+                <exclude>doc/content/**</exclude>
                 <exclude>doc/themes/docsy/**</exclude>
                 <exclude>doc/examples/java-example/target/**</exclude>
                 <exclude>doc/examples/mr-example/target/**</exclude>
                 <exclude>doc/node_modules/**</exclude>
                 <exclude>**/.hugo_build.lock</exclude>
+                <exclude>doc/go.sum</exclude>
                 <!-- build or test files (some are generated files that we commit as-is for testing purposes) -->
                 <exclude>**/*.log</exclude>
                 <exclude>**/*.rej</exclude>
