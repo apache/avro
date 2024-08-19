@@ -25,6 +25,7 @@
 #include <cassert>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "CustomAttributes.hh"
 #include "Exception.hh"

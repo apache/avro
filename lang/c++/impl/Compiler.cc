@@ -369,6 +369,10 @@ static LogicalType makeLogicalType(const Entity &e, const Object &m) {
         t = LogicalType::TIMESTAMP_MILLIS;
     else if (typeField == "timestamp-micros")
         t = LogicalType::TIMESTAMP_MICROS;
+    else if (typeField == "local-timestamp-millis")
+        t = LogicalType::LOCAL_TIMESTAMP_MILLIS;
+    else if (typeField == "local-timestamp-micros")
+        t = LogicalType::LOCAL_TIMESTAMP_MICROS;
     else if (typeField == "duration")
         t = LogicalType::DURATION;
     else if (typeField == "uuid")
