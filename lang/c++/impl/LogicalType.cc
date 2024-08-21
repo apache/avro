@@ -71,11 +71,17 @@ void LogicalType::printJson(std::ostream &os) const {
         case TIMESTAMP_MICROS:
             os << R"("logicalType": "timestamp-micros")";
             break;
+        case TIMESTAMP_NANOS:
+            os << R"("logicalType": "timestamp-nanos")";
+            break;
         case LOCAL_TIMESTAMP_MILLIS:
             os << R"("logicalType": "local-timestamp-millis")";
             break;
         case LOCAL_TIMESTAMP_MICROS:
             os << R"("logicalType": "local-timestamp-micros")";
+            break;
+        case LOCAL_TIMESTAMP_NANOS:
+            os << R"("logicalType": "local-timestamp-nanos")";
             break;
         case DURATION:
             os << R"("logicalType": "duration")";

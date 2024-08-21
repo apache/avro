@@ -217,8 +217,10 @@ const char *roundTripSchemas[] = {
     R"({"type":"long","logicalType":"time-micros"})",
     R"({"type":"long","logicalType":"timestamp-millis"})",
     R"({"type":"long","logicalType":"timestamp-micros"})",
+    R"({"type":"long","logicalType":"timestamp-nanos"})",
     R"({"type":"long","logicalType":"local-timestamp-millis"})",
     R"({"type":"long","logicalType":"local-timestamp-micros"})",
+    R"({"type":"long","logicalType":"local-timestamp-nanos"})",
     R"({"type":"fixed","name":"test","size":12,"logicalType":"duration"})",
     R"({"type":"string","logicalType":"uuid"})",
 
@@ -244,8 +246,10 @@ const char *malformedLogicalTypes[] = {
     R"({"type":"string","logicalType":"time-micros"})",
     R"({"type":"string","logicalType":"timestamp-millis"})",
     R"({"type":"string","logicalType":"timestamp-micros"})",
+    R"({"type":"string","logicalType":"timestamp-nanos"})",
     R"({"type":"string","logicalType":"local-timestamp-millis"})",
     R"({"type":"string","logicalType":"local-timestamp-micros"})",
+    R"({"type":"string","logicalType":"local-timestamp-nanos"})",
     R"({"type":"string","logicalType":"duration"})",
     R"({"type":"long","logicalType":"uuid"})",
     // Missing the required field 'precision'.
@@ -360,11 +364,17 @@ static void testLogicalTypes() {
     const char *timestampMicrosType = "{\n\
         \"type\": \"long\", \"logicalType\": \"timestamp-micros\"\n\
     }";
+    const char *timestampNanosType = "{\n\
+        \"type\": \"long\", \"logicalType\": \"timestamp-nanos\"\n\
+    }";
     const char *localTimestampMillisType = "{\n\
         \"type\": \"long\", \"logicalType\": \"local-timestamp-millis\"\n\
     }";
     const char *localTimestampMicrosType = "{\n\
         \"type\": \"long\", \"logicalType\": \"local-timestamp-micros\"\n\
+    }";
+    const char *localTimestampNanosType = "{\n\
+        \"type\": \"long\", \"logicalType\": \"local-timestamp-nanos\"\n\
     }";
     const char *durationType = "{\n\
         \"type\": \"fixed\",\n\
@@ -447,6 +457,15 @@ static void testLogicalTypes() {
         BOOST_CHECK(datum.logicalType().type() == LogicalType::TIMESTAMP_MICROS);
     }
     {
+        BOOST_TEST_CHECKPOINT(timestampNanosType);
+        ValidSchema schema = compileJsonSchemaFromString(timestampNanosType);
+        BOOST_CHECK(schema.root()->type() == AVRO_LONG);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::TIMESTAMP_NANOS);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::TIMESTAMP_NANOS);
+    }
+    {
         BOOST_TEST_CHECKPOINT(localTimestampMillisType);
         ValidSchema schema = compileJsonSchemaFromString(localTimestampMillisType);
         BOOST_CHECK(schema.root()->type() == AVRO_LONG);
@@ -463,6 +482,15 @@ static void testLogicalTypes() {
         BOOST_CHECK(logicalType.type() == LogicalType::LOCAL_TIMESTAMP_MICROS);
         GenericDatum datum(schema);
         BOOST_CHECK(datum.logicalType().type() == LogicalType::LOCAL_TIMESTAMP_MICROS);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(localTimestampNanosType);
+        ValidSchema schema = compileJsonSchemaFromString(localTimestampNanosType);
+        BOOST_CHECK(schema.root()->type() == AVRO_LONG);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::LOCAL_TIMESTAMP_NANOS);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::LOCAL_TIMESTAMP_NANOS);
     }
     {
         BOOST_TEST_CHECKPOINT(durationType);
