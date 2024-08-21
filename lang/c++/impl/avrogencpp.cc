@@ -79,7 +79,7 @@ public:
     std::optional<std::string> getExistingUnionName(const std::vector<std::string> &unionBranches) const;
     std::string generateNewUnionName(const std::vector<std::string> &unionBranches);
     bool unionTraitsAlreadyGenerated(const std::string &unionClassName) const;
-    void setTraitsGenerated(const std::string &unionName);
+    void setTraitsGenerated(const std::string &unionClassName);
 };
 
 class CodeGen {
@@ -952,6 +952,6 @@ bool UnionCodeTracker::unionTraitsAlreadyGenerated(const std::string &unionClass
     return generatedUnionTraits_.find(unionClassName) != generatedUnionTraits_.end();
 }
 
-void UnionCodeTracker::setTraitsGenerated(const std::string &unionName) {
-    generatedUnionTraits_.insert(unionName);
+void UnionCodeTracker::setTraitsGenerated(const std::string &unionClassName) {
+    generatedUnionTraits_.insert(unionClassName);
 }
