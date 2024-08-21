@@ -17,6 +17,7 @@
  */
 
 #include "Compiler.hh"
+#include "big_union.hh"
 #include "bigrecord.hh"
 #include "bigrecord_r.hh"
 #include "tweet.hh"
@@ -131,6 +132,14 @@ void checkDefaultValues(const testgen_r::RootRecord &r) {
     BOOST_CHECK_EQUAL(r.byteswithDefaultValue.get_bytes()[0], 0xff);
     BOOST_CHECK_EQUAL(r.byteswithDefaultValue.get_bytes()[1], 0xaa);
 }
+
+// enable use of BOOST_CHECK_EQUAL
+template<>
+struct boost::test_tools::tt_detail::print_log_value<big_union::RootRecord::big_union_t::Branch> {
+    void operator()(std::ostream &stream, const big_union::RootRecord::big_union_t::Branch &branch) const {
+        stream << "big_union_t::Branch{" << static_cast<size_t>(branch) << "}";
+    }
+};
 
 void testEncoding() {
     ValidSchema s;
@@ -300,6 +309,105 @@ void testEmptyRecord() {
     BOOST_CHECK_EQUAL(calc2.stack[2].idx(), 2);
 }
 
+void testUnionMethods() {
+    ValidSchema schema;
+    ifstream ifs_w("jsonschemas/bigrecord");
+    compileJsonSchema(ifs_w, schema);
+
+    testgen::RootRecord record;
+    // initialize the map and set values with getter
+    record.myunion.set_map({});
+    record.myunion.get_map()["zero"] = 0;
+    record.myunion.get_map()["one"] = 1;
+
+    std::vector<uint8_t> bytes{1, 2, 3, 4};
+    record.anotherunion.set_bytes(std::move(bytes));
+    // after move assignment the local variable should be empty
+    BOOST_CHECK(bytes.empty());
+
+    unique_ptr<OutputStream> out_stream = memoryOutputStream();
+    EncoderPtr encoder = validatingEncoder(schema, binaryEncoder());
+    encoder->init(*out_stream);
+    avro::encode(*encoder, record);
+    encoder->flush();
+
+    DecoderPtr decoder = validatingDecoder(schema, binaryDecoder());
+    unique_ptr<InputStream> is = memoryInputStream(*out_stream);
+    decoder->init(*is);
+    testgen::RootRecord decoded_record;
+    avro::decode(*decoder, decoded_record);
+
+    // check that a reference can be obtained from a union
+    BOOST_CHECK(decoded_record.myunion.branch() == testgen::RootRecord::myunion_t::Branch::map);
+    const std::map<std::string, int32_t> &read_map = decoded_record.myunion.get_map();
+    BOOST_CHECK_EQUAL(read_map.size(), 2);
+    BOOST_CHECK_EQUAL(read_map.at("zero"), 0);
+    BOOST_CHECK_EQUAL(read_map.at("one"), 1);
+
+    BOOST_CHECK(decoded_record.anotherunion.branch() == testgen::RootRecord::anotherunion_t::Branch::bytes);
+    const std::vector<uint8_t> read_bytes = decoded_record.anotherunion.get_bytes();
+    const std::vector<uint8_t> expected_bytes{1, 2, 3, 4};
+    BOOST_CHECK_EQUAL_COLLECTIONS(read_bytes.begin(), read_bytes.end(), expected_bytes.begin(), expected_bytes.end());
+}
+
+void testUnionBranchEnum() {
+    big_union::RootRecord record;
+
+    using Branch = big_union::RootRecord::big_union_t::Branch;
+
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::null);
+    record.big_union.set_null();
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::null);
+
+    record.big_union.set_bool(false);
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::bool_);
+
+    record.big_union.set_int(123);
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::int_);
+
+    record.big_union.set_long(456);
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::long_);
+
+    record.big_union.set_float(555.555f);
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::float_);
+
+    record.big_union.set_double(777.777);
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::double_);
+
+    record.big_union.set_MD5({});
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::MD5);
+
+    record.big_union.set_string("test");
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::string);
+
+    record.big_union.set_Vec2({});
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::Vec2);
+
+    record.big_union.set_Vec3({});
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::Vec3);
+
+    record.big_union.set_Suit(big_union::Suit::CLUBS);
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::Suit);
+
+    record.big_union.set_array({});
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::array);
+
+    record.big_union.set_map({});
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::map);
+
+    record.big_union.set_int_({});
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::int__2);
+
+    record.big_union.set_int__({});
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::int__);
+
+    record.big_union.set_Int({});
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::Int);
+
+    record.big_union.set__Int({});
+    BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::_Int);
+}
+
 boost::unit_test::test_suite *init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     auto *ts = BOOST_TEST_SUITE("Code generator tests");
     ts->add(BOOST_TEST_CASE(testEncoding));
@@ -308,5 +416,7 @@ boost::unit_test::test_suite *init_unit_test_suite(int /*argc*/, char * /*argv*/
     ts->add(BOOST_TEST_CASE(testEncoding2<umu::r1>));
     ts->add(BOOST_TEST_CASE(testNamespace));
     ts->add(BOOST_TEST_CASE(testEmptyRecord));
+    ts->add(BOOST_TEST_CASE(testUnionMethods));
+    ts->add(BOOST_TEST_CASE(testUnionBranchEnum));
     return ts;
 }
