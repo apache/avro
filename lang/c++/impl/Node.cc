@@ -189,6 +189,18 @@ void Node::setLogicalType(LogicalType logicalType) {
                                 "LONG type");
             }
             break;
+        case LogicalType::LOCAL_TIMESTAMP_MILLIS:
+            if (type_ != AVRO_LONG) {
+                throw Exception("LOCAL-TIMESTAMP-MILLIS logical type can only annotate "
+                                "LONG type");
+            }
+            break;
+        case LogicalType::LOCAL_TIMESTAMP_MICROS:
+            if (type_ != AVRO_LONG) {
+                throw Exception("LOCAL-TIMESTAMP-MICROS logical type can only annotate "
+                                "LONG type");
+            }
+            break;
         case LogicalType::DURATION:
             if (type_ != AVRO_FIXED || fixedSize() != 12) {
                 throw Exception("DURATION logical type can only annotate "
