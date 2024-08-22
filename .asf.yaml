@@ -43,6 +43,9 @@ github:
   collaborators:
     - jbonofre
 
+publish:
+  whoami: asf-site
+
 notifications:
   commits: commits@avro.apache.org
   issues: issues@avro.apache.org
