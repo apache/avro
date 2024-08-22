@@ -198,6 +198,9 @@ jobs:
     needs: [build-website, build-api-c, build-api-cpp, build-api-csharp, build-api-java, build-api-python]
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download website
         uses: actions/download-artifact@v4
         with:
@@ -234,7 +237,7 @@ jobs:
           name: api-python
           path: api-python
 
-      - name: Copy & push the generated HTML
+      - name: Copy the generated HTML
         run: |
           set -x
 
@@ -248,10 +251,9 @@ jobs:
           mv api-python/* $WEBSITE_API/python/html/
           rmdir api-c api-c++ api-csharp api-java api-python
 
-      - name: Commit new site
+      - name: Push the new website
         run: |
           set -ex
-          ls -la
           rsync \
             -a \
             --delete \
@@ -262,7 +264,6 @@ jobs:
                   whoami: asf-site
                 " > .asf.yaml
           touch .nojekyll
-          ls -la
           git config --global user.email "dev@avro.apache.org"
           git config --global user.name "Github Actions"
           git checkout --orphan asf-site-staging
