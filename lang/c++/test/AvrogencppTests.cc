@@ -24,7 +24,9 @@
 #include "union_array_union.hh"
 #include "union_empty_record.hh"
 #include "union_map_union.hh"
+#include "union_redundant_types.hh"
 
+#include <array>
 #include <boost/test/included/unit_test.hpp>
 
 #ifdef min
@@ -408,6 +410,105 @@ void testUnionBranchEnum() {
     BOOST_CHECK_EQUAL(record.big_union.branch(), Branch::_Int);
 }
 
+// enable use of BOOST_CHECK_EQUAL
+template<>
+struct boost::test_tools::tt_detail::print_log_value<std::type_info> {
+    void operator()(std::ostream &stream, const std::type_info &type_info) const {
+        stream << "std::type_info{.name=" << type_info.name() << "}";
+    }
+};
+
+void testNoRedundantUnionTypes() {
+    redundant_types::RedundantUnionSchema record;
+    // ensure only one class is generated for same union
+    BOOST_CHECK_EQUAL(typeid(record.null_string_1), typeid(record.null_string_2));
+    BOOST_CHECK_EQUAL(typeid(record.string_null_1), typeid(record.string_null_2));
+    BOOST_CHECK_EQUAL(typeid(record.null_Empty_1), typeid(record.null_Empty_2));
+    BOOST_CHECK_EQUAL(typeid(record.null_namespace_record_1), typeid(record.null_namespace_record_2));
+    BOOST_CHECK_EQUAL(typeid(record.null_int_map_1), typeid(record.null_int_map_2));
+
+    // different union types should have different class
+    BOOST_CHECK_NE(typeid(record.null_string_1), typeid(record.string_null_1));
+    BOOST_CHECK_NE(typeid(record.null_string_1), typeid(record.null_string_int));
+    BOOST_CHECK_NE(typeid(record.null_fixed_8), typeid(record.null_fixed_16));
+    BOOST_CHECK_NE(typeid(record.null_int_map_1), typeid(record.null_long_map));
+}
+
+void testNoRedundantUnionTypesEncodeDecode() {
+    redundant_types::RedundantUnionSchema input_record;
+    input_record.null_string_1.set_string("null_string_1");
+    input_record.null_string_2.set_string("null_string_2");
+    input_record.string_null_1.set_string("string_null_1");
+    input_record.string_null_2.set_string("string_null_2");
+    input_record.null_string_int.set_string("null_string_int");
+    input_record.null_Empty_1.set_Empty({});
+    input_record.null_Empty_2.set_Empty({});
+    input_record.null_namespace_record_1.set_Record({});
+    input_record.null_namespace_record_2.set_Record({});
+    input_record.null_fixed_8.set_fixed_8({8});
+    input_record.null_fixed_16.set_fixed_16({16});
+    input_record.fixed_8_fixed_16.set_fixed_16({16});
+    input_record.null_int_map_1.set_map({{"null_int_map_1", 1}});
+    input_record.null_int_map_2.set_map({{"null_int_map_2", 1}});
+    input_record.null_long_map.set_map({{"null_long_map", 1}});
+
+    ValidSchema s;
+    ifstream ifs("jsonschemas/union_redundant_types");
+    compileJsonSchema(ifs, s);
+
+    unique_ptr<OutputStream> os = memoryOutputStream();
+    EncoderPtr e = validatingEncoder(s, binaryEncoder());
+    e->init(*os);
+    avro::encode(*e, input_record);
+    e->flush();
+
+    DecoderPtr d = validatingDecoder(s, binaryDecoder());
+    unique_ptr<InputStream> is = memoryInputStream(*os);
+    d->init(*is);
+    redundant_types::RedundantUnionSchema result_record;
+    avro::decode(*d, result_record);
+
+    BOOST_CHECK_EQUAL(result_record.null_string_1.get_string(), "null_string_1");
+    BOOST_CHECK_EQUAL(result_record.null_string_2.get_string(), "null_string_2");
+    BOOST_CHECK_EQUAL(result_record.string_null_1.get_string(), "string_null_1");
+    BOOST_CHECK_EQUAL(result_record.string_null_2.get_string(), "string_null_2");
+    BOOST_CHECK_EQUAL(result_record.null_string_int.get_string(), "null_string_int");
+    BOOST_CHECK(!result_record.null_Empty_1.is_null());
+    BOOST_CHECK(!result_record.null_Empty_2.is_null());
+    BOOST_CHECK(!result_record.null_namespace_record_1.is_null());
+    BOOST_CHECK(!result_record.null_namespace_record_2.is_null());
+    {
+        const auto actual = result_record.null_fixed_8.get_fixed_8();
+        const std::array<uint8_t, 8> expected{8};
+        BOOST_CHECK_EQUAL_COLLECTIONS(actual.begin(), actual.end(), expected.begin(), expected.end());
+    }
+    {
+        const auto actual = result_record.null_fixed_16.get_fixed_16();
+        const std::array<uint8_t, 16> expected{16};
+        BOOST_CHECK_EQUAL_COLLECTIONS(actual.begin(), actual.end(), expected.begin(), expected.end());
+    }
+    {
+        const auto actual = result_record.fixed_8_fixed_16.get_fixed_16();
+        const std::array<uint8_t, 16> expected{16};
+        BOOST_CHECK_EQUAL_COLLECTIONS(actual.begin(), actual.end(), expected.begin(), expected.end());
+    }
+    {
+        const auto actual = result_record.null_int_map_1.get_map();
+        BOOST_CHECK_EQUAL(actual.size(), 1);
+        BOOST_CHECK_EQUAL(actual.at("null_int_map_1"), 1);
+    }
+    {
+        const auto actual = result_record.null_int_map_2.get_map();
+        BOOST_CHECK_EQUAL(actual.size(), 1);
+        BOOST_CHECK_EQUAL(actual.at("null_int_map_2"), 1);
+    }
+    {
+        const auto actual = result_record.null_long_map.get_map();
+        BOOST_CHECK_EQUAL(actual.size(), 1);
+        BOOST_CHECK_EQUAL(actual.at("null_long_map"), 1);
+    }
+}
+
 boost::unit_test::test_suite *init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     auto *ts = BOOST_TEST_SUITE("Code generator tests");
     ts->add(BOOST_TEST_CASE(testEncoding));
@@ -418,5 +519,7 @@ boost::unit_test::test_suite *init_unit_test_suite(int /*argc*/, char * /*argv*/
     ts->add(BOOST_TEST_CASE(testEmptyRecord));
     ts->add(BOOST_TEST_CASE(testUnionMethods));
     ts->add(BOOST_TEST_CASE(testUnionBranchEnum));
+    ts->add(BOOST_TEST_CASE(testNoRedundantUnionTypes));
+    ts->add(BOOST_TEST_CASE(testNoRedundantUnionTypesEncodeDecode));
     return ts;
 }
