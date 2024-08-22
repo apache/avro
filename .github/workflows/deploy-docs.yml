@@ -152,6 +152,7 @@ jobs:
           java-version: |
             11
             17
+            21
 
       - name: Build Java docs
         run: |
