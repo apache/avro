@@ -35,8 +35,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Build job
-  build:
+  build-website:
     runs-on: ubuntu-latest
     env:
       HUGO_VERSION: 0.132.1
@@ -66,6 +65,180 @@ jobs:
             --minify \
             --destination ${{ runner.temp }}/website \
             --baseURL "/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: website
+          path: ${{ runner.temp }}/website
+
+  build-api-c:
+    name: Build C API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build C docs
+        run: |
+          set -x
+          sudo apt-get update -q
+          sudo apt-get install -q -y cmake liblzma-dev libsnappy-dev libjansson-dev zlib1g-dev pkg-config asciidoc source-highlight libsource-highlight-dev
+          cd lang/c
+          ./build.sh clean docs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-c
+          path: build/c/docs
+
+  build-api-cpp:
+    name: Build C++ API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build C++ docs
+        run: |
+          set -x
+          sudo apt-get update -q
+          sudo apt-get install -q -y gcc g++ libboost-all-dev cmake doxygen
+          cd lang/c++
+          ./build.sh clean doc
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-c++
+          path: lang/c++/doc/html
+
+  build-api-csharp:
+    name: Build C# API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build C# docs
+        run: |
+          set -x
+          sudo apt-get update -q
+          sudo apt-get install -q -y wget libzstd-dev libicu-dev doxygen
+          sudo wget https://dot.net/v1/dotnet-install.sh
+          bash ./dotnet-install.sh --channel "8.0" --install-dir "$HOME/.dotnet"
+          cd lang/csharp
+          mkdir -p build/doc
+          doxygen Avro.dox
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-csharp
+          path: lang/csharp/build/doc/html
+
+  build-api-java:
+    name: Build Java API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Local Maven Repository
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Setup Temurin JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 8
+
+      - name: Build Java docs
+        run: |
+          set -x
+          cd lang/java
+          mvn javadoc::aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-java
+          path: lang/java/target/site/apidocs
+
+  build-api-python:
+    name: Build Python API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install tox
+        run: python3 -m pip install tox
+
+      - name: Build docs
+        working-directory: lang/py
+        run: ./build.sh doc
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-python
+          path: lang/py/docs/build/
+
+  push-website:
+    name: Push website
+    needs: [build-website, build-api-c, build-api-cpp, build-api-csharp, build-api-java, build-api-python]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download website
+        uses: actions/download-artifact@v4
+        with:
+          name: website
+          path: ${{ runner.temp }}/website
+
+      - name: Download api-c
+        uses: actions/download-artifact@v4
+        with:
+          name: api-c
+          path: api-c
+
+      - name: Download api-c++
+        uses: actions/download-artifact@v4
+        with:
+          name: api-c++
+          path: api-c++
+
+      - name: Download api-csharp
+        uses: actions/download-artifact@v4
+        with:
+          name: api-csharp
+          path: api-csharp
+
+      - name: Download api-java
+        uses: actions/download-artifact@v4
+        with:
+          name: api-java
+          path: api-java
+
+      - name: Download api-python
+        uses: actions/download-artifact@v4
+        with:
+          name: api-python
+          path: api-python
+
+      - name: Copy & push the generated HTML
+        run: |
+          set -x
+
+          WEBSITE_API=${{ runner.temp }}/website/docs/++version++/api
+          mkdir -p $WEBSITE_API/{c,cpp/html,csharp/html,java,python/html}
+
+          mv api-c/* $WEBSITE_API/c/
+          mv api-c++/* $WEBSITE_API/cpp/html/
+          mv api-csharp/* $WEBSITE_API/csharp/html/
+          mv api-java/* $WEBSITE_API/java/
+          mv api-python/* $WEBSITE_API/python/html/
+          rmdir api-c api-c++ api-csharp api-java api-java
+
       - name: Commit new site
         run: |
           set -ex
