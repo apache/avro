@@ -138,7 +138,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -246,7 +246,7 @@ jobs:
           mv api-csharp/* $WEBSITE_API/csharp/html/
           mv api-java/* $WEBSITE_API/java/
           mv api-python/* $WEBSITE_API/python/html/
-          rmdir api-c api-c++ api-csharp api-java api-java
+          rmdir api-c api-c++ api-csharp api-java api-python
 
       - name: Commit new site
         run: |
