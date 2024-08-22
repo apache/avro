@@ -16,8 +16,8 @@
 # to commit it to your repository.
 
 
-# Sample workflow for building and deploying a Hugo site to GitHub Pages
-name: Deploy Hugo site to Pages
+# A Github Actions workflow that builds and copies the website to asf-site branch
+name: Deploy website
 
 on:
   # Runs on pushes targeting the default branch
@@ -64,16 +64,26 @@ jobs:
           hugo \
             --gc \
             --minify \
-            --baseURL "https://avro.apache.org/"
+            --destination ${{ runner.temp }}/website \
+            --baseURL "/"
       - name: Commit new site
         run: |
           set -ex
-          mv doc/public docs/
+          rsync \
+            -a \
+            --delete \
+            --exclude '/.git/' \
+            ${{ runner.temp }}/website/ \
+            ./
+          echo "publish:
+                  whoami: asf-site
+                " > .asf.yaml
+          touch .nojekyll
           git config --global user.email "dev@avro.apache.org"
           git config --global user.name "Github Actions"
           git checkout --orphan asf-site-staging
-          git add .
-          git commit -m "Update docs"
+          git add --all
+          git commit -m "Publish built website triggered by ${{ github.sha }}"
           git checkout asf-site
           git reset --hard asf-site-staging
           git push origin asf-site --force
