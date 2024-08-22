@@ -83,7 +83,7 @@ jobs:
           git config --global user.name "Github Actions"
           git checkout --orphan asf-site-staging
           git add --all
-          git commit -m "Update docs"
+          git commit -m "Publish built website triggered by ${{ github.sha }}"
           git checkout asf-site
           git reset --hard asf-site-staging
           git push origin asf-site --force
