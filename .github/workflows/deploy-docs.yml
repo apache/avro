@@ -259,7 +259,7 @@ jobs:
           git config --global user.name "Github Actions"
           git checkout --orphan asf-site-staging
 
-          git rm -r *
+          git rm -rf *
 
           mv ${{ runner.temp }}/website/* . 
           echo "publish:
