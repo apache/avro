@@ -254,19 +254,18 @@ jobs:
       - name: Push the new website
         run: |
           set -ex
-          rsync \
-            -a \
-            --delete \
-            --exclude '/.git/' \
-            ${{ runner.temp }}/website/ \
-            ./
+
+          git config --global user.email "dev@avro.apache.org"
+          git config --global user.name "Github Actions"
+          git checkout --orphan asf-site-staging
+
+          git rm -r *
+
+          mv ${{ runner.temp }}/website/* . 
           echo "publish:
                   whoami: asf-site
                 " > .asf.yaml
           touch .nojekyll
-          git config --global user.email "dev@avro.apache.org"
-          git config --global user.name "Github Actions"
-          git checkout --orphan asf-site-staging
           git add --all
           git commit -m "Publish built website triggered by ${{ github.sha }}"
           git checkout asf-site
