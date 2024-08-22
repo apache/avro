@@ -251,6 +251,7 @@ jobs:
       - name: Commit new site
         run: |
           set -ex
+          ls -la
           rsync \
             -a \
             --delete \
@@ -261,6 +262,7 @@ jobs:
                   whoami: asf-site
                 " > .asf.yaml
           touch .nojekyll
+          ls -la
           git config --global user.email "dev@avro.apache.org"
           git config --global user.name "Github Actions"
           git checkout --orphan asf-site-staging
