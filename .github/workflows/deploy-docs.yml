@@ -64,16 +64,16 @@ jobs:
           hugo \
             --gc \
             --minify \
+            --destination ${{ runner.temp }}/website \
             --baseURL "/"
       - name: Commit new site
         run: |
           set -ex
-          mv doc/public ${{runner.temp}}/website
           rsync \
             -a \
             --delete \
             --exclude '/.git/' \
-            ${{runner.temp}}/website/ \
+            ${{ runner.temp }}/website/ \
             ./
           echo "publish:
                   whoami: asf-site
