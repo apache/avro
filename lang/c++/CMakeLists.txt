@@ -182,6 +182,7 @@ gen (primitivetypes pt)
 gen (cpp_reserved_words cppres)
 gen (cpp_reserved_words_union_typedef cppres_union)
 gen (big_union big_union)
+gen (union_redundant_types redundant_types)
 
 add_executable (avrogencpp impl/avrogencpp.cc)
 target_link_libraries (avrogencpp avrocpp_s)
@@ -227,7 +228,7 @@ add_dependencies (AvrogencppTests bigrecord_hh bigrecord_r_hh bigrecord2_hh
     union_array_union_hh union_map_union_hh union_conflict_hh
     recursive_hh reuse_hh circulardep_hh tree1_hh tree2_hh crossref_hh
     primitivetypes_hh empty_record_hh cpp_reserved_words_union_typedef_hh
-    union_empty_record_hh big_union_hh)
+    union_empty_record_hh big_union_hh union_redundant_types_hh)
 
 include (InstallRequiredSystemLibraries)
 
