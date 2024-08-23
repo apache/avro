@@ -256,8 +256,8 @@ jobs:
       - name: Checkout old docs versions from Subversion
         run: |
           svn checkout https://svn.apache.org/repos/asf/avro/site/publish/docs
-          rm -rf docs/1.12.0
-          mv docs/* ${{ runner.temp }}/website/docs/
+          rm -rf docs/1.12.0 docs/.svn
+          mv docs/1* ${{ runner.temp }}/website/docs/
 
       - name: Push the new website
         run: |
