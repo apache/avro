@@ -48,8 +48,7 @@ jobs:
         run: sudo snap install dart-sass
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+
       - name: Install Node.js dependencies
         working-directory: doc/
         run: ls -lah && npm ci
@@ -200,6 +199,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download website
         uses: actions/download-artifact@v4
