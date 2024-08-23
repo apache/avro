@@ -253,6 +253,11 @@ jobs:
           mv api-python/* $WEBSITE_API/py/
           rmdir api-c api-c++ api-csharp api-java api-python
 
+      - name: Checkout old docs versions from Subversion
+        run: |
+          svn checkout https://svn.apache.org/repos/asf/avro/site/publish/docs
+          mv docs/* ${{ runner.temp }}/website/docs/
+
       - name: Push the new website
         run: |
           set -ex
