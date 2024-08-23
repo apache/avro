@@ -243,13 +243,13 @@ jobs:
           set -x
 
           WEBSITE_API=${{ runner.temp }}/website/docs/++version++/api
-          mkdir -p $WEBSITE_API/{c,cpp/html,csharp/html,java,python/html}
+          mkdir -p $WEBSITE_API/{c,cpp/html,csharp/html,java,py/html}
 
           mv api-c/* $WEBSITE_API/c/
           mv api-c++/* $WEBSITE_API/cpp/html/
           mv api-csharp/* $WEBSITE_API/csharp/html/
           mv api-java/* $WEBSITE_API/java/
-          mv api-python/* $WEBSITE_API/python/html/
+          mv api-python/* $WEBSITE_API/py/
           rmdir api-c api-c++ api-csharp api-java api-python
 
       - name: Push the new website
