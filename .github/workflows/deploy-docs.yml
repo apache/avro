@@ -36,6 +36,7 @@ concurrency:
 
 jobs:
   build-website:
+    name: Build website
     runs-on: ubuntu-latest
     env:
       HUGO_VERSION: 0.132.1
