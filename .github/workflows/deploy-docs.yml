@@ -255,6 +255,7 @@ jobs:
 
       - name: Checkout old docs versions from Subversion
         run: |
+          set -xe
           svn checkout https://svn.apache.org/repos/asf/avro/site/publish/docs
           rm -rf docs/1.12.0 docs/.svn
           mv docs/1* ${{ runner.temp }}/website/docs/
@@ -262,6 +263,8 @@ jobs:
       - name: Push the new website
         run: |
           set -ex
+
+          ls -la ${{ runner.temp }}/website/docs/
 
           git config --global user.email "dev@avro.apache.org"
           git config --global user.name "Github Actions"
