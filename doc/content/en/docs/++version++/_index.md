@@ -3,6 +3,8 @@ title: "Apache Avro™ ++version++ Documentation"
 linkTitle: "++version++"
 type: docs
 weight: 10
+aliases:
+- /docs/current/
 ---
 
 <!--
