@@ -2,7 +2,7 @@
 title: "C API"
 linkTitle: "C API"
 weight: 101
-manualLink: /docs/++version++/api/c/
+manualLink: /docs/1.11.1/api/c/
 ---
 
 <!--
@@ -26,4 +26,4 @@ manualLink: /docs/++version++/api/c/
 
 -->
 
-The C API documentation can be found <a href="/docs/++version++/api/c/">here</a>.
+The C API documentation can be found <a href="/docs/1.11.1/api/c/">here</a>.

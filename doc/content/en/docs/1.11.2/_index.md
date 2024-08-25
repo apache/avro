@@ -1,6 +1,6 @@
 ---
-title: "Apache Avro™ ++version++ Documentation"
-linkTitle: "++version++"
+title: "Apache Avro™ 1.11.2 Documentation"
+linkTitle: "1.11.2"
 type: docs
 weight: 10
 ---
