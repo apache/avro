@@ -2,7 +2,7 @@
 title: "Python API"
 linkTitle: "Python API"
 weight: 104
-manualLink: /docs/++version++/api/py/html/
+manualLink: /docs/1.11.3/api/py/html/
 ---
 
 <!--
@@ -26,4 +26,4 @@ manualLink: /docs/++version++/api/py/html/
 
 -->
 
-The Python API documentation can be found <a href="/docs/++version++/api/py/html/">here</a>.
+The Python API documentation can be found <a href="/docs/1.11.3/api/py/html/">here</a>.

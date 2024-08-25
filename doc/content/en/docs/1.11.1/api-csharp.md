@@ -2,7 +2,7 @@
 title: "C# API"
 linkTitle: "C# API"
 weight: 103
-manualLink: /docs/++version++/api/csharp/html/
+manualLink: /docs/1.11.1/api/csharp/html/
 ---
 
 <!--
@@ -26,4 +26,4 @@ manualLink: /docs/++version++/api/csharp/html/
 
 -->
 
-The C# API documentation can be found <a href="/docs/++version++/api/csharp/html/">here</a>.
+The C# API documentation can be found <a href="/docs/1.11.1/api/csharp/html/">here</a>.
