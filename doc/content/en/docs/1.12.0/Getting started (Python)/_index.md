@@ -39,11 +39,11 @@ For Python, the easiest way to get started is to install it from PyPI. Python's 
 $ python3 -m pip install avro
 ```
 
-The official releases of the Avro implementations for C, C++, C#, Java, PHP, Python, and Ruby can be downloaded from the Apache Avro™ Releases page. This guide uses Avro {{< avro_version >}}, the latest version at the time of writing. Download and unzip avro-{{< avro_version >}}.tar.gz, and install via python setup.py (this will probably require root privileges). Ensure that you can import avro from a Python prompt.
+The official releases of the Avro implementations for C, C++, C#, Java, PHP, Python, and Ruby can be downloaded from the Apache Avro™ Releases page. This guide uses Avro 1.12.0, the latest version at the time of writing. Download and unzip avro-1.12.0.tar.gz, and install via python setup.py (this will probably require root privileges). Ensure that you can import avro from a Python prompt.
 
 ```shell
-$ tar xvf avro-{{< avro_version >}}.tar.gz
-$ cd avro-{{< avro_version >}}
+$ tar xvf avro-1.12.0.tar.gz
+$ cd avro-1.12.0
 $ python setup.py install
 $ python
 >>> import avro # should not raise ImportError

@@ -31,7 +31,7 @@ This is a short guide for getting started with Apache Avro™ using Java. This g
 
 ## Download
 
-Avro implementations for C, C++, C#, Java, PHP, Python, and Ruby can be downloaded from the [Apache Avro™ Download]({{< relref "/project/download" >}}) page. This guide uses Avro {{< avro_version >}}, the latest version at the time of writing. For the examples in this guide, download avro-{{< avro_version >}}.jar and avro-tools-{{< avro_version >}}.jar.
+Avro implementations for C, C++, C#, Java, PHP, Python, and Ruby can be downloaded from the [Apache Avro™ Download]({{< relref "/project/download" >}}) page. This guide uses Avro 1.11.2, the latest version at the time of writing. For the examples in this guide, download avro-1.11.2.jar and avro-tools-1.11.2.jar.
 
 Alternatively, if you are using Maven, add the following dependency to your POM:
 
@@ -39,7 +39,7 @@ Alternatively, if you are using Maven, add the following dependency to your POM:
 <dependency>
   <groupId>org.apache.avro</groupId>
   <artifactId>avro</artifactId>
-  <version>{{< avro_version >}}</version>
+  <version>1.11.2</version>
 </dependency>
 ```
 
@@ -49,7 +49,7 @@ As well as the Avro Maven plugin (for performing code generation):
 <plugin>
   <groupId>org.apache.avro</groupId>
   <artifactId>avro-maven-plugin</artifactId>
-  <version>{{< avro_version >}}</version>
+  <version>1.11.2</version>
   <executions>
     <execution>
       <phase>generate-sources</phase>
@@ -101,13 +101,13 @@ Fields are defined via an array of objects, each of which defines a name and typ
 Code generation allows us to automatically create classes based on our previously-defined schema. Once we have defined the relevant classes, there is no need to use the schema directly in our programs. We use the avro-tools jar to generate code as follows:
 
 ```shell
-java -jar /path/to/avro-tools-{{< avro_version >}}.jar compile schema <schema file> <destination>
+java -jar /path/to/avro-tools-1.11.2.jar compile schema <schema file> <destination>
 ```
 
 This will generate the appropriate source files in a package based on the schema's namespace in the provided destination folder. For instance, to generate a User class in package example.avro from the schema defined above, run
 
 ```shell
-java -jar /path/to/avro-tools-{{< avro_version >}}.jar compile schema user.avsc .
+java -jar /path/to/avro-tools-1.11.2.jar compile schema user.avsc .
 ```
 
 Note that if you using the Avro Maven plugin, there is no need to manually invoke the schema compiler; the plugin automatically performs code generation on any .avsc files present in the configured source directory.
