@@ -2,7 +2,7 @@
 title: "Apache Avro™ 1.12.0 Documentation"
 linkTitle: "1.12.0"
 type: docs
-weight: 10
+weight: -1120
 ---
 
 <!--
