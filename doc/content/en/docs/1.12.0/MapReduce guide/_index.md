@@ -35,12 +35,12 @@ The code from this guide is included in the Avro docs under examples/mr-example.
 <dependency>
   <groupId>org.apache.avro</groupId>
   <artifactId>avro</artifactId>
-  <version>{{< avro_version >}}</version>
+  <version>1.12.0</version>
 </dependency>
 <dependency>
   <groupId>org.apache.avro</groupId>
   <artifactId>avro-mapred</artifactId>
-  <version>{{< avro_version >}}</version>
+  <version>1.12.0</version>
 </dependency>
 <dependency>
   <groupId>org.apache.hadoop</groupId>
@@ -53,7 +53,7 @@ And the following plugin:
 <plugin>
   <groupId>org.apache.avro</groupId>
   <artifactId>avro-maven-plugin</artifactId>
-  <version>{{< avro_version >}}</version>
+  <version>1.12.0</version>
   <executions>
     <execution>
       <phase>generate-sources</phase>
@@ -71,7 +71,7 @@ And the following plugin:
 
 If you do not configure the *sourceDirectory* and *outputDirectory* properties, the defaults will be used. The *sourceDirectory* property defaults to *src/main/avro*. The *outputDirectory* property defaults to *target/generated-sources*. You can change the paths to match your project layout.
 
-Alternatively, Avro jars can be downloaded directly from the Apache Avro™ Releases [page](https://avro.apache.org/releases.html). The relevant Avro jars for this guide are *avro-{{< avro_version >}}.jar* and *avro-mapred-{{< avro_version >}}.jar*, as well as *avro-tools-{{< avro_version >}}.jar* for code generation and viewing Avro data files as JSON. In addition, you will need to install Hadoop in order to use MapReduce.
+Alternatively, Avro jars can be downloaded directly from the Apache Avro™ Releases [page](https://avro.apache.org/releases.html). The relevant Avro jars for this guide are *avro-1.12.0.jar* and *avro-mapred-1.12.0.jar*, as well as *avro-tools-1.12.0.jar* for code generation and viewing Avro data files as JSON. In addition, you will need to install Hadoop in order to use MapReduce.
 
 ## Example: ColorCount
 Below is a simple example of a MapReduce that uses Avro. There is an example for both the old (org.apache.hadoop.mapred) and new (org.apache.hadoop.mapreduce) APIs under *examples/mr-example/src/main/java/example/*. _MapredColorCount_ is the example for the older mapred API while _MapReduceColorCount_ is the example for the newer mapreduce API. Both examples are below, but we will detail the mapred API in our subsequent examples.
@@ -291,7 +291,7 @@ part-00000.avro  _SUCCESS
 ```
 You can check the contents of the generated Avro file using the avro-tools jar:
 ```shell
-$ java -jar /path/to/avro-tools-{{< avro_version >}}.jar tojson output/part-00000.avro
+$ java -jar /path/to/avro-tools-1.12.0.jar tojson output/part-00000.avro
 {"value": 3, "key": "blue"}
 {"value": 7, "key": "green"}
 {"value": 1, "key": "none"}
