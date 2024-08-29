@@ -32,5 +32,6 @@ public enum ${this.mangleTypeIdentifier($schema.getName())} implements org.apach
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   @Override
+  @org.apache.avro.specific.AvroInternal
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
 }

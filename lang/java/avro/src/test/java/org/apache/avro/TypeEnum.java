@@ -33,6 +33,7 @@ public enum TypeEnum implements org.apache.avro.generic.GenericEnumSymbol<TypeEn
     return SCHEMA$;
   }
 
+  @org.apache.avro.specific.AvroInternal
   public org.apache.avro.Schema getSchema() {
     return SCHEMA$;
   }
