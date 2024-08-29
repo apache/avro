@@ -232,6 +232,8 @@ import com.fasterxml.jackson.databind.node.TextNode;
  */
 public class SchemaBuilder {
 
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+
   private SchemaBuilder() {
   }
 
@@ -2734,7 +2736,7 @@ public class SchemaBuilder {
       } else {
         s = GenericData.get().toString(o);
       }
-      return new ObjectMapper().readTree(s);
+      return MAPPER.readTree(s);
     } catch (IOException e) {
       throw new SchemaBuilderException(e);
     }
