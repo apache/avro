@@ -358,6 +358,7 @@ class AvroIODatumReader
             }
         }
         // Fill in default values
+        $writers_fields = $writers_schema->fieldsHash();
         foreach ($readers_fields as $field_name => $field) {
             if (isset($writers_fields[$field_name])) {
                 continue;
