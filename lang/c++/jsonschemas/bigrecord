@@ -1,6 +1,6 @@
 {
     "type": "record",
-    "doc": "Top level Doc.",
+    "doc": "Top level Doc.\nWith multiple lines",
     "name": "RootRecord",
     "fields": [
         {
