@@ -747,7 +747,19 @@ void CodeGen::generateDocComment(const NodePtr &n, const char *indent) {
         std::vector<std::string> lines;
         boost::algorithm::split(lines, n->getDoc(), boost::algorithm::is_any_of("\n"));
         for (auto &line : lines) {
-            os_ << indent << "// " << line << "\n";
+            boost::algorithm::replace_all(line, "\r", "");
+
+            if (line.empty()) {
+                os_ << indent << "//\n";
+            } else {
+                // If a comment line ends with a backslash, avoid generating code which will generate
+                // multi-line comment warnings on GCC. We can't just append whitespace here as escaped
+                // newlines ignore trailing whitespace.
+                if (line.back() == '\\') {
+                    line.append("(backslash)");
+                }
+                os_ << indent << "// " << line << "\n";
+            }
         }
     }
 }

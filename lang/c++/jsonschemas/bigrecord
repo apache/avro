@@ -10,6 +10,7 @@
         },
         {
             "name": "nestedrecord",
+            "doc": "Doc edge cases\r\nwith trailing backslash\\",
             "type": {
                 "type": "record",
                 "name": "Nested",
