@@ -797,20 +797,12 @@ public class BinaryDecoder extends Decoder {
           continue;
         }
         // The inputStream contract is evil.
-        // zero "might" mean EOF. So check for 2 in a row, we will
-        // infinite loop waiting for -1 with some classes others
-        // spuriously will return 0 on occasion without EOF
-        if (n == 0) {
-          if (readZero) {
-            isEof = true;
-            throw new EOFException();
-          }
-          readZero = true;
-          continue;
+        // zero "might" mean EOF. So check for 2 in a row.
+        if (readZero) {
+          isEof = true;
+          throw new EOFException();
         }
-        // read negative
-        isEof = true;
-        throw new EOFException();
+        readZero = true;
       }
     }
 
@@ -826,21 +818,12 @@ public class BinaryDecoder extends Decoder {
             continue;
           }
           // The inputStream contract is evil.
-          // zero "might" mean EOF. So check for 2 in a row, we will
-          // infinite loop waiting for -1 with some classes others
-          // spuriously will return 0 on occasion without EOF
-          if (n == 0) {
-            if (readZero) {
-              isEof = true;
-              break;
-            }
-            readZero = true;
-            continue;
+          // zero "might" mean EOF. So check for 2 in a row
+          if (readZero) {
+            isEof = true;
+            break;
           }
-          // read negative
-          isEof = true;
-          break;
-
+          readZero = true;
         }
       } catch (EOFException eof) {
         isEof = true;
