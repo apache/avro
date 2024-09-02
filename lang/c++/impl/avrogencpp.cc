@@ -752,10 +752,14 @@ void CodeGen::generateDocComment(const NodePtr &n, const char *indent) {
             if (line.empty()) {
                 os_ << indent << "//\n";
             } else {
-                // If a comment line ends with a backslash, avoid generating code which will generate
-                // multi-line comment warnings on GCC. We can't just append whitespace here as escaped
-                // newlines ignore trailing whitespace.
-                if (line.back() == '\\') {
+                // If a comment line ends with a backslash or backslash and whitespace,
+                // avoid generating code which will generate multi-line comment warnings
+                // on GCC. We can't just append whitespace here as escaped newlines ignore
+                // trailing whitespace.
+                auto lastBackslash = std::find(line.rbegin(), line.rend(), '\\');
+                auto lastNonWs = std::find_if(line.rbegin(), line.rend(), [](char c) { return !std::isspace(static_cast<int>(c)); });
+                // Note: lastBackslash <= lastNonWs because the iterators are reversed, "less" is later in the string.
+                if (lastBackslash != line.rend() && lastBackslash <= lastNonWs) {
                     line.append("(backslash)");
                 }
                 os_ << indent << "// " << line << "\n";
