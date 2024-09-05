@@ -23,8 +23,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Indicates that an annotated accessor is an Avro internal and should be
- * ignored when introspecting @AvroGenerated classes.
+ * Indicates that an annotated accessor is part of the Avro API of a class, not
+ * part of a schema, and should be ignored when introspecting @AvroGenerated
+ * classes.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
