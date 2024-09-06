@@ -1020,7 +1020,8 @@ public class SpecificCompiler {
   }
 
   private static final String PATTERN_IDENTIFIER_PART = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
-  private static final String PATTERN_IDENTIFIER = String.format("(?:%s(?:\\.%s)*)", PATTERN_IDENTIFIER_PART, PATTERN_IDENTIFIER_PART);
+  private static final String PATTERN_IDENTIFIER = String.format("(?:%s(?:\\.%s)*)", PATTERN_IDENTIFIER_PART,
+      PATTERN_IDENTIFIER_PART);
   private static final String PATTERN_STRING = "\"(?:\\\\[\\\\\"ntfb]|(?<!\\\\).)*\"";
   private static final String PATTERN_NUMBER = "(?:\\((?:byte|char|short|int|long|float|double)\\))?[x0-9_.]*[fl]?";
   private static final String PATTERN_LITERAL_VALUE = String.format("(?:%s|%s|true|false)", PATTERN_STRING,
