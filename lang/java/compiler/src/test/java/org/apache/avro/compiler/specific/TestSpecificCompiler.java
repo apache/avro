@@ -993,7 +993,7 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  void docsAreEscaped_avro() {
+  void docsAreEscaped_avro4053() {
     String jsonSchema = "{\n" + "  \"protocol\": \"DummyProtocol\",\n"
         + "  \"doc\": \"*/\\nTest escaping <threats>\\n/*\",\n" + "  \"types\" : [\n"
         + "    {\"type\": \"fixed\", \"name\": \"Hash\", \"size\": 16, \"doc\": \"*/\\nTest escaping <threats>\\n/*\""
