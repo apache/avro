@@ -1024,7 +1024,7 @@ public class SpecificCompiler {
 
   /**
    * Utility for template use. Takes a (potentially overly long) string and splits
-   * it into a quoted, comma-separted sequence of escaped strings.
+   * it into a quoted, comma-separated sequence of escaped strings.
    *
    * @param s The string to split
    * @return A sequence of quoted, comma-separated, escaped strings
@@ -1036,7 +1036,7 @@ public class SpecificCompiler {
       if (i != 0)
         b.append("\",\""); // insert quote-comma-quote
       String chunk = s.substring(i, Math.min(s.length(), i + maxStringChars));
-      b.append(javaEscape(chunk)); // escape chunks
+      b.append(escapeForJavaString(chunk)); // escape chunks
     }
     b.append("\""); // final quote
     return b.toString();
@@ -1045,7 +1045,7 @@ public class SpecificCompiler {
   /**
    * Utility for template use. Escapes quotes and backslashes.
    */
-  public static String javaEscape(String o) {
+  public static String escapeForJavaString(String o) {
     return o.replace("\\", "\\\\").replace("\"", "\\\"");
   }
 
