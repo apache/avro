@@ -64,7 +64,7 @@ impl SeqSerializer {
 }
 
 impl<'a> SeqVariantSerializer<'a> {
-    pub fn new(index: u32, variant: &'a str, len: Option<usize>) -> SeqVariantSerializer {
+    pub fn new(index: u32, variant: &'a str, len: Option<usize>) -> SeqVariantSerializer<'a> {
         let items = match len {
             Some(len) => Vec::with_capacity(len),
             None => Vec::new(),
@@ -97,7 +97,7 @@ impl StructSerializer {
 }
 
 impl<'a> StructVariantSerializer<'a> {
-    pub fn new(index: u32, variant: &'a str, len: usize) -> StructVariantSerializer {
+    pub fn new(index: u32, variant: &'a str, len: usize) -> StructVariantSerializer<'a> {
         StructVariantSerializer {
             index,
             variant,
