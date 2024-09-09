@@ -167,7 +167,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: api-java
-          path: lang/java/target/site/apidocs
+          path: lang/java/target/reports/apidocs
 
   build-api-python:
     name: Build Python API docs
