@@ -54,7 +54,7 @@ struct Block<'r, R> {
 }
 
 impl<'r, R: Read> Block<'r, R> {
-    fn new(reader: R, schemata: Vec<&'r Schema>) -> AvroResult<Block<R>> {
+    fn new(reader: R, schemata: Vec<&'r Schema>) -> AvroResult<Block<'r, R>> {
         let mut block = Block {
             reader,
             codec: Codec::Null,
