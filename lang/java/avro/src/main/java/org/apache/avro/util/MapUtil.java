@@ -33,6 +33,7 @@ public class MapUtil {
    *      "https://bugs.openjdk.java.net/browse/JDK-8161372">JDK-8161372</a>
    * @deprecated As of JDK 1.9 this issue has been resolved.
    */
+  // TODO: Remove for 1.13.0 or later
   @Deprecated
   public static <K, V> V computeIfAbsent(ConcurrentMap<K, V> map, K key, Function<K, V> mappingFunction) {
     V value = map.get(key);
