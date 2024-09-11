@@ -104,6 +104,7 @@ public class SpecificCompiler {
     specificData.addLogicalTypeConversion(new TimeConversions.DateConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.TimeMillisConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimeNanosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.TimestampNanosConversion());

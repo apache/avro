@@ -14,8 +14,10 @@ import org.apache.avro.message.SchemaStore;
 /** Test various field types */
 @org.apache.avro.specific.AvroGenerated
 public class FieldTest extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = 4609235620572341636L;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"FieldTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test various field types\",\"fields\":[{\"name\":\"number\",\"type\":\"int\",\"doc\":\"The number of the player\"},{\"name\":\"last_name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"timestamp\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"timestampMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}},{\"name\":\"timeMillis\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"timeMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"time-micros\"}}]}");
+  private static final long serialVersionUID = 6639509827245659311L;
+
+
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"FieldTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test various field types\",\"fields\":[{\"name\":\"number\",\"type\":\"int\",\"doc\":\"The number of the player\"},{\"name\":\"last_name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"timestamp\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"timestampMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}},{\"name\":\"timeMillis\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"timeMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"time-micros\"}},{\"name\":\"timeNanos\",\"type\":{\"type\":\"long\",\"logicalType\":\"time-nanos\"}}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
@@ -23,6 +25,7 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
     MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampMillisConversion());
     MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeMicrosConversion());
     MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampMicrosConversion());
+    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeNanosConversion());
     MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeMillisConversion());
   }
 
@@ -84,6 +87,7 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
   private java.time.Instant timestampMicros;
   private java.time.LocalTime timeMillis;
   private java.time.LocalTime timeMicros;
+  private java.time.LocalTime timeNanos;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -100,14 +104,16 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
    * @param timestampMicros The new value for timestampMicros
    * @param timeMillis The new value for timeMillis
    * @param timeMicros The new value for timeMicros
+   * @param timeNanos The new value for timeNanos
    */
-  public FieldTest(java.lang.Integer number, java.lang.String last_name, java.time.Instant timestamp, java.time.Instant timestampMicros, java.time.LocalTime timeMillis, java.time.LocalTime timeMicros) {
+  public FieldTest(java.lang.Integer number, java.lang.String last_name, java.time.Instant timestamp, java.time.Instant timestampMicros, java.time.LocalTime timeMillis, java.time.LocalTime timeMicros, java.time.LocalTime timeNanos) {
     this.number = number;
     this.last_name = last_name;
     this.timestamp = timestamp.truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
     this.timestampMicros = timestampMicros.truncatedTo(java.time.temporal.ChronoUnit.MICROS);
     this.timeMillis = timeMillis.truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
     this.timeMicros = timeMicros.truncatedTo(java.time.temporal.ChronoUnit.MICROS);
+    this.timeNanos = timeNanos.truncatedTo(java.time.temporal.ChronoUnit.NANOS);
   }
 
   @Override
@@ -126,6 +132,7 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
     case 3: return timestampMicros;
     case 4: return timeMillis;
     case 5: return timeMicros;
+    case 6: return timeNanos;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
@@ -138,6 +145,7 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
       new org.apache.avro.data.TimeConversions.TimestampMicrosConversion(),
       new org.apache.avro.data.TimeConversions.TimeMillisConversion(),
       new org.apache.avro.data.TimeConversions.TimeMicrosConversion(),
+      new org.apache.avro.data.TimeConversions.TimeNanosConversion(),
       null
   };
 
@@ -157,6 +165,7 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
     case 3: timestampMicros = (java.time.Instant)value$; break;
     case 4: timeMillis = (java.time.LocalTime)value$; break;
     case 5: timeMicros = (java.time.LocalTime)value$; break;
+    case 6: timeNanos = (java.time.LocalTime)value$; break;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
@@ -265,6 +274,23 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
   }
 
   /**
+   * Gets the value of the 'timeNanos' field.
+   * @return The value of the 'timeNanos' field.
+   */
+  public java.time.LocalTime getTimeNanos() {
+    return timeNanos;
+  }
+
+
+  /**
+   * Sets the value of the 'timeNanos' field.
+   * @param value the value to set.
+   */
+  public void setTimeNanos(java.time.LocalTime value) {
+    this.timeNanos = value.truncatedTo(java.time.temporal.ChronoUnit.NANOS);
+  }
+
+  /**
    * Creates a new FieldTest RecordBuilder.
    * @return A new FieldTest RecordBuilder
    */
@@ -312,6 +338,7 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
     private java.time.Instant timestampMicros;
     private java.time.LocalTime timeMillis;
     private java.time.LocalTime timeMicros;
+    private java.time.LocalTime timeNanos;
 
     /** Creates a new Builder */
     private Builder() {
@@ -348,6 +375,10 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
         this.timeMicros = data().deepCopy(fields()[5].schema(), other.timeMicros);
         fieldSetFlags()[5] = other.fieldSetFlags()[5];
       }
+      if (isValidValue(fields()[6], other.timeNanos)) {
+        this.timeNanos = data().deepCopy(fields()[6].schema(), other.timeNanos);
+        fieldSetFlags()[6] = other.fieldSetFlags()[6];
+      }
     }
 
     /**
@@ -379,6 +410,10 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
       if (isValidValue(fields()[5], other.timeMicros)) {
         this.timeMicros = data().deepCopy(fields()[5].schema(), other.timeMicros);
         fieldSetFlags()[5] = true;
+      }
+      if (isValidValue(fields()[6], other.timeNanos)) {
+        this.timeNanos = data().deepCopy(fields()[6].schema(), other.timeNanos);
+        fieldSetFlags()[6] = true;
       }
     }
 
@@ -621,6 +656,45 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
       return this;
     }
 
+    /**
+      * Gets the value of the 'timeNanos' field.
+      * @return The value.
+      */
+    public java.time.LocalTime getTimeNanos() {
+      return timeNanos;
+    }
+
+
+    /**
+      * Sets the value of the 'timeNanos' field.
+      * @param value The value of 'timeNanos'.
+      * @return This builder.
+      */
+    public avro.examples.baseball.FieldTest.Builder setTimeNanos(java.time.LocalTime value) {
+      validate(fields()[6], value);
+      this.timeNanos = value.truncatedTo(java.time.temporal.ChronoUnit.NANOS);
+      fieldSetFlags()[6] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'timeNanos' field has been set.
+      * @return True if the 'timeNanos' field has been set, false otherwise.
+      */
+    public boolean hasTimeNanos() {
+      return fieldSetFlags()[6];
+    }
+
+
+    /**
+      * Clears the value of the 'timeNanos' field.
+      * @return This builder.
+      */
+    public avro.examples.baseball.FieldTest.Builder clearTimeNanos() {
+      fieldSetFlags()[6] = false;
+      return this;
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public FieldTest build() {
@@ -632,6 +706,7 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
         record.timestampMicros = fieldSetFlags()[3] ? this.timestampMicros : (java.time.Instant) defaultValue(fields()[3]);
         record.timeMillis = fieldSetFlags()[4] ? this.timeMillis : (java.time.LocalTime) defaultValue(fields()[4]);
         record.timeMicros = fieldSetFlags()[5] ? this.timeMicros : (java.time.LocalTime) defaultValue(fields()[5]);
+        record.timeNanos = fieldSetFlags()[6] ? this.timeNanos : (java.time.LocalTime) defaultValue(fields()[6]);
         return record;
       } catch (org.apache.avro.AvroMissingFieldException e) {
         throw e;

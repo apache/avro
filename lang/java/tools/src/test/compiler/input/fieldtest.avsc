@@ -5,6 +5,7 @@
    {"name": "timestamp", "type": { "type": "long", "logicalType": "timestamp-millis"}},
    {"name": "timestampMicros", "type": { "type": "long", "logicalType": "timestamp-micros"}},
    {"name": "timeMillis", "type": { "type": "int", "logicalType": "time-millis"}},
-   {"name": "timeMicros", "type": { "type": "long", "logicalType": "time-micros"}}
+   {"name": "timeMicros", "type": { "type": "long", "logicalType": "time-micros"}},
+   {"name": "timeNanos", "type": { "type": "long", "logicalType": "time-nanos"}}
   ]
 }
