@@ -444,7 +444,7 @@ Two items with the same schema are compared according to the following rules.
 * _map_ data may not be compared. It is an error to attempt to compare data containing maps unless those maps are in an `"order":"ignore"` record field.
 
 ## Object Container Files
-Avro includes a simple object container file format. A file has a schema, and all objects stored in the file must be written according to that schema, using binary encoding. Objects are stored in blocks that may be compressed. Syncronization markers are used between blocks to permit efficient splitting of files for MapReduce processing.
+Avro includes a simple object container file format. A file has a schema, and all objects stored in the file must be written according to that schema, using binary encoding. Objects are stored in blocks that may be compressed. Synchronization markers are used between blocks to permit efficient splitting of files for MapReduce processing.
 
 Files may include arbitrary user-specified metadata.
 
