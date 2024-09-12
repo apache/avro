@@ -37,7 +37,7 @@ class IODatumReaderTest extends TestCase
 JSON;
         $readers_schema = $writers_schema;
         $this->assertTrue(AvroIODatumReader::schemasMatch(
-            AvroSchema::parse($writers_schema),
+                AvroSchema::parse($writers_schema),
             AvroSchema::parse($readers_schema)));
     }
 
@@ -89,5 +89,37 @@ _JSON;
         $bin = $io->string();
 
         $this->assertSame('0200', bin2hex($bin));
+    }
+
+    public function testRecordFieldWithDefault()
+    {
+        $schema = AvroSchema::parse(<<<_JSON
+{
+  "name": "RecordWithDefaultValue",
+  "type": "record",
+  "fields": [
+    {
+      "name": "field1",
+      "type": "string",
+      "default": "default"
+    }
+  ]
+}
+_JSON
+        );
+
+        $io = new AvroStringIO();
+        $writer = new AvroIODatumWriter();
+        $writer->writeData($schema, ['field1' => "foobar"], new AvroIOBinaryEncoder($io));
+
+        $bin = $io->string();
+        $reader = new AvroIODatumReader();
+        $record = $reader->readRecord(
+            $schema,
+            $schema,
+            new AvroIOBinaryDecoder(new AvroStringIO($bin))
+        );
+
+        $this->assertEquals(['field1' => "foobar"], $record);
     }
 }
