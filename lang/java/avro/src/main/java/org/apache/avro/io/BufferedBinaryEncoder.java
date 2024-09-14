@@ -179,7 +179,7 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
     if (pos == buf.length) {
       flushBuffer();
     }
-    buf[pos++] = (byte) (0);
+    buf[pos++] = (byte) 0;
   }
 
   @Override
