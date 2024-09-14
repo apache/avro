@@ -36,7 +36,6 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.FixedSize;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.util.ClassUtils;
-import org.apache.avro.util.MapUtil;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -839,7 +838,7 @@ public class ReflectData extends SpecificData {
 
   // Return of this class and its superclasses to serialize.
   private static Field[] getCachedFields(Class<?> recordClass) {
-    return MapUtil.computeIfAbsent(FIELDS_CACHE, recordClass, rc -> getFields(rc, true));
+    return FIELDS_CACHE.computeIfAbsent(recordClass, rc -> getFields(rc, true));
   }
 
   private static Field[] getFields(Class<?> recordClass, boolean excludeJava) {

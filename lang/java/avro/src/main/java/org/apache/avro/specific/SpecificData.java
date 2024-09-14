@@ -30,7 +30,6 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.ClassUtils;
-import org.apache.avro.util.MapUtil;
 import org.apache.avro.util.SchemaUtil;
 import org.apache.avro.util.internal.ClassValueCache;
 
@@ -379,7 +378,7 @@ public class SpecificData extends GenericData {
       String name = schema.getFullName();
       if (name == null)
         return null;
-      Class<?> c = MapUtil.computeIfAbsent(classCache, name, n -> {
+      Class<?> c = classCache.computeIfAbsent(name, n -> {
         try {
           return ClassUtils.forName(getClassLoader(), getClassName(schema));
         } catch (ClassNotFoundException e) {
