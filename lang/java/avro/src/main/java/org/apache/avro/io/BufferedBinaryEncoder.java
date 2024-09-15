@@ -41,7 +41,7 @@ import org.apache.avro.AvroRuntimeException;
  * <p/>
  * To change the buffer size, configure the factory instance used to create
  * instances with {@link EncoderFactory#configureBufferSize(int)}
- * 
+ *
  * @see Encoder
  * @see EncoderFactory
  * @see BlockingBinaryEncoder
@@ -105,7 +105,7 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
    * current position and the end. This will not expand the buffer larger than its
    * current size, for writes larger than or near to the size of the buffer, we
    * flush the buffer and write directly to the output, bypassing the buffer.
-   * 
+   *
    * @param num
    * @throws IOException
    */
@@ -175,14 +175,11 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
 
   @Override
   protected void writeZero() throws IOException {
-    writeByte(0);
-  }
-
-  private void writeByte(int b) throws IOException {
+    // inlined, shorter version of writeZero
     if (pos == buf.length) {
       flushBuffer();
     }
-    buf[pos++] = (byte) (b & 0xFF);
+    buf[pos++] = (byte) 0;
   }
 
   @Override
