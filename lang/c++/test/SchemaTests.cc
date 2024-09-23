@@ -20,6 +20,7 @@
 #include "GenericDatum.hh"
 #include "ValidSchema.hh"
 
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/parameterized_test.hpp>
 #include <boost/test/unit_test.hpp>
@@ -405,7 +406,18 @@ const char *compactSchemas[] = {
     "\"fields\":["
     "{\"name\":\"re1\",\"type\":\"long\",\"doc\":\"A \\\"quoted doc\\\"\"},"
     "{\"name\":\"re2\",\"type\":\"long\",\"doc\":\"extra slashes\\\\\\\\\"}"
-    "]}"};
+    "]}"
+};
+
+static const std::vector<char> whitespaces = {' ', '\f', '\n', '\r', '\t', '\v'};
+
+static std::string removeWhitespaceFromSchema(const std::string& schema){
+    std::string trimmedSchema = schema;
+    for (char toReplace : whitespaces){
+        boost::algorithm::replace_all(trimmedSchema, std::string{toReplace}, "");
+    }
+    return trimmedSchema;
+}
 
 void testTypes() {
     BOOST_CHECK_EQUAL(isAvroType(AVRO_BOOL), true);
@@ -434,10 +446,8 @@ static void testRoundTrip(const char *schema) {
         compileJsonSchemaFromString(std::string(schema));
     std::ostringstream os;
     compiledSchema.toJson(os);
-    std::string result = os.str();
-    result.erase(std::remove_if(result.begin(), result.end(), ::isspace), result.end()); // Remove whitespace
-    std::string trimmedSchema = schema;
-    trimmedSchema.erase(std::remove_if(trimmedSchema.begin(), trimmedSchema.end(), ::isspace), trimmedSchema.end());
+    std::string result = removeWhitespaceFromSchema(os.str());
+    std::string trimmedSchema = removeWhitespaceFromSchema(schema);
     BOOST_CHECK(result == trimmedSchema);
     // Verify that the compact schema from toJson has the same content as the
     // schema.
