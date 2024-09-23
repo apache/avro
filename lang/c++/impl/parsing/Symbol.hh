@@ -19,6 +19,7 @@
 #ifndef avro_parsing_Symbol_hh__
 #define avro_parsing_Symbol_hh__
 
+#include <algorithm>
 #include <map>
 #include <set>
 #include <sstream>

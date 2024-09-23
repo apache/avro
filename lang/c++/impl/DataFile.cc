@@ -183,7 +183,7 @@ void DataFileWriterBase::sync() {
         crc.process_bytes(reinterpret_cast<const char *>(temp.data()),
                           temp.size());
         // For Snappy, add the CRC32 checksum
-        int32_t checksum = crc();
+        auto checksum = crc();
 
         // Now compress
         size_t compressed_size = snappy::Compress(
@@ -408,7 +408,7 @@ void DataFileReaderBase::readDataBlock() {
                 "Snappy Compression reported an error when decompressing");
         }
         crc.process_bytes(uncompressed.c_str(), uncompressed.size());
-        uint32_t c = crc();
+        auto c = crc();
         if (checksum != c) {
             throw Exception(
                 "Checksum did not match for Snappy compression: Expected: {}, computed: {}",
