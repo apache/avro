@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericFixed;
-import org.apache.avro.io.BinaryData;
 
 /** Base class for generated fixed-sized data classes. */
 public abstract class SpecificFixed implements GenericFixed, Comparable<SpecificFixed>, Externalizable {
@@ -70,7 +69,7 @@ public abstract class SpecificFixed implements GenericFixed, Comparable<Specific
 
   @Override
   public int compareTo(SpecificFixed that) {
-    return BinaryData.compareBytes(this.bytes, 0, this.bytes.length, that.bytes, 0, that.bytes.length);
+    return Arrays.compare(this.bytes, 0, this.bytes.length, that.bytes, 0, that.bytes.length);
   }
 
   @Override
