@@ -143,7 +143,7 @@ const char *basicSchemas[] = {
         "extra attribute": 1
     })",
     R"({"type": "enum", "name": "Test", "symbols": ["A", "B"],"extra attribute": 1})",
-    R"({"type": "array", "items": "long", "extra attribute": 1})",
+    R"({"type": "array", "items": "long", "extra attribute": "1"})",
     R"({"type": "map", "values": "long", "extra attribute": 1})",
     R"({"type": "fixed", "name": "Test", "size": 1, "extra attribute": 1})",
 
