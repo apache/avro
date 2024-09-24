@@ -1067,6 +1067,16 @@ public class SpecificCompiler {
   }
 
   /**
+   * Utility for template use (previous name). Escapes quotes and backslashes.
+   *
+   * @deprecated Use {@link #escapeForJavaString(String)} instead
+   */
+  @Deprecated(since = "1.12.1", forRemoval = true)
+  public static String javaEscape(String o) {
+    return escapeForJavaString(o);
+  }
+
+  /**
    * Utility for template use. Escapes comment end with HTML entities.
    */
   public static String escapeForJavadoc(String s) {
