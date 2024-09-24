@@ -234,7 +234,7 @@ using NodeImplSymbolic = NodeImpl<HasName, NoLeaves, NoLeafNames, NoAttributes, 
 
 using NodeImplRecord = NodeImpl<HasName, MultiLeaves, LeafNames, MultiAttributes, NoSize>;
 using NodeImplEnum = NodeImpl<HasName, NoLeaves, LeafNames, NoAttributes, NoSize>;
-using NodeImplArray = NodeImpl<NoName, SingleLeaf, NoLeafNames, NoAttributes, NoSize>;
+using NodeImplArray = NodeImpl<NoName, SingleLeaf, NoLeafNames, MultiAttributes, NoSize>;
 using NodeImplMap = NodeImpl<NoName, MultiLeaves, NoLeafNames, NoAttributes, NoSize>;
 using NodeImplUnion = NodeImpl<NoName, MultiLeaves, NoLeafNames, NoAttributes, NoSize>;
 using NodeImplFixed = NodeImpl<HasName, NoLeaves, NoLeafNames, NoAttributes, HasSize>;
@@ -363,7 +363,7 @@ class AVRO_DECL NodeArray : public NodeImplArray {
 public:
     NodeArray() : NodeImplArray(AVRO_ARRAY) {}
 
-    explicit NodeArray(const SingleLeaf &items) : NodeImplArray(AVRO_ARRAY, NoName(), items, NoLeafNames(), NoAttributes(), NoSize()) {}
+    explicit NodeArray(const SingleLeaf &items) : NodeImplArray(AVRO_ARRAY, NoName(), items, NoLeafNames(), {}, NoSize()) {}
 
     SchemaResolution resolve(const Node &reader) const override;
 

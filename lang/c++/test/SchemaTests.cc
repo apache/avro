@@ -143,7 +143,7 @@ const char *basicSchemas[] = {
         "extra attribute": 1
     })",
     R"({"type": "enum", "name": "Test", "symbols": ["A", "B"],"extra attribute": 1})",
-    R"({"type": "array", "items": "long", "extra attribute": 1})",
+    R"({"type": "array", "items": "long", "extra attribute": "1"})",
     R"({"type": "map", "values": "long", "extra attribute": 1})",
     R"({"type": "fixed", "name": "Test", "size": 1, "extra attribute": 1})",
 
@@ -355,7 +355,8 @@ const char *roundTripSchemas[] = {
             {"name":"f1","type":"long","extra_field":"1"},
             {"name":"f2","type":"int","extra_field1":"21","extra_field2":"22"}
         ]
-    })"
+    })",
+    R"({"type":"array","items":"long","extra":"1"})"
 };
 
 const char *malformedLogicalTypes[] = {
@@ -448,11 +449,11 @@ static void testRoundTrip(const char *schema) {
     compiledSchema.toJson(os);
     std::string result = removeWhitespaceFromSchema(os.str());
     std::string trimmedSchema = removeWhitespaceFromSchema(schema);
-    BOOST_CHECK(result == trimmedSchema);
+    BOOST_CHECK_EQUAL(result, trimmedSchema);
     // Verify that the compact schema from toJson has the same content as the
     // schema.
     std::string result2 = compiledSchema.toJson(false);
-    BOOST_CHECK(result2 == trimmedSchema);
+    BOOST_CHECK_EQUAL(result2, trimmedSchema);
 }
 
 static void testCompactSchemas() {
