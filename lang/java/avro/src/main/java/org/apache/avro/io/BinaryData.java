@@ -257,7 +257,7 @@ public class BinaryData {
     case FIXED:
       return hashBytes(1, data, schema.getFixedSize(), false);
     case STRING:
-      return hashBytes(0, data, decoder.readInt(), false);
+      return hashBytes(1, data, decoder.readInt(), false);
     case BYTES:
       return hashBytes(1, data, decoder.readInt(), true);
     case NULL:
