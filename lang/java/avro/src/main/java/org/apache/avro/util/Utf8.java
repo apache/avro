@@ -42,7 +42,8 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
   private String string;
 
   public Utf8() {
-    bytes = EMPTY;
+    this.bytes = EMPTY;
+    this.hash = 1;
   }
 
   public Utf8(String string) {
@@ -171,6 +172,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
     if (h == 0) {
       byte[] bytes = this.bytes;
       int length = this.length;
+      h = 1;
       for (int i = 0; i < length; i++) {
         h = h * 31 + bytes[i];
       }
