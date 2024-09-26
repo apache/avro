@@ -25,7 +25,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import org.apache.avro.SystemLimitException;
-import org.apache.avro.io.BinaryData;
 
 /**
  * A Utf8 string. Unlike {@link String}, instances are mutable. This is more
@@ -158,6 +157,10 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
     Utf8 that = (Utf8) o;
     if (!(this.length == that.length))
       return false;
+    // For longer strings, leverage vectorization (JDK 9+) to determine equality
+    // For shorter strings, the overhead of this method defeats the value
+    if (this.length > 7)
+      return Arrays.equals(this.bytes, 0, this.length, that.bytes, 0, that.length);
     byte[] thatBytes = that.bytes;
     for (int i = 0; i < this.length; i++)
       if (bytes[i] != thatBytes[i])
@@ -181,7 +184,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
 
   @Override
   public int compareTo(Utf8 that) {
-    return BinaryData.compareBytes(this.bytes, 0, this.length, that.bytes, 0, that.length);
+    return Arrays.compare(this.bytes, 0, this.length, that.bytes, 0, that.length);
   }
 
   // CharSequence implementation

@@ -23,6 +23,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <set>
 
 #include <boost/algorithm/string.hpp>
@@ -67,8 +68,22 @@ struct PendingConstructor {
     PendingConstructor(string sn, string n, bool im) : structName(std::move(sn)), memberName(std::move(n)), initMember(im) {}
 };
 
+class UnionCodeTracker {
+    std::string schemaFile_;
+    size_t unionNumber_ = 0;
+    std::map<std::vector<std::string>, std::string> unionBranchNameMapping_;
+    std::set<std::string> generatedUnionTraits_;
+
+public:
+    explicit UnionCodeTracker(const std::string &schemaFile);
+    std::optional<std::string> getExistingUnionName(const std::vector<std::string> &unionBranches) const;
+    std::string generateNewUnionName(const std::vector<std::string> &unionBranches);
+    bool unionTraitsAlreadyGenerated(const std::string &unionClassName) const;
+    void setTraitsGenerated(const std::string &unionClassName);
+};
+
 class CodeGen {
-    size_t unionNumber_;
+    UnionCodeTracker unionTracker_;
     std::ostream &os_;
     bool inNamespace_;
     const std::string ns_;
@@ -90,7 +105,6 @@ class CodeGen {
     std::string generateEnumType(const NodePtr &n);
     std::string cppTypeOf(const NodePtr &n);
     std::string generateRecordType(const NodePtr &n);
-    std::string unionName();
     std::string generateUnionType(const NodePtr &n);
     std::string generateType(const NodePtr &n);
     std::string generateDeclaration(const NodePtr &n);
@@ -106,7 +120,7 @@ public:
     CodeGen(std::ostream &os, std::string ns,
             std::string schemaFile, std::string headerFile,
             std::string guardString,
-            std::string includePrefix, bool noUnion) : unionNumber_(0), os_(os), inNamespace_(false), ns_(std::move(ns)),
+            std::string includePrefix, bool noUnion) : unionTracker_(schemaFile), os_(os), inNamespace_(false), ns_(std::move(ns)),
                                                        schemaFile_(std::move(schemaFile)), headerFile_(std::move(headerFile)),
                                                        includePrefix_(std::move(includePrefix)), noUnion_(noUnion),
                                                        guardString_(std::move(guardString)),
@@ -295,17 +309,6 @@ void makeCanonical(string &s, bool foldCase) {
     }
 }
 
-string CodeGen::unionName() {
-    string s = schemaFile_;
-    string::size_type n = s.find_last_of("/\\");
-    if (n != string::npos) {
-        s = s.substr(n);
-    }
-    makeCanonical(s, false);
-
-    return s + "_Union__" + boost::lexical_cast<string>(unionNumber_++) + "__";
-}
-
 static void generateGetterAndSetter(ostream &os,
                                     const string &structName, const string &type, const string &name,
                                     size_t idx) {
@@ -313,12 +316,21 @@ static void generateGetterAndSetter(ostream &os,
 
     os << "inline\n";
 
-    os << type << sn << "get_" << name << "() const {\n"
+    os << "const " << type << "&" << sn << "get_" << name << "() const {\n"
        << "    if (idx_ != " << idx << ") {\n"
        << "        throw avro::Exception(\"Invalid type for "
        << "union " << structName << "\");\n"
        << "    }\n"
-       << "    return std::any_cast<" << type << " >(value_);\n"
+       << "    return *std::any_cast<" << type << " >(&value_);\n"
+       << "}\n\n";
+
+    os << "inline\n"
+       << type << "&" << sn << "get_" << name << "() {\n"
+       << "    if (idx_ != " << idx << ") {\n"
+       << "        throw avro::Exception(\"Invalid type for "
+       << "union " << structName << "\");\n"
+       << "    }\n"
+       << "    return *std::any_cast<" << type << " >(&value_);\n"
        << "}\n\n";
 
     os << "inline\n"
@@ -326,6 +338,13 @@ static void generateGetterAndSetter(ostream &os,
        << "(const " << type << "& v) {\n"
        << "    idx_ = " << idx << ";\n"
        << "    value_ = v;\n"
+       << "}\n\n";
+
+    os << "inline\n"
+       << "void" << sn << "set_" << name
+       << "(" << type << "&& v) {\n"
+       << "    idx_ = " << idx << ";\n"
+       << "    value_ = std::move(v);\n"
        << "}\n\n";
 }
 
@@ -370,14 +389,43 @@ string CodeGen::generateUnionType(const NodePtr &n) {
         return done[n];
     }
 
-    auto result = unionName();
+    // re-use existing union types that have the exact same branches
+    if (const auto existingName = unionTracker_.getExistingUnionName(types); existingName.has_value()) {
+        return existingName.value();
+    }
+    const std::string result = unionTracker_.generateNewUnionName(types);
 
     os_ << "struct " << result << " {\n"
         << "private:\n"
         << "    size_t idx_;\n"
         << "    std::any value_;\n"
-        << "public:\n"
-        << "    size_t idx() const { return idx_; }\n";
+        << "public:\n";
+
+    os_ << "    /** enum representing union branches as returned by the idx() function */\n"
+        << "    enum class Branch: size_t {\n";
+
+    // generate a enum that maps the branch name to the corresponding index (as returned by idx())
+    std::set<std::string> used_branch_names;
+    for (size_t i = 0; i < c; ++i) {
+        // escape reserved literals for c++
+        auto branch_name = decorate(names[i]);
+        // avoid rare collisions, e.g. somone might name their struct int_
+        if (used_branch_names.find(branch_name) != used_branch_names.end()) {
+            size_t postfix = 2;
+            std::string escaped_name = branch_name + "_" + std::to_string(postfix);
+            while (used_branch_names.find(escaped_name) != used_branch_names.end()) {
+                ++postfix;
+                escaped_name = branch_name + "_" + std::to_string(postfix);
+            }
+            branch_name = escaped_name;
+        }
+        os_ << "        " << branch_name << " = " << i << ",\n";
+        used_branch_names.insert(branch_name);
+    }
+    os_ << "    };\n";
+
+    os_ << "    size_t idx() const { return idx_; }\n";
+    os_ << "    Branch branch() const { return static_cast<Branch>(idx_); }\n";
 
     for (size_t i = 0; i < c; ++i) {
         const NodePtr &nn = n->leafAt(i);
@@ -392,9 +440,11 @@ string CodeGen::generateUnionType(const NodePtr &n) {
         } else {
             const string &type = types[i];
             const string &name = names[i];
-            os_ << "    " << type << " get_" << name << "() const;\n"
-                                                        "    void set_"
-                << name << "(const " << type << "& v);\n";
+            os_ << "    "
+                << "const " << type << "& get_" << name << "() const;\n"
+                << "    " << type << "& get_" << name << "();\n"
+                << "    void set_" << name << "(const " << type << "& v);\n"
+                << "    void set_" << name << "(" << type << "&& v);\n";
             pendingGettersAndSetters.emplace_back(result, type, name, i);
         }
     }
@@ -600,15 +650,17 @@ void CodeGen::generateRecordTraits(const NodePtr &n) {
 }
 
 void CodeGen::generateUnionTraits(const NodePtr &n) {
+    const string name = done[n];
+    const string fn = fullname(name);
+    if (unionTracker_.unionTraitsAlreadyGenerated(fn)) {
+        return;
+    }
     size_t c = n->leaves();
 
     for (size_t i = 0; i < c; ++i) {
         const NodePtr &nn = n->leafAt(i);
         generateTraits(nn);
     }
-
-    string name = done[n];
-    string fn = fullname(name);
 
     os_ << "template<> struct codec_traits<" << fn << "> {\n"
         << "    static void encode(Encoder& e, " << fn << " v) {\n"
@@ -645,7 +697,7 @@ void CodeGen::generateUnionTraits(const NodePtr &n) {
             os_ << "            {\n"
                 << "                " << cppTypeOf(nn) << " vv;\n"
                 << "                avro::decode(d, vv);\n"
-                << "                v.set_" << cppNameOf(nn) << "(vv);\n"
+                << "                v.set_" << cppNameOf(nn) << "(std::move(vv));\n"
                 << "            }\n";
         }
         os_ << "            break;\n";
@@ -653,6 +705,8 @@ void CodeGen::generateUnionTraits(const NodePtr &n) {
     os_ << "        }\n"
         << "    }\n"
         << "};\n\n";
+
+    unionTracker_.setTraitsGenerated(fn);
 }
 
 void CodeGen::generateTraits(const NodePtr &n) {
@@ -730,6 +784,7 @@ void CodeGen::generate(const ValidSchema &schema) {
 
     os_ << "#include <sstream>\n"
         << "#include <any>\n"
+        << "#include <utility>\n"
         << "#include \"" << includePrefix_ << "Specific.hh\"\n"
         << "#include \"" << includePrefix_ << "Encoder.hh\"\n"
         << "#include \"" << includePrefix_ << "Decoder.hh\"\n"
@@ -763,8 +818,6 @@ void CodeGen::generate(const ValidSchema &schema) {
     }
 
     os_ << "namespace avro {\n";
-
-    unionNumber_ = 0;
 
     generateTraits(root);
 
@@ -870,4 +923,35 @@ int main(int argc, char **argv) {
                   << e.what() << std::endl;
         return 1;
     }
+}
+
+UnionCodeTracker::UnionCodeTracker(const std::string &schemaFile) : schemaFile_(schemaFile) {
+}
+
+std::optional<std::string> UnionCodeTracker::getExistingUnionName(const std::vector<std::string> &unionBranches) const {
+    if (const auto it = unionBranchNameMapping_.find(unionBranches); it != unionBranchNameMapping_.end()) {
+        return it->second;
+    }
+    return std::nullopt;
+}
+
+std::string UnionCodeTracker::generateNewUnionName(const std::vector<std::string> &unionBranches) {
+    string s = schemaFile_;
+    string::size_type n = s.find_last_of("/\\");
+    if (n != string::npos) {
+        s = s.substr(n);
+    }
+    makeCanonical(s, false);
+
+    std::string result = s + "_Union__" + boost::lexical_cast<string>(unionNumber_++) + "__";
+    unionBranchNameMapping_.emplace(unionBranches, result);
+    return result;
+}
+
+bool UnionCodeTracker::unionTraitsAlreadyGenerated(const std::string &unionClassName) const {
+    return generatedUnionTraits_.find(unionClassName) != generatedUnionTraits_.end();
+}
+
+void UnionCodeTracker::setTraitsGenerated(const std::string &unionClassName) {
+    generatedUnionTraits_.insert(unionClassName);
 }

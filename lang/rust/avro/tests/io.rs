@@ -107,6 +107,22 @@ fn default_value_examples() -> &'static Vec<(&'static str, &'static str, Value)>
             (r#""long""#, "5", Value::Long(5)),
             (r#""float""#, "1.1", Value::Float(1.1)),
             (r#""double""#, "1.1", Value::Double(1.1)),
+            (r#""float""#, r#""INF""#, Value::Float(f32::INFINITY)),
+            (r#""double""#, r#""INF""#, Value::Double(f64::INFINITY)),
+            (r#""float""#, r#""Infinity""#, Value::Float(f32::INFINITY)),
+            (
+                r#""float""#,
+                r#""-Infinity""#,
+                Value::Float(f32::NEG_INFINITY),
+            ),
+            (r#""double""#, r#""Infinity""#, Value::Double(f64::INFINITY)),
+            (
+                r#""double""#,
+                r#""-Infinity""#,
+                Value::Double(f64::NEG_INFINITY),
+            ),
+            (r#""float""#, r#""NaN""#, Value::Float(f32::NAN)),
+            (r#""double""#, r#""NaN""#, Value::Double(f64::NAN)),
             (
                 r#"{"type": "fixed", "name": "F", "size": 2}"#,
                 r#""a""#,
@@ -312,11 +328,41 @@ fn test_default_value() -> TestResult {
             &mut Cursor::new(encoded),
             Some(&reader_schema),
         )?;
-        assert_eq!(
-            datum_read, datum_to_read,
-            "{} -> {}",
-            *field_type, *default_json
-        );
+
+        match default_datum {
+            // For float/double, NaN != NaN, so we check specially here.
+            Value::Double(f) if f.is_nan() => {
+                let Value::Record(fields) = datum_read else {
+                    unreachable!("the test always constructs top level as record")
+                };
+                let Value::Double(f) = fields[0].1 else {
+                    panic!("double expected")
+                };
+                assert!(
+                    f.is_nan(),
+                    "{field_type} -> {default_json} is parsed as {f} rather than NaN"
+                );
+            }
+            Value::Float(f) if f.is_nan() => {
+                let Value::Record(fields) = datum_read else {
+                    unreachable!("the test always constructs top level as record")
+                };
+                let Value::Float(f) = fields[0].1 else {
+                    panic!("double expected")
+                };
+                assert!(
+                    f.is_nan(),
+                    "{field_type} -> {default_json} is parsed as {f} rather than NaN"
+                );
+            }
+            _ => {
+                assert_eq!(
+                    datum_read, datum_to_read,
+                    "{} -> {}",
+                    *field_type, *default_json
+                );
+            }
+        }
     }
 
     Ok(())

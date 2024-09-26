@@ -29,9 +29,6 @@ enableMissingTranslationPlaceholders = true
 
 enableRobotsTXT = true
 
-# Hugo allows theme composition (and inheritance). The precedence is from left to right.
-theme = ["docsy"]
-
 # Will give values to .Lastmod etc.
 enableGitInfo = true
 
@@ -135,7 +132,7 @@ archived_version = false
 # The version number for the version of the docs represented in this doc set.
 # Used in the "version-banner" partial to display a version number for the 
 # current doc set.
-version = "++version++"
+version = "1.12.0"
 
 # A link to latest version of the docs. Used in the "version-banner" partial to
 # point people to the main doc site.
@@ -157,9 +154,6 @@ github_project_repo = "https://github.com/apache/avro"
 
 # Google Custom Search Engine ID. Remove or comment out to disable search.
 # gcs_engine_id = "d72aa9b2712488cc3"
-
-# Enable Algolia DocSearch
-algolia_docsearch = false
 
 # Enable Lunr.js offline search
 offlineSearch = false
@@ -262,8 +256,12 @@ url = "http://www.apache.org/security/"
   desc = "Discuss development issues around the project"
 
 [[params.versions]]
-  version = "++version++ (Current)"
-  url = "/docs/++version++/"
+version = "1.12.0"
+url = "https://avro.apache.org/docs/1.12.0/"
+
+[[params.versions]]
+version = "1.11.3"
+url = "https://avro.apache.org/docs/1.11.3/"
 
 [[params.versions]]
 version = "1.11.2"
@@ -416,4 +414,10 @@ url = "https://avro.apache.org/docs/1.11.0/"
 [[params.versions]]
   version = "1.0.0"
   url = "https://avro.apache.org/docs/1.0.0/"
-  
+
+[module]
+  [module.hugoVersion]
+    extended = true
+    min = "0.110.0"
+  [[module.imports]]
+    path = "github.com/google/docsy"

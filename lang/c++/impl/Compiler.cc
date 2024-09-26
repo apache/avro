@@ -267,7 +267,7 @@ static const std::unordered_set<std::string> &getKnownFields() {
     // return known fields
     static const std::unordered_set<std::string> kKnownFields =
         {"name", "type", "aliases", "default", "doc", "size", "logicalType",
-         "values", "precision", "scale", "namespace"};
+         "values", "precision", "scale", "namespace", "items"};
     return kKnownFields;
 }
 
@@ -369,6 +369,14 @@ static LogicalType makeLogicalType(const Entity &e, const Object &m) {
         t = LogicalType::TIMESTAMP_MILLIS;
     else if (typeField == "timestamp-micros")
         t = LogicalType::TIMESTAMP_MICROS;
+    else if (typeField == "timestamp-nanos")
+        t = LogicalType::TIMESTAMP_NANOS;
+    else if (typeField == "local-timestamp-millis")
+        t = LogicalType::LOCAL_TIMESTAMP_MILLIS;
+    else if (typeField == "local-timestamp-micros")
+        t = LogicalType::LOCAL_TIMESTAMP_MICROS;
+    else if (typeField == "local-timestamp-nanos")
+        t = LogicalType::LOCAL_TIMESTAMP_NANOS;
     else if (typeField == "duration")
         t = LogicalType::DURATION;
     else if (typeField == "uuid")
@@ -416,6 +424,9 @@ static NodePtr makeArrayNode(const Entity &e, const Object &m,
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
+    CustomAttributes customAttributes;
+    getCustomAttributes(m, customAttributes);
+    node->addCustomAttributesForField(customAttributes);
     return node;
 }
 

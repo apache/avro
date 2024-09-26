@@ -54,7 +54,7 @@ harness = false
 name = "single"
 
 [dependencies]
-apache-avro-derive = { default-features = false, version = "0.17.0", path = "../avro_derive", optional = true }
+apache-avro-derive = { default-features = false, version = "0.18.0", path = "../avro_derive", optional = true }
 bigdecimal = { default-features = false, version = "0.4.5", features = ["std", "serde"] }
 bzip2 = { default-features = false, version = "0.4.4", optional = true }
 crc32fast = { default-features = false, version = "1.4.2", optional = true }
@@ -70,25 +70,25 @@ snap = { default-features = false, version = "1.1.0", optional = true }
 strum = { default-features = false, version = "0.26.3" }
 strum_macros = { default-features = false, version = "0.26.4" }
 thiserror = { default-features = false, version = "1.0.63" }
-typed-builder = { default-features = false, version = "0.19.1" }
+typed-builder = { default-features = false, version = "0.20.0" }
 uuid = { default-features = false, version = "1.10.0", features = ["serde", "std"] }
 xz2 = { default-features = false, version = "0.1.7", optional = true }
 zstd = { default-features = false, version = "0.13.2", optional = true }
 
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-quad-rand = { default-features = false, version = "0.2.1" }
+quad-rand = { default-features = false, version = "0.2.2" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rand = { default-features = false, version = "0.8.5", features = ["default"] }
 
 [dev-dependencies]
-anyhow = { default-features = false, version = "1.0.86", features = ["std"] }
-apache-avro-test-helper = { default-features = false, version = "0.17.0", path = "../avro_test_helper" }
+anyhow = { default-features = false, version = "1.0.89", features = ["std"] }
+apache-avro-test-helper = { default-features = false, version = "0.18.0", path = "../avro_test_helper" }
 criterion = { default-features = false, version = "0.5.1" }
 hex-literal = { default-features = false, version = "0.4.1" }
 md-5 = { default-features = false, version = "0.10.6" }
-pretty_assertions = { default-features = false, version = "1.4.0", features = ["std"] }
+pretty_assertions = { default-features = false, version = "1.4.1", features = ["std"] }
 serial_test = "3.1.1"
 sha2 = { default-features = false, version = "0.10.8" }
 paste = { default-features = false, version = "1.0.15" }
