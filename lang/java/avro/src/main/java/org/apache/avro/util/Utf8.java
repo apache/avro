@@ -69,20 +69,15 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
   }
 
   /**
-   * Return UTF-8 encoded bytes. Only valid through {@link #getByteLength()}.
+   * Return UTF-8 encoded bytes. Only valid through {@link #getByteLength()}
+   * assuming the bytes have been fully copied into the underlying buffer from the
+   * source.
+   *
+   * @see #setByteLength(int)
+   * @return a reference to the underlying byte array
    */
   public byte[] getBytes() {
     return bytes;
-  }
-
-  /**
-   * Return length in bytes.
-   *
-   * @deprecated call {@link #getByteLength()} instead.
-   */
-  @Deprecated
-  public int getLength() {
-    return length;
   }
 
   /** Return length in bytes. */
@@ -91,24 +86,27 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
   }
 
   /**
-   * Set length in bytes. Should called whenever byte content changes, even if the
-   * length does not change, as this also clears the cached String.
+   * Set length in bytes. When calling this method, even if the new length is the
+   * same as the current length, the cached contents of this Utf8 object will be
+   * wiped out. After calling this method, no assumptions should be made about the
+   * internal state (e.g., contents, hashcode, equality, etc.) of this Utf8 String
+   * other than the internal buffer being large enough to accommodate a String of
+   * the new length. This should be called immediately before reading a String
+   * from the underlying data source.
    *
-   * @deprecated call {@link #setByteLength(int)} instead.
-   */
-  @Deprecated
-  public Utf8 setLength(int newLength) {
-    return setByteLength(newLength);
-  }
-
-  /**
-   * Set length in bytes. Should called whenever byte content changes, even if the
-   * length does not change, as this also clears the cached String.
+   * @param newLength the new length of the underlying buffer
+   * @return a reference to this object.
+   * @see org.apache.avro.io.BinaryDecoder#readString(Utf8)
    */
   public Utf8 setByteLength(int newLength) {
     SystemLimitException.checkMaxStringLength(newLength);
+
+    // Note that if the buffer size increases, the internal buffer is zero-ed out.
+    // If the buffer is large enough, just the length pointer moves and the old
+    // contents remain. For consistency's sake, we could zero-out the buffer in
+    // both cases, but would be a perf hit.
     if (this.bytes.length < newLength) {
-      this.bytes = Arrays.copyOf(this.bytes, newLength);
+      this.bytes = new byte[newLength];
     }
     this.length = newLength;
     this.string = null;
