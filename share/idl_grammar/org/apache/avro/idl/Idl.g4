@@ -252,6 +252,6 @@ fragment HexadecimalExponent: [pP] [+\-]? Digit+;
  * Also note that this token should *only* be used in the identifier grammar rule above.
  */
 IdentifierToken: ( '`' IdentifierPart '`' | IdentifierPart)([.-] ( '`' IdentifierPart '`' | IdentifierPart) )*;
-fragment IdentifierPart: [\p{XID_Start}] [\p{XID_Continue}]*;
+fragment IdentifierPart: [\p{XID_Start}_] [\p{XID_Continue}]*;
 // See discussion in AVRO-1022, AVRO-2659, AVRO-3115
-// fragment IdentifierPart: [A-Za-z] [A-Za-z0-9_]*
+// fragment IdentifierPart: [A-Za-z_] [A-Za-z0-9_]*
