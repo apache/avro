@@ -17,6 +17,8 @@
  */
 package org.apache.avro.compiler.specific;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
 import org.apache.avro.JsonProperties;
@@ -60,8 +62,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Generate specific Java interfaces and classes for protocols and schemas.
