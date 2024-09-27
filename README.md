@@ -1,4 +1,9 @@
-Apache Avro™<img align="right" height="160" src="doc/assets/icons/logo.svg" alt="Avro Logo"/>
+
+> [!IMPORTANT]  
+> The Rust SDK is moving to https://github.com/apache/avro-rs. Please use it for [new issues](https://github.com/apache/avro-rs/issues/new)
+ and [pull requests](https://github.com/apache/avro-rs/pulls)!
+ 
+ Apache Avro™<img align="right" height="160" src="doc/assets/icons/logo.svg" alt="Avro Logo"/>
 ============
 
 ### Current CI status (Github servers)
@@ -46,9 +51,6 @@ To contribute to Avro, please read:
 
   https://cwiki.apache.org/confluence/display/AVRO/How+To+Contribute
 
-> [!IMPORTANT]  
-> The Rust SDK is moving to https://github.com/apache/avro-rs. Please use it for [new issues](https://github.com/apache/avro-rs/issues/new)
- and [pull requests](https://github.com/apache/avro-rs/pulls)!
 
 <!-- Arranged this way for easy copy-pasting and editor string manipulation -->
 
