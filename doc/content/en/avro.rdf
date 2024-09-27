@@ -52,9 +52,9 @@
     -->
     <release>
       <Version>
-        <name>Avro 1.11.3</name>
-        <created>2023-09-17</created>
-        <revision>1.11.3</revision>
+        <name>Avro 1.12.0</name>
+        <created>2024-08-05</created>
+        <revision>1.12.0</revision>
       </Version>
     </release>
     <repository>

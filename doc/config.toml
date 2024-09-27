@@ -260,6 +260,10 @@ version = "1.12.0"
 url = "https://avro.apache.org/docs/1.12.0/"
 
 [[params.versions]]
+version = "1.11.4"
+url = "https://avro.apache.org/docs/1.11.4/"
+
+[[params.versions]]
 version = "1.11.3"
 url = "https://avro.apache.org/docs/1.11.3/"
 
