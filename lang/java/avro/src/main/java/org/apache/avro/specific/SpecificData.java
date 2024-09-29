@@ -324,7 +324,7 @@ public class SpecificData extends GenericData {
    * Utility for template use. Adds a dollar sign to reserved words.
    */
   public static String mangle(String word, Set<String> reservedWords, boolean isMethod) {
-    if (isBlank(word)) {
+    if (word == null || word.isBlank()) {
       return word;
     }
     if (word.contains(".")) {
@@ -352,21 +352,6 @@ public class SpecificData extends GenericData {
       word = word.substring(0, word.length() - 1);
     }
     return word;
-  }
-
-  private static boolean isBlank(CharSequence cs) {
-    int strLen = cs == null ? 0 : cs.length();
-    if (strLen == 0) {
-      return true;
-    } else {
-      for (int i = 0; i < strLen; ++i) {
-        if (!Character.isWhitespace(cs.charAt(i))) {
-          return false;
-        }
-      }
-
-      return true;
-    }
   }
 
   /** Return the class that implements a schema, or null if none exists. */
@@ -452,7 +437,7 @@ public class SpecificData extends GenericData {
   public static String getClassName(Schema schema) {
     String namespace = schema.getNamespace();
     String name = schema.getName();
-    if (namespace == null || "".equals(namespace))
+    if (namespace == null || namespace.isEmpty())
       return name;
     String dot = namespace.endsWith("$") ? "" : "."; // back-compatibly handle $
     return mangle(namespace) + dot + mangleTypeIdentifier(name);
