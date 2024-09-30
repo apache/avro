@@ -106,7 +106,7 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
    * current size, for writes larger than or near to the size of the buffer, we
    * flush the buffer and write directly to the output, bypassing the buffer.
    *
-   * @param num
+   * @param num the number of bytes to ensure are available
    * @throws IOException
    */
   private void ensureBounds(int num) throws IOException {
