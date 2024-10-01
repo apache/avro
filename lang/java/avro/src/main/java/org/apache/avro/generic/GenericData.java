@@ -95,7 +95,7 @@ public class GenericData {
   private final ClassLoader classLoader;
 
   /**
-   * Set the Java type to be used when reading this schema. Meaningful only only
+   * Set the Java type to be used when reading this schema. Meaningful only for
    * string schemas and map schemas (for the keys).
    */
   public static void setStringType(Schema s, StringType stringType) {
