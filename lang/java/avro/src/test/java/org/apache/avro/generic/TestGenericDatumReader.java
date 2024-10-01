@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.apache.avro.Schema;
 import org.junit.jupiter.api.Test;
@@ -34,47 +32,14 @@ public class TestGenericDatumReader {
   private static final Random r = new Random(System.currentTimeMillis());
 
   @Test
-  void readerCache() {
-    final GenericDatumReader.ReaderCache cache = new GenericDatumReader.ReaderCache(this::findStringClass);
-    List<Thread> threads = IntStream.rangeClosed(1, 200).mapToObj((int index) -> {
-      final Schema schema = TestGenericDatumReader.this.build(index);
-      final WithSchema s = new WithSchema(schema, cache);
-      return (Runnable) () -> s.test();
-    }).map(Thread::new).collect(Collectors.toList());
-    threads.forEach(Thread::start);
-    threads.forEach((Thread t) -> {
-      try {
-        t.join();
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-    });
-  }
-
-  @Test
   void newInstanceFromString() {
-    final GenericDatumReader.ReaderCache cache = new GenericDatumReader.ReaderCache(this::findStringClass);
+    final GenericDatumReader cache = new GenericDatumReader();
 
     Object object = cache.newInstanceFromString(StringBuilder.class, "Hello");
     assertEquals(StringBuilder.class, object.getClass());
     StringBuilder builder = (StringBuilder) object;
     assertEquals("Hello", builder.toString());
 
-  }
-
-  static class WithSchema {
-    private final Schema schema;
-
-    private final GenericDatumReader.ReaderCache cache;
-
-    public WithSchema(Schema schema, GenericDatumReader.ReaderCache cache) {
-      this.schema = schema;
-      this.cache = cache;
-    }
-
-    public void test() {
-      this.cache.getStringClass(schema);
-    }
   }
 
   private List<Schema> list = new ArrayList<>();
