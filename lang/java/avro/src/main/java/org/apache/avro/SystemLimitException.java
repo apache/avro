@@ -154,6 +154,35 @@ public class SystemLimitException extends AvroRuntimeException {
   }
 
   /**
+   * Check to ensure that reading the specified number of items remains within the
+   * specified limits.
+   *
+   * @param items The next number of items to read. In normal usage, this is
+   *              always a positive, permitted value. Negative and zero values
+   *              have a special meaning in Avro decoding.
+   * @return The total number of items in the collection if and only if it is
+   *         within the limit and non-negative.
+   * @throws UnsupportedOperationException if reading the items would allocate a
+   *                                       collection that the Java VM would be
+   *                                       unable to handle
+   * @throws SystemLimitException          if the decoding should fail because it
+   *                                       would otherwise result in an allocation
+   *                                       exceeding the set limit
+   * @throws AvroRuntimeException          if the length is negative
+   */
+  public static int checkMaxCollectionLength(long items) {
+    if (items > MAX_ARRAY_VM_LIMIT) {
+      throw new UnsupportedOperationException(
+          "Cannot read collections larger than " + MAX_ARRAY_VM_LIMIT + " items in Java library");
+    }
+    if (items > maxCollectionLength) {
+      throw new SystemLimitException(
+          "Collection length " + items + " exceeds the maximum allowed of " + maxCollectionLength);
+    }
+    return (int) items;
+  }
+
+  /**
    * Check to ensure that reading the string size is within the specified limits.
    *
    * @param length The proposed size of the string to read
