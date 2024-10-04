@@ -26,6 +26,20 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.generic.GenericData.StringType;
+import org.apache.avro.specific.SpecificData;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,29 +51,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
-import org.apache.avro.AvroTypeException;
-
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.avro.LogicalType;
-import org.apache.avro.LogicalTypes;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
-import org.apache.avro.generic.GenericData.StringType;
-import org.apache.avro.specific.SpecificData;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TestSpecificCompiler {
   private static final Logger LOG = LoggerFactory.getLogger(TestSpecificCompiler.class);
@@ -990,4 +992,49 @@ public class TestSpecificCompiler {
     assertFalse(outputFile4.contents.contains("$3"));
   }
 
+  @Test
+  void docsAreEscaped_avro4053() {
+    String jsonSchema = "{\n" + "  \"protocol\": \"DummyProtocol\",\n"
+        + "  \"doc\": \"*/\\nTest escaping <threats>\\n/*\",\n" + "  \"types\" : [\n"
+        + "    {\"type\": \"fixed\", \"name\": \"Hash\", \"size\": 16, \"doc\": \"*/\\nTest escaping <threats>\\n/*\""
+        + "},\n"
+        + "    {\"type\": \"enum\", \"name\": \"Status\", \"symbols\": [\"ON\", \"OFF\"], \"doc\": \"*/\\nTest escaping <threats>\\n/*\"},\n"
+        + "   " + " {\"type\": \"record\", \"name\": \"Message\", \"fields\" : [\n"
+        + "      {\"name\": \"content\", \"type\": \"string\", \"doc\":  \"*/\\nTest escaping <threats>\\n/*\"},\n"
+        + "      {\"name\": \"status\", \"type\": \"Status\", \"doc\":  \"*/\\nTest escaping <threats>\\n/*\"},\n"
+        + "      {\"name\": \"signature\", \"type\": \"Hash\", \"doc\":  \"*/\\nTest escaping <threats>\\n/*\"}\n"
+        + "    ]}\n" + "  ],\n" + "  \"messages\" : {\n" + "    \"echo\": {\"request\": ["
+        + "{\"name\": \"msg\", \"type\": \"Message\"}"
+        + "], \"response\": \"Message\", \"doc\": \"*/\\nTest escaping <threats>\\n/*\"}\n" + "  },\n"
+        + "  \"javaAnnotation\": [\n" + "    \"Deprecated(forRemoval = true, since = \\\"forever\\\")\",\n"
+        + "    \"SuppressWarnings(\\\"ALL\\\")\",\n" + "    \"SuppressWarnings(\\\"CodeInjection\\\")/*\",\n"
+        + "    \" This is inside a comment as each line is prefixed with @\",\n"
+        + "    \" and the next bit is really dangerous... */ static { System.exit(); }\"\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(Protocol.parse(jsonSchema)).compile();
+    for (SpecificCompiler.OutputFile outputFile : outputs) {
+      assertFalse(outputFile.contents.contains("*/\\nTest escaping <threats>\\n/*"), "Threats present?");
+
+      int expectedEscapeCount = countOccurrences(Pattern.compile("Test escaping", Pattern.LITERAL),
+          outputFile.contents);
+      int escapedJavaDocCount = countOccurrences(Pattern.compile("\\*&#47;\\s*Test escaping &lt;threats&gt;\\s*/\\*"),
+          outputFile.contents);
+      // noinspection RegExpRedundantEscape
+      int escapedDocStringCount = countOccurrences(
+          Pattern.compile("\\\"doc\\\":\\\"*/\\\\nTest escaping <threats>\\\\n/*\\\"", Pattern.LITERAL),
+          outputFile.contents);
+      assertEquals(expectedEscapeCount, escapedJavaDocCount + escapedDocStringCount,
+          "Escaped threats in " + outputFile.path);
+
+      assertFalse(Pattern.compile("\\{ System.exit\\(\\); }(?!\\\\\")").matcher(outputFile.contents).find(),
+          "Code injection present? " + outputFile.contents);
+    }
+  }
+
+  private int countOccurrences(Pattern pattern, String textToSearch) {
+    int count = 0;
+    for (Matcher matcher = pattern.matcher(textToSearch); matcher.find();) {
+      count++;
+    }
+    return count;
+  }
 }
