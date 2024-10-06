@@ -50,7 +50,7 @@
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit5.version>5.11.0</junit5.version>
     <maven-core.version>3.9.6</maven-core.version>
-    <mockito.version>5.13.0</mockito.version>
+    <mockito.version>5.14.1</mockito.version>
     <netty.version>4.1.113.Final</netty.version>
     <protobuf.version>4.28.0</protobuf.version>
     <reload4j.version>1.2.25</reload4j.version>
