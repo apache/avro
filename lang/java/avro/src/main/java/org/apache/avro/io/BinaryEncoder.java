@@ -69,8 +69,8 @@ public abstract class BinaryEncoder extends Encoder {
       for (int i = 0; onlyAscii && (i < stringLength); i++) {
         /*
          * The char data type is a single 16-bit Unicode character (UTF-16). ASCII, is a
-         * 7-bit character encoding. Therefore, if the 8-bit is set than it cannot be
-         * ASCII. If it is ASCII, it is safe to trim to byte.
+         * 7-bit character encoding. Therefore, if the value is larger than 127, it
+         * cannot be ASCII. If it is ASCII, it is safe to trim to byte.
          */
         final char c = string.charAt(i);
         if (c >= 0x80) {
