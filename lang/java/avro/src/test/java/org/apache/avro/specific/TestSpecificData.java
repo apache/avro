@@ -180,6 +180,20 @@ public class TestSpecificData {
   }
 
   @Test
+  void testToByteArray() throws Exception {
+    final Schema string = Schema.create(Type.STRING);
+    final DatumWriter<String> writer = new SpecificDatumWriter<>(string);
+
+    try (final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+      final Encoder encoder = EncoderFactory.get().directBinaryEncoder(baos, null);
+      writer.write("test", encoder);
+
+      final byte[] bytes = writer.toByteArray("test");
+      assertArrayEquals(baos.toByteArray(), bytes);
+    }
+  }
+
+  @Test
   void classNameContainingReservedWords() {
     final Schema schema = Schema.createRecord("AnyName", null, "db.public.table", false);
 

@@ -17,6 +17,7 @@
  */
 package org.apache.avro.io;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
@@ -36,4 +37,19 @@ public interface DatumWriter<D> {
    * the schema from the datum to the output.
    */
   void write(D datum, Encoder out) throws IOException;
+
+  /**
+   * Convenience method to Write a datum to a byte array. Traverse the schema,
+   * depth first, writing each leaf value in the schema from the datum to the byte
+   * array.
+   *
+   * @param datum The datum to serialize
+   * @return The serialized datum stored in an array of bytes
+   */
+  default byte[] toByteArray(D datum) throws IOException {
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream(128)) {
+      write(datum, EncoderFactory.get().directBinaryEncoder(out, null));
+      return out.toByteArray();
+    }
+  }
 }
