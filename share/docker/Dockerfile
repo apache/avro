@@ -222,6 +222,10 @@ RUN gem install bundler --no-document && \
     apt-get install -qqy libyaml-dev && \
     cd /tmp/lang/ruby && bundle install
 
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.73.0
+ENV PATH $PATH:/root/.cargo/bin/
+
 # Install .NET SDK
 RUN cd /opt ; \
     wget https://dot.net/v1/dotnet-install.sh ; \
