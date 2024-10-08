@@ -33,7 +33,6 @@ github:
     - php
     - python
     - ruby
-    - rust
 
   enabled_merge_buttons:
     merge: false
