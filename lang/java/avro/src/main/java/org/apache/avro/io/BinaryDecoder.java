@@ -428,7 +428,7 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public long readArrayStart() throws IOException {
-    collectionCount = SystemLimitException.checkMaxCollectionLength(0L, doReadItemCount());
+    collectionCount = SystemLimitException.checkMaxCollectionLength(doReadItemCount());
     return collectionCount;
   }
 
@@ -446,7 +446,7 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public long readMapStart() throws IOException {
-    collectionCount = SystemLimitException.checkMaxCollectionLength(0L, doReadItemCount());
+    collectionCount = SystemLimitException.checkMaxCollectionLength(doReadItemCount());
     return collectionCount;
   }
 
