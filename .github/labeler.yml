@@ -45,9 +45,6 @@ Python:
 Ruby: 
   - changed-files:
     - any-glob-to-any-file: "lang/ruby/**/*"
-Rust: 
-  - changed-files:
-    - any-glob-to-any-file: "lang/rust/**/*"
 build: 
   - changed-files:
     - any-glob-to-any-file: ["**/*Dockerfile*", "**/*.sh", "**/*pom.xml", ".github/**/*"]

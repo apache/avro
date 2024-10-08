@@ -107,7 +107,6 @@ do
       (cd lang/ruby; ./build.sh lint test)
       (cd lang/php; ./build.sh lint test)
       (cd lang/perl; ./build.sh lint test)
-      (cd lang/rust; ./build.sh lint test)
 
       (cd lang/py; ./build.sh interop-data-generate)
       (cd lang/c; ./build.sh interop-data-generate)
@@ -176,7 +175,6 @@ do
       (cd lang/js; ./build.sh dist)
       (cd lang/ruby; ./build.sh dist)
       (cd lang/php; ./build.sh dist)
-      (cd lang/rust; ./build.sh dist)
 
       mkdir -p dist/perl
       (cd lang/perl; ./build.sh dist)
@@ -252,7 +250,6 @@ do
 
       (cd lang/perl; ./build.sh clean)
 
-      (cd lang/rust; ./build.sh clean)
       ;;
 
     veryclean)
@@ -279,8 +276,6 @@ do
       (cd lang/php; ./build.sh clean)
 
       (cd lang/perl; ./build.sh clean)
-
-      (cd lang/rust; ./build.sh clean)
 
       rm -rf lang/c++/build
       rm -rf lang/js/node_modules

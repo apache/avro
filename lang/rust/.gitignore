@@ -1,8 +1,0 @@
-/target/
-**/*.rs.bk
-*.swp
-.idea/
-*.iml
-precommit_venv/
-fleet.toml
-**/.cargo/config.toml

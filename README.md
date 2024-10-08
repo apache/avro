@@ -17,10 +17,6 @@
 [![test python][test python img]][test python]
 [![test php][test php img]][test php]
 
-[![rust continuous integration][rust continuous integration img]][rust continuous integration]
-[![rust clippy check][rust clippy check img]][rust clippy check]
-[![rust security audit][rust security audit img]][rust security audit]
-
 ### Current CI status (ARM based servers)
 [![test c ARM][test c ARM img]][test c ARM]
 [![test c# ARM][test c# ARM img]][test c# ARM]
@@ -31,7 +27,6 @@
 [![test ruby ARM][test ruby ARM img]][test ruby ARM]
 [![test python ARM][test python ARM img]][test python ARM]
 [![test php ARM][test php ARM img]][test php ARM]
-[![rust continuous integration ARM][rust continuous integration ARM img]][rust continuous integration ARM]
 
 ### Current CodeQL status
 [![codeql c#][codeql c# img]][codeql c#]
@@ -74,11 +69,6 @@ To contribute to Avro, please read:
 [test python ARM]:     https://github.com/apache/avro/actions/workflows/test-lang-py-ARM.yml
 [test php ARM]:        https://github.com/apache/avro/actions/workflows/test-lang-php-ARM.yml
 
-[rust continuous integration]: https://github.com/apache/avro/actions/workflows/test-lang-rust-ci.yml
-[rust continuous integration ARM]: https://github.com/apache/avro/actions/workflows/test-lang-rust-ci-ARM.yml
-[rust clippy check]:           https://github.com/apache/avro/actions/workflows/test-lang-rust-clippy.yml
-[rust security audit]:         https://github.com/apache/avro/actions/workflows/test-lang-rust-audit.yml
-
 [codeql c#]:         https://github.com/apache/avro/actions/workflows/codeql-csharp-analysis.yml
 [codeql java]:       https://github.com/apache/avro/actions/workflows/codeql-java-analysis.yml
 [codeql javascript]: https://github.com/apache/avro/actions/workflows/codeql-js-analysis.yml
@@ -103,12 +93,6 @@ To contribute to Avro, please read:
 [test ruby ARM img]:       https://github.com/apache/avro/actions/workflows/test-lang-ruby-ARM.yml/badge.svg
 [test python ARM img]:     https://github.com/apache/avro/actions/workflows/test-lang-py-ARM.yml/badge.svg
 [test php ARM img]:        https://github.com/apache/avro/actions/workflows/test-lang-php-ARM.yml/badge.svg
-
-[rust continuous integration img]: https://github.com/apache/avro/actions/workflows/test-lang-rust-ci.yml/badge.svg
-[rust clippy check img]:           https://github.com/apache/avro/actions/workflows/test-lang-rust-clippy.yml/badge.svg
-[rust security audit img]:         https://github.com/apache/avro/actions/workflows/test-lang-rust-audit.yml/badge.svg
-
-[rust continuous integration ARM img]: https://github.com/apache/avro/actions/workflows/test-lang-rust-ci-ARM.yml/badge.svg
 
 [codeql c# img]:         https://github.com/apache/avro/actions/workflows/codeql-csharp-analysis.yml/badge.svg
 [codeql java img]:       https://github.com/apache/avro/actions/workflows/codeql-java-analysis.yml/badge.svg
