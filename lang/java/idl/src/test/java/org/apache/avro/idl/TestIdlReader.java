@@ -23,7 +23,6 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.junit.Before;
 import org.junit.Test;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -55,7 +54,7 @@ import static org.junit.Assert.fail;
  * To make it simpler to write these tests, you can run ant -Dtestcase=TestIdl
  * -Dtest.idl.mode=write, which will *replace* all expected output.
  */
-public class IdlReaderTest {
+public class TestIdlReader {
   private static final File TEST_DIR = new File(System.getProperty("test.idl.dir", "src/test/idl"));
 
   private static final File TEST_INPUT_DIR = new File(TEST_DIR, "input").getAbsoluteFile();
