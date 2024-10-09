@@ -172,6 +172,29 @@ namespace Avro.IO
             Read(buffer, start, length);
         }
 
+        /// <inheritdoc/>
+        public object ReadLogicalTypeValue(LogicalSchema logicalSchema)
+        {
+            Schema baseSchema = logicalSchema.BaseSchema;
+            switch(baseSchema.Tag)
+            {
+                case Schema.Type.Int:
+                    return logicalSchema.LogicalType.ConvertToLogicalValue(ReadInt(), logicalSchema);
+                case Schema.Type.Long:
+                    return logicalSchema.LogicalType.ConvertToLogicalValue(ReadLong(), logicalSchema);
+                case Schema.Type.Bytes:
+                    return logicalSchema.LogicalType.ConvertToLogicalValue(ReadBytes(), logicalSchema);
+                case Schema.Type.String:
+                    return logicalSchema.LogicalType.ConvertToLogicalValue(ReadString(), logicalSchema);
+                case Schema.Type.Fixed:
+                    byte[] fixedValue = new byte[((FixedSchema)baseSchema).Size];
+                    ReadFixed(fixedValue);
+                    return logicalSchema.LogicalType.ConvertToLogicalValue(fixedValue, logicalSchema);
+                default:
+                    throw new AvroException($"Unsupported logical type: {logicalSchema.Tag}");
+            }
+        }
+
         /// <summary>
         /// Skips over a null value.
         /// </summary>

@@ -41,6 +41,7 @@ namespace Avro
             get { return SchemaName.Name; }
         }
 
+        
         /// <summary>
         /// Namespace of the schema
         /// </summary>
@@ -91,7 +92,7 @@ namespace Avro
                     return RecordSchema.NewInstance(Type.Error, jo, props, names, encspace);
                 default:
                     NamedSchema result;
-                    if (names.TryGetValue(type, null, encspace, doc, out result))
+                    if (names.TryGetValue(type, null, encspace, doc, null, out result))
                         return result;
                     return null;
             }
@@ -107,8 +108,7 @@ namespace Avro
         /// <param name="names">list of named schemas already read</param>
         /// <param name="doc">documentation for this named schema</param>
         protected NamedSchema(Type type, SchemaName name, IList<SchemaName> aliases, PropertyMap props, SchemaNames names,
-            string doc)
-                                : base(type, props)
+            string doc) : base(type, props)
         {
             this.SchemaName = name;
             this.Documentation = doc;
@@ -130,7 +130,7 @@ namespace Avro
             String n = JsonHelper.GetOptionalString(jtok, "name");      // Changed this to optional string for anonymous records in messages
             String ns = JsonHelper.GetOptionalString(jtok, "namespace");
             String d = JsonHelper.GetOptionalString(jtok, "doc");
-            return new SchemaName(n, ns, encspace, d);
+            return new SchemaName(n, ns, encspace, d, GetAlternateNames(jtok));
         }
 
         /// <summary>
@@ -155,9 +155,34 @@ namespace Avro
                 if (jalias.Type != JTokenType.String)
                     throw new SchemaParseException($"Aliases must be of format JSON array of strings at '{jtok.Path}'");
 
-                aliases.Add(new SchemaName((string)jalias, space, encspace, null));
+                aliases.Add(new SchemaName((string)jalias, space, encspace, null, GetAlternateNames(jtok)));
             }
             return aliases;
+        }
+
+        /// <summary>
+        /// Parses the 'altnames' property from the given JSON token
+        /// </summary>
+        /// <param name="jtok">JSON object to read</param>
+        /// <returns>Dictionary of alternate names. If no 'altnames' specified, then it returns null.</returns>
+        protected static IDictionary<string, string> GetAlternateNames(JToken jtok)
+        {
+            JToken jaliases = jtok["altnames"];
+            if (null == jaliases)
+                return null;
+
+            if (jaliases.Type != JTokenType.Object)
+                throw new SchemaParseException($"Aliases must be of format JSON object at '{jtok.Path}'");
+
+            var altnames = new Dictionary<string, string>();
+            foreach (JProperty jalias in jaliases.Children())
+            {
+                if (jalias.Value.Type != JTokenType.String)
+                    throw new SchemaParseException($"Aliases must be of format JSON object at '{jtok.Path}'");
+
+                altnames.Add(jalias.Name, (string)jalias.Value);
+            }
+            return altnames;
         }
 
         /// <summary>

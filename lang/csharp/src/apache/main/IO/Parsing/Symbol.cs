@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -654,6 +654,32 @@ namespace Avro.IO.Parsing
         }
 
         /// <summary>
+        /// The const check action.
+        /// </summary>
+        public class ConstCheckAction : Symbol
+        {
+            /// <summary>
+            /// The value.
+            /// </summary>
+            public object Value { get; private set; }
+
+            /// <summary>
+            /// Constructor
+            /// </summary>
+            /// <param name="value"></param>
+            public ConstCheckAction(object value) : base(Kind.ExplicitAction)
+            {
+                Value = value;
+                Production = new Symbol[0];
+            }
+
+            internal bool Check(object value)
+            {
+                return Value.Equals(value);
+            }
+        }
+
+        /// <summary>
         /// The writer union action.
         /// </summary>
         public class WriterUnionAction : ImplicitAction
@@ -907,6 +933,10 @@ namespace Avro.IO.Parsing
         /// String
         /// </summary>
         public static Symbol String { get; } = new Terminal("string");
+        /// <summary>
+        /// JsonDateTime
+        /// </summary>
+        public static Symbol JsonDateTime { get; } = new Terminal("string");
         /// <summary>
         /// Bytes
         /// </summary>

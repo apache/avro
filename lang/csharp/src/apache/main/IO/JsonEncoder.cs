@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,9 +21,12 @@ using System.Collections;
 using System.IO;
 using System.Text;
 using Newtonsoft.Json;
+using System;
+using Avro.Util;
 
 namespace Avro.IO
 {
+
     /// <summary>
     /// An <see cref="Encoder"/> for Avro's JSON data encoding.
     ///
@@ -35,6 +38,7 @@ namespace Avro.IO
     public class JsonEncoder : ParsingEncoder, Parser.IActionHandler
     {
         private readonly Parser parser;
+        private readonly JsonMode mode = JsonMode.AvroJson;
         private JsonWriter writer;
         private bool includeNamespace = true;
 
@@ -51,17 +55,39 @@ namespace Avro.IO
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonEncoder"/> class.
         /// </summary>
-        public JsonEncoder(Schema sc, Stream stream, bool pretty) : this(sc, GetJsonWriter(stream, pretty))
+        public JsonEncoder(Schema sc, Stream stream, JsonMode mode) : this(sc, GetJsonWriter(stream, false), mode)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonEncoder"/> class.
         /// </summary>
-        public JsonEncoder(Schema sc, JsonWriter writer)
+        public JsonEncoder(Schema sc, Stream stream, bool pretty) : this(sc, GetJsonWriter(stream, pretty))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JsonEncoder"/> class.    
+        /// </summary>
+        public JsonEncoder(Schema sc, Stream stream, bool pretty, JsonMode mode) : this(sc, GetJsonWriter(stream, pretty), mode)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JsonEncoder"/> class.
+        /// </summary>
+        public JsonEncoder(Schema sc, JsonWriter writer): this(sc, writer, JsonMode.AvroJson)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JsonEncoder"/> class.
+        /// </summary>
+        public JsonEncoder(Schema sc, JsonWriter writer, JsonMode mode)
         {
             Configure(writer);
-            parser = new Parser((new JsonGrammarGenerator()).Generate(sc), this);
+            parser = new Parser((new JsonGrammarGenerator(mode)).Generate(sc), this);
+            this.mode = mode;
         }
 
         /// <inheritdoc />
@@ -123,6 +149,8 @@ namespace Avro.IO
             }
 
             writer = jsonWriter;
+            writer.DateFormatHandling = DateFormatHandling.IsoDateFormat;
+            writer.DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind;
         }
 
         /// <inheritdoc />
@@ -197,8 +225,16 @@ namespace Avro.IO
 
         private void WriteByteArray(byte[] bytes, int start, int len)
         {
-            Encoding iso = Encoding.GetEncoding("ISO-8859-1");
-            writer.WriteValue(iso.GetString(bytes, start, len));
+            if ( mode == JsonMode.AvroJson)
+            {
+                Encoding iso = Encoding.GetEncoding("ISO-8859-1");
+                writer.WriteValue(iso.GetString(bytes, start, len));
+            }
+            else
+            {
+                var base64String = Convert.ToBase64String(bytes, start, len);
+                writer.WriteValue(base64String);
+            }            
         }
 
         /// <inheritdoc />
@@ -315,12 +351,58 @@ namespace Avro.IO
             Symbol symbol = top.GetSymbol(unionIndex);
             if (symbol != Symbol.Null && includeNamespace)
             {
-                writer.WriteStartObject();
-                writer.WritePropertyName(top.GetLabel(unionIndex));
-                parser.PushSymbol(Symbol.UnionEnd);
+                // the wrapper is only written in AvroJson mode
+                if ( mode == JsonMode.AvroJson)
+                {
+                  writer.WriteStartObject();
+                  writer.WritePropertyName(top.GetLabel(unionIndex));
+                  parser.PushSymbol(Symbol.UnionEnd);
+                }                
             }
-
             parser.PushSymbol(symbol);
+        }
+
+        /// <inheritdoc />
+        /// <inheritdoc/>
+        public override void WriteLogicalTypeValue(object value, LogicalSchema schema)
+        {
+            parser.Advance(parser.TopSymbol());
+            switch (schema.LogicalType)
+            {
+                case Util.LogicalUnixEpochType<DateTime> dt:
+                    if (mode == JsonMode.PlainJson)
+                    {
+                        writer.WriteValue(dt.ConvertToBaseValue<string>(value, schema));
+                    }
+                    else
+                    {
+                        writer.WriteValue(dt.ConvertToBaseValue(value, schema));
+                    }
+                    break;
+                case Util.LogicalUnixEpochType<TimeSpan> ts:
+                    if (mode == JsonMode.PlainJson)
+                    {
+                        writer.WriteValue(ts.ConvertToBaseValue<string>(value, schema));
+                    }
+                    else
+                    {
+                        writer.WriteValue(ts.ConvertToBaseValue(value, schema));
+                    }
+                    break;
+                case Util.Decimal dec:
+                    if (mode == JsonMode.PlainJson)
+                    {
+                        writer.WriteValue(dec.ConvertToBaseValue<decimal>(value, schema));
+                    }
+                    else
+                    {
+                        writer.WriteValue(dec.ConvertToBaseValue(value, schema));
+                    }
+                    break;
+                default:
+                    writer.WriteValue(schema.LogicalType.ConvertToBaseValue(value, schema));
+                    break;
+            }
         }
 
         /// <summary>

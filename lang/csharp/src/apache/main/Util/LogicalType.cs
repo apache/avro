@@ -55,6 +55,14 @@ namespace Avro.Util
         public abstract object ConvertToBaseValue(object logicalValue, LogicalSchema schema);
 
         /// <summary>
+        /// Converts a logical value to an instance of type T
+        /// </summary>
+        /// <param name="logicalValue">The logical value to convert.</param>
+        /// <param name="schema">The schema that represents the target of the conversion.</param>
+        /// <typeparam name="T">The type to convert to.</typeparam>
+        public abstract T ConvertToBaseValue<T>(object logicalValue, LogicalSchema schema);
+
+        /// <summary>
         /// Converts a base value to an instance of the logical type.
         /// </summary>
         /// <param name="baseValue">The base value to convert.</param>

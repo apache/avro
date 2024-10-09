@@ -50,14 +50,50 @@ namespace Avro.Util
         /// <inheritdoc/>
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
-            DateTime date = ((DateTime)logicalValue).ToUniversalTime();
-            return (date - UnixEpochDateTime).Ticks / TicksPerMicrosecond;
+            return ConvertToBaseValue<long>(logicalValue, schema);
+        }
+
+        /// <inheritdoc/>
+        override public T ConvertToBaseValue<T>(object logicalValue, LogicalSchema schema)
+        {
+            if ( typeof(T) == typeof(long) )
+            {
+                DateTime date = ((DateTime)logicalValue).ToUniversalTime();
+                return (T)(object)((date - UnixEpochDateTime).Ticks / TicksPerMicrosecond);
+            }
+            else if ( typeof(T) == typeof(DateTime) )
+            {
+                return (T)(object)((DateTime)logicalValue).ToUniversalTime();
+            }
+            else if ( typeof(T) == typeof(string) )
+            {
+                return (T)(object)((DateTime)logicalValue).ToString("O");
+            }
+            else
+            {
+                throw new AvroTypeException("Invalid type conversion");
+            }
         }
 
         /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
-            return UnixEpochDateTime.AddTicks((long)baseValue * TicksPerMicrosecond).ToLocalTime();
+            if (baseValue is long)
+            {
+                return UnixEpochDateTime.AddTicks((long)baseValue * TicksPerMicrosecond).ToLocalTime();
+            }
+            else if (baseValue is DateTime)
+            {
+                return (DateTime)baseValue;
+            }
+            else if (baseValue is string)
+            {
+                return DateTime.Parse((string)baseValue);
+            }
+            else
+            {
+                throw new AvroTypeException("Invalid type conversion");
+            }
         }
     }
 }
