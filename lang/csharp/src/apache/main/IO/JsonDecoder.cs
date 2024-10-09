@@ -45,7 +45,7 @@ namespace Avro.IO
             public JsonReader OrigParser { get; set; }
         }
 
-        private class AvroJsonTextReader : JsonTextReader
+        private sealed class AvroJsonTextReader : JsonTextReader
         {
             public AvroJsonTextReader(TextReader reader) : base(reader)
             {
