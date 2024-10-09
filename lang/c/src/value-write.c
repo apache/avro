@@ -198,6 +198,22 @@ avro_value_write(avro_writer_t writer, avro_value_t *src)
 		case AVRO_UNION:
 			return write_union_value(writer, src);
 
+		case AVRO_DECIMAL:
+		{
+			const void *buf;
+			size_t size;
+			check(rval, avro_value_get_bytes(src, &buf, &size));
+			const avro_schema_t underlying =
+			    avro_schema_logical_underlying(
+				avro_value_get_schema(src));
+			if (is_avro_fixed(underlying)) {
+				return avro_write(writer, (void *) buf, size);
+			}
+
+			return avro_binary_encoding.write_bytes(
+			    writer, (const char *) buf, size);
+		}
+
 		default:
 		{
 			avro_set_error("Unknown schema type");
