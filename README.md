@@ -3,7 +3,7 @@
 > The Rust SDK is moving to https://github.com/apache/avro-rs. Please use it for [new issues](https://github.com/apache/avro-rs/issues/new)
  and [pull requests](https://github.com/apache/avro-rs/pulls)!
  
- Apache Avro™<img align="right" height="160" src="doc/assets/icons/logo.svg" alt="Avro Logo"/>
+ Apache Avro™<img align="right" height="160" src="doc/assets/images/logo.svg" alt="Avro Logo"/>
 ============
 
 ### Current CI status (Github servers)
