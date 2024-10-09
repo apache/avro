@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -45,6 +45,14 @@ namespace Avro.IO
             public JsonReader OrigParser { get; set; }
         }
 
+        private sealed class AvroJsonTextReader : JsonTextReader
+        {
+            public AvroJsonTextReader(TextReader reader) : base(reader)
+            {
+                this.DateParseHandling = DateParseHandling.None;
+            }
+        }
+
         private JsonDecoder(Symbol root, Stream stream) : base(root)
         {
             Configure(stream);
@@ -85,7 +93,7 @@ namespace Avro.IO
             Parser.Reset();
             reorderBuffers.Clear();
             currentReorderBuffer = null;
-            reader = new JsonTextReader(new StreamReader(stream));
+            reader = new AvroJsonTextReader(new StreamReader(stream));
             reader.Read();
         }
 
@@ -100,7 +108,7 @@ namespace Avro.IO
             Parser.Reset();
             reorderBuffers.Clear();
             currentReorderBuffer = null;
-            reader = new JsonTextReader(new StringReader(str));
+            reader = new AvroJsonTextReader(new StringReader(str));
             reader.Read();
         }
 
@@ -651,7 +659,7 @@ namespace Avro.IO
                     if (currentReorderBuffer != null && currentReorderBuffer.SavedFields.Count > 0)
                     {
                         throw TypeError("Unknown fields: " + currentReorderBuffer.SavedFields.Keys
-                            .Aggregate((x, y) => x + ", " + y ));
+                            .Aggregate((x, y) => x + ", " + y));
                     }
 
                     currentReorderBuffer = reorderBuffers.Pop();
@@ -735,6 +743,7 @@ namespace Avro.IO
             public JsonElementReader(IList<JsonElement> elements)
             {
                 this.elements = elements;
+                this.DateParseHandling = DateParseHandling.None;
                 pos = 0;
             }
 
