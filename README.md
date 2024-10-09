@@ -105,7 +105,7 @@ You can use devcontainers to develop Avro:
 * [![Open in Github Codespaces](https://img.shields.io/static/v1?label=&message=Open%20in%20Github%20Codespaces&color=2f362d&logo=github)](https://codespaces.new/apache/avro?quickstart=1&hide_repo_select=true)
 
 
-### Trademark & logo's
+### Trademark & logos
 Apache®, Apache Avro and the Apache Avro airplane logo are trademarks of The Apache Software Foundation.
 
 The Apache Avro airplane logo on this page has been designed by [Emma Kellam](https://github.com/emmak3l) for use by this project.
