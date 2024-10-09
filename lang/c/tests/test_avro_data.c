@@ -186,15 +186,15 @@ static int test_bytes(void)
 	avro_datum_t datum;
 	avro_datum_t expected_datum;
 
-	datum = avro_givebytes(bytes, sizeof(bytes), NULL);
+	datum = avro_givebytes(writer_schema, bytes, sizeof(bytes), NULL);
 	write_read_check(writer_schema, datum, NULL, NULL, "bytes");
 	test_json(datum, "\"\\u00de\\u00ad\\u00be\\u00ef\"");
 	avro_datum_decref(datum);
 	avro_schema_decref(writer_schema);
 
-	datum = avro_givebytes(NULL, 0, NULL);
+	datum = avro_givebytes(writer_schema, NULL, 0, NULL);
 	avro_givebytes_set(datum, bytes, sizeof(bytes), NULL);
-	expected_datum = avro_givebytes(bytes, sizeof(bytes), NULL);
+	expected_datum = avro_givebytes(writer_schema, bytes, sizeof(bytes), NULL);
 	if (!avro_datum_equal(datum, expected_datum)) {
 		fprintf(stderr,
 		        "Expected equal bytes instances.\n");
@@ -206,7 +206,7 @@ static int test_bytes(void)
 	// The following should bork if we don't copy the bytes value
 	// correctly (since we'll try to free a static string).
 
-	datum = avro_bytes("original", 8);
+	datum = avro_bytes(writer_schema, "original", 8);
 	avro_bytes_set(datum, "alsothis", 8);
 	avro_datum_decref(datum);
 
@@ -223,8 +223,8 @@ static int test_int32(void)
 	avro_schema_t double_schema = avro_schema_double();
 	for (i = 0; i < 100; i++) {
 		int32_t  value = rand_int32();
-		avro_datum_t datum = avro_int32(value);
-		avro_datum_t long_datum = avro_int64(value);
+		avro_datum_t datum = avro_int32(writer_schema, value);
+		avro_datum_t long_datum = avro_int64(long_schema, value);
 		avro_datum_t float_datum = avro_float(value);
 		avro_datum_t double_datum = avro_double(value);
 		write_read_check(writer_schema, datum, NULL, NULL, "int");
@@ -240,7 +240,7 @@ static int test_int32(void)
 		avro_datum_decref(double_datum);
 	}
 
-	avro_datum_t  datum = avro_int32(10000);
+	avro_datum_t  datum = avro_int32(writer_schema, 10000);
 	test_json(datum, "10000");
 	avro_datum_decref(datum);
 
@@ -259,7 +259,7 @@ static int test_int64(void)
 	avro_schema_t double_schema = avro_schema_double();
 	for (i = 0; i < 100; i++) {
 		int64_t  value = rand_int64();
-		avro_datum_t datum = avro_int64(value);
+		avro_datum_t datum = avro_int64(writer_schema, value);
 		avro_datum_t float_datum = avro_float(value);
 		avro_datum_t double_datum = avro_double(value);
 		write_read_check(writer_schema, datum, NULL, NULL, "long");
@@ -272,7 +272,7 @@ static int test_int64(void)
 		avro_datum_decref(double_datum);
 	}
 
-	avro_datum_t  datum = avro_int64(10000);
+	avro_datum_t  datum = avro_int64(writer_schema, 10000);
 	test_json(datum, "10000");
 	avro_datum_decref(datum);
 
@@ -354,13 +354,14 @@ static int test_record(void)
 {
 	avro_schema_t schema = avro_schema_record("person", NULL);
 	avro_schema_record_field_append(schema, "name", avro_schema_string());
-	avro_schema_record_field_append(schema, "age", avro_schema_int());
+	avro_schema_t age_schema = avro_schema_int();
+	avro_schema_record_field_append(schema, "age", age_schema);
 
 	avro_datum_t datum = avro_record(schema);
 	avro_datum_t name_datum, age_datum;
 
 	name_datum = avro_givestring("Joseph Campbell", NULL);
-	age_datum = avro_int32(83);
+	age_datum = avro_int32(age_schema, 83);
 
 	avro_record_set(datum, "name", name_datum);
 	avro_record_set(datum, "age", age_datum);
@@ -484,11 +485,12 @@ static int test_enum(void)
 static int test_array(void)
 {
 	int i, rval;
-	avro_schema_t schema = avro_schema_array(avro_schema_int());
+	avro_schema_t int_schema = avro_schema_int();
+	avro_schema_t schema = avro_schema_array(int_schema);
 	avro_datum_t datum = avro_array(schema);
 
 	for (i = 0; i < 10; i++) {
-		avro_datum_t i32_datum = avro_int32(i);
+		avro_datum_t i32_datum = avro_int32(int_schema, i);
 		rval = avro_array_append_datum(datum, i32_datum);
 		avro_datum_decref(i32_datum);
 		if (rval) {
@@ -510,13 +512,14 @@ static int test_array(void)
 
 static int test_map(void)
 {
-	avro_schema_t schema = avro_schema_map(avro_schema_long());
+	avro_schema_t long_schema = avro_schema_long();
+	avro_schema_t schema = avro_schema_map(long_schema);
 	avro_datum_t datum = avro_map(schema);
 	int64_t i = 0;
 	char *nums[] =
 	    { "zero", "one", "two", "three", "four", "five", "six", NULL };
 	while (nums[i]) {
-		avro_datum_t i_datum = avro_int64(i);
+		avro_datum_t i_datum = avro_int64(long_schema, i);
 		avro_map_set(datum, nums[i], i_datum);
 		avro_datum_decref(i_datum);
 		i++;
