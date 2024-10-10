@@ -59,13 +59,12 @@ typedef std::array<uint8_t, SyncSize> DataFileSync;
  *  this object.
  */
 class AVRO_DECL DataFileWriterBase : boost::noncopyable {
-    const std::string filename_;
     const ValidSchema schema_;
     const EncoderPtr encoderPtr_;
     const size_t syncInterval_;
     Codec codec_;
 
-    std::unique_ptr<OutputStream> stream_;
+    std::shared_ptr<OutputStream> stream_;
     std::unique_ptr<OutputStream> buffer_;
     const DataFileSync sync_;
     int64_t objectCount_;
@@ -85,11 +84,6 @@ class AVRO_DECL DataFileWriterBase : boost::noncopyable {
      * Generates a sync marker in the file.
      */
     void sync();
-
-    /**
-     * Shared constructor portion since we aren't using C++11
-     */
-    void init(const ValidSchema &schema, size_t syncInterval, const Codec &codec);
 
 public:
     /**
@@ -119,7 +113,11 @@ public:
      */
     DataFileWriterBase(const char *filename, const ValidSchema &schema,
                        size_t syncInterval, Codec codec = NULL_CODEC);
+    DataFileWriterBase(OutputStream &outputStream, const ValidSchema &schema,
+                       size_t syncInterval, Codec codec = NULL_CODEC);
     DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
+                       const ValidSchema &schema, size_t syncInterval, Codec codec);
+    DataFileWriterBase(std::shared_ptr<OutputStream> outputStream,
                        const ValidSchema &schema, size_t syncInterval, Codec codec);
 
     ~DataFileWriterBase();
@@ -154,7 +152,16 @@ public:
     DataFileWriter(const char *filename, const ValidSchema &schema,
                    size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) : base_(new DataFileWriterBase(filename, schema, syncInterval, codec)) {}
 
+    /**
+     * Constructs a writer which does not own the outputStream.
+     * The outputStream must remain valid for the DataFileWriter's lifetime
+     */
+    DataFileWriter(OutputStream &outputStream, const ValidSchema &schema,
+                   size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) : base_(new DataFileWriterBase(outputStream, schema, syncInterval, codec)) {}
+
     DataFileWriter(std::unique_ptr<OutputStream> outputStream, const ValidSchema &schema,
+                   size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) : base_(new DataFileWriterBase(std::move(outputStream), schema, syncInterval, codec)) {}
+    DataFileWriter(std::shared_ptr<OutputStream> outputStream, const ValidSchema &schema,
                    size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) : base_(new DataFileWriterBase(std::move(outputStream), schema, syncInterval, codec)) {}
 
     /**
@@ -193,7 +200,7 @@ public:
  */
 class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     const std::string filename_;
-    const std::unique_ptr<InputStream> stream_;
+    const std::shared_ptr<InputStream> stream_;
     const DecoderPtr decoder_;
     int64_t objectCount_;
     bool eof_;
@@ -236,14 +243,27 @@ public:
     void decr() { --objectCount_; }
 
     /**
-     * Constructs the reader for the given file and the reader is
-     * expected to use the schema that is used with data.
-     * This function should be called exactly once after constructing
-     * the DataFileReaderBase object.
+     * Construct a reader for the given filename, an avro::Exception will be thrown
+     * if the file cannot be opened.
      */
     explicit DataFileReaderBase(const char *filename);
 
+    /**
+     * Construct a reader for the given inputStream without taking ownership of
+     * it. The inputStream must remain valid for this object's lifetime.
+     */
+    explicit DataFileReaderBase(InputStream &inputStream);
+
+    /**
+     * Construct a reader for the given inputStream.
+     */
     explicit DataFileReaderBase(std::unique_ptr<InputStream> inputStream);
+
+    /**
+     * Construct a reader for the given inputStream. The inputStream should
+     * be used by at most one DataFileReader/Writer at a time.
+     */
+    explicit DataFileReaderBase(std::shared_ptr<InputStream> inputStream);
 
     /**
      * Initializes the reader so that the reader and writer schemas
@@ -315,7 +335,19 @@ public:
         base_->init(readerSchema);
     }
 
+    /**
+     * Constructs a reader which does not own the inputStream.
+     * The inputStream must remain valid for the DataFileReader's lifetime
+     */
+    DataFileReader(InputStream &inputStream, const ValidSchema &readerSchema) : base_(new DataFileReaderBase(inputStream)) {
+        base_->init(readerSchema);
+    }
+
     DataFileReader(std::unique_ptr<InputStream> inputStream, const ValidSchema &readerSchema) : base_(new DataFileReaderBase(std::move(inputStream))) {
+        base_->init(readerSchema);
+    }
+
+    DataFileReader(std::shared_ptr<InputStream> inputStream, const ValidSchema &readerSchema) : base_(new DataFileReaderBase(std::move(inputStream))) {
         base_->init(readerSchema);
     }
 
@@ -327,7 +359,15 @@ public:
         base_->init();
     }
 
+    explicit DataFileReader(InputStream &inputStream) : base_(new DataFileReaderBase(inputStream)) {
+        base_->init();
+    }
+
     explicit DataFileReader(std::unique_ptr<InputStream> inputStream) : base_(new DataFileReaderBase(std::move(inputStream))) {
+        base_->init();
+    }
+
+    explicit DataFileReader(std::shared_ptr<InputStream> inputStream) : base_(new DataFileReaderBase(std::move(inputStream))) {
         base_->init();
     }
 
@@ -375,40 +415,54 @@ public:
     /**
      * Returns the schema for this object.
      */
-    const ValidSchema &readerSchema() { return base_->readerSchema(); }
+    const ValidSchema &readerSchema() {
+        return base_->readerSchema();
+    }
 
     /**
      * Returns the schema stored with the data file.
      */
-    const ValidSchema &dataSchema() { return base_->dataSchema(); }
+    const ValidSchema &dataSchema() {
+        return base_->dataSchema();
+    }
 
     /**
      * Closes the reader. No further operation is possible on this reader.
      */
-    void close() { return base_->close(); }
+    void close() {
+        return base_->close();
+    }
 
     /**
      * Move to a specific, known synchronization point, for example one returned
      * from previousSync().
      */
-    void seek(int64_t position) { base_->seek(position); }
+    void seek(int64_t position) {
+        base_->seek(position);
+    }
 
     /**
      * Move to the next synchronization point after a position. To process a
      * range of file entries, call this with the starting position, then check
      * pastSync() with the end point before each call to read().
      */
-    void sync(int64_t position) { base_->sync(position); }
+    void sync(int64_t position) {
+        base_->sync(position);
+    }
 
     /**
      * Return true if past the next synchronization point after a position.
      */
-    bool pastSync(int64_t position) { return base_->pastSync(position); }
+    bool pastSync(int64_t position) {
+        return base_->pastSync(position);
+    }
 
     /**
      * Return the last synchronization point before our current position.
      */
-    int64_t previousSync() { return base_->previousSync(); }
+    int64_t previousSync() {
+        return base_->previousSync();
+    }
 };
 
 } // namespace avro
