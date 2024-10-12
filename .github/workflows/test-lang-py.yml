@@ -43,11 +43,6 @@ jobs:
         - '3.11'
         - '3.10'
         - '3.9'
-        - '3.8'
-        - '3.7'
-        - '3.6'
-        - 'pypy-3.7'
-        - 'pypy-3.6'
 
     steps:
       - uses: actions/checkout@v4
@@ -92,9 +87,13 @@ jobs:
         - '3.9'
         - '3.8'
         - '3.7'
+<<<<<<< HEAD
         - '3.6'
         - 'pypy-3.7'
         - 'pypy-3.6'
+=======
+        - 'pypy-3.10'
+>>>>>>> 982ad792ce (ci: Remove deprecated pypy-3.9 test (#3211))
 
     steps:
       - uses: actions/checkout@v4
