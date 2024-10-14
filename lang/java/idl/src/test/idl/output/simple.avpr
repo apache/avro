@@ -80,11 +80,11 @@
       "default": null
     }, {
       "name": "numbers",
-      "type": {"type: array", "items": "int"},
+      "type": {"type": "array", "items": "int"},
       "default": []
     }, {
       "name": "dictionary",
-      "type": {"type: map", "items": "string"},
+      "type": {"type": "map", "values": "string"},
       "default": {}
     }],
     "my-property" : {
