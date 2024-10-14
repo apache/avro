@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -87,6 +87,9 @@ namespace Avro.IO
 
         /// <inheritdoc />
         public abstract void WriteFixed(byte[] data, int start, int len);
+
+        /// <inheritdoc />
+        public abstract void WriteLogicalTypeValue(object value, LogicalSchema schema);
 
         /// <inheritdoc />
         public abstract void Flush();

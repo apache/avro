@@ -57,14 +57,48 @@ namespace Avro.Util
         }
 
         /// <inheritdoc/>
+        public override T ConvertToBaseValue<T>(object logicalValue, LogicalSchema schema)
+        {
+            if (typeof(T) == typeof(long))
+            {
+                var time = (TimeSpan)logicalValue;
+
+                ThrowIfOutOfRange(time, nameof(logicalValue));
+
+                return (T)(object)((time - UnixEpochDateTime.TimeOfDay).Ticks / TicksPerMicrosecond);
+            }
+            else if (typeof(T) == typeof(TimeSpan))
+            {
+                return (T)logicalValue;
+            }
+            else if (typeof(T) == typeof(string))
+            {
+                return (T)(object)((TimeSpan)logicalValue).ToString("c");
+            }
+            throw new AvroTypeException($"'{LogicalTypeName}' can only be converted to 'long', not '{typeof(T).Name}'.");
+        }
+
+        /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
-            var time = TimeSpan.FromTicks((long)baseValue * TicksPerMicrosecond);
+            if (baseValue is long)
+            {
+                var time = TimeSpan.FromTicks((long)baseValue * TicksPerMicrosecond);
 
-            ThrowIfOutOfRange(time, nameof(baseValue));
+                ThrowIfOutOfRange(time, nameof(baseValue));
 
-            // Note: UnixEpochDateTime.TimeOfDay is '00:00:00', so the Add is meaningless. This could be 'return time;'
-            return UnixEpochDateTime.TimeOfDay.Add(time);
+                // Note: UnixEpochDateTime.TimeOfDay is '00:00:00', so the Add is meaningless. This could be 'return time;'
+                return UnixEpochDateTime.TimeOfDay.Add(time);
+            }
+            else if (baseValue is TimeSpan)
+            {
+                return baseValue;
+            }
+            else if (baseValue is string)
+            {
+                return TimeSpan.Parse((string)baseValue);
+            }
+            throw new AvroTypeException($"'{LogicalTypeName}' can only be converted from 'long', not '{baseValue.GetType().Name}'.");
         }
 
         private static void ThrowIfOutOfRange(TimeSpan time, string paramName)

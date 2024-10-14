@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,8 @@
 
 using System;
 using System.Collections.Generic;
+using Avro.Util;
+using Newtonsoft.Json;
 
 namespace Avro.IO.Parsing
 {
@@ -27,6 +29,15 @@ namespace Avro.IO.Parsing
     /// </summary>
     public class JsonGrammarGenerator : ValidatingGrammarGenerator
     {
+        private readonly JsonMode mode;
+
+        /// <summary>
+        /// Creates a new instance of the JsonGrammarGenerator class.
+        /// </summary>
+        public JsonGrammarGenerator(JsonMode mode) : base()
+        {
+            this.mode = mode;
+        }
         /// <summary>
         /// Returns the non-terminal that is the start symbol for the grammar for the
         /// grammar for the given schema <tt>schema</tt>.
@@ -75,28 +86,56 @@ namespace Avro.IO.Parsing
                         LitS wsc = new LitS(sc);
                         if (!seen.TryGetValue(wsc, out Symbol rresult))
                         {
-                            Symbol[] production = new Symbol[((RecordSchema)sc).Fields.Count * 3 + 2];
-                            rresult = Symbol.NewSeq(production);
-                            seen[wsc] = rresult;
-
-                            int i = production.Length;
-                            int n = 0;
-                            production[--i] = Symbol.RecordStart;
-                            foreach (Field f in ((RecordSchema)sc).Fields)
+                            RecordSchema recordSchema = (RecordSchema)sc;
+                            if (recordSchema.TryGetRootField(out var rootField))
                             {
-                                production[--i] = new Symbol.FieldAdjustAction(n, f.Name, f.Aliases);
-                                production[--i] = Generate(f.Schema, seen);
-                                production[--i] = Symbol.FieldEnd;
-                                n++;
+                                return Generate(rootField.Schema, seen);
                             }
+                            else
+                            {
+                                Symbol[] production = new Symbol[recordSchema.Fields.Count * 3 + 2];
+                                rresult = Symbol.NewSeq(production);
+                                seen[wsc] = rresult;
 
-                            production[i - 1] = Symbol.RecordEnd;
+                                int i = production.Length;
+                                int n = 0;
+                                production[--i] = Symbol.RecordStart;
+                                foreach (Field f in recordSchema.Fields)
+                                {
+                                    var name = f.Name;
+                                    if (f.AlternateNames != null && f.AlternateNames.TryGetValue("json", out string jsonName))
+                                    {
+                                        name = jsonName;
+                                    }
+                                    production[--i] = new Symbol.FieldAdjustAction(n, name, f.Aliases);
+                                    string constValue = f.GetProperty("const");
+                                    if (constValue != null)
+                                    {
+                                        var constObj = JsonConvert.DeserializeObject(constValue);
+                                        production[--i] = Symbol.NewSeq(new Symbol.ConstCheckAction(constObj), Generate(f.Schema, seen));
+                                    }
+                                    else
+                                    {
+                                        production[--i] = Generate(f.Schema, seen);
+                                    }
+                                    production[--i] = Symbol.FieldEnd;
+                                    n++;
+                                }
+                                production[i - 1] = Symbol.RecordEnd;
+                            }
                         }
-
                         return rresult;
                     }
                 case Schema.Type.Logical:
-                    return Generate((sc as LogicalSchema).BaseSchema, seen);
+                    LogicalSchema logicalSchema = (LogicalSchema)sc;
+                    if (mode == JsonMode.PlainJson && logicalSchema.LogicalType is LogicalUnixEpochType<DateTime>)
+                    {
+                        return Symbol.JsonDateTime;
+                    }
+                    else
+                    {
+                        return Generate((sc as LogicalSchema).BaseSchema, seen);
+                    }
                 default:
                     throw new Exception("Unexpected schema type");
             }

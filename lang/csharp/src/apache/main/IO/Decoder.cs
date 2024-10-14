@@ -136,6 +136,14 @@ namespace Avro.IO
         /// <param name="length">Number of bytes to read</param>
         void ReadFixed(byte[] buffer, int start, int length);
 
+
+        /// <summary>
+        /// Reads a logical type value.
+        /// </summary>
+        /// <param name="schema">Schema of the logical type</param>
+        /// <returns></returns>
+        object ReadLogicalTypeValue(LogicalSchema schema);
+
         /// <summary>
         /// Skips a null Avro type on the stream.
         /// </summary>

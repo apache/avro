@@ -45,15 +45,47 @@ namespace Avro.Util
         /// <inheritdoc/>
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
-            var date = ((DateTime)logicalValue).ToUniversalTime();
-            return (long)(date - UnixEpochDateTime).TotalMilliseconds;
+            return ConvertToBaseValue<long>(logicalValue, schema);
+        }
+
+        /// <inheritdoc/>
+        public override T ConvertToBaseValue<T>(object logicalValue, LogicalSchema schema)
+        {
+            if (typeof(T) == typeof(long))
+            {
+                var date = ((DateTime)logicalValue).ToUniversalTime();
+                return (T)(object)(long)(date - UnixEpochDateTime).TotalMilliseconds;
+            }
+            else if (typeof(T) == typeof(DateTime))
+            {
+                return (T)(object)((DateTime)logicalValue);
+            }
+            else
+            {
+                throw new AvroTypeException("Unsupported type conversion");
+            }
         }
 
         /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
-            var noMs = (long)baseValue;
-            return UnixEpochDateTime.AddMilliseconds(noMs);
+            if (baseValue is long || baseValue is int )
+            {
+                var noMs = (long)baseValue;
+                return UnixEpochDateTime.AddMilliseconds(noMs);
+            }
+            else if (baseValue is DateTime)
+            {
+                return baseValue;
+            }
+            else if ( baseValue is string )
+            {
+                return DateTime.Parse((string)baseValue);
+            }
+            else
+            {
+                throw new AvroTypeException("Unsupported type conversion");
+            }
         }
     }
 }

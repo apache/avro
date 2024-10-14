@@ -55,6 +55,16 @@ namespace Avro
         public readonly string Name;
 
         /// <summary>
+        /// Dictionary of alternate names for this field
+        /// </summary>
+        public IDictionary<string, string> AlternateNames { get; private set; }
+
+        /// <summary>
+        /// Whether the field is a root field. There must only be one such field in a record.
+        /// </summary>
+        public bool Root { get; private set; }
+
+        /// <summary>
         /// List of aliases for the field name.
         /// </summary>
         public IList<string> Aliases { get; private set; }
@@ -103,6 +113,7 @@ namespace Avro
         /// <param name="schema">schema for the field type.</param>
         /// <param name="name">name of the field.</param>
         /// <param name="aliases">list of aliases for the name of the field.</param>
+        /// <param name="alternateNames">dictionary of alternate names for the field</param>
         /// <param name="pos">position of the field.</param>
         /// <param name="doc">documentation for the field.</param>
         /// <param name="defaultValue">field's default value if it exists.</param>
@@ -112,11 +123,13 @@ namespace Avro
             string name,
             int pos,
             IList<string> aliases = null,
+            IDictionary<string, string> alternateNames = null,
+            bool root = false,
             string doc = null,
             JToken defaultValue = null,
             SortOrder sortorder = SortOrder.ignore,
             PropertyMap customProperties = null)
-            : this(schema, name, aliases, pos, doc, defaultValue, sortorder, customProperties)
+            : this(schema, name, aliases, alternateNames, root, pos, doc, defaultValue, sortorder, customProperties)
         {
         }
 
@@ -126,7 +139,7 @@ namespace Avro
         /// <returns>A clone of this field with new position.</returns>
         internal Field ChangePosition(int newPosition)
         {
-            return new Field(Schema, Name, newPosition, Aliases, Documentation, DefaultValue, Ordering ?? SortOrder.ignore, Props);
+            return new Field(Schema, Name, newPosition, Aliases, AlternateNames, Root, Documentation, DefaultValue, Ordering ?? SortOrder.ignore, Props);
         }
 
         /// <summary>
@@ -135,6 +148,8 @@ namespace Avro
         /// <param name="schema">schema for the field type</param>
         /// <param name="name">name of the field</param>
         /// <param name="aliases">list of aliases for the name of the field</param>
+        /// <param name="alternateNames">dictionary of alternate names for the field</param>
+        /// <param name="root">whether the field is a root field. There must only be one such field in a record</param>
         /// <param name="pos">position of the field</param>
         /// <param name="doc">documentation for the field</param>
         /// <param name="defaultValue">field's default value if it exists</param>
@@ -145,7 +160,7 @@ namespace Avro
         /// or
         /// type - type cannot be null.
         /// </exception>
-        internal Field(Schema schema, string name, IList<string> aliases, int pos, string doc,
+        internal Field(Schema schema, string name, IList<string> aliases, IDictionary<string, string> alternateNames, bool root, int pos, string doc,
                         JToken defaultValue, SortOrder sortorder, PropertyMap props)
         {
             if (string.IsNullOrEmpty(name))
@@ -156,11 +171,17 @@ namespace Avro
             Schema = schema ?? throw new ArgumentNullException("type", "type cannot be null.");
             Name = name;
             Aliases = aliases;
+            AlternateNames = alternateNames;
+            Root = root;
             Pos = pos;
             Documentation = doc;
             DefaultValue = defaultValue;
             Ordering = sortorder;
             Props = props;
+            if ( Root && (Schema.Tag != Schema.Type.Array && Schema.Tag != Schema.Type.Map) )
+            {
+                throw new AvroTypeException("Field labeled 'root' must be of type array or map.");
+            }
         }
 
         /// <summary>
@@ -200,6 +221,22 @@ namespace Avro
 
                 writer.WriteEndArray();
             }
+            if (null != AlternateNames)
+            {
+                writer.WritePropertyName("altnames");
+                writer.WriteStartObject();
+                foreach (KeyValuePair<string, string> entry in AlternateNames)
+                {
+                    writer.WritePropertyName(entry.Key);
+                    writer.WriteValue(entry.Value);
+                }
+                writer.WriteEndObject();
+            }
+            if (Root)
+            {
+                writer.WritePropertyName("root");
+                writer.WriteValue(Root);
+            }
 
             writer.WriteEndObject();
         }
@@ -227,6 +264,31 @@ namespace Avro
                 aliases.Add((string)jalias);
             }
             return aliases;
+        }
+
+        /// <summary>
+        /// Parses the 'altnames' property from the given JSON token
+        /// </summary>
+        /// <param name="jtok">JSON object to read</param>
+        /// <returns>Dictionary of alternate names. If no 'altnames' specified, then it returns null.</returns>
+        internal static IDictionary<string, string> GetAlternateNames(JToken jtok)
+        {
+            JToken jaliases = jtok["altnames"];
+            if (null == jaliases)
+                return null;
+
+            if (jaliases.Type != JTokenType.Object)
+                throw new SchemaParseException($"Aliases must be of format JSON object at '{jtok.Path}'");
+
+            var altnames = new Dictionary<string, string>();
+            foreach (JProperty jalias in jaliases.Children())
+            {
+                if (jalias.Value.Type != JTokenType.String)
+                    throw new SchemaParseException($"Aliases must be of format JSON object at '{jtok.Path}'");
+
+                altnames.Add(jalias.Name, (string)jalias.Value);
+            }
+            return altnames;
         }
 
         /// <summary>
