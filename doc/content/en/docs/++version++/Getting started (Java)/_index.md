@@ -4,6 +4,8 @@ tags: ["java"]
 title: "Getting Started (Java)"
 linkTitle: "Getting Started (Java)"
 weight: 2
+aliases:
+- /docs/current/getting-started-java/
 ---
 
 <!--
