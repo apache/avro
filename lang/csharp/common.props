@@ -58,7 +58,7 @@
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)\LICENSE" Pack="true" Visible="false" PackagePath=""/>
     <None Include="$(MSBuildThisFileDirectory)\README.md" Pack="true" Visible="false" PackagePath=""/>
-    <None Include="$(MSBuildThisFileDirectory)\..\..\doc\assets\icons\logo.png" Pack="true" Visible="false" PackagePath=""/>
+    <None Include="$(MSBuildThisFileDirectory)\..\..\doc\assets\images\logo.png" Pack="true" Visible="false" PackagePath=""/>
   </ItemGroup>
 
   <PropertyGroup>

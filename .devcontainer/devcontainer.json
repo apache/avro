@@ -2,7 +2,10 @@
     "name": "Avro Development",
     "build": {
         "dockerfile": "../share/docker/Dockerfile",
-        "context": ".."
+        "context": "..",
+        "options": [
+            "--build-arg=BUILDPLATFORM=linux/amd64" // Dockerfile needs a build platfrom argument
+        ]
     },
     "customizations": {
         "vscode": {
