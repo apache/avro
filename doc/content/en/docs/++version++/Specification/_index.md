@@ -5,6 +5,7 @@ weight: 4
 date: 2021-10-25
 aliases:
 - spec.html
+- /docs/current/specification/
 ---
 
 <!--

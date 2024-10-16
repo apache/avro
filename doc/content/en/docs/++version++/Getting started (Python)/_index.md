@@ -4,6 +4,8 @@ tags: ["python"]
 title: "Getting Started (Python)"
 linkTitle: "Getting Started (Python)"
 weight: 3
+aliases:
+- /docs/current/getting-started-python/
 ---
 
 <!--

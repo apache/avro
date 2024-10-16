@@ -2,6 +2,8 @@
 title: "IDL Language"
 linkTitle: "IDL Language"
 weight: 201
+aliases:
+- /docs/current/idl-language/
 ---
 
 <!--
