@@ -34,7 +34,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
@@ -66,7 +66,7 @@ jobs:
         run: ./build.sh test
 
   interop:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
@@ -144,7 +144,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -q
-          sudo apt-get install -q -y wget libzstd-dev libicu-dev
+          sudo apt-get install -q -y wget libzstd-dev
           wget https://dot.net/v1/dotnet-install.sh
           bash ./dotnet-install.sh --channel "3.1" --install-dir "$HOME/.dotnet" # 3.1
           bash ./dotnet-install.sh --channel "5.0" --install-dir "$HOME/.dotnet" # 5.0

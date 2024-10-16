@@ -96,8 +96,8 @@ jobs:
                                                             libzstd-dev
       - name: Install Python Dependencies
         run: |
-          python3 -m pip install --upgrade pip setuptools tox
-          python3 -m pip install python-snappy zstandard
+          python3 -m pip install --break-system-packages --upgrade pip setuptools tox 
+          python3 -m pip install --break-system-packages python-snappy zstandard
 
       - name: Create Interop Data Directory
         working-directory: .
