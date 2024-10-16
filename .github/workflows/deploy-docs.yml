@@ -203,6 +203,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install dependencies
+        run: |
+          set -x
+          sudo apt-get update -q
+          sudo apt-get install -q -y subversion  
+
       - name: Download website
         uses: actions/download-artifact@v4
         with:
