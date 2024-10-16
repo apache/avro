@@ -268,6 +268,20 @@ namespace Avro.Test
             }
         }
 
+        [TestCase("{ \"s\": \"1900-01-01T00:00:00Z\" }", "1900-01-01T00:00:00Z")]
+        [TestCase("{ \"s\": \"1900-01-01T00:00:00.0000000Z\" }", "1900-01-01T00:00:00.0000000Z")]
+        [TestCase("{ \"s\": \"1900-01-01T00:00:00\" }", "1900-01-01T00:00:00")]
+        public void TestJsonDecoderStringDates(string json, string expected)
+        {
+            string def = "{\"type\":\"record\",\"name\":\"X\",\"fields\": [{\"type\": \"string\",\"name\":\"s\"}]}";
+            Schema schema = Schema.Parse(def);
+            DatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>(schema, schema);
+
+            var response = reader.Read(null, new JsonDecoder(schema, json));
+
+            Assert.AreEqual(expected, response["s"]);
+        }
+
         // Ensure that even if the order of fields in JSON is different from the order in schema, it works.
         [Test]
         public void TestJsonDecoderReorderFields()
@@ -386,7 +400,7 @@ namespace Avro.Test
             "o.Test\",\"fields\":[{\"name\":\"id\",\"type\":\"long\"}]}}},{\"name\":\"mymap\",\"default\":null," +
             "\"type\":[\"null\",{\"type\":\"map\",\"values\":\"int\"}]}]}");
         private IList<Avro.Test.Item> _myarray;
-        private IDictionary<string,System.Int32> _mymap;
+        private IDictionary<string, System.Int32> _mymap;
 
         public virtual global::Avro.Schema Schema
         {
@@ -399,7 +413,7 @@ namespace Avro.Test
             set { this._myarray = value; }
         }
 
-        public IDictionary<string,System.Int32> mymap
+        public IDictionary<string, System.Int32> mymap
         {
             get { return this._mymap; }
             set { this._mymap = value; }
@@ -423,7 +437,7 @@ namespace Avro.Test
                     this.myarray = (IList<Avro.Test.Item>)fieldValue;
                     break;
                 case 1:
-                    this.mymap = (IDictionary<string,System.Int32>)fieldValue;
+                    this.mymap = (IDictionary<string, System.Int32>)fieldValue;
                     break;
                 default: throw new global::Avro.AvroRuntimeException("Bad index " + fieldPos + " in Put()");
             }
