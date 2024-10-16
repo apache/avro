@@ -40,7 +40,7 @@ jobs:
 
       - name: Add libzstd
         shell: bash
-        run: sudo apt-get install -y libzstd-dev
+        run: sudo apt-get install -y libzstd-dev libicu-dev
 
       - name: Install .NET SDKs
         uses: actions/setup-dotnet@v4
@@ -63,9 +63,7 @@ jobs:
         run: ./build.sh lint
 
       - name: Test
-        run: |
-          export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
-          ./build.sh test
+        run: ./build.sh test
 
   interop:
     runs-on: ubuntu-latest
@@ -74,7 +72,7 @@ jobs:
 
       - name: Add libzstd
         shell: bash
-        run: sudo apt-get install -y libzstd-dev
+        run: sudo apt-get install -y libzstd-dev libicu-dev
 
       - name: Install .NET SDKs
         uses: actions/setup-dotnet@v4
@@ -125,9 +123,7 @@ jobs:
         run: ./build.sh interop-data-generate
 
       - name: Run Interop Tests
-        run: |
-          export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
-          ./build.sh interop-data-test
+        run: ./build.sh interop-data-test
 
   arm64:
     name: C# on Linux ARM64
