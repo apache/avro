@@ -191,7 +191,7 @@ RUN curl -sSL https://cpanmin.us \
  && rm -rf .cpanm
 
 # Install Python3
-ENV PATH="${PATH}:/opt/pypy3.9/bin:/opt/pypy3.10/bin" \
+ENV PATH="${PATH}:/opt/pypy3.10/bin" \
     PIP_NO_CACHE_DIR=off
 
 # https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
@@ -201,11 +201,9 @@ RUN case "${BUILDARCH:?}" in \
       *) pypyarch=linux64;; \
     esac \
  && cd /opt \
- && for url in https://downloads.python.org/pypy/pypy3.9-v7.3.12-"$pypyarch".tar.bz2 \
-               https://downloads.python.org/pypy/pypy3.10-v7.3.12-"$pypyarch".tar.bz2; \
+ && for url in https://downloads.python.org/pypy/pypy3.10-v7.3.12-"$pypyarch".tar.bz2; \
     do curl -fsSL "$url" | tar -xvjpf -; \
     done \
- && ln -s pypy3.9* pypy3.9 \
  && ln -s pypy3.10* pypy3.10
 
 RUN python3 -m pip install --upgrade pip setuptools wheel \

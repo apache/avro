@@ -63,7 +63,9 @@ jobs:
         run: ./build.sh lint
 
       - name: Test
-        run: ./build.sh test
+        run: |
+          export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+          ./build.sh test
 
   interop:
     runs-on: ubuntu-latest
@@ -123,4 +125,6 @@ jobs:
         run: ./build.sh interop-data-generate
 
       - name: Run Interop Tests
-        run: ./build.sh interop-data-test
+        run: |
+          export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+          ./build.sh interop-data-test
