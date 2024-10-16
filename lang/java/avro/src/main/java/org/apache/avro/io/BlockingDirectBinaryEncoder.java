@@ -60,7 +60,7 @@ public class BlockingDirectBinaryEncoder extends DirectBinaryEncoder {
    * Create a writer that sends its output to the underlying stream
    * <code>out</code>.
    *
-   * @param out The Outputstream to write to
+   * @param out The OutputStream to write to
    */
   public BlockingDirectBinaryEncoder(OutputStream out) {
     super(out);
