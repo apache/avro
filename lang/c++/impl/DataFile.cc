@@ -22,6 +22,7 @@
 
 #include <sstream>
 
+#include <boost/core/null_deleter.hpp>
 #include <boost/crc.hpp> // for boost::crc_32_type
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -63,35 +64,34 @@ boost::iostreams::zlib_params get_zlib_params() {
 }
 } // namespace
 
-DataFileWriterBase::DataFileWriterBase(const char *filename, const ValidSchema &schema, size_t syncInterval,
-                                       Codec codec) : filename_(filename),
-                                                      schema_(schema),
+DataFileWriterBase::DataFileWriterBase(const char *filename,
+                                       const ValidSchema &schema,
+                                       size_t syncInterval,
+                                       Codec codec) : DataFileWriterBase(fileOutputStream(filename), schema, syncInterval, codec) {
+}
+
+DataFileWriterBase::DataFileWriterBase(OutputStream &outputStream,
+                                       const ValidSchema &schema,
+                                       size_t syncInterval,
+                                       Codec codec) : DataFileWriterBase(std::shared_ptr<OutputStream>(&outputStream, boost::null_deleter()), schema, syncInterval, codec) {}
+
+DataFileWriterBase::DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
+                                       const ValidSchema &schema,
+                                       size_t syncInterval,
+                                       Codec codec) : DataFileWriterBase(std::shared_ptr<OutputStream>(std::move(outputStream)), schema, syncInterval, codec) {}
+
+DataFileWriterBase::DataFileWriterBase(std::shared_ptr<OutputStream> outputStream,
+                                       const ValidSchema &schema,
+                                       size_t syncInterval,
+                                       Codec codec) : schema_(schema),
                                                       encoderPtr_(binaryEncoder()),
                                                       syncInterval_(syncInterval),
                                                       codec_(codec),
-                                                      stream_(fileOutputStream(filename)),
+                                                      stream_(std::move(outputStream)),
                                                       buffer_(memoryOutputStream()),
                                                       sync_(makeSync()),
                                                       objectCount_(0),
                                                       lastSync_(0) {
-    init(schema, syncInterval, codec);
-}
-
-DataFileWriterBase::DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
-                                       const ValidSchema &schema, size_t syncInterval, Codec codec) : filename_(),
-                                                                                                      schema_(schema),
-                                                                                                      encoderPtr_(binaryEncoder()),
-                                                                                                      syncInterval_(syncInterval),
-                                                                                                      codec_(codec),
-                                                                                                      stream_(std::move(outputStream)),
-                                                                                                      buffer_(memoryOutputStream()),
-                                                                                                      sync_(makeSync()),
-                                                                                                      objectCount_(0),
-                                                                                                      lastSync_(0) {
-    init(schema, syncInterval, codec);
-}
-
-void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, const Codec &codec) {
     if (syncInterval < minSyncInterval || syncInterval > maxSyncInterval) {
         throw Exception(
             "Invalid sync interval: {}. Should be between {} and {}",
@@ -264,8 +264,17 @@ DataFileReaderBase::DataFileReaderBase(const char *filename) : filename_(filenam
     readHeader();
 }
 
-DataFileReaderBase::DataFileReaderBase(std::unique_ptr<InputStream> inputStream) : stream_(std::move(inputStream)),
-                                                                                   decoder_(binaryDecoder()), objectCount_(0), eof_(false), codec_(NULL_CODEC) {
+DataFileReaderBase::DataFileReaderBase(InputStream &inputStream) : DataFileReaderBase(std::shared_ptr<InputStream>(&inputStream, boost::null_deleter())) {
+}
+
+DataFileReaderBase::DataFileReaderBase(std::unique_ptr<InputStream> inputStream) : DataFileReaderBase(std::shared_ptr<InputStream>(std::move(inputStream))) {
+}
+
+DataFileReaderBase::DataFileReaderBase(std::shared_ptr<InputStream> inputStream) : stream_(std::move(inputStream)),
+                                                                                   decoder_(binaryDecoder()),
+                                                                                   objectCount_(0),
+                                                                                   eof_(false),
+                                                                                   codec_(NULL_CODEC) {
     readHeader();
 }
 
@@ -284,8 +293,9 @@ void DataFileReaderBase::init(const ValidSchema &readerSchema) {
 static void drain(InputStream &in) {
     const uint8_t *p = nullptr;
     size_t n = 0;
-    while (in.next(&p, &n))
-        ;
+    while (in.next(&p, &n)) {
+        // do nothing
+    }
 }
 
 char hex(unsigned int x) {
