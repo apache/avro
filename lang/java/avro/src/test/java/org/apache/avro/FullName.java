@@ -14,11 +14,15 @@ import org.apache.avro.specific.SpecificRecordBase;
 public class FullName extends SpecificRecordBase implements SpecificRecord {
   private static final long serialVersionUID = 4560514203639509981L;
   public static final Schema SCHEMA$ = (new Schema.Parser()).parse(
-      "{\"type\":\"record\",\"name\":\"FullName\",\"namespace\":\"com.example\",\"fields\":[{\"name\":\"first\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"last\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}]}");
+      "{\"type\":\"record\",\"name\":\"FullName\",\"namespace\":\"org.apache.avro\",\"fields\":[{\"name\":\"first\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"last\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}]}");
   private String first;
   private String last;
   private static final DatumWriter WRITER$;
   private static final DatumReader READER$;
+  static {
+    WRITER$ = new SpecificDatumWriter(SCHEMA$);
+    READER$ = new SpecificDatumReader(SCHEMA$);
+  }
 
   public FullName() {
   }
@@ -57,8 +61,4 @@ public class FullName extends SpecificRecordBase implements SpecificRecord {
 
   }
 
-  static {
-    WRITER$ = new SpecificDatumWriter(SCHEMA$);
-    READER$ = new SpecificDatumReader(SCHEMA$);
-  }
 }

@@ -1,5 +1,8 @@
 package org.apache.avro;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+
 import org.apache.avro.specific.SpecificData;
 import org.junit.Test;
 
@@ -16,6 +19,11 @@ public class TestAvro4078 {
   @Test
   public void testClassLoad() {
     System.err.println(FULLNAME_SCHEMA);
-    System.err.println(SpecificData.get().getClass(FULLNAME_SCHEMA));
+//    assertNotNull(SpecificData.get().getClass(FULLNAME_SCHEMA));
+    assertSame(FullName.class, SpecificData.get().getClass(FULLNAME_SCHEMA));
+  }
+
+  public static void main(String[] args) {
+    assertSame(FullName.class, SpecificData.get().getClass(FULLNAME_SCHEMA));
   }
 }
