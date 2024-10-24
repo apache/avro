@@ -41,8 +41,8 @@ void testCommonSchema(const std::filesystem::path &dir_path) {
     GenericDatum datum(schema);
     const std::filesystem::path &outputDataFile = dir_path / "data_out.avro";
 
-    DataFileReader<GenericDatum> reader(dataFile.c_str());
-    DataFileWriter<GenericDatum> writer(outputDataFile.c_str(), schema);
+    DataFileReader<GenericDatum> reader(dataFile.string().c_str());
+    DataFileWriter<GenericDatum> writer(outputDataFile.string().c_str(), schema);
 
     while (reader.read(datum)) {
         datum.value<avro::GenericRecord>();
@@ -54,8 +54,8 @@ void testCommonSchema(const std::filesystem::path &dir_path) {
     GenericDatum datumOrig(schema);
     GenericDatum datumNew(schema);
 
-    DataFileReader<GenericDatum> readerOrig(dataFile.c_str());
-    DataFileReader<GenericDatum> readerNew(outputDataFile.c_str());
+    DataFileReader<GenericDatum> readerOrig(dataFile.string().c_str());
+    DataFileReader<GenericDatum> readerNew(outputDataFile.string().c_str());
     while (readerOrig.read(datumOrig)) {
         BOOST_CHECK(readerNew.read(datumNew));
         avro::GenericRecord &rec1 = datumOrig.value<avro::GenericRecord>();
