@@ -350,7 +350,7 @@ static LogicalType makeLogicalType(const Entity &e, const Object &m) {
             if (containsField(m, "scale")) {
                 decimalType.setScale(static_cast<int32_t>(getLongField(e, m, "scale")));
             }
-        } catch (Exception &ex) {
+        } catch (const Exception &) {
             // If any part of the logical type is malformed, per the standard we
             // must ignore the whole attribute.
             return LogicalType(LogicalType::NONE);
@@ -508,7 +508,7 @@ static NodePtr makeNode(const Entity &e, const Object &m,
     if (result) {
         try {
             result->setLogicalType(makeLogicalType(e, m));
-        } catch (Exception &ex) {
+        } catch (const Exception &) {
             // Per the standard we must ignore the logical type attribute if it
             // is malformed.
         }
