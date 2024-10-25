@@ -108,6 +108,8 @@ jobs:
 
       - name: 'Setup Python for Generating Input Data'
         uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: '3.12'
 
       - name: 'Apt Install Compression Libs Required by Python'
         run: |
