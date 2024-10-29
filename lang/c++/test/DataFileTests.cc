@@ -656,6 +656,14 @@ public:
             BOOST_CHECK_EQUAL(root->leafAt(5)->getDoc(), "extra slashes\\\\");
         }
     }
+
+    void testClosedReader() {
+        avro::DataFileReader<ComplexDouble> df(filename, writerSchema);
+        df.close();
+        ComplexDouble unused;
+        BOOST_CHECK(!df.read(unused)); // closed stream can't be read
+        BOOST_CHECK_EQUAL(df.previousSync(), 0ul); // closed stream always returns begin position
+    }
 };
 
 void addReaderTests(test_suite *ts, const shared_ptr<DataFileTest> &t) {
@@ -1120,6 +1128,14 @@ init_unit_test_suite(int, char *[]) {
         shared_ptr<DataFileTest> t(new DataFileTest("test12.df", ischWithDoc, ischWithDoc));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSchemaReadWriteWithDoc, t));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+    {
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test13.df");
+        shared_ptr<DataFileTest> t(new DataFileTest("test13.df", ischWithDoc, ischWithDoc));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testClosedReader, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
