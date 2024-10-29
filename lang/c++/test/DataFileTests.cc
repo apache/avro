@@ -471,9 +471,7 @@ public:
     void testReaderSplits() {
         boost::mt19937 random(static_cast<uint32_t>(time(nullptr)));
         avro::DataFileReader<ComplexInteger> df(filename, writerSchema);
-        std::ifstream just_for_length(
-            filename, std::ifstream::ate | std::ifstream::binary);
-        int length = static_cast<int>(just_for_length.tellg());
+        int length = static_cast <int>(boost::filesystem::file_size(filename));
         int splits = 10;
         int end = length;     // end of split
         int remaining = end;  // bytes remaining
@@ -658,6 +656,14 @@ public:
             BOOST_CHECK_EQUAL(root->leafAt(5)->getDoc(), "extra slashes\\\\");
         }
     }
+
+    void testClosedReader() {
+        avro::DataFileReader<ComplexDouble> df(filename, writerSchema);
+        df.close();
+        ComplexDouble unused;
+        BOOST_CHECK(!df.read(unused)); // closed stream can't be read
+        BOOST_CHECK_EQUAL(df.previousSync(), 0ul); // closed stream always returns begin position
+    }
 };
 
 void addReaderTests(test_suite *ts, const shared_ptr<DataFileTest> &t) {
@@ -696,7 +702,7 @@ struct codec_traits<ReaderObj> {
         if (auto *rd =
                 dynamic_cast<avro::ResolvingDecoder *>(&d)) {
             const std::vector<size_t> fo = rd->fieldOrder();
-            for (unsigned long it : fo) {
+            for (const auto it : fo) {
                 switch (it) {
                     case 0: {
                         avro::decode(d, v.s2);
@@ -1097,7 +1103,7 @@ init_unit_test_suite(int, char *[]) {
         shared_ptr<DataFileTest> t9(new DataFileTest("test9.df", sch, sch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t9));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReaderSyncSeek, t9));
-        //ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t9));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t9));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
@@ -1122,6 +1128,14 @@ init_unit_test_suite(int, char *[]) {
         shared_ptr<DataFileTest> t(new DataFileTest("test12.df", ischWithDoc, ischWithDoc));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSchemaReadWriteWithDoc, t));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+    {
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test13.df");
+        shared_ptr<DataFileTest> t(new DataFileTest("test13.df", ischWithDoc, ischWithDoc));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testClosedReader, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
