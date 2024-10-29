@@ -62,44 +62,6 @@ boost::iostreams::zlib_params get_zlib_params() {
     return ret;
 }
 
-class ClosedInputStream : public InputStream {
-public:
-
-    /**
-     * Returns no more available data.
-     *
-     * Returns false because no more data is available.
-     */
-    bool next(const uint8_t ** /* data */, size_t * /* len */) {
-        return false;
-    }
-
-    /**
-     * "Returns" back some of the data to the stream. The returned
-     * data must be less than what was obtained in the last call to
-     * next().
-     */
-    void backup(size_t /* len */) {
-        // skip nothing
-    }
-
-    /**
-     * Do nothing on skips number of bytes specified by len.
-     */
-    void skip(size_t /* len */) {
-        // skip nothing
-    }
-
-    /**
-     * Returns the number of bytes read from this stream so far.
-     * All the bytes made available through next are considered
-     * to be used unless, returned back using backup.
-     */
-    size_t byteCount() const override {
-        return 0u;
-    }
-};
-
 } // namespace
 
 DataFileWriterBase::DataFileWriterBase(const char *filename, const ValidSchema &schema, size_t syncInterval,
@@ -481,7 +443,7 @@ void DataFileReaderBase::readDataBlock() {
 }
 
 void DataFileReaderBase::close() {
-    stream_ = std::make_unique<ClosedInputStream>();
+    stream_.reset();
     eof_ = true;
     objectCount_ = 0;
     blockStart_ = 0;
