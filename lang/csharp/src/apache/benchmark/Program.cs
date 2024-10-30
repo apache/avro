@@ -22,7 +22,6 @@ namespace Avro.Benchmark
     public class Program
     {
         // dotnet run -c Release -f net9.0
-        // dotnet run -c Release -f net9.0 --runtimes net6.0 net7.0 net9.0
         public static void Main(string[] args)
         {
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
