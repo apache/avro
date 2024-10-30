@@ -49,6 +49,8 @@ jobs:
             6.0.x
             7.0.x
             8.0.x
+            9.0.x
+          dotnet-quality: 'preview'
 
       - uses: actions/cache@v4
         with:
@@ -79,6 +81,8 @@ jobs:
             6.0.x
             7.0.x
             8.0.x
+            9.0.x
+          dotnet-quality: 'preview'
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v4
