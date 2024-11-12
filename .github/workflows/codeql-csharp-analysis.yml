@@ -68,7 +68,6 @@ jobs:
           7.0.x
           8.0.x
           9.0.x
-        dotnet-quality: 'preview'
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL

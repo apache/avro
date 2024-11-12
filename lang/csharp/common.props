@@ -80,11 +80,10 @@
     <EditorConfigFiles Condition="'$(IsTestProject)' == 'true'" Include="$(MSBuildThisFileDirectory)/CodeAnalysis.test.globalconfig" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(RunAnalyzers)' != 'false'">
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="$(MicrosoftCodeAnalysisNetAnalyzersVersion)" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" Version="$(MicrosoftCodeAnalysisCSharpCodeStyleVersion)" PrivateAssets="all" />
-    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)" PrivateAssets="all" />
-  </ItemGroup>
+  <PropertyGroup Condition="'$(RunAnalyzers)' != 'false'">
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+  </PropertyGroup>
 
   <Target Name="PrintVersionInfo">
     <Message Importance="high" Text="VersionPrefix: $(VersionPrefix)" />
