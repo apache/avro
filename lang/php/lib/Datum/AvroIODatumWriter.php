@@ -59,7 +59,7 @@ class AvroIODatumWriter
      * @param AvroSchema $writers_schema
      * @param $datum
      * @param AvroIOBinaryEncoder $encoder
-     * @returns mixed
+     * @return mixed
      *
      * @throws AvroIOTypeException if $datum is invalid for $writers_schema
      */
@@ -69,6 +69,19 @@ class AvroIODatumWriter
             throw new AvroIOTypeException($writers_schema, $datum);
         }
 
+        return $this->writeValidatedData($writers_schema, $datum, $encoder);
+    }
+
+    /**
+     * @param AvroSchema $writers_schema
+     * @param $datum
+     * @param AvroIOBinaryEncoder $encoder
+     * @return mixed
+     *
+     * @throws AvroIOTypeException if $datum is invalid for $writers_schema
+     */
+    private function writeValidatedData($writers_schema, $datum, $encoder)
+    {
         switch ($writers_schema->type()) {
             case AvroSchema::NULL_TYPE:
                 return $encoder->writeNull($datum);
@@ -120,7 +133,7 @@ class AvroIODatumWriter
             $encoder->writeLong($datum_count);
             $items = $writers_schema->items();
             foreach ($datum as $item) {
-                $this->writeData($items, $item, $encoder);
+                $this->writeValidatedData($items, $item, $encoder);
             }
         }
         return $encoder->writeLong(0);
@@ -139,7 +152,7 @@ class AvroIODatumWriter
             $encoder->writeLong($datum_count);
             foreach ($datum as $k => $v) {
                 $encoder->writeString($k);
-                $this->writeData($writers_schema->values(), $v, $encoder);
+                $this->writeValidatedData($writers_schema->values(), $v, $encoder);
             }
         }
         $encoder->writeLong(0);
@@ -163,7 +176,7 @@ class AvroIODatumWriter
     private function writeRecord($writers_schema, $datum, $encoder)
     {
         foreach ($writers_schema->fields() as $field) {
-            $this->writeData($field->type(), $datum[$field->name()] ?? null, $encoder);
+            $this->writeValidatedData($field->type(), $datum[$field->name()] ?? null, $encoder);
         }
     }
 
@@ -184,6 +197,6 @@ class AvroIODatumWriter
         }
 
         $encoder->writeLong($datum_schema_index);
-        $this->writeData($datum_schema, $datum, $encoder);
+        $this->writeValidatedData($datum_schema, $datum, $encoder);
     }
 }
