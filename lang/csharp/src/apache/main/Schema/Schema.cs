@@ -238,7 +238,7 @@ namespace Avro
         /// <param name="names">list of named schemas already read</param>
         /// <param name="encspace">enclosing namespace of the schema</param>
         /// <returns>new Schema object</returns>
-        internal static Schema Parse(string json, SchemaNames names, string encspace)
+        public static Schema Parse(string json, SchemaNames names, string encspace = null)
         {
             Schema sc = PrimitiveSchema.NewInstance(json);
             if (null != sc) return sc;
