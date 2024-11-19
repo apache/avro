@@ -413,7 +413,7 @@ namespace Avro.Test
         {
             string nestedSchema = "{\"name\":\"NestedRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"stringField\",\"type\":\"string\"}]}";
             // The root schema references the nested schema above by name only.
-            // This mimics tools that
+            // This mimics tools that allow schemas to have references to other schemas.
             string rootSchema = "{\"name\":\"RootRecord\",\"type\":\"record\",\"fields\":[{\"name\": \"nestedField\",\"type\":\"NestedRecord\"}]}";
 
             NamedSchema nestedRecord = (NamedSchema) Schema.Parse(nestedSchema);
