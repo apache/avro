@@ -408,6 +408,25 @@ namespace Avro.Test
             Assert.AreEqual(schema, recordSchema.ToString());
         }
 
+        [TestCase]
+        public void TestRecordWithNamedReference()
+        {
+            string nestedSchema = "{\"name\":\"NestedRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"stringField\",\"type\":\"string\"}]}";
+            // The root schema references the nested schema above by name only.
+            // This mimics tools that allow schemas to have references to other schemas.
+            string rootSchema = "{\"name\":\"RootRecord\",\"type\":\"record\",\"fields\":[{\"name\": \"nestedField\",\"type\":\"NestedRecord\"}]}";
+
+            NamedSchema nestedRecord = (NamedSchema) Schema.Parse(nestedSchema);
+
+            SchemaNames names = new SchemaNames();
+            names.Add(nestedRecord.SchemaName, nestedRecord);
+
+            // Pass the schema names when parsing the root schema and its reference.
+            RecordSchema rootRecord = (RecordSchema) Schema.Parse(rootSchema, names);
+            Assert.AreEqual("RootRecord", rootRecord.Name);
+            Assert.AreEqual("NestedRecord", rootRecord.Fields[0].Schema.Name);
+        }
+
         [TestCase("{\"type\":\"enum\",\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}",
                 new string[] { "A", "B" })]
 
