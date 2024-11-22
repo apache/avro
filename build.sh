@@ -107,7 +107,6 @@ do
       (cd lang/ruby; ./build.sh lint test)
       (cd lang/php; ./build.sh lint test)
       (cd lang/perl; ./build.sh lint test)
-      (cd lang/rust; ./build.sh lint test)
 
       (cd lang/py; ./build.sh interop-data-generate)
       (cd lang/c; ./build.sh interop-data-generate)
@@ -176,7 +175,6 @@ do
       (cd lang/js; ./build.sh dist)
       (cd lang/ruby; ./build.sh dist)
       (cd lang/php; ./build.sh dist)
-      (cd lang/rust; ./build.sh dist)
 
       mkdir -p dist/perl
       (cd lang/perl; ./build.sh dist)
@@ -252,7 +250,6 @@ do
 
       (cd lang/perl; ./build.sh clean)
 
-      (cd lang/rust; ./build.sh clean)
       ;;
 
     veryclean)
@@ -280,8 +277,6 @@ do
 
       (cd lang/perl; ./build.sh clean)
 
-      (cd lang/rust; ./build.sh clean)
-
       rm -rf lang/c++/build
       rm -rf lang/js/node_modules
       rm -rf lang/perl/inc/
@@ -292,6 +287,7 @@ do
       ;;
 
     docker)
+      echo "NB: for Docker Desktop users on MacOS, the default file sharing implementation (VirtioFS) has issues with some operations. You should better use gRPC FUSE or osxfs."
       if [[ $1 =~ ^--args ]]; then
         DOCKER_RUN_XTRA_ARGS=$2
         shift 2

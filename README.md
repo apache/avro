@@ -1,4 +1,9 @@
-Apache Avro™<img align="right" height="160" src="doc/assets/icons/logo.svg" alt="Avro Logo"/>
+
+> [!IMPORTANT]  
+> The Rust SDK is moving to https://github.com/apache/avro-rs. Please use it for [new issues](https://github.com/apache/avro-rs/issues/new)
+ and [pull requests](https://github.com/apache/avro-rs/pulls)!
+ 
+ Apache Avro™<img align="right" height="160" src="doc/assets/images/logo.svg" alt="Avro Logo"/>
 ============
 
 ### Current CI status (Github servers)
@@ -12,10 +17,6 @@ Apache Avro™<img align="right" height="160" src="doc/assets/icons/logo.svg" al
 [![test python][test python img]][test python]
 [![test php][test php img]][test php]
 
-[![rust continuous integration][rust continuous integration img]][rust continuous integration]
-[![rust clippy check][rust clippy check img]][rust clippy check]
-[![rust security audit][rust security audit img]][rust security audit]
-
 ### Current CI status (ARM based servers)
 [![test c ARM][test c ARM img]][test c ARM]
 [![test c# ARM][test c# ARM img]][test c# ARM]
@@ -26,7 +27,6 @@ Apache Avro™<img align="right" height="160" src="doc/assets/icons/logo.svg" al
 [![test ruby ARM][test ruby ARM img]][test ruby ARM]
 [![test python ARM][test python ARM img]][test python ARM]
 [![test php ARM][test php ARM img]][test php ARM]
-[![rust continuous integration ARM][rust continuous integration ARM img]][rust continuous integration ARM]
 
 ### Current CodeQL status
 [![codeql c#][codeql c# img]][codeql c#]
@@ -45,6 +45,7 @@ Learn more about Avro, please visit our website at:
 To contribute to Avro, please read:
 
   https://cwiki.apache.org/confluence/display/AVRO/How+To+Contribute
+
 
 <!-- Arranged this way for easy copy-pasting and editor string manipulation -->
 
@@ -67,11 +68,6 @@ To contribute to Avro, please read:
 [test ruby ARM]:       https://github.com/apache/avro/actions/workflows/test-lang-ruby-ARM.yml
 [test python ARM]:     https://github.com/apache/avro/actions/workflows/test-lang-py-ARM.yml
 [test php ARM]:        https://github.com/apache/avro/actions/workflows/test-lang-php-ARM.yml
-
-[rust continuous integration]: https://github.com/apache/avro/actions/workflows/test-lang-rust-ci.yml
-[rust continuous integration ARM]: https://github.com/apache/avro/actions/workflows/test-lang-rust-ci-ARM.yml
-[rust clippy check]:           https://github.com/apache/avro/actions/workflows/test-lang-rust-clippy.yml
-[rust security audit]:         https://github.com/apache/avro/actions/workflows/test-lang-rust-audit.yml
 
 [codeql c#]:         https://github.com/apache/avro/actions/workflows/codeql-csharp-analysis.yml
 [codeql java]:       https://github.com/apache/avro/actions/workflows/codeql-java-analysis.yml
@@ -98,12 +94,6 @@ To contribute to Avro, please read:
 [test python ARM img]:     https://github.com/apache/avro/actions/workflows/test-lang-py-ARM.yml/badge.svg
 [test php ARM img]:        https://github.com/apache/avro/actions/workflows/test-lang-php-ARM.yml/badge.svg
 
-[rust continuous integration img]: https://github.com/apache/avro/actions/workflows/test-lang-rust-ci.yml/badge.svg
-[rust clippy check img]:           https://github.com/apache/avro/actions/workflows/test-lang-rust-clippy.yml/badge.svg
-[rust security audit img]:         https://github.com/apache/avro/actions/workflows/test-lang-rust-audit.yml/badge.svg
-
-[rust continuous integration ARM img]: https://github.com/apache/avro/actions/workflows/test-lang-rust-ci-ARM.yml/badge.svg
-
 [codeql c# img]:         https://github.com/apache/avro/actions/workflows/codeql-csharp-analysis.yml/badge.svg
 [codeql java img]:       https://github.com/apache/avro/actions/workflows/codeql-java-analysis.yml/badge.svg
 [codeql javascript img]: https://github.com/apache/avro/actions/workflows/codeql-js-analysis.yml/badge.svg
@@ -115,7 +105,7 @@ You can use devcontainers to develop Avro:
 * [![Open in Github Codespaces](https://img.shields.io/static/v1?label=&message=Open%20in%20Github%20Codespaces&color=2f362d&logo=github)](https://codespaces.new/apache/avro?quickstart=1&hide_repo_select=true)
 
 
-### Trademark & logo's
+### Trademark & logos
 Apache®, Apache Avro and the Apache Avro airplane logo are trademarks of The Apache Software Foundation.
 
 The Apache Avro airplane logo on this page has been designed by [Emma Kellam](https://github.com/emmak3l) for use by this project.

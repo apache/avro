@@ -46,8 +46,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
-            3.1.x
-            5.0.x
             6.0.x
             7.0.x
             8.0.x
@@ -78,8 +76,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
-            3.1.x
-            5.0.x
             6.0.x
             7.0.x
             8.0.x
@@ -93,7 +89,7 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: 'Setup Temurin JDK 8, 11, 17 & 21'
-        uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
+        uses: actions/setup-java@6a0805fcefea3d4657a47ac4c165951e33482018 # v4.2.2
         with:
           distribution: 'temurin'
           java-version: |
@@ -144,10 +140,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -q
-          sudo apt-get install -q -y wget libzstd-dev libicu-dev
+          sudo apt-get install -q -y wget libzstd-dev
           wget https://dot.net/v1/dotnet-install.sh
-          bash ./dotnet-install.sh --channel "3.1" --install-dir "$HOME/.dotnet" # 3.1
-          bash ./dotnet-install.sh --channel "5.0" --install-dir "$HOME/.dotnet" # 5.0
           bash ./dotnet-install.sh --channel "6.0" --install-dir "$HOME/.dotnet" # 6.0
           bash ./dotnet-install.sh --channel "7.0" --install-dir "$HOME/.dotnet" # 7.0
           bash ./dotnet-install.sh --channel "8.0" --install-dir "$HOME/.dotnet" # 8.0

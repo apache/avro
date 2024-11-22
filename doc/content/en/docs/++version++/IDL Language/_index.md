@@ -2,6 +2,8 @@
 title: "IDL Language"
 linkTitle: "IDL Language"
 weight: 201
+aliases:
+- /docs/current/idl-language/
 ---
 
 <!--
@@ -222,12 +224,12 @@ The primitive types supported by Avro IDL are the same as those supported by Avr
 ### Logical Types
 Some of the logical types supported by Avro's JSON format are directly supported by Avro IDL. The currently supported types are:
 
-* _decimal_ (logical type [decimal]({{< relref "specification#decimal" >}}))
-* _date_ (logical type [date]({{< relref "specification#date" >}}))
-* _time_ms_ (logical type [time-millis]({{< relref "specification#time-millisecond-precision" >}}))
-* _timestamp_ms_ (logical type [timestamp-millis]({{< relref "specification#timestamp-millisecond-precision" >}}))
-* _local_timestamp_ms_ (logical type [local-timestamp-millis]({{< relref "specification#local_timestamp_ms" >}}))
-* _uuid_ (logical type [uuid]({{< relref "specification#uuid" >}}))
+* _decimal_ (logical type [decimal]({{< relref "../specification#decimal" >}}))
+* _date_ (logical type [date]({{< relref "../specification#date" >}}))
+* _time_ms_ (logical type [time-millis]({{< relref "../specification#time-millisecond-precision" >}}))
+* _timestamp_ms_ (logical type [timestamp-millis]({{< relref "../specification#timestamp-millisecond-precision" >}}))
+* _local_timestamp_ms_ (logical type [local-timestamp-millis]({{< relref "../specification#local_timestamp_ms" >}}))
+* _uuid_ (logical type [uuid]({{< relref "../specification#uuid" >}}))
 
 For example:
 ```java
@@ -261,7 +263,7 @@ record Card {
 ```
 
 ### Default Values
-Default values for fields may be optionally specified by using an equals sign after the field name followed by a JSON expression indicating the default value. This JSON is interpreted as described in the [spec]({{< relref "specification#schema-record" >}}).
+Default values for fields may be optionally specified by using an equals sign after the field name followed by a JSON expression indicating the default value. This JSON is interpreted as described in the [spec]({{< relref "../specification#schema-record" >}}).
 
 ### Complex Types
 

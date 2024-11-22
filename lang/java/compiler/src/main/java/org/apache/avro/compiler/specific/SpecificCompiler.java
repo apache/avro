@@ -17,27 +17,7 @@
  */
 package org.apache.avro.compiler.specific;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
@@ -60,7 +40,28 @@ import org.apache.velocity.app.VelocityEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Generate specific Java interfaces and classes for protocols and schemas.
@@ -1004,19 +1005,35 @@ public class SpecificCompiler {
    */
   public String[] javaAnnotations(JsonProperties props) {
     final Object value = props.getObjectProp("javaAnnotation");
-    if (value == null)
-      return new String[0];
-    if (value instanceof String)
+    if (value instanceof String && isValidAsAnnotation((String) value))
       return new String[] { value.toString() };
     if (value instanceof List) {
       final List<?> list = (List<?>) value;
       final List<String> annots = new ArrayList<>(list.size());
       for (Object o : list) {
-        annots.add(o.toString());
+        if (isValidAsAnnotation(o.toString()))
+          annots.add(o.toString());
       }
       return annots.toArray(new String[0]);
     }
     return new String[0];
+  }
+
+  private static final String PATTERN_IDENTIFIER_PART = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
+  private static final String PATTERN_IDENTIFIER = String.format("(?:%s(?:\\.%s)*)", PATTERN_IDENTIFIER_PART,
+      PATTERN_IDENTIFIER_PART);
+  private static final String PATTERN_STRING = "\"(?:\\\\[\\\\\"ntfb]|(?<!\\\\).)*\"";
+  private static final String PATTERN_NUMBER = "(?:\\((?:byte|char|short|int|long|float|double)\\))?[x0-9_.]*[fl]?";
+  private static final String PATTERN_LITERAL_VALUE = String.format("(?:%s|%s|true|false)", PATTERN_STRING,
+      PATTERN_NUMBER);
+  private static final String PATTERN_PARAMETER_LIST = String.format(
+      "\\(\\s*(?:%s|%s\\s*=\\s*%s(?:\\s*,\\s*%s\\s*=\\s*%s)*)?\\s*\\)", PATTERN_LITERAL_VALUE, PATTERN_IDENTIFIER,
+      PATTERN_LITERAL_VALUE, PATTERN_IDENTIFIER, PATTERN_LITERAL_VALUE);
+  private static final Pattern VALID_AS_ANNOTATION = Pattern
+      .compile(String.format("%s(?:%s)?", PATTERN_IDENTIFIER, PATTERN_PARAMETER_LIST));
+
+  private boolean isValidAsAnnotation(String value) {
+    return VALID_AS_ANNOTATION.matcher(value.strip()).matches();
   }
 
   // maximum size for string constants, to avoid javac limits
@@ -1024,7 +1041,7 @@ public class SpecificCompiler {
 
   /**
    * Utility for template use. Takes a (potentially overly long) string and splits
-   * it into a quoted, comma-separted sequence of escaped strings.
+   * it into a quoted, comma-separated sequence of escaped strings.
    *
    * @param s The string to split
    * @return A sequence of quoted, comma-separated, escaped strings
@@ -1036,7 +1053,7 @@ public class SpecificCompiler {
       if (i != 0)
         b.append("\",\""); // insert quote-comma-quote
       String chunk = s.substring(i, Math.min(s.length(), i + maxStringChars));
-      b.append(javaEscape(chunk)); // escape chunks
+      b.append(escapeForJavaString(chunk)); // escape chunks
     }
     b.append("\""); // final quote
     return b.toString();
@@ -1045,8 +1062,18 @@ public class SpecificCompiler {
   /**
    * Utility for template use. Escapes quotes and backslashes.
    */
-  public static String javaEscape(String o) {
+  public static String escapeForJavaString(String o) {
     return o.replace("\\", "\\\\").replace("\"", "\\\"");
+  }
+
+  /**
+   * Utility for template use (previous name). Escapes quotes and backslashes.
+   *
+   * @deprecated Use {@link #escapeForJavaString(String)} instead
+   */
+  @Deprecated(since = "1.12.1", forRemoval = true)
+  public static String javaEscape(String o) {
+    return escapeForJavaString(o);
   }
 
   /**

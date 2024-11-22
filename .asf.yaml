@@ -33,7 +33,6 @@ github:
     - php
     - python
     - ruby
-    - rust
 
   enabled_merge_buttons:
     merge: false
@@ -42,6 +41,9 @@ github:
 
   collaborators:
     - jbonofre
+
+publish:
+  whoami: asf-site
 
 notifications:
   commits: commits@avro.apache.org

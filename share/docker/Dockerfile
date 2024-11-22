@@ -94,14 +94,6 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
                                                  php-mbstring \
                                                  php-dev
 
-# Required for Dotnet
-RUN export ARCH="$(dpkg --print-architecture)"; \
-  export LIBSSL_DEB="libssl1.1_1.1.1f-1ubuntu2.22_$ARCH.deb"; \
-  wget -q "http://security.ubuntu.com/ubuntu/pool/main/o/openssl/$LIBSSL_DEB" || \
-    wget -q "http://ports.ubuntu.com/ubuntu-ports/pool/main/o/openssl/$LIBSSL_DEB"; \
-  dpkg -i "$LIBSSL_DEB"; \
-  rm "$LIBSSL_DEB"
-
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/bbb9892e165d40fb35fa19f38929effc5d0c709b/Dockerfile#L30
 ENV MAVEN_VERSION 3.9.6
@@ -191,7 +183,7 @@ RUN curl -sSL https://cpanmin.us \
  && rm -rf .cpanm
 
 # Install Python3
-ENV PATH="${PATH}:/opt/pypy3.9/bin:/opt/pypy3.10/bin" \
+ENV PATH="${PATH}:/opt/pypy3.10/bin" \
     PIP_NO_CACHE_DIR=off
 
 # https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
@@ -201,11 +193,9 @@ RUN case "${BUILDARCH:?}" in \
       *) pypyarch=linux64;; \
     esac \
  && cd /opt \
- && for url in https://downloads.python.org/pypy/pypy3.9-v7.3.12-"$pypyarch".tar.bz2 \
-               https://downloads.python.org/pypy/pypy3.10-v7.3.12-"$pypyarch".tar.bz2; \
+ && for url in https://downloads.python.org/pypy/pypy3.10-v7.3.12-"$pypyarch".tar.bz2; \
     do curl -fsSL "$url" | tar -xvjpf -; \
     done \
- && ln -s pypy3.9* pypy3.9 \
  && ln -s pypy3.10* pypy3.10
 
 RUN python3 -m pip install --upgrade pip setuptools wheel \
@@ -229,8 +219,6 @@ ENV PATH $PATH:/root/.cargo/bin/
 # Install .NET SDK
 RUN cd /opt ; \
     wget https://dot.net/v1/dotnet-install.sh ; \
-    bash ./dotnet-install.sh --channel "3.1" --install-dir "/opt/dotnet" ; \
-    bash ./dotnet-install.sh --channel "5.0" --install-dir "/opt/dotnet" ; \
     bash ./dotnet-install.sh --channel "6.0" --install-dir "/opt/dotnet" ; \
     bash ./dotnet-install.sh --channel "7.0" --install-dir "/opt/dotnet" ; \
     bash ./dotnet-install.sh --channel "8.0" --install-dir "/opt/dotnet" ;

@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include <cmath>
 #include <unordered_set>
 
@@ -186,6 +187,30 @@ void Node::setLogicalType(LogicalType logicalType) {
         case LogicalType::TIMESTAMP_MICROS:
             if (type_ != AVRO_LONG) {
                 throw Exception("TIMESTAMP-MICROS logical type can only annotate "
+                                "LONG type");
+            }
+            break;
+        case LogicalType::TIMESTAMP_NANOS:
+            if (type_ != AVRO_LONG) {
+                throw Exception("TIMESTAMP-NANOS logical type can only annotate "
+                                "LONG type");
+            }
+            break;
+        case LogicalType::LOCAL_TIMESTAMP_MILLIS:
+            if (type_ != AVRO_LONG) {
+                throw Exception("LOCAL-TIMESTAMP-MILLIS logical type can only annotate "
+                                "LONG type");
+            }
+            break;
+        case LogicalType::LOCAL_TIMESTAMP_MICROS:
+            if (type_ != AVRO_LONG) {
+                throw Exception("LOCAL-TIMESTAMP-MICROS logical type can only annotate "
+                                "LONG type");
+            }
+            break;
+        case LogicalType::LOCAL_TIMESTAMP_NANOS:
+            if (type_ != AVRO_LONG) {
+                throw Exception("LOCAL-TIMESTAMP-NANOS logical type can only annotate "
                                 "LONG type");
             }
             break;
