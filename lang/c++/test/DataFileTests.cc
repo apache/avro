@@ -754,6 +754,32 @@ void testSkipString(avro::Codec codec) {
     }
 }
 
+void testSameStreamReadWriteDataFile() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    auto schema = makeValidSchema(dsch);
+    auto stream = avro::memoryOutputStream();
+
+    {
+        ComplexDouble complex;
+        complex.re = 1.0;
+        complex.im = 2.0;
+
+        // Note: We dereference stream here so the writer does not take ownership
+        avro::DataFileWriter<ComplexDouble> writer(*stream, schema);
+        writer.write(complex);
+    }
+
+    // Again, the input stream does not take ownership of the memory stream
+    auto inputStream = avro::memoryInputStream(*stream);
+    // But the reader does take ownership of the input stream
+    avro::DataFileReader<ComplexDouble> reader(std::move(inputStream));
+    ComplexDouble output;
+
+    BOOST_CHECK(reader.read(output));
+    BOOST_CHECK(output.re == 1.0);
+    BOOST_CHECK(output.im == 2.0);
+}
+
 void testSkipStringNullCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
     testSkipString(avro::NULL_CODEC);
@@ -1123,6 +1149,8 @@ init_unit_test_suite(int, char *[]) {
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
+
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testSameStreamReadWriteDataFile));
 
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testSkipStringNullCodec));
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testSkipStringDeflateCodec));

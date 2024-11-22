@@ -79,7 +79,7 @@ case "$target" in
   lint)
     # some versions of cppcheck seem to require an explicit
     # "--error-exitcode" option to return non-zero code
-    cppcheck --error-exitcode=1 --inline-suppr -f -q -x c++ api examples impl test
+    cppcheck --error-exitcode=1 --inline-suppr -f -q -x c++ include examples impl test
     ;;
 
   test)
@@ -118,7 +118,7 @@ case "$target" in
     ;;
 
   format)
-    clang-format -i --style file `find api -type f` `find impl -type f` `find test -type f`
+    clang-format -i --style file `find include -type f` `find impl -type f` `find test -type f`
     ;;
 
   clean)
