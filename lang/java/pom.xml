@@ -45,7 +45,7 @@
     <grpc.version>1.66.0</grpc.version>
     <hadoop.version>3.3.6</hadoop.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <jackson-bom.version>2.17.2</jackson-bom.version>
+    <jackson-bom.version>2.18.2</jackson-bom.version>
     <jetty.version>9.4.56.v20240826</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit5.version>5.11.0</junit5.version>
