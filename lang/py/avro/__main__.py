@@ -161,9 +161,12 @@ def convert(value: str, field: avro.schema.Field) -> Union[int, float, str, byte
 
 
 def convert_union(value: str, field: avro.schema.Field) -> Union[int, float, str, bytes, bool, None]:
-    for name in (s.name for s in field.type.schemas):
+    if not isinstance(field.type, avro.schema.UnionSchema):
+        raise avro.errors.UsageError(f"Expected field.type to be a Union, but it was {field.type}")
+    # Casts to be fixed in AVRO-3798
+    for name in (cast(avro.schema.NamedSchema, s).name for s in field.type.schemas):
         try:
-            return convert(value, name)
+            return convert(value, cast(avro.schema.Field, name))
         except ValueError:
             continue
     raise avro.errors.UsageError("Exhausted Union Schema without finding a match")
