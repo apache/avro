@@ -567,6 +567,21 @@ namespace Avro.Test
             testToString(sc);
         }
 
+        [TestCase("{ \"type\": \"fixed\", \"name\": \"LogicalFixed\", \"logicalType\": \"decimal\", \"precision\": 4, \"scale\": 2, \"size\": 10 }", "decimal", 10)]
+        public void TestLogicalFixed(string s, string logicalType, int size)
+        {
+            Schema sc = Schema.Parse(s);
+            Assert.AreEqual(Schema.Type.Logical, sc.Tag);
+            LogicalSchema logsc = sc as LogicalSchema;
+            FixedSchema basesc = logsc.BaseSchema as FixedSchema;
+            Assert.AreEqual(Schema.Type.Fixed, basesc.Tag);
+            Assert.AreEqual(size, basesc.Size);
+            Assert.AreEqual(logicalType, logsc.LogicalType.Name);
+
+            testEquality(s, sc);
+            testToString(sc);
+        }
+
         [TestCase("{\"type\": \"int\", \"logicalType\": \"unknown\"}", "unknown")]
         public void TestUnknownLogical(string s, string unknownType)
         {
