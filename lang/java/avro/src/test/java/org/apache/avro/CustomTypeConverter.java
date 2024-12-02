@@ -33,7 +33,8 @@ public class CustomTypeConverter extends Conversion<CustomType> {
 
   @Override
   public Schema getRecommendedSchema() {
-    return Schema.create(Schema.Type.STRING);
+    Schema stringSchema = Schema.create(Schema.Type.STRING);
+    return logicalTypeFactory.fromSchema(stringSchema).addToSchema(stringSchema);
   }
 
   @Override
