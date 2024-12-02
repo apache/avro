@@ -103,6 +103,25 @@ encode_utf8_bytes(const void *src, size_t src_len,
 	} while (0)
 
 static json_t *
+bytes_to_json(const avro_value_t *value)
+{
+	const void  *val;
+	size_t  size;
+	void  *encoded = NULL;
+	size_t  encoded_size = 0;
+
+	check_return(NULL, avro_value_get_bytes(value, &val, &size));
+
+	if (encode_utf8_bytes(val, size, &encoded, &encoded_size)) {
+		return NULL;
+	}
+
+	json_t  *result = json_string_nocheck((const char *) encoded);
+	avro_free(encoded, encoded_size);
+	return result;
+}
+
+static json_t *
 avro_value_to_json_t(const avro_value_t *value)
 {
 	switch (avro_value_get_type(value)) {
@@ -116,19 +135,7 @@ avro_value_to_json_t(const avro_value_t *value)
 
 		case AVRO_BYTES:
 		{
-			const void  *val;
-			size_t  size;
-			void  *encoded = NULL;
-			size_t  encoded_size = 0;
-
-			check_return(NULL, avro_value_get_bytes(value, &val, &size));
-
-			if (encode_utf8_bytes(val, size, &encoded, &encoded_size)) {
-				return NULL;
-			}
-
-			json_t  *result = json_string_nocheck((const char *) encoded);
-			avro_free(encoded, encoded_size);
+			json_t  *result = bytes_to_json(value);
 			if (result == NULL) {
 				avro_set_error("Cannot allocate JSON bytes");
 			}
@@ -372,6 +379,15 @@ avro_value_to_json_t(const avro_value_t *value)
 				return NULL;
 			}
 
+			return result;
+		}
+
+		case AVRO_DECIMAL:
+		{
+			json_t  *result = bytes_to_json(value);
+			if (result == NULL) {
+				avro_set_error("Cannot allocate JSON decimal");
+			}
 			return result;
 		}
 
