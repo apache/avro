@@ -452,7 +452,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * representation. By default, this calls {@link #readString(Object,Decoder)}.
    */
   protected Object readString(Object old, Schema expected, Decoder in) throws IOException {
-    Class stringClass = this.getReaderCache().getStringClass(expected);
+    Class stringClass = this.findStringClass(expected);
     if (stringClass == String.class) {
       return in.readString();
     }
@@ -490,12 +490,10 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     if (name == null)
       return CharSequence.class;
 
-    switch (GenericData.StringType.valueOf(name)) {
-    case String:
+    if (GenericData.StringType.String.name().equals(name)) {
       return String.class;
-    default:
-      return CharSequence.class;
     }
+    return CharSequence.class;
   }
 
   /**
@@ -529,14 +527,10 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   // VisibleForTesting
   static class ReaderCache {
-    private final Map<IdentitySchemaKey, Class> stringClassCache = new ConcurrentHashMap<>();
+    private final Map<Class, Function<String, Object>> stringCtorCache;
 
-    private final Map<Class, Function<String, Object>> stringCtorCache = new ConcurrentHashMap<>();
-
-    private final Function<Schema, Class> findStringClass;
-
-    public ReaderCache(Function<Schema, Class> findStringClass) {
-      this.findStringClass = findStringClass;
+    public ReaderCache() {
+      this.stringCtorCache = new ConcurrentHashMap<>();
     }
 
     public Object newInstanceFromString(Class c, String s) {
@@ -561,14 +555,9 @@ public class GenericDatumReader<D> implements DatumReader<D> {
         }
       };
     }
-
-    public Class getStringClass(final Schema s) {
-      final IdentitySchemaKey key = new IdentitySchemaKey(s);
-      return this.stringClassCache.computeIfAbsent(key, (IdentitySchemaKey k) -> this.findStringClass.apply(k.schema));
-    }
   }
 
-  private final ReaderCache readerCache = new ReaderCache(this::findStringClass);
+  private final ReaderCache readerCache = new ReaderCache();
 
   // VisibleForTesting
   ReaderCache getReaderCache() {
