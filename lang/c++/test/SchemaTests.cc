@@ -314,6 +314,7 @@ const char *roundTripSchemas[] = {
     R"({"type":"fixed","name":"Test","size":1})",
 
     // Logical types
+    R"({"type":"bytes","logicalType":"big-decimal"})",
     R"({"type":"bytes","logicalType":"decimal","precision":12,"scale":6})",
     R"({"type":"fixed","name":"test","size":16,"logicalType":"decimal","precision":38,"scale":9})",
     R"({"type":"fixed","name":"test","size":129,"logicalType":"decimal","precision":310,"scale":155})",
@@ -361,6 +362,7 @@ const char *roundTripSchemas[] = {
 
 const char *malformedLogicalTypes[] = {
     // Wrong base type.
+    R"({"type":"long","logicalType": "big-decimal"})",
     R"({"type":"long","logicalType": "decimal","precision": 10})",
     R"({"type":"string","logicalType":"date"})",
     R"({"type":"string","logicalType":"time-millis"})",
@@ -379,9 +381,12 @@ const char *malformedLogicalTypes[] = {
     R"({"type":"fixed","logicalType":"decimal","size":4,"name":"a","precision":20})",
     R"({"type":"fixed","logicalType":"decimal","size":129,"name":"a","precision":311})",
     // Scale is larger than precision.
-    R"({"type":"bytes","logicalType":"decimal","precision":5,"scale":10})"
-};
-
+    R"({"type":"bytes","logicalType":"decimal","precision":5,"scale":10})",
+    // Precision is not supported by the big-decimal logical type
+    // and scale is integrated in bytes.
+    R"({"type":"bytes","logicalType": "big-decimal","precision": 9})",
+    R"({"type":"bytes","logicalType": "big-decimal","scale": 2})",
+    R"({"type":"bytes","logicalType": "big-decimal","precision": 9,"scale": 2})"};
 const char *schemasToCompact[] = {
     // Schema without any whitespace
     R"({"type":"record","name":"Test","fields":[]})",
@@ -469,6 +474,10 @@ static void testCompactSchemas() {
 }
 
 static void testLogicalTypes() {
+    const char *bytesBigDecimalType = R"({
+        "type": "bytes",
+        "logicalType": "big-decimal"
+    })";
     const char *bytesDecimalType = R"({
         "type": "bytes",
         "logicalType": "decimal",
@@ -496,6 +505,13 @@ static void testLogicalTypes() {
     const char *uuidType = R"({"type": "string","logicalType": "uuid"})";
     // AVRO-2923 Union with LogicalType
     const char *unionType = R"([{"type":"string", "logicalType":"uuid"},"null"]})";
+    {
+        BOOST_TEST_CHECKPOINT(bytesBigDecimalType);
+        ValidSchema schema = compileJsonSchemaFromString(bytesBigDecimalType);
+        BOOST_CHECK(schema.root()->type() == AVRO_BYTES);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::BIG_DECIMAL);
+    }
     {
         BOOST_TEST_CHECKPOINT(bytesDecimalType);
         ValidSchema schema1 = compileJsonSchemaFromString(bytesDecimalType);
