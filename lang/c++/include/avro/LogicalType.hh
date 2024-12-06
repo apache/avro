@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include "Config.hh"
+#include <cstdint>
 
 namespace avro {
 
