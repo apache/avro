@@ -20,9 +20,9 @@
 #define avro_CustomAttributes_hh__
 
 #include "Config.hh"
-#include <boost/optional.hpp>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <string>
 
 namespace avro {
@@ -34,7 +34,7 @@ class AVRO_DECL CustomAttributes {
 public:
     // Retrieves the custom attribute json entity for that attributeName, returns an
     // null if the attribute doesn't exist.
-    boost::optional<std::string> getAttribute(const std::string &name) const;
+    std::optional<std::string> getAttribute(const std::string &name) const;
 
     // Adds a custom attribute. If the attribute already exists, throw an exception.
     void addAttribute(const std::string &name, const std::string &value);
