@@ -18,7 +18,7 @@
 set -e
 
 usage() {
-  echo "Usage: $0 {clean|dist|interop-data-generate|interop-data-test|lint|test}"
+  echo "Usage: $0 {clean|dist|doc|interop-data-generate|interop-data-test|lint|test}"
   exit 1
 }
 
@@ -27,11 +27,11 @@ clean() {
                  '*.avsc' \
                  '*.egg-info' \
                  '*.py[co]' \
-                 'VERSION.txt' \
                  '__pycache__' \
                  '.tox' \
                  'avro/test/interop' \
                  'dist' \
+                 'docs/build' \
                  'userlogs'
 }
 
@@ -51,6 +51,15 @@ dist() (
   "$virtualenv/bin/python3" -m build --outdir "$destination"
 )
 
+doc() {
+  local doc_dir
+  local version=$(cat ../../share/VERSION.txt)
+  doc_dir="../../build/avro-doc-$version/api/py"
+  _tox -e docs
+  mkdir -p "$doc_dir"
+  cp -a docs/build/* "$doc_dir"
+}
+
 interop-data-generate() {
   ./setup.py generate_interop_data
   cp -r avro/test/interop/data ../../build/interop
@@ -63,11 +72,11 @@ interop-data-test() {
 }
 
 lint() {
-  python3 -m tox -e lint
+  _tox -e lint
 }
 
 test_() {
-  TOX_SKIP_ENV=lint python3 -m tox --skip-missing-interpreters
+  TOX_SKIP_ENV=lint _tox --skip-missing-interpreters
 }
 
 main() {
@@ -76,6 +85,7 @@ main() {
     case "$target" in
       clean) clean;;
       dist) dist;;
+      doc) doc;;
       interop-data-generate) interop-data-generate;;
       interop-data-test) interop-data-test;;
       lint) lint;;
@@ -83,6 +93,18 @@ main() {
       *) usage;;
     esac
   done
+}
+
+_tox() {
+  if command -v tox 2> /dev/null; then
+    tox "$@"
+  else
+    echo 'Your experience will improve if you install tox'
+    virtualenv="$(mktemp -d)"
+    python3 -m venv "$virtualenv"
+    "$virtualenv/bin/python3" -m pip install tox
+    "$virtualenv/bin/tox" "$@"
+  fi
 }
 
 main "$@"

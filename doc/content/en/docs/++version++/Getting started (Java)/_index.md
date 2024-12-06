@@ -4,6 +4,8 @@ tags: ["java"]
 title: "Getting Started (Java)"
 linkTitle: "Getting Started (Java)"
 weight: 2
+aliases:
+- /docs/current/getting-started-java/
 ---
 
 <!--
@@ -50,16 +52,16 @@ As well as the Avro Maven plugin (for performing code generation):
   <groupId>org.apache.avro</groupId>
   <artifactId>avro-maven-plugin</artifactId>
   <version>{{< avro_version >}}</version>
+  <configuration>
+    <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
+    <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
+  </configuration>
   <executions>
     <execution>
       <phase>generate-sources</phase>
       <goals>
         <goal>schema</goal>
       </goals>
-      <configuration>
-        <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
-        <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
-      </configuration>
     </execution>
   </executions>
 </plugin>
@@ -77,7 +79,7 @@ You may also build the required Avro jars from source. Building Avro is beyond t
 
 ## Defining a schema
 
-Avro schemas are defined using JSON. Schemas are composed of primitive types (null, boolean, int, long, float, double, bytes, and string) and complex types (record, enum, array, map, union, and fixed). You can learn more about Avro schemas and types from the specification, but for now let's start with a simple schema example, user.avsc:
+Avro schemas are defined using JSON or IDL (the latter requires an extra dependency). Schemas are composed of primitive types (null, boolean, int, long, float, double, bytes, and string) and complex types (record, enum, array, map, union, and fixed). You can learn more about Avro schemas and types from the specification, but for now let's start with a simple schema example, user.avsc:
 
 ```json
 {"namespace": "example.avro",
@@ -209,10 +211,10 @@ Data in Avro is always stored with its corresponding schema, meaning we can alwa
 Let's go over the same example as in the previous section, but without using code generation: we'll create some users, serialize them to a data file on disk, and then read back the file and deserialize the users objects.
 
 ### Creating users
-First, we use a Parser to read our schema definition and create a Schema object.
+First, we use a SchemaParser to read our schema definition and create a Schema object.
 
 ```java
-Schema schema = new Schema.Parser().parse(new File("user.avsc"));
+Schema schema = new SchemaParser().parse(new File("user.avsc")).mainSchema();
 ```
 
 Using this schema, let's create some users.

@@ -17,26 +17,7 @@
  */
 package org.apache.avro.compiler.specific;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
@@ -48,20 +29,39 @@ import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.SchemaNormalization;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.data.TimeConversions;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
 import org.apache.avro.specific.SpecificData;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.avro.specific.SpecificData.RESERVED_WORDS;
-import static org.apache.avro.specific.SpecificData.RESERVED_WORD_ESCAPE_CHAR;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Generate specific Java interfaces and classes for protocols and schemas.
@@ -106,8 +106,10 @@ public class SpecificCompiler {
     specificData.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimestampNanosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampMicrosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampNanosConversion());
     specificData.addLogicalTypeConversion(new Conversions.UUIDConversion());
   }
 
@@ -122,43 +124,22 @@ public class SpecificCompiler {
   private boolean gettersReturnOptional = false;
   private boolean optionalGettersForNullableFieldsOnly = false;
   private boolean createSetters = true;
+  private boolean createNullSafeAnnotations = false;
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
   private boolean enableDecimalLogicalType = false;
   private String suffix = ".java";
   private List<Object> additionalVelocityTools = Collections.emptyList();
 
+  private String recordSpecificClass = "org.apache.avro.specific.SpecificRecordBase";
+
+  private String errorSpecificClass = "org.apache.avro.specific.SpecificExceptionBase";
+
   /*
    * Used in the record.vm template.
    */
   public boolean isCreateAllArgsConstructor() {
     return createAllArgsConstructor;
-  }
-
-  /* Reserved words for accessor/mutator methods */
-  protected static final Set<String> ACCESSOR_MUTATOR_RESERVED_WORDS = new HashSet<>(
-      Arrays.asList("class", "schema", "classSchema"));
-
-  static {
-    // Add reserved words to accessor/mutator reserved words
-    ACCESSOR_MUTATOR_RESERVED_WORDS.addAll(RESERVED_WORDS);
-  }
-
-  /* Reserved words for type identifiers */
-  protected static final Set<String> TYPE_IDENTIFIER_RESERVED_WORDS = new HashSet<>(
-      Arrays.asList("var", "yield", "record"));
-
-  static {
-    // Add reserved words to type identifier reserved words
-    TYPE_IDENTIFIER_RESERVED_WORDS.addAll(RESERVED_WORDS);
-  }
-
-  /* Reserved words for error types */
-  protected static final Set<String> ERROR_RESERVED_WORDS = new HashSet<>(Arrays.asList("message", "cause"));
-
-  static {
-    // Add accessor/mutator reserved words to error reserved words
-    ERROR_RESERVED_WORDS.addAll(ACCESSOR_MUTATOR_RESERVED_WORDS);
   }
 
   private static final String FILE_HEADER = "/**\n" + " * Autogenerated by Avro\n" + " *\n"
@@ -174,8 +155,20 @@ public class SpecificCompiler {
   }
 
   public SpecificCompiler(Schema schema) {
+    this(Collections.singleton(schema));
+  }
+
+  public SpecificCompiler(Collection<Schema> schemas) {
     this();
-    enqueue(schema);
+    for (Schema schema : schemas) {
+      enqueue(schema);
+    }
+    this.protocol = null;
+  }
+
+  public SpecificCompiler(Iterable<Schema> schemas) {
+    this();
+    schemas.forEach(this::enqueue);
     this.protocol = null;
   }
 
@@ -244,6 +237,17 @@ public class SpecificCompiler {
    */
   public void setCreateSetters(boolean createSetters) {
     this.createSetters = createSetters;
+  }
+
+  public boolean isCreateNullSafeAnnotations() {
+    return this.createNullSafeAnnotations;
+  }
+
+  /**
+   * Set to true to add jetbrains @Nullable and @NotNull annotations
+   */
+  public void setCreateNullSafeAnnotations(boolean createNullSafeAnnotations) {
+    this.createNullSafeAnnotations = createNullSafeAnnotations;
   }
 
   public boolean isCreateOptionalGetters() {
@@ -468,12 +472,16 @@ public class SpecificCompiler {
    * Generates Java classes for a number of schema files.
    */
   public static void compileSchema(File[] srcFiles, File dest) throws IOException {
-    Schema.Parser parser = new Schema.Parser();
+    SchemaParser parser = new SchemaParser();
 
     for (File src : srcFiles) {
-      Schema schema = parser.parse(src);
+      parser.parse(src);
+    }
+    // FIXME: use lastModified() without causing a NoSuchMethodError in the build
+    File lastModifiedSourceFile = Stream.of(srcFiles).max(Comparator.comparing(File::lastModified)).orElse(null);
+    for (Schema schema : parser.getParsedNamedSchemas()) {
       SpecificCompiler compiler = new SpecificCompiler(schema);
-      compiler.compileToDestination(src, dest);
+      compiler.compileToDestination(lastModifiedSourceFile, dest);
     }
   }
 
@@ -804,7 +812,7 @@ public class SpecificCompiler {
     case RECORD:
     case ENUM:
     case FIXED:
-      return mangleFullyQualified(schema.getFullName());
+      return SpecificData.mangleFullyQualified(schema.getFullName());
     case ARRAY:
       return "java.util.List<" + javaType(schema.getElementType()) + ">";
     case MAP:
@@ -833,19 +841,6 @@ public class SpecificCompiler {
       return "java.lang.Void";
     default:
       throw new RuntimeException("Unknown type: " + schema);
-    }
-  }
-
-  private String mangleFullyQualified(String fullName) {
-    int lastDot = fullName.lastIndexOf('.');
-
-    if (lastDot < 0) {
-      return mangleTypeIdentifier(fullName);
-    } else {
-      String namespace = fullName.substring(0, lastDot);
-      String typeName = fullName.substring(lastDot + 1);
-
-      return mangle(namespace) + "." + mangleTypeIdentifier(typeName);
     }
   }
 
@@ -942,19 +937,21 @@ public class SpecificCompiler {
    * record.vm can handle the schema being presented.
    */
   public boolean isCustomCodable(Schema schema) {
-    if (schema.isError())
-      return false;
     return isCustomCodable(schema, new HashSet<>());
   }
 
   private boolean isCustomCodable(Schema schema, Set<Schema> seen) {
     if (!seen.add(schema))
+      // Recursive call: assume custom codable until a caller on the call stack proves
+      // otherwise.
       return true;
     if (schema.getLogicalType() != null)
       return false;
     boolean result = true;
     switch (schema.getType()) {
     case RECORD:
+      if (schema.isError())
+        return false;
       for (Schema.Field f : schema.getFields())
         result &= isCustomCodable(f.schema(), seen);
       break;
@@ -1008,19 +1005,35 @@ public class SpecificCompiler {
    */
   public String[] javaAnnotations(JsonProperties props) {
     final Object value = props.getObjectProp("javaAnnotation");
-    if (value == null)
-      return new String[0];
-    if (value instanceof String)
+    if (value instanceof String && isValidAsAnnotation((String) value))
       return new String[] { value.toString() };
     if (value instanceof List) {
       final List<?> list = (List<?>) value;
       final List<String> annots = new ArrayList<>(list.size());
       for (Object o : list) {
-        annots.add(o.toString());
+        if (isValidAsAnnotation(o.toString()))
+          annots.add(o.toString());
       }
       return annots.toArray(new String[0]);
     }
     return new String[0];
+  }
+
+  private static final String PATTERN_IDENTIFIER_PART = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
+  private static final String PATTERN_IDENTIFIER = String.format("(?:%s(?:\\.%s)*)", PATTERN_IDENTIFIER_PART,
+      PATTERN_IDENTIFIER_PART);
+  private static final String PATTERN_STRING = "\"(?:\\\\[\\\\\"ntfb]|(?<!\\\\).)*\"";
+  private static final String PATTERN_NUMBER = "(?:\\((?:byte|char|short|int|long|float|double)\\))?[x0-9_.]*[fl]?";
+  private static final String PATTERN_LITERAL_VALUE = String.format("(?:%s|%s|true|false)", PATTERN_STRING,
+      PATTERN_NUMBER);
+  private static final String PATTERN_PARAMETER_LIST = String.format(
+      "\\(\\s*(?:%s|%s\\s*=\\s*%s(?:\\s*,\\s*%s\\s*=\\s*%s)*)?\\s*\\)", PATTERN_LITERAL_VALUE, PATTERN_IDENTIFIER,
+      PATTERN_LITERAL_VALUE, PATTERN_IDENTIFIER, PATTERN_LITERAL_VALUE);
+  private static final Pattern VALID_AS_ANNOTATION = Pattern
+      .compile(String.format("%s(?:%s)?", PATTERN_IDENTIFIER, PATTERN_PARAMETER_LIST));
+
+  private boolean isValidAsAnnotation(String value) {
+    return VALID_AS_ANNOTATION.matcher(value.strip()).matches();
   }
 
   // maximum size for string constants, to avoid javac limits
@@ -1028,7 +1041,7 @@ public class SpecificCompiler {
 
   /**
    * Utility for template use. Takes a (potentially overly long) string and splits
-   * it into a quoted, comma-separted sequence of escaped strings.
+   * it into a quoted, comma-separated sequence of escaped strings.
    *
    * @param s The string to split
    * @return A sequence of quoted, comma-separated, escaped strings
@@ -1040,7 +1053,7 @@ public class SpecificCompiler {
       if (i != 0)
         b.append("\",\""); // insert quote-comma-quote
       String chunk = s.substring(i, Math.min(s.length(), i + maxStringChars));
-      b.append(javaEscape(chunk)); // escape chunks
+      b.append(escapeForJavaString(chunk)); // escape chunks
     }
     b.append("\""); // final quote
     return b.toString();
@@ -1049,15 +1062,25 @@ public class SpecificCompiler {
   /**
    * Utility for template use. Escapes quotes and backslashes.
    */
-  public static String javaEscape(String o) {
+  public static String escapeForJavaString(String o) {
     return o.replace("\\", "\\\\").replace("\"", "\\\"");
+  }
+
+  /**
+   * Utility for template use (previous name). Escapes quotes and backslashes.
+   *
+   * @deprecated Use {@link #escapeForJavaString(String)} instead
+   */
+  @Deprecated(since = "1.12.1", forRemoval = true)
+  public static String javaEscape(String o) {
+    return escapeForJavaString(o);
   }
 
   /**
    * Utility for template use. Escapes comment end with HTML entities.
    */
   public static String escapeForJavadoc(String s) {
-    return s.replace("*/", "*&#47;");
+    return s.replace("*/", "*&#47;").replace("<", "&lt;").replace(">", "&gt;");
   }
 
   /**
@@ -1071,14 +1094,14 @@ public class SpecificCompiler {
    * Utility for template use. Adds a dollar sign to reserved words.
    */
   public static String mangle(String word) {
-    return mangle(word, false);
+    return SpecificData.mangle(word, false);
   }
 
   /**
    * Utility for template use. Adds a dollar sign to reserved words.
    */
   public static String mangle(String word, boolean isError) {
-    return mangle(word, isError ? ERROR_RESERVED_WORDS : RESERVED_WORDS);
+    return SpecificData.mangle(word, isError);
   }
 
   /**
@@ -1086,7 +1109,7 @@ public class SpecificCompiler {
    * identifiers.
    */
   public static String mangleTypeIdentifier(String word) {
-    return mangleTypeIdentifier(word, false);
+    return SpecificData.mangleTypeIdentifier(word, false);
   }
 
   /**
@@ -1094,40 +1117,21 @@ public class SpecificCompiler {
    * identifiers.
    */
   public static String mangleTypeIdentifier(String word, boolean isError) {
-    return mangle(word, isError ? ERROR_RESERVED_WORDS : TYPE_IDENTIFIER_RESERVED_WORDS);
+    return SpecificData.mangle(word, isError);
   }
 
   /**
    * Utility for template use. Adds a dollar sign to reserved words.
    */
   public static String mangle(String word, Set<String> reservedWords) {
-    return mangle(word, reservedWords, false);
+    return SpecificData.mangle(word, reservedWords, false);
   }
 
   /**
    * Utility for template use. Adds a dollar sign to reserved words.
    */
   public static String mangle(String word, Set<String> reservedWords, boolean isMethod) {
-    if (StringUtils.isBlank(word)) {
-      return word;
-    }
-    if (word.contains(".")) {
-      // If the 'word' is really a full path of a class we must mangle just the
-      String[] packageWords = word.split("\\.");
-      String[] newPackageWords = new String[packageWords.length];
-
-      for (int i = 0; i < packageWords.length; i++) {
-        String oldName = packageWords[i];
-        newPackageWords[i] = mangle(oldName, reservedWords, false);
-      }
-
-      return String.join(".", newPackageWords);
-    }
-    if (reservedWords.contains(word) || (isMethod && reservedWords
-        .contains(Character.toLowerCase(word.charAt(0)) + ((word.length() > 1) ? word.substring(1) : "")))) {
-      return word + RESERVED_WORD_ESCAPE_CHAR;
-    }
-    return word;
+    return SpecificData.mangle(word, reservedWords, isMethod);
   }
 
   /**
@@ -1258,14 +1262,10 @@ public class SpecificCompiler {
 
     // Check for the special case in which the schema defines two fields whose
     // names are identical except for the case of the first character:
-    char firstChar = field.name().charAt(0);
-    String conflictingFieldName = (Character.isLowerCase(firstChar) ? Character.toUpperCase(firstChar)
-        : Character.toLowerCase(firstChar)) + (field.name().length() > 1 ? field.name().substring(1) : "");
-    boolean fieldNameConflict = schema.getField(conflictingFieldName) != null;
+    int indexNameConflict = calcNameIndex(field.name(), schema);
 
     StringBuilder methodBuilder = new StringBuilder(prefix);
-    String fieldName = mangle(field.name(), schema.isError() ? ERROR_RESERVED_WORDS : ACCESSOR_MUTATOR_RESERVED_WORDS,
-        true);
+    String fieldName = SpecificData.mangleMethod(field.name(), schema.isError());
 
     boolean nextCharToUpper = true;
     for (int ii = 0; ii < fieldName.length(); ii++) {
@@ -1281,14 +1281,73 @@ public class SpecificCompiler {
     methodBuilder.append(postfix);
 
     // If there is a field name conflict append $0 or $1
-    if (fieldNameConflict) {
+    if (indexNameConflict >= 0) {
       if (methodBuilder.charAt(methodBuilder.length() - 1) != '$') {
         methodBuilder.append('$');
       }
-      methodBuilder.append(Character.isLowerCase(firstChar) ? '0' : '1');
+      methodBuilder.append(indexNameConflict);
     }
 
     return methodBuilder.toString();
+  }
+
+  /**
+   * Calc name index for getter / setter field in case of conflict as example,
+   * having a schema with fields __X, _X, _x, X, x should result with indexes __X:
+   * 3, _X: 2, _x: 1, X: 0 x: None (-1)
+   *
+   * @param fieldName : field name.
+   * @param schema    : schema.
+   * @return index for field.
+   */
+  private static int calcNameIndex(String fieldName, Schema schema) {
+    // get name without underscore at start
+    // and calc number of other similar fields with same subname.
+    int countSimilar = 0;
+    String pureFieldName = fieldName;
+    while (!pureFieldName.isEmpty() && pureFieldName.charAt(0) == '_') {
+      pureFieldName = pureFieldName.substring(1);
+      if (schema.getField(pureFieldName) != null) {
+        countSimilar++;
+      }
+      String reversed = reverseFirstLetter(pureFieldName);
+      if (schema.getField(reversed) != null) {
+        countSimilar++;
+      }
+    }
+    // field name start with upper have +1
+    String reversed = reverseFirstLetter(fieldName);
+    if (!pureFieldName.isEmpty() && Character.isUpperCase(pureFieldName.charAt(0))
+        && schema.getField(reversed) != null) {
+      countSimilar++;
+    }
+
+    int ret = -1; // if no similar name, no index.
+    if (countSimilar > 0) {
+      ret = countSimilar - 1; // index is count similar -1 (start with $0)
+    }
+
+    return ret;
+  }
+
+  /**
+   * Reverse first letter upper <=> lower. __Name <=> __name
+   *
+   * @param name : input name.
+   * @return name with change case of first letter.
+   */
+  private static String reverseFirstLetter(String name) {
+    StringBuilder builder = new StringBuilder(name);
+    int index = 0;
+    while (builder.length() > index && builder.charAt(index) == '_') {
+      index++;
+    }
+    if (builder.length() > index) {
+      char c = builder.charAt(index);
+      char inverseC = Character.isLowerCase(c) ? Character.toUpperCase(c) : Character.toLowerCase(c);
+      builder.setCharAt(index, inverseC);
+    }
+    return builder.toString();
   }
 
   /**
@@ -1321,5 +1380,21 @@ public class SpecificCompiler {
    */
   public void setOutputCharacterEncoding(String outputCharacterEncoding) {
     this.outputCharacterEncoding = outputCharacterEncoding;
+  }
+
+  public String getSchemaParentClass(boolean isError) {
+    if (isError) {
+      return this.errorSpecificClass;
+    } else {
+      return this.recordSpecificClass;
+    }
+  }
+
+  public void setRecordSpecificClass(final String recordSpecificClass) {
+    this.recordSpecificClass = recordSpecificClass;
+  }
+
+  public void setErrorSpecificClass(final String errorSpecificClass) {
+    this.errorSpecificClass = errorSpecificClass;
   }
 }

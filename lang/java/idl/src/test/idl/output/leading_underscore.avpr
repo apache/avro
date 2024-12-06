@@ -1,0 +1,17 @@
+{
+  "protocol" : "_LeadingUnderscore",
+  "doc":"Testing leading underscore for identifiers",
+  "types" : [
+    {
+      "type" : "record",
+      "name" : "_TestRecord",
+      "fields" : [
+        {
+          "name" : "_testField",
+          "type" : "string"
+        }
+      ]
+    }
+  ],
+  "messages" : {}
+}

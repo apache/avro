@@ -17,19 +17,6 @@
  */
 package org.apache.avro.util;
 
-import java.io.File;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
-
 import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
@@ -38,11 +25,24 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.generic.GenericRecord;
+
+import java.io.File;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /** Generates schema data as Java objects with random values. */
 public class RandomData implements Iterable<Object> {
   public static final String USE_DEFAULT = "use-default";
+  private final GenericData genericData;
 
   private static final int MILLIS_IN_DAY = (int) Duration.ofDays(1).toMillis();
 
@@ -64,6 +64,23 @@ public class RandomData implements Iterable<Object> {
   }
 
   public RandomData(Schema schema, int count, long seed, boolean utf8ForString) {
+    this(GenericData.get(), schema, count, seed, utf8ForString);
+  }
+
+  public RandomData(GenericData genericData, Schema schema, int count) {
+    this(genericData, schema, count, false);
+  }
+
+  public RandomData(GenericData genericData, Schema schema, int count, long seed) {
+    this(genericData, schema, count, seed, false);
+  }
+
+  public RandomData(GenericData genericData, Schema schema, int count, boolean utf8ForString) {
+    this(genericData, schema, count, System.currentTimeMillis(), utf8ForString);
+  }
+
+  public RandomData(GenericData genericData, Schema schema, int count, long seed, boolean utf8ForString) {
+    this.genericData = genericData;
     this.root = schema;
     this.seed = seed;
     this.count = count;
@@ -74,7 +91,7 @@ public class RandomData implements Iterable<Object> {
   public Iterator<Object> iterator() {
     return new Iterator<Object>() {
       private int n;
-      private Random random = new Random(seed);
+      private final Random random = new Random(seed);
 
       @Override
       public boolean hasNext() {
@@ -98,26 +115,25 @@ public class RandomData implements Iterable<Object> {
   private Object generate(Schema schema, Random random, int d) {
     switch (schema.getType()) {
     case RECORD:
-      GenericRecord record = new GenericData.Record(schema);
+      Object record = genericData.newRecord(null, schema);
       for (Schema.Field field : schema.getFields()) {
         Object value = (field.getObjectProp(USE_DEFAULT) == null) ? generate(field.schema(), random, d + 1)
             : GenericData.get().getDefaultValue(field);
-        record.put(field.name(), value);
+        genericData.setField(record, field.name(), field.pos(), value);
       }
       return record;
     case ENUM:
       List<String> symbols = schema.getEnumSymbols();
-      return new GenericData.EnumSymbol(schema, symbols.get(random.nextInt(symbols.size())));
+      return genericData.createEnum(symbols.get(random.nextInt(symbols.size())), schema);
     case ARRAY:
-      int length = (random.nextInt(5) + 2) - d;
-      @SuppressWarnings("rawtypes")
-      GenericArray<Object> array = new GenericData.Array(length <= 0 ? 0 : length, schema);
+      int length = Math.max(0, (random.nextInt(5) + 2) - d);
+      GenericArray<Object> array = (GenericArray<Object>) genericData.newArray(null, length, schema);
       for (int i = 0; i < length; i++)
         array.add(generate(schema.getElementType(), random, d + 1));
       return array;
     case MAP:
-      length = (random.nextInt(5) + 2) - d;
-      Map<Object, Object> map = new HashMap<>(length <= 0 ? 0 : length);
+      length = Math.max(0, (random.nextInt(5) + 2) - d);
+      Map<Object, Object> map = (Map<Object, Object>) genericData.newMap(null, length);
       for (int i = 0; i < length; i++) {
         map.put(randomString(random, 40), generate(schema.getValueType(), random, d + 1));
       }
@@ -128,7 +144,7 @@ public class RandomData implements Iterable<Object> {
     case FIXED:
       byte[] bytes = new byte[schema.getFixedSize()];
       random.nextBytes(bytes);
-      return new GenericData.Fixed(schema, bytes);
+      return genericData.createFixed(null, bytes, schema);
     case STRING:
       return randomString(random, 40);
     case BYTES:
@@ -180,7 +196,7 @@ public class RandomData implements Iterable<Object> {
 
   private static ByteBuffer randomBytes(Random rand, int maxLength) {
     ByteBuffer bytes = ByteBuffer.allocate(rand.nextInt(maxLength));
-    ((Buffer) bytes).limit(bytes.capacity());
+    bytes.limit(bytes.capacity());
     rand.nextBytes(bytes.array());
     return bytes;
   }
@@ -194,7 +210,9 @@ public class RandomData implements Iterable<Object> {
     try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>())) {
       writer.setCodec(CodecFactory.fromString(args.length >= 4 ? args[3] : "null"));
       writer.setMeta("user_metadata", "someByteArray".getBytes(StandardCharsets.UTF_8));
-      writer.create(sch, new File(args[1]));
+      File file = new File(args[1]);
+      Files.createDirectories(Paths.get(file.getParent()));
+      writer.create(sch, file);
 
       for (Object datum : new RandomData(sch, Integer.parseInt(args[2]))) {
         writer.append(datum);

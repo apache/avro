@@ -268,6 +268,74 @@ namespace Avro.Test
             }
         }
 
+        [Test]
+        [TestCase("float", "0", (float)0)]
+        [TestCase("float", "1", (float)1)]
+        [TestCase("float", "1.0", (float)1.0)]
+        [TestCase("double", "0", (double)0)]
+        [TestCase("double", "1", (double)1)]
+        [TestCase("double", "1.0", 1.0)]
+        [TestCase("float", "\"NaN\"", float.NaN)]
+        [TestCase("float", "\"Infinity\"", float.PositiveInfinity)]
+        [TestCase("float", "\"INF\"", float.PositiveInfinity)]
+        [TestCase("float", "\"-Infinity\"", float.NegativeInfinity)]
+        [TestCase("float", "\"-INF\"", float.NegativeInfinity)]
+        [TestCase("double", "\"NaN\"", double.NaN)]
+        [TestCase("double", "\"Infinity\"", double.PositiveInfinity)]
+        [TestCase("double", "\"INF\"", double.PositiveInfinity)]
+        [TestCase("double", "\"-Infinity\"", double.NegativeInfinity)]
+        [TestCase("double", "\"-INF\"", double.NegativeInfinity)]
+        [TestCase("float", "\"\"", null)]
+        [TestCase("float", "\"unknown\"", null)]
+        [TestCase("float", "\"nan\"", null)]
+        [TestCase("float", "\"infinity\"", null)]
+        [TestCase("float", "\"inf\"", null)]
+        [TestCase("float", "\"-infinity\"", null)]
+        [TestCase("float", "\"-inf\"", null)]
+        [TestCase("double", "\"\"", null)]
+        [TestCase("double", "\"unknown\"", null)]
+        [TestCase("double", "\"nan\"", null)]
+        [TestCase("double", "\"infinity\"", null)]
+        [TestCase("double", "\"inf\"", null)]
+        [TestCase("double", "\"-infinity\"", null)]
+        [TestCase("double", "\"-inf\"", null)]
+        [TestCase("double", "\"-inf\"", null)]
+        public void TestJsonDecodeFloatDouble(string typeStr, string valueStr, object expected)
+        {
+            string def = $"{{\"type\":\"record\",\"name\":\"X\",\"fields\":[{{\"type\":\"{typeStr}\",\"name\":\"Value\"}}]}}";
+            Schema schema = Schema.Parse(def);
+            DatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>(schema, schema);
+
+            string record = $"{{\"Value\":{valueStr}}}";
+            Decoder decoder = new JsonDecoder(schema, record);
+            try
+            {
+                GenericRecord r = reader.Read(null, decoder);
+                Assert.AreEqual(expected, r["Value"]);
+            }
+            catch (AvroTypeException)
+            {
+                if (expected != null)
+                {
+                    throw;
+                }
+            }
+        }
+
+        [TestCase("{ \"s\": \"1900-01-01T00:00:00Z\" }", "1900-01-01T00:00:00Z")]
+        [TestCase("{ \"s\": \"1900-01-01T00:00:00.0000000Z\" }", "1900-01-01T00:00:00.0000000Z")]
+        [TestCase("{ \"s\": \"1900-01-01T00:00:00\" }", "1900-01-01T00:00:00")]
+        public void TestJsonDecoderStringDates(string json, string expected)
+        {
+            string def = "{\"type\":\"record\",\"name\":\"X\",\"fields\": [{\"type\": \"string\",\"name\":\"s\"}]}";
+            Schema schema = Schema.Parse(def);
+            DatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>(schema, schema);
+
+            var response = reader.Read(null, new JsonDecoder(schema, json));
+
+            Assert.AreEqual(expected, response["s"]);
+        }
+
         // Ensure that even if the order of fields in JSON is different from the order in schema, it works.
         [Test]
         public void TestJsonDecoderReorderFields()
@@ -287,11 +355,12 @@ namespace Avro.Test
         }
 
         [Test]
-        public void TestJsonDecoderSpecificWithArray()
+        public void TestJsonDecoderSpecificDatumWriterWithArrayAndMap()
         {
             Root data = new Root();
             Item item = new Item { id = 123456 };
             data.myarray = new List<Item> { item };
+            data.mymap = new Dictionary<string, int> { { "1", 1 }, { "2", 2 }, { "3", 3 }, { "4", 4 } };
 
             DatumWriter<Root> writer = new SpecificDatumWriter<Root>(data.Schema);
 
@@ -306,7 +375,32 @@ namespace Avro.Test
             using (StreamReader reader = new StreamReader(listStreams[0]))
             {
                 String output = reader.ReadToEnd();
-                Assert.AreEqual("{\"myarray\":[{\"id\":123456}]}", output);
+                Assert.AreEqual("{\"myarray\":[{\"id\":123456}],\"mymap\":{\"map\":{\"1\":1,\"2\":2,\"3\":3,\"4\":4}}}", output);
+            }
+        }
+
+        [Test]
+        public void TestJsonDecoderSpecificDefaultWriterWithArrayAndMap()
+        {
+            Root data = new Root();
+            Item item = new Item { id = 123456 };
+            data.myarray = new List<Item> { item };
+            data.mymap = new Dictionary<string, int> { { "1", 1 }, { "2", 2 }, { "3", 3 }, { "4", 4 } };
+
+            SpecificDefaultWriter writer = new SpecificDefaultWriter(data.Schema);
+
+            ByteBufferOutputStream bbos = new ByteBufferOutputStream();
+
+            Encoder encoder = new JsonEncoder(data.Schema, bbos);
+            writer.Write(data, encoder);
+            encoder.Flush();
+
+            List<MemoryStream> listStreams = bbos.GetBufferList();
+
+            using (StreamReader reader = new StreamReader(listStreams[0]))
+            {
+                String output = reader.ReadToEnd();
+                Assert.AreEqual("{\"myarray\":[{\"id\":123456}],\"mymap\":{\"map\":{\"1\":1,\"2\":2,\"3\":3,\"4\":4}}}", output);
             }
         }
 
@@ -357,9 +451,10 @@ namespace Avro.Test
         public static global::Avro.Schema _SCHEMA = global::Avro.Schema.Parse(
             "{\"type\":\"record\",\"name\":\"Root\",\"namespace\":\"Avro.Test\",\"fields\":[{\"name\":\"myarray" +
             "\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"Item\",\"namespace\":\"Avr" +
-            "o.Test\",\"fields\":[{\"name\":\"id\",\"type\":\"long\"}]}}}]}");
-
+            "o.Test\",\"fields\":[{\"name\":\"id\",\"type\":\"long\"}]}}},{\"name\":\"mymap\",\"default\":null," +
+            "\"type\":[\"null\",{\"type\":\"map\",\"values\":\"int\"}]}]}");
         private IList<Avro.Test.Item> _myarray;
+        private IDictionary<string, System.Int32> _mymap;
 
         public virtual global::Avro.Schema Schema
         {
@@ -372,11 +467,18 @@ namespace Avro.Test
             set { this._myarray = value; }
         }
 
+        public IDictionary<string, System.Int32> mymap
+        {
+            get { return this._mymap; }
+            set { this._mymap = value; }
+        }
+
         public virtual object Get(int fieldPos)
         {
             switch (fieldPos)
             {
                 case 0: return this.myarray;
+                case 1: return this.mymap;
                 default: throw new global::Avro.AvroRuntimeException("Bad index " + fieldPos + " in Get()");
             }
         }
@@ -387,6 +489,9 @@ namespace Avro.Test
             {
                 case 0:
                     this.myarray = (IList<Avro.Test.Item>)fieldValue;
+                    break;
+                case 1:
+                    this.mymap = (IDictionary<string, System.Int32>)fieldValue;
                     break;
                 default: throw new global::Avro.AvroRuntimeException("Bad index " + fieldPos + " in Put()");
             }

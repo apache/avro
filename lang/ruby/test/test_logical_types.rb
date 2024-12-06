@@ -92,6 +92,28 @@ class TestLogicalTypes < Test::Unit::TestCase
     assert_equal Time.utc(2015, 5, 28, 21, 46, 53, 221843), type.decode(1432849613221843)
   end
 
+  def test_timestamp_nanos_long
+    schema = Avro::Schema.parse <<-SCHEMA
+      { "type": "long", "logicalType": "timestamp-nanos" }
+    SCHEMA
+
+    time = Time.at(628232400, 123456789, :nanosecond)
+    assert_equal 'timestamp-nanos', schema.logical_type
+    assert_encode_and_decode time, schema
+    assert_preencoded Avro::LogicalTypes::TimestampNanos.encode(time), schema, time.utc
+  end
+
+  def test_timestamp_nanos_long_conversion
+    type = Avro::LogicalTypes::TimestampNanos
+
+    now = Time.now.utc
+
+    assert_equal Time.at(now.to_i, now.nsec, :nanosecond).utc, type.decode(type.encode(now))
+    assert_equal 1432849613221843789, type.encode(Time.at(1432849613, 221843789, :nanosecond).utc)
+    assert_equal 1432849613221843789, type.encode(DateTime.new(2015, 5, 28, 21, 46, 53.221843789))
+    assert_equal Time.at(1432849613, 221843789, :nanosecond).utc, type.decode(1432849613221843789)
+  end
+
   def test_parse_fixed_duration
     schema = Avro::Schema.parse <<-SCHEMA
       { "type": "fixed", "size": 12, "name": "fixed_dur", "logicalType": "duration" }
@@ -122,6 +144,113 @@ class TestLogicalTypes < Test::Unit::TestCase
       type = Avro::LogicalTypes::BytesDecimal.new(schema)
       type.encode('1.23')
     end
+  end
+
+  def test_logical_type_default_value
+    sales_schema = Avro::Schema.parse('{
+        "type": "record",
+        "name": "Order",
+        "fields" : [
+            {
+                "name": "sales",
+                "type": [
+                    {
+                        "type": "bytes",
+                        "logicalType": "decimal",
+                        "precision": 4,
+                        "scale": 2
+                    },
+                    "null"
+                ],
+                "default": "\u0000"
+            }
+        ]
+    }')
+
+    sales_tax_schema = Avro::Schema.parse('{
+        "type": "record",
+        "name": "Order",
+        "fields" : [
+            {
+                "name": "sales",
+                "type": [
+                    {
+                        "type": "bytes",
+                        "logicalType": "decimal",
+                        "precision": 4,
+                        "scale": 2
+                    },
+                    "null"
+                ],
+                "default": "\u0000"
+            },
+            {
+                "name": "tax",
+                "type": [
+                    {
+                        "type": "bytes",
+                        "logicalType": "decimal",
+                        "precision": 4,
+                        "scale": 2
+                    },
+                    "null"
+                ],
+                "default": "\u0000"
+            },
+            {
+                "name": "invoice_date",
+                "type": [
+                    {
+                        "type": "int",
+                        "logicalType": "date"
+                    },
+                    "null"
+                ],
+                "default": 0
+            },
+            {
+                "name": "invoice_time",
+                "type": [
+                    {
+                        "type": "int",
+                        "logicalType": "time-millis"
+                    },
+                    "null"
+                ],
+                "default": 0
+            },
+            {
+                "name": "created_at",
+                "type": [
+                    {
+                        "type": "long",
+                        "logicalType": "timestamp-millis"
+                    },
+                    "null"
+                ],
+                "default": 0
+            }
+        ]
+    }')
+
+    sales_record = {"sales" => BigDecimal("12.34")}
+    sales_tax_record = {
+      "sales" => BigDecimal("12.34"),
+      "tax" => BigDecimal("0.000"),
+      "invoice_date" => Date.new(1970, 1, 1),
+      # time-millis is not supported
+      "invoice_time" => 0,
+      "created_at" => Time.at(0).utc,
+    }
+    encoded = encode(sales_record, sales_schema)
+    assert_equal sales_record, decode(encoded, sales_schema)
+    # decode with different schema applies default
+    assert_equal sales_tax_record, decode(encoded, sales_tax_schema, writer_schema: sales_schema)
+
+    # decode with same schema does not apply default, since it is nullable during encode
+    encoded = encode(sales_record, sales_tax_schema)
+    tax_nil_record = {"sales" => BigDecimal("12.34"), "tax" => nil, "invoice_date" => nil, "invoice_time" => nil, "created_at" => nil}
+    assert_equal tax_nil_record, decode(encoded, sales_tax_schema)
   end
 
   def test_bytes_decimal_range_errors
@@ -243,11 +372,12 @@ class TestLogicalTypes < Test::Unit::TestCase
     buffer.string
   end
 
-  def decode(encoded, schema)
+  def decode(encoded, schema, writer_schema: nil)
+    writer_schema ||= schema
     buffer = StringIO.new(encoded)
     decoder = Avro::IO::BinaryDecoder.new(buffer)
 
-    datum_reader = Avro::IO::DatumReader.new(schema, schema)
+    datum_reader = Avro::IO::DatumReader.new(writer_schema, schema)
     datum_reader.read(decoder)
   end
 

@@ -17,9 +17,9 @@ name: Test C++
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths:
     - '.github/workflows/test-lang-c\+\+.yml'
     - 'lang/c\+\+/**'
@@ -36,10 +36,16 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Dependencies
-        run: sudo apt update && sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev cmake
+        run: sudo apt update && sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev libfmt-dev cmake
+
+      - name: Print Versions
+        run: |
+          gcc --version
+          cmake --version
+          cppcheck --version
 
       - name: Clean
         run: ./build.sh clean

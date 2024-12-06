@@ -5,7 +5,6 @@
  */
 package avro.examples.baseball;
 
-import org.apache.avro.generic.GenericArray;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.message.BinaryMessageEncoder;
@@ -15,8 +14,10 @@ import java.util.Optional;
 /** Test that optional getters are created only for nullable fields */
 @org.apache.avro.specific.AvroGenerated
 public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = 7830366875847294825L;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OptionalGettersNullableFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that optional getters are created only for nullable fields\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"nullable_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"favorite_number\",\"type\":[\"int\"]},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]}]}");
+  private static final long serialVersionUID = -6919829133416680993L;
+
+
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OptionalGettersNullableFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that optional getters are created only for nullable fields\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"nullable_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"favorite_number\",\"type\":[\"int\"]},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]},{\"name\":\"nullable_array\",\"type\":[{\"type\":\"array\",\"items\":\"string\"},\"null\"]}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
@@ -76,6 +77,7 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
   private java.lang.CharSequence nullable_name;
   private java.lang.Object favorite_number;
   private java.lang.Integer nullable_favorite_number;
+  private java.util.List<java.lang.CharSequence> nullable_array;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -90,12 +92,14 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
    * @param nullable_name The new value for nullable_name
    * @param favorite_number The new value for favorite_number
    * @param nullable_favorite_number The new value for nullable_favorite_number
+   * @param nullable_array The new value for nullable_array
    */
-  public OptionalGettersNullableFieldsTest(java.lang.CharSequence name, java.lang.CharSequence nullable_name, java.lang.Object favorite_number, java.lang.Integer nullable_favorite_number) {
+  public OptionalGettersNullableFieldsTest(java.lang.CharSequence name, java.lang.CharSequence nullable_name, java.lang.Object favorite_number, java.lang.Integer nullable_favorite_number, java.util.List<java.lang.CharSequence> nullable_array) {
     this.name = name;
     this.nullable_name = nullable_name;
     this.favorite_number = favorite_number;
     this.nullable_favorite_number = nullable_favorite_number;
+    this.nullable_array = nullable_array;
   }
 
   @Override
@@ -112,6 +116,7 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
     case 1: return nullable_name;
     case 2: return favorite_number;
     case 3: return nullable_favorite_number;
+    case 4: return nullable_array;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
@@ -125,6 +130,7 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
     case 1: nullable_name = (java.lang.CharSequence)value$; break;
     case 2: favorite_number = value$; break;
     case 3: nullable_favorite_number = (java.lang.Integer)value$; break;
+    case 4: nullable_array = (java.util.List<java.lang.CharSequence>)value$; break;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
@@ -198,6 +204,23 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
   }
 
   /**
+   * Gets the value of the 'nullable_array' field as an Optional&lt;java.util.List&lt;java.lang.CharSequence&gt;&gt;.
+   * @return The value wrapped in an Optional&lt;java.util.List&lt;java.lang.CharSequence&gt;&gt;.
+   */
+  public Optional<java.util.List<java.lang.CharSequence>> getNullableArray() {
+    return Optional.<java.util.List<java.lang.CharSequence>>ofNullable(nullable_array);
+  }
+
+
+  /**
+   * Sets the value of the 'nullable_array' field.
+   * @param value the value to set.
+   */
+  public void setNullableArray(java.util.List<java.lang.CharSequence> value) {
+    this.nullable_array = value;
+  }
+
+  /**
    * Creates a new OptionalGettersNullableFieldsTest RecordBuilder.
    * @return A new OptionalGettersNullableFieldsTest RecordBuilder
    */
@@ -242,6 +265,7 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
     private java.lang.CharSequence nullable_name;
     private java.lang.Object favorite_number;
     private java.lang.Integer nullable_favorite_number;
+    private java.util.List<java.lang.CharSequence> nullable_array;
 
     /** Creates a new Builder */
     private Builder() {
@@ -270,6 +294,10 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
         this.nullable_favorite_number = data().deepCopy(fields()[3].schema(), other.nullable_favorite_number);
         fieldSetFlags()[3] = other.fieldSetFlags()[3];
       }
+      if (isValidValue(fields()[4], other.nullable_array)) {
+        this.nullable_array = data().deepCopy(fields()[4].schema(), other.nullable_array);
+        fieldSetFlags()[4] = other.fieldSetFlags()[4];
+      }
     }
 
     /**
@@ -293,6 +321,10 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
       if (isValidValue(fields()[3], other.nullable_favorite_number)) {
         this.nullable_favorite_number = data().deepCopy(fields()[3].schema(), other.nullable_favorite_number);
         fieldSetFlags()[3] = true;
+      }
+      if (isValidValue(fields()[4], other.nullable_array)) {
+        this.nullable_array = data().deepCopy(fields()[4].schema(), other.nullable_array);
+        fieldSetFlags()[4] = true;
       }
     }
 
@@ -456,6 +488,46 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
       return this;
     }
 
+    /**
+      * Gets the value of the 'nullable_array' field.
+      * @return The value.
+      */
+    public java.util.List<java.lang.CharSequence> getNullableArray() {
+      return nullable_array;
+    }
+
+
+    /**
+      * Sets the value of the 'nullable_array' field.
+      * @param value The value of 'nullable_array'.
+      * @return This builder.
+      */
+    public avro.examples.baseball.OptionalGettersNullableFieldsTest.Builder setNullableArray(java.util.List<java.lang.CharSequence> value) {
+      validate(fields()[4], value);
+      this.nullable_array = value;
+      fieldSetFlags()[4] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'nullable_array' field has been set.
+      * @return True if the 'nullable_array' field has been set, false otherwise.
+      */
+    public boolean hasNullableArray() {
+      return fieldSetFlags()[4];
+    }
+
+
+    /**
+      * Clears the value of the 'nullable_array' field.
+      * @return This builder.
+      */
+    public avro.examples.baseball.OptionalGettersNullableFieldsTest.Builder clearNullableArray() {
+      nullable_array = null;
+      fieldSetFlags()[4] = false;
+      return this;
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public OptionalGettersNullableFieldsTest build() {
@@ -465,6 +537,7 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
         record.nullable_name = fieldSetFlags()[1] ? this.nullable_name : (java.lang.CharSequence) defaultValue(fields()[1]);
         record.favorite_number = fieldSetFlags()[2] ? this.favorite_number :  defaultValue(fields()[2]);
         record.nullable_favorite_number = fieldSetFlags()[3] ? this.nullable_favorite_number : (java.lang.Integer) defaultValue(fields()[3]);
+        record.nullable_array = fieldSetFlags()[4] ? this.nullable_array : (java.util.List<java.lang.CharSequence>) defaultValue(fields()[4]);
         return record;
       } catch (org.apache.avro.AvroMissingFieldException e) {
         throw e;

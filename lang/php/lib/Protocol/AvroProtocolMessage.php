@@ -27,6 +27,8 @@ use Apache\Avro\Schema\AvroSchema;
 
 class AvroProtocolMessage
 {
+    public $name;
+
     /**
      * @var AvroRecordSchema $request
      */

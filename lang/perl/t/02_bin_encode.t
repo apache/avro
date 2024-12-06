@@ -24,18 +24,26 @@ use Config;
 use Test::More;
 use Test::Exception;
 use Math::BigInt;
+use JSON::PP; # For booleans
 
 use_ok 'Avro::BinaryEncoder';
 
-sub primitive_ok {
-    my ($primitive_type, $primitive_val, $expected_enc) = @_;
+sub primitive {
+    my ($type, $data) = @_;
 
-    my $data;
-    my $meth = "encode_$primitive_type";
-    Avro::BinaryEncoder->$meth(
-        undef, $primitive_val, sub { $data = ${$_[0]} }
+    my $encoded;
+    my $method = "encode_$type";
+    Avro::BinaryEncoder->$method(
+        undef, $data, sub { $encoded = ${$_[0]} }
     );
-    is $data, $expected_enc, "primitive $primitive_type encoded correctly";
+    return $encoded;
+}
+
+sub primitive_ok {
+    my ($type, $have, $want) = @_;
+    my $data = primitive( $type => $have );
+    is primitive( $type => $have ), $want,
+        "primitive $type encoded @{[ $have // '<UNDEF>' ]} correctly";
     return $data;
 }
 
@@ -44,8 +52,48 @@ sub primitive_ok {
     primitive_ok null    =>    undef, '';
     primitive_ok null    => 'whatev', '';
 
-    primitive_ok boolean => 0, "\x0";
-    primitive_ok boolean => 1, "\x1";
+    primitive_ok boolean => 0,                 "\x0";
+    primitive_ok boolean => 1,                 "\x1";
+    primitive_ok boolean => 'false',           "\x0";
+    primitive_ok boolean => 'true',            "\x1";
+    primitive_ok boolean => 'f',               "\x0";
+    primitive_ok boolean => 't',               "\x1";
+    primitive_ok boolean => 'no',              "\x0";
+    primitive_ok boolean => 'yes',             "\x1";
+    primitive_ok boolean => 'n',               "\x0";
+    primitive_ok boolean => 'y',               "\x1";
+    primitive_ok boolean => 'FALSE',           "\x0";
+    primitive_ok boolean => 'TRUE',            "\x1";
+    primitive_ok boolean => 'F',               "\x0";
+    primitive_ok boolean => 'T',               "\x1";
+    primitive_ok boolean => 'NO',              "\x0";
+    primitive_ok boolean => 'YES',             "\x1";
+    primitive_ok boolean => 'N',               "\x0";
+    primitive_ok boolean => 'Y',               "\x1";
+    primitive_ok boolean => !!0,               "\x0"; # Native false
+    primitive_ok boolean => !!1,               "\x1"; # Native true
+    primitive_ok boolean => $JSON::PP::false,  "\x0";
+    primitive_ok boolean => $JSON::PP::true,   "\x1";
+
+    throws_ok {
+        primitive boolean => undef;
+    } "Avro::BinaryEncoder::Error", "<UNDEF> is not a valid boolean value";
+
+    throws_ok {
+        primitive boolean => 2;
+    } "Avro::BinaryEncoder::Error", "'2' is not a valid boolean value";
+
+    throws_ok {
+        primitive boolean => -1;
+    } "Avro::BinaryEncoder::Error", "'-1' is not a valid boolean value";
+
+    throws_ok {
+        primitive boolean => 'anything truthy';
+    } "Avro::BinaryEncoder::Error", "'anything truthy' is not a valid boolean value";
+
+    throws_ok {
+        primitive boolean => {};
+    } "Avro::BinaryEncoder::Error", "cannot encode a 'HASH' reference as boolean";
 
     ## - high-bit of each byte should be set except for last one
     ## - rest of bits are:
@@ -67,34 +115,37 @@ sub primitive_ok {
     ## BigInt values still work
     primitive_ok int     => Math::BigInt->new(-65), $p;
 
-    throws_ok {
-        my $toobig;
-        if ($Config{use64bitint}) {
-            $toobig = 1<<32;
-        }
-        else {
-            require Math::BigInt;
-            $toobig = Math::BigInt->new(1)->blsft(32);
-        }
-        primitive_ok int => $toobig, undef;
-    } "Avro::BinaryEncoder::Error", "33 bits";
+    # test extremes
+    primitive_ok int     =>  Math::BigInt->new(2)**31 - 1, "\xfe\xff\xff\xff\x0f";
+    primitive_ok int     => -Math::BigInt->new(2)**31, "\xff\xff\xff\xff\x0f";
+    primitive_ok long    =>  Math::BigInt->new(2)**63 - 1, "\xfe\xff\xff\xff\xff\xff\xff\xff\xff\x01";
+    primitive_ok long    => -Math::BigInt->new(2)**63, "\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01";
 
     throws_ok {
-        primitive_ok int => Math::BigInt->new(1)->blsft(63), undef;
-    } "Avro::BinaryEncoder::Error", "65 bits";
+        primitive int => Math::BigInt->new(2)**31;
+    } "Avro::BinaryEncoder::Error", "32-bit signed int overflow";
 
-    for (qw(long int)) {
-        throws_ok {
-            primitive_ok $_ =>  "x", undef;
-        } 'Avro::BinaryEncoder::Error', 'numeric values only';
-    };
+    throws_ok {
+        primitive int => -Math::BigInt->new(2)**31 - 1;
+    } "Avro::BinaryEncoder::Error", "32-bit signed int underflow";
+
+    throws_ok {
+        primitive int => Math::BigInt->new(2)**63;
+    } "Avro::BinaryEncoder::Error", "64-bit signed int overflow";
+
+    throws_ok {
+        primitive long => -Math::BigInt->new(2)**63 - 1;
+    } "Avro::BinaryEncoder::Error", "64-bit signed int underflow";
+
+    throws_ok {
+        primitive $_ =>  "x";
+    } 'Avro::BinaryEncoder::Error', 'numeric values only' for qw(long int);
+
     # In Unicode, there are decimals that aren't 0-9.
     # Make sure we handle non-ascii decimals cleanly.
-    for (qw(long int)) {
-        throws_ok {
-            primitive_ok $_ =>  "\N{U+0661}", undef;
-        } 'Avro::BinaryEncoder::Error', 'ascii decimals only';
-    };
+    throws_ok {
+        primitive $_ =>  "\N{U+0661}";
+    } 'Avro::BinaryEncoder::Error', 'ascii decimals only' for qw(long int);
 }
 
 ## spec examples

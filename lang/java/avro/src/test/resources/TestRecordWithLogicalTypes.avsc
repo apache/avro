@@ -40,6 +40,12 @@
       "type" : "long",
       "logicalType" : "timestamp-millis"
     }
-  } ]
+  }, {
+    "name" : "bd",
+    "type" : {
+      "type" : "bytes",
+      "logicalType" : "big-decimal"
+    }
+  }  ]
 }
 

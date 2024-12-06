@@ -23,20 +23,26 @@ use Config;
 use Encode();
 use Error::Simple;
 use Regexp::Common qw(number);
+use JSON::PP; # For is_bool
 
 our $VERSION = '++MODULE_VERSION++';
 
-our $max64;
-our $complement = ~0x7F;
-if ($Config{use64bitint}) {
-    $max64 = 9223372036854775807;
-}
-else {
+# Private function deleted below, should be a lexical sub
+sub _bigint {
     require Math::BigInt;
-    $complement = Math::BigInt->new("0b" . ("1" x 57) . ("0" x 7));
-    $max64      = Math::BigInt->new("0b0" . ("1" x 63));
+    my $val = Math::BigInt->new(shift);
+
+    $Config{use64bitint}
+        ? 0 + $val->bstr() # numify() loses precision
+        : $val;
 }
 
+# Avro type limits
+# Private constants deleted below
+use constant INT_MAX => 0x7FFF_FFFF;
+use constant INT_MIN => -0x8000_0000;
+use constant LONG_MAX => _bigint('0x7FFF_FFFF_FFFF_FFFF');
+use constant LONG_MIN => _bigint('-0x8000_0000_0000_0000');
 
 =head2 encode(%param)
 
@@ -86,7 +92,28 @@ sub encode_null {
 sub encode_boolean {
     my $class = shift;
     my ($schema, $data, $cb) = @_;
-    $cb->( $data ? \"\x1" : \"\x0" );
+
+    throw Avro::BinaryEncoder::Error( "<UNDEF> is not a valid boolean value")
+        unless defined $data;
+
+    if ( my $type = ref $data ) {
+        throw Avro::BinaryEncoder::Error("cannot encode a '$type' reference as boolean")
+            unless $type eq 'JSON::PP::Boolean';
+    }
+    else {
+        throw Avro::BinaryEncoder::Error( "'$data' is not a valid boolean value")
+            unless $data eq '' # For Perl versions without builtin::is_bool
+                || JSON::PP::is_bool($data)
+                || $data =~ /^(?:true|t|false|f|yes|y|no|n|0|1)$/i;
+    }
+
+    # Some values might be false but evaluate to "truthy" for Perl,
+    # like the string 'false'. For these known exceptions, which
+    # would otherwise be false, we read a false value. For everything
+    # else, we rely on their value evaluated in a boolean context.
+    my $true = $data =~ /^(?:no|n|false|f)$/i ? 0 : !!$data;
+
+    $cb->( $true ? \"\x1" : \"\x0" );
 }
 
 sub encode_int {
@@ -95,8 +122,8 @@ sub encode_int {
     if ($data !~ /^$RE{num}{int}$/) {
         throw Avro::BinaryEncoder::Error("cannot convert '$data' to integer");
     }
-    if (abs($data) > 0x7fffffff) {
-        throw Avro::BinaryEncoder::Error("int ($data) should be <= 32bits");
+    if ($data > INT_MAX || $data < INT_MIN) {
+        throw Avro::BinaryEncoder::Error("data ($data) out of range for Avro 'int'");
     }
 
     my $enc = unsigned_varint(zigzag($data));
@@ -109,8 +136,8 @@ sub encode_long {
     if ($data !~ /^$RE{num}{int}$/) {
         throw Avro::BinaryEncoder::Error("cannot convert '$data' to long integer");
     }
-    if (abs($data) > $max64) {
-        throw Avro::BinaryEncoder::Error("int ($data) should be <= 64bits");
+    if ($data > LONG_MAX || $data < LONG_MIN) {
+        throw Avro::BinaryEncoder::Error("data ($data) out of range for Avro 'long'");
     }
     my $enc = unsigned_varint(zigzag($data));
     $cb->(\$enc);
@@ -133,7 +160,9 @@ sub encode_double {
 sub encode_bytes {
     my $class = shift;
     my ($schema, $data, $cb) = @_;
-    encode_long($class, undef, bytes::length($data), $cb);
+    throw Avro::BinaryEncoder::Error("Invalid data given for 'bytes': Contains values >255")
+        unless utf8::downgrade($data, 1);
+    encode_long($class, undef, length($data), $cb);
     $cb->(\$data);
 }
 
@@ -141,7 +170,7 @@ sub encode_string {
     my $class = shift;
     my ($schema, $data, $cb) = @_;
     my $bytes = Encode::encode_utf8($data);
-    encode_long($class, undef, bytes::length($bytes), $cb);
+    encode_long($class, undef, length($bytes), $cb);
     $cb->(\$bytes);
 }
 
@@ -265,11 +294,16 @@ sub encode_union {
 sub encode_fixed {
     my $class = shift;
     my ($schema, $data, $cb) = @_;
-    if (bytes::length $data != $schema->size) {
-        my $s1 = bytes::length $data;
-        my $s2 = $schema->size;
-        throw Avro::BinaryEncoder::Error("Fixed size doesn't match $s1!=$s2");
-    }
+
+    throw Avro::BinaryEncoder::Error("Invalid data given for 'fixed': Contains values >255")
+        unless utf8::downgrade($data, 1);
+
+    my $length = length $data;
+    my $size   = $schema->size;
+
+    throw Avro::BinaryEncoder::Error("Fixed size doesn't match $length!=$size")
+        unless $length == $size;
+
     $cb->(\$data);
 }
 
@@ -283,13 +317,16 @@ sub zigzag {
 
 sub unsigned_varint {
     my @bytes;
-    while ($_[0] & $complement) {           # mask with continuation bit
-        push @bytes, ($_[0] & 0x7F) | 0x80; # out and set continuation bit
-        $_[0] >>= 7;                        # next please
+    while ($_[0] > 0x7F) {                  # while more than 7 bits to encode
+        push @bytes, ($_[0] & 0x7F) | 0x80; # append continuation bit and 7 data bits
+        $_[0] >>= 7;                        # get next 7 bits
     }
     push @bytes, $_[0]; # last byte
     return pack "C*", @bytes;
 }
+
+# Delete private symbols to avoid adding them to the API
+delete $Avro::BinaryEncoder::{$_} for '_bigint', <{INT,LONG}_{MIN,MAX}>;
 
 package Avro::BinaryEncoder::Error;
 use parent 'Error::Simple';

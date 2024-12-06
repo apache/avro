@@ -58,7 +58,6 @@ case "$target" in
     ;;
 
   dist)
-    cp ../../share/VERSION.txt .
     perl ./Makefile.PL && make dist
     ;;
 

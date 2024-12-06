@@ -42,7 +42,7 @@ do
 
     perf)
       pushd ./src/apache/perf/
-      dotnet run --configuration Release --framework net7.0
+      dotnet run --configuration Release --framework net8.0
       ;;
 
     dist)
@@ -77,7 +77,7 @@ do
       ;;
 
     interop-data-generate)
-      dotnet run --project src/apache/test/Avro.test.csproj --framework net7.0 ../../share/test/schemas/interop.avsc ../../build/interop/data
+      dotnet run --project src/apache/test/Avro.test.csproj --framework net8.0 ../../share/test/schemas/interop.avsc ../../build/interop/data
       ;;
 
     interop-data-test)
@@ -85,7 +85,8 @@ do
       ;;
 
     clean)
-      rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf}/{obj,bin}
+      rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf,benchmark}/{obj,bin}
+      rm -rf src/apache/codec/Avro.File.{BZip2,Snappy,XZ,ZStandard}{,.Test}/{obj,bin}
       rm -rf build
       rm -f  TestResult.xml
       ;;

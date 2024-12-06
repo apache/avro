@@ -176,6 +176,8 @@ class TestSchema < Test::Unit::TestCase
     end
 
     assert_equal '"MissingType" is not a schema we know about.', error.message
+    assert_equal "MissingType", error.type_name
+    assert_equal "my.name.space", error.default_namespace
   end
 
   def test_invalid_name
@@ -612,6 +614,37 @@ class TestSchema < Test::Unit::TestCase
     assert_equal schema_hash, schema.to_avro
   end
 
+  def test_bytes_decimal_in_record
+    assert_nothing_raised do
+      hash_to_schema(
+        type: 'record',
+        name: 'account',
+        fields: [
+          { name: 'balance', type: 'bytes', logicalType: 'decimal', precision: 9, scale: 2 }
+        ]
+      )
+    end
+  end
+
+  def test_bytes_decimal_with_default_in_record
+    assert_nothing_raised do
+      hash_to_schema(
+        type: 'record',
+        name: 'account',
+        fields: [
+          {
+            name: 'balance',
+            type: [
+              { type: 'bytes', logicalType: 'decimal', precision: 9, scale: 2 },
+              'null'
+            ],
+            default: '\u00ff'
+          }
+        ]
+      )
+    end
+  end
+  
   def test_bytes_decimal_to_include_precision_scale
     schema = Avro::Schema.parse <<-SCHEMA
       {

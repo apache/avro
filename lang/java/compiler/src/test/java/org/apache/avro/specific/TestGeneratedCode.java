@@ -20,6 +20,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.avro.Schema;
 import org.apache.avro.io.Encoder;
@@ -28,6 +30,8 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
+import org.apache.avro.specific.test.RecordWithErrorField;
+import org.apache.avro.specific.test.TestError;
 import org.apache.avro.util.Utf8;
 
 import org.junit.Assert;
@@ -71,8 +75,9 @@ public class TestGeneratedCode {
 
   @Test
   void withSchemaMigration() throws IOException {
+    Map<CharSequence, CharSequence> map = new HashMap<>();
     FullRecordV2 src = new FullRecordV2(true, 731, 87231, 38L, 54.2832F, "Hi there",
-        ByteBuffer.wrap(Utf8.getBytesFor("Hello, world!")));
+        ByteBuffer.wrap(Utf8.getBytesFor("Hello, world!")), map);
     assertTrue(((SpecificRecordBase) src).hasCustomCoders(), "Test schema must allow for custom coders.");
 
     ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
@@ -87,6 +92,30 @@ public class TestGeneratedCode {
     FullRecordV1 dst = r.read(null, d);
 
     FullRecordV1 expected = new FullRecordV1(true, 87231, 731L, 54.2832F, 38.0, null, "Hello, world!");
+    Assert.assertEquals(expected, dst);
+  }
+
+  @Test
+  public void withErrorField() throws IOException {
+    TestError srcError = TestError.newBuilder().setMessage$("Oops").build();
+    RecordWithErrorField src = new RecordWithErrorField("Hi there", srcError);
+    Assert.assertFalse("Test schema with error field cannot allow for custom coders.",
+        ((SpecificRecordBase) src).hasCustomCoders());
+    Schema schema = RecordWithErrorField.getClassSchema();
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
+    Encoder e = EncoderFactory.get().directBinaryEncoder(out, null);
+    DatumWriter<RecordWithErrorField> w = (DatumWriter<RecordWithErrorField>) MODEL.createDatumWriter(schema);
+    w.write(src, e);
+    e.flush();
+
+    ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+    Decoder d = DecoderFactory.get().directBinaryDecoder(in, null);
+    DatumReader<RecordWithErrorField> r = (DatumReader<RecordWithErrorField>) MODEL.createDatumReader(schema);
+    RecordWithErrorField dst = r.read(null, d);
+
+    TestError expectedError = TestError.newBuilder().setMessage$("Oops").build();
+    RecordWithErrorField expected = new RecordWithErrorField("Hi there", expectedError);
     Assert.assertEquals(expected, dst);
   }
 }

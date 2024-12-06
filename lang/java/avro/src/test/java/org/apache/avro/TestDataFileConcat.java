@@ -17,60 +17,42 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.util.RandomData;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@RunWith(Parameterized.class)
+import java.io.File;
+import java.io.IOException;
+import java.util.stream.Stream;
+
+import static org.junit.Assert.assertEquals;
+
 public class TestDataFileConcat {
   private static final Logger LOG = LoggerFactory.getLogger(TestDataFileConcat.class);
 
-  @Rule
-  public TemporaryFolder DIR = new TemporaryFolder();
+  @TempDir
+  public File DIR;
 
-  CodecFactory codec;
-  CodecFactory codec2;
-  boolean recompress;
-
-  public TestDataFileConcat(CodecFactory codec, CodecFactory codec2, Boolean recompress) {
-    this.codec = codec;
-    this.codec2 = codec2;
-    this.recompress = recompress;
-    LOG.info("Testing concatenating files, " + codec2 + " into " + codec + " with recompress=" + recompress);
-  }
-
-  @Parameters
-  public static List<Object[]> codecs() {
-    List<Object[]> r = new ArrayList<>();
-    r.add(new Object[] { null, null, false });
-    r.add(new Object[] { null, null, true });
-    r.add(new Object[] { CodecFactory.deflateCodec(1), CodecFactory.deflateCodec(6), false });
-    r.add(new Object[] { CodecFactory.deflateCodec(1), CodecFactory.deflateCodec(6), true });
-    r.add(new Object[] { CodecFactory.deflateCodec(3), CodecFactory.nullCodec(), false });
-    r.add(new Object[] { CodecFactory.nullCodec(), CodecFactory.deflateCodec(6), false });
-    r.add(new Object[] { CodecFactory.xzCodec(1), CodecFactory.xzCodec(2), false });
-    r.add(new Object[] { CodecFactory.xzCodec(1), CodecFactory.xzCodec(2), true });
-    r.add(new Object[] { CodecFactory.xzCodec(2), CodecFactory.nullCodec(), false });
-    r.add(new Object[] { CodecFactory.nullCodec(), CodecFactory.xzCodec(2), false });
-    return r;
+  public static Stream<Arguments> codecs() {
+    return Stream.of(Arguments.of(null, null, false), Arguments.of(null, null, true),
+        Arguments.of(CodecFactory.deflateCodec(1), CodecFactory.deflateCodec(6), false),
+        Arguments.of(CodecFactory.deflateCodec(1), CodecFactory.deflateCodec(6), true),
+        Arguments.of(CodecFactory.deflateCodec(3), CodecFactory.nullCodec(), false),
+        Arguments.of(CodecFactory.nullCodec(), CodecFactory.deflateCodec(6), false),
+        Arguments.of(CodecFactory.xzCodec(1), CodecFactory.xzCodec(2), false),
+        Arguments.of(CodecFactory.xzCodec(1), CodecFactory.xzCodec(2), true),
+        Arguments.of(CodecFactory.xzCodec(2), CodecFactory.nullCodec(), false),
+        Arguments.of(CodecFactory.nullCodec(), CodecFactory.xzCodec(2), false));
   }
 
   private static final int COUNT = Integer.parseInt(System.getProperty("test.count", "200"));
@@ -83,11 +65,12 @@ public class TestDataFileConcat {
   private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
 
   private File makeFile(String name) {
-    return new File(DIR.getRoot().getPath(), "test-" + name + ".avro");
+    return new File(DIR, "test-" + name + ".avro");
   }
 
-  @Test
-  public void testConcatenateFiles() throws IOException {
+  @ParameterizedTest
+  @MethodSource("codecs")
+  void concatenateFiles(CodecFactory codec, CodecFactory codec2, boolean recompress) throws IOException {
     System.out.println("SEED = " + SEED);
     System.out.println("COUNT = " + COUNT);
     for (int k = 0; k < 5; k++) {

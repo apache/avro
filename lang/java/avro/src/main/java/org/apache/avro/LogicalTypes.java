@@ -18,14 +18,14 @@
 
 package org.apache.avro;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LogicalTypes {
 
@@ -137,6 +137,9 @@ public class LogicalTypes {
       case DECIMAL:
         logicalType = new Decimal(schema);
         break;
+      case BIG_DECIMAL:
+        logicalType = BIG_DECIMAL_TYPE;
+        break;
       case UUID:
         logicalType = UUID_TYPE;
         break;
@@ -145,6 +148,9 @@ public class LogicalTypes {
         break;
       case TIMESTAMP_MICROS:
         logicalType = TIMESTAMP_MICROS_TYPE;
+        break;
+      case TIMESTAMP_NANOS:
+        logicalType = TIMESTAMP_NANOS_TYPE;
         break;
       case TIME_MILLIS:
         logicalType = TIME_MILLIS_TYPE;
@@ -157,6 +163,9 @@ public class LogicalTypes {
         break;
       case LOCAL_TIMESTAMP_MILLIS:
         logicalType = LOCAL_TIMESTAMP_MILLIS_TYPE;
+        break;
+      case LOCAL_TIMESTAMP_NANOS:
+        logicalType = LOCAL_TIMESTAMP_NANOS_TYPE;
         break;
       default:
         final LogicalTypeFactory typeFactory = REGISTERED_TYPES.get(typeName);
@@ -182,14 +191,18 @@ public class LogicalTypes {
   }
 
   private static final String DECIMAL = "decimal";
+  private static final String BIG_DECIMAL = "big-decimal";
+  private static final String DURATION = "duration";
   private static final String UUID = "uuid";
   private static final String DATE = "date";
   private static final String TIME_MILLIS = "time-millis";
   private static final String TIME_MICROS = "time-micros";
   private static final String TIMESTAMP_MILLIS = "timestamp-millis";
   private static final String TIMESTAMP_MICROS = "timestamp-micros";
+  private static final String TIMESTAMP_NANOS = "timestamp-nanos";
   private static final String LOCAL_TIMESTAMP_MILLIS = "local-timestamp-millis";
   private static final String LOCAL_TIMESTAMP_MICROS = "local-timestamp-micros";
+  private static final String LOCAL_TIMESTAMP_NANOS = "local-timestamp-nanos";
 
   /** Create a Decimal LogicalType with the given precision and scale 0 */
   public static Decimal decimal(int precision) {
@@ -201,10 +214,23 @@ public class LogicalTypes {
     return new Decimal(precision, scale);
   }
 
-  private static final LogicalType UUID_TYPE = new LogicalType("uuid");
+  private static final BigDecimal BIG_DECIMAL_TYPE = new BigDecimal();
+
+  /** Create a Big Decimal LogicalType that can accept any precision and scale */
+  public static BigDecimal bigDecimal() {
+    return BIG_DECIMAL_TYPE;
+  }
+
+  private static final LogicalType UUID_TYPE = new Uuid();
 
   public static LogicalType uuid() {
     return UUID_TYPE;
+  }
+
+  private static final LogicalType DURATION_TYPE = new Duration();
+
+  public static LogicalType duration() {
+    return DURATION_TYPE;
   }
 
   private static final Date DATE_TYPE = new Date();
@@ -237,6 +263,12 @@ public class LogicalTypes {
     return TIMESTAMP_MICROS_TYPE;
   }
 
+  private static final TimestampNanos TIMESTAMP_NANOS_TYPE = new TimestampNanos();
+
+  public static TimestampNanos timestampNanos() {
+    return TIMESTAMP_NANOS_TYPE;
+  }
+
   private static final LocalTimestampMillis LOCAL_TIMESTAMP_MILLIS_TYPE = new LocalTimestampMillis();
 
   public static LocalTimestampMillis localTimestampMillis() {
@@ -247,6 +279,50 @@ public class LogicalTypes {
 
   public static LocalTimestampMicros localTimestampMicros() {
     return LOCAL_TIMESTAMP_MICROS_TYPE;
+  }
+
+  private static final LocalTimestampNanos LOCAL_TIMESTAMP_NANOS_TYPE = new LocalTimestampNanos();
+
+  public static LocalTimestampNanos localTimestampNanos() {
+    return LOCAL_TIMESTAMP_NANOS_TYPE;
+  }
+
+  /** Uuid represents a uuid without a time */
+  public static class Uuid extends LogicalType {
+
+    private static final int UUID_BYTES = 2 * Long.BYTES;
+
+    private Uuid() {
+      super(UUID);
+    }
+
+    @Override
+    public void validate(Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.STRING && schema.getType() != Schema.Type.FIXED) {
+        throw new IllegalArgumentException("Uuid can only be used with an underlying string or fixed type");
+      }
+      if (schema.getType() == Schema.Type.FIXED && schema.getFixedSize() != UUID_BYTES) {
+        throw new IllegalArgumentException("Uuid with fixed type must have a size of " + UUID_BYTES + " bytes");
+      }
+    }
+  }
+
+  /**
+   * Duration represents a duration, consisting on months, days and milliseconds
+   */
+  public static class Duration extends LogicalType {
+    private Duration() {
+      super(DURATION);
+    }
+
+    @Override
+    public void validate(Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.FIXED || schema.getFixedSize() != 12) {
+        throw new IllegalArgumentException("Duration can only be used with an underlying fixed type of size 12.");
+      }
+    }
   }
 
   /** Decimal represents arbitrary-precision fixed-scale decimal numbers */
@@ -363,6 +439,20 @@ public class LogicalTypes {
     }
   }
 
+  public static class BigDecimal extends LogicalType {
+    private BigDecimal() {
+      super(BIG_DECIMAL);
+    }
+
+    @Override
+    public void validate(final Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.BYTES) {
+        throw new IllegalArgumentException("BigDecimal can only be used with an underlying bytes type");
+      }
+    }
+  }
+
   /** Date represents a date without a time */
   public static class Date extends LogicalType {
     private Date() {
@@ -438,6 +528,21 @@ public class LogicalTypes {
     }
   }
 
+  /** TimestampNanos represents a date and time in nanoseconds */
+  public static class TimestampNanos extends LogicalType {
+    private TimestampNanos() {
+      super(TIMESTAMP_NANOS);
+    }
+
+    @Override
+    public void validate(Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.LONG) {
+        throw new IllegalArgumentException("Timestamp (nanos) can only be used with an underlying long type");
+      }
+    }
+  }
+
   public static class LocalTimestampMillis extends LogicalType {
     private LocalTimestampMillis() {
       super(LOCAL_TIMESTAMP_MILLIS);
@@ -455,6 +560,20 @@ public class LogicalTypes {
   public static class LocalTimestampMicros extends LogicalType {
     private LocalTimestampMicros() {
       super(LOCAL_TIMESTAMP_MICROS);
+    }
+
+    @Override
+    public void validate(Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.LONG) {
+        throw new IllegalArgumentException("Local timestamp (micros) can only be used with an underlying long type");
+      }
+    }
+  }
+
+  public static class LocalTimestampNanos extends LogicalType {
+    private LocalTimestampNanos() {
+      super(LOCAL_TIMESTAMP_NANOS);
     }
 
     @Override

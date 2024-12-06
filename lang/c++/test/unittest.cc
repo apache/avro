@@ -43,7 +43,6 @@
 #include "NodeImpl.hh"
 #include "Types.hh"
 
-
 using namespace avro;
 
 static const uint8_t fixeddata[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
@@ -80,8 +79,7 @@ struct TestSchema {
         bool caught = false;
         try {
             customAttributeLong.addAttribute("extra_info_mylong", std::string("duplicate"));
-        }
-        catch(Exception &e) {
+        } catch (Exception &e) {
             std::cout << "(intentional) exception: " << e.what() << '\n';
             caught = true;
         }
@@ -143,9 +141,9 @@ struct TestSchema {
 
         CustomAttributes customAttributeLong2;
         customAttributeLong2.addAttribute("extra_info_mylong2",
-        std::string("it's a long field"));
+                                          std::string("it's a long field"));
         customAttributeLong2.addAttribute("more_info_mylong2",
-        std::string("it's still a long field"));
+                                          std::string("it's still a long field"));
         record.addField("mylong2", LongSchema(), customAttributeLong2);
 
         record.addField("anotherint", intSchema);
@@ -276,7 +274,7 @@ struct TestSchema {
         out << is.rdbuf();
     }
 
-    void printNext(Parser<Reader> &p) {
+    void printNext(Parser<Reader> &) {
         // no-op printer
     }
 
@@ -413,30 +411,31 @@ struct TestSchema {
     }
 
     void testNodeRecord(const NodeRecord &nodeRecord,
-                    const std::string &expectedJson)
-    {
+                        const std::string &expectedJson) {
         BOOST_CHECK_EQUAL(nodeRecord.isValid(), true);
 
         std::ostringstream oss;
         nodeRecord.printJson(oss, 0);
         std::string actual = oss.str();
         actual.erase(std::remove_if(actual.begin(), actual.end(),
-                                    ::isspace), actual.end());
+                                    ::isspace),
+                     actual.end());
 
         std::string expected = expectedJson;
         expected.erase(std::remove_if(expected.begin(), expected.end(),
-                                    ::isspace), expected.end());
+                                      ::isspace),
+                       expected.end());
 
         BOOST_CHECK_EQUAL(actual, expected);
     }
 
     // Create NodeRecord with custom attributes at field level
     // validate json serialization
-    void checkNodeRecordWithCustomAttribute()
-    {
+    void checkNodeRecordWithCustomAttribute() {
         Name recordName("Test");
         HasName nameConcept(recordName);
         concepts::MultiAttribute<std::string> fieldNames;
+        std::vector<std::vector<std::string>> fieldAliases;
         concepts::MultiAttribute<NodePtr> fieldValues;
         std::vector<GenericDatum> defaultValues;
         concepts::MultiAttribute<CustomAttributes> customAttributes;
@@ -449,30 +448,29 @@ struct TestSchema {
         cf.addAttribute("arrayField", std::string("[1]"));
         cf.addAttribute("mapField", std::string("{\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}"));
         fieldNames.add("f1");
-        fieldValues.add(NodePtr( new NodePrimitive(Type::AVRO_LONG)));
+        fieldValues.add(NodePtr(new NodePrimitive(Type::AVRO_LONG)));
         customAttributes.add(cf);
 
         NodeRecord nodeRecordWithCustomAttribute(nameConcept, fieldValues,
-                                            fieldNames, defaultValues,
-                                            customAttributes);
+                                                 fieldNames, fieldAliases, defaultValues,
+                                                 customAttributes);
         std::string expectedJsonWithCustomAttribute =
-        "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
-        "[{\"name\": \"f1\", \"type\": \"long\", "
-        "\"arrayField\": \"[1]\", "
-        "\"booleanField\": \"true\", "
-        "\"mapField\": \"{\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}\", "
-        "\"nullField\": \"null\", "
-        "\"numberField\": \"1.23\", "
-        "\"stringField\": \"\\\"field value with \\\"double quotes\\\"\\\"\""
-        "}]}";
+            "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
+            "[{\"name\": \"f1\", \"type\": \"long\", "
+            "\"arrayField\": \"[1]\", "
+            "\"booleanField\": \"true\", "
+            "\"mapField\": \"{\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}\", "
+            "\"nullField\": \"null\", "
+            "\"numberField\": \"1.23\", "
+            "\"stringField\": \"\\\"field value with \\\"double quotes\\\"\\\"\""
+            "}]}";
         testNodeRecord(nodeRecordWithCustomAttribute,
-                    expectedJsonWithCustomAttribute);
+                       expectedJsonWithCustomAttribute);
     }
 
     // Create NodeRecord without custom attributes at field level
     // validate json serialization
-    void checkNodeRecordWithoutCustomAttribute()
-    {
+    void checkNodeRecordWithoutCustomAttribute() {
         Name recordName("Test");
         HasName nameConcept(recordName);
         concepts::MultiAttribute<std::string> fieldNames;
@@ -480,24 +478,23 @@ struct TestSchema {
         std::vector<GenericDatum> defaultValues;
 
         fieldNames.add("f1");
-        fieldValues.add(NodePtr( new NodePrimitive(Type::AVRO_LONG)));
+        fieldValues.add(NodePtr(new NodePrimitive(Type::AVRO_LONG)));
 
         NodeRecord nodeRecordWithoutCustomAttribute(nameConcept, fieldValues,
-                                            fieldNames, defaultValues);
+                                                    fieldNames, defaultValues);
         std::string expectedJsonWithoutCustomAttribute =
-        "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
-        "[{\"name\": \"f1\", \"type\": \"long\"}]}";
+            "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
+            "[{\"name\": \"f1\", \"type\": \"long\"}]}";
         testNodeRecord(nodeRecordWithoutCustomAttribute,
-                    expectedJsonWithoutCustomAttribute);
+                       expectedJsonWithoutCustomAttribute);
     }
 
-    void checkCustomAttributes_getAttribute()
-    {
+    void checkCustomAttributes_getAttribute() {
         CustomAttributes cf;
         cf.addAttribute("field1", std::string("1"));
 
         BOOST_CHECK_EQUAL(std::string("1"), *cf.getAttribute("field1"));
-        BOOST_CHECK_EQUAL(false, cf.getAttribute("not_existing").is_initialized());
+        BOOST_CHECK_EQUAL(false, cf.getAttribute("not_existing").has_value());
     }
 
     void test() {
@@ -1034,8 +1031,8 @@ private:
 };
 
 void testNestedArraySchema() {
-    ArraySchema b0 = ArraySchema(NullSchema());
-    ArraySchema a0 = ArraySchema(b0);
+    ArraySchema b0{NullSchema()};
+    ArraySchema a0 = b0;
 
     avro::ValidSchema vs(a0);
     std::ostringstream actual;
@@ -1052,8 +1049,8 @@ void testNestedArraySchema() {
 }
 
 void testNestedMapSchema() {
-    MapSchema b0 = MapSchema(NullSchema());
-    MapSchema a0 = MapSchema(b0);
+    MapSchema b0{NullSchema()};
+    MapSchema a0 = b0;
 
     avro::ValidSchema vs(a0);
     std::ostringstream actual;

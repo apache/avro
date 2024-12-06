@@ -18,7 +18,6 @@
 # limitations under the License.
 
 import collections
-import distutils.spawn
 import os
 import platform
 import shutil
@@ -80,13 +79,13 @@ def _has_java():  # pragma: no coverage
     telling you how to install java. This code does additional work around that
     to be completely automatic.
     """
-    if platform.system() == "Darwin":
-        try:
-            output = subprocess.check_output("/usr/libexec/java_home", stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError as e:
-            output = e.output
-        return b"No Java runtime present" not in output
-    return bool(distutils.spawn.find_executable("java"))
+    if platform.system() != "Darwin":
+        return bool(shutil.which("java"))
+    try:
+        output = subprocess.check_output("/usr/libexec/java_home", stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        output = e.output
+    return b"No Java runtime present" not in output
 
 
 @unittest.skipUnless(_has_java(), "No Java runtime present")

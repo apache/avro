@@ -37,6 +37,9 @@ import org.apache.avro.util.Utf8;
  */
 public abstract class BinaryEncoder extends Encoder {
 
+  // Buffer used for writing ASCII strings
+  private final byte[] stringBuffer = new byte[128];
+
   @Override
   public void writeNull() throws IOException {
   }
@@ -48,10 +51,47 @@ public abstract class BinaryEncoder extends Encoder {
 
   @Override
   public void writeString(String string) throws IOException {
-    if (0 == string.length()) {
+    /* empty string short-circuit */
+    if (string.isEmpty()) {
       writeZero();
       return;
     }
+
+    /*
+     * Assume the String is ASCII. If the ASCII String fits into the existing
+     * buffer, copy the characters into the buffer and write it to the underlying
+     * Encoder. If the String is too long, or ends up not being ASCII, then
+     * fall-back to the default JDK mechanism for handling String to byte array.
+     */
+    final int stringLength = string.length();
+    if (stringLength <= stringBuffer.length) {
+      boolean onlyAscii = true;
+      for (int i = 0; onlyAscii && (i < stringLength); i++) {
+        /*
+         * The char data type is a single 16-bit Unicode character (UTF-16). ASCII, is a
+         * 7-bit character encoding. Therefore, if the value is larger than 127, it
+         * cannot be ASCII. If it is ASCII, it is safe to trim to byte.
+         */
+        final char c = string.charAt(i);
+        if (c >= 0x80) {
+          onlyAscii = false;
+        } else {
+          stringBuffer[i] = (byte) c;
+        }
+      }
+      if (onlyAscii) {
+        writeInt(stringLength);
+        writeFixed(stringBuffer, 0, stringLength);
+        return;
+      }
+    }
+
+    /*
+     * The standard JDK way of turning Strings into byte arrays. Handles UTF-16
+     * case. However, for ASCII this has the overhead of instantiating a new byte
+     * array (which pollutes the heap), and then copying the underlying bytes into
+     * the array,
+     */
     byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
     writeInt(bytes.length);
     writeFixed(bytes, 0, bytes.length);

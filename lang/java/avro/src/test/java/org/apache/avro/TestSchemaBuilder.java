@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,6 +39,8 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecordBuilder;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -109,14 +112,14 @@ public class TestSchemaBuilder {
     assertTrue(s.getObjectProp("intProp") instanceof Integer);
     assertTrue(s.getObjectProp("longProp") instanceof Long);
     assertEquals(Long.MAX_VALUE, s.getObjectProp("longProp"));
-    assertTrue(s.getObjectProp("floatProp") instanceof Double);
+    assertTrue(s.getObjectProp("floatProp") instanceof Float);
     // float converts to double
-    assertEquals(1.0d, s.getObjectProp("floatProp"));
+    assertEquals(1.0f, s.getObjectProp("floatProp"));
     assertTrue(s.getObjectProp("doubleProp") instanceof Double);
     assertEquals(Double.MAX_VALUE, s.getObjectProp("doubleProp"));
     // byte[] converts to string
-    assertTrue(s.getObjectProp("byteProp") instanceof String);
-    assertEquals("ABC", s.getObjectProp("byteProp"));
+    assertTrue(s.getObjectProp("byteProp") instanceof byte[]);
+    assertArrayEquals(new byte[] { 0x41, 0x42, 0x43 }, (byte[]) s.getObjectProp("byteProp"));
     assertTrue(s.getObjectProp("stringProp") instanceof String);
     assertEquals("abc", s.getObjectProp("stringProp"));
   }
@@ -139,14 +142,14 @@ public class TestSchemaBuilder {
     assertTrue(f.getObjectProp("intProp") instanceof Integer);
     assertTrue(f.getObjectProp("longProp") instanceof Long);
     assertEquals(Long.MAX_VALUE, f.getObjectProp("longProp"));
-    assertTrue(f.getObjectProp("floatProp") instanceof Double);
+    assertTrue(f.getObjectProp("floatProp") instanceof Float);
     // float converts to double
-    assertEquals(1.0d, f.getObjectProp("floatProp"));
+    assertEquals(1.0f, f.getObjectProp("floatProp"));
     assertTrue(f.getObjectProp("doubleProp") instanceof Double);
     assertEquals(Double.MAX_VALUE, f.getObjectProp("doubleProp"));
     // byte[] converts to string
-    assertTrue(f.getObjectProp("byteProp") instanceof String);
-    assertEquals("ABC", f.getObjectProp("byteProp"));
+    assertTrue(f.getObjectProp("byteProp") instanceof byte[]);
+    assertArrayEquals(new byte[] { 0x41, 0x42, 0x43 }, (byte[]) f.getObjectProp("byteProp"));
     assertTrue(f.getObjectProp("stringProp") instanceof String);
     assertEquals("abc", f.getObjectProp("stringProp"));
 
@@ -178,11 +181,11 @@ public class TestSchemaBuilder {
     assertEquals(true, iter.next());
     assertEquals(Integer.MAX_VALUE, iter.next());
     assertEquals(Long.MAX_VALUE, iter.next());
-    // float converts to double
-    assertEquals(1.0d, iter.next());
+
+    assertEquals(1.0f, iter.next());
     assertEquals(Double.MAX_VALUE, iter.next());
-    // byte[] converts to string
-    assertEquals("ABC", iter.next());
+
+    assertArrayEquals(new byte[] { 0x41, 0x42, 0x43 }, (byte[]) iter.next());
     assertEquals("abc", iter.next());
   }
 
@@ -213,11 +216,11 @@ public class TestSchemaBuilder {
     assertEquals(true, iter.next());
     assertEquals(Integer.MAX_VALUE, iter.next());
     assertEquals(Long.MAX_VALUE, iter.next());
-    // float converts to double
-    assertEquals(1.0d, iter.next());
+
+    assertEquals(1.0f, iter.next());
     assertEquals(Double.MAX_VALUE, iter.next());
-    // byte[] converts to string
-    assertEquals("ABC", iter.next());
+
+    assertArrayEquals(new byte[] { 0x41, 0x42, 0x43 }, (byte[]) iter.next());
     assertEquals("abc", iter.next());
   }
 
@@ -246,14 +249,14 @@ public class TestSchemaBuilder {
     assertEquals(Integer.MAX_VALUE, valueMap.get("intKey"));
     assertTrue(valueMap.get("longKey") instanceof Long);
     assertEquals(Long.MAX_VALUE, valueMap.get("longKey"));
-    // float converts to double
-    assertTrue(valueMap.get("floatKey") instanceof Double);
-    assertEquals(1.0d, valueMap.get("floatKey"));
+
+    assertTrue(valueMap.get("floatKey") instanceof Float);
+    assertEquals(1.0f, valueMap.get("floatKey"));
     assertTrue(valueMap.get("doubleKey") instanceof Double);
     assertEquals(Double.MAX_VALUE, valueMap.get("doubleKey"));
-    // byte[] converts to string
-    assertTrue(valueMap.get("byteKey") instanceof String);
-    assertEquals("ABC", valueMap.get("byteKey"));
+
+    assertTrue(valueMap.get("byteKey") instanceof byte[]);
+    assertArrayEquals("ABC".getBytes(StandardCharsets.UTF_8), (byte[]) valueMap.get("byteKey"));
     assertTrue(valueMap.get("stringKey") instanceof String);
     assertEquals("abc", valueMap.get("stringKey"));
   }
@@ -286,14 +289,14 @@ public class TestSchemaBuilder {
     assertEquals(Integer.MAX_VALUE, valueMap.get("intKey"));
     assertTrue(valueMap.get("longKey") instanceof Long);
     assertEquals(Long.MAX_VALUE, valueMap.get("longKey"));
-    // float converts to double
-    assertTrue(valueMap.get("floatKey") instanceof Double);
-    assertEquals(1.0d, valueMap.get("floatKey"));
+
+    assertTrue(valueMap.get("floatKey") instanceof Float);
+    assertEquals(1.0f, valueMap.get("floatKey"));
     assertTrue(valueMap.get("doubleKey") instanceof Double);
     assertEquals(Double.MAX_VALUE, valueMap.get("doubleKey"));
-    // byte[] converts to string
-    assertTrue(valueMap.get("byteKey") instanceof String);
-    assertEquals("ABC", valueMap.get("byteKey"));
+
+    assertTrue(valueMap.get("byteKey") instanceof byte[]);
+    assertEquals("ABC", new String((byte[]) valueMap.get("byteKey")));
     assertTrue(valueMap.get("stringKey") instanceof String);
     assertEquals("abc", valueMap.get("stringKey"));
   }
@@ -873,5 +876,26 @@ public class TestSchemaBuilder {
     Schema a2 = new Schema.Parser().parse(a1.toString());
 
     assertEquals(a2, a1);
+  }
+
+  @Test
+  void namesAcceptAll() throws InterruptedException {
+    // Ensure that Schema.setNameValidator won't interfere with others unit tests.
+    Runnable r = () -> {
+      Schema.setNameValidator(NameValidator.NO_VALIDATION);
+      final Schema schema = SchemaBuilder.record("7name").fields().name("123").type(Schema.create(Schema.Type.INT))
+          .noDefault().endRecord();
+      Assertions.assertNotNull(schema);
+      Assertions.assertEquals("7name", schema.getName());
+      final Schema.Field field = schema.getField("123");
+      Assertions.assertEquals("123", field.name());
+    };
+
+    final Throwable[] exception = new Throwable[] { null };
+    Thread t = new Thread(r);
+    t.setUncaughtExceptionHandler((Thread th, Throwable e) -> exception[0] = e);
+    t.start();
+    t.join();
+    Assertions.assertNull(exception[0], () -> exception[0].getMessage());
   }
 }

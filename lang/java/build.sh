@@ -16,6 +16,7 @@
 # limitations under the License.
 
 set -e
+set -x
 
 usage() {
   echo "Usage: $0 {lint|test|dist|clean}"
@@ -31,9 +32,9 @@ main() {
         mvn -B spotless:apply
         ;;
       test)
-        mvn -B test
+        mvn -B verify
         # Test the modules that depend on hadoop using Hadoop 2
-        mvn -B test -Phadoop2
+        mvn -Dmaven.build.cache.enabled=false -B test -Phadoop2
         ;;
       dist)
         mvn -P dist package -DskipTests javadoc:aggregate

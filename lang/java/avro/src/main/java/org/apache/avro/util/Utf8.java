@@ -24,9 +24,7 @@ import java.io.ObjectOutput;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.io.BinaryData;
-import org.slf4j.LoggerFactory;
+import org.apache.avro.SystemLimitException;
 
 /**
  * A Utf8 string. Unlike {@link String}, instances are mutable. This is more
@@ -34,22 +32,8 @@ import org.slf4j.LoggerFactory;
  * as a single instance may be reused.
  */
 public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
-  private static final String MAX_LENGTH_PROPERTY = "org.apache.avro.limits.string.maxLength";
-  private static final int MAX_LENGTH;
-  private static final byte[] EMPTY = new byte[0];
 
-  static {
-    String o = System.getProperty(MAX_LENGTH_PROPERTY);
-    int i = Integer.MAX_VALUE;
-    if (o != null) {
-      try {
-        i = Integer.parseUnsignedInt(o);
-      } catch (NumberFormatException nfe) {
-        LoggerFactory.getLogger(Utf8.class).warn("Could not parse property " + MAX_LENGTH_PROPERTY + ": " + o, nfe);
-      }
-    }
-    MAX_LENGTH = i;
-  }
+  private static final byte[] EMPTY = new byte[0];
 
   private byte[] bytes;
   private int hash;
@@ -57,13 +41,14 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
   private String string;
 
   public Utf8() {
-    bytes = EMPTY;
+    this.bytes = EMPTY;
+    this.hash = 1;
   }
 
   public Utf8(String string) {
     byte[] bytes = getBytesFor(string);
     int length = bytes.length;
-    checkLength(length);
+    SystemLimitException.checkMaxStringLength(length);
     this.bytes = bytes;
     this.length = length;
     this.string = string;
@@ -78,26 +63,21 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
 
   public Utf8(byte[] bytes) {
     int length = bytes.length;
-    checkLength(length);
+    SystemLimitException.checkMaxStringLength(length);
     this.bytes = bytes;
     this.length = length;
   }
 
   /**
-   * Return UTF-8 encoded bytes. Only valid through {@link #getByteLength()}.
+   * Return UTF-8 encoded bytes. Only valid through {@link #getByteLength()}
+   * assuming the bytes have been fully copied into the underlying buffer from the
+   * source.
+   *
+   * @see #setByteLength(int)
+   * @return a reference to the underlying byte array
    */
   public byte[] getBytes() {
     return bytes;
-  }
-
-  /**
-   * Return length in bytes.
-   *
-   * @deprecated call {@link #getByteLength()} instead.
-   */
-  @Deprecated
-  public int getLength() {
-    return length;
   }
 
   /** Return length in bytes. */
@@ -106,24 +86,27 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
   }
 
   /**
-   * Set length in bytes. Should called whenever byte content changes, even if the
-   * length does not change, as this also clears the cached String.
+   * Set length in bytes. When calling this method, even if the new length is the
+   * same as the current length, the cached contents of this Utf8 object will be
+   * wiped out. After calling this method, no assumptions should be made about the
+   * internal state (e.g., contents, hashcode, equality, etc.) of this Utf8 String
+   * other than the internal buffer being large enough to accommodate a String of
+   * the new length. This should be called immediately before reading a String
+   * from the underlying data source.
    *
-   * @deprecated call {@link #setByteLength(int)} instead.
-   */
-  @Deprecated
-  public Utf8 setLength(int newLength) {
-    return setByteLength(newLength);
-  }
-
-  /**
-   * Set length in bytes. Should called whenever byte content changes, even if the
-   * length does not change, as this also clears the cached String.
+   * @param newLength the new length of the underlying buffer
+   * @return a reference to this object.
+   * @see org.apache.avro.io.BinaryDecoder#readString(Utf8)
    */
   public Utf8 setByteLength(int newLength) {
-    checkLength(newLength);
+    SystemLimitException.checkMaxStringLength(newLength);
+
+    // Note that if the buffer size increases, the internal buffer is zero-ed out.
+    // If the buffer is large enough, just the length pointer moves and the old
+    // contents remain. For consistency's sake, we could zero-out the buffer in
+    // both cases, but would be a perf hit.
     if (this.bytes.length < newLength) {
-      this.bytes = Arrays.copyOf(this.bytes, newLength);
+      this.bytes = new byte[newLength];
     }
     this.length = newLength;
     this.string = null;
@@ -135,7 +118,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
   public Utf8 set(String string) {
     byte[] bytes = getBytesFor(string);
     int length = bytes.length;
-    checkLength(length);
+    SystemLimitException.checkMaxStringLength(length);
     this.bytes = bytes;
     this.length = length;
     this.string = string;
@@ -173,6 +156,10 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
     Utf8 that = (Utf8) o;
     if (!(this.length == that.length))
       return false;
+    // For longer strings, leverage vectorization (JDK 9+) to determine equality
+    // For shorter strings, the overhead of this method defeats the value
+    if (this.length > 7)
+      return Arrays.equals(this.bytes, 0, this.length, that.bytes, 0, that.length);
     byte[] thatBytes = that.bytes;
     for (int i = 0; i < this.length; i++)
       if (bytes[i] != thatBytes[i])
@@ -186,6 +173,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
     if (h == 0) {
       byte[] bytes = this.bytes;
       int length = this.length;
+      h = 1;
       for (int i = 0; i < length; i++) {
         h = h * 31 + bytes[i];
       }
@@ -196,7 +184,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
 
   @Override
   public int compareTo(Utf8 that) {
-    return BinaryData.compareBytes(this.bytes, 0, this.length, that.bytes, 0, that.length);
+    return Arrays.compare(this.bytes, 0, this.length, that.bytes, 0, that.length);
   }
 
   // CharSequence implementation
@@ -213,12 +201,6 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
   @Override
   public CharSequence subSequence(int start, int end) {
     return toString().subSequence(start, end);
-  }
-
-  private static void checkLength(int length) {
-    if (length > MAX_LENGTH) {
-      throw new AvroRuntimeException("String length " + length + " exceeds maximum allowed");
-    }
   }
 
   /** Gets the UTF-8 bytes for a String */

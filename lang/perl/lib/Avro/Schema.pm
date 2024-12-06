@@ -20,12 +20,12 @@ use strict;
 use warnings;
 
 use Carp;
-use JSON::XS();
+use JSON::MaybeXS ();
 use Try::Tiny;
 
 our $VERSION = '++MODULE_VERSION++';
 
-my $json = JSON::XS->new->allow_nonref;
+my $json = JSON::MaybeXS->new->allow_nonref;
 
 sub parse {
     my $schema      = shift;
@@ -276,6 +276,14 @@ sub is_data_valid {
     my $schema = shift;
     my $data = shift;
     my $type = $schema->{type};
+
+    if ($type eq 'null') {
+        return ! defined $data;
+    }
+
+    # undef isn't valid for any other types
+    return 0 unless defined $data;
+
     if ($type eq 'int') {
         no warnings;
         my $packed_int = pack "l", $data;
@@ -305,16 +313,17 @@ sub is_data_valid {
     if ($type eq 'float' or $type eq 'double') {
         $data =~ /^$RE{num}{real}$/ ? return 1 : 0;
     }
-    if ($type eq "bytes" or $type eq "string") {
-        return 1 unless !defined $data or ref $data;
+    if ($type eq 'bytes') {
+        return 0 if ref $data;
+        return 1 unless utf8::is_utf8($data) and $data =~ /[^\x00-\xFF]/;
     }
-    if ($type eq 'null') {
-        return defined $data ? 0 : 1;
+    if ($type eq 'string') {
+        return 1 unless ref $data;
     }
     if ($type eq 'boolean') {
+        return 1 if JSON::PP::is_bool($data);
         return 0 if ref $data; # sometimes risky
-        return 1 if $data =~ m{yes|no|y|n|t|f|true|false}i;
-        return 0;
+        return $data =~ m{^(?:yes|no|y|n|t|f|true|false|0|1)$}i;
     }
     return 0;
 }
@@ -802,11 +811,10 @@ sub new {
 }
 
 sub is_data_valid {
-    my $schema = shift;
-    my $default = shift;
-    my $size = $schema->{size};
-    return 1 if $default && bytes::length $default == $size;
-    return 0;
+    my ( $schema, $data ) = @_;
+
+    return 0 if utf8::is_utf8($data) && $data =~ /[^\x00-\xFF]/;
+    return $data && length($data) == $schema->{size};
 }
 
 sub size {

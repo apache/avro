@@ -18,6 +18,18 @@
 
 package org.apache.avro.mojo;
 
+import org.apache.avro.LogicalTypes;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.generic.GenericData;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.model.fileset.FileSet;
+import org.apache.maven.shared.model.fileset.util.FileSetManager;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -26,16 +38,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-
-import org.apache.avro.LogicalTypes;
-import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.model.fileset.FileSet;
-import org.apache.maven.shared.model.fileset.util.FileSetManager;
 
 /**
  * Base for Avro Compiler Mojos.
@@ -130,6 +134,20 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected String[] velocityToolsClassesNames = new String[0];
 
   /**
+   * Generated record schema classes will extend this class.
+   *
+   * @parameter property="recordSpecificClass"
+   */
+  private String recordSpecificClass = "org.apache.avro.specific.SpecificRecordBase";
+
+  /**
+   * Generated error schema classes will extend this class.
+   *
+   * @parameter property="errorSpecificClass"
+   */
+  private String errorSpecificClass = "org.apache.avro.specific.SpecificExceptionBase";
+
+  /**
    * The createOptionalGetters parameter enables generating the getOptional...
    * methods that return an Optional of the requested type. This works ONLY on
    * Java 8+
@@ -163,6 +181,19 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * @parameter default-value="true"
    */
   protected boolean createSetters;
+
+  /**
+   * The createNullSafeAnnotations parameter adds JetBrains {@literal @}Nullable
+   * and {@literal @}NotNull annotations for fhe fields of the record. The default
+   * is to not include annotations.
+   *
+   * @parameter property="createNullSafeAnnotations"
+   *
+   * @see <a href=
+   *      "https://www.jetbrains.com/help/idea/annotating-source-code.html#nullability-annotations">
+   *      JetBrains nullability annotations</a>
+   */
+  protected boolean createNullSafeAnnotations = false;
 
   /**
    * A set of fully qualified class names of custom
@@ -211,6 +242,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     }
 
     if (hasImports) {
+      checkImportPaths();
       for (String importedFile : imports) {
         File file = new File(importedFile);
         if (file.isDirectory()) {
@@ -238,6 +270,15 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
       String[] includedFiles = getIncludedFiles(testSourceDirectory.getAbsolutePath(), testExcludes, getTestIncludes());
       compileFiles(includedFiles, testSourceDirectory, testOutputDirectory);
       project.addTestCompileSourceRoot(testOutputDirectory.getAbsolutePath());
+    }
+  }
+
+  private void checkImportPaths() throws MojoExecutionException {
+    for (String importedFile : imports) {
+      File file = new File(importedFile);
+      if (!file.exists()) {
+        throw new MojoExecutionException("Path " + file.getAbsolutePath() + " does not exist");
+      }
     }
   }
 
@@ -273,14 +314,21 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   }
 
   private void compileFiles(String[] files, File sourceDir, File outDir) throws MojoExecutionException {
-    for (String filename : files) {
+    final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+    try {
+      Thread.currentThread().setContextClassLoader(createClassLoader());
+
+      // Need to register custom logical type factories before schema compilation.
       try {
-        // Need to register custom logical type factories before schema compilation.
         loadLogicalTypesFactories();
-        doCompile(filename, sourceDir, outDir);
       } catch (IOException e) {
-        throw new MojoExecutionException("Error compiling protocol file " + filename + " to " + outDir, e);
+        throw new MojoExecutionException("Error while loading logical types factories ", e);
       }
+      this.doCompile(files, sourceDir, outDir);
+    } catch (MalformedURLException | DependencyResolutionRequiredException e) {
+      throw new MojoExecutionException("Cannot locate classpath entries", e);
+    } finally {
+      Thread.currentThread().setContextClassLoader(contextClassLoader);
     }
   }
 
@@ -313,7 +361,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     final List<Object> velocityTools = new ArrayList<>(velocityToolsClassesNames.length);
     for (String velocityToolClassName : velocityToolsClassesNames) {
       try {
-        Class klass = Class.forName(velocityToolClassName);
+        Class<?> klass = Class.forName(velocityToolClassName);
         velocityTools.add(klass.getDeclaredConstructor().newInstance());
       } catch (Exception e) {
         throw new RuntimeException(e);
@@ -322,22 +370,74 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     return velocityTools;
   }
 
-  protected abstract void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException;
+  protected void doCompile(String[] files, File sourceDirectory, File outputDirectory) throws MojoExecutionException {
+    for (String filename : files) {
+      try {
+        doCompile(filename, sourceDirectory, outputDirectory);
+      } catch (IOException e) {
+        throw new MojoExecutionException("Error compiling file " + filename + " to " + outputDirectory, e);
+      }
+    }
+  }
 
-  protected URLClassLoader createClassLoader() throws DependencyResolutionRequiredException, MalformedURLException {
+  protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
+    throw new UnsupportedOperationException(
+        "Programmer error: AbstractAvroMojo.doCompile(String, java.io.File, java.io.File) called directly");
+  };
+
+  protected void doCompile(File sourceFileForModificationDetection, Collection<Schema> schemas, File outputDirectory)
+      throws IOException {
+    doCompile(sourceFileForModificationDetection, new SpecificCompiler(schemas), outputDirectory);
+  }
+
+  protected void doCompile(File sourceFileForModificationDetection, Protocol protocol, File outputDirectory)
+      throws IOException {
+    doCompile(sourceFileForModificationDetection, new SpecificCompiler(protocol), outputDirectory);
+  }
+
+  private void doCompile(File sourceFileForModificationDetection, SpecificCompiler compiler, File outputDirectory)
+      throws IOException {
+    compiler.setTemplateDir(templateDirectory);
+    compiler.setStringType(GenericData.StringType.valueOf(stringType));
+    compiler.setFieldVisibility(getFieldVisibility());
+    compiler.setCreateOptionalGetters(createOptionalGetters);
+    compiler.setGettersReturnOptional(gettersReturnOptional);
+    compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
+    compiler.setCreateSetters(createSetters);
+    compiler.setCreateNullSafeAnnotations(createNullSafeAnnotations);
+    compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
+    try {
+      for (String customConversion : customConversions) {
+        compiler.addCustomConversion(Thread.currentThread().getContextClassLoader().loadClass(customConversion));
+      }
+    } catch (ClassNotFoundException e) {
+      throw new IOException(e);
+    }
+    compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
+    compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
+    compiler.setRecordSpecificClass(this.recordSpecificClass);
+    compiler.setErrorSpecificClass(this.errorSpecificClass);
+    compiler.compileToDestination(sourceFileForModificationDetection, outputDirectory);
+  }
+
+  protected List<URL> findClasspath() throws DependencyResolutionRequiredException, MalformedURLException {
     final List<URL> urls = appendElements(project.getRuntimeClasspathElements());
     urls.addAll(appendElements(project.getTestClasspathElements()));
+    return urls;
+  }
+
+  protected URLClassLoader createClassLoader() throws DependencyResolutionRequiredException, MalformedURLException {
+    final List<URL> urls = findClasspath();
     return new URLClassLoader(urls.toArray(new URL[0]), Thread.currentThread().getContextClassLoader());
   }
 
-  private List<URL> appendElements(List runtimeClasspathElements) throws MalformedURLException {
+  private List<URL> appendElements(List<String> runtimeClasspathElements) throws MalformedURLException {
     if (runtimeClasspathElements == null) {
       return new ArrayList<>();
     }
     List<URL> runtimeUrls = new ArrayList<>(runtimeClasspathElements.size());
-    for (Object runtimeClasspathElement : runtimeClasspathElements) {
-      String element = (String) runtimeClasspathElement;
-      runtimeUrls.add(new File(element).toURI().toURL());
+    for (String runtimeClasspathElement : runtimeClasspathElements) {
+      runtimeUrls.add(new File(runtimeClasspathElement).toURI().toURL());
     }
     return runtimeUrls;
   }

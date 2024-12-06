@@ -75,7 +75,7 @@ module Avro
       def read_float
         # A float is written as 4 bytes.
         # The float is converted into a 32-bit integer using a method
-        # equivalent to Java's floatToIntBits and then encoded in
+        # equivalent to Java's floatToRawIntBits and then encoded in
         # little-endian format.
         read_and_unpack(4, 'e')
       end
@@ -83,7 +83,7 @@ module Avro
       def read_double
         #  A double is written as 8 bytes.
         # The double is converted into a 64-bit integer using a method
-        # equivalent to Java's doubleToLongBits and then encoded in
+        # equivalent to Java's doubleToRawLongBits and then encoded in
         # little-endian format.
         read_and_unpack(8, 'E')
       end
@@ -203,7 +203,7 @@ module Avro
 
       # A float is written as 4 bytes.
       # The float is converted into a 32-bit integer using a method
-      # equivalent to Java's floatToIntBits and then encoded in
+      # equivalent to Java's floatToRawIntBits and then encoded in
       # little-endian format.
       def write_float(datum)
         @writer.write([datum].pack('e'))
@@ -211,7 +211,7 @@ module Avro
 
       # A double is written as 8 bytes.
       # The double is converted into a 64-bit integer using a method
-      # equivalent to Java's doubleToLongBits and then encoded in
+      # equivalent to Java's doubleToRawLongBits and then encoded in
       # little-endian format.
       def write_double(datum)
         @writer.write([datum].pack('E'))
@@ -390,31 +390,31 @@ module Avro
 
       def read_default_value(field_schema, default_value)
         # Basically a JSON Decoder?
-        case field_schema.type_sym
+        datum = case field_schema.type_sym
         when :null
-          return nil
+          nil
         when :int, :long
-          return Integer(default_value)
+          Integer(default_value)
         when :float, :double
-          return Float(default_value)
+          Float(default_value)
         when :boolean, :enum, :fixed, :string, :bytes
-          return default_value
+          default_value
         when :array
           read_array = []
           default_value.each do |json_val|
             item_val = read_default_value(field_schema.items, json_val)
             read_array << item_val
           end
-          return read_array
+          read_array
         when :map
           read_map = {}
           default_value.each do |key, json_val|
             map_val = read_default_value(field_schema.values, json_val)
             read_map[key] = map_val
           end
-          return read_map
+          read_map
         when :union
-          return read_default_value(field_schema.schemas[0], default_value)
+          read_default_value(field_schema.schemas[0], default_value)
         when :record, :error
           read_record = {}
           field_schema.fields.each do |field|
@@ -423,11 +423,13 @@ module Avro
             field_val = read_default_value(field.type, json_val)
             read_record[field.name] = field_val
           end
-          return read_record
+          read_record
         else
           fail_msg = "Unknown type: #{field_schema.type}"
           raise AvroError, fail_msg
         end
+
+        field_schema.type_adapter.decode(datum)
       end
 
       def skip_data(writers_schema, decoder)

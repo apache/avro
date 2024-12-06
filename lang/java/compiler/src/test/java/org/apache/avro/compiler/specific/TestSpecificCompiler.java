@@ -26,6 +26,20 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.generic.GenericData.StringType;
+import org.apache.avro.specific.SpecificData;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,29 +51,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
-import org.apache.avro.AvroTypeException;
-
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.avro.LogicalType;
-import org.apache.avro.LogicalTypes;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
-import org.apache.avro.generic.GenericData.StringType;
-import org.apache.avro.specific.SpecificData;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TestSpecificCompiler {
   private static final Logger LOG = LoggerFactory.getLogger(TestSpecificCompiler.class);
@@ -393,6 +395,7 @@ public class TestSpecificCompiler {
     Schema timeMicrosSchema = LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampMicrosSchema = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+    Schema timestampNanosSchema = LogicalTypes.timestampNanos().addToSchema(Schema.create(Schema.Type.LONG));
 
     // Date/time types should always use upper level java classes
     assertEquals("java.time.LocalDate", compiler.javaType(dateSchema), "Should use java.time.LocalDate for date type");
@@ -404,6 +407,8 @@ public class TestSpecificCompiler {
         "Should use java.time.LocalTime for time-micros type");
     assertEquals("java.time.Instant", compiler.javaType(timestampMicrosSchema),
         "Should use java.time.Instant for timestamp-micros type");
+    assertEquals("java.time.Instant", compiler.javaType(timestampNanosSchema),
+        "Should use java.time.Instant for timestamp-nanos type");
   }
 
   @Test
@@ -582,15 +587,18 @@ public class TestSpecificCompiler {
     // present or added as converters (AVRO-2481).
     final Schema tsMillis = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
     final Schema tsMicros = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+    final Schema tsNanos = LogicalTypes.timestampNanos().addToSchema(Schema.create(Schema.Type.LONG));
 
     final Collection<String> conversions = compiler.getUsedConversionClasses(SchemaBuilder.record("WithTimestamps")
         .fields().name("tsMillis").type(tsMillis).noDefault().name("tsMillisOpt").type().unionOf().nullType().and()
         .type(tsMillis).endUnion().noDefault().name("tsMicros").type(tsMicros).noDefault().name("tsMicrosOpt").type()
-        .unionOf().nullType().and().type(tsMicros).endUnion().noDefault().endRecord());
+        .unionOf().nullType().and().type(tsMicros).endUnion().noDefault().name("tsNanos").type(tsNanos).noDefault()
+        .name("tsNanosOpt").type().unionOf().nullType().and().type(tsNanos).endUnion().noDefault().endRecord());
 
-    assertEquals(2, conversions.size());
+    assertEquals(3, conversions.size());
     assertThat(conversions, hasItem("org.apache.avro.data.TimeConversions.TimestampMillisConversion"));
     assertThat(conversions, hasItem("org.apache.avro.data.TimeConversions.TimestampMicrosConversion"));
+    assertThat(conversions, hasItem("org.apache.avro.data.TimeConversions.TimestampNanosConversion"));
   }
 
   @Test
@@ -670,9 +678,9 @@ public class TestSpecificCompiler {
       String dstDirPrefix) throws IOException {
     Set<String> reservedIdentifiers = new HashSet<>();
     reservedIdentifiers.addAll(SpecificData.RESERVED_WORDS);
-    reservedIdentifiers.addAll(SpecificCompiler.TYPE_IDENTIFIER_RESERVED_WORDS);
-    reservedIdentifiers.addAll(SpecificCompiler.ACCESSOR_MUTATOR_RESERVED_WORDS);
-    reservedIdentifiers.addAll(SpecificCompiler.ERROR_RESERVED_WORDS);
+    reservedIdentifiers.addAll(SpecificData.TYPE_IDENTIFIER_RESERVED_WORDS);
+    reservedIdentifiers.addAll(SpecificData.ACCESSOR_MUTATOR_RESERVED_WORDS);
+    reservedIdentifiers.addAll(SpecificData.ERROR_RESERVED_WORDS);
     for (String reserved : reservedIdentifiers) {
       try {
         Schema s = new Schema.Parser().parse(schema.replace("__test__", reserved));
@@ -929,4 +937,104 @@ public class TestSpecificCompiler {
     }
   }
 
+  @Test
+  void fieldWithUnderscore_avro3826() {
+    String jsonSchema = "{\n" + "  \"name\": \"Value\",\n" + "  \"type\": \"record\",\n" + "  \"fields\": [\n"
+        + "    { \"name\": \"__deleted\",  \"type\": \"string\"\n" + "    }\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(jsonSchema))
+        .compile();
+    assertEquals(1, outputs.size());
+    SpecificCompiler.OutputFile outputFile = outputs.iterator().next();
+    assertTrue(outputFile.contents.contains("getDeleted()"));
+    assertFalse(outputFile.contents.contains("$0"));
+    assertFalse(outputFile.contents.contains("$1"));
+
+    String jsonSchema2 = "{\n" + "  \"name\": \"Value\",  \"type\": \"record\",\n" + "  \"fields\": [\n"
+        + "    { \"name\": \"__deleted\",  \"type\": \"string\"},\n"
+        + "    { \"name\": \"_deleted\",  \"type\": \"string\"}\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs2 = new SpecificCompiler(new Schema.Parser().parse(jsonSchema2))
+        .compile();
+    assertEquals(1, outputs2.size());
+    SpecificCompiler.OutputFile outputFile2 = outputs2.iterator().next();
+
+    assertTrue(outputFile2.contents.contains("getDeleted()"));
+    assertTrue(outputFile2.contents.contains("getDeleted$0()"));
+    assertFalse(outputFile.contents.contains("$1"));
+
+    String jsonSchema3 = "{\n" + "  \"name\": \"Value\",  \"type\": \"record\",\n" + "  \"fields\": [\n"
+        + "    { \"name\": \"__deleted\",  \"type\": \"string\"},\n"
+        + "    { \"name\": \"_deleted\",  \"type\": \"string\"},\n"
+        + "    { \"name\": \"deleted\",  \"type\": \"string\"}\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs3 = new SpecificCompiler(new Schema.Parser().parse(jsonSchema3))
+        .compile();
+    assertEquals(1, outputs3.size());
+    SpecificCompiler.OutputFile outputFile3 = outputs3.iterator().next();
+
+    assertTrue(outputFile3.contents.contains("getDeleted()"));
+    assertTrue(outputFile3.contents.contains("getDeleted$0()"));
+    assertTrue(outputFile3.contents.contains("getDeleted$1()"));
+    assertFalse(outputFile3.contents.contains("$2"));
+
+    String jsonSchema4 = "{\n" + "  \"name\": \"Value\",  \"type\": \"record\",\n" + "  \"fields\": [\n"
+        + "    { \"name\": \"__deleted\",  \"type\": \"string\"},\n"
+        + "    { \"name\": \"_deleted\",  \"type\": \"string\"},\n"
+        + "    { \"name\": \"deleted\",  \"type\": \"string\"},\n"
+        + "    { \"name\": \"Deleted\",  \"type\": \"string\"}\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs4 = new SpecificCompiler(new Schema.Parser().parse(jsonSchema4))
+        .compile();
+    assertEquals(1, outputs4.size());
+    SpecificCompiler.OutputFile outputFile4 = outputs4.iterator().next();
+
+    assertTrue(outputFile4.contents.contains("getDeleted()"));
+    assertTrue(outputFile4.contents.contains("getDeleted$0()"));
+    assertTrue(outputFile4.contents.contains("getDeleted$1()"));
+    assertTrue(outputFile4.contents.contains("getDeleted$2()"));
+    assertFalse(outputFile4.contents.contains("$3"));
+  }
+
+  @Test
+  void docsAreEscaped_avro4053() {
+    String jsonSchema = "{\n" + "  \"protocol\": \"DummyProtocol\",\n"
+        + "  \"doc\": \"*/\\nTest escaping <threats>\\n/*\",\n" + "  \"types\" : [\n"
+        + "    {\"type\": \"fixed\", \"name\": \"Hash\", \"size\": 16, \"doc\": \"*/\\nTest escaping <threats>\\n/*\""
+        + "},\n"
+        + "    {\"type\": \"enum\", \"name\": \"Status\", \"symbols\": [\"ON\", \"OFF\"], \"doc\": \"*/\\nTest escaping <threats>\\n/*\"},\n"
+        + "   " + " {\"type\": \"record\", \"name\": \"Message\", \"fields\" : [\n"
+        + "      {\"name\": \"content\", \"type\": \"string\", \"doc\":  \"*/\\nTest escaping <threats>\\n/*\"},\n"
+        + "      {\"name\": \"status\", \"type\": \"Status\", \"doc\":  \"*/\\nTest escaping <threats>\\n/*\"},\n"
+        + "      {\"name\": \"signature\", \"type\": \"Hash\", \"doc\":  \"*/\\nTest escaping <threats>\\n/*\"}\n"
+        + "    ]}\n" + "  ],\n" + "  \"messages\" : {\n" + "    \"echo\": {\"request\": ["
+        + "{\"name\": \"msg\", \"type\": \"Message\"}"
+        + "], \"response\": \"Message\", \"doc\": \"*/\\nTest escaping <threats>\\n/*\"}\n" + "  },\n"
+        + "  \"javaAnnotation\": [\n" + "    \"Deprecated(forRemoval = true, since = \\\"forever\\\")\",\n"
+        + "    \"SuppressWarnings(\\\"ALL\\\")\",\n" + "    \"SuppressWarnings(\\\"CodeInjection\\\")/*\",\n"
+        + "    \" This is inside a comment as each line is prefixed with @\",\n"
+        + "    \" and the next bit is really dangerous... */ static { System.exit(); }\"\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(Protocol.parse(jsonSchema)).compile();
+    for (SpecificCompiler.OutputFile outputFile : outputs) {
+      assertFalse(outputFile.contents.contains("*/\\nTest escaping <threats>\\n/*"), "Threats present?");
+
+      int expectedEscapeCount = countOccurrences(Pattern.compile("Test escaping", Pattern.LITERAL),
+          outputFile.contents);
+      int escapedJavaDocCount = countOccurrences(Pattern.compile("\\*&#47;\\s*Test escaping &lt;threats&gt;\\s*/\\*"),
+          outputFile.contents);
+      // noinspection RegExpRedundantEscape
+      int escapedDocStringCount = countOccurrences(
+          Pattern.compile("\\\"doc\\\":\\\"*/\\\\nTest escaping <threats>\\\\n/*\\\"", Pattern.LITERAL),
+          outputFile.contents);
+      assertEquals(expectedEscapeCount, escapedJavaDocCount + escapedDocStringCount,
+          "Escaped threats in " + outputFile.path);
+
+      assertFalse(Pattern.compile("\\{ System.exit\\(\\); }(?!\\\\\")").matcher(outputFile.contents).find(),
+          "Code injection present? " + outputFile.contents);
+    }
+  }
+
+  private int countOccurrences(Pattern pattern, String textToSearch) {
+    int count = 0;
+    for (Matcher matcher = pattern.matcher(textToSearch); matcher.find();) {
+      count++;
+    }
+    return count;
+  }
 }

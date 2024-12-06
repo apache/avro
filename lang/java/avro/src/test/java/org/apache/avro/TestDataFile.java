@@ -17,19 +17,6 @@
  */
 package org.apache.avro;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.stream.Stream;
-
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
@@ -40,17 +27,32 @@ import org.apache.avro.file.Syncable;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.RandomData;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestDataFile {
   private static final Logger LOG = LoggerFactory.getLogger(TestDataFile.class);
@@ -85,6 +87,14 @@ public class TestDataFile {
   private static final String SCHEMA_JSON = "{\"type\": \"record\", \"name\": \"Test\", \"fields\": ["
       + "{\"name\":\"stringField\", \"type\":\"string\"}," + "{\"name\":\"longField\", \"type\":\"long\"}]}";
   private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
+  private static final Object LAST_RECORD;
+  static {
+    Object lastValue = null;
+    for (Object object : new RandomData(SCHEMA, COUNT, SEED)) {
+      lastValue = object;
+    }
+    LAST_RECORD = lastValue;
+  }
 
   private File makeFile(CodecFactory codec) {
     return new File(DIR, "test-" + codec + ".avro");
@@ -93,22 +103,33 @@ public class TestDataFile {
   @ParameterizedTest
   @MethodSource("codecs")
   public void runTestsInOrder(CodecFactory codec) throws Exception {
-    LOG.info("Running with codec: " + codec);
-    testGenericWrite(codec);
-    testGenericRead(codec);
-    testSplits(codec);
-    testSyncDiscovery(codec);
-    testGenericAppend(codec);
-    testReadWithHeader(codec);
-    testFSync(codec, false);
-    testFSync(codec, true);
+    // Run for both encoders, but the MethodSource didn't really like it,
+    // so it is just a loop within the test
+    List<Function<OutputStream, BinaryEncoder>> encoders = new ArrayList<>();
+    encoders.add(b -> new EncoderFactory().directBinaryEncoder(b, null));
+    encoders.add(b -> new EncoderFactory().blockingDirectBinaryEncoder(b, null));
+
+    for (Function<OutputStream, BinaryEncoder> encoder : encoders) {
+      LOG.info("Running with codec: {}", codec);
+      testGenericWrite(codec, encoder);
+      testGenericRead(codec);
+      testSplits(codec);
+      testSyncDiscovery(codec);
+      testReadLastRecord(codec);
+      testGenericAppend(codec, encoder);
+      testReadWithHeader(codec);
+      testFSync(codec, encoder, false);
+      testFSync(codec, encoder, true);
+    }
   }
 
-  private void testGenericWrite(CodecFactory codec) throws IOException {
+  private void testGenericWrite(CodecFactory codec, Function<OutputStream, BinaryEncoder> encoderFunc)
+      throws IOException {
     DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>()).setSyncInterval(100);
     if (codec != null) {
       writer.setCodec(codec);
     }
+    writer.setEncoder(encoderFunc);
     writer.create(SCHEMA, makeFile(codec));
     try {
       int count = 0;
@@ -207,13 +228,46 @@ public class TestDataFile {
         reader.seek(sync);
         assertNotNull(reader.next());
       }
+      // Lastly, confirm that reading (but not decoding) all blocks results in the
+      // same sync points
+      reader.sync(0);
+      ArrayList<Long> syncs2 = new ArrayList<>();
+      while (reader.hasNext()) {
+        syncs2.add(reader.previousSync());
+        reader.nextBlock();
+      }
+      assertEquals(syncs, syncs2);
     }
   }
 
-  private void testGenericAppend(CodecFactory codec) throws IOException {
+  private void testReadLastRecord(CodecFactory codec) throws IOException {
+    File file = makeFile(codec);
+    try (DataFileReader<Object> reader = new DataFileReader<>(file, new GenericDatumReader<>())) {
+      long lastBlockStart = -1;
+      while (reader.hasNext()) {
+        // This algorithm can be made more efficient by checking if the underlying
+        // SeekableFileInput has been fully read: if so, the last block is in
+        // memory, and calls to next() will decode it.
+        // NOTE: this depends on the current implementation of DataFileReader.
+        lastBlockStart = reader.previousSync();
+        reader.nextBlock();
+      }
+      reader.seek(lastBlockStart);
+
+      Object lastRecord = null;
+      while (reader.hasNext()) {
+        lastRecord = reader.next(lastRecord);
+      }
+      assertEquals(LAST_RECORD, lastRecord);
+    }
+  }
+
+  private void testGenericAppend(CodecFactory codec, Function<OutputStream, BinaryEncoder> encoderFunc)
+      throws IOException {
     File file = makeFile(codec);
     long start = file.length();
     try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>()).appendTo(file)) {
+      writer.setEncoder(encoderFunc);
       for (Object datum : new RandomData(SCHEMA, COUNT, SEED + 1)) {
         writer.append(datum);
       }
@@ -254,17 +308,14 @@ public class TestDataFile {
           assertEquals(validPos, sin.tell(), "Should not move from sync point on reopen");
           assertNotNull(readerFalse.next(), "Should be able to reopen at sync point");
         }
-
       }
-
     }
-
   }
 
   @Test
   public void syncInHeader() throws IOException {
-    try (DataFileReader<Object> reader = new DataFileReader<>(new File("../../../share/test/data/syncInMeta.avro"),
-        new GenericDatumReader<>())) {
+    try (DataFileReader<Object> reader = new DataFileReader<>(
+        new File("target/test-classes/share/test/data/syncInMeta.avro"), new GenericDatumReader<>())) {
       reader.sync(0);
       for (Object datum : reader)
         assertNotNull(datum);
@@ -273,7 +324,7 @@ public class TestDataFile {
 
   @Test
   public void test12() throws IOException {
-    readFile(new File("../../../share/test/data/test.avro12"), new GenericDatumReader<>());
+    readFile(new File("target/test-classes/share/test/data/test.avro12"), new GenericDatumReader<>());
   }
 
   @Test
@@ -306,8 +357,10 @@ public class TestDataFile {
     assertTrue(out.flushCount < currentCount && out.flushCount >= flushCounter);
   }
 
-  private void testFSync(CodecFactory codec, boolean useFile) throws IOException {
+  private void testFSync(CodecFactory codec, Function<OutputStream, BinaryEncoder> encoderFunc, boolean useFile)
+      throws IOException {
     try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>())) {
+      writer.setEncoder(encoderFunc);
       writer.setFlushOnEveryBlock(false);
       TestingByteArrayOutputStream out = new TestingByteArrayOutputStream();
       if (useFile) {

@@ -1,0 +1,144 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: 'Test Perl on ARM'
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    paths:
+    - .github/workflows/test-lang-perl.yml
+    - lang/perl/**
+
+defaults:
+  run:
+    working-directory: lang/perl
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Perl ${{ matrix.perl }} Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        perl:
+        - '5.32'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: ${{ matrix.perl }}
+
+      - name: Install Dependencies
+        run: |
+          cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
+                                                       Encode \
+                                                       Error::Simple \
+                                                       JSON::MaybeXS \
+                                                       Module::Install \
+                                                       Module::Install::ReadmeFromPod \
+                                                       Object::Tiny \
+                                                       Perl::Critic \
+                                                       Regexp::Common \
+                                                       Test::Exception \
+                                                       Test::More \
+                                                       Test::Pod \
+                                                       Try::Tiny
+
+      - name: Lint
+        run: ./build.sh lint
+
+      - name: Test
+        run: ./build.sh test
+
+  interop:
+    name: Perl ${{ matrix.perl }} Interop
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        perl:
+        - '5.32'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: ${{ matrix.perl }}
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get -qqy install --no-install-recommends libjansson-dev \
+                                                            libsnappy-dev
+          cpanm --mirror https://www.cpan.org/ install CPAN::Uploader \
+                                                       Compress::Zstd \
+                                                       Encode \
+                                                       Error::Simple \
+                                                       JSON::MaybeXS \
+                                                       Module::Install \
+                                                       Module::Install::ReadmeFromPod \
+                                                       Object::Tiny \
+                                                       Perl::Critic \
+                                                       Regexp::Common \
+                                                       Test::Exception \
+                                                       Test::More \
+                                                       Test::Pod \
+                                                       Try::Tiny
+
+      - name: Cache Local Maven Repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: 'Setup Temurin JDK 8, 11, 17 & 21'
+        uses: actions/setup-java@6a0805fcefea3d4657a47ac4c165951e33482018 # v4.2.2
+        with:
+          distribution: 'temurin'
+          java-version: |
+            8
+            11
+            17
+            21
+
+      - name: 'Setup Maven 3.9.6'
+        uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
+        with:
+          maven-version: 3.9.6
+
+      - name: Install Java Avro for Interop Test
+        working-directory: .
+        run: mvn -B install -PskipQuality
+
+      - name: Create Interop Data Directory
+        working-directory: .
+        run: mkdir -p build/interop/data
+
+      - name: Generate Interop Resources
+        working-directory: lang/java/avro
+        run: mvn -B -P interop-data-generate generate-resources
+
+      - name: Generate Interop Data
+        run: ./build.sh interop-data-generate
+
+      - name: Run Interop Tests
+        run: ./build.sh interop-data-test

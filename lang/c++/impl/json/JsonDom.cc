@@ -25,9 +25,6 @@
 #include "JsonIO.hh"
 #include "Stream.hh"
 
-using boost::format;
-using std::string;
-
 namespace avro {
 namespace json {
 const char *typeToString(EntityType t) {
@@ -142,19 +139,18 @@ void writeEntity(JsonGenerator<JsonNullFormatter> &g, const Entity &n) {
 
 void Entity::ensureType(EntityType type) const {
     if (type_ != type) {
-        format msg = format("Invalid type. Expected \"%1%\" actual %2%") % typeToString(type) % typeToString(type_);
-        throw Exception(msg);
+        throw Exception("Invalid type. Expected \"{}\" actual {}", typeToString(type), typeToString(type_));
     }
 }
 
 String Entity::stringValue() const {
     ensureType(EntityType::String);
-    return JsonParser::toStringValue(**boost::any_cast<std::shared_ptr<String>>(&value_));
+    return JsonParser::toStringValue(**std::any_cast<std::shared_ptr<String>>(&value_));
 }
 
 String Entity::bytesValue() const {
     ensureType(EntityType::String);
-    return JsonParser::toBytesValue(**boost::any_cast<std::shared_ptr<String>>(&value_));
+    return JsonParser::toBytesValue(**std::any_cast<std::shared_ptr<String>>(&value_));
 }
 
 std::string Entity::toString() const {

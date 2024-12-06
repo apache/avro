@@ -18,7 +18,6 @@
 # limitations under the License.
 
 import io
-import os
 import subprocess
 import sys
 import time

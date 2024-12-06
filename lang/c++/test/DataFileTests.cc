@@ -123,7 +123,7 @@ static ValidSchema makeValidSchema(const char *schema) {
     istringstream iss(schema);
     ValidSchema vs;
     compileJsonSchema(iss, vs);
-    return ValidSchema(vs);
+    return vs;
 }
 
 static const char sch[] = "{\"type\": \"record\","
@@ -217,7 +217,7 @@ public:
 #endif
 
     void testWriteWithCodec(avro::Codec codec) {
-        avro::DataFileWriter<ComplexInteger> df(filename, writerSchema, 100);
+        avro::DataFileWriter<ComplexInteger> df(filename, writerSchema, 100, codec);
         int64_t re = 3;
         int64_t im = 5;
         for (int i = 0; i < count; ++i, re *= im, im += 3) {
@@ -405,7 +405,7 @@ public:
         }
         std::set<pair<int64_t, int64_t>> actual;
         int num = 0;
-        for (int i = sync_points.size() - 2; i >= 0; --i) {
+        for (ssize_t i = sync_points.size() - 2; i >= 0; --i) {
             df.seek(sync_points[i]);
             ComplexInteger ci;
             // Subtract avro::SyncSize here because sync and pastSync
@@ -471,9 +471,7 @@ public:
     void testReaderSplits() {
         boost::mt19937 random(static_cast<uint32_t>(time(nullptr)));
         avro::DataFileReader<ComplexInteger> df(filename, writerSchema);
-        std::ifstream just_for_length(
-            filename, std::ifstream::ate | std::ifstream::binary);
-        int length = just_for_length.tellg();
+        int length = static_cast<int>(boost::filesystem::file_size(filename));
         int splits = 10;
         int end = length;     // end of split
         int remaining = end;  // bytes remaining
@@ -575,7 +573,7 @@ public:
         }
         {
             avro::DataFileReader<ComplexInteger> reader(filename, dschema);
-            std::vector<int> found;
+            std::vector<int64_t> found;
             ComplexInteger record;
             while (reader.read(record)) {
                 found.push_back(record.re);
@@ -696,7 +694,7 @@ struct codec_traits<ReaderObj> {
         if (auto *rd =
                 dynamic_cast<avro::ResolvingDecoder *>(&d)) {
             const std::vector<size_t> fo = rd->fieldOrder();
-            for (unsigned long it : fo) {
+            for (const auto it : fo) {
                 switch (it) {
                     case 0: {
                         avro::decode(d, v.s2);
@@ -948,7 +946,7 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
         std::unique_ptr<avro::InputStream>
             inputStream = avro::memoryInputStream(stitchedData.data(), stitchedData.size());
 
-        int recordsUptoRecordToRead = recordToRead - recordsUptoLastSync;
+        size_t recordsUptoRecordToRead = recordToRead - recordsUptoLastSync;
 
         // Ensure this is not the first record in the chunk.
         BOOST_CHECK_GT(recordsUptoRecordToRead, 0);
@@ -956,7 +954,7 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
         avro::DataFileReader<TestRecord> df(std::move(inputStream));
         TestRecord readRecord("", 0);
         //::printf("\nReading %d rows until specific record is reached", recordsUptoRecordToRead);
-        for (int index = 0; index < recordsUptoRecordToRead; index++) {
+        for (size_t index = 0; index < recordsUptoRecordToRead; index++) {
             BOOST_CHECK_EQUAL(df.read(readRecord), true);
 
             int64_t expectedId = (recordToRead - recordsUptoRecordToRead + index);
@@ -1004,7 +1002,7 @@ void testReadRecordEfficientlyUsingLastSyncSnappyCodec() {
 #endif
 
 test_suite *
-init_unit_test_suite(int argc, char *argv[]) {
+init_unit_test_suite(int, char *[]) {
     {
         auto *ts = BOOST_TEST_SUITE("DataFile tests: test0.df");
         shared_ptr<DataFileTest> t1(new DataFileTest("test1.d0", sch, isch, 0));
@@ -1097,7 +1095,7 @@ init_unit_test_suite(int argc, char *argv[]) {
         shared_ptr<DataFileTest> t9(new DataFileTest("test9.df", sch, sch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t9));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReaderSyncSeek, t9));
-        //ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t9));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t9));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {

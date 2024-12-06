@@ -258,11 +258,11 @@ public class TestReflectLogicalTypes {
     });
 
     LogicalTypes.register("pair", new LogicalTypes.LogicalTypeFactory() {
-      private final LogicalType PAIR = new LogicalType("pair");
+      private final LogicalType pair = new LogicalType("pair");
 
       @Override
       public LogicalType fromSchema(Schema schema) {
-        return PAIR;
+        return pair;
       }
 
       @Override
@@ -410,61 +410,21 @@ public class TestReflectLogicalTypes {
   }
 
   @Test
-  void readUUIDMissingLogicalTypeUnsafe() throws IOException {
-    String unsafeValue = System.getProperty("avro.disable.unsafe");
-    try {
-      // only one FieldAccess can be set per JVM
-      System.clearProperty("avro.disable.unsafe");
-      Assumptions.assumeTrue(ReflectionUtil.getFieldAccess() instanceof FieldAccessUnsafe);
-
-      Schema uuidSchema = SchemaBuilder.record(RecordWithUUID.class.getName()).fields().requiredString("uuid")
-          .endRecord();
-      LogicalTypes.uuid().addToSchema(uuidSchema.getField("uuid").schema());
-
-      UUID u1 = UUID.randomUUID();
-
-      RecordWithStringUUID r1 = new RecordWithStringUUID();
-      r1.uuid = u1.toString();
-
-      File test = write(ReflectData.get().getSchema(RecordWithStringUUID.class), r1);
-
-      RecordWithUUID datum = (RecordWithUUID) read(ReflectData.get().createDatumReader(uuidSchema), test).get(0);
-      Object uuid = datum.uuid;
-      assertTrue(uuid instanceof String, "UUID should be a String (unsafe)");
-    } finally {
-      if (unsafeValue != null) {
-        System.setProperty("avro.disable.unsafe", unsafeValue);
-      }
-    }
-  }
-
-  @Test
   void readUUIDMissingLogicalTypeReflect() throws IOException {
-    final String unsafeValue = System.getProperty("avro.disable.unsafe");
-    // only one FieldAccess can be set per JVM
-    System.setProperty("avro.disable.unsafe", "true");
-    try {
-      Assumptions.assumeTrue(ReflectionUtil.getFieldAccess() instanceof FieldAccessReflect);
+    Assumptions.assumeTrue(ReflectionUtil.getFieldAccess() instanceof FieldAccessReflect);
 
-      Schema uuidSchema = SchemaBuilder.record(RecordWithUUID.class.getName()).fields().requiredString("uuid")
-          .endRecord();
-      LogicalTypes.uuid().addToSchema(uuidSchema.getField("uuid").schema());
+    Schema uuidSchema = SchemaBuilder.record(RecordWithUUID.class.getName()).fields().requiredString("uuid")
+        .endRecord();
+    LogicalTypes.uuid().addToSchema(uuidSchema.getField("uuid").schema());
 
-      UUID u1 = UUID.randomUUID();
+    UUID u1 = UUID.randomUUID();
 
-      RecordWithStringUUID r1 = new RecordWithStringUUID();
-      r1.uuid = u1.toString();
+    RecordWithStringUUID r1 = new RecordWithStringUUID();
+    r1.uuid = u1.toString();
 
-      File test = write(ReflectData.get().getSchema(RecordWithStringUUID.class), r1);
-      assertThrows(IllegalArgumentException.class,
-          () -> read(ReflectData.get().createDatumReader(uuidSchema), test).get(0));
-    } finally {
-      if (unsafeValue != null) {
-        System.setProperty("avro.disable.unsafe", unsafeValue);
-      } else {
-        System.clearProperty("avro.disable.unsafe");
-      }
-    }
+    File test = write(ReflectData.get().getSchema(RecordWithStringUUID.class), r1);
+    assertThrows(IllegalArgumentException.class,
+        () -> read(ReflectData.get().createDatumReader(uuidSchema), test).get(0));
   }
 
   @Test
@@ -768,6 +728,6 @@ class RecordWithTimestamps {
       return false;
     }
     RecordWithTimestamps that = (RecordWithTimestamps) obj;
-    return Objects.equals(that.localDateTime, that.localDateTime);
+    return Objects.equals(localDateTime, that.localDateTime);
   }
 }

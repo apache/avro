@@ -17,38 +17,29 @@
  */
 package org.apache.avro;
 
-import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
-import static org.apache.avro.TestSchemas.*;
-
-import java.util.Arrays;
-
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
 
-@RunWith(Parameterized.class)
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
+
+import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
+import static org.apache.avro.TestSchemas.A_INT_B_DINT_RECORD1;
+import static org.apache.avro.TestSchemas.A_INT_RECORD1;
+import static org.apache.avro.TestSchemas.EMPTY_RECORD1;
+
 public class TestSchemaCompatibilityReaderFieldMissingDefaultValue {
-  @Parameters(name = "r: {0} | w: {1}")
-  public static Iterable<Object[]> data() {
-    Object[][] fields = { //
-        { A_INT_RECORD1, EMPTY_RECORD1, "a", "/fields/0" }, { A_INT_B_DINT_RECORD1, EMPTY_RECORD1, "a", "/fields/0" } };
-    return Arrays.asList(fields);
+
+  public static Stream<Arguments> data() {
+    return Stream.of(Arguments.of(A_INT_RECORD1, EMPTY_RECORD1, "a", "/fields/0"),
+        Arguments.of(A_INT_B_DINT_RECORD1, EMPTY_RECORD1, "a", "/fields/0"));
   }
 
-  @Parameter(0)
-  public Schema reader;
-  @Parameter(1)
-  public Schema writer;
-  @Parameter(2)
-  public String details;
-  @Parameter(3)
-  public String location;
-
-  @Test
-  public void testReaderFieldMissingDefaultValueSchemas() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testReaderFieldMissingDefaultValueSchemas(Schema reader, Schema writer, String details, String location) {
     validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.READER_FIELD_MISSING_DEFAULT_VALUE, details,
         location);
   }

@@ -1,0 +1,16 @@
+@namespace("org.apache.avro.gen")
+protocol UnionFwd {
+
+	record TestRecord {
+		union {SR1, SR2} unionField;
+	}
+
+	record SR1 {
+		string field;
+	}
+
+	record SR2 {
+		string field;
+	}
+
+}

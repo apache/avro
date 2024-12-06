@@ -17,23 +17,52 @@
  */
 package org.apache.avro;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericData.EnumSymbol;
+import org.apache.avro.generic.GenericData.Record;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.GenericRecordBuilder;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import static java.util.Objects.requireNonNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestSchema {
   @Test
@@ -409,4 +438,238 @@ public class TestSchema {
     assertEquals("Int", nameInt.getQualified("space"));
   }
 
+  @Test
+  void validValue() {
+    // Valid null value
+    final Schema nullSchema = Schema.create(Type.NULL);
+    assertTrue(nullSchema.isValidDefault(JsonNodeFactory.instance.nullNode()));
+
+    // Valid int value
+    final Schema intSchema = Schema.create(Type.INT);
+    assertTrue(intSchema.isValidDefault(JsonNodeFactory.instance.numberNode(12)));
+
+    // Valid Text value
+    final Schema strSchema = Schema.create(Type.STRING);
+    assertTrue(strSchema.isValidDefault(new TextNode("textNode")));
+
+    // Valid Array value
+    final Schema arraySchema = Schema.createArray(Schema.create(Type.STRING));
+    final ArrayNode arrayValue = JsonNodeFactory.instance.arrayNode();
+    assertTrue(arraySchema.isValidDefault(arrayValue)); // empty array
+
+    arrayValue.add("Hello");
+    arrayValue.add("World");
+    assertTrue(arraySchema.isValidDefault(arrayValue));
+
+    arrayValue.add(5);
+    assertFalse(arraySchema.isValidDefault(arrayValue));
+
+    // Valid Union type
+    final Schema unionSchema = Schema.createUnion(strSchema, intSchema, nullSchema);
+    assertTrue(unionSchema.isValidDefault(JsonNodeFactory.instance.textNode("Hello")));
+    assertTrue(unionSchema.isValidDefault(new IntNode(23)));
+    assertTrue(unionSchema.isValidDefault(JsonNodeFactory.instance.nullNode()));
+
+    assertFalse(unionSchema.isValidDefault(arrayValue));
+
+    // Array of union
+    final Schema arrayUnion = Schema.createArray(unionSchema);
+    final ArrayNode arrayUnionValue = JsonNodeFactory.instance.arrayNode();
+    arrayUnionValue.add("Hello");
+    arrayUnionValue.add(NullNode.getInstance());
+    assertTrue(arrayUnion.isValidDefault(arrayUnionValue));
+
+    // Union String, bytes
+    final Schema unionStrBytes = Schema.createUnion(strSchema, Schema.create(Type.BYTES));
+    assertTrue(unionStrBytes.isValidDefault(JsonNodeFactory.instance.textNode("Hello")));
+    assertFalse(unionStrBytes.isValidDefault(JsonNodeFactory.instance.numberNode(123)));
+  }
+
+  @Test
+  void enumLateDefine() {
+    String schemaString = "{\n" + "    \"type\":\"record\",\n" + "    \"name\": \"Main\",\n" + "    \"fields\":[\n"
+        + "        {\n" + "            \"name\":\"f1\",\n" + "            \"type\":\"Sub\"\n" + "        },\n"
+        + "        {\n" + "            \"name\":\"f2\",\n" + "            \"type\":{\n"
+        + "                \"type\":\"enum\",\n" + "                \"name\":\"Sub\",\n"
+        + "                \"symbols\":[\"OPEN\",\"CLOSE\"]\n" + "            }\n" + "        }\n" + "    ]\n" + "}";
+
+    final Schema schema = new Schema.Parser().parse(schemaString);
+    Schema f1Schema = schema.getField("f1").schema();
+    Schema f2Schema = schema.getField("f2").schema();
+    assertSame(f1Schema, f2Schema);
+    assertEquals(Type.ENUM, f1Schema.getType());
+    String stringSchema = schema.toString();
+    int definitionIndex = stringSchema.indexOf("\"symbols\":[\"OPEN\",\"CLOSE\"]");
+    int usageIndex = stringSchema.indexOf("\"type\":\"Sub\"");
+    assertTrue(definitionIndex < usageIndex, "usage is before definition");
+  }
+
+  @Test
+  public void testRecordInArray() {
+    String schemaString = "{\n" + "  \"type\": \"record\",\n" + "  \"name\": \"TestRecord\",\n" + "  \"fields\": [\n"
+        + "    {\n" + "      \"name\": \"value\",\n" + "      \"type\": {\n" + "        \"type\": \"record\",\n"
+        + "        \"name\": \"Container\",\n" + "        \"fields\": [\n" + "          {\n"
+        + "            \"name\": \"Optional\",\n" + "            \"type\": {\n" + "              \"type\": \"array\",\n"
+        + "              \"items\": [\n" + "                {\n" + "                  \"type\": \"record\",\n"
+        + "                  \"name\": \"optional_field_0\",\n" + "                  \"namespace\": \"\",\n"
+        + "                  \"doc\": \"\",\n" + "                  \"fields\": [\n" + "                    {\n"
+        + "                      \"name\": \"optional_field_1\",\n" + "                      \"type\": \"long\",\n"
+        + "                      \"doc\": \"\",\n" + "                      \"default\": 0\n"
+        + "                    }\n" + "                  ]\n" + "                }\n" + "              ]\n"
+        + "            }\n" + "          }\n" + "        ]\n" + "      }\n" + "    }\n" + "  ]\n" + "}";
+    final Schema schema = new Schema.Parser().parse(schemaString);
+    assertNotNull(schema);
+  }
+
+  /*
+   * @Test public void testRec() { String schemaString =
+   * "[{\"name\":\"employees\",\"type\":[\"null\",{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"Pair1081149ea1d6eb80\",\"fields\":[{\"name\":\"key\",\"type\":\"int\"},{\"name\":\"value\",\"type\":{\"type\":\"record\",\"name\":\"EmployeeInfo2\",\"fields\":[{\"name\":\"companyMap\",\"type\":[\"null\",{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"PairIntegerString\",\"fields\":[{\"name\":\"key\",\"type\":\"int\"},{\"name\":\"value\",\"type\":\"string\"}]},\"java-class\":\"java.util.HashMap\"}],\"default\":null},{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null}]}}]},\"java-class\":\"java.util.HashMap\"}],\"default\":null}]";
+   * final Schema schema = new Schema.Parser().parse(schemaString);
+   * Assert.assertNotNull(schema);
+   *
+   * }
+   */
+
+  @Test
+  public void testUnionFieldType() {
+    String schemaString = "{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": [{\"name\":\"value\", \"type\":[\"null\", \"string\",{\"type\": \"record\", \"name\": \"Cons\", \"fields\": [{\"name\":\"car\", \"type\":\"Lisp\"},{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}";
+    final Schema schema = new Schema.Parser().parse(schemaString);
+    Field value = schema.getField("value");
+    Schema fieldSchema = value.schema();
+    Schema subSchema = fieldSchema.getTypes().stream().filter((Schema s) -> s.getType() == Type.RECORD).findFirst()
+        .get();
+    assertTrue(subSchema.hasFields());
+  }
+
+  @Test
+  public void parseAliases() throws JsonProcessingException {
+    String s1 = "{ \"aliases\" : [\"a1\",  \"b1\"]}";
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode j1 = mapper.readTree(s1);
+    Set<String> aliases = Schema.parseAliases(j1);
+    assertEquals(2, aliases.size());
+    assertTrue(aliases.contains("a1"));
+    assertTrue(aliases.contains("b1"));
+
+    String s2 = "{ \"aliases\" : {\"a1\": \"b1\"}}";
+    JsonNode j2 = mapper.readTree(s2);
+
+    SchemaParseException ex = assertThrows(SchemaParseException.class, () -> Schema.parseAliases(j2));
+    assertTrue(ex.getMessage().contains("aliases not an array"));
+
+    String s3 = "{ \"aliases\" : [11,  \"b1\"]}";
+    JsonNode j3 = mapper.readTree(s3);
+    SchemaParseException ex3 = assertThrows(SchemaParseException.class, () -> Schema.parseAliases(j3));
+    assertTrue(ex3.getMessage().contains("alias not a string"));
+  }
+
+  @Test
+  void testContentAfterAvsc() {
+    Schema.Parser parser = new Schema.Parser(NameValidator.UTF_VALIDATOR);
+    parser.setValidateDefaults(true);
+    assertThrows(SchemaParseException.class, () -> parser.parse("{\"type\": \"string\"}; DROP TABLE STUDENTS"));
+  }
+
+  @Test
+  void testContentAfterAvscInInputStream() throws Exception {
+    Schema.Parser parser = new Schema.Parser(NameValidator.UTF_VALIDATOR);
+    parser.setValidateDefaults(true);
+    String avsc = "{\"type\": \"string\"}; DROP TABLE STUDENTS";
+    ByteArrayInputStream is = new ByteArrayInputStream(avsc.getBytes(StandardCharsets.UTF_8));
+    Schema schema = parser.parse(is);
+    assertNotNull(schema);
+  }
+
+  @Test
+  void testContentAfterAvscInFile() throws Exception {
+    File avscFile = Files.createTempFile("testContentAfterAvscInFile", null).toFile();
+    try (FileWriter writer = new FileWriter(avscFile)) {
+      writer.write("{\"type\": \"string\"}; DROP TABLE STUDENTS");
+      writer.flush();
+    }
+
+    Schema.Parser parser = new Schema.Parser(NameValidator.UTF_VALIDATOR);
+    parser.setValidateDefaults(true);
+    assertThrows(SchemaParseException.class, () -> parser.parse(avscFile));
+  }
+
+  @Test
+  void testParseMultipleFile() throws IOException {
+    URL directory = requireNonNull(Thread.currentThread().getContextClassLoader().getResource("multipleFile"));
+    File f1 = new File(directory.getPath(), "ApplicationEvent.avsc");
+    File f2 = new File(directory.getPath(), "DocumentInfo.avsc");
+    File f3 = new File(directory.getPath(), "MyResponse.avsc");
+    Assertions.assertTrue(f1.exists(), "File not exist for test " + f1.getPath());
+    Assertions.assertTrue(f2.exists(), "File not exist for test " + f2.getPath());
+    Assertions.assertTrue(f3.exists(), "File not exist for test " + f3.getPath());
+    SchemaParser parser = new SchemaParser();
+    parser.parse(f1);
+    parser.parse(f2);
+    parser.parse(f3);
+    final List<Schema> schemas = parser.getParsedNamedSchemas();
+    Assertions.assertEquals(3, schemas.size());
+    Schema schemaAppEvent = schemas.get(0);
+    Schema schemaDocInfo = schemas.get(1);
+    Schema schemaResponse = schemas.get(2);
+    Assertions.assertNotNull(schemaAppEvent);
+    Assertions.assertEquals(3, schemaAppEvent.getFields().size());
+    Field documents = schemaAppEvent.getField("documents");
+    Schema docSchema = documents.schema().getTypes().get(1).getElementType();
+    Assertions.assertEquals(docSchema, schemaDocInfo);
+    Assertions.assertNotNull(schemaDocInfo);
+    Assertions.assertNotNull(schemaResponse);
+  }
+
+  @Test
+  void add_types() {
+    String schemaRecord2 = "{\"type\":\"record\", \"name\":\"record2\", \"fields\": ["
+        + "  {\"name\":\"f1\", \"type\":\"record1\" }" + "]}"; // register schema1 in schema.
+    Schema schemaRecord1 = Schema.createRecord("record1", "doc", "", false);
+    schemaRecord1.setFields(Collections.singletonList(new Field("name", Schema.create(Type.STRING))));
+    Schema.Parser parser = new Schema.Parser().addTypes(Collections.singleton(schemaRecord1));
+
+    // parse schema for record2 that contains field for schema1.
+    final Schema schema = parser.parse(schemaRecord2);
+    final Field f1 = schema.getField("f1");
+    assertNotNull(f1);
+    assertEquals(schemaRecord1, f1.schema());
+  }
+
+  /**
+   * Tests the behavior of Schema.Parser if its validation option is set to
+   * `null`. This is then set to the default option `NO_VALIDATION`.
+   */
+  @Test
+  void testParserNullValidate() {
+    new Schema.Parser((NameValidator) null).parse("{\"type\":\"record\",\"name\":\"\",\"fields\":[]}"); // Empty name
+  }
+
+  /**
+   * Tests when a user tries to write a record with an invalid enum symbol value
+   * that the exception returned is more descriptive than just a NPE or an
+   * incorrect mention of an unspecified non-null field.
+   */
+  @Test
+  void enumWriteUnknownField() throws IOException {
+    Schema schema = Schema.createRecord("record1", "doc", "", false);
+    String goodValue = "HELLO";
+    Schema enumSchema = Schema.createEnum("enum1", "doc", "", Arrays.asList(goodValue));
+    Field field1 = new Field("field1", enumSchema);
+    schema.setFields(Collections.singletonList(field1));
+
+    GenericDatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<>(schema);
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    Encoder encoder = EncoderFactory.get().binaryEncoder(byteArrayOutputStream, null);
+    GenericRecordBuilder builder = new GenericRecordBuilder(schema);
+    String badValue = "GOODBYE";
+    builder.set(field1, new EnumSymbol(enumSchema, badValue));
+    Record record = builder.build();
+    try {
+      datumWriter.write(record, encoder);
+      fail("should have thrown");
+    } catch (AvroTypeException ate) {
+      assertTrue(ate.getMessage().contains(goodValue));
+      assertTrue(ate.getMessage().contains(badValue));
+    }
+  }
 }

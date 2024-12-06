@@ -18,6 +18,7 @@
 package org.apache.avro.tool;
 
 import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -35,9 +36,12 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Reads a data file and dumps to JSON */
 public class DataFileReadTool implements Tool {
+  private static final Logger LOG = LoggerFactory.getLogger(DataFileReadTool.class);
   private static final long DEFAULT_HEAD_COUNT = 10;
 
   @Override
@@ -62,18 +66,13 @@ public class DataFileReadTool implements Tool {
         .ofType(String.class);
 
     OptionSet optionSet = optionParser.parse(args.toArray(new String[0]));
-    Boolean pretty = optionSet.has(prettyOption);
+    boolean pretty = optionSet.has(prettyOption);
     List<String> nargs = new ArrayList<>((List<String>) optionSet.nonOptionArguments());
 
     String readerSchemaStr = readerSchemaOption.value(optionSet);
     String readerSchemaFile = readerSchemaFileOption.value(optionSet);
 
-    Schema readerSchema = null;
-    if (readerSchemaFile != null) {
-      readerSchema = Util.parseSchemaFromFS(readerSchemaFile);
-    } else if (readerSchemaStr != null) {
-      readerSchema = new Schema.Parser().parse(readerSchemaStr);
-    }
+    Schema readerSchema = getSchema(readerSchemaStr, readerSchemaFile);
 
     long headCount = getHeadCount(optionSet, headOption, nargs);
 
@@ -92,7 +91,7 @@ public class DataFileReadTool implements Tool {
     }
     try (DataFileStream<Object> streamReader = new DataFileStream<>(inStream, reader)) {
       Schema schema = readerSchema != null ? readerSchema : streamReader.getSchema();
-      DatumWriter writer = new GenericDatumWriter<>(schema);
+      DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
       JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out, pretty);
       for (long recordCount = 0; streamReader.hasNext() && recordCount < headCount; recordCount++) {
         Object datum = streamReader.next();
@@ -103,6 +102,18 @@ public class DataFileReadTool implements Tool {
       out.flush();
     }
     return 0;
+  }
+
+  static Schema getSchema(String schemaStr, String schemaFile) throws IOException {
+    Schema readerSchema = null;
+    if (schemaFile != null) {
+      LOG.info("Reading schema from file '{}'", schemaFile);
+      readerSchema = Util.parseSchemaFromFS(schemaFile);
+    } else if (schemaStr != null) {
+      LOG.info("Reading schema from string '{}'", schemaStr);
+      readerSchema = new Schema.Parser().parse(schemaStr);
+    }
+    return readerSchema;
   }
 
   private static long getHeadCount(OptionSet optionSet, OptionSpec<String> headOption, List<String> nargs) {

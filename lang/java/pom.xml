@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.avro</groupId>
     <artifactId>avro-toplevel</artifactId>
-    <version>1.12.0-SNAPSHOT</version>
+    <version>1.13.0-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -37,42 +37,45 @@
     <main.basedir>${project.parent.basedir}</main.basedir>
 
     <!-- version properties for dependencies -->
-    <hadoop.version>3.3.5</hadoop.version>
-    <jackson-bom.version>2.14.2</jackson-bom.version>
-    <servlet-api.version>4.0.1</servlet-api.version>
-    <jetty.version>9.4.51.v20230217</jetty.version>
-    <jopt-simple.version>5.0.4</jopt-simple.version>
-    <junit5.version>5.9.2</junit5.version>
-    <netty.version>4.1.91.Final</netty.version>
-    <protobuf.version>3.22.2</protobuf.version>
-    <thrift.version>0.16.0</thrift.version>
-    <slf4j.version>1.7.36</slf4j.version>
-    <reload4j.version>1.2.25</reload4j.version>
-    <snappy.version>1.1.9.1</snappy.version>
-    <velocity.version>2.3</velocity.version>
-    <maven-core.version>3.3.9</maven-core.version>
-    <ant.version>1.10.13</ant.version>
-    <commons-cli.version>1.5.0</commons-cli.version>
-    <commons-compress.version>1.22</commons-compress.version>
-    <commons-text.version>1.10.0</commons-text.version>
-    <tukaani.version>1.9</tukaani.version>
-    <mockito.version>4.11.0</mockito.version>
+    <ant.version>1.10.15</ant.version>
+    <commons-cli.version>1.9.0</commons-cli.version>
+    <commons-compress.version>1.27.1</commons-compress.version>
+    <commons-text.version>1.12.0</commons-text.version>
+    <commons-lang3.version>3.17.0</commons-lang3.version>
+    <grpc.version>1.66.0</grpc.version>
+    <hadoop.version>3.3.6</hadoop.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <grpc.version>1.54.0</grpc.version>
-    <zstd-jni.version>1.5.4-2</zstd-jni.version>
+    <jackson-bom.version>2.17.2</jackson-bom.version>
+    <jetty.version>9.4.56.v20240826</jetty.version>
+    <jopt-simple.version>5.0.4</jopt-simple.version>
+    <junit5.version>5.11.0</junit5.version>
+    <maven-core.version>3.9.6</maven-core.version>
+    <mockito.version>5.13.0</mockito.version>
+    <netty.version>4.1.113.Final</netty.version>
+    <protobuf.version>4.28.0</protobuf.version>
+    <reload4j.version>1.2.25</reload4j.version>
+    <servlet-api.version>4.0.1</servlet-api.version>
+    <slf4j.version>2.0.16</slf4j.version>
+    <snappy.version>1.1.10.6</snappy.version>
+    <thrift.version>0.20.0</thrift.version>
+    <tukaani.version>1.10</tukaani.version>
+    <velocity.version>2.3</velocity.version>
+    <zstd-jni.version>1.5.6-5</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.1</archetype-plugin.version>
-    <bundle-plugin-version>5.1.8</bundle-plugin-version>
-    <exec-plugin.version>3.1.0</exec-plugin.version>
+    <bundle-plugin-version>5.1.9</bundle-plugin-version>
+    <cyclonedx-maven-plugin.version>2.8.1</cyclonedx-maven-plugin.version>
+    <exec-plugin.version>3.4.1</exec-plugin.version>
     <file-management.version>3.1.0</file-management.version>
     <javacc-plugin.version>3.0.3</javacc-plugin.version>
-    <javacc.version>7.0.12</javacc.version>
-    <cyclonedx-maven-plugin.version>2.7.6</cyclonedx-maven-plugin.version>
+    <javacc.version>7.0.13</javacc.version>
+    <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
   </properties>
 
   <modules>
     <module>android</module>
     <module>avro</module>
+    <module>idl</module>
     <module>compiler</module>
     <module>maven-plugin</module>
     <module>ipc</module>
@@ -87,6 +90,7 @@
     <module>grpc</module>
     <module>integration-test</module>
     <module>perf</module>
+    <module>interop-data-test</module>
   </modules>
 
   <build>
@@ -98,7 +102,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
-          <version>3.3.0</version>
+          <version>3.6.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -115,6 +119,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin.version}</version>
           <configuration>
             <compilerArgs>
               <arg>-parameters</arg>
@@ -195,7 +200,6 @@
           <artifactId>maven-javadoc-plugin</artifactId>
           <configuration>
             <links>
-              <link>https://docs.oracle.com/javase/8/docs/api/</link>
               <link>https://hadoop.apache.org/docs/current/api/</link>
             </links>
             <tagletArtifacts>
@@ -252,11 +256,17 @@
           <instructions>
             <Bundle-Name>${project.name}</Bundle-Name>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <!--suppress UnresolvedMavenProperty -->
             <Export-Package>${osgi.export}</Export-Package>
+            <!--suppress UnresolvedMavenProperty -->
             <Import-Package>${osgi.import}</Import-Package>
+            <!--suppress UnresolvedMavenProperty -->
             <DynamicImport-Package>${osgi.dynamic.import}</DynamicImport-Package>
+            <!--suppress UnresolvedMavenProperty -->
             <Private-Package>${osgi.private}</Private-Package>
+            <!--suppress UnresolvedMavenProperty -->
             <Require-Bundle>${osgi.bundles}</Require-Bundle>
+            <!--suppress UnresolvedMavenProperty -->
             <Bundle-Activator>${osgi.activator}</Bundle-Activator>
           </instructions>
           <supportedProjectTypes>
@@ -304,7 +314,7 @@
               <!-- Avro uses Sun's java code style conventions with 2 spaces, this is a modified version of
                    the eclipse formatter -->
               <file>${main.basedir}/lang/java/eclipse-java-formatter.xml</file>
-              <version>4.19.0</version>
+              <version>4.19</version>
             </eclipse>
             <!-- Temporarily disabled for JDK 16+ builds -->
             <!--<removeUnusedImports/>-->
@@ -313,6 +323,8 @@
               <searchRegex>import\s+[^\*\s]+\*;(\r\n|\r|\n)</searchRegex>
               <replacement>$1</replacement>
             </replaceRegex>
+            <!-- Allow spotless:off/spotless:on comment pairs to keep ASCII-formatted tables intact -->
+            <toggleOffOn/>
           </java>
         </configuration>
         <executions>
@@ -345,6 +357,21 @@
   </reporting>
 
   <profiles>
+
+    <profile>
+      <id>skipQuality</id>
+      <properties>
+        <skipTests>true</skipTests>
+        <rat.skip>true</rat.skip>
+        <checkstyle.skip>true</checkstyle.skip>
+        <spotless.skip>true</spotless.skip>
+        <invoker.skip>true</invoker.skip>
+        <cyclonedx.skip>true</cyclonedx.skip>
+        <gpg.skip>true</gpg.skip>
+        <maven.build.cache.skipCache>true</maven.build.cache.skipCache>
+      </properties>
+    </profile>
+
     <profile>
       <id>m2e</id>
       <activation>
@@ -432,33 +459,13 @@
                 </lifecycleMappingMetadata>
               </configuration>
             </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-antrun-plugin</artifactId>
+              <version>${maven-antrun-plugin.version}</version>
+            </plugin>
           </plugins>
         </pluginManagement>
-      </build>
-    </profile>
-    <profile>
-      <id>interop-data-test</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <includes>
-                <include>**/DataFileInteropTest*</include>
-              </includes>
-              <excludes>
-              </excludes>
-              <enableAssertions>false</enableAssertions>
-              <forkCount>1</forkCount>
-              <reuseForks>true</reuseForks>
-              <redirectTestOutputToFile>false</redirectTestOutputToFile>
-              <systemPropertyVariables>
-                <test.dir>../../../build/interop/data/</test.dir>
-              </systemPropertyVariables>
-            </configuration>
-          </plugin>
-        </plugins>
       </build>
     </profile>
     <profile>
@@ -552,11 +559,13 @@
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>${mockito.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest-library</artifactId>
         <version>${hamcrest.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.xerial.snappy</groupId>
@@ -604,6 +613,11 @@
         <groupId>com.github.luben</groupId>
         <artifactId>zstd-jni</artifactId>
         <version>${zstd-jni.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${commons-lang3.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
