@@ -402,9 +402,12 @@ public class Protocol extends JsonProperties {
     if (!(o instanceof Protocol))
       return false;
     Protocol that = (Protocol) o;
+
+    List<Schema> resolvedSchemas = this.context.resolveAllSchemas();
+    List<Schema> thatResolvedSchemas = that.context.resolveAllSchemas();
     return Objects.equals(this.name, that.name) && Objects.equals(this.namespace, that.namespace)
-        && Objects.equals(this.context.resolveAllSchemas(), that.context.resolveAllSchemas())
-        && Objects.equals(this.messages, that.messages) && this.propsEqual(that);
+        && Objects.equals(this.messages, that.messages) && this.propsEqual(that)
+        && resolvedSchemas.size() == thatResolvedSchemas.size() && resolvedSchemas.containsAll(thatResolvedSchemas);
   }
 
   @Override
