@@ -19,6 +19,7 @@
 #ifndef avro_json_JsonDom_hh__
 #define avro_json_JsonDom_hh__
 
+#include <any>
 #include <cstdint>
 #include <iostream>
 #include <map>
@@ -27,7 +28,6 @@
 #include <vector>
 
 #include "Config.hh"
-#include "boost/any.hpp"
 
 namespace avro {
 
@@ -67,7 +67,7 @@ inline std::ostream &operator<<(std::ostream &os, EntityType et) {
 
 class AVRO_DECL Entity {
     EntityType type_;
-    boost::any value_;
+    std::any value_;
     size_t line_; // can't be const else noncopyable...
 
     void ensureType(EntityType) const;
@@ -99,17 +99,17 @@ public:
 
     Bool boolValue() const {
         ensureType(EntityType::Bool);
-        return boost::any_cast<Bool>(value_);
+        return std::any_cast<Bool>(value_);
     }
 
     Long longValue() const {
         ensureType(EntityType::Long);
-        return boost::any_cast<Long>(value_);
+        return std::any_cast<Long>(value_);
     }
 
     Double doubleValue() const {
         ensureType(EntityType::Double);
-        return boost::any_cast<Double>(value_);
+        return std::any_cast<Double>(value_);
     }
 
     String stringValue() const;
@@ -118,12 +118,12 @@ public:
 
     const Array &arrayValue() const {
         ensureType(EntityType::Arr);
-        return **boost::any_cast<std::shared_ptr<Array>>(&value_);
+        return **std::any_cast<std::shared_ptr<Array>>(&value_);
     }
 
     const Object &objectValue() const {
         ensureType(EntityType::Obj);
-        return **boost::any_cast<std::shared_ptr<Object>>(&value_);
+        return **std::any_cast<std::shared_ptr<Object>>(&value_);
     }
 
     std::string toString() const;
