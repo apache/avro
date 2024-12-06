@@ -20,6 +20,7 @@
 #define avro_parsing_Symbol_hh__
 
 #include <algorithm>
+#include <any>
 #include <map>
 #include <set>
 #include <sstream>
@@ -27,7 +28,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/any.hpp>
 #include <boost/tuple/tuple.hpp>
 
 #include "Decoder.hh"
@@ -92,7 +92,7 @@ public:
 
 private:
     Kind kind_;
-    boost::any extra_;
+    std::any extra_;
 
     explicit Symbol(Kind k) : kind_(k) {}
     template<typename T>
@@ -105,17 +105,17 @@ public:
 
     template<typename T>
     T extra() const {
-        return boost::any_cast<T>(extra_);
+        return std::any_cast<T>(extra_);
     }
 
     template<typename T>
     T *extrap() {
-        return boost::any_cast<T>(&extra_);
+        return std::any_cast<T>(&extra_);
     }
 
     template<typename T>
     const T *extrap() const {
-        return boost::any_cast<T>(&extra_);
+        return std::any_cast<T>(&extra_);
     }
 
     template<typename T>
