@@ -61,6 +61,7 @@ boost::iostreams::zlib_params get_zlib_params() {
     ret.noheader = true;
     return ret;
 }
+
 } // namespace
 
 DataFileWriterBase::DataFileWriterBase(const char *filename, const ValidSchema &schema, size_t syncInterval,
@@ -442,6 +443,11 @@ void DataFileReaderBase::readDataBlock() {
 }
 
 void DataFileReaderBase::close() {
+    stream_.reset();
+    eof_ = true;
+    objectCount_ = 0;
+    blockStart_ = 0;
+    blockEnd_ = 0;
 }
 
 static string toString(const vector<uint8_t> &v) {
