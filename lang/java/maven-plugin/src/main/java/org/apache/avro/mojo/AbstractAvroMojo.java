@@ -395,8 +395,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     doCompile(sourceFileForModificationDetection, new SpecificCompiler(protocol), outputDirectory);
   }
 
-  private void doCompile(File sourceFileForModificationDetection, SpecificCompiler compiler, File outputDirectory)
-      throws IOException {
+  protected void setCompilerProperties(SpecificCompiler compiler) {
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(GenericData.StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());
@@ -406,6 +405,15 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     compiler.setCreateSetters(createSetters);
     compiler.setCreateNullSafeAnnotations(createNullSafeAnnotations);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
+    compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
+    compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
+    compiler.setRecordSpecificClass(this.recordSpecificClass);
+    compiler.setErrorSpecificClass(this.errorSpecificClass);
+  }
+
+  private void doCompile(File sourceFileForModificationDetection, SpecificCompiler compiler, File outputDirectory)
+      throws IOException {
+    setCompilerProperties(compiler);
     try {
       for (String customConversion : customConversions) {
         compiler.addCustomConversion(Thread.currentThread().getContextClassLoader().loadClass(customConversion));
@@ -413,10 +421,6 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     } catch (ClassNotFoundException e) {
       throw new IOException(e);
     }
-    compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
-    compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
-    compiler.setRecordSpecificClass(this.recordSpecificClass);
-    compiler.setErrorSpecificClass(this.errorSpecificClass);
     compiler.compileToDestination(sourceFileForModificationDetection, outputDirectory);
   }
 
