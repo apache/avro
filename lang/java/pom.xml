@@ -63,7 +63,7 @@
     <zstd-jni.version>1.5.6-8</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.1</archetype-plugin.version>
-    <bundle-plugin-version>5.1.9</bundle-plugin-version>
+    <bundle-plugin-version>6.0.0</bundle-plugin-version>
     <cyclonedx-maven-plugin.version>2.9.1</cyclonedx-maven-plugin.version>
     <exec-plugin.version>3.4.1</exec-plugin.version>
     <file-management.version>3.1.0</file-management.version>
