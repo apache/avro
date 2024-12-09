@@ -1,0 +1,292 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# For most projects, this workflow file will not need changing; you simply need
+# to commit it to your repository.
+
+
+# A Github Actions workflow that builds and copies the website to asf-site branch
+name: Deploy website
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches:
+      - main
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-website:
+    name: Build website
+    runs-on: ubuntu-latest
+    env:
+      HUGO_VERSION: 0.132.1
+    steps:
+      - name: Install Hugo CLI
+        run: |
+          wget -q -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
+          && sudo dpkg -i ${{ runner.temp }}/hugo.deb
+      - name: Install Dart Sass
+        run: sudo snap install dart-sass
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node.js dependencies
+        working-directory: doc/
+        run: ls -lah && npm ci
+      - name: Build with Hugo
+        working-directory: doc/
+        env:
+          HUGO_CACHEDIR: ${{ runner.temp }}/hugo_cache
+          HUGO_ENVIRONMENT: production
+          TZ: America/Los_Angeles
+        run: |
+          hugo \
+            --gc \
+            --minify \
+            --destination ${{ runner.temp }}/website \
+            --baseURL "/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: website
+          path: ${{ runner.temp }}/website
+
+  build-api-c:
+    name: Build C API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build C docs
+        run: |
+          set -x
+          sudo apt-get update -q
+          sudo apt-get install -q -y cmake liblzma-dev libsnappy-dev libjansson-dev zlib1g-dev pkg-config asciidoc source-highlight libsource-highlight-dev
+          cd lang/c
+          ./build.sh clean docs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-c
+          path: build/c/docs
+
+  build-api-cpp:
+    name: Build C++ API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build C++ docs
+        run: |
+          set -x
+          sudo apt-get update -q
+          sudo apt-get install -q -y gcc g++ libboost-all-dev cmake doxygen
+          cd lang/c++
+          ./build.sh clean doc
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-c++
+          path: lang/c++/doc/html
+
+  build-api-csharp:
+    name: Build C# API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build C# docs
+        run: |
+          set -x
+          sudo apt-get update -q
+          sudo apt-get install -q -y wget libzstd-dev libicu-dev doxygen
+          sudo wget https://dot.net/v1/dotnet-install.sh
+          bash ./dotnet-install.sh --channel "8.0" --install-dir "$HOME/.dotnet"
+          cd lang/csharp
+          mkdir -p build/doc
+          doxygen Avro.dox
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-csharp
+          path: lang/csharp/build/doc/html
+
+  build-api-java:
+    name: Build Java API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Local Maven Repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      
+      - name: 'Setup Maven'
+        uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
+        with:
+          maven-version: 3.9.9
+
+      - name: Setup Temurin JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: |
+            11
+            17
+            21
+
+      - name: Build Java docs
+        run: |
+          set -x
+          cd lang/java
+          mvn javadoc::aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-java
+          path: lang/java/target/reports/apidocs
+
+  build-api-python:
+    name: Build Python API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install tox
+        run: python3 -m pip install tox
+
+      - name: Build docs
+        working-directory: lang/py
+        run: ./build.sh doc
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-python
+          path: lang/py/docs/build/
+
+  push-website:
+    name: Push website
+    needs: [build-website, build-api-c, build-api-cpp, build-api-csharp, build-api-java, build-api-python]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          set -x
+          sudo apt-get update -q
+          sudo apt-get install -q -y subversion  
+
+      - name: Download website
+        uses: actions/download-artifact@v4
+        with:
+          name: website
+          path: ${{ runner.temp }}/website
+
+      - name: Download api-c
+        uses: actions/download-artifact@v4
+        with:
+          name: api-c
+          path: api-c
+
+      - name: Download api-c++
+        uses: actions/download-artifact@v4
+        with:
+          name: api-c++
+          path: api-c++
+
+      - name: Download api-csharp
+        uses: actions/download-artifact@v4
+        with:
+          name: api-csharp
+          path: api-csharp
+
+      - name: Download api-java
+        uses: actions/download-artifact@v4
+        with:
+          name: api-java
+          path: api-java
+
+      - name: Download api-python
+        uses: actions/download-artifact@v4
+        with:
+          name: api-python
+          path: api-python
+
+      - name: Copy the generated HTML
+        run: |
+          set -x
+
+          WEBSITE_API=${{ runner.temp }}/website/docs/++version++/api
+          mkdir -p $WEBSITE_API/{c,cpp/html,csharp/html,java,py/html}
+
+          mv api-c/* $WEBSITE_API/c/
+          mv api-c++/* $WEBSITE_API/cpp/html/
+          mv api-csharp/* $WEBSITE_API/csharp/html/
+          mv api-java/* $WEBSITE_API/java/
+          mv api-python/* $WEBSITE_API/py/
+          rmdir api-c api-c++ api-csharp api-java api-python
+
+      - name: Checkout old docs versions from Subversion
+        run: |
+          set -xe
+          svn checkout https://svn.apache.org/repos/asf/avro/site/publish/docs
+          rm -rf docs/.svn
+          cp -R docs/1* ${{ runner.temp }}/website/docs/
+          rm -rf docs
+
+      - name: Push the new website
+        run: |
+          set -ex
+
+          ls -la ${{ runner.temp }}/website/docs/
+
+          git config --global user.email "dev@avro.apache.org"
+          git config --global user.name "Github Actions"
+          git checkout --orphan asf-site-staging
+
+          git rm -rf *
+
+          mv ${{ runner.temp }}/website/* . 
+          echo "publish:
+                  whoami: asf-site
+                " > .asf.yaml
+          touch .nojekyll
+          git add --all
+          git commit -m "Publish built website triggered by ${{ github.sha }}"
+          git switch asf-site
+          git reset --hard asf-site-staging
+          git push origin asf-site --force
+          
