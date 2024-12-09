@@ -52,7 +52,7 @@
     <maven-core.version>3.9.6</maven-core.version>
     <mockito.version>5.13.0</mockito.version>
     <netty.version>4.1.113.Final</netty.version>
-    <protobuf.version>4.28.0</protobuf.version>
+    <protobuf.version>4.29.1</protobuf.version>
     <reload4j.version>1.2.25</reload4j.version>
     <servlet-api.version>4.0.1</servlet-api.version>
     <slf4j.version>2.0.16</slf4j.version>
