@@ -65,6 +65,7 @@ public class TestReflectLogicalTypes {
   public static void addUUID() {
     REFLECT.addLogicalTypeConversion(new Conversions.UUIDConversion());
     REFLECT.addLogicalTypeConversion(new Conversions.DecimalConversion());
+    REFLECT.addLogicalTypeConversion(new TimeConversions.TimeNanosConversion());
     REFLECT.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
   }
 
