@@ -1337,7 +1337,7 @@ static const TestData3 data3[] = {
      "U0N[c3sS1sS2sS3][]",
      1},
     {
-      R"({"name": "Project", "type": "record", "fields": [
+        R"({"name": "Project", "type": "record", "fields": [
         { "name": "_types", "type": [
             "null",
             { "name": "Record1", "type": "record", "fields": [{ "name": "Record1_field1", "type": "string" }]}
@@ -1345,7 +1345,7 @@ static const TestData3 data3[] = {
         { "name": "field1", "type": { "type": "array", "items": "Record1" } }
       ]})",
         "U0N[c3sS1sS2sS3]",
-      R"({"name": "Project", "type": "record", "fields": [
+        R"({"name": "Project", "type": "record", "fields": [
         { "name": "_types", "type": [
             "null",
             { "name": "Record1", "type": "record", "fields": [{ "name": "Record1_field1", "type": "string" }]},
@@ -1375,7 +1375,7 @@ static const TestData3 data3[] = {
         { "name": "field2", "type": { "type": "array", "items": "Record3" }, "default": [] }
       ]})",
         "U0N[c3sS1sS2sS3][]",
-      R"({"name": "Project", "type": "record", "fields": [
+        R"({"name": "Project", "type": "record", "fields": [
         { "name": "_types", "type": [
             "null",
             { "name": "Record1", "type": "record", "fields": [{ "name": "Record1_field1", "type": "string" }]}
