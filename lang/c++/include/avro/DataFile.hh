@@ -193,7 +193,7 @@ public:
  */
 class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     const std::string filename_;
-    const std::unique_ptr<InputStream> stream_;
+    std::unique_ptr<InputStream> stream_;
     const DecoderPtr decoder_;
     int64_t objectCount_;
     bool eof_;
