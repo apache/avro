@@ -441,12 +441,14 @@ struct TestSchema {
         concepts::MultiAttribute<CustomAttributes> customAttributes;
 
         CustomAttributes cf;
-        cf.addAttribute("stringField", std::string("\\\"field value with \\\"double quotes\\\"\\\""));
-        cf.addAttribute("booleanField", std::string("true"));
-        cf.addAttribute("numberField", std::string("1.23"));
-        cf.addAttribute("nullField", std::string("null"));
-        cf.addAttribute("arrayField", std::string("[1]"));
-        cf.addAttribute("mapField", std::string("{\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}"));
+        cf.addAttribute("stringField", std::string("foobar"));
+        cf.addAttribute("stringFieldComplex", std::string("\" a field value with \"double quotes\" \""));
+        cf.addAttributeJson("stringFieldComplex2", std::string("\"\\\" a field value with \\\"double quotes\\\" \\\"\""));
+        cf.addAttributeJson("booleanField", std::string("true"));
+        cf.addAttributeJson("numberField", std::string("1.23"));
+        cf.addAttributeJson("nullField", std::string("null"));
+        cf.addAttributeJson("arrayField", std::string("[1]"));
+        cf.addAttributeJson("mapField", std::string("{\"key1\":\"value1\", \"key2\":\"value2\"}"));
         fieldNames.add("f1");
         fieldValues.add(NodePtr(new NodePrimitive(Type::AVRO_LONG)));
         customAttributes.add(cf);
@@ -457,12 +459,14 @@ struct TestSchema {
         std::string expectedJsonWithCustomAttribute =
             "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
             "[{\"name\": \"f1\", \"type\": \"long\", "
-            "\"arrayField\": \"[1]\", "
-            "\"booleanField\": \"true\", "
-            "\"mapField\": \"{\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}\", "
-            "\"nullField\": \"null\", "
-            "\"numberField\": \"1.23\", "
-            "\"stringField\": \"\\\"field value with \\\"double quotes\\\"\\\"\""
+            "\"arrayField\": [1], "
+            "\"booleanField\": true, "
+            "\"mapField\": {\"key1\":\"value1\", \"key2\":\"value2\"}, "
+            "\"nullField\": null, "
+            "\"numberField\": 1.23, "
+            "\"stringField\": \"foobar\", "
+            "\"stringFieldComplex\": \"\\\" a field value with \\\"double quotes\\\" \\\"\", "
+            "\"stringFieldComplex2\": \"\\\" a field value with \\\"double quotes\\\" \\\"\""
             "}]}";
         testNodeRecord(nodeRecordWithCustomAttribute,
                        expectedJsonWithCustomAttribute);
