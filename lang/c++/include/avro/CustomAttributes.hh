@@ -36,13 +36,17 @@ class AVRO_DECL CustomAttributes {
 public:
     // Retrieves the custom attribute value for the given name as a JSON document.
     // Returns an empty value if the attribute doesn't exist. Unlike getAttribute,
-    // string values will be quoted and escaped.
+    // string values will always be quoted and escaped.
     std::optional<std::string> getAttributeJson(const std::string &name) const;
 
     // Retrieves the custom attribute string for the given name. Returns an empty
     // value if the attribute doesn't exist. If the attribute value is not a string
     // (i.e. it's a number, boolean, array, or object), the stringified form (the
-    // value encoded as a JSON document) will be returned.
+    // value encoded as a JSON document) will be returned. This makes it ambiguous
+    // to the caller as to whether the value was a string or not. So getAttributeJson
+    // should be used instead, which does not have this ambiguity. This method is
+    // present only for backward compatibility.
+    [[deprecated("use getAttributeJson instead")]]
     std::optional<std::string> getAttribute(const std::string &name) const;
 
     // Adds a custom attribute with an arbitrary JSON value. The given string must
@@ -56,12 +60,25 @@ public:
 
     // Adds a custom attribute with a string value. If the attribute already exists,
     // throw an exception. Unlike with addAttributeJson, the string value must not
-    // be encoded (no quoting or escaping).
+    // be encoded (no quoting or escaping). This is only present for backward
+    // compatibility since it does not allow setting non-string values. So
+    // addAttributeJson should be used instead, which allows setting any kind of
+    // value.
+    [[deprecated("use addAttributeJson instead")]]
     void addAttribute(const std::string &name, const std::string &value);
 
     // Provides a way to iterate over the custom attributes or check attribute size.
-    // To query for the json element value of an entry, you can iterate over the keys
-    // of this map and then call getAttributeJson for each one.
+    // All values are encoded to JSON. So string values will be quoted and escaped.
+    const std::map<std::string, std::string> &jsonAttributes() const {
+        return attributeJson_;
+    }
+
+    // Provides a way to iterate over the custom attributes or check attribute size.
+    // The values in this map are the same as those returned from getAttribute. So
+    // string values are returned as-is but non-string values are encoded to JSON
+    // first. That means it is ambiguous as to whether a value is a string or not,
+    // so callers should prefer jsonAttributes instead.
+    [[deprecated("use jsonAttributes instead")]]
     const std::map<std::string, std::string> &attributes() const {
         return attributeStrings_;
     }
@@ -70,8 +87,8 @@ public:
     void printJson(std::ostream &os, const std::string &name) const;
 
 private:
-    // We have to keep a separate attribute strings map just to implement the
-    // attributes() method. This is just for API backwards-compatibility.
+    // We have to maintain a separate map in order to implement the
+    // attributes() method. This is just for API backward compatibility.
     std::map<std::string, std::string> attributeStrings_;
 
     std::map<std::string, std::string> attributeJson_;
