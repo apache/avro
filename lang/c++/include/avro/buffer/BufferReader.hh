@@ -40,7 +40,7 @@ namespace avro {
  * chunk boundaries.  May read from an InputBuffer or OutputBuffer.
  *
  **/
-class AVRO_DECL BufferReader : private boost::noncopyable {
+class AVRO_DECL BufferReader {
 
 public:
     typedef detail::data_type data_type;
@@ -82,6 +82,9 @@ public:
                                                      bytes_(bufferImpl_->size()),
                                                      bytesRemaining_(bytes_),
                                                      chunkPos_(0) {}
+
+    BufferReader(const BufferReader &) = delete;
+    BufferReader &operator=(const BufferReader &) = delete;
 
     /**
      * How many bytes are still not read from this buffer.

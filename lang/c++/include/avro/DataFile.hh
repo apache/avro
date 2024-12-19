@@ -58,7 +58,7 @@ typedef std::array<uint8_t, SyncSize> DataFileSync;
  *  At any given point in time, at most one file can be written using
  *  this object.
  */
-class AVRO_DECL DataFileWriterBase : boost::noncopyable {
+class AVRO_DECL DataFileWriterBase {
     const std::string filename_;
     const ValidSchema schema_;
     const EncoderPtr encoderPtr_;
@@ -122,6 +122,9 @@ public:
     DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
                        const ValidSchema &schema, size_t syncInterval, Codec codec);
 
+    DataFileWriterBase(const DataFileWriterBase &) = delete;
+    DataFileWriterBase &operator=(const DataFileWriterBase &) = delete;
+
     ~DataFileWriterBase();
     /**
      * Closes the current file. Once closed this datafile object cannot be
@@ -144,7 +147,7 @@ public:
  *  An Avro datafile that can store objects of type T.
  */
 template<typename T>
-class DataFileWriter : boost::noncopyable {
+class DataFileWriter {
     std::unique_ptr<DataFileWriterBase> base_;
 
 public:
@@ -156,6 +159,9 @@ public:
 
     DataFileWriter(std::unique_ptr<OutputStream> outputStream, const ValidSchema &schema,
                    size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) : base_(new DataFileWriterBase(std::move(outputStream), schema, syncInterval, codec)) {}
+
+    DataFileWriter(const DataFileWriter &) = delete;
+    DataFileWriter &operator=(const DataFileWriter &) = delete;
 
     /**
      * Writes the given piece of data into the file.
@@ -191,7 +197,7 @@ public:
 /**
  * The type independent portion of reader.
  */
-class AVRO_DECL DataFileReaderBase : boost::noncopyable {
+class AVRO_DECL DataFileReaderBase {
     const std::string filename_;
     const std::unique_ptr<InputStream> stream_;
     const DecoderPtr decoder_;
@@ -244,6 +250,9 @@ public:
     explicit DataFileReaderBase(const char *filename);
 
     explicit DataFileReaderBase(std::unique_ptr<InputStream> inputStream);
+
+    DataFileReaderBase(const DataFileReaderBase &) = delete;
+    DataFileReaderBase &operator=(const DataFileReaderBase &) = delete;
 
     /**
      * Initializes the reader so that the reader and writer schemas
@@ -303,7 +312,7 @@ public:
  * Reads the contents of data file one after another.
  */
 template<typename T>
-class DataFileReader : boost::noncopyable {
+class DataFileReader {
     std::unique_ptr<DataFileReaderBase> base_;
 
 public:
@@ -357,6 +366,9 @@ public:
                    const ValidSchema &readerSchema) : base_(std::move(base)) {
         base_->init(readerSchema);
     }
+
+    DataFileReader(const DataFileReader &) = delete;
+    DataFileReader &operator=(const DataFileReader &) = delete;
 
     /**
      * Reads the next entry from the data file.

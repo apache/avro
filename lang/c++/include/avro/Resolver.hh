@@ -19,7 +19,6 @@
 #ifndef avro_Resolver_hh__
 #define avro_Resolver_hh__
 
-#include <boost/noncopyable.hpp>
 #include <cstdint>
 #include <memory>
 
@@ -34,8 +33,12 @@ namespace avro {
 class ValidSchema;
 class Layout;
 
-class AVRO_DECL Resolver : private boost::noncopyable {
+class AVRO_DECL Resolver {
 public:
+    Resolver() = default;
+    Resolver(const Resolver &) = delete;
+    Resolver &operator=(const Resolver &) = delete;
+
     virtual void parse(Reader &reader, uint8_t *address) const = 0;
     virtual ~Resolver() = default;
 };
