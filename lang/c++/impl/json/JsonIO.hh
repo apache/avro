@@ -37,7 +37,7 @@ inline char toHex(unsigned int n) {
     return static_cast<char>((n < 10) ? (n + '0') : (n + 'a' - 10));
 }
 
-class AVRO_DECL JsonParser : boost::noncopyable {
+class AVRO_DECL JsonParser {
 public:
     enum class Token {
         Null,
@@ -88,6 +88,9 @@ private:
 public:
     JsonParser() : curState(stValue), hasNext(false), nextChar(0), peeked(false),
                    curToken(Token::Null), bv(false), lv(0), dv(0), line_(1) {}
+
+    JsonParser(const JsonParser &) = delete;
+    JsonParser &operator=(const JsonParser &) = delete;
 
     void init(InputStream &is) {
         // Clear by swapping with an empty stack

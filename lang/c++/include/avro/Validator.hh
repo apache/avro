@@ -19,7 +19,6 @@
 #ifndef avro_Validating_hh__
 #define avro_Validating_hh__
 
-#include <boost/noncopyable.hpp>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -30,10 +29,13 @@
 
 namespace avro {
 
-class AVRO_DECL NullValidator : private boost::noncopyable {
+class AVRO_DECL NullValidator {
 public:
     explicit NullValidator(const ValidSchema &) {}
     NullValidator() = default;
+
+    NullValidator(const NullValidator &) = delete;
+    NullValidator &operator=(const NullValidator &) = delete;
 
     void setCount(size_t) {}
 
@@ -67,9 +69,12 @@ public:
 /// through all leaf nodes but a union only skips to one), and reports which
 /// type is next.
 
-class AVRO_DECL Validator : private boost::noncopyable {
+class AVRO_DECL Validator {
 public:
     explicit Validator(ValidSchema schema);
+
+    Validator(const Validator &) = delete;
+    Validator &operator=(const Validator &) = delete;
 
     void setCount(size_t val);
 

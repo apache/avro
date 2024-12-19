@@ -445,7 +445,7 @@ protected:
     size_t offset_;
 };
 
-class ResolverFactory : private boost::noncopyable {
+class ResolverFactory {
 
     template<typename T>
     unique_ptr<Resolver>
@@ -512,6 +512,10 @@ class ResolverFactory : private boost::noncopyable {
     }
 
 public:
+    ResolverFactory() = default;
+    ResolverFactory(const ResolverFactory &) = delete;
+    ResolverFactory &operator=(const ResolverFactory &) = delete;
+
     unique_ptr<Resolver>
     construct(const NodePtr &writer, const NodePtr &reader, const Layout &offset) {
 

@@ -191,7 +191,7 @@ inline bool operator!=(const Chunk &lhs, const Chunk &rhs) {
  *
  */
 
-class BufferImpl : boost::noncopyable {
+class BufferImpl {
 
     /// Add a new chunk to the list of chunks for this buffer, growing the
     /// buffer by the default block size.

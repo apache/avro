@@ -20,7 +20,6 @@
 #define avro_Writer_hh__
 
 #include <array>
-#include <boost/noncopyable.hpp>
 
 #include "Config.hh"
 #include "Types.hh"
@@ -33,12 +32,15 @@ namespace avro {
 /// Class for writing avro data to a stream.
 
 template<class ValidatorType>
-class WriterImpl : private boost::noncopyable {
+class WriterImpl {
 
 public:
     WriterImpl() = default;
 
     explicit WriterImpl(const ValidSchema &schema) : validator_(schema) {}
+
+    WriterImpl(const WriterImpl &) = delete;
+    WriterImpl &operator=(const WriterImpl &) = delete;
 
     void writeValue(const Null &) {
         validator_.checkTypeExpected(AVRO_NULL);

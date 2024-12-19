@@ -22,7 +22,6 @@
 #include "avro/Decoder.hh"
 #include "avro/Encoder.hh"
 #include "avro/Specific.hh"
-#include "boost/any.hpp"
 
 namespace i {
 struct cpx {
