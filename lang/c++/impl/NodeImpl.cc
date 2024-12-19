@@ -86,8 +86,8 @@ std::ostream &operator<<(std::ostream &os, indent x) {
 void printCustomAttributes(const CustomAttributes &customAttributes, size_t depth,
                            std::ostream &os) {
     std::map<std::string, std::string>::const_iterator iter =
-        customAttributes.attributes().begin();
-    while (iter != customAttributes.attributes().end()) {
+        customAttributes.jsonAttributes().begin();
+    while (iter != customAttributes.jsonAttributes().end()) {
         os << ",\n"
            << indent(depth);
         customAttributes.printJson(os, iter->first);
