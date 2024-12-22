@@ -55,6 +55,9 @@ list(GET AVRO_VERSION 2 AVRO_VERSION_PATCH)
 project (Avro-cpp)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR})
 
+option(AVRO_BUILD_EXECUTABLES "Build executables" ON)
+option(AVRO_BUILD_TESTS "Build tests" ON)
+
 if (WIN32 AND NOT CYGWIN AND NOT MSYS)
     add_definitions (/EHa)
     add_definitions (
@@ -78,9 +81,12 @@ if (AVRO_ADD_PROTECTOR_FLAGS)
 endif ()
 endif ()
 
-
-find_package (Boost 1.38 REQUIRED
-    COMPONENTS filesystem iostreams program_options regex system)
+if (AVRO_BUILD_TESTS OR AVRO_BUILD_EXECUTABLES)
+    find_package (Boost 1.38 REQUIRED
+        COMPONENTS filesystem iostreams program_options system)
+else ()
+    find_package (Boost 1.38 REQUIRED COMPONENTS iostreams)
+endif ()
 
 include(FetchContent)
 FetchContent_Declare(
@@ -149,86 +155,90 @@ set_target_properties (avrocpp_s PROPERTIES
 target_link_libraries (avrocpp ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES} fmt::fmt-header-only)
 target_include_directories(avrocpp PRIVATE ${SNAPPY_INCLUDE_DIR})
 
-add_executable (precompile test/precompile.cc)
-
-target_link_libraries (precompile avrocpp_s)
-
-macro (gen file ns)
-    add_custom_command (OUTPUT ${file}.hh
-        COMMAND avrogencpp
-            -p -
-            -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/${file}
-            -o ${file}.hh -n ${ns}
-        DEPENDS avrogencpp ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/${file})
-    add_custom_target (${file}_hh DEPENDS ${file}.hh)
-endmacro (gen)
-
-gen (empty_record empty)
-gen (bigrecord testgen)
-gen (bigrecord_r testgen_r)
-gen (bigrecord2 testgen2)
-gen (tweet testgen3)
-gen (union_array_union uau)
-gen (union_map_union umu)
-gen (union_conflict uc)
-gen (union_empty_record uer)
-gen (recursive rec)
-gen (reuse ru)
-gen (circulardep cd)
-gen (tree1 tr1)
-gen (tree2 tr2)
-gen (crossref cr)
-gen (primitivetypes pt)
-gen (cpp_reserved_words cppres)
-gen (cpp_reserved_words_union_typedef cppres_union)
-gen (big_union big_union)
-gen (union_redundant_types redundant_types)
-
-add_executable (avrogencpp impl/avrogencpp.cc)
-target_link_libraries (avrogencpp avrocpp_s)
-
-target_include_directories(avrocpp_s PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
 target_include_directories(avrocpp PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
+target_include_directories(avrocpp_s PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
 
-enable_testing()
+if (AVRO_BUILD_EXECUTABLES)
+    add_executable (precompile test/precompile.cc)
 
-macro (unittest name)
-    add_executable (${name} test/${name}.cc)
-    target_link_libraries (${name} avrocpp ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
-    add_test (NAME ${name} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name})
-endmacro (unittest)
+    target_link_libraries (precompile avrocpp_s)
 
-unittest (buffertest)
-unittest (unittest)
-unittest (SchemaTests)
-unittest (LargeSchemaTests)
-unittest (CodecTests)
-unittest (StreamTests)
-unittest (SpecificTests)
-unittest (DataFileTests)
-unittest (JsonTests)
-unittest (AvrogencppTests)
-unittest (CompilerTests)
-unittest (AvrogencppTestReservedWords)
-unittest (CommonsSchemasTests)
+    macro (gen file ns)
+        add_custom_command (OUTPUT ${file}.hh
+            COMMAND avrogencpp
+                -p -
+                -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/${file}
+                -o ${file}.hh -n ${ns}
+            DEPENDS avrogencpp ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/${file})
+        add_custom_target (${file}_hh DEPENDS ${file}.hh)
+    endmacro (gen)
 
-add_dependencies (AvrogencppTestReservedWords cpp_reserved_words_hh)
-add_dependencies (AvrogencppTestReservedWords cpp_reserved_words_hh
-    cpp_reserved_words_union_typedef_hh)
+    gen (empty_record empty)
+    gen (bigrecord testgen)
+    gen (bigrecord_r testgen_r)
+    gen (bigrecord2 testgen2)
+    gen (tweet testgen3)
+    gen (union_array_union uau)
+    gen (union_map_union umu)
+    gen (union_conflict uc)
+    gen (union_empty_record uer)
+    gen (recursive rec)
+    gen (reuse ru)
+    gen (circulardep cd)
+    gen (tree1 tr1)
+    gen (tree2 tr2)
+    gen (crossref cr)
+    gen (primitivetypes pt)
+    gen (cpp_reserved_words cppres)
+    gen (cpp_reserved_words_union_typedef cppres_union)
+    gen (big_union big_union)
+    gen (union_redundant_types redundant_types)
 
-add_dependencies (AvrogencppTests bigrecord_hh bigrecord_r_hh bigrecord2_hh
-    tweet_hh
-    union_array_union_hh union_map_union_hh union_conflict_hh
-    recursive_hh reuse_hh circulardep_hh tree1_hh tree2_hh crossref_hh
-    primitivetypes_hh empty_record_hh cpp_reserved_words_union_typedef_hh
-    union_empty_record_hh big_union_hh union_redundant_types_hh)
+    add_executable (avrogencpp impl/avrogencpp.cc)
+    target_link_libraries (avrogencpp avrocpp_s ${Boost_LIBRARIES})
+endif ()
+
+if (AVRO_BUILD_TESTS)
+    enable_testing()
+
+    macro (unittest name)
+        add_executable (${name} test/${name}.cc)
+        target_link_libraries (${name} avrocpp_s ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
+        add_test (NAME ${name} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name})
+    endmacro (unittest)
+
+    unittest (buffertest)
+    unittest (unittest)
+    unittest (SchemaTests)
+    unittest (LargeSchemaTests)
+    unittest (CodecTests)
+    unittest (StreamTests)
+    unittest (SpecificTests)
+    unittest (DataFileTests)
+    unittest (JsonTests)
+    unittest (AvrogencppTests)
+    unittest (CompilerTests)
+    unittest (AvrogencppTestReservedWords)
+    unittest (CommonsSchemasTests)
+
+    add_dependencies (AvrogencppTestReservedWords cpp_reserved_words_hh)
+    add_dependencies (AvrogencppTestReservedWords cpp_reserved_words_hh
+        cpp_reserved_words_union_typedef_hh)
+
+    add_dependencies (AvrogencppTests bigrecord_hh bigrecord_r_hh bigrecord2_hh
+        tweet_hh
+        union_array_union_hh union_map_union_hh union_conflict_hh
+        recursive_hh reuse_hh circulardep_hh tree1_hh tree2_hh crossref_hh
+        primitivetypes_hh empty_record_hh cpp_reserved_words_union_typedef_hh
+        union_empty_record_hh big_union_hh union_redundant_types_hh)
+endif ()
 
 include (InstallRequiredSystemLibraries)
 
@@ -241,7 +251,9 @@ install (TARGETS avrocpp avrocpp_s
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION lib)
 
-install (TARGETS avrogencpp RUNTIME DESTINATION bin)
+if (AVRO_BUILD_EXECUTABLES)
+    install (TARGETS avrogencpp RUNTIME DESTINATION bin)
+endif ()
 
 install (DIRECTORY include/avro DESTINATION include
     FILES_MATCHING PATTERN *.hh)
