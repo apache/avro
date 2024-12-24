@@ -139,6 +139,13 @@ void Node::setLogicalType(LogicalType logicalType) {
     // Check that the logical type is applicable to the node type.
     switch (logicalType.type()) {
         case LogicalType::NONE: break;
+        case LogicalType::BIG_DECIMAL: {
+            if (type_ != AVRO_BYTES) {
+                throw Exception("BIG_DECIMAL logical type can annotate "
+                                "only BYTES type");
+            }
+            break;
+        }
         case LogicalType::DECIMAL: {
             if (type_ != AVRO_BYTES && type_ != AVRO_FIXED) {
                 throw Exception("DECIMAL logical type can annotate "

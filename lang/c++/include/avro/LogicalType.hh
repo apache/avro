@@ -29,6 +29,7 @@ class AVRO_DECL LogicalType {
 public:
     enum Type {
         NONE,
+        BIG_DECIMAL,
         DECIMAL,
         DATE,
         TIME_MILLIS,

@@ -359,7 +359,11 @@ static LogicalType makeLogicalType(const Entity &e, const Object &m) {
     }
 
     LogicalType::Type t = LogicalType::NONE;
-    if (typeField == "date")
+    if (typeField == "big-decimal"
+        && !containsField(m, "precision")
+        && !containsField(m, "scale"))
+        t = LogicalType::BIG_DECIMAL;
+    else if (typeField == "date")
         t = LogicalType::DATE;
     else if (typeField == "time-millis")
         t = LogicalType::TIME_MILLIS;

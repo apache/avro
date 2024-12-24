@@ -51,6 +51,9 @@ void LogicalType::setScale(int32_t scale) {
 void LogicalType::printJson(std::ostream &os) const {
     switch (type_) {
         case LogicalType::NONE: break;
+        case LogicalType::BIG_DECIMAL:
+            os << R"("logicalType": "big-decimal")";
+            break;
         case LogicalType::DECIMAL:
             os << R"("logicalType": "decimal")";
             os << ", \"precision\": " << precision_;
