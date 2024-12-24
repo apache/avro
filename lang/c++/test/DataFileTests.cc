@@ -656,6 +656,27 @@ public:
             BOOST_CHECK_EQUAL(root->leafAt(5)->getDoc(), "extra slashes\\\\");
         }
     }
+
+    void testClosedReader() {
+        const auto isNonSeekableInputStreamError = [](const avro::Exception &e) { return e.what() == std::string("seek not supported on non-SeekableInputStream"); };
+
+        avro::DataFileReader<ComplexDouble> df(filename, writerSchema);
+        df.close();
+        ComplexDouble unused;
+        BOOST_CHECK(!df.read(unused));                                                       // closed stream can't be read
+        BOOST_CHECK_EQUAL(df.previousSync(), 0ul);                                           // closed stream always returns begin position
+        BOOST_CHECK(df.pastSync(10l));                                                       // closed stream always point after position                                                                                                                                   // closed stream always returns begin position
+        BOOST_CHECK_EQUAL(df.previousSync(), 0u);                                            // closed stream always point at position 0                                                                                                                       // closed stream always returns begin position
+        BOOST_CHECK_EXCEPTION(df.sync(10l), avro::Exception, isNonSeekableInputStreamError); // closed stream always returns begin position
+        BOOST_CHECK_EXCEPTION(df.seek(10l), avro::Exception, isNonSeekableInputStreamError); // closed stream always returns begin position
+    }
+
+    void testClosedWriter() {
+        avro::DataFileWriter<ComplexDouble> df(filename, writerSchema);
+        df.close();
+        ComplexDouble unused;
+        BOOST_CHECK_NO_THROW(df.write(unused)); // write has not effect on closed stream
+    }
 };
 
 void addReaderTests(test_suite *ts, const shared_ptr<DataFileTest> &t) {
@@ -1120,6 +1141,21 @@ init_unit_test_suite(int, char *[]) {
         shared_ptr<DataFileTest> t(new DataFileTest("test12.df", ischWithDoc, ischWithDoc));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSchemaReadWriteWithDoc, t));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+    {
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test13.df");
+        shared_ptr<DataFileTest> t(new DataFileTest("test13.df", ischWithDoc, ischWithDoc));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testClosedReader, t));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+    {
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test14.df");
+        shared_ptr<DataFileTest> t(new DataFileTest("test14.df", ischWithDoc, ischWithDoc));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testClosedWriter, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
