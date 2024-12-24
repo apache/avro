@@ -64,6 +64,9 @@ void testCommonSchema(const std::filesystem::path &dir_path) {
     }
     BOOST_CHECK(!readerNew.read(datumNew));
 
+    readerNew.close();
+    readerOrig.close();
+
     std::filesystem::remove(outputDataFile);
 }
 
