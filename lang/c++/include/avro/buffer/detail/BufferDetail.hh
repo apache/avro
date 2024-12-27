@@ -20,7 +20,6 @@
 #define avro_BufferDetail_hh__
 
 #include <boost/function.hpp>
-#include <boost/shared_array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/utility.hpp>
@@ -31,6 +30,7 @@
 #include <cassert>
 #include <deque>
 #include <exception>
+#include <memory>
 
 /**
  * \file BufferDetail.hh
@@ -161,7 +161,7 @@ private:
     friend bool operator!=(const Chunk &lhs, const Chunk &rhs);
 
     // more than one buffer can share an underlying block, so use SharedPtr
-    boost::shared_array<data_type> underlyingBlock_;
+    std::shared_ptr<data_type[]> underlyingBlock_;
 
     data_type *readPos_;  ///< The first readable byte in the block
     data_type *writePos_; ///< The end of written data and start of free space
