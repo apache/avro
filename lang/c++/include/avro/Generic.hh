@@ -19,8 +19,6 @@
 #ifndef avro_Generic_hh__
 #define avro_Generic_hh__
 
-#include <boost/utility.hpp>
-
 #include "Config.hh"
 #include "Decoder.hh"
 #include "Encoder.hh"

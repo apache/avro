@@ -21,7 +21,6 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
-#include <boost/utility.hpp>
 #include <locale>
 #include <sstream>
 #include <stack>

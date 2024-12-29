@@ -26,12 +26,11 @@
 #include "ValidSchema.hh"
 #include "buffer/Buffer.hh"
 
+#include <array>
 #include <map>
 #include <string>
 #include <vector>
 
-#include "array"
-#include "boost/utility.hpp"
 #include <boost/iostreams/filtering_stream.hpp>
 
 namespace avro {
