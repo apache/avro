@@ -48,7 +48,8 @@
  */
 namespace avro {
 
-typedef boost::blank null;
+struct null {
+};
 
 template<typename T>
 void encode(Encoder &e, const T &t);

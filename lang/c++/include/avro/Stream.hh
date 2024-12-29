@@ -24,8 +24,6 @@
 #include <memory>
 #include <vector>
 
-#include "boost/utility.hpp"
-
 #include "Config.hh"
 #include "Exception.hh"
 
