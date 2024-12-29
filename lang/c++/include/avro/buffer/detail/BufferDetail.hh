@@ -19,14 +19,15 @@
 #ifndef avro_BufferDetail_hh__
 #define avro_BufferDetail_hh__
 
-#include <utility>
 #ifdef HAVE_BOOST_ASIO
 #include <boost/asio/buffer.hpp>
 #endif
 #include <cassert>
 #include <deque>
 #include <exception>
+#include <functional>
 #include <memory>
+#include <utility>
 
 /**
  * \file BufferDetail.hh
