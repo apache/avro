@@ -494,7 +494,7 @@ struct TestSchema {
         cf.addAttribute("field1", std::string("1"));
 
         BOOST_CHECK_EQUAL(std::string("1"), *cf.getAttribute("field1"));
-        BOOST_CHECK_EQUAL(false, cf.getAttribute("not_existing").is_initialized());
+        BOOST_CHECK_EQUAL(false, cf.getAttribute("not_existing").has_value());
     }
 
     void test() {

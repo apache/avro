@@ -19,7 +19,6 @@
 #include "ValidatingCodec.hh"
 
 #include <algorithm>
-#include <boost/any.hpp>
 #include <map>
 #include <memory>
 #include <utility>

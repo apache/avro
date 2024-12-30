@@ -20,7 +20,6 @@
 #define avro_Reader_hh__
 
 #include <array>
-#include <boost/noncopyable.hpp>
 #include <cstdint>
 #include <vector>
 
@@ -38,13 +37,16 @@ namespace avro {
 ///
 
 template<class ValidatorType>
-class ReaderImpl : private boost::noncopyable {
+class ReaderImpl {
 
 public:
     explicit ReaderImpl(const InputBuffer &buffer) : reader_(buffer) {}
 
     ReaderImpl(const ValidSchema &schema, const InputBuffer &buffer) : validator_(schema),
                                                                        reader_(buffer) {}
+
+    ReaderImpl(const ReaderImpl &) = delete;
+    ReaderImpl &operator=(const ReaderImpl &) = delete;
 
     void readValue(Null &) {
         validator_.checkTypeExpected(AVRO_NULL);
