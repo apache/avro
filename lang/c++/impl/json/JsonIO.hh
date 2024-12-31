@@ -414,7 +414,7 @@ public:
         sep();
         std::ostringstream oss;
         if (std::isfinite(t)) {
-            oss << std::setprecision(10) << t;
+            oss << std::setprecision(9) << t;
         } else if (std::isnan(t)) {
             oss << "NaN";
         } else if (t == std::numeric_limits<float>::infinity()) {
@@ -431,7 +431,7 @@ public:
         sep();
         std::ostringstream oss;
         if (std::isfinite(t)) {
-            oss << std::setprecision(18) << t;
+            oss << std::setprecision(17) << t;
         } else if (std::isnan(t)) {
             oss << "NaN";
         } else if (t == std::numeric_limits<double>::infinity()) {
