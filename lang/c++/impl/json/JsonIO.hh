@@ -20,6 +20,7 @@
 #define avro_json_JsonIO_hh__
 
 #include <cmath>
+#include <iomanip>
 #include <locale>
 #include <sstream>
 #include <stack>
