@@ -409,11 +409,28 @@ public:
         sep2();
     }
 
+    void encodeNumber(float t) {
+        sep();
+        std::ostringstream oss;
+        if (std::isfinite(t)) {
+            oss << std::setprecision(10) << t;
+        } else if (std::isnan(t)) {
+            oss << "NaN";
+        } else if (t == std::numeric_limits<float>::infinity()) {
+            oss << "Infinity";
+        } else {
+            oss << "-Infinity";
+        }
+        const std::string s = oss.str();
+        out_.writeBytes(reinterpret_cast<const uint8_t *>(s.data()), s.size());
+        sep2();
+    }
+
     void encodeNumber(double t) {
         sep();
         std::ostringstream oss;
         if (std::isfinite(t)) {
-            oss << t;
+            oss << std::setprecision(18) << t;
         } else if (std::isnan(t)) {
             oss << "NaN";
         } else if (t == std::numeric_limits<double>::infinity()) {
