@@ -19,8 +19,7 @@
 #ifndef avro_json_JsonIO_hh__
 #define avro_json_JsonIO_hh__
 
-#include <boost/lexical_cast.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
+#include <cmath>
 #include <locale>
 #include <sstream>
 #include <stack>
@@ -405,9 +404,7 @@ public:
     template<typename T>
     void encodeNumber(T t) {
         sep();
-        std::ostringstream oss;
-        oss << boost::lexical_cast<std::string>(t);
-        const std::string s = oss.str();
+        const std::string s = std::to_string(t);
         out_.writeBytes(reinterpret_cast<const uint8_t *>(s.data()), s.size());
         sep2();
     }
@@ -415,9 +412,9 @@ public:
     void encodeNumber(double t) {
         sep();
         std::ostringstream oss;
-        if (boost::math::isfinite(t)) {
-            oss << boost::lexical_cast<std::string>(t);
-        } else if (boost::math::isnan(t)) {
+        if (std::isfinite(t)) {
+            oss << t;
+        } else if (std::isnan(t)) {
             oss << "NaN";
         } else if (t == std::numeric_limits<double>::infinity()) {
             oss << "Infinity";
