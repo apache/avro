@@ -414,6 +414,7 @@ public:
         sep();
         std::ostringstream oss;
         if (std::isfinite(t)) {
+            oss.imbue(std::locale::classic());
             oss << std::setprecision(9) << t;
         } else if (std::isnan(t)) {
             oss << "NaN";
@@ -431,6 +432,7 @@ public:
         sep();
         std::ostringstream oss;
         if (std::isfinite(t)) {
+            oss.imbue(std::locale::classic());
             oss << std::setprecision(17) << t;
         } else if (std::isnan(t)) {
             oss << "NaN";
