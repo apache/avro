@@ -25,6 +25,7 @@
 #include <sstream>
 #include <stack>
 #include <string>
+#include <type_traits>
 
 #include "Config.hh"
 #include "Stream.hh"
@@ -403,40 +404,30 @@ public:
     }
 
     template<typename T>
-    void encodeNumber(T t) {
-        sep();
-        const std::string s = std::to_string(t);
-        out_.writeBytes(reinterpret_cast<const uint8_t *>(s.data()), s.size());
-        sep2();
-    }
-
-    void encodeNumber(float t) {
+    std::enable_if_t<!std::is_floating_point_v<T>, void> encodeNumber(T t) {
         sep();
         std::ostringstream oss;
-        if (std::isfinite(t)) {
-            oss.imbue(std::locale::classic());
-            oss << std::setprecision(9) << t;
-        } else if (std::isnan(t)) {
-            oss << "NaN";
-        } else if (t == std::numeric_limits<float>::infinity()) {
-            oss << "Infinity";
-        } else {
-            oss << "-Infinity";
-        }
+        oss.imbue(std::locale::classic());
+        oss << t;
         const std::string s = oss.str();
         out_.writeBytes(reinterpret_cast<const uint8_t *>(s.data()), s.size());
         sep2();
     }
 
-    void encodeNumber(double t) {
+    template<typename T>
+    std::enable_if_t<std::is_floating_point_v<T>, void> encodeNumber(T t) {
         sep();
         std::ostringstream oss;
         if (std::isfinite(t)) {
             oss.imbue(std::locale::classic());
-            oss << std::setprecision(17) << t;
+            if constexpr (std::is_same_v<T, float>) {
+                oss << std::setprecision(9) << t;
+            } else {
+                oss << std::setprecision(17) << t;
+            }
         } else if (std::isnan(t)) {
             oss << "NaN";
-        } else if (t == std::numeric_limits<double>::infinity()) {
+        } else if (t == std::numeric_limits<T>::infinity()) {
             oss << "Infinity";
         } else {
             oss << "-Infinity";
