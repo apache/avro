@@ -19,12 +19,13 @@
 #ifndef avro_json_JsonIO_hh__
 #define avro_json_JsonIO_hh__
 
-#include <boost/lexical_cast.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
+#include <cmath>
+#include <iomanip>
 #include <locale>
 #include <sstream>
 #include <stack>
 #include <string>
+#include <type_traits>
 
 #include "Config.hh"
 #include "Stream.hh"
@@ -403,23 +404,30 @@ public:
     }
 
     template<typename T>
-    void encodeNumber(T t) {
+    std::enable_if_t<!std::is_floating_point_v<T>, void> encodeNumber(T t) {
         sep();
         std::ostringstream oss;
-        oss << boost::lexical_cast<std::string>(t);
+        oss.imbue(std::locale::classic());
+        oss << t;
         const std::string s = oss.str();
         out_.writeBytes(reinterpret_cast<const uint8_t *>(s.data()), s.size());
         sep2();
     }
 
-    void encodeNumber(double t) {
+    template<typename T>
+    std::enable_if_t<std::is_floating_point_v<T>, void> encodeNumber(T t) {
         sep();
         std::ostringstream oss;
-        if (boost::math::isfinite(t)) {
-            oss << boost::lexical_cast<std::string>(t);
-        } else if (boost::math::isnan(t)) {
+        if (std::isfinite(t)) {
+            oss.imbue(std::locale::classic());
+            if constexpr (std::is_same_v<T, float>) {
+                oss << std::setprecision(9) << t;
+            } else {
+                oss << std::setprecision(17) << t;
+            }
+        } else if (std::isnan(t)) {
             oss << "NaN";
-        } else if (t == std::numeric_limits<double>::infinity()) {
+        } else if (t == std::numeric_limits<T>::infinity()) {
             oss << "Infinity";
         } else {
             oss << "-Infinity";

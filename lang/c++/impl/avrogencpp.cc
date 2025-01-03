@@ -27,7 +27,6 @@
 #include <set>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
 
 #include <boost/random/mersenne_twister.hpp>
@@ -46,8 +45,6 @@ using std::ostream;
 using std::set;
 using std::string;
 using std::vector;
-
-using boost::lexical_cast;
 
 using avro::compileJsonSchema;
 using avro::ValidSchema;
@@ -196,7 +193,7 @@ string CodeGen::cppTypeOf(const NodePtr &n) {
         case avro::AVRO_MAP:
             return "std::map<std::string, " + cppTypeOf(n->leafAt(1)) + " >";
         case avro::AVRO_FIXED:
-            return "std::array<uint8_t, " + lexical_cast<string>(n->fixedSize()) + ">";
+            return "std::array<uint8_t, " + std::to_string(n->fixedSize()) + ">";
         case avro::AVRO_SYMBOLIC:
             return cppTypeOf(resolveSymbol(n));
         case avro::AVRO_UNION:
@@ -799,7 +796,7 @@ void CodeGen::emitGeneratedWarning() {
 string CodeGen::guard() {
     string h = headerFile_;
     makeCanonical(h, true);
-    return h + "_" + lexical_cast<string>(random_()) + "_H";
+    return h + "_" + std::to_string(random_()) + "_H";
 }
 
 void CodeGen::generate(const ValidSchema &schema) {
@@ -972,7 +969,7 @@ std::string UnionCodeTracker::generateNewUnionName(const std::vector<std::string
     }
     makeCanonical(s, false);
 
-    std::string result = s + "_Union__" + boost::lexical_cast<string>(unionNumber_++) + "__";
+    std::string result = s + "_Union__" + std::to_string(unionNumber_++) + "__";
     unionBranchNameMapping_.emplace(unionBranches, result);
     return result;
 }
