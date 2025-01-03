@@ -113,6 +113,7 @@ class CodeGen {
     void generateTraits(const NodePtr &n);
     void generateRecordTraits(const NodePtr &n);
     void generateUnionTraits(const NodePtr &n);
+    void generateDocComment(const NodePtr &n, const char *indent = "");
     void emitCopyright();
     void emitGeneratedWarning();
 
@@ -253,6 +254,7 @@ string CodeGen::generateRecordType(const NodePtr &n) {
         return it->second;
     }
 
+    generateDocComment(n);
     os_ << "struct " << decoratedName << " {\n";
     if (!noUnion_) {
         for (size_t i = 0; i < c; ++i) {
@@ -271,6 +273,7 @@ string CodeGen::generateRecordType(const NodePtr &n) {
         // the nameAt(i) does not take c++ reserved words into account
         // so we need to call decorate on it
         std::string decoratedNameAt = decorate(n->nameAt(i));
+        generateDocComment(n->leafAt(i), "    ");
         os_ << "    " << types[i];
         os_ << ' ' << decoratedNameAt << ";\n";
     }
@@ -409,7 +412,7 @@ string CodeGen::generateUnionType(const NodePtr &n) {
     for (size_t i = 0; i < c; ++i) {
         // escape reserved literals for c++
         auto branch_name = decorate(names[i]);
-        // avoid rare collisions, e.g. somone might name their struct int_
+        // avoid rare collisions, e.g. someone might name their struct int_
         if (used_branch_names.find(branch_name) != used_branch_names.end()) {
             size_t postfix = 2;
             std::string escaped_name = branch_name + "_" + std::to_string(postfix);
@@ -736,6 +739,32 @@ void CodeGen::generateTraits(const NodePtr &n) {
         case avro::AVRO_FIXED:
         default:
             break;
+    }
+}
+
+void CodeGen::generateDocComment(const NodePtr &n, const char *indent) {
+    if (!n->getDoc().empty()) {
+        std::vector<std::string> lines;
+        boost::algorithm::split(lines, n->getDoc(), boost::algorithm::is_any_of("\n"));
+        for (auto &line : lines) {
+            boost::algorithm::replace_all(line, "\r", "");
+
+            if (line.empty()) {
+                os_ << indent << "//\n";
+            } else {
+                // If a comment line ends with a backslash or backslash and whitespace,
+                // avoid generating code which will generate multi-line comment warnings
+                // on GCC. We can't just append whitespace here as escaped newlines ignore
+                // trailing whitespace.
+                auto lastBackslash = std::find(line.rbegin(), line.rend(), '\\');
+                auto lastNonWs = std::find_if(line.rbegin(), line.rend(), [](char c) { return !std::isspace(static_cast<int>(c)); });
+                // Note: lastBackslash <= lastNonWs because the iterators are reversed, "less" is later in the string.
+                if (lastBackslash != line.rend() && lastBackslash <= lastNonWs) {
+                    line.append("(backslash)");
+                }
+                os_ << indent << "// " << line << "\n";
+            }
+        }
     }
 }
 
