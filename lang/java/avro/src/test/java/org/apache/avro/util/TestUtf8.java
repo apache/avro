@@ -99,6 +99,26 @@ public class TestUtf8 {
     assertEquals(4122302, u.hashCode());
   }
 
+  /**
+   * There are two different code paths that hashcode() can call depending on the
+   * state of the internal buffer. If the buffer is full (string length is equal
+   * to buffer length) then the JDK hashcode function can be used. However, if the
+   * buffer is not full (string length is less than the internal buffer length),
+   * then the JDK does not support this prior to JDK 23 and a scalar
+   * implementation is the only option today. This difference can be resolved with
+   * JDK 23 as it supports both cases.
+   */
+  @Test
+  void hashCodeBasedOnCapacity() {
+    // string = 8; buffer = 8
+    Utf8 fullCapacity = new Utf8("abcdefgh", 8);
+
+    // string = 8; buffer = 9
+    Utf8 partialCapacity = new Utf8("abcdefghX", 8);
+
+    assertEquals(fullCapacity.hashCode(), partialCapacity.hashCode());
+  }
+
   @Test
   void oversizeUtf8() {
     Utf8 u = new Utf8();
