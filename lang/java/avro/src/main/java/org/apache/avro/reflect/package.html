@@ -83,7 +83,10 @@ will not be written or read to.
 <p> The {@link org.apache.avro.reflect.AvroName AvroName} annotation renames 
 the field in the schema to the given name. The reflect datum reader will look 
 for a schema field with the given name, when trying to read into such an 
-annotated java field. 
+annotated java field.
+
+<p> The {@link org.apache.avro.reflect.AvroNamespace AvroTypeName} annotation renames
+    the namespace in the schema to the given namespace.
 
 <p>The {@link org.apache.avro.reflect.AvroMeta AvroMeta} annotation adds an 
 arbitrary key:value pair in the schema at the node of the java field.
