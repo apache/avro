@@ -495,7 +495,7 @@ static void testLogicalTypes() {
     const char *durationType = R"({"type": "fixed","size": 12,"name": "durationType","logicalType": "duration"})";
     const char *uuidType = R"({"type": "string","logicalType": "uuid"})";
     // AVRO-2923 Union with LogicalType
-    const char *unionType = R"([{"type":"string", "logicalType":"uuid"},"null"]})";
+    const char *unionType = R"([{"type":"string", "logicalType":"uuid"},"null"])";
     {
         BOOST_TEST_CHECKPOINT(bytesDecimalType);
         ValidSchema schema1 = compileJsonSchemaFromString(bytesDecimalType);

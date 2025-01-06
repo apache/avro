@@ -74,11 +74,11 @@ struct TestSchema {
         RecordSchema record("RootRecord");
 
         CustomAttributes customAttributeLong;
-        customAttributeLong.addAttributeJson("extra_info_mylong", std::string("\"it's a long field\""));
+        customAttributeLong.addAttribute("extra_info_mylong", std::string("it's a long field"));
         // Validate that adding a custom attribute with same name is not allowed
         bool caught = false;
         try {
-            customAttributeLong.addAttributeJson("extra_info_mylong", std::string("\"duplicate\""));
+            customAttributeLong.addAttribute("extra_info_mylong", std::string("duplicate"));
         } catch (Exception &e) {
             std::cout << "(intentional) exception: " << e.what() << '\n';
             caught = true;
@@ -140,10 +140,10 @@ struct TestSchema {
         BOOST_CHECK_EQUAL(caught, true);
 
         CustomAttributes customAttributeLong2;
-        customAttributeLong2.addAttributeJson("extra_info_mylong2",
-                                              std::string("\"it's a long field\""));
-        customAttributeLong2.addAttributeJson("more_info_mylong2",
-                                              std::string("\"it's still a long field\""));
+        customAttributeLong2.addAttribute("extra_info_mylong2",
+                                          std::string("it's a long field"));
+        customAttributeLong2.addAttribute("more_info_mylong2",
+                                          std::string("it's still a long field"));
         record.addField("mylong2", LongSchema(), customAttributeLong2);
 
         record.addField("anotherint", intSchema);
@@ -440,15 +440,14 @@ struct TestSchema {
         std::vector<GenericDatum> defaultValues;
         concepts::MultiAttribute<CustomAttributes> customAttributes;
 
-        CustomAttributes ca;
-        ca.addAttribute("stringField", std::string("foobar"));
-        ca.addAttribute("stringFieldComplex", std::string("\" a field value with \"double quotes\" \""));
-        ca.addAttributeJson("stringFieldComplex2", std::string("\"\\\" a field value with \\\"double quotes\\\" \\\"\""));
-        ca.addAttributeJson("booleanField", std::string("true"));
-        ca.addAttributeJson("numberField", std::string("1.23"));
-        ca.addAttributeJson("nullField", std::string("null"));
-        ca.addAttributeJson("arrayField", std::string("[1]"));
-        ca.addAttributeJson("mapField", std::string("{\"key1\":\"value1\", \"key2\":\"value2\"}"));
+        CustomAttributes ca(false);
+        ca.addAttribute("stringField", std::string("\"foobar\""));
+        ca.addAttribute("stringFieldComplex", std::string("\"\\\" a field value with \\\"double quotes\\\" \\\"\""));
+        ca.addAttribute("booleanField", std::string("true"));
+        ca.addAttribute("numberField", std::string("1.23"));
+        ca.addAttribute("nullField", std::string("null"));
+        ca.addAttribute("arrayField", std::string("[1]"));
+        ca.addAttribute("mapField", std::string("{\"key1\":\"value1\", \"key2\":\"value2\"}"));
         fieldNames.add("f1");
         fieldValues.add(NodePtr(new NodePrimitive(Type::AVRO_LONG)));
         customAttributes.add(ca);
@@ -465,8 +464,7 @@ struct TestSchema {
             "\"nullField\": null, "
             "\"numberField\": 1.23, "
             "\"stringField\": \"foobar\", "
-            "\"stringFieldComplex\": \"\\\" a field value with \\\"double quotes\\\" \\\"\", "
-            "\"stringFieldComplex2\": \"\\\" a field value with \\\"double quotes\\\" \\\"\""
+            "\"stringFieldComplex\": \"\\\" a field value with \\\"double quotes\\\" \\\"\""
             "}]}";
         testNodeRecord(nodeRecordWithCustomAttribute,
                        expectedJsonWithCustomAttribute);
@@ -494,35 +492,25 @@ struct TestSchema {
     }
 
     void checkCustomAttributes_addAndGetAttributeJson() {
-        CustomAttributes ca;
-        ca.addAttributeJson("field1", std::string("true"));
+        CustomAttributes ca(false);
+        ca.addAttribute("field1", std::string("true"));
 
-        BOOST_CHECK_EQUAL(std::string("true"), *ca.getAttributeJson("field1"));
-        BOOST_CHECK_EQUAL(false, ca.getAttributeJson("not_existing").has_value());
+        BOOST_CHECK_EQUAL(std::string("true"), *ca.getAttribute("field1"));
+        BOOST_CHECK_EQUAL(false, ca.getAttribute("not_existing").has_value());
     }
 
-    void checkCustomAttributes_deprecatedAddAndGetAttribute() {
+    void checkCustomAttributes_addAndGetAttributeString() {
         CustomAttributes ca;
-        ca.addAttribute("field1", std::string("foo bar"));
-        ca.addAttributeJson("field2", std::string("true"));
+        ca.addAttribute("field1", std::string("true"));
+        ca.addAttribute("field2", std::string("value with \\\"quotes\\\""));
 
-        BOOST_CHECK_EQUAL(std::string("foo bar"), *ca.getAttribute("field1"));
-        BOOST_CHECK_EQUAL(std::string("true"), *ca.getAttribute("field2"));
+        BOOST_CHECK_EQUAL(std::string("true"), *ca.getAttribute("field1"));
+        BOOST_CHECK_EQUAL(std::string("value with \\\"quotes\\\""), *ca.getAttribute("field2"));
         BOOST_CHECK_EQUAL(false, ca.getAttribute("not_existing").has_value());
-        // non-deprecated version quotes strings
-        BOOST_CHECK_EQUAL(std::string("\"foo bar\""), *ca.getAttributeJson("field1"));
 
-        // also check the deprecated map accessor
-        auto map = ca.attributes();
-        BOOST_CHECK_EQUAL(2, map.size());
-        auto iter = map.begin();
-        BOOST_CHECK_EQUAL("field1", iter->first);
-        BOOST_CHECK_EQUAL("foo bar", iter->second);
-        iter++;
-        BOOST_CHECK_EQUAL("field2", iter->first);
-        BOOST_CHECK_EQUAL("true", iter->second);
-        iter++;
-        BOOST_CHECK(iter == map.end());
+        std::ostringstream oss;
+        ca.printJson(oss, "field2");
+        BOOST_CHECK_EQUAL(std::string("\"field2\": \"value with \\\"quotes\\\"\""), oss.str());
     }
 
     void test() {
@@ -550,7 +538,7 @@ struct TestSchema {
         checkNodeRecordWithoutCustomAttribute();
         checkNodeRecordWithCustomAttribute();
         checkCustomAttributes_addAndGetAttributeJson();
-        checkCustomAttributes_deprecatedAddAndGetAttribute();
+        checkCustomAttributes_addAndGetAttributeString();
     }
 
     ValidSchema schema_;

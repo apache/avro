@@ -27,16 +27,8 @@
 namespace avro {
 
 std::optional<std::string> CustomAttributes::getAttribute(const std::string &name) const {
-    auto iter = attributeStrings_.find(name);
-    if (iter == attributeStrings_.end()) {
-        return {};
-    }
-    return iter->second;
-}
-
-std::optional<std::string> CustomAttributes::getAttributeJson(const std::string &name) const {
-    auto iter = attributeJson_.find(name);
-    if (iter == attributeJson_.end()) {
+    auto iter = attributes_.find(name);
+    if (iter == attributes_.end()) {
         return {};
     }
     return iter->second;
@@ -44,39 +36,44 @@ std::optional<std::string> CustomAttributes::getAttributeJson(const std::string 
 
 void CustomAttributes::addAttribute(const std::string &name,
                                     const std::string &value) {
-    auto iter_and_find =
-        attributeStrings_.insert(std::pair<std::string, std::string>(name, value));
-    if (!iter_and_find.second) {
-        throw Exception(name + " already exists and cannot be added");
-    }
-    attributeJson_[name] = json::Entity(std::make_shared<std::string>(value)).toString();
-}
-
-void CustomAttributes::addAttributeJson(const std::string &name,
-                                        const std::string &value) {
+    // Validate the incoming value.
+    //
     // NOTE: This is a bit annoying that we accept the data as a string instead of
     // as an Entity. That means the compiler must convert the value to a string only
     // for this method to convert it back. But we can't directly refer to the
     // json::Entity type in the signatures for this class (and thus cannot accept
     // that type directly as a parameter) because then it would need to be included
     // from a header file: CustomAttributes.hh. But the json header files are not
-    // part of the Avro distribution, so these header files cannot #include any of
+    // part of the Avro distribution, so CustomAttributes.hh cannot #include any of
     // the json header files.
-    json::Entity e = json::loadEntity(value.c_str());
+    if (onlyStringValues_) {
+        try {
+            json::loadEntity(("\"" + value + "\"").c_str());
+        } catch (json::TooManyValuesException e) {
+            throw Exception("string has malformed or missing escapes");
+        }
+    } else {
+        json::loadEntity(value.c_str());
+    }
+
     auto iter_and_find =
-        attributeJson_.insert(std::pair<std::string, std::string>(name, value));
+        attributes_.insert(std::pair<std::string, std::string>(name, value));
     if (!iter_and_find.second) {
         throw Exception(name + " already exists and cannot be added");
     }
-    attributeStrings_[name] = e.type() == json::EntityType::String ? e.stringValue() : value;
 }
 
 void CustomAttributes::printJson(std::ostream &os,
                                  const std::string &name) const {
-    auto iter = attributeJson_.find(name);
-    if (iter == attributeJson_.end()) {
+    auto iter = attributes_.find(name);
+    if (iter == attributes_.end()) {
         throw Exception(name + " doesn't exist");
     }
-    os << json::Entity(std::make_shared<std::string>(name)).toString() << ": " << iter->second;
+    os << json::Entity(std::make_shared<std::string>(name)).toString() << ": ";
+    if (onlyStringValues_) {
+        os << "\"" << iter->second << "\"";
+    } else {
+        os << iter->second;
+    }
 }
 } // namespace avro

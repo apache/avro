@@ -177,6 +177,12 @@ AVRO_DECL Entity loadEntity(const uint8_t *text, size_t len);
 
 void writeEntity(JsonGenerator<JsonNullFormatter> &g, const Entity &n);
 
+class AVRO_DECL TooManyValuesException : public virtual std::runtime_error {
+public:
+    explicit TooManyValuesException() :
+        std::runtime_error("invalid JSON document: expecting a single JSON value but found more than one") {}
+};
+
 } // namespace json
 } // namespace avro
 

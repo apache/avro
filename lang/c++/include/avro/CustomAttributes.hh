@@ -34,64 +34,61 @@ namespace avro {
 class AVRO_DECL CustomAttributes {
 
 public:
-    // Retrieves the custom attribute value for the given name as a JSON document.
-    // Returns an empty value if the attribute doesn't exist. Unlike getAttribute,
-    // string values will always be quoted and escaped.
-    std::optional<std::string> getAttributeJson(const std::string &name) const;
+    // Creates a new CustomAttributes object where all values are strings.
+    // All values passed to addAttribute() and returned from getAttribute() or the
+    // attributes() map will not be enclosed in quotes. However, any internal quotes
+    // WILL be escaped and other special characters MAY be escaped.
+    //
+    // To support non-string values, use CustomAttributes(false) instead.
+    CustomAttributes() : CustomAttributes(true) {}
+
+    // Creates a new CustomAttributes object.
+    //
+    // If the given onlyStringValues flag is true, all values must be strings. All
+    // values passed to addAttribute() and returned from getAttribute() or the
+    // attributes() map will not be enclosed in quotes. However, any internal quotes
+    // WILL be escaped and other special characters MAY be escaped.
+    //
+    // If the given onlyStringValues is false, the values support any valid JSON type.
+    // In this mode, all values passed to addAttribute() and returned from getAttribute()
+    // or the attributes() map must be valid JSON values; string values must be quoted
+    // and escaped.
+    CustomAttributes(bool onlyStringValues): onlyStringValues_(onlyStringValues) {}
 
     // Retrieves the custom attribute string for the given name. Returns an empty
-    // value if the attribute doesn't exist. If the attribute value is not a string
-    // (i.e. it's a number, boolean, array, or object), the stringified form (the
-    // value encoded as a JSON document) will be returned. This makes it ambiguous
-    // to the caller as to whether the value was a string or not. So getAttributeJson
-    // should be used instead, which does not have this ambiguity. This method is
-    // present only for backward compatibility.
-    [[deprecated("use getAttributeJson instead")]]
+    // value if the attribute doesn't exist.
+    //
+    // If this CustomAttributes was instantiated to allow non-string values, the returned
+    // string will be a JSON document (and string values will be quoted and escaped).
+    // Otherwise, the returned string will be a string value, though interior quotes
+    // will be escaped and other special characters may be escaped.
     std::optional<std::string> getAttribute(const std::string &name) const;
 
-    // Adds a custom attribute with an arbitrary JSON value. The given string must
-    // be a valid JSON document. So if the value is a string, it must be quoted
-    // and escaped. Unlike addAttribute, this allows setting the value to
-    // non-string values, like numbers, booleans, arrays, and objects.
+    // Adds a custom attribute.
+    //
+    // If this CustomAttributes was instantiated to allow non-string values, the given
+    // value string must be a valid JSON document. So if the value is a string, it must
+    // be quoted and escaped. Otherwise, the given value string is an unquoted string
+    // value (though interior quotes must still be escaped).
     //
     // If the attribute already exists or if the given value is not a valid JSON
-    // document, throw an exception.
-    void addAttributeJson(const std::string &name, const std::string &value);
-
-    // Adds a custom attribute with a string value. If the attribute already exists,
-    // throw an exception. Unlike with addAttributeJson, the string value must not
-    // be encoded (no quoting or escaping). This is only present for backward
-    // compatibility since it does not allow setting non-string values. So
-    // addAttributeJson should be used instead, which allows setting any kind of
-    // value.
-    [[deprecated("use addAttributeJson instead")]]
+    // document or not a correctly escaped string, throw an exception.
     void addAttribute(const std::string &name, const std::string &value);
 
     // Provides a way to iterate over the custom attributes or check attribute size.
-    // All values are encoded to JSON. So string values will be quoted and escaped.
-    const std::map<std::string, std::string> &jsonAttributes() const {
-        return attributeJson_;
-    }
-
-    // Provides a way to iterate over the custom attributes or check attribute size.
     // The values in this map are the same as those returned from getAttribute. So
-    // string values are returned as-is but non-string values are encoded to JSON
-    // first. That means it is ambiguous as to whether a value is a string or not,
-    // so callers should prefer jsonAttributes instead.
-    [[deprecated("use jsonAttributes instead")]]
+    // the value may be a JSON document or an unquoted string, depending on whether
+    // this CustomAttributes was instantiated to allow non-string values.
     const std::map<std::string, std::string> &attributes() const {
-        return attributeStrings_;
+        return attributes_;
     }
 
     // Prints the attribute value for the specific attribute.
     void printJson(std::ostream &os, const std::string &name) const;
 
 private:
-    // We have to maintain a separate map in order to implement the
-    // attributes() method. This is just for API backward compatibility.
-    std::map<std::string, std::string> attributeStrings_;
-
-    std::map<std::string, std::string> attributeJson_;
+    bool onlyStringValues_;
+    std::map<std::string, std::string> attributes_;
 };
 
 } // namespace avro
