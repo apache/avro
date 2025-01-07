@@ -24,13 +24,12 @@
 #include <iostream>
 #include <map>
 #include <optional>
+#include <random>
 #include <set>
+#include <utility>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
-
-#include <boost/random/mersenne_twister.hpp>
-#include <utility>
 
 #include "Compiler.hh"
 #include "NodeImpl.hh"
@@ -89,7 +88,7 @@ class CodeGen {
     const std::string includePrefix_;
     const bool noUnion_;
     const std::string guardString_;
-    boost::mt19937 random_;
+    std::mt19937 random_;
 
     vector<PendingSetterGetter> pendingGettersAndSetters;
     vector<PendingConstructor> pendingConstructors;

@@ -25,8 +25,6 @@
 #include <string>
 #include <vector>
 
-#include "boost/blank.hpp"
-
 #include "AvroTraits.hh"
 #include "Config.hh"
 #include "Decoder.hh"
