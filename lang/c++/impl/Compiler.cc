@@ -136,10 +136,20 @@ int64_t getLongField(const Entity &e, const Object &m,
 // Unescape double quotes (") for de-serialization.  This method complements the
 // method NodeImpl::escape() which is used for serialization.
 static void unescape(string &s) {
-    std::string::size_type pos = 0;
-    while ((pos = s.find("\\\"", pos)) != std::string::npos) {
-        s.replace(pos, 2, "\"");
-        pos += 1;
+    size_t writePos = 0, readPos = 0;
+    while (readPos < s.length()) {
+        if (readPos + 1 < s.length() && s[readPos] == '\\' && s[readPos + 1] == '\"') {
+            s[writePos++] = '\"';
+            readPos += 2;
+        } else if (writePos != readPos) {
+            s[writePos++] = s[readPos++];
+        } else {
+            writePos++;
+            readPos++;
+        }
+    }
+    if (writePos != s.length()) {
+        s.resize(writePos);
     }
 }
 
