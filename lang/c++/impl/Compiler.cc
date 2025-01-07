@@ -139,7 +139,7 @@ static void unescape(string &s) {
     std::string::size_type pos = 0;
     while ((pos = s.find("\\\"", pos)) != std::string::npos) {
         s.replace(pos, 2, "\"");
-        pos += 2;
+        pos += 1;
     }
 }
 
