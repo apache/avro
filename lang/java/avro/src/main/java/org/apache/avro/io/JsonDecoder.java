@@ -199,6 +199,19 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
       float result = in.getFloatValue();
       in.nextToken();
       return result;
+    } else if (in.getCurrentToken() == JsonToken.VALUE_STRING) {
+      String stringValue = in.getText();
+      in.nextToken();
+      if (isNaNString(stringValue)) {
+        return Float.NaN;
+      }
+      if (isNegativeInfinityString(stringValue)) {
+        return Float.NEGATIVE_INFINITY;
+      }
+      if (isPositiveInfinityString(stringValue)) {
+        return Float.POSITIVE_INFINITY;
+      }
+      throw error("float");
     } else {
       throw error("float");
     }
@@ -211,9 +224,40 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
       double result = in.getDoubleValue();
       in.nextToken();
       return result;
+    } else if (in.getCurrentToken() == JsonToken.VALUE_STRING) {
+      String stringValue = in.getText();
+      in.nextToken();
+      if (isNaNString(stringValue)) {
+        return Double.NaN;
+      }
+      if (isNegativeInfinityString(stringValue)) {
+        return Double.NEGATIVE_INFINITY;
+      }
+      if (isPositiveInfinityString(stringValue)) {
+        return Double.POSITIVE_INFINITY;
+      }
+      throw error("double");
     } else {
       throw error("double");
     }
+  }
+
+  // check whether the given string represents an IEEE 754 'NaN' string value as
+  // serialized by Jackson
+  private static boolean isNaNString(String value) {
+    return "NaN".equals(value);
+  }
+
+  // check whether the given string represents an IEEE 754 'Infinity' string value
+  // as serialized by Jackson
+  private static boolean isPositiveInfinityString(String value) {
+    return "Infinity".equals(value) || "INF".equals(value);
+  }
+
+  // check whether the given string represents an IEEE 754 '-Infinity' string
+  // value as serialized by Jackson
+  private static boolean isNegativeInfinityString(String value) {
+    return "-Infinity".equals(value) || "-INF".equals(value);
   }
 
   @Override
