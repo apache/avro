@@ -300,7 +300,7 @@ static Field makeField(const Entity &e, SymbolTable &st, const string &ns) {
     }
     GenericDatum d = (it2 == m.end()) ? GenericDatum() : makeGenericDatum(node, it2->second, st);
     // Get custom attributes
-    CustomAttributes customAttributes(false);
+    CustomAttributes customAttributes(CustomAttributes::json);
     getCustomAttributes(m, customAttributes);
     return Field(std::move(n), std::move(aliases), node, d, customAttributes);
 }
@@ -424,7 +424,7 @@ static NodePtr makeArrayNode(const Entity &e, const Object &m,
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
-    CustomAttributes customAttributes(false);
+    CustomAttributes customAttributes(CustomAttributes::json);
     getCustomAttributes(m, customAttributes);
     node->addCustomAttributesForField(customAttributes);
     return node;

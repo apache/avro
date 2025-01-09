@@ -440,7 +440,7 @@ struct TestSchema {
         std::vector<GenericDatum> defaultValues;
         concepts::MultiAttribute<CustomAttributes> customAttributes;
 
-        CustomAttributes ca(false);
+        CustomAttributes ca(CustomAttributes::json);
         ca.addAttribute("stringField", std::string("\"foobar\""));
         ca.addAttribute("stringFieldComplex", std::string("\"\\\" a field value with \\\"double quotes\\\" \\\"\""));
         ca.addAttribute("booleanField", std::string("true"));
@@ -492,7 +492,7 @@ struct TestSchema {
     }
 
     void checkCustomAttributes_addAndGetAttributeJson() {
-        CustomAttributes ca(false);
+        CustomAttributes ca(CustomAttributes::json);
         ca.addAttribute("field1", std::string("true"));
 
         BOOST_CHECK_EQUAL(std::string("true"), *ca.getAttribute("field1"));
