@@ -276,6 +276,19 @@ class PrimitivesArraysTest {
     for (int i = 1; i <= 100; i++) {
       Assertions.assertEquals((101 - i) * 3.0d, doubleArray.get(i - 1));
     }
+
+    doubleArray.add(Double.MAX_VALUE);
+    doubleArray.add(Double.MIN_VALUE);
+    Assertions.assertEquals(102, doubleArray.size());
+    Assertions.assertEquals(Double.MAX_VALUE, doubleArray.get(100));
+    Assertions.assertEquals(Double.MIN_VALUE, doubleArray.get(101));
+
+    // Flip the positions to make sure they still work
+    doubleArray.set(101, Double.MAX_VALUE);
+    doubleArray.set(100, Double.MIN_VALUE);
+    Assertions.assertEquals(102, doubleArray.size());
+    Assertions.assertEquals(Double.MAX_VALUE, doubleArray.get(101));
+    Assertions.assertEquals(Double.MIN_VALUE, doubleArray.get(100));
   }
 
   @Test
