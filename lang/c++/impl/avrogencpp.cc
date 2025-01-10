@@ -926,22 +926,29 @@ static bool parseArgs(int argc, char **argv, ProgramOptions &opts) {
 
         if (arg == "-U" || arg == "--no-union-typedef") {
             opts.noUnionTypedef = true;
-            continue;
-        }
-
-        // Options that require a value
-        if (i + 1 >= argc) {
-            std::cerr << "Missing value for option " << arg << std::endl;
-            return false;
-        }
-
-        if (arg == "-p" || arg == "--include-prefix") {
+        } else if (arg == "-p" || arg == "--include-prefix") {
+            if (i + 1 >= argc) {
+                std::cerr << "Missing value for option: " << arg << std::endl;
+                return false;
+            }
             opts.includePrefix = argv[++i];
         } else if (arg == "-n" || arg == "--namespace") {
+            if (i + 1 >= argc) {
+                std::cerr << "Missing value for option: " << arg << std::endl;
+                return false;
+            }
             opts.nameSpace = argv[++i];
         } else if (arg == "-i" || arg == "--input") {
+            if (i + 1 >= argc) {
+                std::cerr << "Missing value for option: " << arg << std::endl;
+                return false;
+            }
             opts.inputFile = argv[++i];
         } else if (arg == "-o" || arg == "--output") {
+            if (i + 1 >= argc) {
+                std::cerr << "Missing value for option: " << arg << std::endl;
+                return false;
+            }
             opts.outputFile = argv[++i];
         } else {
             std::cerr << "Unknown option: " << arg << std::endl;
