@@ -19,18 +19,15 @@
 #ifndef avro_BufferDetail_hh__
 #define avro_BufferDetail_hh__
 
-#include <boost/function.hpp>
-#include <boost/shared_array.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/static_assert.hpp>
-#include <boost/utility.hpp>
-#include <utility>
 #ifdef HAVE_BOOST_ASIO
 #include <boost/asio/buffer.hpp>
 #endif
 #include <cassert>
 #include <deque>
 #include <exception>
+#include <functional>
+#include <memory>
+#include <utility>
 
 /**
  * \file BufferDetail.hh
@@ -55,7 +52,7 @@ const size_type kMinBlockSize = 4096;
 const size_type kMaxBlockSize = 16384;
 const size_type kDefaultBlockSize = kMinBlockSize;
 
-typedef boost::function<void(void)> free_func;
+typedef std::function<void(void)> free_func;
 
 /**
  * Simple class to hold a functor that executes on delete
@@ -108,7 +105,7 @@ public:
 
 private:
     // reference counted object will call a functor when it's destroyed
-    boost::shared_ptr<CallOnDestroy> callOnDestroy_;
+    std::shared_ptr<CallOnDestroy> callOnDestroy_;
 
 public:
     /// Remove readable bytes from the front of the chunk by advancing the
@@ -161,7 +158,7 @@ private:
     friend bool operator!=(const Chunk &lhs, const Chunk &rhs);
 
     // more than one buffer can share an underlying block, so use SharedPtr
-    boost::shared_array<data_type> underlyingBlock_;
+    std::shared_ptr<data_type[]> underlyingBlock_;
 
     data_type *readPos_;  ///< The first readable byte in the block
     data_type *writePos_; ///< The end of written data and start of free space
@@ -191,7 +188,7 @@ inline bool operator!=(const Chunk &lhs, const Chunk &rhs) {
  *
  */
 
-class BufferImpl : boost::noncopyable {
+class BufferImpl {
 
     /// Add a new chunk to the list of chunks for this buffer, growing the
     /// buffer by the default block size.
@@ -274,8 +271,8 @@ class BufferImpl : boost::noncopyable {
 
 public:
     typedef std::deque<Chunk> ChunkList;
-    typedef boost::shared_ptr<BufferImpl> SharedPtr;
-    typedef boost::shared_ptr<const BufferImpl> ConstSharedPtr;
+    typedef std::shared_ptr<BufferImpl> SharedPtr;
+    typedef std::shared_ptr<const BufferImpl> ConstSharedPtr;
 
     /// Default constructor, creates a buffer without any chunks
     BufferImpl() : freeSpace_(0),
@@ -343,7 +340,7 @@ public:
     /// and will compile-time assert.
     template<typename T>
     void writeTo(T /*val*/, const std::false_type &) {
-        BOOST_STATIC_ASSERT(sizeof(T) == 0);
+        static_assert(sizeof(T) == 0);
     }
 
     /// Write a block of data to the buffer, adding new chunks if necessary.

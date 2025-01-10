@@ -24,14 +24,12 @@
 #include <iostream>
 #include <map>
 #include <optional>
+#include <random>
 #include <set>
+#include <utility>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
-
-#include <boost/random/mersenne_twister.hpp>
-#include <utility>
 
 #include "Compiler.hh"
 #include "NodeImpl.hh"
@@ -46,8 +44,6 @@ using std::ostream;
 using std::set;
 using std::string;
 using std::vector;
-
-using boost::lexical_cast;
 
 using avro::compileJsonSchema;
 using avro::ValidSchema;
@@ -92,7 +88,7 @@ class CodeGen {
     const std::string includePrefix_;
     const bool noUnion_;
     const std::string guardString_;
-    boost::mt19937 random_;
+    std::mt19937 random_;
 
     vector<PendingSetterGetter> pendingGettersAndSetters;
     vector<PendingConstructor> pendingConstructors;
@@ -113,6 +109,7 @@ class CodeGen {
     void generateTraits(const NodePtr &n);
     void generateRecordTraits(const NodePtr &n);
     void generateUnionTraits(const NodePtr &n);
+    void generateDocComment(const NodePtr &n, const char *indent = "");
     void emitCopyright();
     void emitGeneratedWarning();
 
@@ -195,7 +192,7 @@ string CodeGen::cppTypeOf(const NodePtr &n) {
         case avro::AVRO_MAP:
             return "std::map<std::string, " + cppTypeOf(n->leafAt(1)) + " >";
         case avro::AVRO_FIXED:
-            return "std::array<uint8_t, " + lexical_cast<string>(n->fixedSize()) + ">";
+            return "std::array<uint8_t, " + std::to_string(n->fixedSize()) + ">";
         case avro::AVRO_SYMBOLIC:
             return cppTypeOf(resolveSymbol(n));
         case avro::AVRO_UNION:
@@ -253,6 +250,7 @@ string CodeGen::generateRecordType(const NodePtr &n) {
         return it->second;
     }
 
+    generateDocComment(n);
     os_ << "struct " << decoratedName << " {\n";
     if (!noUnion_) {
         for (size_t i = 0; i < c; ++i) {
@@ -271,6 +269,7 @@ string CodeGen::generateRecordType(const NodePtr &n) {
         // the nameAt(i) does not take c++ reserved words into account
         // so we need to call decorate on it
         std::string decoratedNameAt = decorate(n->nameAt(i));
+        generateDocComment(n->leafAt(i), "    ");
         os_ << "    " << types[i];
         os_ << ' ' << decoratedNameAt << ";\n";
     }
@@ -409,7 +408,7 @@ string CodeGen::generateUnionType(const NodePtr &n) {
     for (size_t i = 0; i < c; ++i) {
         // escape reserved literals for c++
         auto branch_name = decorate(names[i]);
-        // avoid rare collisions, e.g. somone might name their struct int_
+        // avoid rare collisions, e.g. someone might name their struct int_
         if (used_branch_names.find(branch_name) != used_branch_names.end()) {
             size_t postfix = 2;
             std::string escaped_name = branch_name + "_" + std::to_string(postfix);
@@ -739,6 +738,32 @@ void CodeGen::generateTraits(const NodePtr &n) {
     }
 }
 
+void CodeGen::generateDocComment(const NodePtr &n, const char *indent) {
+    if (!n->getDoc().empty()) {
+        std::vector<std::string> lines;
+        boost::algorithm::split(lines, n->getDoc(), boost::algorithm::is_any_of("\n"));
+        for (auto &line : lines) {
+            boost::algorithm::replace_all(line, "\r", "");
+
+            if (line.empty()) {
+                os_ << indent << "//\n";
+            } else {
+                // If a comment line ends with a backslash or backslash and whitespace,
+                // avoid generating code which will generate multi-line comment warnings
+                // on GCC. We can't just append whitespace here as escaped newlines ignore
+                // trailing whitespace.
+                auto lastBackslash = std::find(line.rbegin(), line.rend(), '\\');
+                auto lastNonWs = std::find_if(line.rbegin(), line.rend(), [](char c) { return !std::isspace(static_cast<int>(c)); });
+                // Note: lastBackslash <= lastNonWs because the iterators are reversed, "less" is later in the string.
+                if (lastBackslash != line.rend() && lastBackslash <= lastNonWs) {
+                    line.append("(backslash)");
+                }
+                os_ << indent << "// " << line << "\n";
+            }
+        }
+    }
+}
+
 void CodeGen::emitCopyright() {
     os_ << "/**\n"
            " * Licensed to the Apache Software Foundation (ASF) under one\n"
@@ -770,7 +795,7 @@ void CodeGen::emitGeneratedWarning() {
 string CodeGen::guard() {
     string h = headerFile_;
     makeCanonical(h, true);
-    return h + "_" + lexical_cast<string>(random_()) + "_H";
+    return h + "_" + std::to_string(random_()) + "_H";
 }
 
 void CodeGen::generate(const ValidSchema &schema) {
@@ -943,7 +968,7 @@ std::string UnionCodeTracker::generateNewUnionName(const std::vector<std::string
     }
     makeCanonical(s, false);
 
-    std::string result = s + "_Union__" + boost::lexical_cast<string>(unionNumber_++) + "__";
+    std::string result = s + "_Union__" + std::to_string(unionNumber_++) + "__";
     unionBranchNameMapping_.emplace(unionBranches, result);
     return result;
 }

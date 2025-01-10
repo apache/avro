@@ -23,8 +23,8 @@
 
 namespace avro {
 
-boost::optional<std::string> CustomAttributes::getAttribute(const std::string &name) const {
-    boost::optional<std::string> result;
+std::optional<std::string> CustomAttributes::getAttribute(const std::string &name) const {
+    std::optional<std::string> result;
     std::map<std::string, std::string>::const_iterator iter =
         attributes_.find(name);
     if (iter == attributes_.end()) {

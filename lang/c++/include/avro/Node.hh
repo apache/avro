@@ -21,7 +21,6 @@
 
 #include "Config.hh"
 
-#include <boost/noncopyable.hpp>
 #include <cassert>
 #include <memory>
 #include <utility>
@@ -97,11 +96,14 @@ inline std::ostream &operator<<(std::ostream &os, const Name &n) {
 /// different node types.
 ///
 
-class AVRO_DECL Node : private boost::noncopyable {
+class AVRO_DECL Node {
 public:
     explicit Node(Type type) : type_(type),
                                logicalType_(LogicalType::NONE),
                                locked_(false) {}
+
+    Node(const Node &) = delete;
+    Node &operator=(const Node &) = delete;
 
     virtual ~Node();
 
