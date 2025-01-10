@@ -277,6 +277,7 @@ class PrimitivesArraysTest {
       Assertions.assertEquals((101 - i) * 3.0d, doubleArray.get(i - 1));
     }
   }
+
   @Test
   void testDoubleArrayPreservesPrecisionForNonFloatRepresentableValues() {
     final PrimitivesArrays.DoubleArray doubleArray = new PrimitivesArrays.DoubleArray(1,
