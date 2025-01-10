@@ -22,6 +22,7 @@
 #endif
 #include <fstream>
 #include <iostream>
+#include <locale>
 #include <map>
 #include <optional>
 #include <random>
@@ -871,17 +872,17 @@ static string readGuard(const string &filename) {
     while (std::getline(ifs, buf)) {
         if (!buf.empty()) {
             size_t start = 0, end = buf.length();
-            while (start < end && std::isspace(buf[start])) start++;
-            while (start < end && std::isspace(buf[end - 1])) end--;
+            while (start < end && std::isspace(buf[start], std::locale::classic())) start++;
+            while (start < end && std::isspace(buf[end - 1], std::locale::classic())) end--;
             if (start > 0 || end < buf.length()) {
                 buf = buf.substr(start, end - start);
             }
         }
         if (candidate.empty()) {
-            if (buf.substr(0, 8) == "#ifndef ") {
+            if (buf.compare(0, 8, "#ifndef ") == 0) {
                 candidate = buf.substr(8);
             }
-        } else if (buf.substr(0, 8) == "#define ") {
+        } else if (buf.compare(0, 8, "#define ") == 0) {
             if (candidate == buf.substr(8)) {
                 break;
             }
