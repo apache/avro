@@ -48,7 +48,7 @@
     "nyc": "^17.0.0",
     "coveralls": "^3.1.1",
     "jshint": "^2.13.4",
-    "mocha": "10.7.3",
+    "mocha": "10.8.2",
     "tmp": "^0.2.1"
   },
   "noAnalyze": true,

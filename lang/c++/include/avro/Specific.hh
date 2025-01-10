@@ -25,8 +25,6 @@
 #include <string>
 #include <vector>
 
-#include "boost/blank.hpp"
-
 #include "AvroTraits.hh"
 #include "Config.hh"
 #include "Decoder.hh"
@@ -48,7 +46,8 @@
  */
 namespace avro {
 
-typedef boost::blank null;
+struct null {
+};
 
 template<typename T>
 void encode(Encoder &e, const T &t);

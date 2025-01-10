@@ -20,7 +20,6 @@
 #define avro_Serializer_hh__
 
 #include <array>
-#include <boost/noncopyable.hpp>
 
 #include "Config.hh"
 #include "Writer.hh"
@@ -31,7 +30,7 @@ namespace avro {
 /// explicit write* names instead of writeValue
 
 template<class Writer>
-class Serializer : private boost::noncopyable {
+class Serializer {
 
 public:
     /// Constructor only works with Writer
@@ -39,6 +38,9 @@ public:
 
     /// Constructor only works with ValidatingWriter
     explicit Serializer(const ValidSchema &schema) : writer_(schema) {}
+
+    Serializer(const Serializer &) = delete;
+    Serializer &operator=(const Serializer &) = delete;
 
     void writeNull() {
         writer_.writeValue(Null());

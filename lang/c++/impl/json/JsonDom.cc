@@ -145,12 +145,12 @@ void Entity::ensureType(EntityType type) const {
 
 String Entity::stringValue() const {
     ensureType(EntityType::String);
-    return JsonParser::toStringValue(**boost::any_cast<std::shared_ptr<String>>(&value_));
+    return JsonParser::toStringValue(**std::any_cast<std::shared_ptr<String>>(&value_));
 }
 
 String Entity::bytesValue() const {
     ensureType(EntityType::String);
-    return JsonParser::toBytesValue(**boost::any_cast<std::shared_ptr<String>>(&value_));
+    return JsonParser::toBytesValue(**std::any_cast<std::shared_ptr<String>>(&value_));
 }
 
 std::string Entity::toString() const {

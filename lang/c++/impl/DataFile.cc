@@ -20,13 +20,13 @@
 #include "Compiler.hh"
 #include "Exception.hh"
 
+#include <random>
 #include <sstream>
 
 #include <boost/crc.hpp> // for boost::crc_32_type
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
-#include <boost/random/mersenne_twister.hpp>
 
 #ifdef SNAPPY_CODEC_AVAILABLE
 #include <snappy.h>
@@ -61,6 +61,7 @@ boost::iostreams::zlib_params get_zlib_params() {
     ret.noheader = true;
     return ret;
 }
+
 } // namespace
 
 DataFileWriterBase::DataFileWriterBase(const char *filename, const ValidSchema &schema, size_t syncInterval,
@@ -235,7 +236,7 @@ void DataFileWriterBase::flush() {
 }
 
 DataFileSync DataFileWriterBase::makeSync() {
-    boost::mt19937 random(static_cast<uint32_t>(time(nullptr)));
+    std::mt19937 random(static_cast<uint32_t>(time(nullptr)));
     DataFileSync sync;
     std::generate(sync.begin(), sync.end(), random);
     return sync;
@@ -442,6 +443,11 @@ void DataFileReaderBase::readDataBlock() {
 }
 
 void DataFileReaderBase::close() {
+    stream_.reset();
+    eof_ = true;
+    objectCount_ = 0;
+    blockStart_ = 0;
+    blockEnd_ = 0;
 }
 
 static string toString(const vector<uint8_t> &v) {

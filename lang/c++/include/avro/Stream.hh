@@ -24,8 +24,6 @@
 #include <memory>
 #include <vector>
 
-#include "boost/utility.hpp"
-
 #include "Config.hh"
 #include "Exception.hh"
 
@@ -34,12 +32,15 @@ namespace avro {
 /**
  * A no-copy input stream.
  */
-class AVRO_DECL InputStream : boost::noncopyable {
+class AVRO_DECL InputStream {
 protected:
     /**
      * An empty constructor.
      */
     InputStream() = default;
+
+    InputStream(const InputStream &) = delete;
+    InputStream &operator=(const InputStream &) = delete;
 
 public:
     /**
@@ -106,12 +107,15 @@ typedef std::unique_ptr<SeekableInputStream> SeekableInputStreamPtr;
 /**
  * A no-copy output stream.
  */
-class AVRO_DECL OutputStream : boost::noncopyable {
+class AVRO_DECL OutputStream {
 protected:
     /**
      * An empty constructor.
      */
     OutputStream() = default;
+
+    OutputStream(const OutputStream &) = delete;
+    OutputStream &operator=(const OutputStream &) = delete;
 
 public:
     /**
