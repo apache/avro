@@ -926,34 +926,36 @@ static bool parseArgs(int argc, char **argv, ProgramOptions &opts) {
 
         if (arg == "-U" || arg == "--no-union-typedef") {
             opts.noUnionTypedef = true;
-        } else if (arg == "-p" || arg == "--include-prefix") {
-            if (i + 1 >= argc) {
-                std::cerr << "Missing value for option: " << arg << std::endl;
-                return false;
+            continue;
+        }
+
+        if (arg == "-p" || arg == "--include-prefix") {
+            if (i + 1 < argc) {
+                opts.includePrefix = argv[++i];
+                continue;
             }
-            opts.includePrefix = argv[++i];
         } else if (arg == "-n" || arg == "--namespace") {
-            if (i + 1 >= argc) {
-                std::cerr << "Missing value for option: " << arg << std::endl;
-                return false;
+            if (i + 1 < argc) {
+                opts.nameSpace = argv[++i];
+                continue;
             }
-            opts.nameSpace = argv[++i];
         } else if (arg == "-i" || arg == "--input") {
-            if (i + 1 >= argc) {
-                std::cerr << "Missing value for option: " << arg << std::endl;
-                return false;
+            if (i + 1 < argc) {
+                opts.inputFile = argv[++i];
+                continue;
             }
-            opts.inputFile = argv[++i];
         } else if (arg == "-o" || arg == "--output") {
-            if (i + 1 >= argc) {
-                std::cerr << "Missing value for option: " << arg << std::endl;
-                return false;
+            if (i + 1 < argc) {
+                opts.outputFile = argv[++i];
+                continue;
             }
-            opts.outputFile = argv[++i];
         } else {
             std::cerr << "Unknown option: " << arg << std::endl;
             return false;
         }
+
+        std::cerr << "Missing value for option: " << arg << std::endl;
+        return false;
     }
 
     return true;
