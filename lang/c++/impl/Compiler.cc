@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <boost/algorithm/string/replace.hpp>
+
 #include <sstream>
 #include <unordered_set>
 #include <utility>
@@ -136,7 +136,21 @@ int64_t getLongField(const Entity &e, const Object &m,
 // Unescape double quotes (") for de-serialization.  This method complements the
 // method NodeImpl::escape() which is used for serialization.
 static void unescape(string &s) {
-    boost::replace_all(s, "\\\"", "\"");
+    size_t writePos = 0, readPos = 0;
+    while (readPos < s.length()) {
+        if (readPos + 1 < s.length() && s[readPos] == '\\' && s[readPos + 1] == '\"') {
+            s[writePos++] = '\"';
+            readPos += 2;
+        } else if (writePos != readPos) {
+            s[writePos++] = s[readPos++];
+        } else {
+            writePos++;
+            readPos++;
+        }
+    }
+    if (writePos != s.length()) {
+        s.resize(writePos);
+    }
 }
 
 string getDocField(const Entity &e, const Object &m) {
