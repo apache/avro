@@ -22,13 +22,13 @@
 #endif
 #include <fstream>
 #include <iostream>
+#include <locale>
 #include <map>
 #include <optional>
 #include <random>
 #include <set>
 #include <utility>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
 
 #include "Compiler.hh"
@@ -741,9 +741,20 @@ void CodeGen::generateTraits(const NodePtr &n) {
 void CodeGen::generateDocComment(const NodePtr &n, const char *indent) {
     if (!n->getDoc().empty()) {
         std::vector<std::string> lines;
-        boost::algorithm::split(lines, n->getDoc(), boost::algorithm::is_any_of("\n"));
+        {
+            const std::string &doc = n->getDoc();
+            size_t pos = 0;
+            size_t found;
+            while ((found = doc.find('\n', pos)) != std::string::npos) {
+                lines.push_back(doc.substr(pos, found - pos));
+                pos = found + 1;
+            }
+            if (pos < doc.size()) {
+                lines.push_back(doc.substr(pos));
+            }
+        }
         for (auto &line : lines) {
-            boost::algorithm::replace_all(line, "\r", "");
+            line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
 
             if (line.empty()) {
                 os_ << indent << "//\n";
@@ -859,12 +870,19 @@ static string readGuard(const string &filename) {
     string buf;
     string candidate;
     while (std::getline(ifs, buf)) {
-        boost::algorithm::trim(buf);
+        if (!buf.empty()) {
+            size_t start = 0, end = buf.length();
+            while (start < end && std::isspace(buf[start], std::locale::classic())) start++;
+            while (start < end && std::isspace(buf[end - 1], std::locale::classic())) end--;
+            if (start > 0 || end < buf.length()) {
+                buf = buf.substr(start, end - start);
+            }
+        }
         if (candidate.empty()) {
-            if (boost::algorithm::starts_with(buf, "#ifndef ")) {
+            if (buf.compare(0, 8, "#ifndef ") == 0) {
                 candidate = buf.substr(8);
             }
-        } else if (boost::algorithm::starts_with(buf, "#define ")) {
+        } else if (buf.compare(0, 8, "#define ") == 0) {
             if (candidate == buf.substr(8)) {
                 break;
             }
