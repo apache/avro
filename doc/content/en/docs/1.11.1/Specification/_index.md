@@ -83,7 +83,7 @@ Records use the type name "record" and support the following attributes:
 |---------------|----------------|-------------|
 | null          | null           | `null`      |
 | boolean       | boolean        | `true`      |
-| int,long      | integer        | `1`         |
+| int,long      | number         | `1`         |
 | float,double  | number         | `1.1`       |
 | bytes         | string         | `"\u00FF"`  |
 | string        | string         | `"foo"`     |
