@@ -440,16 +440,17 @@ struct TestSchema {
         std::vector<GenericDatum> defaultValues;
         concepts::MultiAttribute<CustomAttributes> customAttributes;
 
-        CustomAttributes cf;
-        cf.addAttribute("stringField", std::string("\\\"field value with \\\"double quotes\\\"\\\""));
-        cf.addAttribute("booleanField", std::string("true"));
-        cf.addAttribute("numberField", std::string("1.23"));
-        cf.addAttribute("nullField", std::string("null"));
-        cf.addAttribute("arrayField", std::string("[1]"));
-        cf.addAttribute("mapField", std::string("{\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}"));
+        CustomAttributes ca(CustomAttributes::json);
+        ca.addAttribute("stringField", std::string("\"foobar\""));
+        ca.addAttribute("stringFieldComplex", std::string("\"\\\" a field value with \\\"double quotes\\\" \\\"\""));
+        ca.addAttribute("booleanField", std::string("true"));
+        ca.addAttribute("numberField", std::string("1.23"));
+        ca.addAttribute("nullField", std::string("null"));
+        ca.addAttribute("arrayField", std::string("[1]"));
+        ca.addAttribute("mapField", std::string("{\"key1\":\"value1\", \"key2\":\"value2\"}"));
         fieldNames.add("f1");
         fieldValues.add(NodePtr(new NodePrimitive(Type::AVRO_LONG)));
-        customAttributes.add(cf);
+        customAttributes.add(ca);
 
         NodeRecord nodeRecordWithCustomAttribute(nameConcept, fieldValues,
                                                  fieldNames, fieldAliases, defaultValues,
@@ -457,12 +458,13 @@ struct TestSchema {
         std::string expectedJsonWithCustomAttribute =
             "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
             "[{\"name\": \"f1\", \"type\": \"long\", "
-            "\"arrayField\": \"[1]\", "
-            "\"booleanField\": \"true\", "
-            "\"mapField\": \"{\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}\", "
-            "\"nullField\": \"null\", "
-            "\"numberField\": \"1.23\", "
-            "\"stringField\": \"\\\"field value with \\\"double quotes\\\"\\\"\""
+            "\"arrayField\": [1], "
+            "\"booleanField\": true, "
+            "\"mapField\": {\"key1\":\"value1\", \"key2\":\"value2\"}, "
+            "\"nullField\": null, "
+            "\"numberField\": 1.23, "
+            "\"stringField\": \"foobar\", "
+            "\"stringFieldComplex\": \"\\\" a field value with \\\"double quotes\\\" \\\"\""
             "}]}";
         testNodeRecord(nodeRecordWithCustomAttribute,
                        expectedJsonWithCustomAttribute);
@@ -489,12 +491,26 @@ struct TestSchema {
                        expectedJsonWithoutCustomAttribute);
     }
 
-    void checkCustomAttributes_getAttribute() {
-        CustomAttributes cf;
-        cf.addAttribute("field1", std::string("1"));
+    void checkCustomAttributes_addAndGetAttributeJson() {
+        CustomAttributes ca(CustomAttributes::json);
+        ca.addAttribute("field1", std::string("true"));
 
-        BOOST_CHECK_EQUAL(std::string("1"), *cf.getAttribute("field1"));
-        BOOST_CHECK_EQUAL(false, cf.getAttribute("not_existing").has_value());
+        BOOST_CHECK_EQUAL(std::string("true"), *ca.getAttribute("field1"));
+        BOOST_CHECK_EQUAL(false, ca.getAttribute("not_existing").has_value());
+    }
+
+    void checkCustomAttributes_addAndGetAttributeString() {
+        CustomAttributes ca;
+        ca.addAttribute("field1", std::string("true"));
+        ca.addAttribute("field2", std::string("value with \\\"quotes\\\""));
+
+        BOOST_CHECK_EQUAL(std::string("true"), *ca.getAttribute("field1"));
+        BOOST_CHECK_EQUAL(std::string("value with \\\"quotes\\\""), *ca.getAttribute("field2"));
+        BOOST_CHECK_EQUAL(false, ca.getAttribute("not_existing").has_value());
+
+        std::ostringstream oss;
+        ca.printJson(oss, "field2");
+        BOOST_CHECK_EQUAL(std::string("\"field2\": \"value with \\\"quotes\\\"\""), oss.str());
     }
 
     void test() {
@@ -521,7 +537,8 @@ struct TestSchema {
 
         checkNodeRecordWithoutCustomAttribute();
         checkNodeRecordWithCustomAttribute();
-        checkCustomAttributes_getAttribute();
+        checkCustomAttributes_addAndGetAttributeJson();
+        checkCustomAttributes_addAndGetAttributeString();
     }
 
     ValidSchema schema_;

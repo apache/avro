@@ -92,7 +92,11 @@ Entity loadEntity(const char *text) {
 Entity loadEntity(InputStream &in) {
     JsonParser p;
     p.init(in);
-    return readEntity(p);
+    Entity e = readEntity(p);
+    if (p.hasMore()) {
+        throw TooManyValuesException();
+    }
+    return e;
 }
 
 Entity loadEntity(const uint8_t *text, size_t len) {

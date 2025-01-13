@@ -49,6 +49,28 @@ char JsonParser::next() {
     return ch;
 }
 
+bool JsonParser::hasMore() {
+    if (peeked || hasNext && !isspace(nextChar)) {
+        return true;
+    }
+    if (!hasNext) {
+        nextChar = ' ';
+    }
+    // We return true if there are any more tokens; we ignore
+    // any trailing whitespace.
+    while (isspace(nextChar)) {
+        if (nextChar == '\n') {
+            line_++;
+        }
+        if (!in_.hasMore()) {
+            return false;
+        }
+        nextChar = in_.read();
+    }
+    hasNext = true;
+    return true;
+}
+
 void JsonParser::expectToken(Token tk) {
     if (advance() != tk) {
         if (tk == Token::Double) {
