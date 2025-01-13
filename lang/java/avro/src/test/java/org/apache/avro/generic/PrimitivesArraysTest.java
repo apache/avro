@@ -277,4 +277,18 @@ class PrimitivesArraysTest {
       Assertions.assertEquals((101 - i) * 3.0d, doubleArray.get(i - 1));
     }
   }
+
+  @Test
+  void testDoubleArrayPreservesPrecisionForNonFloatRepresentableValues() {
+    final PrimitivesArrays.DoubleArray doubleArray = new PrimitivesArrays.DoubleArray(1,
+        Schema.createArray(Schema.create(Schema.Type.DOUBLE)));
+
+    // This value cannot be represented as a float
+    Double nonFloatDouble = .9;
+    Assertions.assertNotEquals(.9, nonFloatDouble.floatValue());
+
+    // Assert that the double array does not lose precision when adding
+    doubleArray.add(nonFloatDouble);
+    Assertions.assertEquals(nonFloatDouble, doubleArray.get(0));
+  }
 }
