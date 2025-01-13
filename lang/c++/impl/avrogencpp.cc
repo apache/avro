@@ -29,8 +29,6 @@
 #include <set>
 #include <utility>
 
-#include <boost/program_options.hpp>
-
 #include "Compiler.hh"
 #include "NodeImpl.hh"
 #include "ValidSchema.hh"
@@ -863,8 +861,6 @@ void CodeGen::generate(const ValidSchema &schema) {
     os_.flush();
 }
 
-namespace po = boost::program_options;
-
 static string readGuard(const string &filename) {
     std::ifstream ifs(filename.c_str());
     string buf;
@@ -893,49 +889,106 @@ static string readGuard(const string &filename) {
     return candidate;
 }
 
+struct ProgramOptions {
+    bool helpRequested = false;
+    bool versionRequested = false;
+    bool noUnionTypedef = false;
+    std::string includePrefix = "avro";
+    std::string nameSpace;
+    std::string inputFile;
+    std::string outputFile;
+};
+
+static void printUsage() {
+    std::cout << "Allowed options:\n"
+              << "  -h [ --help ]                       produce help message\n"
+              << "  -V [ --version ]                    produce version information\n"
+              << "  -p [ --include-prefix ] arg (=avro) prefix for include headers, - for none, default: avro\n"
+              << "  -U [ --no-union-typedef ]           do not generate typedefs for unions in records\n"
+              << "  -n [ --namespace ] arg              set namespace for generated code\n"
+              << "  -i [ --input ] arg                  input file\n"
+              << "  -o [ --output ] arg                 output file to generate\n";
+}
+
+static bool parseArgs(int argc, char **argv, ProgramOptions &opts) {
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+
+        if (arg == "-h" || arg == "--help") {
+            opts.helpRequested = true;
+            return true;
+        }
+
+        if (arg == "-V" || arg == "--version") {
+            opts.versionRequested = true;
+            return true;
+        }
+
+        if (arg == "-U" || arg == "--no-union-typedef") {
+            opts.noUnionTypedef = true;
+            continue;
+        }
+
+        if (arg == "-p" || arg == "--include-prefix") {
+            if (i + 1 < argc) {
+                opts.includePrefix = argv[++i];
+                continue;
+            }
+        } else if (arg == "-n" || arg == "--namespace") {
+            if (i + 1 < argc) {
+                opts.nameSpace = argv[++i];
+                continue;
+            }
+        } else if (arg == "-i" || arg == "--input") {
+            if (i + 1 < argc) {
+                opts.inputFile = argv[++i];
+                continue;
+            }
+        } else if (arg == "-o" || arg == "--output") {
+            if (i + 1 < argc) {
+                opts.outputFile = argv[++i];
+                continue;
+            }
+        } else {
+            std::cerr << "Unknown option: " << arg << std::endl;
+            return false;
+        }
+
+        std::cerr << "Missing value for option: " << arg << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 int main(int argc, char **argv) {
-    const string NS("namespace");
-    const string OUT_FILE("output");
-    const string IN_FILE("input");
-    const string INCLUDE_PREFIX("include-prefix");
-    const string NO_UNION_TYPEDEF("no-union-typedef");
+    ProgramOptions opts;
+    if (!parseArgs(argc, argv, opts)) {
+        printUsage();
+        return 1;
+    }
 
-    po::options_description desc("Allowed options");
-    // clang-format off
-    desc.add_options()
-        ("help,h", "produce help message")
-        ("version,V", "produce version information")
-        ("include-prefix,p", po::value<string>()->default_value("avro"), "prefix for include headers, - for none, default: avro")
-        ("no-union-typedef,U", "do not generate typedefs for unions in records")
-        ("namespace,n", po::value<string>(), "set namespace for generated code")
-        ("input,i", po::value<string>(), "input file")
-        ("output,o", po::value<string>(), "output file to generate");
-    // clang-format on
-
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
-
-    if (vm.count("help")) {
-        std::cout << desc << std::endl;
+    if (opts.helpRequested) {
+        printUsage();
         return 0;
     }
 
-    if (vm.count("version")) {
+    if (opts.versionRequested) {
         std::cout << AVRO_VERSION << std::endl;
         return 0;
     }
 
-    if (vm.count(IN_FILE) == 0 || vm.count(OUT_FILE) == 0) {
-        std::cout << desc << std::endl;
+    if (opts.inputFile.empty() || opts.outputFile.empty()) {
+        std::cerr << "Input and output files are required.\n\n";
+        printUsage();
         return 1;
     }
 
-    string ns = vm.count(NS) > 0 ? vm[NS].as<string>() : string();
-    string outf = vm.count(OUT_FILE) > 0 ? vm[OUT_FILE].as<string>() : string();
-    string inf = vm.count(IN_FILE) > 0 ? vm[IN_FILE].as<string>() : string();
-    string incPrefix = vm[INCLUDE_PREFIX].as<string>();
-    bool noUnion = vm.count(NO_UNION_TYPEDEF) != 0;
+    std::string ns = opts.nameSpace;
+    std::string outf = opts.outputFile;
+    std::string inf = opts.inputFile;
+    std::string incPrefix = opts.includePrefix;
+    bool noUnion = opts.noUnionTypedef;
 
     if (incPrefix == "-") {
         incPrefix.clear();
