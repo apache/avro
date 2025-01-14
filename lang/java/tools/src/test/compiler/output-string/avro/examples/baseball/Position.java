@@ -11,5 +11,6 @@ public enum Position implements org.apache.avro.generic.GenericEnumSymbol<Positi
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   @Override
+  @org.apache.avro.specific.AvroInternal
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
 }
