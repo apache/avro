@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using System.Linq;
+using Avro.Util;
 
 namespace Avro.Test
 {
@@ -567,12 +568,76 @@ namespace Avro.Test
             testToString(sc);
         }
 
+        // Make sure unknown type is carried thru to LogicalTypeName
         [TestCase("{\"type\": \"int\", \"logicalType\": \"unknown\"}", "unknown")]
         public void TestUnknownLogical(string s, string unknownType)
         {
-            var err = Assert.Throws<AvroTypeException>(() => Schema.Parse(s));
+            var schema = Schema.Parse(s);
+            Assert.IsNotNull(schema);   // make sure Variable is not null
+            Assert.IsInstanceOf(typeof(LogicalSchema), schema);
 
-            Assert.AreEqual("Logical type '" + unknownType + "' is not supported.", err.Message);
+            var logicalSchema = schema as LogicalSchema;
+            Assert.IsNotNull(logicalSchema);   // make sure Variable is not null
+            Assert.IsInstanceOf(typeof(UnknownLogicalType), logicalSchema.LogicalType);
+
+            Assert.AreEqual(logicalSchema.LogicalTypeName, unknownType);
+        }
+
+        /*
+            {
+              "fields": [
+                {
+                  "default": 0,
+                  "name": "firstField",
+                  "type": "int"
+                },
+                {
+                  "default": null,
+                  "name": "secondField",
+                  "type": [
+                    "null",
+                    {
+                      "logicalType": "varchar",
+                      "maxLength": 65,
+                      "type": "string"
+                    }
+                  ]
+                }
+              ],
+              "name": "sample_schema",
+              "type": "record"
+            }
+         */
+
+        // Before Change will throw Avro.AvroTypeException: 'Logical type 'varchar' is not supported.'
+        // Per AVRO Spec (v1.8.0 - v1.11.1) ... Logical Types Section
+        //  Language implementations must ignore unknown logical types when reading, and should use the underlying Avro type.
+        [TestCase("{\"fields\": [{\"default\": 0,\"name\": \"firstField\",\"type\": \"int\"},{\"default\": null,\"name\": \"secondField\",\"type\": [\"null\",{\"logicalType\": \"varchar\",\"maxLength\": 65,\"type\": \"string\"}]}],\"name\": \"sample_schema\",\"type\": \"record\"}")]
+        public void TestUnknownLogicalType(string schemaText)
+        {
+            var schema = Avro.Schema.Parse(schemaText);
+            Assert.IsNotNull(schema);
+
+            var secondField = ((RecordSchema)schema).Fields.FirstOrDefault(f => f.Name == @"secondField");
+            Assert.IsNotNull(secondField);
+
+            var secondFieldSchema = (secondField).Schema;
+            Assert.IsNotNull(secondFieldSchema);
+
+            var secondFieldUnionSchema = (UnionSchema)secondFieldSchema;
+            Assert.IsNotNull(secondFieldUnionSchema);
+
+            var props = secondFieldUnionSchema.Schemas.Where(s => s.Props != null).ToList();
+            Assert.IsNotNull(props);
+            Assert.IsTrue(props.Count == 1);
+
+            var prop = props[0];
+            // Confirm that the unknown logical type is ignored and the underlying AVRO type is used
+            Assert.IsTrue(prop.Name == @"string");
+            var logicalSchema = prop as LogicalSchema;
+            Assert.IsInstanceOf(typeof(UnknownLogicalType), logicalSchema.LogicalType);
+
+            Assert.AreEqual(logicalSchema.LogicalTypeName, @"varchar");
         }
 
         [TestCase("{\"type\": \"map\", \"values\": \"long\"}", "long")]
