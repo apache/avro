@@ -31,8 +31,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/iostreams/filtering_stream.hpp>
-
 namespace avro {
 
 /** Specify type of compression to use when writing data files. */
@@ -216,7 +214,6 @@ class AVRO_DECL DataFileReaderBase {
     DataFileSync sync_{};
 
     // for compressed buffer
-    std::unique_ptr<boost::iostreams::filtering_istream> os_;
     std::vector<char> compressed_;
     std::string uncompressed;
     void readHeader();
