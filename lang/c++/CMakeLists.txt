@@ -112,8 +112,6 @@ endif (SNAPPY_FOUND)
 
 find_package(ZLIB REQUIRED)
 if (ZLIB_FOUND)
-    set(ZLIB_PKG libz)
-    add_definitions(-DZLIB_CODEC_AVAILABLE)
     message("Enabled zlib codec")
 else (ZLIB_FOUND)
     message(FATAL_ERROR "ZLIB is not found")
