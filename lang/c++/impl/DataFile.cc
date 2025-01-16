@@ -137,7 +137,7 @@ void DataFileWriterBase::sync() {
         std::unique_ptr<InputStream> in = memoryInputStream(*buffer_);
         copy(*in, *stream_);
     } else if (codec_ == DEFLATE_CODEC) {
-        std::vector<char> buf;
+        std::vector<uint8_t> buf;
         {
             z_stream zs;
             zs.zalloc = Z_NULL;
@@ -175,8 +175,7 @@ void DataFileWriterBase::sync() {
             buf.resize(zs.total_out);
             (void) deflateEnd(&zs);
         } // make sure all is flushed
-        std::unique_ptr<InputStream> in = memoryInputStream(
-            reinterpret_cast<const uint8_t *>(buf.data()), buf.size());
+        std::unique_ptr<InputStream> in = memoryInputStream(buf.data(), buf.size());
         int64_t byteCount = buf.size();
         avro::encode(*encoderPtr_, byteCount);
         encoderPtr_->flush();
