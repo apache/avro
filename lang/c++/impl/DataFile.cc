@@ -161,7 +161,7 @@ void DataFileWriterBase::sync() {
                         buf.resize(buf.size() + zlibBufGrowSize);
                     }
                     zs.avail_out = static_cast<uInt>(buf.size() - zs.total_out);
-                    zs.next_out = reinterpret_cast<Bytef *>(buf.data() + zs.total_out);
+                    zs.next_out = buf.data() + zs.total_out;
                     ret = deflate(&zs, flush ? Z_FINISH : Z_NO_FLUSH);
                     if (ret == Z_STREAM_END) {
                         break;
