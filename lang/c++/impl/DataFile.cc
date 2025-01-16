@@ -23,14 +23,11 @@
 #include <random>
 #include <sstream>
 
-#include <boost/crc.hpp> // for boost::crc_32_type
-#include <boost/iostreams/device/file.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
-#include <boost/iostreams/filter/zlib.hpp>
-
 #ifdef SNAPPY_CODEC_AVAILABLE
 #include <snappy.h>
 #endif
+
+#include <zlib.h>
 
 namespace avro {
 using std::copy;
@@ -55,12 +52,8 @@ const string AVRO_SNAPPY_CODEC = "snappy";
 const size_t minSyncInterval = 32;
 const size_t maxSyncInterval = 1u << 30;
 
-boost::iostreams::zlib_params get_zlib_params() {
-    boost::iostreams::zlib_params ret;
-    ret.method = boost::iostreams::zlib::deflated;
-    ret.noheader = true;
-    return ret;
-}
+// Recommended by https://www.zlib.net/zlib_how.html
+const size_t zlibBufGrowSize = 128 * 1024;
 
 } // namespace
 
@@ -144,21 +137,45 @@ void DataFileWriterBase::sync() {
         std::unique_ptr<InputStream> in = memoryInputStream(*buffer_);
         copy(*in, *stream_);
     } else if (codec_ == DEFLATE_CODEC) {
-        std::vector<char> buf;
+        std::vector<uint8_t> buf;
         {
-            boost::iostreams::filtering_ostream os;
-            os.push(boost::iostreams::zlib_compressor(get_zlib_params()));
-            os.push(boost::iostreams::back_inserter(buf));
-            const uint8_t *data;
-            size_t len;
+            z_stream zs;
+            zs.zalloc = Z_NULL;
+            zs.zfree = Z_NULL;
+            zs.opaque = Z_NULL;
+
+            int ret = deflateInit2(&zs, Z_DEFAULT_COMPRESSION, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY);
+            if (ret != Z_OK) {
+                throw Exception("Failed to initialize deflate, error: {}", ret);
+            }
 
             std::unique_ptr<InputStream> input = memoryInputStream(*buffer_);
-            while (input->next(&data, &len)) {
-                boost::iostreams::write(os, reinterpret_cast<const char *>(data), len);
+            const uint8_t *data;
+            size_t len;
+            while (ret != Z_STREAM_END && input->next(&data, &len)) {
+                zs.avail_in = static_cast<uInt>(len);
+                zs.next_in = const_cast<Bytef *>(data);
+                bool flush = (zs.total_in + len) >= buffer_->byteCount();
+                do {
+                    if (zs.total_out == buf.size()) {
+                        buf.resize(buf.size() + zlibBufGrowSize);
+                    }
+                    zs.avail_out = static_cast<uInt>(buf.size() - zs.total_out);
+                    zs.next_out = buf.data() + zs.total_out;
+                    ret = deflate(&zs, flush ? Z_FINISH : Z_NO_FLUSH);
+                    if (ret == Z_STREAM_END) {
+                        break;
+                    }
+                    if (ret != Z_OK) {
+                        throw Exception("Failed to deflate, error: {}", ret);
+                    }
+                } while (zs.avail_out == 0);
             }
+
+            buf.resize(zs.total_out);
+            (void) deflateEnd(&zs);
         } // make sure all is flushed
-        std::unique_ptr<InputStream> in = memoryInputStream(
-            reinterpret_cast<const uint8_t *>(buf.data()), buf.size());
+        std::unique_ptr<InputStream> in = memoryInputStream(buf.data(), buf.size());
         int64_t byteCount = buf.size();
         avro::encode(*encoderPtr_, byteCount);
         encoderPtr_->flush();
@@ -167,35 +184,28 @@ void DataFileWriterBase::sync() {
     } else if (codec_ == SNAPPY_CODEC) {
         std::vector<char> temp;
         std::string compressed;
-        boost::crc_32_type crc;
-        {
-            boost::iostreams::filtering_ostream os;
-            os.push(boost::iostreams::back_inserter(temp));
-            const uint8_t *data;
-            size_t len;
 
-            std::unique_ptr<InputStream> input = memoryInputStream(*buffer_);
-            while (input->next(&data, &len)) {
-                boost::iostreams::write(os, reinterpret_cast<const char *>(data),
-                                        len);
-            }
-        } // make sure all is flushed
+        const uint8_t *data;
+        size_t len;
+        std::unique_ptr<InputStream> input = memoryInputStream(*buffer_);
+        while (input->next(&data, &len)) {
+            temp.insert(temp.end(), reinterpret_cast<const char *>(data),
+                        reinterpret_cast<const char *>(data) + len);
+        }
 
-        crc.process_bytes(reinterpret_cast<const char *>(temp.data()),
-                          temp.size());
         // For Snappy, add the CRC32 checksum
-        auto checksum = crc();
+        auto checksum = crc32(0, reinterpret_cast<const Bytef *>(temp.data()),
+                              static_cast<uInt>(temp.size()));
 
         // Now compress
         size_t compressed_size = snappy::Compress(
             reinterpret_cast<const char *>(temp.data()), temp.size(),
             &compressed);
+
         temp.clear();
-        {
-            boost::iostreams::filtering_ostream os;
-            os.push(boost::iostreams::back_inserter(temp));
-            boost::iostreams::write(os, compressed.c_str(), compressed_size);
-        }
+        temp.insert(temp.end(), compressed.c_str(),
+                    compressed.c_str() + compressed_size);
+
         temp.push_back(static_cast<char>((checksum >> 24) & 0xFF));
         temp.push_back(static_cast<char>((checksum >> 16) & 0xFF));
         temp.push_back(static_cast<char>((checksum >> 8) & 0xFF));
@@ -285,8 +295,7 @@ void DataFileReaderBase::init(const ValidSchema &readerSchema) {
 static void drain(InputStream &in) {
     const uint8_t *p = nullptr;
     size_t n = 0;
-    while (in.next(&p, &n))
-        ;
+    while (in.next(&p, &n));
 }
 
 char hex(unsigned int x) {
@@ -384,7 +393,6 @@ void DataFileReaderBase::readDataBlock() {
         dataStream_ = std::move(st);
 #ifdef SNAPPY_CODEC_AVAILABLE
     } else if (codec_ == SNAPPY_CODEC) {
-        boost::crc_32_type crc;
         uint32_t checksum = 0;
         compressed_.clear();
         uncompressed.clear();
@@ -408,35 +416,67 @@ void DataFileReaderBase::readDataBlock() {
             throw Exception(
                 "Snappy Compression reported an error when decompressing");
         }
-        crc.process_bytes(uncompressed.c_str(), uncompressed.size());
-        auto c = crc();
+        auto c = crc32(0, reinterpret_cast<const Bytef *>(uncompressed.c_str()),
+                       static_cast<uInt>(uncompressed.size()));
         if (checksum != c) {
             throw Exception(
                 "Checksum did not match for Snappy compression: Expected: {}, computed: {}",
                 checksum, c);
         }
-        os_.reset(new boost::iostreams::filtering_istream());
-        os_->push(
-            boost::iostreams::basic_array_source<char>(uncompressed.c_str(),
-                                                       uncompressed.size()));
-        std::unique_ptr<InputStream> in = istreamInputStream(*os_);
+
+        std::unique_ptr<InputStream> in = memoryInputStream(
+            reinterpret_cast<const uint8_t *>(uncompressed.c_str()),
+            uncompressed.size());
 
         dataDecoder_->init(*in);
         dataStream_ = std::move(in);
 #endif
     } else {
         compressed_.clear();
-        const uint8_t *data;
-        size_t len;
-        while (st->next(&data, &len)) {
-            compressed_.insert(compressed_.end(), data, data + len);
-        }
-        os_.reset(new boost::iostreams::filtering_istream());
-        os_->push(boost::iostreams::zlib_decompressor(get_zlib_params()));
-        os_->push(boost::iostreams::basic_array_source<char>(
-            compressed_.data(), compressed_.size()));
+        uncompressed.clear();
 
-        std::unique_ptr<InputStream> in = nonSeekableIstreamInputStream(*os_);
+        {
+            z_stream zs;
+            zs.zalloc = Z_NULL;
+            zs.zfree = Z_NULL;
+            zs.opaque = Z_NULL;
+            zs.avail_in = 0;
+            zs.next_in = Z_NULL;
+
+            int ret = inflateInit2(&zs, /*windowBits=*/-15);
+            if (ret != Z_OK) {
+                throw Exception("Failed to initialize inflate, error: {}", ret);
+            }
+
+            const uint8_t *data;
+            size_t len;
+            while (ret != Z_STREAM_END && st->next(&data, &len)) {
+                zs.avail_in = static_cast<uInt>(len);
+                zs.next_in = const_cast<Bytef *>(data);
+                do {
+                    if (zs.total_out == uncompressed.size()) {
+                        uncompressed.resize(uncompressed.size() + zlibBufGrowSize);
+                    }
+                    zs.avail_out = static_cast<uInt>(uncompressed.size() - zs.total_out);
+                    zs.next_out = reinterpret_cast<Bytef *>(uncompressed.data() + zs.total_out);
+                    ret = inflate(&zs, Z_NO_FLUSH);
+                    if (ret == Z_STREAM_END) {
+                        break;
+                    }
+                    if (ret != Z_OK) {
+                        throw Exception("Failed to inflate, error: {}", ret);
+                    }
+                } while (zs.avail_out == 0);
+            }
+
+            uncompressed.resize(zs.total_out);
+            (void) inflateEnd(&zs);
+        }
+
+        std::unique_ptr<InputStream> in = memoryInputStream(
+            reinterpret_cast<const uint8_t *>(uncompressed.c_str()),
+            uncompressed.size());
+
         dataDecoder_->init(*in);
         dataStream_ = std::move(in);
     }
