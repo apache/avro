@@ -18,9 +18,10 @@
 
 #include "Exception.hh"
 #include "Stream.hh"
-#include "boost/filesystem.hpp"
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/parameterized_test.hpp>
+
+#include <filesystem>
 
 namespace avro {
 namespace stream {
@@ -136,9 +137,9 @@ void testNonEmpty2(const TestData &td) {
 static const char filename[] = "test_str.bin";
 
 struct FileRemover {
-    const boost::filesystem::path file;
+    const std::filesystem::path file;
     explicit FileRemover(const char *fn) : file(fn) {}
-    ~FileRemover() { boost::filesystem::remove(file); }
+    ~FileRemover() { std::filesystem::remove(file); }
 };
 
 template<typename V>
