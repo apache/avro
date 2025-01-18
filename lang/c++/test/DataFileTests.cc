@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#include <boost/filesystem.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
 #include <boost/shared_ptr.hpp>
@@ -24,6 +23,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <chrono>
+#include <filesystem>
 #include <thread>
 
 #include <sstream>
@@ -199,7 +199,7 @@ public:
     using Pair = pair<ValidSchema, GenericDatum>;
 
     void testCleanup() {
-        BOOST_CHECK(boost::filesystem::remove(filename));
+        BOOST_CHECK(std::filesystem::remove(filename));
     }
 
     void testWrite() {
@@ -278,12 +278,12 @@ public:
 
     void testTruncate() {
         testWriteDouble();
-        uintmax_t size = boost::filesystem::file_size(filename);
+        uintmax_t size = std::filesystem::file_size(filename);
         {
             avro::DataFileWriter<Pair> df(filename, writerSchema, 100);
             df.close();
         }
-        uintmax_t new_size = boost::filesystem::file_size(filename);
+        uintmax_t new_size = std::filesystem::file_size(filename);
         BOOST_CHECK(size > new_size);
     }
 
@@ -471,7 +471,7 @@ public:
     void testReaderSplits() {
         boost::mt19937 random(static_cast<uint32_t>(time(nullptr)));
         avro::DataFileReader<ComplexInteger> df(filename, writerSchema);
-        int length = static_cast<int>(boost::filesystem::file_size(filename));
+        int length = static_cast<int>(std::filesystem::file_size(filename));
         int splits = 10;
         int end = length;     // end of split
         int remaining = end;  // bytes remaining
