@@ -57,16 +57,13 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR})
 
 option(AVRO_BUILD_EXECUTABLES "Build executables" ON)
 option(AVRO_BUILD_TESTS "Build tests" ON)
+option(AVRO_USE_BOOST "Use Boost" OFF)
 
 if (WIN32 AND NOT CYGWIN AND NOT MSYS)
     add_definitions (/EHa)
     add_definitions (
         -DNOMINMAX
-        -DBOOST_REGEX_DYN_LINK
-        -DBOOST_FILESYSTEM_DYN_LINK
         -DBOOST_SYSTEM_DYN_LINK
-        -DBOOST_IOSTREAMS_DYN_LINK
-        -DBOOST_PROGRAM_OPTIONS_DYN_LINK
         -DBOOST_ALL_NO_LIB)
 endif()
 
@@ -81,11 +78,8 @@ if (AVRO_ADD_PROTECTOR_FLAGS)
 endif ()
 endif ()
 
-if (AVRO_BUILD_TESTS OR AVRO_BUILD_EXECUTABLES)
-    find_package (Boost 1.38 REQUIRED
-        COMPONENTS filesystem iostreams program_options system)
-else ()
-    find_package (Boost 1.38 REQUIRED COMPONENTS iostreams)
+if (AVRO_BUILD_TESTS OR AVRO_USE_BOOST)
+    find_package (Boost 1.38 REQUIRED COMPONENTS system)
 endif ()
 
 include(FetchContent)
