@@ -550,7 +550,7 @@ public class PrimitivesArrays {
       if (o == null) {
         return;
       }
-      this.add(location, (double) o);
+      this.add(location, o.doubleValue());
     }
 
     public void add(int location, double o) {
