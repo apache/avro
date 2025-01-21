@@ -58,7 +58,7 @@ public class PrimitivesArrays {
 
     /**
      * Direct primitive int access.
-     * 
+     *
      * @param i : index.
      * @return value at index.
      */
@@ -162,7 +162,7 @@ public class PrimitivesArrays {
 
     /**
      * Direct primitive int access.
-     * 
+     *
      * @param i : index.
      * @return value at index.
      */
@@ -273,7 +273,7 @@ public class PrimitivesArrays {
 
     /**
      * Direct primitive int access.
-     * 
+     *
      * @param i : index.
      * @return value at index.
      */
@@ -431,7 +431,7 @@ public class PrimitivesArrays {
 
     /**
      * Direct primitive int access.
-     * 
+     *
      * @param i : index.
      * @return value at index.
      */
@@ -535,7 +535,7 @@ public class PrimitivesArrays {
 
     /**
      * Direct primitive int access.
-     * 
+     *
      * @param i : index.
      * @return value at index.
      */
@@ -550,7 +550,7 @@ public class PrimitivesArrays {
       if (o == null) {
         return;
       }
-      this.add(location, o.floatValue());
+      this.add(location, o.doubleValue());
     }
 
     public void add(int location, double o) {
