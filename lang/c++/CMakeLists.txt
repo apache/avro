@@ -70,18 +70,16 @@ endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wuseless-cast -Wconversion -pedantic -Werror")
-if (AVRO_ADD_PROTECTOR_FLAGS)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fstack-protector-all -D_GLIBCXX_DEBUG")
-    # Unset _GLIBCXX_DEBUG for avrogencpp.cc because using Boost Program Options
-    # leads to linking errors when compiling with _GLIBCXX_DEBUG as described on
-    # https://stackoverflow.com/questions/19729036/
-    set_source_files_properties(impl/avrogencpp.cc PROPERTIES COMPILE_FLAGS "-U_GLIBCXX_DEBUG")
-endif ()
 endif ()
 
 if (AVRO_BUILD_TESTS OR AVRO_USE_BOOST)
     # Boost 1.70 and above provide a BoostConfig.cmake package configuration file.
     find_package (Boost 1.70 REQUIRED CONFIG COMPONENTS system)
+    if (TARGET Boost::system)
+        message("Found Boost version: ${Boost_VERSION}")
+    else ()
+        message(FATAL_ERROR "Boost::system not found")
+    endif ()
 endif ()
 
 include(FetchContent)
@@ -97,21 +95,17 @@ FetchContent_MakeAvailable(fmt)
 find_package(Snappy CONFIG)
 if (TARGET Snappy::snappy)
     add_definitions(-DSNAPPY_CODEC_AVAILABLE)
-    message("Enabled snappy codec")
+    message("Enabled snappy codec, version: ${Snappy_VERSION}")
 else ()
     message("Disabled snappy codec. Snappy::snappy not found.")
 endif ()
 
 find_package(ZLIB REQUIRED)
 if (TARGET ZLIB::ZLIB)
-    message("Enabled zlib codec")
+    message("Enabled zlib codec, version: ${ZLIB_VERSION}")
 else ()
     message(FATAL_ERROR "ZLIB::ZLIB not found but required.")
 endif ()
-
-add_definitions (${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
-
-add_definitions (-DAVRO_VERSION="${AVRO_VERSION}")
 
 include_directories (include/avro ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -136,14 +130,32 @@ set (AVRO_SOURCE_FILES
 add_library (avrocpp   SHARED ${AVRO_SOURCE_FILES})
 add_library (avrocpp_s STATIC ${AVRO_SOURCE_FILES})
 
-target_compile_definitions(avrocpp   PRIVATE AVRO_SOURCE AVRO_DYN_LINK AVRO_VERSION="${AVRO_VERSION}")
-target_compile_definitions(avrocpp_s PRIVATE AVRO_SOURCE AVRO_VERSION="${AVRO_VERSION}")
+target_compile_definitions(avrocpp   PRIVATE AVRO_SOURCE AVRO_DYN_LINK)
+target_compile_definitions(avrocpp_s PRIVATE AVRO_SOURCE)
 
 set_target_properties (avrocpp   PROPERTIES VERSION ${AVRO_VERSION})
 set_target_properties (avrocpp_s PROPERTIES VERSION ${AVRO_VERSION})
 
-target_link_libraries (avrocpp   $<IF:$<TARGET_EXISTS:Boost::system>,Boost::system,> $<IF:$<TARGET_EXISTS:Snappy::snappy>,Snappy::snappy,> ZLIB::ZLIB fmt::fmt-header-only)
-target_link_libraries (avrocpp_s $<IF:$<TARGET_EXISTS:Boost::system>,Boost::system,> $<IF:$<TARGET_EXISTS:Snappy::snappy>,Snappy::snappy,> ZLIB::ZLIB fmt::fmt-header-only)
+target_link_libraries(avrocpp PUBLIC 
+  $<BUILD_INTERFACE:fmt::fmt-header-only>
+  $<BUILD_INTERFACE:ZLIB::ZLIB>
+  $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
+  $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
+  $<INSTALL_INTERFACE:fmt::fmt-header-only>
+  $<INSTALL_INTERFACE:ZLIB::ZLIB>
+  $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
+  $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
+)
+target_link_libraries(avrocpp_s PUBLIC
+  $<BUILD_INTERFACE:fmt::fmt-header-only>
+  $<BUILD_INTERFACE:ZLIB::ZLIB>
+  $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
+  $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
+  $<INSTALL_INTERFACE:fmt::fmt-header-only>
+  $<INSTALL_INTERFACE:ZLIB::ZLIB>
+  $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
+  $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
+)
 
 target_include_directories(avrocpp PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -161,6 +173,7 @@ if (AVRO_BUILD_EXECUTABLES)
 
     add_executable (avrogencpp impl/avrogencpp.cc)
     target_link_libraries (avrogencpp avrocpp_s)
+    target_compile_definitions(avrogencpp PRIVATE AVRO_VERSION="${AVRO_VERSION}")
 endif ()
 
 if (AVRO_BUILD_TESTS)
@@ -237,12 +250,14 @@ set (CPACK_PACKAGE_FILE_NAME "avrocpp-${AVRO_VERSION_MAJOR}")
 include (CPack)
 
 install (TARGETS avrocpp avrocpp_s
+    EXPORT avrocpp_targets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION lib)
+    RUNTIME DESTINATION lib
+    INCLUDES DESTINATION include)
 
 if (AVRO_BUILD_EXECUTABLES)
-    install (TARGETS avrogencpp RUNTIME DESTINATION bin)
+    install (TARGETS avrogencpp EXPORT avrocpp_targets RUNTIME DESTINATION bin)
 endif ()
 
 install (DIRECTORY include/avro DESTINATION include
@@ -253,3 +268,28 @@ if (NOT CMAKE_BUILD_TYPE)
       "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
       FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
+
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/AvroConfigVersion.cmake"
+    VERSION ${AVRO_VERSION}
+    COMPATIBILITY SameMajorVersion)
+
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/AvroConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/AvroConfig.cmake"
+    INSTALL_DESTINATION lib/cmake/Avro
+)
+
+install(EXPORT avrocpp_targets
+    NAMESPACE Avro::
+    DESTINATION lib/cmake/Avro
+    FILE "AvroTargets.cmake"
+)
+
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/AvroConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/AvroConfigVersion.cmake"
+    DESTINATION lib/cmake/Avro
+)
