@@ -127,13 +127,13 @@ set (AVRO_SOURCE_FILES
         impl/CustomAttributes.cc
         )
 
-add_library (avrocpp   SHARED ${AVRO_SOURCE_FILES})
+add_library (avrocpp SHARED ${AVRO_SOURCE_FILES})
 add_library (avrocpp_s STATIC ${AVRO_SOURCE_FILES})
 
-target_compile_definitions(avrocpp   PRIVATE AVRO_SOURCE AVRO_DYN_LINK)
+target_compile_definitions(avrocpp PRIVATE AVRO_SOURCE AVRO_DYN_LINK)
 target_compile_definitions(avrocpp_s PRIVATE AVRO_SOURCE)
 
-set_target_properties (avrocpp   PROPERTIES VERSION ${AVRO_VERSION})
+set_target_properties (avrocpp PROPERTIES VERSION ${AVRO_VERSION})
 set_target_properties (avrocpp_s PROPERTIES VERSION ${AVRO_VERSION})
 
 target_link_libraries(avrocpp PUBLIC 
@@ -212,7 +212,7 @@ if (AVRO_BUILD_TESTS)
 
     macro (unittest name)
         add_executable (${name} test/${name}.cc)
-        target_link_libraries (${name} avrocpp_s Boost::system ZLIB::ZLIB $<IF:$<TARGET_EXISTS:Snappy::snappy>,Snappy::snappy,>)
+        target_link_libraries (${name} avrocpp_s Boost::system ZLIB::ZLIB $<$<TARGET_EXISTS:Snappy::snappy>:Snappy::snappy>)
         add_test (NAME ${name} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name})
     endmacro (unittest)
