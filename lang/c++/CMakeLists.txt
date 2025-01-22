@@ -170,6 +170,13 @@ if (AVRO_BUILD_EXECUTABLES)
 
     target_link_libraries (precompile avrocpp_s)
 
+    add_executable (avrogencpp impl/avrogencpp.cc)
+    target_link_libraries (avrogencpp avrocpp_s ${Boost_LIBRARIES})
+endif ()
+
+if (AVRO_BUILD_TESTS)
+    enable_testing()
+
     macro (gen file ns)
         add_custom_command (OUTPUT ${file}.hh
             COMMAND avrogencpp
@@ -200,13 +207,6 @@ if (AVRO_BUILD_EXECUTABLES)
     gen (cpp_reserved_words_union_typedef cppres_union)
     gen (big_union big_union)
     gen (union_redundant_types redundant_types)
-
-    add_executable (avrogencpp impl/avrogencpp.cc)
-    target_link_libraries (avrogencpp avrocpp_s ${Boost_LIBRARIES})
-endif ()
-
-if (AVRO_BUILD_TESTS)
-    enable_testing()
 
     macro (unittest name)
         add_executable (${name} test/${name}.cc)
