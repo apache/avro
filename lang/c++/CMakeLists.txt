@@ -77,11 +77,6 @@ if (AVRO_BUILD_TESTS OR AVRO_USE_BOOST)
     # It guarantees that Boost::system target exists if found.
     # See https://cmake.org/cmake/help/latest/policy/CMP0167.html
     find_package (Boost 1.70 REQUIRED CONFIG COMPONENTS system)
-    if (Boost_FOUND)
-        message("Found Boost version: ${Boost_VERSION}")
-    else ()
-        message(FATAL_ERROR "Boost not found but required")
-    endif ()
 endif ()
 
 include(FetchContent)
@@ -103,14 +98,9 @@ else ()
     message("Disabled snappy codec.")
 endif ()
 
+# FindZLIB guarantees that ZLIB::ZLIB target exists if found
+# See https://cmake.org/cmake/help/latest/module/FindZLIB.html#imported-targets
 find_package(ZLIB REQUIRED)
-if (ZLIB_FOUND)
-    # FindZLIB guarantees that ZLIB::ZLIB target exists if found
-    # See https://cmake.org/cmake/help/latest/module/FindZLIB.html#imported-targets
-    message("Enabled zlib codec, version: ${ZLIB_VERSION}")
-else ()
-    message(FATAL_ERROR "ZLIB not found but required")
-endif ()
 
 include_directories (include/avro ${CMAKE_CURRENT_BINARY_DIR})
 
