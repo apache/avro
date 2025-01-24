@@ -34,14 +34,14 @@ namespace avro {
 class AVRO_DECL CustomAttributes {
 
 public:
-    enum ValueMode {
-        // When a CustomAttributes is created using this mode, all values are strings.
+    enum class ValueMode : uint8_t {
+        // When a CustomAttributes is created using this mode, all values are expected to be string.
         // The value should not be quoted, but any interior quotes and special
         // characters (such as newlines) must be escaped.
-        string,
-        // When a CustomAttributes is created using this mode, all values are JSON
+        STRING,
+        // When a CustomAttributes is created using this mode, all values are standard JSON
         // values. String values must be quoted and escaped.
-        json
+        JSON
     };
 
     // Creates a new CustomAttributes object where all values are strings.
@@ -50,7 +50,7 @@ public:
     // WILL be escaped and other special characters MAY be escaped.
     //
     // To support non-string values, use CustomAttributes(CustomAttributes::json) instead.
-    CustomAttributes() : CustomAttributes(string) {}
+    CustomAttributes() : CustomAttributes(ValueMode::STRING) {}
 
     // Creates a new CustomAttributes object.
     //

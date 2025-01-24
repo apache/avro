@@ -28,12 +28,12 @@ namespace avro {
 
 CustomAttributes::CustomAttributes(ValueMode valueMode) {
     switch (valueMode) {
-    case CustomAttributes::string:
-    case CustomAttributes::json:
+    case ValueMode::STRING:
+    case ValueMode::JSON:
         valueMode_ = valueMode;
         break;
     default:
-        throw Exception("invalid ValueMode: " + std::to_string(valueMode));
+        throw Exception("invalid ValueMode: " + std::to_string(static_cast<int>(valueMode)));
     }
 }
 
@@ -57,7 +57,7 @@ void CustomAttributes::addAttribute(const std::string &name,
     // from a header file: CustomAttributes.hh. But the json header files are not
     // part of the Avro distribution, so CustomAttributes.hh cannot #include any of
     // the json header files.
-    if (valueMode_ == CustomAttributes::string) {
+    if (valueMode_ == ValueMode::STRING) {
         try {
             json::loadEntity(("\"" + value + "\"").c_str());
         } catch (json::TooManyValuesException e) {
@@ -81,7 +81,7 @@ void CustomAttributes::printJson(std::ostream &os,
         throw Exception(name + " doesn't exist");
     }
     os << json::Entity(std::make_shared<std::string>(name)).toString() << ": ";
-    if (valueMode_ == CustomAttributes::string) {
+    if (valueMode_ == ValueMode::STRING) {
         os << "\"" << iter->second << "\"";
     } else {
         os << iter->second;
