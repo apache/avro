@@ -16,6 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#if defined(__clang__)
+// Even though CustomAttributes::ValueMode::STRING is deprecated, we still have to
+// handle/implement it.
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 #include <map>
 #include <memory>
 
