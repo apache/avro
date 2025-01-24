@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.NullNode;
+import org.apache.avro.path.TracingAvroTypeException;
 import org.apache.avro.util.internal.Accessor;
 import org.apache.avro.util.internal.Accessor.FieldAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
@@ -1113,7 +1114,12 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
     @Override
     public int getEnumOrdinal(String symbol) {
-      return ordinals.get(symbol);
+      Integer ordinal = ordinals.get(symbol);
+      if (ordinal == null) {
+        throw new TracingAvroTypeException(
+            new AvroTypeException("enum value '" + symbol + "' is not in the enum symbol set: " + symbols));
+      }
+      return ordinal;
     }
 
     @Override

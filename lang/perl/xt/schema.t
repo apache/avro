@@ -23,7 +23,7 @@ use File::Find;
 use_ok 'Avro::Schema';
 
 sub parse {
-    next unless /\.avsc$/;
+    return unless /\.avsc$/;
     open(my $fh, '<', $_);
     local $/ = undef;
     my $schema = <$fh>;

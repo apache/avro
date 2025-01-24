@@ -49,9 +49,9 @@ The schema we want to use to decode the data.
 
 =item * reader
 
-An object implementing a straightforward interface. C<read($buf, $nbytes)> and
-C<seek($nbytes, $whence)> are expected. Typically a IO::String object or a
-IO::File object. It is expected that this calls will block the decoder, if not
+A file handle, or an object implementing a similar interface, like L<IO::File>.
+Specifically, it must support C<read($buf, $nbytes)> and
+C<seek($nbytes, $whence)>. These calls will block the decoder if not
 enough data is available for read.
 
 =back
@@ -67,7 +67,7 @@ sub decode {
     my $type = Avro::Schema->match(
         writer => $writer_schema,
         reader => $reader_schema,
-    ) or throw Avro::Schema::Error::Mismatch;
+    ) or throw Avro::Schema::Error::Mismatch 'schema do not match';
 
     my $meth = "decode_$type";
     return $class->$meth($writer_schema, $reader_schema, $reader);

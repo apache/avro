@@ -29,9 +29,9 @@ INSTRUCTIONS
 
 Pre-requisites:
 
-To compile requires boost headers, and the boost regex library. Optionally, it requires Snappy compression library. If Snappy is available, it builds support for Snappy compression and skips it otherwise. (Please see your OS-specific instructions on how to install Boost and Snappy for your OS).
+To compile requires boost headers. Optionally, it requires Snappy compression library. If Snappy is available, it builds support for Snappy compression and skips it otherwise. (Please see your OS-specific instructions on how to install Boost and Snappy for your OS).
 
-To build one requires cmake 2.6 or later.
+To build one requires cmake 3.5 or later and a compiler supporting C++17 or later.
 
 To generate a Makefile under Unix, MacOS (using GNU) or Cygwin use:
 

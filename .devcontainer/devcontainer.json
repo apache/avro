@@ -2,7 +2,10 @@
     "name": "Avro Development",
     "build": {
         "dockerfile": "../share/docker/Dockerfile",
-        "context": ".."
+        "context": "..",
+        "options": [
+            "--build-arg=BUILDPLATFORM=linux/amd64" // Dockerfile needs a build platfrom argument
+        ]
     },
     "customizations": {
         "vscode": {
@@ -16,12 +19,6 @@
                 "ms-vscode.cpptools",
                 // C#
                 "ms-dotnettools.csharp",
-                // Rust
-                "vadimcn.vscode-lldb",
-                "mutantdino.resourcemonitor",
-                "matklad.rust-analyzer",
-                "tamasfe.even-better-toml",
-                "serayuzgur.crates",
                 // Java
                 "vscjava.vscode-java-pack",
                 // Shell script

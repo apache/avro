@@ -28,7 +28,7 @@ LogicalType::Type LogicalType::type() const {
     return type_;
 }
 
-void LogicalType::setPrecision(int precision) {
+void LogicalType::setPrecision(int32_t precision) {
     if (type_ != DECIMAL) {
         throw Exception("Only logical type DECIMAL can have precision");
     }
@@ -38,7 +38,7 @@ void LogicalType::setPrecision(int precision) {
     precision_ = precision;
 }
 
-void LogicalType::setScale(int scale) {
+void LogicalType::setScale(int32_t scale) {
     if (type_ != DECIMAL) {
         throw Exception("Only logical type DECIMAL can have scale");
     }
@@ -51,6 +51,9 @@ void LogicalType::setScale(int scale) {
 void LogicalType::printJson(std::ostream &os) const {
     switch (type_) {
         case LogicalType::NONE: break;
+        case LogicalType::BIG_DECIMAL:
+            os << R"("logicalType": "big-decimal")";
+            break;
         case LogicalType::DECIMAL:
             os << R"("logicalType": "decimal")";
             os << ", \"precision\": " << precision_;
@@ -70,6 +73,18 @@ void LogicalType::printJson(std::ostream &os) const {
             break;
         case TIMESTAMP_MICROS:
             os << R"("logicalType": "timestamp-micros")";
+            break;
+        case TIMESTAMP_NANOS:
+            os << R"("logicalType": "timestamp-nanos")";
+            break;
+        case LOCAL_TIMESTAMP_MILLIS:
+            os << R"("logicalType": "local-timestamp-millis")";
+            break;
+        case LOCAL_TIMESTAMP_MICROS:
+            os << R"("logicalType": "local-timestamp-micros")";
+            break;
+        case LOCAL_TIMESTAMP_NANOS:
+            os << R"("logicalType": "local-timestamp-nanos")";
             break;
         case DURATION:
             os << R"("logicalType": "duration")";

@@ -71,7 +71,7 @@ string escape(const string &unescaped) {
 // Wrap an indentation in a struct for ostream operator<<
 struct indent {
     explicit indent(size_t depth) : d(depth) {}
-    int d;
+    size_t d;
 };
 
 /// ostream operator for indent
@@ -83,14 +83,15 @@ std::ostream &operator<<(std::ostream &os, indent x) {
     return os;
 }
 
-void printCustomAttributes(const CustomAttributes& customAttributes, int depth,
-                       std::ostream &os) {
+void printCustomAttributes(const CustomAttributes &customAttributes, size_t depth,
+                           std::ostream &os) {
     std::map<std::string, std::string>::const_iterator iter =
         customAttributes.attributes().begin();
     while (iter != customAttributes.attributes().end()) {
-      os << ",\n" << indent(depth);
-      customAttributes.printJson(os, iter->first);
-      ++iter;
+        os << ",\n"
+           << indent(depth);
+        customAttributes.printJson(os, iter->first);
+        ++iter;
     }
 }
 
@@ -112,7 +113,7 @@ NodePrimitive::resolve(const Node &reader) const {
                 return RESOLVE_PROMOTABLE_TO_LONG;
             }
 
-            // fall-through intentional
+            [[fallthrough]];
 
         case AVRO_LONG:
 
@@ -120,7 +121,7 @@ NodePrimitive::resolve(const Node &reader) const {
                 return RESOLVE_PROMOTABLE_TO_FLOAT;
             }
 
-            // fall-through intentional
+            [[fallthrough]];
 
         case AVRO_FLOAT:
 
@@ -302,10 +303,10 @@ void NodeRecord::printJson(std::ostream &os, size_t depth) const {
                     os << ',';
                 }
                 os << '\n'
-                << indent(depth) << "\"" << fieldsAliases_[i][j] << "\"";
+                   << indent(depth) << "\"" << fieldsAliases_[i][j] << "\"";
             }
             os << '\n'
-            << indent(--depth) << ']';
+               << indent(--depth) << ']';
         }
 
         // Serialize "default" field:
@@ -320,8 +321,8 @@ void NodeRecord::printJson(std::ostream &os, size_t depth) const {
             }
         }
 
-        if(customAttributes_.size() == fields) {
-          printCustomAttributes(customAttributes_.get(i), depth, os);
+        if (customAttributes_.size() == fields) {
+            printCustomAttributes(customAttributes_.get(i), depth, os);
         }
 
         os << '\n';
@@ -333,7 +334,7 @@ void NodeRecord::printJson(std::ostream &os, size_t depth) const {
 }
 
 void NodePrimitive::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                       size_t depth) const {
+                                       size_t) const {
     assert(isPrimitive(g.type()));
 
     switch (g.type()) {
@@ -374,13 +375,13 @@ void NodePrimitive::printDefaultToJson(const GenericDatum &g, std::ostream &os,
 }
 
 void NodeEnum::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                  size_t depth) const {
+                                  size_t) const {
     assert(g.type() == AVRO_ENUM);
     os << "\"" << g.value<GenericEnum>().symbol() << "\"";
 }
 
 void NodeFixed::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                   size_t depth) const {
+                                   size_t) const {
     assert(g.type() == AVRO_FIXED);
     // ex: "\uOOff"
     // Convert to a string
@@ -530,9 +531,9 @@ void NodeEnum::printJson(std::ostream &os, size_t depth) const {
     printName(os, nameAttribute_.get(), depth);
     os << indent(depth) << "\"symbols\": [\n";
 
-    int names = leafNameAttributes_.size();
+    auto names = leafNameAttributes_.size();
     ++depth;
-    for (int i = 0; i < names; ++i) {
+    for (size_t i = 0; i < names; ++i) {
         if (i > 0) {
             os << ",\n";
         }
@@ -553,6 +554,9 @@ void NodeArray::printJson(std::ostream &os, size_t depth) const {
     os << indent(depth + 1) << "\"items\": ";
     leafAttributes_.get()->printJson(os, depth + 1);
     os << '\n';
+    for (size_t i = 0; i != customAttributes_.size(); i++){
+        printCustomAttributes(customAttributes_.get(i), depth + 1, os);
+    }
     os << indent(depth) << '}';
 }
 
@@ -576,9 +580,9 @@ NodeMap::NodeMap() : NodeImplMap(AVRO_MAP) {
 
 void NodeUnion::printJson(std::ostream &os, size_t depth) const {
     os << "[\n";
-    int fields = leafAttributes_.size();
+    auto fields = leafAttributes_.size();
     ++depth;
-    for (int i = 0; i < fields; ++i) {
+    for (size_t i = 0; i < fields; ++i) {
         if (i > 0) {
             os << ",\n";
         }

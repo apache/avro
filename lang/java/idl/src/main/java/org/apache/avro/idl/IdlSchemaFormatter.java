@@ -21,7 +21,6 @@ import java.io.StringWriter;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaFormatter;
-import org.apache.avro.util.IdlUtils;
 
 public class IdlSchemaFormatter implements SchemaFormatter {
   @Override

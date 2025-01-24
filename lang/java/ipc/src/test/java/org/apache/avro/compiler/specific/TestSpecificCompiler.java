@@ -70,7 +70,7 @@ public class TestSpecificCompiler {
 
   @Test
   void esc() {
-    assertEquals("\\\"", SpecificCompiler.javaEscape("\""));
+    assertEquals("\\\"", SpecificCompiler.escapeForJavaString("\""));
   }
 
   @Test

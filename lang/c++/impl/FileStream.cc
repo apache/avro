@@ -94,7 +94,7 @@ struct FileBufferCopyIn : public BufferCopyIn {
     }
 
     bool read(uint8_t *b, size_t toRead, size_t &actual) final {
-        int n = ::read(fd_, b, toRead);
+        auto n = ::read(fd_, b, toRead);
         if (n > 0) {
             actual = n;
             return true;

@@ -17,29 +17,29 @@
  */
 package org.apache.avro.file;
 
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.InvalidAvroMagicException;
+import org.apache.avro.NameValidator;
+import org.apache.avro.Schema;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DecoderFactory;
+
+import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.InvalidAvroMagicException;
-import org.apache.avro.NameValidator;
-import org.apache.avro.Schema;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.DatumReader;
 
 /**
  * Streaming access to files written by {@link DataFileWriter}. Use
@@ -275,6 +275,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     if (blockRemaining != blockCount)
       throw new IllegalStateException("Not at block start.");
     blockRemaining = 0;
+    blockFinished();
     datumIn = null;
     return blockBuffer;
   }

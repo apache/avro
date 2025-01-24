@@ -25,7 +25,7 @@
 #include "Specific.hh"
 #include "ValidSchema.hh"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <cstdint>
 #include <functional>
 #include <stack>
@@ -160,7 +160,7 @@ static string randomString(size_t len) {
         if (c == '\0') {
             c = '\x7f';
         }
-        result.push_back(c);
+        result.push_back(static_cast<char>(c));
     }
     return result;
 }
@@ -169,7 +169,7 @@ static vector<uint8_t> randomBytes(size_t len) {
     vector<uint8_t> result;
     result.reserve(len);
     for (size_t i = 0; i < len; ++i) {
-        result.push_back(rnd());
+        result.push_back(static_cast<uint8_t>(rnd()));
     }
     return result;
 }
@@ -335,7 +335,7 @@ struct StackElement {
 };
 } // namespace
 
-static vector<string>::const_iterator skipCalls(Scanner &sc, Decoder &d,
+static vector<string>::const_iterator skipCalls(Scanner &sc, Decoder &,
                                                 vector<string>::const_iterator it, bool isArray) {
     char end = isArray ? ']' : '}';
     int level = 0;
@@ -364,7 +364,7 @@ static vector<string>::const_iterator skipCalls(Scanner &sc, Decoder &d,
             case 'K':
             case 'b':
             case 'f':
-            case 'e': ++it; // Fall through.
+            case 'e': ++it; [[fallthrough]];
             case 'c':
             case 'U':
                 sc.extractInt();
@@ -525,7 +525,7 @@ ValidSchema makeValidSchema(const char *schema) {
     istringstream iss(schema);
     ValidSchema vs;
     compileJsonSchema(iss, vs);
-    return ValidSchema(vs);
+    return vs;
 }
 
 void testEncoder(const EncoderPtr &e, const char *writerCalls,
@@ -594,7 +594,6 @@ struct TestData4 {
     const char *readerCalls;
     const char *readerValues[100];
     unsigned int depth;
-    size_t recordCount;
 };
 
 void appendSentinel(OutputStream &os) {
@@ -838,7 +837,7 @@ void testGenericResolving(const TestData3 &td) {
         GenericReader gr(wvs, rvs, d1);
         GenericDatum datum;
         gr.read(datum);
-        d1->drain();
+        gr.drain();
         assertSentinel(*in1);
 
         EncoderPtr e2 = CodecFactory::newEncoder(rvs);
@@ -1286,7 +1285,7 @@ static const TestData3 data3[] = {
         {"name": "f1", "type": "boolean"},
         {"name": "f2", "type": "double"}]})",
      "IBD",
-    R"({"type":"record", "name":"s", "aliases":["r"], "fields":[
+     R"({"type":"record", "name":"s", "aliases":["r"], "fields":[
         {"name":"g0", "type":"int", "aliases":["f0"]},
         {"name":"g1", "type":"boolean", "aliases":["f1"]},
         {"name":"f2", "type":"double", "aliases":["g2"]}]})",
@@ -1319,6 +1318,72 @@ static const TestData3 data3[] = {
      R"({"type": "fixed", "name": "g", "namespace": "n2", "aliases": ["h", "n.f"], "size": 8})",
      "f8",
      1},
+    {R"({"type": "record", "name": "r1", "fields": [
+     {"name": "f1", "type": ["null", {"type": "record", "name": "r2", "fields": [{"name": "f11", "type": "string"}]}]},
+     {"name": "f2", "type": {"type": "array", "items": "r2"}}
+     ]})",
+     "U0N[c3sS1sS2sS3]",
+     R"({"type": "record", "name": "r1", "fields": [
+     {"name": "f1", "type": [
+         "null",
+         {"type": "record", "name": "r2", "fields": [{"name": "f11", "type": "string"}]},
+         {"type": "record", "name": "r3", "fields": [
+             {"name": "g11", "type": {"type": "array", "items": {"type": "record", "name": "r31", "fields": [{"name": "g111", "type": "double"}]}}}
+         ]}
+     ]},
+     {"name": "f2", "type": {"type": "array", "items": "r2"}},
+     {"name": "f3", "type": {"type": "array", "items": "r3"}, "default": []}
+     ]})",
+     "U0N[c3sS1sS2sS3][]",
+     1},
+    {
+      R"({"name": "Project", "type": "record", "fields": [
+        { "name": "_types", "type": [
+            "null",
+            { "name": "Record1", "type": "record", "fields": [{ "name": "Record1_field1", "type": "string" }]}
+        ]},
+        { "name": "field1", "type": { "type": "array", "items": "Record1" } }
+      ]})",
+        "U0N[c3sS1sS2sS3]",
+      R"({"name": "Project", "type": "record", "fields": [
+        { "name": "_types", "type": [
+            "null",
+            { "name": "Record1", "type": "record", "fields": [{ "name": "Record1_field1", "type": "string" }]},
+            { "name": "Record3", "type": "record", "fields": [
+                { "name": "Record3_field1", "type": { "type": "array", "items": { "name": "Record2", "type": "record",
+                     "fields":[{ "name": "Record2_field1", "type": "double" }]}
+                }}
+            ]}
+        ]},
+        { "name": "field1", "type": { "type": "array", "items": "Record1" } },
+        { "name": "field2", "type": { "type": "array", "items": "Record3" }, "default": [] }
+      ]})",
+        "U0N[c3sS1sS2sS3][]",
+        1},
+    {
+        R"({"name": "Project", "type": "record", "fields": [
+        { "name": "_types", "type": [
+            "null",
+            { "name": "Record1", "type": "record", "fields": [{ "name": "Record1_field1", "type": "string" }]},
+            { "name": "Record3", "type": "record", "fields": [
+                { "name": "Record3_field1", "type": { "type": "array", "items": { "name": "Record2", "type": "record",
+                     "fields":[{ "name": "Record2_field1", "type": "double" }]}
+                }}
+            ]}
+        ]},
+        { "name": "field1", "type": { "type": "array", "items": "Record1" } },
+        { "name": "field2", "type": { "type": "array", "items": "Record3" }, "default": [] }
+      ]})",
+        "U0N[c3sS1sS2sS3][]",
+      R"({"name": "Project", "type": "record", "fields": [
+        { "name": "_types", "type": [
+            "null",
+            { "name": "Record1", "type": "record", "fields": [{ "name": "Record1_field1", "type": "string" }]}
+        ]},
+        { "name": "field1", "type": { "type": "array", "items": "Record1" } }
+      ]})",
+        "U0N[c3sS1sS2sS3]",
+        1},
 };
 
 static const TestData4 data4[] = {
@@ -1345,9 +1410,7 @@ static const TestData4 data4[] = {
         })",
         "RS10S10RS10S10",
         {"s1", "s2", "t1", "t2", nullptr},
-        1,
-        2
-    },
+        1},
 
     // Reordered fields
     {
@@ -1371,9 +1434,7 @@ static const TestData4 data4[] = {
         })",
         "RLS10",
         {"10", "hello", nullptr},
-        1,
-        1
-    },
+        1},
 
     // Default values
     {
@@ -1387,15 +1448,12 @@ static const TestData4 data4[] = {
         })",
         "RI",
         {"100", nullptr},
-        1,
-        1
-    },
+        1},
 
-    {
-        R"({"type": "record", "name": "r", "fields": [{"name": "f2", "type": "int"}]})",
-        "I",
-        {"10", nullptr},
-        R"({
+    {R"({"type": "record", "name": "r", "fields": [{"name": "f2", "type": "int"}]})",
+     "I",
+     {"10", nullptr},
+     R"({
             "type": "record",
             "name": "r",
             "fields": [
@@ -1403,11 +1461,9 @@ static const TestData4 data4[] = {
                 {"name": "f2", "type": "int"}
             ]
         })",
-        "RII",
-        {"10", "101", nullptr},
-        1,
-        1
-    },
+     "RII",
+     {"10", "101", nullptr},
+     1},
 
     {
         R"({
@@ -1451,9 +1507,7 @@ static const TestData4 data4[] = {
         })",
         "RRIIL",
         {"10", "101", "11", nullptr},
-        1,
-        1
-    },
+        1},
 
     // Default value for a record.
     {
@@ -1509,9 +1563,7 @@ static const TestData4 data4[] = {
         })",
         "RRLILRLI",
         {"10", "12", "13", "15", "101", nullptr},
-        1,
-        1
-    },
+        1},
 
     {
         R"({
@@ -1559,11 +1611,9 @@ static const TestData4 data4[] = {
         })",
         "RRLILRLI",
         {"10", "12", "13", "15", "101", nullptr},
-        1,
-        1
-    },
+        1},
 
-// TODO mkmkme HERE
+    // TODO mkmkme HERE
     {
         R"({
             "type": "record",
@@ -1585,9 +1635,7 @@ static const TestData4 data4[] = {
         })",
         "[c1sI]",
         {"100", nullptr},
-        1,
-        1
-    },
+        1},
 
     {
         R"({
@@ -1610,9 +1658,7 @@ static const TestData4 data4[] = {
         })",
         "[Rc1sI]",
         {"100", nullptr},
-        1,
-        1
-    },
+        1},
 
     // Record of array of record with deleted field as last field
     {
@@ -1657,9 +1703,7 @@ static const TestData4 data4[] = {
         })",
         "R[c1sI]",
         {"10", nullptr},
-        2,
-        1
-    },
+        2},
 
     // Enum resolution
     {
@@ -1669,20 +1713,15 @@ static const TestData4 data4[] = {
         R"({"type": "enum", "name": "e", "symbols": ["y", "z"]})",
         "e1",
         {nullptr},
-        1,
-        1
-    },
+        1},
 
-    {
-        R"({"type": "enum", "name": "e", "symbols": ["x", "y"]})",
-        "e1",
-        {nullptr},
-        R"({"type": "enum", "name": "e", "symbols": ["y", "z"]})",
-        "e0",
-        {nullptr},
-        1,
-        1
-    },
+    {R"({"type": "enum", "name": "e", "symbols": ["x", "y"]})",
+     "e1",
+     {nullptr},
+     R"({"type": "enum", "name": "e", "symbols": ["y", "z"]})",
+     "e0",
+     {nullptr},
+     1},
 
     // Union
     {
@@ -1692,20 +1731,15 @@ static const TestData4 data4[] = {
         R"(["long", "int"])",
         "U1I",
         {"100", nullptr},
-        1,
-        1
-    },
+        1},
 
-    {
-        R"(["long", "int"])",
-        "U1I",
-        {"100", nullptr},
-        R"("int")",
-        "I",
-        {"100", nullptr},
-        1,
-        1
-    },
+    {R"(["long", "int"])",
+     "U1I",
+     {"100", nullptr},
+     R"("int")",
+     "I",
+     {"100", nullptr},
+     1},
 
     // Arrray of unions
     {
@@ -1715,9 +1749,7 @@ static const TestData4 data4[] = {
         R"({"type":"array", "items": "int"})",
         "[c2sIsI]",
         {"100", "100", nullptr},
-        2,
-        1
-    },
+        2},
 
     // Map of unions
     {
@@ -1727,9 +1759,7 @@ static const TestData4 data4[] = {
         R"({"type":"map", "values": "int"})",
         "{c2sS10IsS10I}",
         {"k1", "100", "k2", "100", nullptr},
-        2,
-        1
-    },
+        2},
 
     // Union + promotion
     {
@@ -1739,20 +1769,15 @@ static const TestData4 data4[] = {
         R"(["long", "string"])",
         "U0L",
         {"100", nullptr},
-        1,
-        1
-    },
+        1},
 
-    {
-        R"(["int", "string"])",
-        "U0I",
-        {"100", nullptr},
-        R"("long")",
-        "L",
-        {"100", nullptr},
-        1,
-        1
-    },
+    {R"(["int", "string"])",
+     "U0I",
+     {"100", nullptr},
+     R"("long")",
+     "L",
+     {"100", nullptr},
+     1},
 
     // Record where union field is skipped.
     {
@@ -1779,9 +1804,7 @@ static const TestData4 data4[] = {
         })",
         "BLD",
         {"1", "100", "10.75", nullptr},
-        1,
-        1
-    },
+        1},
 };
 
 static const TestData4 data4BinaryOnly[] = {
@@ -1796,8 +1819,7 @@ static const TestData4 data4BinaryOnly[] = {
         R"({"type":"array", "items": "int"})",
         "[c1sIc1sI]",
         {"100", "100", nullptr},
-        2
-    },
+        2},
 
     // Map of unions
     {
@@ -1807,8 +1829,7 @@ static const TestData4 data4BinaryOnly[] = {
         R"({"type":"map", "values": "int"})",
         "{c1sS10Ic1sS10I}",
         {"k1", "100", "k2", "100", nullptr},
-        2
-    },
+        2},
 };
 
 #define COUNTOF(x) sizeof(x) / sizeof(x[0])
@@ -1826,13 +1847,13 @@ Test testWithData(const Test &test, const Data &) {
         testWithData(&testFunc<Factory>, data), data, data + COUNTOF(data)))
 
 struct BinaryEncoderFactory {
-    static EncoderPtr newEncoder(const ValidSchema &schema) {
+    static EncoderPtr newEncoder(const ValidSchema &) {
         return binaryEncoder();
     }
 };
 
 struct BinaryDecoderFactory {
-    static DecoderPtr newDecoder(const ValidSchema &schema) {
+    static DecoderPtr newDecoder(const ValidSchema &) {
         return binaryDecoder();
     }
 };
@@ -2093,7 +2114,7 @@ static void testByteCount() {
 } // namespace avro
 
 boost::unit_test::test_suite *
-init_unit_test_suite(int argc, char *argv[]) {
+init_unit_test_suite(int, char *[]) {
     using namespace boost::unit_test;
 
     auto *ts = BOOST_TEST_SUITE("Avro C++ unit tests for codecs");

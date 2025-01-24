@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include <cmath>
 #include <unordered_set>
 
@@ -42,11 +43,11 @@ Name::Name(std::string simpleName, std::string ns) : ns_(std::move(ns)), simpleN
     check();
 }
 
-Name::Name(const Name& other) {
+Name::Name(const Name &other) {
     *this = other;
 }
 
-Name& Name::operator=(const Name& other) {
+Name &Name::operator=(const Name &other) {
     if (this != &other) {
         ns_ = other.ns_;
         simpleName_ = other.simpleName_;
@@ -57,9 +58,9 @@ Name& Name::operator=(const Name& other) {
     return *this;
 }
 
-Name::Name(Name&& other) = default;
+Name::Name(Name &&other) = default;
 
-Name& Name::operator=(Name&& other) = default;
+Name &Name::operator=(Name &&other) = default;
 
 Name::~Name() = default;
 
@@ -79,7 +80,7 @@ void Name::fullname(const string &name) {
     check();
 }
 
-const std::vector<std::string>& Name::aliases() const {
+const std::vector<std::string> &Name::aliases() const {
     static const std::vector<std::string> emptyAliases;
     return aliases_ ? aliases_->raw : emptyAliases;
 }
@@ -138,6 +139,13 @@ void Node::setLogicalType(LogicalType logicalType) {
     // Check that the logical type is applicable to the node type.
     switch (logicalType.type()) {
         case LogicalType::NONE: break;
+        case LogicalType::BIG_DECIMAL: {
+            if (type_ != AVRO_BYTES) {
+                throw Exception("BIG_DECIMAL logical type can annotate "
+                                "only BYTES type");
+            }
+            break;
+        }
         case LogicalType::DECIMAL: {
             if (type_ != AVRO_BYTES && type_ != AVRO_FIXED) {
                 throw Exception("DECIMAL logical type can annotate "
@@ -146,13 +154,13 @@ void Node::setLogicalType(LogicalType logicalType) {
             if (type_ == AVRO_FIXED) {
                 // Max precision that can be supported by the current size of
                 // the FIXED type.
-                long maxPrecision = floor(log10(2.0) * (8.0 * fixedSize() - 1));
+                auto maxPrecision = static_cast<int32_t>(floor(log10(2.0) * (8.0 * static_cast<double>(fixedSize()) - 1)));
                 if (logicalType.precision() > maxPrecision) {
                     throw Exception(
-                            "DECIMAL precision {} is too large for the "
-                            "FIXED type of size {}, precision cannot be "
-                            "larger than {}",
-                            logicalType.precision(), fixedSize(), maxPrecision);
+                        "DECIMAL precision {} is too large for the "
+                        "FIXED type of size {}, precision cannot be "
+                        "larger than {}",
+                        logicalType.precision(), fixedSize(), maxPrecision);
                 }
             }
             if (logicalType.scale() > logicalType.precision()) {
@@ -186,6 +194,30 @@ void Node::setLogicalType(LogicalType logicalType) {
         case LogicalType::TIMESTAMP_MICROS:
             if (type_ != AVRO_LONG) {
                 throw Exception("TIMESTAMP-MICROS logical type can only annotate "
+                                "LONG type");
+            }
+            break;
+        case LogicalType::TIMESTAMP_NANOS:
+            if (type_ != AVRO_LONG) {
+                throw Exception("TIMESTAMP-NANOS logical type can only annotate "
+                                "LONG type");
+            }
+            break;
+        case LogicalType::LOCAL_TIMESTAMP_MILLIS:
+            if (type_ != AVRO_LONG) {
+                throw Exception("LOCAL-TIMESTAMP-MILLIS logical type can only annotate "
+                                "LONG type");
+            }
+            break;
+        case LogicalType::LOCAL_TIMESTAMP_MICROS:
+            if (type_ != AVRO_LONG) {
+                throw Exception("LOCAL-TIMESTAMP-MICROS logical type can only annotate "
+                                "LONG type");
+            }
+            break;
+        case LogicalType::LOCAL_TIMESTAMP_NANOS:
+            if (type_ != AVRO_LONG) {
+                throw Exception("LOCAL-TIMESTAMP-NANOS logical type can only annotate "
                                 "LONG type");
             }
             break;

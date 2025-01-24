@@ -30,13 +30,11 @@ import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
-import org.apache.avro.io.BinaryData;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.FixedSize;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.util.ClassUtils;
-import org.apache.avro.util.MapUtil;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -360,8 +358,8 @@ public class ReflectData extends SpecificData {
   static class ClassAccessorData {
     private final Class<?> clazz;
     private final Map<String, FieldAccessor> byName = new HashMap<>();
-    // getAccessorsFor is already synchronized, no need to wrap
-    final Map<Schema, FieldAccessor[]> bySchema = new WeakHashMap<>();
+    // getAccessorsFor replaces this map with each modification
+    volatile Map<Schema, FieldAccessor[]> bySchema = new WeakHashMap<>();
 
     private ClassAccessorData(Class<?> c) {
       clazz = c;
@@ -379,12 +377,14 @@ public class ReflectData extends SpecificData {
      * Return the field accessors as an array, indexed by the field index of the
      * given schema.
      */
-    private synchronized FieldAccessor[] getAccessorsFor(Schema schema) {
-      // if synchronized is removed from this method, adjust bySchema appropriately
+    private FieldAccessor[] getAccessorsFor(Schema schema) {
+      // to avoid synchronization, we replace the map for each modification
       FieldAccessor[] result = bySchema.get(schema);
       if (result == null) {
         result = createAccessorsFor(schema);
+        Map<Schema, FieldAccessor[]> bySchema = new WeakHashMap<>(this.bySchema);
         bySchema.put(schema, result);
+        this.bySchema = bySchema;
       }
       return result;
     }
@@ -426,16 +426,6 @@ public class ReflectData extends SpecificData {
     }
     return null;
   }
-
-  /** @deprecated Replaced by {@link SpecificData#CLASS_PROP} */
-  @Deprecated
-  static final String CLASS_PROP = "java-class";
-  /** @deprecated Replaced by {@link SpecificData#KEY_CLASS_PROP} */
-  @Deprecated
-  static final String KEY_CLASS_PROP = "java-key-class";
-  /** @deprecated Replaced by {@link SpecificData#ELEMENT_PROP} */
-  @Deprecated
-  static final String ELEMENT_PROP = "java-element-class";
 
   private static final Map<String, Class> CLASS_CACHE = new ConcurrentHashMap<>();
 
@@ -847,7 +837,7 @@ public class ReflectData extends SpecificData {
 
   // Return of this class and its superclasses to serialize.
   private static Field[] getCachedFields(Class<?> recordClass) {
-    return MapUtil.computeIfAbsent(FIELDS_CACHE, recordClass, rc -> getFields(rc, true));
+    return FIELDS_CACHE.computeIfAbsent(recordClass, rc -> getFields(rc, true));
   }
 
   private static Field[] getFields(Class<?> recordClass, boolean excludeJava) {
@@ -995,7 +985,7 @@ public class ReflectData extends SpecificData {
         break;
       byte[] b1 = (byte[]) o1;
       byte[] b2 = (byte[]) o2;
-      return BinaryData.compareBytes(b1, 0, b1.length, b2, 0, b2.length);
+      return Arrays.compare(b1, 0, b1.length, b2, 0, b2.length);
     }
     return super.compare(o1, o2, s, equals);
   }

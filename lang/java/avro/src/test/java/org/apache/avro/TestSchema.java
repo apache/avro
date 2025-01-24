@@ -45,6 +45,13 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericData.EnumSymbol;
+import org.apache.avro.generic.GenericData.Record;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.GenericRecordBuilder;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -635,5 +642,34 @@ public class TestSchema {
   @Test
   void testParserNullValidate() {
     new Schema.Parser((NameValidator) null).parse("{\"type\":\"record\",\"name\":\"\",\"fields\":[]}"); // Empty name
+  }
+
+  /**
+   * Tests when a user tries to write a record with an invalid enum symbol value
+   * that the exception returned is more descriptive than just a NPE or an
+   * incorrect mention of an unspecified non-null field.
+   */
+  @Test
+  void enumWriteUnknownField() throws IOException {
+    Schema schema = Schema.createRecord("record1", "doc", "", false);
+    String goodValue = "HELLO";
+    Schema enumSchema = Schema.createEnum("enum1", "doc", "", Arrays.asList(goodValue));
+    Field field1 = new Field("field1", enumSchema);
+    schema.setFields(Collections.singletonList(field1));
+
+    GenericDatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<>(schema);
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    Encoder encoder = EncoderFactory.get().binaryEncoder(byteArrayOutputStream, null);
+    GenericRecordBuilder builder = new GenericRecordBuilder(schema);
+    String badValue = "GOODBYE";
+    builder.set(field1, new EnumSymbol(enumSchema, badValue));
+    Record record = builder.build();
+    try {
+      datumWriter.write(record, encoder);
+      fail("should have thrown");
+    } catch (AvroTypeException ate) {
+      assertTrue(ate.getMessage().contains(goodValue));
+      assertTrue(ate.getMessage().contains(badValue));
+    }
   }
 }

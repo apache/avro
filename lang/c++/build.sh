@@ -58,8 +58,8 @@ function do_doc() {
 function do_dist() {
   rm -rf $BUILD_CPP/
   mkdir -p $BUILD_CPP
-  cp -r api AUTHORS build.sh CMakeLists.txt ChangeLog \
-    LICENSE NOTICE impl jsonschemas NEWS parser README test examples \
+  cp -r include AUTHORS build.sh CMakeLists.txt ChangeLog \
+    LICENSE NOTICE impl jsonschemas NEWS README test examples \
     $BUILD_CPP
   find $BUILD_CPP -name '.svn' | xargs rm -rf
   cp ../../share/VERSION.txt $BUILD_CPP
@@ -83,7 +83,7 @@ case "$target" in
     ;;
 
   test)
-    (cmake -S. -Bbuild -D CMAKE_BUILD_TYPE=Debug -D AVRO_ADD_PROTECTOR_FLAGS=1 && cmake --build build \
+    (cmake -S. -Bbuild -D CMAKE_BUILD_TYPE=Debug -D AVRO_ADD_PROTECTOR_FLAGS=1 && cmake --build build -- -k \
       && ./build/buffertest \
       && ./build/unittest \
       && ./build/AvrogencppTestReservedWords \

@@ -20,6 +20,7 @@
 #include "GenericDatum.hh"
 #include "ValidSchema.hh"
 
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/parameterized_test.hpp>
 #include <boost/test/unit_test.hpp>
@@ -28,14 +29,14 @@ namespace avro {
 namespace schema {
 
 const char *basicSchemas[] = {
-    "\"null\"",
-    "\"boolean\"",
-    "\"int\"",
-    "\"long\"",
-    "\"float\"",
-    "\"double\"",
-    "\"bytes\"",
-    "\"string\"",
+    R"("null")",
+    R"("boolean")",
+    R"("int")",
+    R"("long")",
+    R"("float")",
+    R"("double")",
+    R"("bytes")",
+    R"("string")",
 
     // Primitive types - longer
     R"({ "type": "null" })",
@@ -48,51 +49,101 @@ const char *basicSchemas[] = {
     R"({ "type": "string" })",
 
     // Record
-    R"({"type":"record","name":"Test","doc":"Doc_string","fields":[]})",
-    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
-    "[{\"name\":\"f\",\"type\":\"long\"}]}",
-    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
-    "[{\"name\":\"f1\",\"type\":\"long\",\"doc\":\"field_doc\"},"
-    "{\"name\":\"f2\",\"type\":\"int\"}]}",
-    "{\"type\":\"error\",\"name\":\"Test\",\"fields\":"
-    "[{\"name\":\"f1\",\"type\":\"long\"},"
-    "{\"name\":\"f2\",\"type\":\"int\"}]}",
-
+    R"({
+        "type":"record",
+        "name":"Test",
+        "doc":"Doc_string",
+        "fields":[]
+    })",
+    R"({
+        "type":"record",
+        "name":"Test",
+        "fields": [
+            {"name":"f","type":"long"}
+        ]
+    })",
+    R"({
+        "type":"record",
+        "name":"Test",
+        "fields":[
+            {"name":"f1","type":"long","doc":"field_doc"},
+            {"name":"f2","type":"int"}
+        ]
+    })",
+    R"({
+        "type":"error",
+        "name":"Test",
+        "fields":[
+            {"name":"f1","type":"long"},
+            {"name":"f2","type":"int"}
+        ]
+    })",
     // Recursive.
-    "{\"type\":\"record\",\"name\":\"LongList\","
-    "\"fields\":[{\"name\":\"value\",\"type\":\"long\",\"doc\":\"recursive_doc\"},"
-    "{\"name\":\"next\",\"type\":[\"LongList\",\"null\"]}]}",
+    R"({
+        "type":"record",
+        "name":"LongList",
+        "fields":[
+            {"name":"value","type":"long","doc":"recursive_doc"},
+            {"name":"next","type":["LongList","null"]}
+        ]
+    })",
+
     // Enum
-    R"({"type":"enum","doc":"enum_doc","name":"Test","symbols":["A","B"]})",
+    R"({
+        "type":"enum",
+        "doc":"enum_doc",
+        "name":"Test",
+        "symbols":["A","B"]
+    })",
 
     // Array
-    R"({"type":"array","doc":"array_doc","items":"long"})",
-    "{\"type\":\"array\",\"items\":{\"type\":\"enum\","
-    "\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}}",
+    R"({
+        "type":"array",
+        "doc":"array_doc",
+        "items":"long"
+    })",
+    R"({
+        "type":"array",
+        "items":{
+            "type":"enum",
+            "name":"Test",
+            "symbols":["A","B"]
+        }
+    })",
 
     // Map
     R"({"type":"map","doc":"map_doc","values":"long"})",
-    "{\"type\":\"map\",\"values\":{\"type\":\"enum\", "
-    "\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}}",
+    R"({
+        "type":"map",
+        "values":{
+            "type":"enum",
+            "name":"Test",
+            "symbols":["A","B"]
+        }
+    })",
 
     // Union
     R"(["string","null","long"])",
 
     // Fixed
     R"({"type":"fixed","doc":"fixed_doc","name":"Test","size":1})",
-    "{\"type\":\"fixed\",\"name\":\"MyFixed\","
-    "\"namespace\":\"org.apache.hadoop.avro\",\"size\":1}",
+    R"({"type":"fixed","name":"MyFixed","namespace":"org.apache.hadoop.avro","size":1})",
     R"({"type":"fixed","name":"Test","size":1})",
     R"({"type":"fixed","name":"Test","size":1})",
 
     // Extra attributes (should be ignored)
     R"({"type": "null", "extra attribute": "should be ignored"})",
     R"({"type": "boolean", "extra1": 1, "extra2": 2, "extra3": 3})",
-    "{\"type\": \"record\",\"name\": \"Test\",\"fields\": "
-    "[{\"name\": \"f\",\"type\": \"long\"}], \"extra attribute\": 1}",
-    "{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"],"
-    "\"extra attribute\": 1}",
-    R"({"type": "array", "items": "long", "extra attribute": 1})",
+    R"({
+        "type": "record",
+        "name": "Test",
+        "fields":[
+            {"name": "f","type":"long"}
+        ],
+        "extra attribute": 1
+    })",
+    R"({"type": "enum", "name": "Test", "symbols": ["A", "B"],"extra attribute": 1})",
+    R"({"type": "array", "items": "long", "extra attribute": "1"})",
     R"({"type": "map", "values": "long", "extra attribute": 1})",
     R"({"type": "fixed", "name": "Test", "size": 1, "extra attribute": 1})",
 
@@ -103,15 +154,30 @@ const char *basicSchemas[] = {
     R"({ "name":"test", "type": "record", "fields": [ {"name": "double","type": "double","default" : 1.2 }]})",
 
     // namespace with '$' in it.
-    "{\"type\":\"record\",\"name\":\"Test\",\"namespace\":\"a.b$\",\"fields\":"
-    "[{\"name\":\"f\",\"type\":\"long\"}]}",
+    R"({
+        "type":"record",
+        "name":"Test",
+        "namespace":"a.b$",
+        "fields":[
+            {"name":"f","type":"long"}
+        ]
+    })",
 
     // Custom attribute(s) for field in record
-    "{\"type\": \"record\",\"name\": \"Test\",\"fields\": "
-        "[{\"name\": \"f1\",\"type\": \"long\",\"extra field\": \"1\"}]}",
-    "{\"type\": \"record\",\"name\": \"Test\",\"fields\": "
-        "[{\"name\": \"f1\",\"type\": \"long\","
-        "\"extra field1\": \"1\",\"extra field2\": \"2\"}]}"
+    R"({
+        "type": "record",
+        "name": "Test",
+        "fields":[
+            {"name": "f1","type": "long","extra field": "1"}
+        ]
+    })",
+    R"({
+        "type": "record",
+        "name": "Test",
+        "fields":[
+            {"name": "f1","type": "long","extra field1": "1","extra field2": "2"}
+        ]
+    })"
 };
 
 const char *basicSchemaErrors[] = {
@@ -122,30 +188,33 @@ const char *basicSchemaErrors[] = {
     R"({"type":"record","name":"LongList", "fields": "hi"})",
 
     // Undefined name
-    "{\"type\":\"record\",\"name\":\"LongList\","
-    "\"fields\":[{\"name\":\"value\",\"type\":\"long\"},"
-    "{\"name\":\"next\",\"type\":[\"LongListA\",\"null\"]}]}",
+    R"({
+        "type":"record",
+        "name":"LongList",
+        "fields":[
+            {"name":"value","type":"long"},
+            {"name":"next","type":["LongListA","null"]}
+        ]
+    })",
 
     // Enum
     // Symbols not an array
-    "{\"type\": \"enum\", \"name\": \"Status\", \"symbols\": "
-    "\"Normal Caution Critical\"}",
+    R"({"type": "enum", "name": "Status", "symbols":"Normal Caution Critical"})",
     // Name not a string
-    "{\"type\": \"enum\", \"name\": [ 0, 1, 1, 2, 3, 5, 8 ], "
-    "\"symbols\": [\"Golden\", \"Mean\"]}",
+    R"({"type": "enum", "name": [ 0, 1, 1, 2, 3, 5, 8 ], "symbols": ["Golden", "Mean"]})",
     // No name
-    "{\"type\": \"enum\", \"symbols\" : [\"I\", \"will\", "
-    "\"fail\", \"no\", \"name\"]}",
+    R"({"type": "enum", "symbols" : ["I", "will", "fail", "no", "name"]})",
     // Duplicate symbol
-    "{\"type\": \"enum\", \"name\": \"Test\","
-    "\"symbols\" : [\"AA\", \"AA\"]}",
+    R"({"type": "enum", "name": "Test", "symbols" : ["AA", "AA"]})",
 
     // Union
     // Duplicate type
     R"(["string", "long", "long"])",
     // Duplicate type
-    "[{\"type\": \"array\", \"items\": \"long\"}, "
-    "{\"type\": \"array\", \"items\": \"string\"}]",
+    R"([
+        {"type": "array", "items": "long"},
+        {"type": "array", "items": "string"}
+    ])",
 
     // Fixed
     // No size
@@ -162,54 +231,90 @@ const char *basicSchemaErrors[] = {
 };
 
 const char *roundTripSchemas[] = {
-    "\"null\"",
-    "\"boolean\"",
-    "\"int\"",
-    "\"long\"",
-    "\"float\"",
-    "\"double\"",
-    "\"bytes\"",
-    "\"string\"",
+    R"("null")",
+    R"("boolean")",
+    R"("int")",
+    R"("long")",
+    R"("float")",
+    R"("double")",
+    R"("bytes")",
+    R"("string")",
+
     // Record
     R"({"type":"record","name":"Test","fields":[]})",
-    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
-    "[{\"name\":\"f\",\"type\":\"long\"}]}",
-    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
-    "[{\"name\":\"f1\",\"type\":\"long\"},"
-    "{\"name\":\"f2\",\"type\":\"int\"}]}",
+    R"({
+        "type":"record",
+        "name":"Test",
+        "fields":[
+            {"name":"f","type":"long"}
+        ]
+    })",
+    R"({
+        "type":"record",
+        "name":"Test",
+        "fields":[
+            {"name":"f1","type":"long"},
+            {"name":"f2","type":"int"}
+        ]
+    })",
+
     /* Avro-C++ cannot do a round-trip on error schemas.
- * "{\"type\":\"error\",\"name\":\"Test\",\"fields\":"
- *       "[{\"name\":\"f1\",\"type\":\"long\"},"
- *       "{\"name\":\"f2\",\"type\":\"int\"}]}"
- */
+     * R"({
+     *      "type":"error",
+     *      "name":"Test",
+     *      "fields":[
+     *          {"name":"f1","type":"long"},
+     *          {"name":"f2","type":"int"}
+     *          ]
+     * })",
+     */
+
     // Recursive.
-    "{\"type\":\"record\",\"name\":\"LongList\","
-    "\"fields\":[{\"name\":\"value\",\"type\":\"long\"},"
-    "{\"name\":\"next\",\"type\":[\"LongList\",\"null\"]}]}",
+    R"({
+        "type":"record",
+        "name":"LongList",
+        "fields":[
+            {"name":"value","type":"long"},
+            {"name":"next","type":["LongList","null"]}
+        ]
+    })",
+
     // Enum
     R"({"type":"enum","name":"Test","symbols":["A","B"]})",
 
     // Array
     R"({"type":"array","items":"long"})",
-    "{\"type\":\"array\",\"items\":{\"type\":\"enum\","
-    "\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}}",
+    R"({
+        "type":"array",
+        "items":{
+            "type":"enum",
+            "name":"Test",
+            "symbols":["A","B"]
+        }
+    })",
 
     // Map
     R"({"type":"map","values":"long"})",
-    "{\"type\":\"map\",\"values\":{\"type\":\"enum\","
-    "\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}}",
+    R"({
+        "type":"map",
+        "values":{
+            "type":"enum",
+            "name":"Test",
+            "symbols":["A","B"]
+        }
+    })",
 
     // Union
     R"(["string","null","long"])",
 
     // Fixed
     R"({"type":"fixed","name":"Test","size":1})",
-    "{\"type\":\"fixed\",\"namespace\":\"org.apache.hadoop.avro\","
-    "\"name\":\"MyFixed\",\"size\":1}",
+    R"({"type":"fixed","namespace":"org.apache.hadoop.avro","name":"MyFixed","size":1})",
     R"({"type":"fixed","name":"Test","size":1})",
     R"({"type":"fixed","name":"Test","size":1})",
 
     // Logical types
+    R"({"type":"bytes","logicalType":"big-decimal"})",
     R"({"type":"bytes","logicalType":"decimal","precision":12,"scale":6})",
     R"({"type":"fixed","name":"test","size":16,"logicalType":"decimal","precision":38,"scale":9})",
     R"({"type":"fixed","name":"test","size":129,"logicalType":"decimal","precision":310,"scale":155})",
@@ -218,31 +323,56 @@ const char *roundTripSchemas[] = {
     R"({"type":"long","logicalType":"time-micros"})",
     R"({"type":"long","logicalType":"timestamp-millis"})",
     R"({"type":"long","logicalType":"timestamp-micros"})",
+    R"({"type":"long","logicalType":"timestamp-nanos"})",
+    R"({"type":"long","logicalType":"local-timestamp-millis"})",
+    R"({"type":"long","logicalType":"local-timestamp-micros"})",
+    R"({"type":"long","logicalType":"local-timestamp-nanos"})",
     R"({"type":"fixed","name":"test","size":12,"logicalType":"duration"})",
     R"({"type":"string","logicalType":"uuid"})",
 
     // namespace with '$' in it.
-    "{\"type\":\"record\",\"namespace\":\"a.b$\",\"name\":\"Test\",\"fields\":"
-    "[{\"name\":\"f\",\"type\":\"long\"}]}",
+    R"({
+        "type":"record",
+        "namespace":"a.b$",
+        "name":"Test",
+        "fields":[
+            {"name":"f","type":"long"}
+        ]
+    })",
 
     // Custom fields
-    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
-        "[{\"name\":\"f1\",\"type\":\"long\",\"extra_field\":\"1\"},"
-        "{\"name\":\"f2\",\"type\":\"int\"}]}",
-    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
-        "[{\"name\":\"f1\",\"type\":\"long\",\"extra_field\":\"1\"},"
-        "{\"name\":\"f2\",\"type\":\"int\","
-        "\"extra_field1\":\"21\",\"extra_field2\":\"22\"}]}",
+    R"({
+        "type":"record",
+        "name":"Test",
+        "fields":[
+            {"name":"f1","type":"long","extra_field":"1"},
+            {"name":"f2","type":"int"}
+        ]
+    })",
+    R"({
+        "type":"record",
+        "name":"Test",
+        "fields":[
+            {"name":"f1","type":"long","extra_field":"1"},
+            {"name":"f2","type":"int","extra_field1":"21","extra_field2":"22"}
+        ]
+    })",
+    R"({"type":"array","items":"long","extra":"1"})"
 };
 
 const char *malformedLogicalTypes[] = {
     // Wrong base type.
+    R"({"type":"long","logicalType": "big-decimal"})",
     R"({"type":"long","logicalType": "decimal","precision": 10})",
     R"({"type":"string","logicalType":"date"})",
     R"({"type":"string","logicalType":"time-millis"})",
     R"({"type":"string","logicalType":"time-micros"})",
     R"({"type":"string","logicalType":"timestamp-millis"})",
     R"({"type":"string","logicalType":"timestamp-micros"})",
+    R"({"type":"string","logicalType":"timestamp-nanos"})",
+    R"({"type":"string","logicalType":"local-timestamp-millis"})",
+    R"({"type":"string","logicalType":"local-timestamp-micros"})",
+    R"({"type":"string","logicalType":"local-timestamp-nanos"})",
     R"({"type":"string","logicalType":"duration"})",
     R"({"type":"long","logicalType":"uuid"})",
     // Missing the required field 'precision'.
@@ -251,7 +381,12 @@ const char *malformedLogicalTypes[] = {
     R"({"type":"fixed","logicalType":"decimal","size":4,"name":"a","precision":20})",
     R"({"type":"fixed","logicalType":"decimal","size":129,"name":"a","precision":311})",
     // Scale is larger than precision.
-    R"({"type":"bytes","logicalType":"decimal","precision":5,"scale":10})"};
+    R"({"type":"bytes","logicalType":"decimal","precision":5,"scale":10})",
+    // Precision is not supported by the big-decimal logical type
+    // and scale is integrated in bytes.
+    R"({"type":"bytes","logicalType": "big-decimal","precision": 9})",
+    R"({"type":"bytes","logicalType": "big-decimal","scale": 2})",
+    R"({"type":"bytes","logicalType": "big-decimal","precision": 9,"scale": 2})"};
 const char *schemasToCompact[] = {
     // Schema without any whitespace
     R"({"type":"record","name":"Test","fields":[]})",
@@ -277,7 +412,18 @@ const char *compactSchemas[] = {
     "\"fields\":["
     "{\"name\":\"re1\",\"type\":\"long\",\"doc\":\"A \\\"quoted doc\\\"\"},"
     "{\"name\":\"re2\",\"type\":\"long\",\"doc\":\"extra slashes\\\\\\\\\"}"
-    "]}"};
+    "]}"
+};
+
+static const std::vector<char> whitespaces = {' ', '\f', '\n', '\r', '\t', '\v'};
+
+static std::string removeWhitespaceFromSchema(const std::string& schema){
+    std::string trimmedSchema = schema;
+    for (char toReplace : whitespaces){
+        boost::algorithm::replace_all(trimmedSchema, std::string{toReplace}, "");
+    }
+    return trimmedSchema;
+}
 
 void testTypes() {
     BOOST_CHECK_EQUAL(isAvroType(AVRO_BOOL), true);
@@ -306,13 +452,13 @@ static void testRoundTrip(const char *schema) {
         compileJsonSchemaFromString(std::string(schema));
     std::ostringstream os;
     compiledSchema.toJson(os);
-    std::string result = os.str();
-    result.erase(std::remove_if(result.begin(), result.end(), ::isspace), result.end()); // Remove whitespace
-    BOOST_CHECK(result == std::string(schema));
+    std::string result = removeWhitespaceFromSchema(os.str());
+    std::string trimmedSchema = removeWhitespaceFromSchema(schema);
+    BOOST_CHECK_EQUAL(result, trimmedSchema);
     // Verify that the compact schema from toJson has the same content as the
     // schema.
     std::string result2 = compiledSchema.toJson(false);
-    BOOST_CHECK(result2 == std::string(schema));
+    BOOST_CHECK_EQUAL(result2, trimmedSchema);
 }
 
 static void testCompactSchemas() {
@@ -328,49 +474,44 @@ static void testCompactSchemas() {
 }
 
 static void testLogicalTypes() {
-    const char *bytesDecimalType = "{\n\
-        \"type\": \"bytes\",\n\
-        \"logicalType\": \"decimal\",\n\
-        \"precision\": 10,\n\
-        \"scale\": 2\n\
-    }";
-    const char *fixedDecimalType = "{\n\
-        \"type\": \"fixed\",\n\
-        \"size\": 16,\n\
-        \"name\": \"fixedDecimalType\",\n\
-        \"logicalType\": \"decimal\",\n\
-        \"precision\": 12,\n\
-        \"scale\": 6\n\
-    }";
-    const char *dateType = "{\n\
-        \"type\": \"int\", \"logicalType\": \"date\"\n\
-    }";
-    const char *timeMillisType = "{\n\
-        \"type\": \"int\", \"logicalType\": \"time-millis\"\n\
-    }";
-    const char *timeMicrosType = "{\n\
-        \"type\": \"long\", \"logicalType\": \"time-micros\"\n\
-    }";
-    const char *timestampMillisType = "{\n\
-        \"type\": \"long\", \"logicalType\": \"timestamp-millis\"\n\
-    }";
-    const char *timestampMicrosType = "{\n\
-        \"type\": \"long\", \"logicalType\": \"timestamp-micros\"\n\
-    }";
-    const char *durationType = "{\n\
-        \"type\": \"fixed\",\n\
-        \"size\": 12,\n\
-        \"name\": \"durationType\",\n\
-        \"logicalType\": \"duration\"\n\
-    }";
-    const char *uuidType = "{\n\
-        \"type\": \"string\",\n\
-        \"logicalType\": \"uuid\"\n\
-    }";
+    const char *bytesBigDecimalType = R"({
+        "type": "bytes",
+        "logicalType": "big-decimal"
+    })";
+    const char *bytesDecimalType = R"({
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": 10,
+        "scale": 2
+    })";
+    const char *fixedDecimalType = R"({
+        "type": "fixed",
+        "size": 16,
+        "name": "fixedDecimalType",
+        "logicalType": "decimal",
+        "precision": 12,
+        "scale": 6
+    })";
+    const char *dateType = R"({"type": "int", "logicalType": "date"})";
+    const char *timeMillisType = R"({"type": "int", "logicalType": "time-millis"})";
+    const char *timeMicrosType = R"({"type": "long", "logicalType": "time-micros"})";
+    const char *timestampMillisType = R"({"type": "long", "logicalType": "timestamp-millis"})";
+    const char *timestampMicrosType = R"({"type": "long", "logicalType": "timestamp-micros"})";
+    const char *timestampNanosType = R"({"type": "long", "logicalType": "timestamp-nanos"})";
+    const char *localTimestampMillisType = R"({"type": "long", "logicalType": "local-timestamp-millis"})";
+    const char *localTimestampMicrosType = R"({"type": "long", "logicalType": "local-timestamp-micros"})";
+    const char *localTimestampNanosType = R"({"type": "long", "logicalType": "local-timestamp-nanos"})";
+    const char *durationType = R"({"type": "fixed","size": 12,"name": "durationType","logicalType": "duration"})";
+    const char *uuidType = R"({"type": "string","logicalType": "uuid"})";
     // AVRO-2923 Union with LogicalType
-    const char* unionType = "[\n\
-        {\"type\":\"string\", \"logicalType\":\"uuid\"},\"null\"\n\
-    ]";
+    const char *unionType = R"([{"type":"string", "logicalType":"uuid"},"null"]})";
+    {
+        BOOST_TEST_CHECKPOINT(bytesBigDecimalType);
+        ValidSchema schema = compileJsonSchemaFromString(bytesBigDecimalType);
+        BOOST_CHECK(schema.root()->type() == AVRO_BYTES);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::BIG_DECIMAL);
+    }
     {
         BOOST_TEST_CHECKPOINT(bytesDecimalType);
         ValidSchema schema1 = compileJsonSchemaFromString(bytesDecimalType);
@@ -436,6 +577,42 @@ static void testLogicalTypes() {
         BOOST_CHECK(logicalType.type() == LogicalType::TIMESTAMP_MICROS);
         GenericDatum datum(schema);
         BOOST_CHECK(datum.logicalType().type() == LogicalType::TIMESTAMP_MICROS);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(timestampNanosType);
+        ValidSchema schema = compileJsonSchemaFromString(timestampNanosType);
+        BOOST_CHECK(schema.root()->type() == AVRO_LONG);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::TIMESTAMP_NANOS);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::TIMESTAMP_NANOS);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(localTimestampMillisType);
+        ValidSchema schema = compileJsonSchemaFromString(localTimestampMillisType);
+        BOOST_CHECK(schema.root()->type() == AVRO_LONG);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::LOCAL_TIMESTAMP_MILLIS);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::LOCAL_TIMESTAMP_MILLIS);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(localTimestampMicrosType);
+        ValidSchema schema = compileJsonSchemaFromString(localTimestampMicrosType);
+        BOOST_CHECK(schema.root()->type() == AVRO_LONG);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::LOCAL_TIMESTAMP_MICROS);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::LOCAL_TIMESTAMP_MICROS);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(localTimestampNanosType);
+        ValidSchema schema = compileJsonSchemaFromString(localTimestampNanosType);
+        BOOST_CHECK(schema.root()->type() == AVRO_LONG);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::LOCAL_TIMESTAMP_NANOS);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::LOCAL_TIMESTAMP_NANOS);
     }
     {
         BOOST_TEST_CHECKPOINT(durationType);

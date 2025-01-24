@@ -15,79 +15,73 @@
  * permissions and limitations under the License.
  */
 
+#include "Compiler.hh"
+#include "DataFile.hh"
+#include "Generic.hh"
+#include "ValidSchema.hh"
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/unit_test.hpp>
 #include <filesystem>
-#include "DataFile.hh"
-#include "Compiler.hh"
-#include "ValidSchema.hh"
-#include "Generic.hh"
 
-
-using avro::validatingDecoder;
-using avro::GenericReader;
 using avro::DataFileReader;
 using avro::DataFileWriter;
 using avro::GenericDatum;
+using avro::GenericReader;
+using avro::validatingDecoder;
 
+void testCommonSchema(const std::filesystem::path &dir_path) {
+    const std::filesystem::path &schemaFile = dir_path / "schema.json";
+    std::ifstream in(schemaFile.c_str());
 
-void testCommonSchema(const std::filesystem::path &dir_path)
-{
-	const std::filesystem::path& schemaFile = dir_path / "schema.json";
-	std::ifstream in(schemaFile.c_str());
+    avro::ValidSchema schema;
+    avro::compileJsonSchema(in, schema);
 
-	avro::ValidSchema schema;
-	avro::compileJsonSchema(in, schema);
+    const std::filesystem::path &dataFile = dir_path / "data.avro";
 
-	const std::filesystem::path& dataFile = dir_path / "data.avro";
+    GenericDatum datum(schema);
+    const std::filesystem::path &outputDataFile = dir_path / "data_out.avro";
 
+    DataFileReader<GenericDatum> reader(dataFile.string().c_str());
+    DataFileWriter<GenericDatum> writer(outputDataFile.string().c_str(), schema);
 
-	GenericDatum datum(schema);
-	const std::filesystem::path& outputDataFile = dir_path / "data_out.avro";
-
-
-	DataFileReader<GenericDatum> reader(dataFile.c_str());
-	DataFileWriter<GenericDatum> writer(outputDataFile.c_str(), schema);
-
-	while (reader.read(datum)) {
-        avro::GenericRecord& rec =  datum.value<avro::GenericRecord>();
-        BOOST_CHECK(rec.fieldCount() >= 0);
+    while (reader.read(datum)) {
+        datum.value<avro::GenericRecord>();
         writer.write(datum);
-	}
-	writer.close();
-	reader.close();
+    }
+    writer.close();
+    reader.close();
 
-	GenericDatum datumOrig(schema);
-	GenericDatum datumNew(schema);
+    GenericDatum datumOrig(schema);
+    GenericDatum datumNew(schema);
 
-	DataFileReader<GenericDatum> readerOrig(dataFile.c_str());
-	DataFileReader<GenericDatum> readerNew(outputDataFile.c_str());
-	while (readerOrig.read(datumOrig)) {
-	    BOOST_CHECK(readerNew.read(datumNew));
-        avro::GenericRecord& rec1 =  datumOrig.value<avro::GenericRecord>();
-        avro::GenericRecord& rec2 =  datumNew.value<avro::GenericRecord>();
+    DataFileReader<GenericDatum> readerOrig(dataFile.string().c_str());
+    DataFileReader<GenericDatum> readerNew(outputDataFile.string().c_str());
+    while (readerOrig.read(datumOrig)) {
+        BOOST_CHECK(readerNew.read(datumNew));
+        avro::GenericRecord &rec1 = datumOrig.value<avro::GenericRecord>();
+        avro::GenericRecord &rec2 = datumNew.value<avro::GenericRecord>();
         BOOST_CHECK_EQUAL(rec1.fieldCount(), rec2.fieldCount());
-	}
-	BOOST_CHECK(!readerNew.read(datumNew));
+    }
+    BOOST_CHECK(!readerNew.read(datumNew));
 
+    readerNew.close();
+    readerOrig.close();
 
-	std::filesystem::remove(outputDataFile);
+    std::filesystem::remove(outputDataFile);
 }
 
-
-
-void testCommonsSchemas()
-{
-	const std::filesystem::path commons_schemas{"../../share/test/data/schemas"};
-	if (!std::filesystem::exists(commons_schemas)) {
-        std::cout << "\nWarn: Can't access share test folder '../../share/test/data/schemas'\n" << std::endl;
+void testCommonsSchemas() {
+    const std::filesystem::path commons_schemas{"../../share/test/data/schemas"};
+    if (!std::filesystem::exists(commons_schemas)) {
+        std::cout << "\nWarn: Can't access share test folder '../../share/test/data/schemas'\n"
+                  << std::endl;
         return;
-	}
-	for (auto const& dir_entry : std::filesystem::directory_iterator{commons_schemas}) {
+    }
+    for (auto const &dir_entry : std::filesystem::directory_iterator{commons_schemas}) {
         if (std::filesystem::is_directory(dir_entry)) {
-		    testCommonSchema(dir_entry.path());
+            testCommonSchema(dir_entry.path());
         }
-	}
+    }
 }
 
 boost::unit_test::test_suite *
