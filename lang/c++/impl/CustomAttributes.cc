@@ -62,16 +62,15 @@ void CustomAttributes::addAttribute(const std::string &name,
     // json::Entity type in the signatures for this class (and thus cannot accept
     // that type directly as a parameter) because then it would need to be included
     // from a header file: CustomAttributes.hh. But the json header files are not
-    // part of the Avro distribution, so CustomAttributes.hh cannot #include any of
-    // the json header files.
-    if (valueMode_ == ValueMode::STRING) {
-        try {
-            json::loadEntity(("\"" + value + "\"").c_str());
-        } catch (json::TooManyValuesException e) {
-            throw Exception("string has malformed or missing escapes");
-        }
-    } else {
-        json::loadEntity(value.c_str());
+    // part of the Avro distribution (intentionally), so CustomAttributes.hh cannot
+    // #include any of the json header files.
+    const std::string &jsonVal = (valueMode_ == ValueMode::STRING)
+                ? std::move("\"" + value + "\"")
+                : value;
+    try {
+        json::loadEntity(jsonVal.c_str());
+    } catch (json::TooManyValuesException &e) {
+        throw Exception("string has malformed or missing escapes");
     }
 
     auto iter_and_find =

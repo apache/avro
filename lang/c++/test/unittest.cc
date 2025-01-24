@@ -502,6 +502,29 @@ struct TestSchema {
 
         BOOST_CHECK_EQUAL(std::string("true"), *ca.getAttribute("field1"));
         BOOST_CHECK_EQUAL(false, ca.getAttribute("not_existing").has_value());
+
+        bool caught = false;
+        try {
+            ca.addAttribute("field2", std::string("identifier"));
+        } catch (Exception &e) {
+            std::cout << "(intentional) exception: " << e.what() << '\n';
+            caught = true;
+        }
+        BOOST_CHECK_EQUAL(caught, true);
+        // No exception when quoted
+        ca.addAttribute("field2", std::string("\"identifier\""));
+
+        caught = false;
+        try {
+            // malformed string: no escaping of internal quotes and newline
+            ca.addAttribute("field3", std::string("\"a string with \"quotes\" and \nnewline\""));
+        } catch (Exception &e) {
+            std::cout << "(intentional) exception: " << e.what() << '\n';
+            caught = true;
+        }
+        BOOST_CHECK_EQUAL(caught, true);
+        // No exception when quoted
+        ca.addAttribute("field3", std::string("\"a string with \\\"quotes\\\" and \\nnewline\""));
     }
 
     void checkCustomAttributes_addAndGetAttributeString() {
@@ -516,6 +539,18 @@ struct TestSchema {
         std::ostringstream oss;
         ca.printJson(oss, "field2");
         BOOST_CHECK_EQUAL(std::string("\"field2\": \"value with \\\"quotes\\\"\""), oss.str());
+
+        bool caught = false;
+        try {
+            // JSON not accepted: must be string with interior quotes escaped.
+            ca.addAttribute("field3", std::string("{\"key\": \"value\"}"));
+        } catch (Exception &e) {
+            std::cout << "(intentional) exception: " << e.what() << '\n';
+            caught = true;
+        }
+        BOOST_CHECK_EQUAL(caught, true);
+        // No exception when escaped
+        ca.addAttribute("field3", std::string("{\\\"key\\\": \\\"value\\\"}"));
     }
 
     void test() {
