@@ -39,7 +39,8 @@ public:
         // to be strings. The value should not be quoted, but any interior quotes and
         // special characters (such as newlines) must be escaped.
         STRING
-        [[deprecated("The JSON ValueMode is less error-prone and less limited.")]],
+        [[deprecated("The JSON ValueMode is less error-prone and less limited. "
+                     "Deprecated since 1.13.0. To be removed with 1.14.0.")]],
 
         // When a CustomAttributes is created using this mode, all values are formatted
         // JSON values. So string values must be quoted and escaped.
@@ -53,7 +54,7 @@ public:
     //
     // To support non-string values, one must instead use
     // CustomAttributes(CustomAttributes::ValueMode::JSON)
-    [[deprecated("Use CustomAttributes(ValueMode) instead.")]]
+    [[deprecated("Use CustomAttributes(ValueMode) instead. Deprecated since 1.13.0")]]
     CustomAttributes() : CustomAttributes(ValueMode::STRING) {}
 
     // Creates a new CustomAttributes object with the given value mode.
