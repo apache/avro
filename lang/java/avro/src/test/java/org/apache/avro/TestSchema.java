@@ -32,7 +32,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -606,13 +609,14 @@ public class TestSchema {
     parser.parse(f1);
     parser.parse(f2);
     parser.parse(f3);
-    final List<Schema> schemas = parser.getParsedNamedSchemas();
+    final Map<String, Schema> schemas = parser.getParsedNamedSchemas().stream()
+        .collect(Collectors.toMap(Schema::getName, Function.identity()));
     Assertions.assertEquals(3, schemas.size());
-    Schema schemaAppEvent = schemas.get(0);
-    Schema schemaDocInfo = schemas.get(1);
-    Schema schemaResponse = schemas.get(2);
+    Schema schemaAppEvent = schemas.get("ApplicationEvent");
+    Schema schemaDocInfo = schemas.get("DocumentInfo");
+    Schema schemaResponse = schemas.get("MyResponse");
     Assertions.assertNotNull(schemaAppEvent);
-    Assertions.assertEquals(3, schemaAppEvent.getFields().size());
+    Assertions.assertEquals(4, schemaAppEvent.getFields().size());
     Field documents = schemaAppEvent.getField("documents");
     Schema docSchema = documents.schema().getTypes().get(1).getElementType();
     Assertions.assertEquals(docSchema, schemaDocInfo);
