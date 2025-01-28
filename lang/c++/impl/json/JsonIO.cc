@@ -50,7 +50,7 @@ char JsonParser::next() {
 }
 
 bool JsonParser::hasMore() {
-    if (peeked || hasNext && !isspace(nextChar)) {
+    if (peeked || (hasNext && !isspace(nextChar))) {
         return true;
     }
     if (!hasNext) {

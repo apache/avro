@@ -17,12 +17,6 @@
  * limitations under the License.
  */
 
-#if defined(__clang__)
-// Even though CustomAttributes::ValueMode::STRING is deprecated, we still have to
-// handle/implement it.
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#endif
-
 #include <map>
 #include <memory>
 
@@ -30,6 +24,12 @@
 #include "Exception.hh"
 
 #include "json/JsonDom.hh"
+
+#if defined(__clang__)
+// Even though CustomAttributes::ValueMode::STRING is deprecated, we still have to
+// handle/implement it.
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 namespace avro {
 
@@ -65,7 +65,7 @@ void CustomAttributes::addAttribute(const std::string &name,
     // part of the Avro distribution (intentionally), so CustomAttributes.hh cannot
     // #include any of the json header files.
     const std::string &jsonVal = (valueMode_ == ValueMode::STRING)
-                ? std::move("\"" + value + "\"")
+                ? "\"" + value + "\""
                 : value;
     try {
         json::loadEntity(jsonVal.c_str());

@@ -16,11 +16,6 @@
  * limitations under the License.
  */
 
-#if defined(__clang__)
-// Even though CustomAttributes::ValueMode::STRING is deprecated, we still test it.
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#endif
-
 #include <boost/test/included/unit_test.hpp>
 #include <iostream>
 #include <memory>
@@ -527,6 +522,12 @@ struct TestSchema {
         ca.addAttribute("field3", std::string("\"a string with \\\"quotes\\\" and \\nnewline\""));
     }
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+// Even though CustomAttributes::ValueMode::STRING is deprecated, we still test it.
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
     void checkCustomAttributes_addAndGetAttributeString() {
         CustomAttributes ca(CustomAttributes::ValueMode::STRING);
         ca.addAttribute("field1", std::string("true"));
@@ -552,6 +553,10 @@ struct TestSchema {
         // No exception when escaped
         ca.addAttribute("field3", std::string("{\\\"key\\\": \\\"value\\\"}"));
     }
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
     void test() {
         std::cout << "Before\n";
