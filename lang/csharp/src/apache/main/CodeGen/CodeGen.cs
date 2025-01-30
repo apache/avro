@@ -1273,9 +1273,6 @@ namespace Avro
                 return $@"""namespace""{m.Groups[1].Value}:{m.Groups[2].Value}""{ns}""";
             });
         }
-
-
-
     /// <summary>
     /// Replace namespaces in a parsed JSON schema object for all "type" fields.
     /// </summary>
