@@ -1285,7 +1285,9 @@ namespace Avro
     private static string ReplaceMappedNamespacesInSchemaTypes(string schemaJson, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
     {
         if (string.IsNullOrWhiteSpace(schemaJson) || namespaceMapping == null)
+        {
             return schemaJson;
+        }
 
         var schemaToken = JToken.Parse(schemaJson);
 
