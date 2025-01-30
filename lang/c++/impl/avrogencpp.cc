@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include <cctype>
 #ifndef _WIN32
 #include <ctime>
