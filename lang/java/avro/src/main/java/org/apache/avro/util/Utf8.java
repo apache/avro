@@ -68,6 +68,11 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
     this.length = length;
   }
 
+  Utf8(String string, int length) {
+    this(string);
+    this.length = length;
+  }
+
   /**
    * Return UTF-8 encoded bytes. Only valid through {@link #getByteLength()}
    * assuming the bytes have been fully copied into the underlying buffer from the
@@ -173,9 +178,15 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
     if (h == 0) {
       byte[] bytes = this.bytes;
       int length = this.length;
-      h = 1;
-      for (int i = 0; i < length; i++) {
-        h = h * 31 + bytes[i];
+      // If the array is filled, use the underlying JDK hash functionality.
+      // Starting with JDK 21, the underlying implementation is vectorized.
+      if (length > 7 && bytes.length == length) {
+        h = Arrays.hashCode(bytes);
+      } else {
+        h = 1;
+        for (int i = 0; i < length; i++) {
+          h = h * 31 + bytes[i];
+        }
       }
       this.hash = h;
     }
