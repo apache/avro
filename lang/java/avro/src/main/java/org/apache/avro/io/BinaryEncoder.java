@@ -37,8 +37,12 @@ import org.apache.avro.util.Utf8;
  */
 public abstract class BinaryEncoder extends Encoder {
 
-  // Buffer used for writing ASCII strings
-  private final byte[] stringBuffer = new byte[128];
+  /*
+   * Buffer used for writing ASCII strings. A string is encoded as a long followed
+   * by that many bytes of character data. A string of length 63 is the upper
+   * limit for a 1 byte variable-length long value.
+   */
+  private final byte[] stringBuffer = new byte[63];
 
   @Override
   public void writeNull() throws IOException {
