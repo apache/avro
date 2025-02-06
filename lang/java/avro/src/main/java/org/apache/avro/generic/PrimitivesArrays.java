@@ -24,22 +24,29 @@ import java.util.Arrays;
 import java.util.Collection;
 
 public class PrimitivesArrays {
+  public abstract static class PrimitiveArray<T> extends GenericData.AbstractArray<T> {
+    PrimitiveArray(Schema schema, Schema.Type underlyingType) {
+      super(schema);
+      if (!underlyingType.equals(schema.getElementType().getType()))
+        throw new AvroRuntimeException("Not a " + underlyingType + " array schema: " + schema);
+      if (schema.getElementType().getLogicalType() != null)
+        throw new AvroRuntimeException("Logical types cant use primitive arrays - array schema: " + schema);
+    }
+  }
 
-  public static class IntArray extends GenericData.AbstractArray<Integer> {
+  public static class IntArray extends PrimitiveArray<Integer> {
     private static final int[] EMPTY = new int[0];
 
     private int[] elements = EMPTY;
 
     public IntArray(int capacity, Schema schema) {
-      super(schema);
-      if (!Schema.Type.INT.equals(schema.getElementType().getType()))
-        throw new AvroRuntimeException("Not a int array schema: " + schema);
+      super(schema, Schema.Type.INT);
       if (capacity != 0)
         elements = new int[capacity];
     }
 
     public IntArray(Schema schema, Collection<Integer> c) {
-      super(schema);
+      super(schema, Schema.Type.INT);
       if (c != null) {
         elements = new int[c.size()];
         addAll(c);
@@ -129,21 +136,19 @@ public class PrimitivesArrays {
     }
   }
 
-  public static class LongArray extends GenericData.AbstractArray<Long> {
+  public static class LongArray extends PrimitiveArray<Long> {
     private static final long[] EMPTY = new long[0];
 
     private long[] elements = EMPTY;
 
     public LongArray(int capacity, Schema schema) {
-      super(schema);
-      if (!Schema.Type.LONG.equals(schema.getElementType().getType()))
-        throw new AvroRuntimeException("Not a long array schema: " + schema);
+      super(schema, Schema.Type.LONG);
       if (capacity != 0)
         elements = new long[capacity];
     }
 
     public LongArray(Schema schema, Collection<Long> c) {
-      super(schema);
+      super(schema, Schema.Type.LONG);
       if (c != null) {
         elements = new long[c.size()];
         addAll(c);
@@ -233,21 +238,19 @@ public class PrimitivesArrays {
     }
   }
 
-  public static class BooleanArray extends GenericData.AbstractArray<Boolean> {
+  public static class BooleanArray extends PrimitiveArray<Boolean> {
     private static final byte[] EMPTY = new byte[0];
 
     private byte[] elements = EMPTY;
 
     public BooleanArray(int capacity, Schema schema) {
-      super(schema);
-      if (!Schema.Type.BOOLEAN.equals(schema.getElementType().getType()))
-        throw new AvroRuntimeException("Not a boolean array schema: " + schema);
+      super(schema, Schema.Type.BOOLEAN);
       if (capacity != 0)
         elements = new byte[1 + (capacity / Byte.SIZE)];
     }
 
     public BooleanArray(Schema schema, Collection<Boolean> c) {
-      super(schema);
+      super(schema, Schema.Type.BOOLEAN);
 
       if (c != null) {
         elements = new byte[1 + (c.size() / 8)];
@@ -398,21 +401,19 @@ public class PrimitivesArrays {
     }
   }
 
-  public static class FloatArray extends GenericData.AbstractArray<Float> {
+  public static class FloatArray extends PrimitiveArray<Float> {
     private static final float[] EMPTY = new float[0];
 
     private float[] elements = EMPTY;
 
     public FloatArray(int capacity, Schema schema) {
-      super(schema);
-      if (!Schema.Type.FLOAT.equals(schema.getElementType().getType()))
-        throw new AvroRuntimeException("Not a float array schema: " + schema);
+      super(schema, Schema.Type.FLOAT);
       if (capacity != 0)
         elements = new float[capacity];
     }
 
     public FloatArray(Schema schema, Collection<Float> c) {
-      super(schema);
+      super(schema, Schema.Type.FLOAT);
       if (c != null) {
         elements = new float[c.size()];
         addAll(c);
@@ -502,21 +503,19 @@ public class PrimitivesArrays {
     }
   }
 
-  public static class DoubleArray extends GenericData.AbstractArray<Double> {
+  public static class DoubleArray extends PrimitiveArray<Double> {
     private static final double[] EMPTY = new double[0];
 
     private double[] elements = EMPTY;
 
     public DoubleArray(int capacity, Schema schema) {
-      super(schema);
-      if (!Schema.Type.DOUBLE.equals(schema.getElementType().getType()))
-        throw new AvroRuntimeException("Not a double array schema: " + schema);
+      super(schema, Schema.Type.DOUBLE);
       if (capacity != 0)
         elements = new double[capacity];
     }
 
     public DoubleArray(Schema schema, Collection<Double> c) {
-      super(schema);
+      super(schema, Schema.Type.DOUBLE);
       if (c != null) {
         elements = new double[c.size()];
         addAll(c);

@@ -1515,34 +1515,43 @@ public class GenericData {
 
   }
 
-  /*
+  /**
    * Called to create new array instances. Subclasses may override to use a
    * different array implementation. By default, this returns a {@link
    * GenericData.Array}.
+   * @param old the old array instance to reuse, if possible.
+   *            If the old array is an appropriate type, it may be cleared and returned.
+   * @param size the size of the array to create.
+   * @param schema the schema of the array elements.
    */
   public Object newArray(Object old, int size, Schema schema) {
-    if (old instanceof GenericArray) {
-      ((GenericArray<?>) old).reset();
+    if (old instanceof GenericData.AbstractArray<?> && ((GenericData.AbstractArray<?>) old).getSchema() == schema) {
+      ((GenericData.AbstractArray<?>) old).reset();
       return old;
-    } else if (old instanceof Collection) {
+    }
+    if (old instanceof Collection && (!(old instanceof GenericContainer) || ((GenericContainer) old).getSchema() == schema)) {
       ((Collection<?>) old).clear();
       return old;
-    } else {
-      if (schema.getElementType().getType() == Type.INT) {
-        return new PrimitivesArrays.IntArray(size, schema);
-      }
-      if (schema.getElementType().getType() == Type.BOOLEAN) {
-        return new PrimitivesArrays.BooleanArray(size, schema);
-      }
-      if (schema.getElementType().getType() == Type.LONG) {
-        return new PrimitivesArrays.LongArray(size, schema);
-      }
-      if (schema.getElementType().getType() == Type.FLOAT) {
-        return new PrimitivesArrays.FloatArray(size, schema);
-      }
-      if (schema.getElementType().getType() == Type.DOUBLE) {
-        return new PrimitivesArrays.DoubleArray(size, schema);
-      }
+    }
+
+    //we can't reuse the old array, so we create a new one
+
+    if (schema.getElementType().getLogicalType() != null) {
+      return new GenericData.Array<Object>(size, schema);
+    }
+
+    switch (schema.getElementType().getType()) {
+    case INT:
+      return new PrimitivesArrays.IntArray(size, schema);
+    case BOOLEAN:
+      return new PrimitivesArrays.BooleanArray(size, schema);
+    case LONG:
+      return new PrimitivesArrays.LongArray(size, schema);
+    case FLOAT:
+      return new PrimitivesArrays.FloatArray(size, schema);
+    case DOUBLE:
+      return new PrimitivesArrays.DoubleArray(size, schema);
+    default:
       return new GenericData.Array<Object>(size, schema);
     }
   }
