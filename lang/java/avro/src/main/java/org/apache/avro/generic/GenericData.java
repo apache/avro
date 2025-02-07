@@ -1517,11 +1517,12 @@ public class GenericData {
 
   /**
    * Called to create new array instances. Subclasses may override to use a
-   * different array implementation. By default, this returns a {@link
-   * GenericData.Array}.
-   * @param old the old array instance to reuse, if possible.
-   *            If the old array is an appropriate type, it may be cleared and returned.
-   * @param size the size of the array to create.
+   * different array implementation. By default, this returns a
+   * {@link GenericData.Array}.
+   * 
+   * @param old    the old array instance to reuse, if possible. If the old array
+   *               is an appropriate type, it may be cleared and returned.
+   * @param size   the size of the array to create.
    * @param schema the schema of the array elements.
    */
   public Object newArray(Object old, int size, Schema schema) {
@@ -1529,12 +1530,13 @@ public class GenericData {
       ((GenericData.AbstractArray<?>) old).reset();
       return old;
     }
-    if (old instanceof Collection && (!(old instanceof GenericContainer) || ((GenericContainer) old).getSchema() == schema)) {
+    if (old instanceof Collection
+        && (!(old instanceof GenericContainer) || ((GenericContainer) old).getSchema() == schema)) {
       ((Collection<?>) old).clear();
       return old;
     }
 
-    //we can't reuse the old array, so we create a new one
+    // we can't reuse the old array, so we create a new one
 
     if (schema.getElementType().getLogicalType() != null) {
       return new GenericData.Array<Object>(size, schema);
