@@ -28,9 +28,15 @@ namespace Avro.Reflect
     /// </summary>
     public class DotnetClass
     {
-        private ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
+        /// <summary>
+        /// Properties list
+        /// </summary>
+        protected readonly ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
 
-        private Type _type;
+        /// <summary>
+        /// Type
+        /// </summary>
+        protected Type _type;
 
         /// <summary>
         /// Constructor
@@ -64,7 +70,20 @@ namespace Avro.Reflect
             }
         }
 
-        private PropertyInfo GetPropertyInfo(Field f)
+        /// <summary>
+        /// Contructor
+        /// </summary>
+        protected DotnetClass()
+        {
+        }
+
+        /// <summary>
+        /// Get property info
+        /// </summary>
+        /// <param name="f"></param>
+        /// <returns></returns>
+        /// <exception cref="AvroException"></exception>
+        protected PropertyInfo GetPropertyInfo(Field f)
         {
             var prop = _type.GetProperty(f.Name);
             if (prop != null)
@@ -92,7 +111,7 @@ namespace Avro.Reflect
         /// <param name="o">the object</param>
         /// <param name="f">FieldSchema used to look up the property</param>
         /// <returns></returns>
-        public object GetValue(object o, Field f)
+        public virtual object GetValue(object o, Field f)
         {
             DotnetProperty p;
             if (!_propertyMap.TryGetValue(f.Name, out p))
@@ -109,7 +128,7 @@ namespace Avro.Reflect
         /// <param name="o">the object</param>
         /// <param name="f">field schema</param>
         /// <param name="v">value for the property referenced by the field schema</param>
-        public void SetValue(object o, Field f, object v)
+        public virtual void SetValue(object o, Field f, object v)
         {
             DotnetProperty p;
             if (!_propertyMap.TryGetValue(f.Name, out p))
@@ -124,7 +143,7 @@ namespace Avro.Reflect
         /// Return the type of the Class
         /// </summary>
         /// <returns>The </returns>
-        public Type GetClassType()
+        public virtual Type GetClassType()
         {
             return _type;
         }
@@ -134,7 +153,7 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="f"></param>
         /// <returns></returns>
-        public Type GetPropertyType(Field f)
+        public virtual Type GetPropertyType(Field f)
         {
             DotnetProperty p;
             if (!_propertyMap.TryGetValue(f.Name, out p))
