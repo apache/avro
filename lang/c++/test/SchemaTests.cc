@@ -144,6 +144,10 @@ const char *basicSchemas[] = {
     })",
     R"({"type": "enum", "name": "Test", "symbols": ["A", "B"],"extra attribute": 1})",
     R"({"type": "array", "items": "long", "extra attribute": "1"})",
+    R"({"type": "array", "items": "long", "extra attribute": 1})",
+    R"({"type": "array", "items": "long", "extra attribute": true})",
+    R"({"type": "array", "items": "long", "extra attribute": 1.1})",
+    R"({"type": "array", "items": "long", "extra attribute": {"extra extra attribute": "1"}})",
     R"({"type": "map", "values": "long", "extra attribute": 1})",
     R"({"type": "fixed", "name": "Test", "size": 1, "extra attribute": 1})",
 
