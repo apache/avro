@@ -89,6 +89,7 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
                                                  libbz2-dev \
                                                  php \
                                                  php-bz2 \
+                                                 php-curl \
                                                  php-gmp \
                                                  php-xml \
                                                  php-mbstring \
