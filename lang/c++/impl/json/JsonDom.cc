@@ -177,7 +177,7 @@ std::string Entity::toString() const {
     return result;
 }
 
-std::string Entity::to_string() const {
+std::string Entity::toLiteralString() const {
     switch (type_) {
         case EntityType::Null:
             return "null";

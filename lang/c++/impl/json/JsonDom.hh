@@ -127,7 +127,7 @@ public:
     }
 
     std::string toString() const;
-    std::string to_string() const;
+    std::string toLiteralString() const;
 };
 
 template<typename T>
