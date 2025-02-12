@@ -48,6 +48,6 @@ void CustomAttributes::printJson(std::ostream &os,
     if (attributes().find(name) == attributes().end()) {
         throw Exception(name + " doesn't exist");
     }
-    os << "\"" << name << "\": \"" << attributes().at(name) << "\"";
+    os << "\"" << name << "\": " << attributes().at(name);
 }
 } // namespace avro
