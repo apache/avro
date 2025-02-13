@@ -291,7 +291,7 @@ static void getCustomAttributes(const Object &m, CustomAttributes &customAttribu
     const std::unordered_set<std::string> &kKnownFields = getKnownFields();
     for (const auto &entry : m) {
         if (kKnownFields.find(entry.first) == kKnownFields.end()) {
-            customAttributes.addAttribute(entry.first, entry.second.stringValue());
+            customAttributes.addAttribute(entry.first, entry.second.toLiteralString());
         }
     }
 }
