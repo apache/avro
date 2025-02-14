@@ -43,7 +43,7 @@ The working directory in the container is mounted from your host. This
 allows you to access the files in your Avro development tree from the
 Docker container.
 
-There are some additional `DOCKER_` environment variables described in 
+There are some additional `DOCKER_` environment variables described in
 [build.sh](./build.sh) that can be used to interact with the image using
 the build script. Some examples:
 
@@ -64,13 +64,13 @@ Requirement:
  - [Visual Studio Code](https://code.visualstudio.com/)
  - [Remote Development extension pack](https://aka.ms/vscode-remote/download/extension)
  - Docker
-   - Windows: (Docker Desktop)[https://www.docker.com/products/docker-desktop]
-   - macOS: (Docker Desktop)[https://www.docker.com/products/docker-desktop]
-   - Linux: (Docker CE/EE)[https://docs.docker.com/install/#supported-platforms] and (Docker Compose)[https://docs.docker.com/compose/install]
+   - Windows: [Docker Desktop](https://www.docker.com/products/docker-desktop)
+   - macOS: [Docker Desktop](https://www.docker.com/products/docker-desktop)
+   - Linux: [Docker CE/EE](https://docs.docker.com/install/#supported-platforms) and [Docker Compose](https://docs.docker.com/compose/install)
 
 Useful links:
- - (Developing inside a Container)[https://code.visualstudio.com/docs/remote/containers]
- - (Going further with Dev Containers)[https://microsoft.github.io/code-with-engineering-playbook/developer-experience/going-further/]
+ - [Developing inside a Container](https://code.visualstudio.com/docs/remote/containers)
+ - [Going further with Dev Containers](https://microsoft.github.io/code-with-engineering-playbook/developer-experience/going-further/)
 
 ## Building
 
