@@ -124,7 +124,7 @@ class AvroIOBinaryDecoder
             $n |= (($b & 0x7f) << $shift);
             $shift += 7;
         }
-        return (($n >> 1) ^ -($n & 1));
+        return ($n >> 1) ^ (($n >> 63) << 63) ^ -($n & 1);
     }
 
     /**
