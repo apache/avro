@@ -556,7 +556,7 @@ class TestSchemaValidator < Test::Unit::TestCase
       validate!(schema, { 'name' => 'apple', 'color' => 'green' }, fail_on_extra_fields: true)
     end
     assert_equal(1, exception.result.errors.size)
-    assert_equal("at . extra field 'color' - not in schema", exception.to_s)
+    assert_equal("fruit at . extra field 'color' - not in schema", exception.to_s)
   end
 
   def test_validate_bytes_decimal
