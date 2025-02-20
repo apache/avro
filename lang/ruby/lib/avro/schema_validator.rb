@@ -24,6 +24,7 @@ module Avro
     COMPLEX_TYPES = [:array, :error, :map, :record, :request].freeze
     BOOLEAN_VALUES = [true, false].freeze
     DEFAULT_VALIDATION_OPTIONS = { recursive: true, encoded: false, fail_on_extra_fields: false }.freeze
+    NAMED_SCHEMAS = [Avro::Schema::RecordSchema, Avro::Schema::EnumSchema, Avro::Schema::FixedSchema].freeze
     RECURSIVE_SIMPLE_VALIDATION_OPTIONS = { encoded: true }.freeze
     RUBY_CLASS_TO_AVRO_TYPE = {
       NilClass => 'null',
@@ -198,18 +199,22 @@ module Avro
         compatible_type = first_compatible_type(datum, expected_schema, path, failures, options)
         return unless compatible_type.nil?
 
-        complex_type_failed = failures.select { |r| COMPLEX_TYPES.include?(r[:type]) }
-        if complex_type_failed.any?
-          complex_type_failed.each do |type_failures|
-            type_failures[:result].errors.each do |error|
-              error_msg = type_failures[:schema] ? "#{type_failures[:schema]} #{error}" : error
-              result << error_msg
-            end
-          end
-        else
-          types = expected_schema.schemas.map { |s| "'#{s.type_sym}'" }.join(', ')
-          result.add_error(path, "expected union of [#{types}], got #{actual_value_message(datum)}")
+
+        failed_complex_types = failures.select { |r| COMPLEX_TYPES.include?(r[:type]) }
+        complex_type_errors =  []
+        failed_complex_types.each do |failed_complex_type|
+          error_msg = failed_complex_type[:result].errors.map do |error|
+            error
+          end.join("; ")
+          schema_name_prefix = "#{failed_complex_type[:schema_name]}: " if failed_complex_type[:schema_name] 
+          complex_type_errors << "#{schema_name_prefix}#{error_msg}"
         end
+
+        types = expected_schema.schemas.map do |s|
+          s.respond_to?(:name) ? "#{s.name} ('#{s.type}')" : "'#{s.type}'"
+        end.join(', ')
+        type_mismatches = %Q{\nUnion type specific errors:\n#{complex_type_errors.join("\n")}} if complex_type_errors.any?
+        result.add_error(path, "expected union of [#{types}], got #{actual_value_message(datum)}#{type_mismatches}")
       end
 
       def first_compatible_type(datum, expected_schema, path, failures, options = {})
@@ -223,7 +228,7 @@ module Avro
           validate_recursive(schema, datum, path, result, options)
           if result.failure?
             failure = { type: schema.type_sym, result: result }
-            failure[:schema] = schema.name if schema.is_a?(Avro::Schema::RecordSchema)
+            failure[:schema_name] = schema.name if schema.respond_to?(:name)
             failures << failure
           end
           !result.failure?
