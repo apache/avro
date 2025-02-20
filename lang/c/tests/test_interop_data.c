@@ -17,9 +17,13 @@
 
 #include "avro.h"
 #include "avro_private.h"
-#include <dirent.h>
 #include <stddef.h>
 #include <stdio.h>
+#ifdef _WIN32
+#include "msdirent.h"
+#else
+#include <dirent.h>
+#endif
 
 int should_test(char *d_name)
 {
@@ -31,7 +35,7 @@ int should_test(char *d_name)
     }
 
     ptrdiff_t diff = d_name + strlen(d_name) - ext_pos;
-    char *substr = malloc(sizeof(char) * diff);
+    char *substr = (char *) malloc(sizeof(char) * diff);
     strncpy(substr, ext_pos + 1, diff - 1);
     *(substr + diff - 1) = '\0';
     if (strcmp(substr, "avro") != 0)
@@ -53,7 +57,7 @@ int should_test(char *d_name)
     }
 
     diff = ext_pos - codec_pos;
-    substr = malloc(sizeof(char) * diff);
+    substr = (char *) malloc(sizeof(char) * diff);
     strncpy(substr, codec_pos + 1, diff - 1);
     *(substr + diff - 1) = '\0';
     if (strcmp(substr, "deflate") == 0 || strcmp(substr, "snappy") == 0)
@@ -92,7 +96,7 @@ int main(int argc, char *argv[])
         char *d_name = ent->d_name;
         size_t d_name_len = strlen(d_name);
         size_t size = strlen(argv[1]) + d_name_len + 2;
-        char* path = malloc(sizeof(char) * size);
+        char* path = (char *) malloc(sizeof(char) * size);
         sprintf(path, "%s/%s", argv[1], d_name);
 
         if (!should_test(d_name))
