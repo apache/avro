@@ -221,10 +221,11 @@ module Avro
 
           result = Result.new
           validate_recursive(schema, datum, path, result, options)
-
-          failure = { type: schema.type_sym, result: result }
-          failure[:schema] = schema.name if schema.is_a?(Avro::Schema::RecordSchema)
-          failures << failure if result.failure?
+          if result.failure?
+            failure = { type: schema.type_sym, result: result }
+            failure[:schema] = schema.name if schema.is_a?(Avro::Schema::RecordSchema)
+            failures << failure
+          end
           !result.failure?
         end
       end
