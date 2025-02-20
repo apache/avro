@@ -24,7 +24,6 @@ module Avro
     COMPLEX_TYPES = [:array, :error, :map, :record, :request].freeze
     BOOLEAN_VALUES = [true, false].freeze
     DEFAULT_VALIDATION_OPTIONS = { recursive: true, encoded: false, fail_on_extra_fields: false }.freeze
-    NAMED_SCHEMAS = [Avro::Schema::RecordSchema, Avro::Schema::EnumSchema, Avro::Schema::FixedSchema].freeze
     RECURSIVE_SIMPLE_VALIDATION_OPTIONS = { encoded: true }.freeze
     RUBY_CLASS_TO_AVRO_TYPE = {
       NilClass => 'null',
