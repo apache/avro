@@ -19,8 +19,6 @@
 #ifndef avro_Generic_hh__
 #define avro_Generic_hh__
 
-#include <boost/utility.hpp>
-
 #include "Config.hh"
 #include "Decoder.hh"
 #include "Encoder.hh"
@@ -31,7 +29,7 @@ namespace avro {
 /**
  * A utility class to read generic datum from decoders.
  */
-class AVRO_DECL GenericReader : boost::noncopyable {
+class AVRO_DECL GenericReader {
     const ValidSchema schema_;
     const bool isResolving_;
     const DecoderPtr decoder_;
@@ -51,6 +49,9 @@ public:
      */
     GenericReader(const ValidSchema &writerSchema,
                   const ValidSchema &readerSchema, const DecoderPtr &decoder);
+
+    GenericReader(const GenericReader &) = delete;
+    GenericReader &operator=(const GenericReader &) = delete;
 
     /**
      * Reads a value off the decoder.
@@ -79,7 +80,7 @@ public:
 /**
  * A utility class to write generic datum to encoders.
  */
-class AVRO_DECL GenericWriter : boost::noncopyable {
+class AVRO_DECL GenericWriter {
     const ValidSchema schema_;
     const EncoderPtr encoder_;
 
@@ -90,6 +91,9 @@ public:
      * Constructs a writer for the given schema using the given encoder.
      */
     GenericWriter(ValidSchema s, EncoderPtr encoder);
+
+    GenericWriter(const GenericWriter &) = delete;
+    GenericWriter &operator=(const GenericWriter &) = delete;
 
     /**
      * Writes a value onto the encoder.

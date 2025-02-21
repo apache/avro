@@ -32,7 +32,7 @@ namespace avro {
 ///
 
 template<class Reader>
-class Parser : private boost::noncopyable {
+class Parser {
 
 public:
     // Constructor only works with Writer
@@ -40,6 +40,9 @@ public:
 
     /// Constructor only works with ValidatingWriter
     Parser(const ValidSchema &schema, const InputBuffer &in) : reader_(schema, in) {}
+
+    Parser(const Parser &) = delete;
+    Parser &operator=(const Parser &) = delete;
 
     void readNull() {
         Null null;

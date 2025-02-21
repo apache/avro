@@ -19,7 +19,6 @@
 #ifndef avro_ResolvingReader_hh__
 #define avro_ResolvingReader_hh__
 
-#include <boost/noncopyable.hpp>
 #include <stdint.h>
 
 #include "Config.hh"
@@ -28,11 +27,13 @@
 
 namespace avro {
 
-class AVRO_DECL ResolvingReader : private boost::noncopyable {
+class AVRO_DECL ResolvingReader {
 
 public:
     ResolvingReader(const ResolverSchema &schema, const InputBuffer &in) : reader_(in),
                                                                            schema_(schema) {}
+    ResolvingReader(const ResolvingReader &) = delete;
+    ResolvingReader &operator=(const ResolvingReader &) = delete;
 
     template<typename T>
     void parse(T &object) {

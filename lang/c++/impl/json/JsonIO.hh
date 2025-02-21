@@ -19,13 +19,13 @@
 #ifndef avro_json_JsonIO_hh__
 #define avro_json_JsonIO_hh__
 
-#include <boost/lexical_cast.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
-#include <boost/utility.hpp>
+#include <cmath>
+#include <iomanip>
 #include <locale>
 #include <sstream>
 #include <stack>
 #include <string>
+#include <type_traits>
 
 #include "Config.hh"
 #include "Stream.hh"
@@ -37,7 +37,7 @@ inline char toHex(unsigned int n) {
     return static_cast<char>((n < 10) ? (n + '0') : (n + 'a' - 10));
 }
 
-class AVRO_DECL JsonParser : boost::noncopyable {
+class AVRO_DECL JsonParser {
 public:
     enum class Token {
         Null,
@@ -88,6 +88,9 @@ private:
 public:
     JsonParser() : curState(stValue), hasNext(false), nextChar(0), peeked(false),
                    curToken(Token::Null), bv(false), lv(0), dv(0), line_(1) {}
+
+    JsonParser(const JsonParser &) = delete;
+    JsonParser &operator=(const JsonParser &) = delete;
 
     void init(InputStream &is) {
         // Clear by swapping with an empty stack
@@ -403,23 +406,30 @@ public:
     }
 
     template<typename T>
-    void encodeNumber(T t) {
+    std::enable_if_t<!std::is_floating_point_v<T>, void> encodeNumber(T t) {
         sep();
         std::ostringstream oss;
-        oss << boost::lexical_cast<std::string>(t);
+        oss.imbue(std::locale::classic());
+        oss << t;
         const std::string s = oss.str();
         out_.writeBytes(reinterpret_cast<const uint8_t *>(s.data()), s.size());
         sep2();
     }
 
-    void encodeNumber(double t) {
+    template<typename T>
+    std::enable_if_t<std::is_floating_point_v<T>, void> encodeNumber(T t) {
         sep();
         std::ostringstream oss;
-        if (boost::math::isfinite(t)) {
-            oss << boost::lexical_cast<std::string>(t);
-        } else if (boost::math::isnan(t)) {
+        if (std::isfinite(t)) {
+            oss.imbue(std::locale::classic());
+            if constexpr (std::is_same_v<T, float>) {
+                oss << std::setprecision(9) << t;
+            } else {
+                oss << std::setprecision(17) << t;
+            }
+        } else if (std::isnan(t)) {
             oss << "NaN";
-        } else if (t == std::numeric_limits<double>::infinity()) {
+        } else if (t == std::numeric_limits<T>::infinity()) {
             oss << "Infinity";
         } else {
             oss << "-Infinity";

@@ -787,6 +787,8 @@ A logical type is always serialized using its underlying Avro type so that value
 Language implementations must ignore unknown logical types when reading, and should use the underlying Avro type. If a logical type is invalid, for example a decimal with scale greater than its precision, then implementations should ignore the logical type and use the underlying Avro type.
 
 ### Decimal
+
+#### Fixed precision
 The `decimal` logical type represents an arbitrary-precision signed decimal number of the form _unscaled × 10<sup>-scale</sup>_.
 
 A `decimal` logical type annotates Avro _bytes_ or _fixed_ types. The byte array must contain the two's-complement representation of the unscaled integer value in big-endian byte order. The scale is fixed, and is specified using an attribute.
@@ -810,11 +812,11 @@ Scale must be zero or a positive integer less than or equal to the precision.
 
 For the purposes of schema resolution, two schemas that are `decimal` logical types _match_ if their scales and precisions match.
 
-**alternative**
+#### Scalable precision
 
 As it's not always possible to fix scale and precision in advance for a decimal field, `big-decimal` is another `decimal` logical type restrict to Avro _bytes_.
 
-_Currently only available in Java and Rust_.
+_Currently only available in C++, Java and Rust_.
 
 ```json
 {
@@ -822,7 +824,7 @@ _Currently only available in Java and Rust_.
   "logicalType": "big-decimal"
 }
 ```
-Here, as scale property is stored in value itself it needs more bytes than preceding `decimal` type, but it allows more flexibility.
+Here, bytes array contains two serialized properties. First part is an Avro byte arrays which is the two's-complement representation of the unscaled integer value in big-endian byte order. The second part is the scale property stored as an Avro integer. Scale must be zero or a positive integer less than or equal to the precision. Value itself needs more bytes than preceding `decimal` type, but it allows more flexibility.
 
 ### UUID
 

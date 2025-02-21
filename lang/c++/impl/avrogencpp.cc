@@ -16,21 +16,18 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include <cctype>
 #ifndef _WIN32
 #include <ctime>
 #endif
 #include <fstream>
 #include <iostream>
+#include <locale>
 #include <map>
 #include <optional>
+#include <random>
 #include <set>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/program_options.hpp>
-
-#include <boost/random/mersenne_twister.hpp>
 #include <utility>
 
 #include "Compiler.hh"
@@ -46,8 +43,6 @@ using std::ostream;
 using std::set;
 using std::string;
 using std::vector;
-
-using boost::lexical_cast;
 
 using avro::compileJsonSchema;
 using avro::ValidSchema;
@@ -92,7 +87,7 @@ class CodeGen {
     const std::string includePrefix_;
     const bool noUnion_;
     const std::string guardString_;
-    boost::mt19937 random_;
+    std::mt19937 random_;
 
     vector<PendingSetterGetter> pendingGettersAndSetters;
     vector<PendingConstructor> pendingConstructors;
@@ -113,6 +108,7 @@ class CodeGen {
     void generateTraits(const NodePtr &n);
     void generateRecordTraits(const NodePtr &n);
     void generateUnionTraits(const NodePtr &n);
+    void generateDocComment(const NodePtr &n, const char *indent = "");
     void emitCopyright();
     void emitGeneratedWarning();
 
@@ -195,7 +191,7 @@ string CodeGen::cppTypeOf(const NodePtr &n) {
         case avro::AVRO_MAP:
             return "std::map<std::string, " + cppTypeOf(n->leafAt(1)) + " >";
         case avro::AVRO_FIXED:
-            return "std::array<uint8_t, " + lexical_cast<string>(n->fixedSize()) + ">";
+            return "std::array<uint8_t, " + std::to_string(n->fixedSize()) + ">";
         case avro::AVRO_SYMBOLIC:
             return cppTypeOf(resolveSymbol(n));
         case avro::AVRO_UNION:
@@ -253,6 +249,7 @@ string CodeGen::generateRecordType(const NodePtr &n) {
         return it->second;
     }
 
+    generateDocComment(n);
     os_ << "struct " << decoratedName << " {\n";
     if (!noUnion_) {
         for (size_t i = 0; i < c; ++i) {
@@ -271,6 +268,7 @@ string CodeGen::generateRecordType(const NodePtr &n) {
         // the nameAt(i) does not take c++ reserved words into account
         // so we need to call decorate on it
         std::string decoratedNameAt = decorate(n->nameAt(i));
+        generateDocComment(n->leafAt(i), "    ");
         os_ << "    " << types[i];
         os_ << ' ' << decoratedNameAt << ";\n";
     }
@@ -409,7 +407,7 @@ string CodeGen::generateUnionType(const NodePtr &n) {
     for (size_t i = 0; i < c; ++i) {
         // escape reserved literals for c++
         auto branch_name = decorate(names[i]);
-        // avoid rare collisions, e.g. somone might name their struct int_
+        // avoid rare collisions, e.g. someone might name their struct int_
         if (used_branch_names.find(branch_name) != used_branch_names.end()) {
             size_t postfix = 2;
             std::string escaped_name = branch_name + "_" + std::to_string(postfix);
@@ -739,6 +737,43 @@ void CodeGen::generateTraits(const NodePtr &n) {
     }
 }
 
+void CodeGen::generateDocComment(const NodePtr &n, const char *indent) {
+    if (!n->getDoc().empty()) {
+        std::vector<std::string> lines;
+        {
+            const std::string &doc = n->getDoc();
+            size_t pos = 0;
+            size_t found;
+            while ((found = doc.find('\n', pos)) != std::string::npos) {
+                lines.push_back(doc.substr(pos, found - pos));
+                pos = found + 1;
+            }
+            if (pos < doc.size()) {
+                lines.push_back(doc.substr(pos));
+            }
+        }
+        for (auto &line : lines) {
+            line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
+
+            if (line.empty()) {
+                os_ << indent << "//\n";
+            } else {
+                // If a comment line ends with a backslash or backslash and whitespace,
+                // avoid generating code which will generate multi-line comment warnings
+                // on GCC. We can't just append whitespace here as escaped newlines ignore
+                // trailing whitespace.
+                auto lastBackslash = std::find(line.rbegin(), line.rend(), '\\');
+                auto lastNonWs = std::find_if(line.rbegin(), line.rend(), [](char c) { return !std::isspace(static_cast<int>(c)); });
+                // Note: lastBackslash <= lastNonWs because the iterators are reversed, "less" is later in the string.
+                if (lastBackslash != line.rend() && lastBackslash <= lastNonWs) {
+                    line.append("(backslash)");
+                }
+                os_ << indent << "// " << line << "\n";
+            }
+        }
+    }
+}
+
 void CodeGen::emitCopyright() {
     os_ << "/**\n"
            " * Licensed to the Apache Software Foundation (ASF) under one\n"
@@ -770,7 +805,7 @@ void CodeGen::emitGeneratedWarning() {
 string CodeGen::guard() {
     string h = headerFile_;
     makeCanonical(h, true);
-    return h + "_" + lexical_cast<string>(random_()) + "_H";
+    return h + "_" + std::to_string(random_()) + "_H";
 }
 
 void CodeGen::generate(const ValidSchema &schema) {
@@ -827,19 +862,24 @@ void CodeGen::generate(const ValidSchema &schema) {
     os_.flush();
 }
 
-namespace po = boost::program_options;
-
 static string readGuard(const string &filename) {
     std::ifstream ifs(filename.c_str());
     string buf;
     string candidate;
     while (std::getline(ifs, buf)) {
-        boost::algorithm::trim(buf);
+        if (!buf.empty()) {
+            size_t start = 0, end = buf.length();
+            while (start < end && std::isspace(buf[start], std::locale::classic())) start++;
+            while (start < end && std::isspace(buf[end - 1], std::locale::classic())) end--;
+            if (start > 0 || end < buf.length()) {
+                buf = buf.substr(start, end - start);
+            }
+        }
         if (candidate.empty()) {
-            if (boost::algorithm::starts_with(buf, "#ifndef ")) {
+            if (buf.compare(0, 8, "#ifndef ") == 0) {
                 candidate = buf.substr(8);
             }
-        } else if (boost::algorithm::starts_with(buf, "#define ")) {
+        } else if (buf.compare(0, 8, "#define ") == 0) {
             if (candidate == buf.substr(8)) {
                 break;
             }
@@ -850,49 +890,106 @@ static string readGuard(const string &filename) {
     return candidate;
 }
 
+struct ProgramOptions {
+    bool helpRequested = false;
+    bool versionRequested = false;
+    bool noUnionTypedef = false;
+    std::string includePrefix = "avro";
+    std::string nameSpace;
+    std::string inputFile;
+    std::string outputFile;
+};
+
+static void printUsage() {
+    std::cout << "Allowed options:\n"
+              << "  -h [ --help ]                       produce help message\n"
+              << "  -V [ --version ]                    produce version information\n"
+              << "  -p [ --include-prefix ] arg (=avro) prefix for include headers, - for none, default: avro\n"
+              << "  -U [ --no-union-typedef ]           do not generate typedefs for unions in records\n"
+              << "  -n [ --namespace ] arg              set namespace for generated code\n"
+              << "  -i [ --input ] arg                  input file\n"
+              << "  -o [ --output ] arg                 output file to generate\n";
+}
+
+static bool parseArgs(int argc, char **argv, ProgramOptions &opts) {
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+
+        if (arg == "-h" || arg == "--help") {
+            opts.helpRequested = true;
+            return true;
+        }
+
+        if (arg == "-V" || arg == "--version") {
+            opts.versionRequested = true;
+            return true;
+        }
+
+        if (arg == "-U" || arg == "--no-union-typedef") {
+            opts.noUnionTypedef = true;
+            continue;
+        }
+
+        if (arg == "-p" || arg == "--include-prefix") {
+            if (i + 1 < argc) {
+                opts.includePrefix = argv[++i];
+                continue;
+            }
+        } else if (arg == "-n" || arg == "--namespace") {
+            if (i + 1 < argc) {
+                opts.nameSpace = argv[++i];
+                continue;
+            }
+        } else if (arg == "-i" || arg == "--input") {
+            if (i + 1 < argc) {
+                opts.inputFile = argv[++i];
+                continue;
+            }
+        } else if (arg == "-o" || arg == "--output") {
+            if (i + 1 < argc) {
+                opts.outputFile = argv[++i];
+                continue;
+            }
+        } else {
+            std::cerr << "Unknown option: " << arg << std::endl;
+            return false;
+        }
+
+        std::cerr << "Missing value for option: " << arg << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 int main(int argc, char **argv) {
-    const string NS("namespace");
-    const string OUT_FILE("output");
-    const string IN_FILE("input");
-    const string INCLUDE_PREFIX("include-prefix");
-    const string NO_UNION_TYPEDEF("no-union-typedef");
+    ProgramOptions opts;
+    if (!parseArgs(argc, argv, opts)) {
+        printUsage();
+        return 1;
+    }
 
-    po::options_description desc("Allowed options");
-    // clang-format off
-    desc.add_options()
-        ("help,h", "produce help message")
-        ("version,V", "produce version information")
-        ("include-prefix,p", po::value<string>()->default_value("avro"), "prefix for include headers, - for none, default: avro")
-        ("no-union-typedef,U", "do not generate typedefs for unions in records")
-        ("namespace,n", po::value<string>(), "set namespace for generated code")
-        ("input,i", po::value<string>(), "input file")
-        ("output,o", po::value<string>(), "output file to generate");
-    // clang-format on
-
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
-
-    if (vm.count("help")) {
-        std::cout << desc << std::endl;
+    if (opts.helpRequested) {
+        printUsage();
         return 0;
     }
 
-    if (vm.count("version")) {
+    if (opts.versionRequested) {
         std::cout << AVRO_VERSION << std::endl;
         return 0;
     }
 
-    if (vm.count(IN_FILE) == 0 || vm.count(OUT_FILE) == 0) {
-        std::cout << desc << std::endl;
+    if (opts.inputFile.empty() || opts.outputFile.empty()) {
+        std::cerr << "Input and output files are required.\n\n";
+        printUsage();
         return 1;
     }
 
-    string ns = vm.count(NS) > 0 ? vm[NS].as<string>() : string();
-    string outf = vm.count(OUT_FILE) > 0 ? vm[OUT_FILE].as<string>() : string();
-    string inf = vm.count(IN_FILE) > 0 ? vm[IN_FILE].as<string>() : string();
-    string incPrefix = vm[INCLUDE_PREFIX].as<string>();
-    bool noUnion = vm.count(NO_UNION_TYPEDEF) != 0;
+    std::string ns = opts.nameSpace;
+    std::string outf = opts.outputFile;
+    std::string inf = opts.inputFile;
+    std::string incPrefix = opts.includePrefix;
+    bool noUnion = opts.noUnionTypedef;
 
     if (incPrefix == "-") {
         incPrefix.clear();
@@ -943,7 +1040,7 @@ std::string UnionCodeTracker::generateNewUnionName(const std::vector<std::string
     }
     makeCanonical(s, false);
 
-    std::string result = s + "_Union__" + boost::lexical_cast<string>(unionNumber_++) + "__";
+    std::string result = s + "_Union__" + std::to_string(unionNumber_++) + "__";
     unionBranchNameMapping_.emplace(unionBranches, result);
     return result;
 }
