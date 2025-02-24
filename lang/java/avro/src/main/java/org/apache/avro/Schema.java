@@ -1862,7 +1862,6 @@ public abstract class Schema extends JsonProperties implements Serializable {
     Name name = parseName(schema, currentNameSpace);
     String doc = parseDoc(schema);
     Schema result = new RecordSchema(name, doc, isTypeError);
-    context.put(result);
 
     JsonNode fieldsNode = schema.get("fields");
     if (fieldsNode == null || !fieldsNode.isArray())
@@ -1879,6 +1878,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     result.setFields(fields);
     parsePropertiesAndLogicalType(schema, result, SCHEMA_RESERVED);
     parseAliases(schema, result);
+    context.put(result);
     return result;
   }
 
@@ -1924,9 +1924,9 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     Schema result = new EnumSchema(name, doc, symbols, defaultSymbol);
-    context.put(result);
     parsePropertiesAndLogicalType(schema, result, ENUM_RESERVED);
     parseAliases(schema, result);
+    context.put(result);
     return result;
   }
 
@@ -1959,9 +1959,9 @@ public abstract class Schema extends JsonProperties implements Serializable {
       throw new SchemaParseException("Invalid or no size: " + schema);
 
     Schema result = new FixedSchema(name, doc, sizeNode.intValue());
-    context.put(result);
     parsePropertiesAndLogicalType(schema, result, SCHEMA_RESERVED);
     parseAliases(schema, result);
+    context.put(result);
     return result;
   }
 
