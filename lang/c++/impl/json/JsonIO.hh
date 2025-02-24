@@ -119,6 +119,8 @@ public:
         return curToken;
     }
 
+    bool hasMore();
+
     void expectToken(Token tk);
 
     bool boolValue() const {
