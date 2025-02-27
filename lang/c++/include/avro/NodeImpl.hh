@@ -235,9 +235,9 @@ using NodeImplSymbolic = NodeImpl<HasName, NoLeaves, NoLeafNames, NoAttributes, 
 using NodeImplRecord = NodeImpl<HasName, MultiLeaves, LeafNames, MultiAttributes, NoSize>;
 using NodeImplEnum = NodeImpl<HasName, NoLeaves, LeafNames, NoAttributes, NoSize>;
 using NodeImplArray = NodeImpl<NoName, SingleLeaf, NoLeafNames, MultiAttributes, NoSize>;
-using NodeImplMap = NodeImpl<NoName, MultiLeaves, NoLeafNames, NoAttributes, NoSize>;
+using NodeImplMap = NodeImpl<NoName, MultiLeaves, NoLeafNames, MultiAttributes, NoSize>;
 using NodeImplUnion = NodeImpl<NoName, MultiLeaves, NoLeafNames, NoAttributes, NoSize>;
-using NodeImplFixed = NodeImpl<HasName, NoLeaves, NoLeafNames, NoAttributes, HasSize>;
+using NodeImplFixed = NodeImpl<HasName, NoLeaves, NoLeafNames, MultiAttributes, HasSize>;
 
 class AVRO_DECL NodePrimitive : public NodeImplPrimitive {
 public:
@@ -380,7 +380,7 @@ class AVRO_DECL NodeMap : public NodeImplMap {
 public:
     NodeMap();
 
-    explicit NodeMap(const SingleLeaf &values) : NodeImplMap(AVRO_MAP, NoName(), MultiLeaves(values), NoLeafNames(), NoAttributes(), NoSize()) {
+    explicit NodeMap(const SingleLeaf &values) : NodeImplMap(AVRO_MAP, NoName(), MultiLeaves(values), NoLeafNames(), {}, NoSize()) {
         // need to add the key for the map too
         NodePtr key(new NodePrimitive(AVRO_STRING));
         doAddLeaf(key);
@@ -473,7 +473,7 @@ class AVRO_DECL NodeFixed : public NodeImplFixed {
 public:
     NodeFixed() : NodeImplFixed(AVRO_FIXED) {}
 
-    NodeFixed(const HasName &name, const HasSize &size) : NodeImplFixed(AVRO_FIXED, name, NoLeaves(), NoLeafNames(), NoAttributes(), size) {}
+    NodeFixed(const HasName &name, const HasSize &size) : NodeImplFixed(AVRO_FIXED, name, NoLeaves(), NoLeafNames(), {}, size) {}
 
     SchemaResolution resolve(const Node &reader) const override;
 

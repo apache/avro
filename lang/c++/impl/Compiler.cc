@@ -431,6 +431,11 @@ static NodePtr makeFixedNode(const Entity &e,
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
+
+    CustomAttributes customAttributes;
+    getCustomAttributes(m, customAttributes);
+    node->addCustomAttributesForField(customAttributes);
+
     return node;
 }
 
@@ -457,6 +462,11 @@ static NodePtr makeMapNode(const Entity &e, const Object &m,
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
+
+    CustomAttributes customAttributes;
+    getCustomAttributes(m, customAttributes);
+    node->addCustomAttributesForField(customAttributes);
+
     return node;
 }
 
