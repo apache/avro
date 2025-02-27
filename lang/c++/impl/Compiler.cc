@@ -281,7 +281,7 @@ static const std::unordered_set<std::string> &getKnownFields() {
     // return known fields
     static const std::unordered_set<std::string> kKnownFields =
         {"name", "type", "aliases", "default", "doc", "size", "logicalType",
-         "values", "precision", "scale", "namespace", "items"};
+         "values", "precision", "scale", "namespace", "items", "symbols"};
     return kKnownFields;
 }
 
@@ -417,6 +417,11 @@ static NodePtr makeEnumNode(const Entity &e,
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
+
+    CustomAttributes customAttributes;
+    getCustomAttributes(m, customAttributes);
+    node->addCustomAttributesForField(customAttributes);
+
     return node;
 }
 

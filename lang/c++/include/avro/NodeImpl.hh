@@ -233,7 +233,7 @@ using NodeImplPrimitive = NodeImpl<NoName, NoLeaves, NoLeafNames, MultiAttribute
 using NodeImplSymbolic = NodeImpl<HasName, NoLeaves, NoLeafNames, NoAttributes, NoSize>;
 
 using NodeImplRecord = NodeImpl<HasName, MultiLeaves, LeafNames, MultiAttributes, NoSize>;
-using NodeImplEnum = NodeImpl<HasName, NoLeaves, LeafNames, NoAttributes, NoSize>;
+using NodeImplEnum = NodeImpl<HasName, NoLeaves, LeafNames, MultiAttributes, NoSize>;
 using NodeImplArray = NodeImpl<NoName, SingleLeaf, NoLeafNames, MultiAttributes, NoSize>;
 using NodeImplMap = NodeImpl<NoName, MultiLeaves, NoLeafNames, MultiAttributes, NoSize>;
 using NodeImplUnion = NodeImpl<NoName, MultiLeaves, NoLeafNames, NoAttributes, NoSize>;
@@ -339,7 +339,7 @@ class AVRO_DECL NodeEnum : public NodeImplEnum {
 public:
     NodeEnum() : NodeImplEnum(AVRO_ENUM) {}
 
-    NodeEnum(const HasName &name, const LeafNames &symbols) : NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoAttributes(), NoSize()) {
+    NodeEnum(const HasName &name, const LeafNames &symbols) : NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, {}, NoSize()) {
         for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
             if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
                 throw Exception("Cannot add duplicate enum: {}", leafNameAttributes_.get(i));

@@ -363,6 +363,7 @@ const char *roundTripSchemas[] = {
     R"({"type":"array","items":"long","extra":"1"})",
     R"({"type":"map","values":"long","extra":"1"})",
     R"({"type":"fixed","name":"Test","size":1,"extra":"1"})",
+    R"({"type":"enum","name":"Test","symbols":["A","B"],"extra":"1"})",
 };
 
 const char *malformedLogicalTypes[] = {

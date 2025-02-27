@@ -541,6 +541,9 @@ void NodeEnum::printJson(std::ostream &os, size_t depth) const {
     }
     os << '\n';
     os << indent(--depth) << "]\n";
+    for (size_t i = 0; i != customAttributes_.size(); i++) {
+        printCustomAttributes(customAttributes_.get(i), depth, os);
+    }
     os << indent(--depth) << '}';
 }
 
@@ -616,7 +619,6 @@ void NodeFixed::printJson(std::ostream &os, size_t depth) const {
     for (size_t i = 0; i != customAttributes_.size(); i++) {
         printCustomAttributes(customAttributes_.get(i), depth, os);
     }
-
     os << indent(--depth) << '}';
 }
 
