@@ -541,6 +541,9 @@ void NodeEnum::printJson(std::ostream &os, size_t depth) const {
     }
     os << '\n';
     os << indent(--depth) << "]\n";
+    for (size_t i = 0; i != customAttributes_.size(); i++) {
+        printCustomAttributes(customAttributes_.get(i), depth, os);
+    }
     os << indent(--depth) << '}';
 }
 
@@ -554,7 +557,7 @@ void NodeArray::printJson(std::ostream &os, size_t depth) const {
     os << indent(depth + 1) << "\"items\": ";
     leafAttributes_.get()->printJson(os, depth + 1);
     os << '\n';
-    for (size_t i = 0; i != customAttributes_.size(); i++){
+    for (size_t i = 0; i != customAttributes_.size(); i++) {
         printCustomAttributes(customAttributes_.get(i), depth + 1, os);
     }
     os << indent(depth) << '}';
@@ -570,6 +573,9 @@ void NodeMap::printJson(std::ostream &os, size_t depth) const {
     os << indent(depth + 1) << "\"values\": ";
     leafAttributes_.get(1)->printJson(os, depth + 1);
     os << '\n';
+    for (size_t i = 0; i != customAttributes_.size(); i++) {
+        printCustomAttributes(customAttributes_.get(i), depth + 1, os);
+    }
     os << indent(depth) << '}';
 }
 
@@ -609,8 +615,11 @@ void NodeFixed::printJson(std::ostream &os, size_t depth) const {
         logicalType().printJson(os);
     }
 
-    os << "\n"
-       << indent(--depth) << '}';
+    os << "\n";
+    for (size_t i = 0; i != customAttributes_.size(); i++) {
+        printCustomAttributes(customAttributes_.get(i), depth, os);
+    }
+    os << indent(--depth) << '}';
 }
 
 } // namespace avro

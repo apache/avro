@@ -181,8 +181,7 @@ const char *basicSchemas[] = {
         "fields":[
             {"name": "f1","type": "long","extra field1": "1","extra field2": "2"}
         ]
-    })"
-};
+    })"};
 
 const char *basicSchemaErrors[] = {
     // Record
@@ -361,7 +360,10 @@ const char *roundTripSchemas[] = {
             {"name":"f2","type":"int","extra_field1":"21","extra_field2":"22"}
         ]
     })",
-    R"({"type":"array","items":"long","extra":"1"})"
+    R"({"type":"array","items":"long","extra":"1"})",
+    R"({"type":"map","values":"long","extra":"1"})",
+    R"({"type":"fixed","name":"Test","size":1,"extra":"1"})",
+    R"({"type":"enum","name":"Test","symbols":["A","B"],"extra":"1"})",
 };
 
 const char *malformedLogicalTypes[] = {
@@ -416,14 +418,13 @@ const char *compactSchemas[] = {
     "\"fields\":["
     "{\"name\":\"re1\",\"type\":\"long\",\"doc\":\"A \\\"quoted doc\\\"\"},"
     "{\"name\":\"re2\",\"type\":\"long\",\"doc\":\"extra slashes\\\\\\\\\"}"
-    "]}"
-};
+    "]}"};
 
 static const std::vector<char> whitespaces = {' ', '\f', '\n', '\r', '\t', '\v'};
 
-static std::string removeWhitespaceFromSchema(const std::string& schema){
+static std::string removeWhitespaceFromSchema(const std::string &schema) {
     std::string trimmedSchema = schema;
-    for (char toReplace : whitespaces){
+    for (char toReplace : whitespaces) {
         boost::algorithm::replace_all(trimmedSchema, std::string{toReplace}, "");
     }
     return trimmedSchema;
