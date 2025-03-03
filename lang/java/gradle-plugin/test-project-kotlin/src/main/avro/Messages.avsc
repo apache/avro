@@ -1,0 +1,26 @@
+{
+    "type": "record",
+	  "name": "Messages",
+	  "namespace": "com.somedomain",
+	  "fields": [
+		{
+		  "name": "start",
+		  "type": {
+			"type": "long",
+			"logicalType": "timestamp-millis"
+		  }
+		},
+		{
+		  "name": "end",
+		  "type": [
+			"null",
+			{
+			  "type": "long",
+			  "logicalType": "timestamp-millis"
+			}
+		  ],
+		  "default": null
+		}
+	  ]
+	}
+}
