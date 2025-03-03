@@ -28,7 +28,7 @@ RecordSchema::RecordSchema(const std::string &name) : Schema(new NodeRecord) {
 }
 
 void RecordSchema::addField(const std::string &name, const Schema &fieldSchema) {
-    const CustomAttributes emptyCustomAttribute;
+    const CustomAttributes emptyCustomAttribute(CustomAttributes::ValueMode::JSON);
     addField(name, fieldSchema, emptyCustomAttribute);
 }
 

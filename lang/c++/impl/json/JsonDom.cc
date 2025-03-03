@@ -92,7 +92,11 @@ Entity loadEntity(const char *text) {
 Entity loadEntity(InputStream &in) {
     JsonParser p;
     p.init(in);
-    return readEntity(p);
+    Entity e = readEntity(p);
+    if (p.hasMore()) {
+        throw TooManyValuesException();
+    }
+    return e;
 }
 
 Entity loadEntity(const uint8_t *text, size_t len) {
@@ -175,23 +179,6 @@ std::string Entity::toString() const {
         c += n;
     }
     return result;
-}
-
-std::string Entity::toLiteralString() const {
-    switch (type_) {
-        case EntityType::Null:
-            return "null";
-        case EntityType::Bool:
-            return boolValue() ? "true" : "false";
-        case EntityType::Long:
-            return std::to_string(longValue());
-        case EntityType::Double:
-            return std::to_string(doubleValue());
-        case EntityType::String:
-            return stringValue();
-        default:
-	    return toString();
-    }
 }
 
 } // namespace json
