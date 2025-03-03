@@ -233,6 +233,11 @@ void Node::setLogicalType(LogicalType logicalType) {
                                 "STRING type");
             }
             break;
+        case LogicalType::CUSTOM:
+            if (logicalType.customLogicalType() == nullptr) {
+                throw Exception("CUSTOM logical type is not set");
+            }
+            break;
     }
 
     logicalType_ = logicalType;
