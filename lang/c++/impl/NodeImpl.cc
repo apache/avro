@@ -252,9 +252,18 @@ static void printName(std::ostream &os, const Name &n, size_t depth) {
     os << indent(depth) << R"("name": ")" << n.simpleName() << "\",\n";
 }
 
+static void printLogicalType(std::ostream &os, const LogicalType &logicalType, size_t depth) {
+    if (logicalType.type() != LogicalType::NONE) {
+        os << indent(depth);
+        logicalType.printJson(os);
+        os << ",\n";
+    }
+}
+
 void NodeRecord::printJson(std::ostream &os, size_t depth) const {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"record\",\n";
+    printLogicalType(os, logicalType(), depth);
     const Name &name = nameAttribute_.get();
     printName(os, name, depth);
 
@@ -524,6 +533,7 @@ void NodeMap::printDefaultToJson(const GenericDatum &g, std::ostream &os,
 void NodeEnum::printJson(std::ostream &os, size_t depth) const {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"enum\",\n";
+    printLogicalType(os, logicalType(), depth);
     if (!getDoc().empty()) {
         os << indent(depth) << R"("doc": ")"
            << escape(getDoc()) << "\",\n";
@@ -550,6 +560,7 @@ void NodeEnum::printJson(std::ostream &os, size_t depth) const {
 void NodeArray::printJson(std::ostream &os, size_t depth) const {
     os << "{\n";
     os << indent(depth + 1) << "\"type\": \"array\",\n";
+    printLogicalType(os, logicalType(), depth + 1);
     if (!getDoc().empty()) {
         os << indent(depth + 1) << R"("doc": ")"
            << escape(getDoc()) << "\",\n";
@@ -566,6 +577,7 @@ void NodeArray::printJson(std::ostream &os, size_t depth) const {
 void NodeMap::printJson(std::ostream &os, size_t depth) const {
     os << "{\n";
     os << indent(depth + 1) << "\"type\": \"map\",\n";
+    printLogicalType(os, logicalType(), depth + 1);
     if (!getDoc().empty()) {
         os << indent(depth + 1) << R"("doc": ")"
            << escape(getDoc()) << "\",\n";
