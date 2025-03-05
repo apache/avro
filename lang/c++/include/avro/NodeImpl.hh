@@ -164,15 +164,12 @@ protected:
         customAttributes_.add(customAttributes);
     }
 
-    CustomAttributes getCustomAttributes() const override {
-        CustomAttributes mergedCustomAttributes;
-        for (size_t i = 0; i < customAttributes_.size(); i++) {
-            const auto &customAttribute = customAttributes_.get(i);
-            for (const auto &[key, value] : customAttribute.attributes()) {
-                mergedCustomAttributes.addAttribute(key, value);
-            }
-        }
-        return mergedCustomAttributes;
+    size_t customAttributes() const override {
+        return customAttributes_.size();
+    }
+
+    const CustomAttributes &customAttributesAt(size_t index) const override {
+        return customAttributes_.get(index);
     }
 
     SchemaResolution furtherResolution(const Node &reader) const {

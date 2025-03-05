@@ -170,7 +170,8 @@ public:
         doAddCustomAttribute(customAttributes);
     }
 
-    virtual CustomAttributes getCustomAttributes() const = 0;
+    virtual size_t customAttributes() const = 0;
+    virtual const CustomAttributes &customAttributesAt(size_t index) const = 0;
 
     virtual bool isValid() const = 0;
 
