@@ -17,23 +17,94 @@
  */
 package org.apache.avro.generic;
 
-import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
 public class PrimitivesArrays {
+  /**
+   * Determine the optimal value type for an array. The value type is determined
+   * form the convertedElementType if supplied, otherwise the underlying type from
+   * the schema
+   *
+   * @param schema               the schema of the array
+   * @param convertedElementType the converted elements value type. This may not
+   *                             be the same and the schema if for instance there
+   *                             is a logical type, and a convertor is use
+   * @return an indicator for the type of the array, useful for
+   *         {@link #createOptimizedArray(int, Schema, Schema.Type)}. May be null
+   *         if the type is not optimised
+   */
+  public static Schema.Type optimalValueType(Schema schema, LogicalType logicalType, Class<?> convertedElementType) {
+    final Schema.Type convertedType;
+    if (logicalType == null)
+      // if there are no logical types- use the schema type
+      return schema.getElementType().getType();
+    else if (convertedElementType == null)
+      // if there is no convertor
+      return null;
+    else
+      // use the converted type
+      return primitiveTypesWithSpecialisedArrays.get(convertedElementType);
+  }
 
-  public static class IntArray extends GenericData.AbstractArray<Integer> {
+  /**
+   * Create a primitive array if the value type is has an associated optimised
+   * implementation, otherwise a generic array is returned. The value type is
+   * determined form the convertedElementType if supplied, otherwise the
+   * underlying type from the schema
+   *
+   * @param size      the size of the array to create
+   * @param schema    the schema of the array
+   * @param valueType the converted elements value type. This may not be the same
+   *                  and the schema if for instance there is a logical type, and
+   *                  a convertor is use
+   * @return an instance of a primitive array or a Generic array if the value type
+   *         is does not have an associated optimised implementation.
+   */
+  public static GenericData.AbstractArray<?> createOptimizedArray(int size, Schema schema, Schema.Type valueType) {
+
+    if (valueType != null)
+      switch (valueType) {
+      case INT:
+        return new PrimitivesArrays.IntArray(size, schema);
+      case BOOLEAN:
+        return new PrimitivesArrays.BooleanArray(size, schema);
+      case LONG:
+        return new PrimitivesArrays.LongArray(size, schema);
+      case FLOAT:
+        return new PrimitivesArrays.FloatArray(size, schema);
+      case DOUBLE:
+        return new PrimitivesArrays.DoubleArray(size, schema);
+      }
+    return new GenericData.Array<>(size, schema);
+  }
+
+  private final static Map<Class<?>, Schema.Type> primitiveTypesWithSpecialisedArrays = Map.of(//
+      Long.TYPE, Schema.Type.LONG, //
+      Integer.TYPE, Schema.Type.INT, //
+      Float.TYPE, Schema.Type.FLOAT, //
+      Double.TYPE, Schema.Type.DOUBLE, //
+      Boolean.TYPE, Schema.Type.BOOLEAN);
+
+  public abstract static class PrimitiveArray<T> extends GenericData.AbstractArray<T> {
+    PrimitiveArray(Schema schema) {
+      super(schema);
+    }
+
+    public abstract Schema.Type valueType();
+  }
+
+  public static class IntArray extends PrimitiveArray<Integer> {
     private static final int[] EMPTY = new int[0];
 
     private int[] elements = EMPTY;
 
     public IntArray(int capacity, Schema schema) {
       super(schema);
-      if (!Schema.Type.INT.equals(schema.getElementType().getType()))
-        throw new AvroRuntimeException("Not a int array schema: " + schema);
       if (capacity != 0)
         elements = new int[capacity];
     }
@@ -127,17 +198,20 @@ public class PrimitivesArrays {
       elements[index1] = elements[index2];
       elements[index2] = tmp;
     }
+
+    @Override
+    public Schema.Type valueType() {
+      return Schema.Type.INT;
+    }
   }
 
-  public static class LongArray extends GenericData.AbstractArray<Long> {
+  public static class LongArray extends PrimitiveArray<Long> {
     private static final long[] EMPTY = new long[0];
 
     private long[] elements = EMPTY;
 
     public LongArray(int capacity, Schema schema) {
       super(schema);
-      if (!Schema.Type.LONG.equals(schema.getElementType().getType()))
-        throw new AvroRuntimeException("Not a long array schema: " + schema);
       if (capacity != 0)
         elements = new long[capacity];
     }
@@ -231,17 +305,20 @@ public class PrimitivesArrays {
       elements[index1] = elements[index2];
       elements[index2] = tmp;
     }
+
+    @Override
+    public Schema.Type valueType() {
+      return Schema.Type.LONG;
+    }
   }
 
-  public static class BooleanArray extends GenericData.AbstractArray<Boolean> {
+  public static class BooleanArray extends PrimitiveArray<Boolean> {
     private static final byte[] EMPTY = new byte[0];
 
     private byte[] elements = EMPTY;
 
     public BooleanArray(int capacity, Schema schema) {
       super(schema);
-      if (!Schema.Type.BOOLEAN.equals(schema.getElementType().getType()))
-        throw new AvroRuntimeException("Not a boolean array schema: " + schema);
       if (capacity != 0)
         elements = new byte[1 + (capacity / Byte.SIZE)];
     }
@@ -396,17 +473,20 @@ public class PrimitivesArrays {
       this.set(index1, this.get(index2));
       this.set(index2, tmp);
     }
+
+    @Override
+    public Schema.Type valueType() {
+      return Schema.Type.BOOLEAN;
+    }
   }
 
-  public static class FloatArray extends GenericData.AbstractArray<Float> {
+  public static class FloatArray extends PrimitiveArray<Float> {
     private static final float[] EMPTY = new float[0];
 
     private float[] elements = EMPTY;
 
     public FloatArray(int capacity, Schema schema) {
       super(schema);
-      if (!Schema.Type.FLOAT.equals(schema.getElementType().getType()))
-        throw new AvroRuntimeException("Not a float array schema: " + schema);
       if (capacity != 0)
         elements = new float[capacity];
     }
@@ -500,17 +580,20 @@ public class PrimitivesArrays {
       this.set(index1, this.get(index2));
       this.set(index2, tmp);
     }
+
+    @Override
+    public Schema.Type valueType() {
+      return Schema.Type.FLOAT;
+    }
   }
 
-  public static class DoubleArray extends GenericData.AbstractArray<Double> {
+  public static class DoubleArray extends PrimitiveArray<Double> {
     private static final double[] EMPTY = new double[0];
 
     private double[] elements = EMPTY;
 
     public DoubleArray(int capacity, Schema schema) {
       super(schema);
-      if (!Schema.Type.DOUBLE.equals(schema.getElementType().getType()))
-        throw new AvroRuntimeException("Not a double array schema: " + schema);
       if (capacity != 0)
         elements = new double[capacity];
     }
@@ -603,6 +686,11 @@ public class PrimitivesArrays {
       double tmp = this.get(index1);
       this.set(index1, this.get(index2));
       this.set(index2, tmp);
+    }
+
+    @Override
+    public Schema.Type valueType() {
+      return Schema.Type.DOUBLE;
     }
   }
 
