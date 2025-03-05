@@ -17,21 +17,85 @@
  */
 package org.apache.avro.generic;
 
-import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
 public class PrimitivesArrays {
+  /**
+   * Determine the optimal value type for an array. The value type is determined
+   * form the convertedElementType if supplied, otherwise the underlying type from
+   * the schema
+   *
+   * @param schema               the schema of the array
+   * @param convertedElementType the converted elements value type. This may not
+   *                             be the same and the schema if for instance there
+   *                             is a logical type, and a convertor is use
+   * @return an indicator for the type of the array, useful for
+   *         {@link #createOptimizedArray(int, Schema, Schema.Type)}. May be null
+   *         if the type is not optimised
+   */
+  public static Schema.Type optimalValueType(Schema schema, LogicalType logicalType, Class<?> convertedElementType) {
+    final Schema.Type convertedType;
+    if (logicalType == null)
+      // if there are no logical types- use the schema type
+      return schema.getElementType().getType();
+    else if (convertedElementType == null)
+      // if there is no convertor
+      return null;
+    else
+      // use the converted type
+      return primitiveTypesWithSpecialisedArrays.get(convertedElementType);
+  }
+
+  /**
+   * Create a primitive array if the value type is has an associated optimised
+   * implementation, otherwise a generic array is returned. The value type is
+   * determined form the convertedElementType if supplied, otherwise the
+   * underlying type from the schema
+   *
+   * @param size      the size of the array to create
+   * @param schema    the schema of the array
+   * @param valueType the converted elements value type. This may not be the same
+   *                  and the schema if for instance there is a logical type, and
+   *                  a convertor is use
+   * @return an instance of a primitive array or a Generic array if the value type
+   *         is does not have an associated optimised implementation.
+   */
+  public static GenericData.AbstractArray<?> createOptimizedArray(int size, Schema schema, Schema.Type valueType) {
+
+    if (valueType != null)
+      switch (valueType) {
+      case INT:
+        return new PrimitivesArrays.IntArray(size, schema);
+      case BOOLEAN:
+        return new PrimitivesArrays.BooleanArray(size, schema);
+      case LONG:
+        return new PrimitivesArrays.LongArray(size, schema);
+      case FLOAT:
+        return new PrimitivesArrays.FloatArray(size, schema);
+      case DOUBLE:
+        return new PrimitivesArrays.DoubleArray(size, schema);
+      }
+    return new GenericData.Array<>(size, schema);
+  }
+
+  private final static Map<Class<?>, Schema.Type> primitiveTypesWithSpecialisedArrays = Map.of(//
+      Long.TYPE, Schema.Type.LONG, //
+      Integer.TYPE, Schema.Type.INT, //
+      Float.TYPE, Schema.Type.FLOAT, //
+      Double.TYPE, Schema.Type.DOUBLE, //
+      Boolean.TYPE, Schema.Type.BOOLEAN);
+
   public abstract static class PrimitiveArray<T> extends GenericData.AbstractArray<T> {
-    PrimitiveArray(Schema schema, Schema.Type underlyingType) {
+    PrimitiveArray(Schema schema) {
       super(schema);
-      if (!underlyingType.equals(schema.getElementType().getType()))
-        throw new AvroRuntimeException("Not a " + underlyingType + " array schema: " + schema);
-      if (schema.getElementType().getLogicalType() != null)
-        throw new AvroRuntimeException("Logical types cant use primitive arrays - array schema: " + schema);
     }
+
+    public abstract Schema.Type valueType();
   }
 
   public static class IntArray extends PrimitiveArray<Integer> {
@@ -40,13 +104,13 @@ public class PrimitivesArrays {
     private int[] elements = EMPTY;
 
     public IntArray(int capacity, Schema schema) {
-      super(schema, Schema.Type.INT);
+      super(schema);
       if (capacity != 0)
         elements = new int[capacity];
     }
 
     public IntArray(Schema schema, Collection<Integer> c) {
-      super(schema, Schema.Type.INT);
+      super(schema);
       if (c != null) {
         elements = new int[c.size()];
         addAll(c);
@@ -134,6 +198,11 @@ public class PrimitivesArrays {
       elements[index1] = elements[index2];
       elements[index2] = tmp;
     }
+
+    @Override
+    public Schema.Type valueType() {
+      return Schema.Type.INT;
+    }
   }
 
   public static class LongArray extends PrimitiveArray<Long> {
@@ -142,13 +211,13 @@ public class PrimitivesArrays {
     private long[] elements = EMPTY;
 
     public LongArray(int capacity, Schema schema) {
-      super(schema, Schema.Type.LONG);
+      super(schema);
       if (capacity != 0)
         elements = new long[capacity];
     }
 
     public LongArray(Schema schema, Collection<Long> c) {
-      super(schema, Schema.Type.LONG);
+      super(schema);
       if (c != null) {
         elements = new long[c.size()];
         addAll(c);
@@ -236,6 +305,11 @@ public class PrimitivesArrays {
       elements[index1] = elements[index2];
       elements[index2] = tmp;
     }
+
+    @Override
+    public Schema.Type valueType() {
+      return Schema.Type.LONG;
+    }
   }
 
   public static class BooleanArray extends PrimitiveArray<Boolean> {
@@ -244,13 +318,13 @@ public class PrimitivesArrays {
     private byte[] elements = EMPTY;
 
     public BooleanArray(int capacity, Schema schema) {
-      super(schema, Schema.Type.BOOLEAN);
+      super(schema);
       if (capacity != 0)
         elements = new byte[1 + (capacity / Byte.SIZE)];
     }
 
     public BooleanArray(Schema schema, Collection<Boolean> c) {
-      super(schema, Schema.Type.BOOLEAN);
+      super(schema);
 
       if (c != null) {
         elements = new byte[1 + (c.size() / 8)];
@@ -399,6 +473,11 @@ public class PrimitivesArrays {
       this.set(index1, this.get(index2));
       this.set(index2, tmp);
     }
+
+    @Override
+    public Schema.Type valueType() {
+      return Schema.Type.BOOLEAN;
+    }
   }
 
   public static class FloatArray extends PrimitiveArray<Float> {
@@ -407,13 +486,13 @@ public class PrimitivesArrays {
     private float[] elements = EMPTY;
 
     public FloatArray(int capacity, Schema schema) {
-      super(schema, Schema.Type.FLOAT);
+      super(schema);
       if (capacity != 0)
         elements = new float[capacity];
     }
 
     public FloatArray(Schema schema, Collection<Float> c) {
-      super(schema, Schema.Type.FLOAT);
+      super(schema);
       if (c != null) {
         elements = new float[c.size()];
         addAll(c);
@@ -501,6 +580,11 @@ public class PrimitivesArrays {
       this.set(index1, this.get(index2));
       this.set(index2, tmp);
     }
+
+    @Override
+    public Schema.Type valueType() {
+      return Schema.Type.FLOAT;
+    }
   }
 
   public static class DoubleArray extends PrimitiveArray<Double> {
@@ -509,13 +593,13 @@ public class PrimitivesArrays {
     private double[] elements = EMPTY;
 
     public DoubleArray(int capacity, Schema schema) {
-      super(schema, Schema.Type.DOUBLE);
+      super(schema);
       if (capacity != 0)
         elements = new double[capacity];
     }
 
     public DoubleArray(Schema schema, Collection<Double> c) {
-      super(schema, Schema.Type.DOUBLE);
+      super(schema);
       if (c != null) {
         elements = new double[c.size()];
         addAll(c);
@@ -602,6 +686,11 @@ public class PrimitivesArrays {
       double tmp = this.get(index1);
       this.set(index1, this.get(index2));
       this.set(index2, tmp);
+    }
+
+    @Override
+    public Schema.Type valueType() {
+      return Schema.Type.DOUBLE;
     }
   }
 

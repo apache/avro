@@ -17,6 +17,7 @@
  */
 package org.apache.avro.generic;
 
+import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -85,9 +86,8 @@ class GenericDataTest {
     return Schema.createArray(schema);
   }
 
-  public static Stream<Arguments> testNewArrayData() {
-    Map<Schema.Type, GenericData.AbstractArray<?>> validMappings = new EnumMap<>(Schema.Type.class);
-
+  static Map<Schema.Type, GenericData.AbstractArray<?>> validMappings = new EnumMap<>(Schema.Type.class);
+  static {
     for (Schema.Type type : Schema.Type.values()) {
       switch (type) {
       case INT:
@@ -110,41 +110,101 @@ class GenericDataTest {
         break;
       }
     }
+  }
+
+  public static Stream<Arguments> testNewArrayData() {
 
     List<Arguments> data = new ArrayList<>();
 
     validMappings.forEach((validKey, optimalValue) -> {
       Class<?> optimalValueType = optimalValue.getClass();
       // cant reuse null, or a string
-      data.add(Arguments.of("null input, " + validKey, createArraySchema(validKey), null, optimalValueType));
-      data.add(Arguments.of("String input, " + validKey, createArraySchema(validKey), "foo", optimalValueType));
-      // should reuse arraylist
-      data.add(Arguments.of("ArrayList input, " + validKey, createArraySchema(validKey), new ArrayList<>(),
+      final Schema arraySchema = createArraySchema(validKey);
+
+      data.add(Arguments.of("null input, " + validKey, arraySchema, Collections.emptyList(), null, optimalValueType));
+      data.add(
+          Arguments.of("String input, " + validKey, arraySchema, Collections.emptyList(), "foo", optimalValueType));
+      // should reuse arraylist & generic array
+      data.add(Arguments.of("ArrayList input, " + validKey, arraySchema, Collections.emptyList(), new ArrayList<>(),
           ArrayList.class));
+      data.add(Arguments.of("Generic input, " + validKey, arraySchema, Collections.emptyList(),
+          new GenericData.Array<Object>(0, arraySchema), GenericData.Array.class));
+      // with logical type
       if (validKey != Schema.Type.UNION) {
         data.add(Arguments.of("null (with logical type) input, " + validKey, createArraySchemaWithLogicalType(validKey),
-            null, GenericData.Array.class));
+            Collections.emptyList(), null, GenericData.Array.class));
         data.add(Arguments.of("String (with logical type) input, " + validKey,
-            createArraySchemaWithLogicalType(validKey), "foo", GenericData.Array.class));
-        data.add(Arguments.of("ArrayList (with logical type) input, " + validKey, createArraySchema(validKey),
+            createArraySchemaWithLogicalType(validKey), Collections.emptyList(), "foo", GenericData.Array.class));
+        data.add(Arguments.of("ArrayList (with logical type) input, " + validKey, arraySchema, Collections.emptyList(),
             new ArrayList<>(), ArrayList.class));
+        data.add(Arguments.of("Generic (with logical type) input, " + validKey, arraySchema, Collections.emptyList(),
+            new GenericData.Array<Object>(0, arraySchema), GenericData.Array.class));
+//         with logical type and conversion
+
+        validMappings.forEach((targetKey, targetType) -> {
+          if (targetKey != Schema.Type.UNION) {
+            data.add(Arguments.of("null (with logical type) input, " + validKey + " convert to " + targetType,
+                createArraySchemaWithLogicalType(targetKey), singleConversion(targetKey), null, targetType.getClass()));
+            data.add(Arguments.of("String (with logical type) input, " + validKey + " convert to " + targetType,
+                createArraySchemaWithLogicalType(targetKey), singleConversion(targetKey), "foo",
+                targetType.getClass()));
+            data.add(Arguments.of("ArrayList (with logical type) input, " + validKey + " convert to " + targetType,
+                createArraySchemaWithLogicalType(targetKey), singleConversion(targetKey), new ArrayList<>(),
+                ArrayList.class));
+            data.add(Arguments.of("Generic (with logical type) input, " + validKey, arraySchema,
+                Collections.emptyList(), new GenericData.Array<Object>(0, arraySchema), GenericData.Array.class));
+          }
+        });
+
       }
 
       validMappings.forEach((suppliedValueType, suppliedValue) -> {
-        data.add(Arguments.of(suppliedValueType + " input " + validKey, createArraySchema(validKey), suppliedValue,
-            optimalValueType));
+        data.add(Arguments.of(suppliedValueType + " input " + validKey, arraySchema, Collections.emptyList(),
+            suppliedValue, optimalValueType));
         if (validKey != Schema.Type.UNION)
           data.add(Arguments.of(suppliedValueType + " (with logical type) input " + validKey,
-              createArraySchemaWithLogicalType(validKey), suppliedValue, GenericData.Array.class));
+              createArraySchemaWithLogicalType(validKey), Collections.emptyList(), suppliedValue,
+              GenericData.Array.class));
       });
     });
     return data.stream();
   }
 
+  private static <T> List<Conversion<?>> singleConversion(Schema.Type targetKey) {
+    return Collections.singletonList(new Conversion<T>() {
+
+      public Class<T> getConvertedType() {
+        switch (targetKey) {
+        case INT:
+          return (Class<T>) Integer.TYPE;
+        case LONG:
+          return (Class<T>) Long.TYPE;
+        case DOUBLE:
+          return (Class<T>) Double.TYPE;
+        case FLOAT:
+          return (Class<T>) Float.TYPE;
+        case BOOLEAN:
+          return (Class<T>) Boolean.TYPE;
+        default:
+          return (Class<T>) Object.class;
+        }
+
+      }
+
+      public String getLogicalTypeName() {
+        return "Mike";
+      }
+
+    });
+  }
+
   @ParameterizedTest
   @MethodSource("testNewArrayData")
-  void testNewArray(String description, Schema schema, Object initial, Class<? extends Collection<?>> expectedType) {
+  void testNewArray(String description, Schema schema, List<Conversion<?>> convertions, Object initial,
+      Class<? extends Collection<?>> expectedType) {
     GenericData underTest = new GenericData();
+    convertions.forEach(underTest::addLogicalTypeConversion);
+
     Object result = underTest.newArray(initial, 10, schema);
     // never null
     assertNotNull(result, description);
@@ -160,12 +220,12 @@ class GenericDataTest {
 
     // is the supplied type matched the return type, then we should not have
     // allocated a new object
-    if (initial != null && initial.getClass() == result.getClass() && (!(initial instanceof GenericContainer)
-        || ((GenericContainer) initial).getSchema().getElementType() == schema.getElementType())) {
+    if (initial != null && initial.getClass() == result.getClass()) {
       // if the result type is the same as the initial type, it should be reused, so
       // we should not have allocated a new object
       assertSame(initial, result, "not reused - " + description);
     }
+
     // is the supplied type matched the return type, then we should not have
     // allocated a new object
     if (initial == null) {
@@ -173,7 +233,7 @@ class GenericDataTest {
       assertSame(expectedType, result.getClass(), "not optimal - " + description);
     }
     // check the schema was set correctly
-    if (result instanceof GenericContainer) {
+    if (result instanceof GenericContainer && result != initial) {
       GenericContainer resultArray = (GenericContainer) result;
       assertEquals(schema.getElementType(), resultArray.getSchema().getElementType(),
           "wrong element type - " + description);
@@ -183,7 +243,6 @@ class GenericDataTest {
     // array should be the correct type
     if (result instanceof PrimitivesArrays.PrimitiveArray) {
       assertSame(expectedType, resultCollection.getClass(), "wrong type for primitive - " + description);
-      assertNull(schema.getElementType().getLogicalType(), "Primitive array for logical type - " + description);
     }
 
     final Object sample = sampleValue(schema);

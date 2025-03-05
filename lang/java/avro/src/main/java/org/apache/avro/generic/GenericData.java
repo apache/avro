@@ -57,6 +57,7 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.FastReaderBuilder;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.util.internal.Accessor;
+import org.apache.avro.generic.PrimitivesArrays.PrimitiveArray;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.avro.util.springframework.ConcurrentReferenceHashMap;
@@ -1519,43 +1520,35 @@ public class GenericData {
    * Called to create new array instances. Subclasses may override to use a
    * different array implementation. By default, this returns a
    * {@link GenericData.Array}.
-   * 
+   *
    * @param old    the old array instance to reuse, if possible. If the old array
    *               is an appropriate type, it may be cleared and returned.
    * @param size   the size of the array to create.
    * @param schema the schema of the array elements.
    */
   public Object newArray(Object old, int size, Schema schema) {
-    if (old instanceof GenericData.AbstractArray<?> && ((GenericData.AbstractArray<?>) old).getSchema() == schema) {
-      ((GenericData.AbstractArray<?>) old).reset();
-      return old;
-    }
-    if (old instanceof Collection
-        && (!(old instanceof GenericContainer) || ((GenericContainer) old).getSchema() == schema)) {
-      ((Collection<?>) old).clear();
-      return old;
-    }
+    final var logicalType = schema.getElementType().getLogicalType();
+    final var conversion = getConversionFor(logicalType);
+    final var optimalValueType = PrimitivesArrays.optimalValueType(schema, logicalType,
+        conversion == null ? null : conversion.getConvertedType());
 
+    if (old != null) {
+      if (old instanceof GenericData.Array<?>) {
+        ((GenericData.Array<?>) old).reset();
+        return old;
+      } else if (old instanceof PrimitiveArray) {
+        var primitiveOld = (PrimitiveArray<?>) old;
+        if (primitiveOld.valueType() == optimalValueType) {
+          primitiveOld.reset();
+          return old;
+        }
+      } else if (old instanceof Collection) {
+        ((Collection<?>) old).clear();
+        return old;
+      }
+    }
     // we can't reuse the old array, so we create a new one
-
-    if (schema.getElementType().getLogicalType() != null) {
-      return new GenericData.Array<Object>(size, schema);
-    }
-
-    switch (schema.getElementType().getType()) {
-    case INT:
-      return new PrimitivesArrays.IntArray(size, schema);
-    case BOOLEAN:
-      return new PrimitivesArrays.BooleanArray(size, schema);
-    case LONG:
-      return new PrimitivesArrays.LongArray(size, schema);
-    case FLOAT:
-      return new PrimitivesArrays.FloatArray(size, schema);
-    case DOUBLE:
-      return new PrimitivesArrays.DoubleArray(size, schema);
-    default:
-      return new GenericData.Array<Object>(size, schema);
-    }
+    return PrimitivesArrays.createOptimizedArray(size, schema, optimalValueType);
   }
 
   /**
