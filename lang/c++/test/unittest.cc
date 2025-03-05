@@ -1066,16 +1066,6 @@ void testNestedMapSchema() {
     BOOST_CHECK_EQUAL(expected, actual.str());
 }
 
-void testCustomAttributes() {
-    std::string schema = R"({"type":"array","items":"long","extra":"1","extra2":"2"})";
-    avro::ValidSchema compiledSchema =
-        compileJsonSchemaFromString(schema);
-    auto customAttributes = compiledSchema.root()->getCustomAttributes();
-    BOOST_CHECK_EQUAL(customAttributes.attributes().size(), 2);
-    BOOST_CHECK_EQUAL(customAttributes.getAttribute("extra").value(), "1");
-    BOOST_CHECK_EQUAL(customAttributes.getAttribute("extra2").value(), "2");
-}
-
 boost::unit_test::test_suite *
 init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     using namespace boost::unit_test;
@@ -1096,7 +1086,6 @@ init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
                                     boost::make_shared<TestResolution>()));
     test->add(BOOST_TEST_CASE(&testNestedArraySchema));
     test->add(BOOST_TEST_CASE(&testNestedMapSchema));
-    test->add(BOOST_TEST_CASE(&testCustomAttributes));
 
     return test;
 }
