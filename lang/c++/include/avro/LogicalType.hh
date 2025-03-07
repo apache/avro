@@ -19,11 +19,17 @@
 #ifndef avro_LogicalType_hh__
 #define avro_LogicalType_hh__
 
+#include <functional>
 #include <iostream>
+#include <memory>
+#include <mutex>
+#include <unordered_map>
 
 #include "Config.hh"
 
 namespace avro {
+
+class CustomLogicalType;
 
 class AVRO_DECL LogicalType {
 public:
@@ -41,10 +47,12 @@ public:
         LOCAL_TIMESTAMP_MICROS,
         LOCAL_TIMESTAMP_NANOS,
         DURATION,
-        UUID
+        UUID,
+        CUSTOM // for registered custom logical types
     };
 
     explicit LogicalType(Type type);
+    explicit LogicalType(std::shared_ptr<CustomLogicalType> custom);
 
     Type type() const;
 
@@ -57,12 +65,53 @@ public:
     void setScale(int32_t scale);
     int32_t scale() const { return scale_; }
 
+    const std::shared_ptr<CustomLogicalType> &customLogicalType() const {
+        return custom_;
+    }
+
     void printJson(std::ostream &os) const;
 
 private:
     Type type_;
     int32_t precision_;
     int32_t scale_;
+    std::shared_ptr<CustomLogicalType> custom_;
+};
+
+class AVRO_DECL CustomLogicalType {
+public:
+    CustomLogicalType(const std::string &name) : name_(name) {}
+
+    virtual ~CustomLogicalType() = default;
+
+    const std::string &name() const { return name_; }
+
+    virtual void printJson(std::ostream &os) const;
+
+private:
+    std::string name_;
+};
+
+// Registry for custom logical types.
+// This class is thread-safe.
+class AVRO_DECL CustomLogicalTypeRegistry {
+public:
+    static CustomLogicalTypeRegistry &instance();
+
+    using Factory = std::function<std::shared_ptr<CustomLogicalType>(const std::string &json)>;
+
+    // Register a custom logical type and its factory function.
+    void registerType(const std::string &name, Factory factory);
+
+    // Create a custom logical type from a JSON string.
+    // Returns nullptr if the name is not registered.
+    std::shared_ptr<CustomLogicalType> create(const std::string &name, const std::string &json) const;
+
+private:
+    CustomLogicalTypeRegistry() = default;
+
+    std::unordered_map<std::string, Factory> registry_;
+    mutable std::mutex mutex_;
 };
 
 } // namespace avro
