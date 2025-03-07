@@ -1529,7 +1529,7 @@ public class GenericData {
   public Object newArray(Object old, int size, Schema schema) {
     final var logicalType = schema.getElementType().getLogicalType();
     final var conversion = getConversionFor(logicalType);
-    final var optimalValueType = PrimitivesArrays.optimalValueType(schema, logicalType,
+    final var optimalValueType = optimalValueType(schema, logicalType,
         conversion == null ? null : conversion.getConvertedType());
 
     if (old != null) {
@@ -1550,6 +1550,39 @@ public class GenericData {
     // we can't reuse the old array, so we create a new one
     return PrimitivesArrays.createOptimizedArray(size, schema, optimalValueType);
   }
+
+  /**
+   * Determine the optimal value type for an array. The value type is determined
+   * form the convertedElementType if supplied, otherwise the underlying type from
+   * the schema
+   *
+   * @param schema               the schema of the array
+   * @param convertedElementType the converted elements value type. This may not
+   *                             be the same and the schema if for instance there
+   *                             is a logical type, and a convertor is use
+   * @return an indicator for the type of the array, useful for
+   *         {@link PrimitivesArrays#createOptimizedArray(int, Schema, Schema.Type)}.
+   *         May be null if the type is not optimised
+   */
+  public static Schema.Type optimalValueType(Schema schema, LogicalType logicalType, Class<?> convertedElementType) {
+    final Schema.Type convertedType;
+    if (logicalType == null)
+      // if there are no logical types- use the schema type
+      return schema.getElementType().getType();
+    else if (convertedElementType == null)
+      // if there is no convertor
+      return null;
+    else
+      // use the converted type
+      return PRIMITIVE_TYPES_WITH_SPECIALISED_ARRAYS.get(convertedElementType);
+  }
+
+  private final static Map<Class<?>, Schema.Type> PRIMITIVE_TYPES_WITH_SPECIALISED_ARRAYS = Map.of(//
+      Long.TYPE, Schema.Type.LONG, //
+      Integer.TYPE, Schema.Type.INT, //
+      Float.TYPE, Schema.Type.FLOAT, //
+      Double.TYPE, Schema.Type.DOUBLE, //
+      Boolean.TYPE, Schema.Type.BOOLEAN);
 
   /**
    * Called to create new array instances. Subclasses may override to use a

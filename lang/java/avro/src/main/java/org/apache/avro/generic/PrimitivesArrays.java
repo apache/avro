@@ -17,39 +17,12 @@
  */
 package org.apache.avro.generic;
 
-import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Map;
 
 public class PrimitivesArrays {
-  /**
-   * Determine the optimal value type for an array. The value type is determined
-   * form the convertedElementType if supplied, otherwise the underlying type from
-   * the schema
-   *
-   * @param schema               the schema of the array
-   * @param convertedElementType the converted elements value type. This may not
-   *                             be the same and the schema if for instance there
-   *                             is a logical type, and a convertor is use
-   * @return an indicator for the type of the array, useful for
-   *         {@link #createOptimizedArray(int, Schema, Schema.Type)}. May be null
-   *         if the type is not optimised
-   */
-  public static Schema.Type optimalValueType(Schema schema, LogicalType logicalType, Class<?> convertedElementType) {
-    final Schema.Type convertedType;
-    if (logicalType == null)
-      // if there are no logical types- use the schema type
-      return schema.getElementType().getType();
-    else if (convertedElementType == null)
-      // if there is no convertor
-      return null;
-    else
-      // use the converted type
-      return primitiveTypesWithSpecialisedArrays.get(convertedElementType);
-  }
 
   /**
    * Create a primitive array if the value type is has an associated optimised
@@ -82,13 +55,6 @@ public class PrimitivesArrays {
       }
     return new GenericData.Array<>(size, schema);
   }
-
-  private final static Map<Class<?>, Schema.Type> primitiveTypesWithSpecialisedArrays = Map.of(//
-      Long.TYPE, Schema.Type.LONG, //
-      Integer.TYPE, Schema.Type.INT, //
-      Float.TYPE, Schema.Type.FLOAT, //
-      Double.TYPE, Schema.Type.DOUBLE, //
-      Boolean.TYPE, Schema.Type.BOOLEAN);
 
   public abstract static class PrimitiveArray<T> extends GenericData.AbstractArray<T> {
     PrimitiveArray(Schema schema) {
