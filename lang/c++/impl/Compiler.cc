@@ -399,6 +399,12 @@ static LogicalType makeLogicalType(const Entity &e, const Object &m) {
         t = LogicalType::DURATION;
     else if (typeField == "uuid")
         t = LogicalType::UUID;
+    else {
+        auto custom = CustomLogicalTypeRegistry::instance().create(typeField, e.toString());
+        if (custom != nullptr) {
+            return LogicalType(std::move(custom));
+        }
+    }
     return LogicalType(t);
 }
 

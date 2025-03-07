@@ -811,6 +811,43 @@ static void testAddCustomAttributes() {
     BOOST_CHECK_EQUAL(removeWhitespaceFromSchema(json), removeWhitespaceFromSchema(expected));
 }
 
+static void testCustomLogicalType() {
+    // Declare a custom logical type.
+    struct MapLogicalType : public CustomLogicalType {
+        MapLogicalType() : CustomLogicalType("map") {}
+    };
+
+    // Register the custom logical type with the registry.
+    CustomLogicalTypeRegistry::instance().registerType("map", [](const std::string &) {
+        return std::make_shared<MapLogicalType>();
+    });
+
+    auto verifyCustomLogicalType = [](const ValidSchema &schema) {
+        auto logicalType = schema.root()->logicalType();
+        BOOST_CHECK_EQUAL(logicalType.type(), LogicalType::CUSTOM);
+        BOOST_CHECK_EQUAL(logicalType.customLogicalType()->name(), "map");
+    };
+
+    const std::string schema =
+        R"({ "type": "array",
+             "logicalType": "map",
+             "items": {
+               "type": "record",
+               "name": "k12_v13",
+               "fields": [
+                 { "name": "key", "type": "int", "field-id": 12 },
+                 { "name": "value", "type": "string", "field-id": 13 }
+               ]
+             }
+           })";
+    auto compiledSchema = compileJsonSchemaFromString(schema);
+    verifyCustomLogicalType(compiledSchema);
+
+    auto json = compiledSchema.toJson();
+    auto parsedSchema = compileJsonSchemaFromString(json);
+    verifyCustomLogicalType(parsedSchema);
+}
+
 } // namespace schema
 } // namespace avro
 
@@ -836,5 +873,6 @@ init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     ts->add(BOOST_TEST_CASE(&avro::schema::testCompactSchemas));
     ts->add(BOOST_TEST_CASE(&avro::schema::testParseCustomAttributes));
     ts->add(BOOST_TEST_CASE(&avro::schema::testAddCustomAttributes));
+    ts->add(BOOST_TEST_CASE(&avro::schema::testCustomLogicalType));
     return ts;
 }
