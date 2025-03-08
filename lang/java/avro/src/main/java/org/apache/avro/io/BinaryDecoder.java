@@ -184,10 +184,25 @@ public class BinaryDecoder extends Decoder {
   @Override
   public long readLong() throws IOException {
     ensureBounds(10);
-    int b = buf[pos++] & 0xff;
-    int n = b & 0x7f;
+
+    /*
+     * Long values are used for many different areas of the spec, for example: a
+     * string is encoded as a long followed by that many bytes of UTF-8 encoded
+     * character data. Because of this, long values actually tend to be pretty small
+     * on average, and so can often fit within the first byte of the variable-length
+     * array. Therefore, the first byte is prioritized. For the first byte, if the
+     * high-order bit is set, this indicates there are more bytes to read, but also
+     * this means a signed value >= 0 does not have any following bytes.
+     */
     long l;
-    if (b > 0x7f) {
+    int b, n;
+    if ((b = buf[pos++]) == 0) {
+      return 0;
+    } else if (b > 0) {
+      // back to two's-complement (zig-zag)
+      return (b >>> 1) ^ -(b & 1);
+    } else {
+      n = b & 0x7f;
       b = buf[pos++] & 0xff;
       n ^= (b & 0x7f) << 7;
       if (b > 0x7f) {
@@ -209,8 +224,6 @@ public class BinaryDecoder extends Decoder {
       } else {
         l = n;
       }
-    } else {
-      l = n;
     }
     if (pos > limit) {
       throw new EOFException();
