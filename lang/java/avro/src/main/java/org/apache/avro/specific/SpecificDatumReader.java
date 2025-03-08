@@ -37,30 +37,42 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
   public static final String[] SERIALIZABLE_PACKAGES;
 
   static {
-    SERIALIZABLE_PACKAGES = System.getProperty("org.apache.avro.SERIALIZABLE_PACKAGES",
-        "java.lang,java.math,java.io,java.net,org.apache.avro.reflect").split(",");
+    String defaultPackages = "java.lang,java.math,java.io,java.net,org.apache.avro.reflect";
+
+    String userDefinedPackages = System.getProperty("org.apache.avro.SERIALIZABLE_PACKAGES", "");
+
+    // Combine the user-defined packages (if any) with the default packages.
+    String combined = userProp.isEmpty() ? defaultPackages : userProp + "," + defaultPackages;
+
+    SERIALIZABLE_PACKAGES = Arrays.stream(combined.split(","))
+                                  .distinct()
+                                  .toArray(String[]::new);
   }
 
   private final List<String> trustedPackages = new ArrayList<>();
 
   public SpecificDatumReader() {
     this(null, null, SpecificData.get());
+    initializeTrustedPackages();
   }
 
   /** Construct for reading instances of a class. */
   public SpecificDatumReader(Class<T> c) {
     this(SpecificData.getForClass(c));
     setSchema(getSpecificData().getSchema(c));
+    initializeTrustedPackages();
   }
 
   /** Construct where the writer's and reader's schemas are the same. */
   public SpecificDatumReader(Schema schema) {
     this(schema, schema, SpecificData.getForSchema(schema));
+    initializeTrustedPackages();
   }
 
   /** Construct given writer's and reader's schema. */
   public SpecificDatumReader(Schema writer, Schema reader) {
     this(writer, reader, SpecificData.getForSchema(reader));
+    initializeTrustedPackages();
   }
 
   /**
@@ -68,12 +80,29 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
    */
   public SpecificDatumReader(Schema writer, Schema reader, SpecificData data) {
     super(writer, reader, data);
-    trustedPackages.addAll(Arrays.asList(SERIALIZABLE_PACKAGES));
+    initializeTrustedPackages();
   }
 
   /** Construct given a {@link SpecificData}. */
   public SpecificDatumReader(SpecificData data) {
     super(data);
+    initializeTrustedPackages();
+  }
+
+  /**
+   * Initializes the {@code trustedPackages} list with the package names considered safe for deserialization.
+   *
+   * <p>This method populates the {@code trustedPackages} list using the static array {@code SERIALIZABLE_PACKAGES},
+   * which is initialized from the system property {@code org.apache.avro.SERIALIZABLE_PACKAGES} combined with
+   * default trusted packages. By doing so, it ensures that both user-defined and default packages are included,
+   * and any duplicate entries are avoided.</p>
+   *
+   * <p>Before adding the packages, the list is cleared to prevent duplicate entries if this method is invoked
+   * multiple times, ensuring that the list remains consistent and up-to-date across all instances.</p>
+   */
+  private void initializeTrustedPackages() {
+    trustedPackages.clear();
+    trustedPackages.addAll(Arrays.asList(SERIALIZABLE_PACKAGES));
   }
 
   /** Return the contained {@link SpecificData}. */
