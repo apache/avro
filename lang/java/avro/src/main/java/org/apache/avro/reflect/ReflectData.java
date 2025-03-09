@@ -724,7 +724,6 @@ public class ReflectData extends SpecificData {
           boolean error = Throwable.class.isAssignableFrom(c);
           schema = Schema.createRecord(name, doc, space, error);
           consumeAvroAliasAnnotation(c, schema);
-          names.put(c.getName(), schema);
           for (Field field : getCachedFields(c))
             if ((field.getModifiers() & (Modifier.TRANSIENT | Modifier.STATIC)) == 0
                 && !field.isAnnotationPresent(AvroIgnore.class)) {
@@ -770,6 +769,7 @@ public class ReflectData extends SpecificData {
         }
         names.put(fullName, schema);
       }
+      names.put(c.getName(), schema);
       return schema;
     }
     return super.createSchema(type, names);
@@ -908,11 +908,7 @@ public class ReflectData extends SpecificData {
       }
     }
 
-    // reverse types, since they were defined in reference order
-    List<Schema> types = new ArrayList<>(names.values());
-    Collections.reverse(types);
-    protocol.setTypes(types);
-
+    protocol.setTypes(new ArrayList<>(names.values()));
     return protocol;
   }
 
