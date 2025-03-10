@@ -1,0 +1,8 @@
+{
+    "name": "SimpleRecord",
+    "type": "record",
+    "namespace": "resolver",
+    "fields": [
+        { "name": "field1", "type": "string" }
+    ]
+}
