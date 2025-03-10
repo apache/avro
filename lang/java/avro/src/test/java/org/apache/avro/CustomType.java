@@ -20,7 +20,7 @@ package org.apache.avro;
 
 import java.util.Objects;
 
-public final class CustomType {
+public class CustomType {
   private final String name;
 
   public CustomType(CharSequence name) {
