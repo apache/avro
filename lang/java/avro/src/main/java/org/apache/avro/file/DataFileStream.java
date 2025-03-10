@@ -63,7 +63,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     }
   }
 
-  private DatumReader<D> reader;
+  private final DatumReader<D> reader;
   private long blockSize;
   private boolean availableBlock = false;
   private Header header;
@@ -94,7 +94,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   /**
    * create an uninitialized DataFileStream
    */
-  protected DataFileStream(DatumReader<D> reader) throws IOException {
+  protected DataFileStream(DatumReader<D> reader) {
     this.reader = reader;
   }
 
@@ -147,7 +147,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   }
 
   /** Initialize the stream without reading from it. */
-  void initialize(Header header) throws IOException {
+  void initialize(Header header) {
     this.header = header;
     this.codec = resolveCodec();
     reader.setSchema(header.schema);
@@ -303,7 +303,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
       blockRemaining = vin.readLong(); // read block count
       blockSize = vin.readLong(); // read block size
       if (blockSize > Integer.MAX_VALUE || blockSize < 0) {
-        throw new IOException("Block size invalid or too large for this " + "implementation: " + blockSize);
+        throw new IOException("Block size invalid or too large for this implementation: " + blockSize);
       }
       blockCount = blockRemaining;
       availableBlock = true;
@@ -364,22 +364,6 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
       this.blockSize = block.remaining();
       this.offset = block.arrayOffset() + block.position();
       this.numEntries = numEntries;
-    }
-
-    byte[] getData() {
-      return data;
-    }
-
-    long getNumEntries() {
-      return numEntries;
-    }
-
-    int getBlockSize() {
-      return blockSize;
-    }
-
-    boolean isFlushOnWrite() {
-      return flushOnWrite;
     }
 
     void setFlushOnWrite(boolean flushOnWrite) {

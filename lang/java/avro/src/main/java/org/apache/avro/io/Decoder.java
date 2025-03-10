@@ -30,11 +30,11 @@ import org.apache.avro.util.Utf8;
  * <p/>
  * The other type of methods support the reading of maps and arrays. These
  * methods are {@link #readArrayStart}, {@link #arrayNext}, and similar methods
- * for maps). See {@link #readArrayStart} for details on these methods.)
+ * for maps. See {@link #readArrayStart} for details on these methods.
  * <p/>
  * {@link DecoderFactory} contains Decoder construction and configuration
  * facilities.
- * 
+ *
  * @see DecoderFactory
  * @see Encoder
  */
@@ -44,7 +44,7 @@ public abstract class Decoder {
   /**
    * "Reads" a null value. (Doesn't actually read anything, but advances the state
    * of the parser if the implementation is stateful.)
-   * 
+   *
    * @throws AvroTypeException If this is a stateful reader and null is not the
    *                           type of the next value to be read
    */
@@ -52,7 +52,7 @@ public abstract class Decoder {
 
   /**
    * Reads a boolean value written by {@link Encoder#writeBoolean}.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful reader and boolean is not the
    *                           type of the next value to be read
    */
@@ -61,7 +61,7 @@ public abstract class Decoder {
 
   /**
    * Reads an integer written by {@link Encoder#writeInt}.
-   * 
+   *
    * @throws AvroTypeException If encoded value is larger than 32-bits
    * @throws AvroTypeException If this is a stateful reader and int is not the
    *                           type of the next value to be read
@@ -70,7 +70,7 @@ public abstract class Decoder {
 
   /**
    * Reads a long written by {@link Encoder#writeLong}.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful reader and long is not the
    *                           type of the next value to be read
    */
@@ -78,7 +78,7 @@ public abstract class Decoder {
 
   /**
    * Reads a float written by {@link Encoder#writeFloat}.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful reader and is not the type of
    *                           the next value to be read
    */
@@ -86,7 +86,7 @@ public abstract class Decoder {
 
   /**
    * Reads a double written by {@link Encoder#writeDouble}.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful reader and is not the type of
    *                           the next value to be read
    */
@@ -94,7 +94,7 @@ public abstract class Decoder {
 
   /**
    * Reads a char-string written by {@link Encoder#writeString}.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful reader and char-string is not
    *                           the type of the next value to be read
    */
@@ -102,7 +102,7 @@ public abstract class Decoder {
 
   /**
    * Reads a char-string written by {@link Encoder#writeString}.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful reader and char-string is not
    *                           the type of the next value to be read
    */
@@ -110,7 +110,7 @@ public abstract class Decoder {
 
   /**
    * Discards a char-string written by {@link Encoder#writeString}.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful reader and char-string is not
    *                           the type of the next value to be read
    */
@@ -120,7 +120,7 @@ public abstract class Decoder {
    * Reads a byte-string written by {@link Encoder#writeBytes}. if <tt>old</tt> is
    * not null and has sufficient capacity to take in the bytes being read, the
    * bytes are returned in <tt>old</tt>.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful reader and byte-string is not
    *                           the type of the next value to be read
    */
@@ -128,7 +128,7 @@ public abstract class Decoder {
 
   /**
    * Discards a byte-string written by {@link Encoder#writeBytes}.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful reader and byte-string is not
    *                           the type of the next value to be read
    */
@@ -136,7 +136,7 @@ public abstract class Decoder {
 
   /**
    * Reads fixed sized binary object.
-   * 
+   *
    * @param bytes  The buffer to store the contents being read.
    * @param start  The position where the data needs to be written.
    * @param length The size of the binary object.
@@ -149,7 +149,7 @@ public abstract class Decoder {
 
   /**
    * A shorthand for <tt>readFixed(bytes, 0, bytes.length)</tt>.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful reader and fixed sized binary
    *                           object is not the type of the next value to be read
    *                           or the length is incorrect.
@@ -161,7 +161,7 @@ public abstract class Decoder {
 
   /**
    * Discards fixed sized binary object.
-   * 
+   *
    * @param length The size of the binary object to be skipped.
    * @throws AvroTypeException If this is a stateful reader and fixed sized binary
    *                           object is not the type of the next value to be read
@@ -172,7 +172,7 @@ public abstract class Decoder {
 
   /**
    * Reads an enumeration.
-   * 
+   *
    * @return The enumeration's value.
    * @throws AvroTypeException If this is a stateful reader and enumeration is not
    *                           the type of the next value to be read.
@@ -185,7 +185,7 @@ public abstract class Decoder {
    * returns non-zero, then the caller should read the indicated number of items,
    * and then call {@link #arrayNext} to find out the number of items in the next
    * block. The typical pattern for consuming an array looks like:
-   * 
+   *
    * <pre>
    *   for(long i = in.readArrayStart(); i != 0; i = in.arrayNext()) {
    *     for (long j = 0; j < i; j++) {
@@ -193,7 +193,7 @@ public abstract class Decoder {
    *     }
    *   }
    * </pre>
-   * 
+   *
    * @throws AvroTypeException If this is a stateful reader and array is not the
    *                           type of the next value to be read
    */
@@ -201,9 +201,9 @@ public abstract class Decoder {
 
   /**
    * Processes the next block of an array and returns the number of items in the
-   * block and let's the caller read those items.
-   * 
-   * @throws AvroTypeException When called outside of an array context
+   * block and lets the caller read those items.
+   *
+   * @throws AvroTypeException When called outside an array context
    */
   public abstract long arrayNext() throws IOException;
 
@@ -216,7 +216,7 @@ public abstract class Decoder {
    * possible. It will return zero if there are no more items to skip through, or
    * an item count if it needs the client's help in skipping. The typical usage
    * pattern is:
-   * 
+   *
    * <pre>
    *   for(long i = in.skipArray(); i != 0; i = i.skipArray()) {
    *     for (long j = 0; j < i; j++) {
@@ -224,7 +224,7 @@ public abstract class Decoder {
    *     }
    *   }
    * </pre>
-   * 
+   *
    * Note that this method can automatically skip through items if a byte-count is
    * found in the underlying data, or if a schema has been provided to the
    * implementation, but otherwise the client will have to skip through items
@@ -240,9 +240,9 @@ public abstract class Decoder {
    * {@link #readArrayStart}.
    *
    * As an example, let's say you want to read a map of records, the record
-   * consisting of an Long field and a Boolean field. Your code would look
+   * consisting of a Long field and a Boolean field. Your code would look
    * something like this:
-   * 
+   *
    * <pre>
    * Map<String, Record> m = new HashMap<String, Record>();
    * Record reuse = new Record();
@@ -255,7 +255,7 @@ public abstract class Decoder {
    *   }
    * }
    * </pre>
-   * 
+   *
    * @throws AvroTypeException If this is a stateful reader and map is not the
    *                           type of the next value to be read
    */
@@ -264,8 +264,8 @@ public abstract class Decoder {
   /**
    * Processes the next block of map entries and returns the count of them.
    * Similar to {@link #arrayNext}. See {@link #readMapStart} for details.
-   * 
-   * @throws AvroTypeException When called outside of a map context
+   *
+   * @throws AvroTypeException When called outside a map context
    */
   public abstract long mapNext() throws IOException;
 
@@ -273,9 +273,9 @@ public abstract class Decoder {
    * Support for quickly skipping through a map similar to {@link #skipArray}.
    *
    * As an example, let's say you want to skip a map of records, the record
-   * consisting of an Long field and a Boolean field. Your code would look
+   * consisting of a Long field and a Boolean field. Your code would look
    * something like this:
-   * 
+   *
    * <pre>
    * for (long i = in.skipMap(); i != 0; i = in.skipMap()) {
    *   for (long j = 0; j < i; j++) {
@@ -285,7 +285,7 @@ public abstract class Decoder {
    *   }
    * }
    * </pre>
-   * 
+   *
    * @throws AvroTypeException If this is a stateful reader and array is not the
    *                           type of the next value to be read
    */
@@ -294,7 +294,7 @@ public abstract class Decoder {
 
   /**
    * Reads the tag of a union written by {@link Encoder#writeIndex}.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful reader and union is not the
    *                           type of the next value to be read
    */
