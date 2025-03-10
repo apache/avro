@@ -73,12 +73,12 @@ struct TestSchema {
     void buildSchema() {
         RecordSchema record("RootRecord");
 
-        CustomAttributes customAttributeLong;
-        customAttributeLong.addAttribute("extra_info_mylong", std::string("it's a long field"));
+        CustomAttributes customAttributeLong(CustomAttributes::ValueMode::JSON);
+        customAttributeLong.addAttribute("extra_info_mylong", std::string("\"it's a long field\""));
         // Validate that adding a custom attribute with same name is not allowed
         bool caught = false;
         try {
-            customAttributeLong.addAttribute("extra_info_mylong", std::string("duplicate"));
+            customAttributeLong.addAttribute("extra_info_mylong", std::string("\"duplicate\""));
         } catch (Exception &e) {
             std::cout << "(intentional) exception: " << e.what() << '\n';
             caught = true;
@@ -139,11 +139,11 @@ struct TestSchema {
         }
         BOOST_CHECK_EQUAL(caught, true);
 
-        CustomAttributes customAttributeLong2;
+        CustomAttributes customAttributeLong2(CustomAttributes::ValueMode::JSON);
         customAttributeLong2.addAttribute("extra_info_mylong2",
-                                          std::string("it's a long field"));
+                                          std::string("\"it's a long field\""));
         customAttributeLong2.addAttribute("more_info_mylong2",
-                                          std::string("it's still a long field"));
+                                          std::string("\"it's still a long field\""));
         record.addField("mylong2", LongSchema(), customAttributeLong2);
 
         record.addField("anotherint", intSchema);
@@ -440,16 +440,17 @@ struct TestSchema {
         std::vector<GenericDatum> defaultValues;
         concepts::MultiAttribute<CustomAttributes> customAttributes;
 
-        CustomAttributes cf;
-        cf.addAttribute("stringField", std::string("\\\"field value with \\\"double quotes\\\"\\\""));
-        cf.addAttribute("booleanField", std::string("true"));
-        cf.addAttribute("numberField", std::string("1.23"));
-        cf.addAttribute("nullField", std::string("null"));
-        cf.addAttribute("arrayField", std::string("[1]"));
-        cf.addAttribute("mapField", std::string("{\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}"));
+        CustomAttributes ca(CustomAttributes::ValueMode::JSON);
+        ca.addAttribute("stringField", std::string("\"foobar\""));
+        ca.addAttribute("stringFieldComplex", std::string("\"\\\" a field value with \\\"double quotes\\\" \\\"\""));
+        ca.addAttribute("booleanField", std::string("true"));
+        ca.addAttribute("numberField", std::string("1.23"));
+        ca.addAttribute("nullField", std::string("null"));
+        ca.addAttribute("arrayField", std::string("[1]"));
+        ca.addAttribute("mapField", std::string("{\"key1\":\"value1\", \"key2\":\"value2\"}"));
         fieldNames.add("f1");
         fieldValues.add(NodePtr(new NodePrimitive(Type::AVRO_LONG)));
-        customAttributes.add(cf);
+        customAttributes.add(ca);
 
         NodeRecord nodeRecordWithCustomAttribute(nameConcept, fieldValues,
                                                  fieldNames, fieldAliases, defaultValues,
@@ -457,12 +458,13 @@ struct TestSchema {
         std::string expectedJsonWithCustomAttribute =
             "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
             "[{\"name\": \"f1\", \"type\": \"long\", "
-            "\"arrayField\": \"[1]\", "
-            "\"booleanField\": \"true\", "
-            "\"mapField\": \"{\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}\", "
-            "\"nullField\": \"null\", "
-            "\"numberField\": \"1.23\", "
-            "\"stringField\": \"\\\"field value with \\\"double quotes\\\"\\\"\""
+            "\"arrayField\": [1], "
+            "\"booleanField\": true, "
+            "\"mapField\": {\"key1\":\"value1\", \"key2\":\"value2\"}, "
+            "\"nullField\": null, "
+            "\"numberField\": 1.23, "
+            "\"stringField\": \"foobar\", "
+            "\"stringFieldComplex\": \"\\\" a field value with \\\"double quotes\\\" \\\"\""
             "}]}";
         testNodeRecord(nodeRecordWithCustomAttribute,
                        expectedJsonWithCustomAttribute);
@@ -489,13 +491,72 @@ struct TestSchema {
                        expectedJsonWithoutCustomAttribute);
     }
 
-    void checkCustomAttributes_getAttribute() {
-        CustomAttributes cf;
-        cf.addAttribute("field1", std::string("1"));
+    void checkCustomAttributes_addAndGetAttributeJson() {
+        CustomAttributes ca(CustomAttributes::ValueMode::JSON);
+        ca.addAttribute("field1", std::string("true"));
 
-        BOOST_CHECK_EQUAL(std::string("1"), *cf.getAttribute("field1"));
-        BOOST_CHECK_EQUAL(false, cf.getAttribute("not_existing").has_value());
+        BOOST_CHECK_EQUAL(std::string("true"), *ca.getAttribute("field1"));
+        BOOST_CHECK_EQUAL(false, ca.getAttribute("not_existing").has_value());
+
+        bool caught = false;
+        try {
+            ca.addAttribute("field2", std::string("identifier"));
+        } catch (Exception &e) {
+            std::cout << "(intentional) exception: " << e.what() << '\n';
+            caught = true;
+        }
+        BOOST_CHECK_EQUAL(caught, true);
+        // No exception when quoted
+        ca.addAttribute("field2", std::string("\"identifier\""));
+
+        caught = false;
+        try {
+            // malformed string: no escaping of internal quotes and newline
+            ca.addAttribute("field3", std::string("\"a string with \"quotes\" and \nnewline\""));
+        } catch (Exception &e) {
+            std::cout << "(intentional) exception: " << e.what() << '\n';
+            caught = true;
+        }
+        BOOST_CHECK_EQUAL(caught, true);
+        // No exception when quoted
+        ca.addAttribute("field3", std::string("\"a string with \\\"quotes\\\" and \\nnewline\""));
     }
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+// Even though CustomAttributes::ValueMode::STRING is deprecated, we still test it.
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
+    void checkCustomAttributes_addAndGetAttributeString() {
+        CustomAttributes ca(CustomAttributes::ValueMode::STRING);
+        ca.addAttribute("field1", std::string("true"));
+        ca.addAttribute("field2", std::string("value with \\\"quotes\\\""));
+
+        BOOST_CHECK_EQUAL(std::string("true"), *ca.getAttribute("field1"));
+        BOOST_CHECK_EQUAL(std::string("value with \\\"quotes\\\""), *ca.getAttribute("field2"));
+        BOOST_CHECK_EQUAL(false, ca.getAttribute("not_existing").has_value());
+
+        std::ostringstream oss;
+        ca.printJson(oss, "field2");
+        BOOST_CHECK_EQUAL(std::string("\"field2\": \"value with \\\"quotes\\\"\""), oss.str());
+
+        bool caught = false;
+        try {
+            // JSON not accepted: must be string with interior quotes escaped.
+            ca.addAttribute("field3", std::string("{\"key\": \"value\"}"));
+        } catch (Exception &e) {
+            std::cout << "(intentional) exception: " << e.what() << '\n';
+            caught = true;
+        }
+        BOOST_CHECK_EQUAL(caught, true);
+        // No exception when escaped
+        ca.addAttribute("field3", std::string("{\\\"key\\\": \\\"value\\\"}"));
+    }
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
     void test() {
         std::cout << "Before\n";
@@ -521,7 +582,8 @@ struct TestSchema {
 
         checkNodeRecordWithoutCustomAttribute();
         checkNodeRecordWithCustomAttribute();
-        checkCustomAttributes_getAttribute();
+        checkCustomAttributes_addAndGetAttributeJson();
+        checkCustomAttributes_addAndGetAttributeString();
     }
 
     ValidSchema schema_;

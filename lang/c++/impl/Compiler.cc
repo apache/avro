@@ -291,7 +291,7 @@ static void getCustomAttributes(const Object &m, CustomAttributes &customAttribu
     const std::unordered_set<std::string> &kKnownFields = getKnownFields();
     for (const auto &entry : m) {
         if (kKnownFields.find(entry.first) == kKnownFields.end()) {
-            customAttributes.addAttribute(entry.first, entry.second.toLiteralString());
+            customAttributes.addAttribute(entry.first, entry.second.toString());
         }
     }
 }
@@ -314,7 +314,7 @@ static Field makeField(const Entity &e, SymbolTable &st, const string &ns) {
     }
     GenericDatum d = (it2 == m.end()) ? GenericDatum() : makeGenericDatum(node, it2->second, st);
     // Get custom attributes
-    CustomAttributes customAttributes;
+    CustomAttributes customAttributes(CustomAttributes::ValueMode::JSON);
     getCustomAttributes(m, customAttributes);
     return Field(std::move(n), std::move(aliases), node, d, customAttributes);
 }
@@ -458,7 +458,7 @@ static NodePtr makeArrayNode(const Entity &e, const Object &m,
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
-    CustomAttributes customAttributes;
+    CustomAttributes customAttributes(CustomAttributes::ValueMode::JSON);
     getCustomAttributes(m, customAttributes);
     node->addCustomAttributesForField(customAttributes);
     return node;
