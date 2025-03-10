@@ -22,6 +22,8 @@
 
 DATE = "date"
 DECIMAL = "decimal"
+LOCAL_TIMESTAMP_MICROS = "local-timestamp-micros"
+LOCAL_TIMESTAMP_MILLIS = "local-timestamp-millis"
 TIMESTAMP_MICROS = "timestamp-micros"
 TIMESTAMP_MILLIS = "timestamp-millis"
 TIME_MICROS = "time-micros"
@@ -31,6 +33,8 @@ UUID = "uuid"
 SUPPORTED_LOGICAL_TYPE = [
     DATE,
     DECIMAL,
+    LOCAL_TIMESTAMP_MICROS,
+    LOCAL_TIMESTAMP_MILLIS,
     TIMESTAMP_MICROS,
     TIMESTAMP_MILLIS,
     TIME_MICROS,
