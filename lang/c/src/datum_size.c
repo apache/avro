@@ -272,6 +272,11 @@ static int64_t size_datum(avro_writer_t writer, const avro_encoding_t * enc,
 
 	case AVRO_LINK:
 	case AVRO_INVALID:
+	case AVRO_DECIMAL:
+		/*
+		 * Datums will not be created from logical schemas, only their
+		 * underlying schemas.
+		 */
 		break;
 	}
 
