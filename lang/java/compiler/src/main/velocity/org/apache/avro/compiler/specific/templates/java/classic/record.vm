@@ -160,7 +160,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
 #end
 #end
    */
-  public ${this.mangleTypeIdentifier($schema.getName())}(#foreach($field in $schema.getFields())#if(${this.createNullSafeAnnotations})#if(${field.schema().isNullable()})@org.jetbrains.annotations.Nullable#else@org.jetbrains.annotations.NotNull#end #end${this.javaType($field.schema())} ${this.mangle($field.name())}#if($foreach.count < $schema.getFields().size()), #end#end) {
+  public ${this.mangleTypeIdentifier($schema.getName())}(#foreach($field in $schema.getFields())#if(${this.createNullSafeAnnotations})#if(${field.schema().isNullable()})@${this.nullSafeAnnotationNullable}#else@${this.nullSafeAnnotationNotNull}#end #end${this.javaType($field.schema())} ${this.mangle($field.name())}#if($foreach.count < $schema.getFields().size()), #end#end) {
 #foreach ($field in $schema.getFields())
     ${this.generateSetterCode($field.schema(), ${this.mangle($field.name())}, ${this.mangle($field.name())})}
 #end
@@ -244,9 +244,9 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
    */
 #if(${this.createNullSafeAnnotations})
 #if (${field.schema().isNullable()})
-  @org.jetbrains.annotations.Nullable
+  @${this.nullSafeAnnotationNullable}
 #else
-  @org.jetbrains.annotations.NotNull
+  @${this.nullSafeAnnotationNotNull}
 #end
 #end
   public ${this.javaUnbox($field.schema(), false)} ${this.generateGetMethod($schema, $field)}() {
@@ -273,7 +273,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
 #end
    * @param value the value to set.
    */
-  public void ${this.generateSetMethod($schema, $field)}(#if(${this.createNullSafeAnnotations})#if(${field.schema().isNullable()})@org.jetbrains.annotations.Nullable#else@org.jetbrains.annotations.NotNull#end #end${this.javaUnbox($field.schema(), false)} value) {
+  public void ${this.generateSetMethod($schema, $field)}(#if(${this.createNullSafeAnnotations})#if(${field.schema().isNullable()})@${this.nullSafeAnnotationNullable}#else@${this.nullSafeAnnotationNotNull}#end #end${this.javaUnbox($field.schema(), false)} value) {
     ${this.generateSetterCode($field.schema(), ${this.mangle($field.name(), $schema.isError())}, "value")}
   }
 #end
@@ -429,7 +429,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
       * @param value The value of '${this.mangle($field.name(), $schema.isError())}'.
       * @return This builder.
       */
-    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(#if(${this.createNullSafeAnnotations})#if(${field.schema().isNullable()})@org.jetbrains.annotations.Nullable#else@org.jetbrains.annotations.NotNull#end #end${this.javaUnbox($field.schema(), false)} value) {
+    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(#if(${this.createNullSafeAnnotations})#if(${field.schema().isNullable()})@${this.nullSafeAnnotationNullable}#else@${this.nullSafeAnnotationNotNull}#end #end${this.javaUnbox($field.schema(), false)} value) {
       validate(fields()[$field.pos()], value);
 #if (${this.hasBuilder($field.schema())})
       this.${this.mangle($field.name(), $schema.isError())}Builder = null;
