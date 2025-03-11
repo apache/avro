@@ -41,38 +41,37 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
 
     String userDefinedPackages = System.getProperty("org.apache.avro.SERIALIZABLE_PACKAGES", "");
 
-    // Combine the user-defined packages (if any) with the default packages.
-    String combined = userProp.isEmpty() ? defaultPackages : userProp + "," + defaultPackages;
+    if ("*".equals(userDefinedPackages)) {
+      SERIALIZABLE_PACKAGES = new String[]{"*"};
+    } else {
+      String combinedPackages = userDefinedPackages.isEmpty() ? defaultPackages : userDefinedPackages + "," + defaultPackages;
 
-    SERIALIZABLE_PACKAGES = Arrays.stream(combined.split(","))
-                                  .distinct()
-                                  .toArray(String[]::new);
+      SERIALIZABLE_PACKAGES = Arrays.stream(combinedPackages.split(","))
+                                    .distinct()
+                                    .toArray(String[]::new);
+    }
   }
 
   private final List<String> trustedPackages = new ArrayList<>();
 
   public SpecificDatumReader() {
     this(null, null, SpecificData.get());
-    initializeTrustedPackages();
   }
 
   /** Construct for reading instances of a class. */
   public SpecificDatumReader(Class<T> c) {
     this(SpecificData.getForClass(c));
     setSchema(getSpecificData().getSchema(c));
-    initializeTrustedPackages();
   }
 
   /** Construct where the writer's and reader's schemas are the same. */
   public SpecificDatumReader(Schema schema) {
     this(schema, schema, SpecificData.getForSchema(schema));
-    initializeTrustedPackages();
   }
 
   /** Construct given writer's and reader's schema. */
   public SpecificDatumReader(Schema writer, Schema reader) {
     this(writer, reader, SpecificData.getForSchema(reader));
-    initializeTrustedPackages();
   }
 
   /**
@@ -80,7 +79,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
    */
   public SpecificDatumReader(Schema writer, Schema reader, SpecificData data) {
     super(writer, reader, data);
-    initializeTrustedPackages();
+    trustedPackages.addAll(Arrays.asList(SERIALIZABLE_PACKAGES));
   }
 
   /** Construct given a {@link SpecificData}. */
