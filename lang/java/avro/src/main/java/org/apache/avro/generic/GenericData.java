@@ -137,9 +137,9 @@ public class GenericData {
     }
   }
 
-  private Map<String, Conversion<?>> conversions = new HashMap<>();
+  private final Map<String, Conversion<?>> conversions = new HashMap<>();
 
-  private Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass = new IdentityHashMap<>();
+  private final Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass = new IdentityHashMap<>();
 
   public Collection<Conversion<?>> getConversions() {
     return conversions.values();
@@ -364,7 +364,7 @@ public class GenericData {
 
     @Override
     public Iterator<T> iterator() {
-      return new Iterator<T>() {
+      return new Iterator<>() {
         private int position = 0;
 
         @Override
@@ -551,8 +551,8 @@ public class GenericData {
 
   /** Default implementation of {@link GenericEnumSymbol}. */
   public static class EnumSymbol implements GenericEnumSymbol<EnumSymbol> {
-    private Schema schema;
-    private String symbol;
+    private final Schema schema;
+    private final String symbol;
 
     public EnumSymbol(Schema schema, String symbol) {
       this.schema = schema;
@@ -1259,9 +1259,7 @@ public class GenericData {
           }
         }
       }
-    } catch (ClassCastException unused) {
-      return 1;
-    } catch (NullPointerException unused) {
+    } catch (ClassCastException | NullPointerException unused) {
       return 1;
     }
 
