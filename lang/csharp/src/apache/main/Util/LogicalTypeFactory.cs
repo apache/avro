@@ -45,7 +45,7 @@ namespace Avro.Util
                 { TimeMicrosecond.LogicalTypeName, new TimeMicrosecond() },
                 { TimestampMillisecond.LogicalTypeName, new TimestampMillisecond() },
                 { TimestampMicrosecond.LogicalTypeName, new TimestampMicrosecond() },
-                { Uuid.LogicalTypeName, new Uuid() }
+                { Uuid.LogicalTypeName, new Uuid() },
             };
         }
 
@@ -67,22 +67,22 @@ namespace Avro.Util
         /// <returns>A <see cref="LogicalType" />.</returns>
         public LogicalType GetFromLogicalSchema(LogicalSchema schema, bool ignoreInvalidOrUnknown = false)
         {
-            try
-            {
-                if (!_logicalTypes.TryGetValue(schema.LogicalTypeName, out LogicalType logicalType))
-                    throw new AvroTypeException("Logical type '" + schema.LogicalTypeName + "' is not supported.");
+            LogicalType logicalType = null;
 
+            if (_logicalTypes.TryGetValue(schema.LogicalTypeName, out logicalType))
+            {
                 logicalType.ValidateSchema(schema);
-
-                return logicalType;
             }
-            catch (AvroTypeException)
+            else if (ignoreInvalidOrUnknown)
             {
-                if (!ignoreInvalidOrUnknown)
-                    throw;
+                logicalType = new UnknownLogicalType(schema);
+            }
+            else
+            {
+                throw new AvroTypeException("Logical type '" + schema.LogicalTypeName + "' is not supported.");
             }
 
-            return null;
+            return logicalType;
         }
     }
 }
