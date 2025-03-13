@@ -169,6 +169,10 @@ protected:
     }
 
     const CustomAttributes &customAttributesAt(size_t index) const override {
+        if (index >= customAttributes_.size()) {
+            throw Exception("Custom attribute index {} is out of bounds for size {}",
+                            index, customAttributes_.size());
+        }
         return customAttributes_.get(index);
     }
 

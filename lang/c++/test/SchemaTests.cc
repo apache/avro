@@ -715,13 +715,15 @@ static void testParseCustomAttributes() {
             { "name": "timestamp_field",
               "type": "long", "logicalType": "timestamp-micros", "adjust-to-utc": true,
               "field-id": 10,
-              "extra": "bar" }
+              "extra": "bar" },
+            { "name": "no_custom_attributes_field",
+              "type": "long" }
         ]
     })";
 
     ValidSchema compiledSchema = compileJsonSchemaFromString(schema);
     const NodePtr &root = compiledSchema.root();
-    BOOST_CHECK_EQUAL(root->customAttributes(), 4);
+    BOOST_CHECK_EQUAL(root->customAttributes(), 5);
 
     // long_field
     {
@@ -761,6 +763,12 @@ static void testParseCustomAttributes() {
         BOOST_CHECK_EQUAL(customAttributes.getAttribute("field-id").value(), "10");
         BOOST_CHECK_EQUAL(customAttributes.getAttribute("extra").value(), "bar");
         BOOST_CHECK_EQUAL(customAttributes.getAttribute("adjust-to-utc").value(), "true");
+    }
+
+    // no_custom_attributes_field
+    {
+        auto customAttributes = root->customAttributesAt(4);
+        BOOST_CHECK_EQUAL(customAttributes.attributes().size(), 0);
     }
 }
 
@@ -846,7 +854,6 @@ static void testAddCustomAttributes() {
     ValidSchema schema(recordNode);
     std::string json = schema.toJson();
     BOOST_CHECK_EQUAL(removeWhitespaceFromSchema(json), removeWhitespaceFromSchema(expected));
->>>>>>> b82d54283 (AVRO-4121: [C++] Fix get CustomAttributes from Node)
 }
 
 } // namespace schema
