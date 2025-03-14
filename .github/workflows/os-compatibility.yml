@@ -19,15 +19,15 @@
 # or to provide custom queries or build logic.
 
 name: OS Compatibility
-on: [push, pull_request]
+on: [ pull_request ]
 jobs:
   build:
     name: "Compatibility: ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        java: [11]
-        os: [ubuntu-latest, windows-latest, macOS-latest] # All supported OS
+        java: [ "11" ]
+        os: [ ubuntu-latest, windows-latest, macOS-latest ] # All supported OS
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3

@@ -19,7 +19,7 @@
 # or to provide custom queries or build logic.
 
 name: Gradle Compatibility Tests
-on: [ push, pull_request ]
+on: [ pull_request ]
 jobs:
   test:
     name: "Compatibility: gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"

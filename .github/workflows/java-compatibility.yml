@@ -20,7 +20,7 @@
 
 # See https://docs.gradle.org/current/userguide/compatibility.html
 name: Java Compatibility Tests
-on: [ push, pull_request ]
+on: [ pull_request ]
 jobs:
   java8-12:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"

@@ -19,16 +19,16 @@
 # or to provide custom queries or build logic.
 
 name: Avro Compatibility Tests
-on: [push, pull_request]
+on: [ pull_request ]
 jobs:
   test:
     name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        avro: ["1.11.0", "1.11.1"]
-        gradle: ["7.6"]
-        java: ["8"]
+        avro: [ "1.11.0", "1.11.1" ]
+        gradle: [ "7.6", "8.5" ]
+        java: [ "17" ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3

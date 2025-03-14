@@ -20,7 +20,7 @@
 
 # See https://github.com/marketplace/actions/gradle-wrapper-validation
 name: "Validate Gradle Wrapper"
-on: [push, pull_request]
+on: [ pull_request ]
 
 jobs:
   validation:
