@@ -1565,7 +1565,6 @@ public class GenericData {
    *         May be null if the type is not optimised
    */
   public static Schema.Type optimalValueType(Schema schema, LogicalType logicalType, Class<?> convertedElementType) {
-    final Schema.Type convertedType;
     if (logicalType == null)
       // if there are no logical types- use the schema type
       return schema.getElementType().getType();

@@ -173,6 +173,7 @@ class GenericDataTest {
   private static <T> List<Conversion<?>> singleConversion(Schema.Type targetKey) {
     return Collections.singletonList(new Conversion<T>() {
 
+      @Override
       public Class<T> getConvertedType() {
         switch (targetKey) {
         case INT:
@@ -191,6 +192,7 @@ class GenericDataTest {
 
       }
 
+      @Override
       public String getLogicalTypeName() {
         return "Mike";
       }

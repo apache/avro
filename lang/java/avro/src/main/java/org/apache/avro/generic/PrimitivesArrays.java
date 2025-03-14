@@ -52,6 +52,8 @@ public class PrimitivesArrays {
         return new PrimitivesArrays.FloatArray(size, schema);
       case DOUBLE:
         return new PrimitivesArrays.DoubleArray(size, schema);
+      default:
+        break;
       }
     return new GenericData.Array<>(size, schema);
   }
