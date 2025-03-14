@@ -20,16 +20,16 @@
 
 # See https://docs.gradle.org/current/userguide/compatibility.html
 name: Java Compatibility Tests
-on: [push, pull_request]
+on: [ push, pull_request ]
 jobs:
   java8-12:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        avro: ["1.11.0"]
-        gradle: ["5.1", "7.6"]
-        java: ["8", "11"]
+        avro: [ "1.11.0" ]
+        gradle: [ "7.6", "8.5" ]
+        java: [ "8", "11" ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
@@ -46,9 +46,9 @@ jobs:
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        avro: ["1.11.0"]
-        gradle: ["7.3", "7.6"] # See here for latest versions: https://services.gradle.org/versions/
-        java: ["17"]
+        avro: [ "1.11.0" ]
+        gradle: [ "7.6", "8.5" ] # See here for latest versions: https://services.gradle.org/versions/
+        java: [ "17" ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
@@ -65,9 +65,9 @@ jobs:
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        avro: ["1.11.0"]
-        gradle: ["7.5", "7.6"] # See here for latest versions: https://services.gradle.org/versions/
-        java: ["18"]
+        avro: [ "1.11.0" ]
+        gradle: [ "7.5", "7.6" ] # See here for latest versions: https://services.gradle.org/versions/
+        java: [ "18" ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
@@ -84,9 +84,9 @@ jobs:
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        avro: ["1.11.0"]
-        gradle: ["7.6"] # See here for latest versions: https://services.gradle.org/versions/
-        java: ["19"]
+        avro: [ "1.11.0" ]
+        gradle: [ "8.5" ] # See here for latest versions: https://services.gradle.org/versions/
+        java: [ "19" ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
@@ -104,9 +104,9 @@ jobs:
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        avro: ["1.11.0"]
-        gradle: ["7.6"] # See here for latest versions: https://services.gradle.org/versions/
-        java: ["20-ea"]
+        avro: [ "1.11.0" ]
+        gradle: [ "8.5" ] # See here for latest versions: https://services.gradle.org/versions/
+        java: [ "21" ]
       fail-fast: false
     steps:
       - uses: actions/checkout@v3
