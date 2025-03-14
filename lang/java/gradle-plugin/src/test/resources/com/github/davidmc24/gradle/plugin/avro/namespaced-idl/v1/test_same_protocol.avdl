@@ -1,0 +1,6 @@
+@namespace("org.example.v1")
+protocol TestProtocol {
+    record SomeOtherTestRecord {
+        string field1;
+    }
+}
