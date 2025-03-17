@@ -18,6 +18,7 @@
 
 #include "Compiler.hh"
 #include "GenericDatum.hh"
+#include "NodeImpl.hh"
 #include "ValidSchema.hh"
 
 #include <boost/algorithm/string/replace.hpp>
@@ -695,6 +696,166 @@ static void testCustomLogicalType() {
     verifyCustomLogicalType(parsedSchema);
 }
 
+static void testParseCustomAttributes() {
+    const std::string schema = R"({
+        "type": "record",
+        "name": "my_record",
+        "fields": [
+            { "name": "long_field",
+              "type": ["null", "long"],
+              "field-id": 1 },
+            { "name": "array_field",
+              "type": { "type": "array", "items": "int", "element-id": 3 },
+              "field-id": 2,
+              "extra": "1", "extra2": "2" },
+            { "name": "map_field",
+              "type": { "type": "map", "values": "int", "key-id": 5, "value-id": 6 },
+              "field-id": 4,
+              "extra": "foo" },
+            { "name": "timestamp_field",
+              "type": "long", "logicalType": "timestamp-micros", "adjust-to-utc": true,
+              "field-id": 10,
+              "extra": "bar" },
+            { "name": "no_custom_attributes_field",
+              "type": "long" }
+        ]
+    })";
+
+    ValidSchema compiledSchema = compileJsonSchemaFromString(schema);
+    const NodePtr &root = compiledSchema.root();
+    BOOST_CHECK_EQUAL(root->customAttributes(), 5);
+
+    // long_field
+    {
+        auto customAttributes = root->customAttributesAt(0);
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("field-id").value(), "1");
+    }
+
+    // array_field
+    {
+        auto customAttributes = root->customAttributesAt(1);
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("extra").value(), "1");
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("extra2").value(), "2");
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("field-id").value(), "2");
+
+        auto arrayField = root->leafAt(1);
+        BOOST_CHECK_EQUAL(arrayField->customAttributes(), 1);
+        auto arrayFieldCustomAttributes = arrayField->customAttributesAt(0);
+        BOOST_CHECK_EQUAL(arrayFieldCustomAttributes.getAttribute("element-id").value(), "3");
+    }
+
+    // map_field
+    {
+        auto customAttributes = root->customAttributesAt(2);
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("field-id").value(), "4");
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("extra").value(), "foo");
+
+        auto mapField = root->leafAt(2);
+        BOOST_CHECK_EQUAL(mapField->customAttributes(), 1);
+        auto mapFieldCustomAttributes = mapField->customAttributesAt(0);
+        BOOST_CHECK_EQUAL(mapFieldCustomAttributes.getAttribute("key-id").value(), "5");
+        BOOST_CHECK_EQUAL(mapFieldCustomAttributes.getAttribute("value-id").value(), "6");
+    }
+
+    // timestamp_field
+    {
+        auto customAttributes = root->customAttributesAt(3);
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("field-id").value(), "10");
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("extra").value(), "bar");
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("adjust-to-utc").value(), "true");
+    }
+
+    // no_custom_attributes_field
+    {
+        auto customAttributes = root->customAttributesAt(4);
+        BOOST_CHECK_EQUAL(customAttributes.attributes().size(), 0);
+    }
+}
+
+static void testAddCustomAttributes() {
+    auto recordNode = std::make_shared<NodeRecord>();
+
+    // long_field
+    {
+        CustomAttributes customAttributes;
+        customAttributes.addAttribute("field-id", "1");
+        recordNode->addCustomAttributesForField(customAttributes);
+        recordNode->addLeaf(std::make_shared<NodePrimitive>(AVRO_LONG));
+        recordNode->addName("long_field");
+    }
+
+    // array_field
+    {
+        auto arrayField = std::make_shared<NodeArray>(SingleLeaf(std::make_shared<NodePrimitive>(AVRO_INT)));
+        CustomAttributes elementCustomAttributes;
+        elementCustomAttributes.addAttribute("element-id", "3");
+        arrayField->addCustomAttributesForField(elementCustomAttributes);
+
+        CustomAttributes customAttributes;
+        customAttributes.addAttribute("field-id", "2");
+        customAttributes.addAttribute("extra", "1");
+        customAttributes.addAttribute("extra2", "2");
+        recordNode->addCustomAttributesForField(customAttributes);
+        recordNode->addLeaf(arrayField);
+        recordNode->addName("array_field");
+    }
+
+    // map_field
+    {
+        auto mapField = std::make_shared<NodeMap>(SingleLeaf(std::make_shared<NodePrimitive>(AVRO_INT)));
+        CustomAttributes keyValueCustomAttributes;
+        keyValueCustomAttributes.addAttribute("key-id", "5");
+        keyValueCustomAttributes.addAttribute("value-id", "6");
+        mapField->addCustomAttributesForField(keyValueCustomAttributes);
+
+        CustomAttributes customAttributes;
+        customAttributes.addAttribute("field-id", "4");
+        customAttributes.addAttribute("extra", "foo");
+        recordNode->addCustomAttributesForField(customAttributes);
+        recordNode->addLeaf(mapField);
+        recordNode->addName("map_field");
+    }
+
+    // timestamp_field
+    {
+        auto timestampField = std::make_shared<NodePrimitive>(AVRO_LONG);
+        CustomAttributes customAttributes;
+        customAttributes.addAttribute("field-id", "10");
+        customAttributes.addAttribute("extra", "bar");
+        customAttributes.addAttribute("adjust-to-utc", "true");
+        recordNode->addCustomAttributesForField(customAttributes);
+        recordNode->addLeaf(timestampField);
+        recordNode->addName("timestamp_field");
+    }
+
+    const std::string expected = R"({
+        "type": "record",
+        "name": "",
+        "fields": [
+            { "name": "long_field",
+              "type": "long",
+              "field-id": "1" },
+            { "name": "array_field",
+              "type": { "type": "array", "items": "int", "element-id": "3" },
+              "extra": "1",
+              "extra2": "2",
+              "field-id": "2" },
+            { "name": "map_field",
+              "type": { "type": "map", "values": "int", "key-id": "5", "value-id": "6" },
+              "extra": "foo",
+              "field-id": "4" },
+            { "name": "timestamp_field",
+              "type": "long",
+              "adjust-to-utc": "true",
+              "extra": "bar",
+              "field-id": "10" }
+        ]
+    })";
+    ValidSchema schema(recordNode);
+    std::string json = schema.toJson();
+    BOOST_CHECK_EQUAL(removeWhitespaceFromSchema(json), removeWhitespaceFromSchema(expected));
+}
+
 } // namespace schema
 } // namespace avro
 
@@ -719,5 +880,7 @@ init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
                    avro::schema::malformedLogicalTypes);
     ts->add(BOOST_TEST_CASE(&avro::schema::testCompactSchemas));
     ts->add(BOOST_TEST_CASE(&avro::schema::testCustomLogicalType));
+    ts->add(BOOST_TEST_CASE(&avro::schema::testParseCustomAttributes));
+    ts->add(BOOST_TEST_CASE(&avro::schema::testAddCustomAttributes));
     return ts;
 }
