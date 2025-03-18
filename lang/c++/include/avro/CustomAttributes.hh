@@ -24,6 +24,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <unordered_set>
 
 namespace avro {
 
@@ -37,7 +38,10 @@ public:
     std::optional<std::string> getAttribute(const std::string &name) const;
 
     // Adds a custom attribute. If the attribute already exists, throw an exception.
-    void addAttribute(const std::string &name, const std::string &value);
+    //
+    // If `addQuotes` is true, the `value` will be wrapped in double quotes in the
+    // json serialization; otherwise, the `value` will be serialized as is.
+    void addAttribute(const std::string &name, const std::string &value, bool addQuotes = true);
 
     // Provides a way to iterate over the custom attributes or check attribute size.
     const std::map<std::string, std::string> &attributes() const {
@@ -49,6 +53,7 @@ public:
 
 private:
     std::map<std::string, std::string> attributes_;
+    std::unordered_set<std::string> keysNeedQuotes_;
 };
 
 } // namespace avro
