@@ -35,19 +35,28 @@ std::optional<std::string> CustomAttributes::getAttribute(const std::string &nam
 }
 
 void CustomAttributes::addAttribute(const std::string &name,
-                                    const std::string &value) {
+                                    const std::string &value,
+                                    bool addQuotes) {
     auto iter_and_find =
         attributes_.insert(std::pair<std::string, std::string>(name, value));
     if (!iter_and_find.second) {
         throw Exception(name + " already exists and cannot be added");
     }
+    if (addQuotes) {
+        keysNeedQuotes_.insert(name);
+    }
 }
 
 void CustomAttributes::printJson(std::ostream &os,
                                  const std::string &name) const {
-    if (attributes().find(name) == attributes().end()) {
+    auto iter = attributes_.find(name);
+    if (iter == attributes_.cend()) {
         throw Exception(name + " doesn't exist");
     }
-    os << "\"" << name << "\": \"" << attributes().at(name) << "\"";
+    if (keysNeedQuotes_.find(name) != keysNeedQuotes_.cend()) {
+        os << "\"" << name << "\": \"" << iter->second << "\"";
+    } else {
+        os << "\"" << name << "\": " << iter->second;
+    }
 }
 } // namespace avro

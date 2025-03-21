@@ -856,6 +856,60 @@ static void testAddCustomAttributes() {
     BOOST_CHECK_EQUAL(removeWhitespaceFromSchema(json), removeWhitespaceFromSchema(expected));
 }
 
+static void testCustomAttributesJson2Schema2Json() {
+    const std::string schema = R"({
+        "type": "record",
+        "name": "my_record",
+        "fields": [
+            { "name": "long_field", "type": "long", "int_key": 1, "str_key": "1" }
+        ]
+    })";
+    ValidSchema compiledSchema = compileJsonSchemaFromString(schema);
+
+    // Verify custom attributes from parsed schema
+    auto customAttributes = compiledSchema.root()->customAttributesAt(0);
+    BOOST_CHECK_EQUAL(customAttributes.getAttribute("int_key").value(), "1");
+    BOOST_CHECK_EQUAL(customAttributes.getAttribute("str_key").value(), "1");
+
+    // Verify custom attributes from json result
+    std::string json = compiledSchema.toJson();
+    BOOST_CHECK_EQUAL(removeWhitespaceFromSchema(json), removeWhitespaceFromSchema(schema));
+}
+
+static void testCustomAttributesSchema2Json2Schema() {
+    const std::string expected = R"({
+        "type": "record",
+        "name": "my_record",
+        "fields": [
+            { "name": "long_field", "type": "long", "int_key": 1, "str_key": "1" }
+        ]
+    })";
+
+    auto recordNode = std::make_shared<NodeRecord>();
+    {
+        CustomAttributes customAttributes;
+        customAttributes.addAttribute("int_key", "1", /*addQuotes=*/false);
+        customAttributes.addAttribute("str_key", "1", /*addQuotes=*/true);
+        recordNode->addCustomAttributesForField(customAttributes);
+        recordNode->addLeaf(std::make_shared<NodePrimitive>(AVRO_LONG));
+        recordNode->addName("long_field");
+        recordNode->setName(Name("my_record"));
+    }
+
+    // Verify custom attributes from json result
+    ValidSchema schema(recordNode);
+    std::string json = schema.toJson();
+    BOOST_CHECK_EQUAL(removeWhitespaceFromSchema(json), removeWhitespaceFromSchema(expected));
+
+    // Verify custom attributes from parsed schema
+    {
+        auto parsedSchema = compileJsonSchemaFromString(json);
+        auto customAttributes = parsedSchema.root()->customAttributesAt(0);
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("int_key").value(), "1");
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("str_key").value(), "1");
+    }
+}
+
 } // namespace schema
 } // namespace avro
 
@@ -882,5 +936,7 @@ init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     ts->add(BOOST_TEST_CASE(&avro::schema::testCustomLogicalType));
     ts->add(BOOST_TEST_CASE(&avro::schema::testParseCustomAttributes));
     ts->add(BOOST_TEST_CASE(&avro::schema::testAddCustomAttributes));
+    ts->add(BOOST_TEST_CASE(&avro::schema::testCustomAttributesJson2Schema2Json));
+    ts->add(BOOST_TEST_CASE(&avro::schema::testCustomAttributesSchema2Json2Schema));
     return ts;
 }

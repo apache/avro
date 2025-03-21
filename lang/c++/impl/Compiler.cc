@@ -291,7 +291,8 @@ static void getCustomAttributes(const Object &m, CustomAttributes &customAttribu
     const std::unordered_set<std::string> &kKnownFields = getKnownFields();
     for (const auto &entry : m) {
         if (kKnownFields.find(entry.first) == kKnownFields.end()) {
-            customAttributes.addAttribute(entry.first, entry.second.toLiteralString());
+            bool addQuotes = entry.second.type() == json::EntityType::String;
+            customAttributes.addAttribute(entry.first, entry.second.toLiteralString(), addQuotes);
         }
     }
 }
