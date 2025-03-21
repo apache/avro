@@ -1863,7 +1863,6 @@ public abstract class Schema extends JsonProperties implements Serializable {
     Name name = parseName(schema, currentNameSpace);
     String doc = parseDoc(schema);
     Schema result = new RecordSchema(name, doc, isTypeError);
-    context.put(result);
 
     JsonNode fieldsNode = schema.get("fields");
     if (fieldsNode == null || !fieldsNode.isArray())
@@ -1878,6 +1877,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
             name, f.name(), getOptionalText(field, "logicalType"));
     }
     result.setFields(fields);
+    context.put(result);
     parsePropertiesAndLogicalType(schema, result, SCHEMA_RESERVED);
     parseAliases(schema, result);
     return result;
