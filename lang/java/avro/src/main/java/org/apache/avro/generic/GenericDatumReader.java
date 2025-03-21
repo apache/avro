@@ -23,8 +23,6 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Conversion;
@@ -46,8 +44,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private Schema actual;
   private Schema expected;
   private DatumReader<D> fastDatumReader = null;
-
   private ResolvingDecoder creatorResolver = null;
+  private final Map<Class, Constructor> stringCtorCache;
   private final Thread creator;
 
   public GenericDatumReader() {
@@ -73,6 +71,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   protected GenericDatumReader(GenericData data) {
     this.data = data;
     this.creator = Thread.currentThread();
+    this.stringCtorCache = new HashMap<>();
   }
 
   /** Return the {@link GenericData} implementation. */
@@ -452,12 +451,14 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * representation. By default, this calls {@link #readString(Object,Decoder)}.
    */
   protected Object readString(Object old, Schema expected, Decoder in) throws IOException {
-    Class stringClass = this.getReaderCache().getStringClass(expected);
-    if (stringClass == String.class) {
-      return in.readString();
-    }
+    Class stringClass = this.findStringClass(expected);
+
+    // Default is CharSequence / UTF8 so check it first
     if (stringClass == CharSequence.class) {
       return readString(old, in);
+    }
+    if (stringClass == String.class) {
+      return in.readString();
     }
     return this.newInstanceFromString(stringClass, in.readString());
   }
@@ -487,97 +488,46 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    */
   protected Class findStringClass(Schema schema) {
     String name = schema.getProp(GenericData.STRING_PROP);
-    if (name == null)
+    if (name == null) {
       return CharSequence.class;
-
-    switch (GenericData.StringType.valueOf(name)) {
-    case String:
+    }
+    if (GenericData.StringType.String.name().equals(name)) {
       return String.class;
-    default:
-      return CharSequence.class;
     }
-  }
-
-  /**
-   * This class is used to reproduce part of IdentityHashMap in ConcurrentHashMap
-   * code.
-   */
-  private static final class IdentitySchemaKey {
-    private final Schema schema;
-
-    private final int hashcode;
-
-    public IdentitySchemaKey(Schema schema) {
-      this.schema = schema;
-      this.hashcode = System.identityHashCode(schema);
-    }
-
-    @Override
-    public int hashCode() {
-      return this.hashcode;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == null || !(obj instanceof GenericDatumReader.IdentitySchemaKey)) {
-        return false;
-      }
-      IdentitySchemaKey key = (IdentitySchemaKey) obj;
-      return this == key || this.schema == key.schema;
-    }
-  }
-
-  // VisibleForTesting
-  static class ReaderCache {
-    private final Map<IdentitySchemaKey, Class> stringClassCache = new ConcurrentHashMap<>();
-
-    private final Map<Class, Function<String, Object>> stringCtorCache = new ConcurrentHashMap<>();
-
-    private final Function<Schema, Class> findStringClass;
-
-    public ReaderCache(Function<Schema, Class> findStringClass) {
-      this.findStringClass = findStringClass;
-    }
-
-    public Object newInstanceFromString(Class c, String s) {
-      final Function<String, Object> ctor = stringCtorCache.computeIfAbsent(c, this::buildFunction);
-      return ctor.apply(s);
-    }
-
-    private Function<String, Object> buildFunction(Class c) {
-      final Constructor ctor;
-      try {
-        ctor = c.getDeclaredConstructor(String.class);
-      } catch (NoSuchMethodException e) {
-        throw new AvroRuntimeException(e);
-      }
-      ctor.setAccessible(true);
-
-      return (String s) -> {
-        try {
-          return ctor.newInstance(s);
-        } catch (ReflectiveOperationException e) {
-          throw new AvroRuntimeException(e);
-        }
-      };
-    }
-
-    public Class getStringClass(final Schema s) {
-      final IdentitySchemaKey key = new IdentitySchemaKey(s);
-      return this.stringClassCache.computeIfAbsent(key, (IdentitySchemaKey k) -> this.findStringClass.apply(k.schema));
-    }
-  }
-
-  private final ReaderCache readerCache = new ReaderCache(this::findStringClass);
-
-  // VisibleForTesting
-  ReaderCache getReaderCache() {
-    return readerCache;
+    return CharSequence.class;
   }
 
   @SuppressWarnings("unchecked")
   protected Object newInstanceFromString(Class c, String s) {
-    return this.getReaderCache().newInstanceFromString(c, s);
+    // For some of the more common classes, implement specific routines.
+    // For more complex classes, use reflection.
+    if (c == Integer.class) {
+      return Integer.parseInt(s, 10);
+    }
+    if (c == Long.class) {
+      return Long.parseLong(s, 10);
+    }
+    if (c == Float.class) {
+      return Float.parseFloat(s);
+    }
+    if (c == Double.class) {
+      return Double.parseDouble(s);
+    }
+    final Constructor cachedCtor = stringCtorCache.computeIfAbsent(c, clazz -> {
+      final Constructor ctor;
+      try {
+        ctor = clazz.getDeclaredConstructor(String.class);
+        ctor.setAccessible(true);
+      } catch (NoSuchMethodException e) {
+        throw new AvroRuntimeException(e);
+      }
+      return ctor;
+    });
+    try {
+      return cachedCtor.newInstance(s);
+    } catch (ReflectiveOperationException e) {
+      throw new AvroRuntimeException(e);
+    }
   }
 
   /**
