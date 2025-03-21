@@ -124,6 +124,7 @@ public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecor
   }
 
   @Override
+  @org.apache.avro.specific.AvroInternal
   public org.apache.avro.Schema getSchema() {
     return SCHEMA$;
   }

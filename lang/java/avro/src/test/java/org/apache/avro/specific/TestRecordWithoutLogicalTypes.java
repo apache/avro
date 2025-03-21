@@ -76,6 +76,7 @@ public class TestRecordWithoutLogicalTypes extends org.apache.avro.specific.Spec
     this.dec = dec;
   }
 
+  @org.apache.avro.specific.AvroInternal
   public org.apache.avro.Schema getSchema() {
     return SCHEMA$;
   }

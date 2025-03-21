@@ -117,11 +117,13 @@ public class TestUnionRecord extends SpecificRecordBase implements SpecificRecor
   }
 
   @Override
+  @org.apache.avro.specific.AvroInternal
   public SpecificData getSpecificData() {
     return MODEL$;
   }
 
   @Override
+  @org.apache.avro.specific.AvroInternal
   public org.apache.avro.Schema getSchema() {
     return SCHEMA$;
   }

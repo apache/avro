@@ -100,9 +100,11 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
   }
 
   @Override
+  @org.apache.avro.specific.AvroInternal
   public org.apache.avro.specific.SpecificData getSpecificData() { return MODEL$; }
 
   @Override
+  @org.apache.avro.specific.AvroInternal
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
 
   // Used by DatumWriter.  Applications should not call.
