@@ -255,11 +255,11 @@ public class BinaryData {
     case UNION:
       return hashCode(data, schema.getTypes().get(decoder.readInt()));
     case FIXED:
-      return hashBytes(1, data, schema.getFixedSize(), false);
+      return hashBytes(data, schema.getFixedSize(), false);
     case STRING:
-      return hashBytes(1, data, decoder.readInt(), false);
+      return hashBytes(data, decoder.readInt(), false);
     case BYTES:
-      return hashBytes(1, data, decoder.readInt(), true);
+      return hashBytes(data, decoder.readInt(), true);
     case NULL:
       return 0;
     default:
@@ -267,8 +267,8 @@ public class BinaryData {
     }
   }
 
-  private static int hashBytes(int init, HashData data, int len, boolean rev) throws IOException {
-    int hashCode = init;
+  private static int hashBytes(HashData data, int len, boolean rev) throws IOException {
+    int hashCode = 1;
     byte[] bytes = data.decoder.getBuf();
     int start = data.decoder.getPos();
     int end = start + len;

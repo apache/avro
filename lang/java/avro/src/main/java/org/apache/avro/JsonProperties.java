@@ -150,9 +150,9 @@ public abstract class JsonProperties {
   // Also, we only ever ADD to the collection, never changing a value, so
   // putWithAbsent is the
   // only modifier
-  private ConcurrentMap<String, JsonNode> props = new ConcurrentHashMap<String, JsonNode>() {
+  private final ConcurrentMap<String, JsonNode> props = new ConcurrentHashMap<>() {
     private static final long serialVersionUID = 1L;
-    private Queue<MapEntry<String, JsonNode>> propOrder = new ConcurrentLinkedQueue<>();
+    private final Queue<MapEntry<String, JsonNode>> propOrder = new ConcurrentLinkedQueue<>();
 
     @Override
     public JsonNode putIfAbsent(String key, JsonNode value) {
@@ -170,10 +170,10 @@ public abstract class JsonProperties {
 
     @Override
     public Set<Map.Entry<String, JsonNode>> entrySet() {
-      return new AbstractSet<Map.Entry<String, JsonNode>>() {
+      return new AbstractSet<>() {
         @Override
         public Iterator<Map.Entry<String, JsonNode>> iterator() {
-          return new Iterator<Map.Entry<String, JsonNode>>() {
+          return new Iterator<>() {
             Iterator<MapEntry<String, JsonNode>> it = propOrder.iterator();
 
             @Override
@@ -196,7 +196,7 @@ public abstract class JsonProperties {
     }
   };
 
-  private Set<String> reserved;
+  private final Set<String> reserved;
 
   JsonProperties(Set<String> reserved) {
     this.reserved = reserved;
@@ -206,7 +206,7 @@ public abstract class JsonProperties {
     this.reserved = reserved;
     for (Entry<String, ?> a : propMap.entrySet()) {
       Object v = a.getValue();
-      JsonNode json = null;
+      JsonNode json;
       if (v instanceof String) {
         json = TextNode.valueOf((String) v);
       } else if (v instanceof JsonNode) {

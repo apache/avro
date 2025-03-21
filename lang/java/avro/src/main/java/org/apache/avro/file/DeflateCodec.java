@@ -40,7 +40,7 @@ public class DeflateCodec extends Codec {
   private static final int DEFAULT_BUFFER_SIZE = 8192;
 
   static class Option extends CodecFactory {
-    private int compressionLevel;
+    private final int compressionLevel;
 
     Option(int compressionLevel) {
       this.compressionLevel = compressionLevel;
@@ -55,8 +55,8 @@ public class DeflateCodec extends Codec {
   private Deflater deflater;
   private Inflater inflater;
   // currently only do 'nowrap' -- RFC 1951, not zlib
-  private boolean nowrap = true;
-  private int compressionLevel;
+  private final boolean nowrap = true;
+  private final int compressionLevel;
 
   public DeflateCodec(int compressionLevel) {
     this.compressionLevel = compressionLevel;
