@@ -74,6 +74,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
   /** Construct given a {@link SpecificData}. */
   public SpecificDatumReader(SpecificData data) {
     super(data);
+    trustedPackages.addAll(Arrays.asList(SERIALIZABLE_PACKAGES));
   }
 
   /** Return the contained {@link SpecificData}. */
