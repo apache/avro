@@ -1,0 +1,8 @@
+{"type":"record", "name":"JSpecifyNullSafeAnnotationsFieldsTest", "namespace": "avro.examples.baseball", "doc":"Test that @org.jspecify.annotations.Nullable and @org.jspecify.annotations.NonNull annotations are created for all fields",
+  "fields": [
+    {"name": "name", "type": "string"},
+    {"name": "nullable_name",  "type": ["string", "null"]},
+    {"name": "favorite_number",  "type": "int"},
+    {"name": "nullable_favorite_number", "type": ["int", "null"]}
+  ]
+}
