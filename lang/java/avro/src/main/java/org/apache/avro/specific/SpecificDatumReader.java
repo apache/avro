@@ -50,9 +50,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     if ("*".equals(userDefinedPackages)) {
       SERIALIZABLE_PACKAGES = new String[]{"*"};
     } else {
-      String combinedPackages = userDefinedPackages.isEmpty() ? defaultPackages : userDefinedPackages + "," + defaultPackages;
-
-      SERIALIZABLE_PACKAGES = Arrays.stream(combinedPackages.split(","))
+      SERIALIZABLE_PACKAGES = Arrays.stream(userDefinedPackages.split(","))
                                     .distinct()
                                     .toArray(String[]::new);
     }
