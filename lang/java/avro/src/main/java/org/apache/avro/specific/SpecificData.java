@@ -19,9 +19,11 @@ package org.apache.avro.specific;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.Conversions;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.data.TimeConversions;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
@@ -57,6 +59,22 @@ import java.util.function.Function;
 public class SpecificData extends GenericData {
 
   private static final SpecificData INSTANCE = new SpecificData();
+
+  static {
+    INSTANCE.addLogicalTypeConversion(new Conversions.UUIDConversion());
+    INSTANCE.addLogicalTypeConversion(new Conversions.DecimalConversion());
+    INSTANCE.addLogicalTypeConversion(new Conversions.BigDecimalConversion());
+    INSTANCE.addLogicalTypeConversion(new Conversions.DurationConversion());
+    INSTANCE.addLogicalTypeConversion(new TimeConversions.DateConversion());
+    INSTANCE.addLogicalTypeConversion(new TimeConversions.LocalTimestampMicrosConversion());
+    INSTANCE.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
+    INSTANCE.addLogicalTypeConversion(new TimeConversions.LocalTimestampNanosConversion());
+    INSTANCE.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
+    INSTANCE.addLogicalTypeConversion(new TimeConversions.TimeMillisConversion());
+    INSTANCE.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
+    INSTANCE.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
+    INSTANCE.addLogicalTypeConversion(new TimeConversions.TimestampNanosConversion());
+  }
 
   private static final Class<?>[] NO_ARG = new Class[] {};
   private static final Class<?>[] SCHEMA_ARG = new Class[] { Schema.class };
