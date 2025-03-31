@@ -1,0 +1,33 @@
+{
+    "name": "Avro Development",
+    "build": {
+        "dockerfile": "../share/docker/Dockerfile",
+        "context": "..",
+        "options": [
+            "--build-arg=BUILDPLATFORM=linux/amd64" // Dockerfile needs a build platfrom argument
+        ]
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {
+            },
+            "extensions": [
+                // Python
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                // C/C++
+                "ms-vscode.cpptools",
+                // C#
+                "ms-dotnettools.csharp",
+                // Java
+                "vscjava.vscode-java-pack",
+                // Shell script
+                "timonwong.shellcheck",
+                // YAML
+                "redhat.vscode-yaml",
+                // Git
+                "eamodio.gitlens"
+            ]
+        }
+    }
+}
