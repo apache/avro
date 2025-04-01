@@ -1,0 +1,8 @@
+{"type":"record", "name":"JetBrainsNullSafeAnnotationsFieldsTest", "namespace": "avro.examples.baseball", "doc":"Test that @org.jetbrains.annotations.Nullable and @org.jetbrains.annotations.NotNull annotations are created for all fields",
+  "fields": [
+    {"name": "name", "type": "string"},
+    {"name": "nullable_name",  "type": ["string", "null"]},
+    {"name": "favorite_number",  "type": "int"},
+    {"name": "nullable_favorite_number", "type": ["int", "null"]}
+  ]
+}
