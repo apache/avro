@@ -36,9 +36,24 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
 
   public static final String[] SERIALIZABLE_PACKAGES;
 
+  private static final String DEFAULT_PACKAGES = "java.lang,java.math,java.io,java.net,org.apache.avro.reflect";
+
   static {
-    SERIALIZABLE_PACKAGES = System.getProperty("org.apache.avro.SERIALIZABLE_PACKAGES",
-        "java.lang,java.math,java.io,java.net,org.apache.avro.reflect").split(",");
+    String userDefinedPackages = System.getProperty("org.apache.avro.SERIALIZABLE_PACKAGES", DEFAULT_PACKAGES);
+
+    /*
+    * Note:
+    * - There are some packages that has already been considered trustable by Avro.
+    * - If a user defines custom packages but does not include these default ones, they may face
+    *   errors when deserializing objects that rely on them.
+    */
+    if ("*".equals(userDefinedPackages)) {
+      SERIALIZABLE_PACKAGES = new String[]{"*"};
+    } else {
+      SERIALIZABLE_PACKAGES = Arrays.stream(userDefinedPackages.split(","))
+                                    .distinct()
+                                    .toArray(String[]::new);
+    }
   }
 
   private final List<String> trustedPackages = new ArrayList<>();
