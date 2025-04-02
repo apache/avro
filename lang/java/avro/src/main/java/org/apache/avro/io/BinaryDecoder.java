@@ -214,7 +214,7 @@ public class BinaryDecoder extends Decoder {
           if (b > 0x7f) {
             // only the low 28 bits can be set, so this won't carry
             // the sign bit to the long
-            l = innerLongDecode((long) n);
+            l = innerLongDecode(n);
           } else {
             l = n;
           }
@@ -792,7 +792,7 @@ public class BinaryDecoder extends Decoder {
   }
 
   private static class InputStreamByteSource extends ByteSource {
-    private InputStream in;
+    private final InputStream in;
     protected boolean isEof = false;
 
     private InputStreamByteSource(InputStream in) {
@@ -922,7 +922,7 @@ public class BinaryDecoder extends Decoder {
    */
   private static class ByteArrayByteSource extends ByteSource {
     private static final int MIN_SIZE = 16;
-    private byte[] data;
+    private final byte[] data;
     private int position;
     private int max;
     private boolean compacted = false;
@@ -962,7 +962,7 @@ public class BinaryDecoder extends Decoder {
     }
 
     @Override
-    protected long trySkipBytes(long length) throws IOException {
+    protected long trySkipBytes(long length) {
       // the buffer is shared, so this should return 0
       max = ba.getLim();
       position = ba.getPos();
@@ -987,13 +987,13 @@ public class BinaryDecoder extends Decoder {
     }
 
     @Override
-    protected int tryReadRaw(byte[] data, int off, int len) throws IOException {
+    protected int tryReadRaw(byte[] data, int off, int len) {
       // the buffer is shared, nothing to read
       return 0;
     }
 
     @Override
-    protected void compactAndFill(byte[] buf, int pos, int minPos, int remaining) throws IOException {
+    protected void compactAndFill(byte[] buf, int pos, int minPos, int remaining) {
       // this implementation does not want to mutate the array passed in,
       // so it makes a new tiny buffer unless it has been compacted once before
       if (!compacted) {

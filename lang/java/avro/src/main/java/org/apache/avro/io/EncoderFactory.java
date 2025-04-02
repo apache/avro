@@ -166,7 +166,6 @@ public class EncoderFactory {
    *         <i>reuse</i> is null, this will be a new instance. If <i>reuse</i> is
    *         not null, then the returned instance may be a new instance or
    *         <i>reuse</i> reconfigured to use <i>out</i>.
-   * @throws IOException
    * @see BufferedBinaryEncoder
    * @see Encoder
    */
@@ -287,7 +286,6 @@ public class EncoderFactory {
    *         <i>reuse</i> is null, this will be a new instance. If <i>reuse</i> is
    *         not null, then the returned instance may be a new instance or
    *         <i>reuse</i> reconfigured to use <i>out</i>.
-   * @throws IOException
    * @see BlockingBinaryEncoder
    * @see Encoder
    */
@@ -403,7 +401,7 @@ public class EncoderFactory {
    * {@link ValidatingEncoder} is not thread-safe.
    *
    * @param schema  The Schema to validate operations against. Cannot be null.
-   * @param encoder The Encoder to wrap. Cannot be be null.
+   * @param encoder The Encoder to wrap. Cannot be null.
    * @return A ValidatingEncoder configured to wrap <i>encoder</i> and validate
    *         against <i>schema</i>
    * @throws IOException
