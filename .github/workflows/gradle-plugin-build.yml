@@ -22,7 +22,7 @@ name: CI Build
 on: [ pull_request ]
 jobs:
   build:
-    name: "Build Gradle "
+    name: "Build Gradle plugin"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
