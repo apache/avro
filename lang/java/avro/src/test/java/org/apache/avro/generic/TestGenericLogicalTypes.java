@@ -53,6 +53,7 @@ import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 public class TestGenericLogicalTypes {
@@ -487,5 +488,26 @@ public class TestGenericLogicalTypes {
 
     assertEquals(expected, read(GenericData.get().createDatumReader(stringSchema), test),
         "Should read CustomType as strings");
+  }
+
+  @Test
+  public void testLogicalTypeSubclassing() throws IOException {
+    Schema stringSchema = Schema.create(Schema.Type.STRING);
+    GenericData.setStringType(stringSchema, GenericData.StringType.String);
+    LogicalType customType = LogicalTypes.getCustomRegisteredTypes().get("custom").fromSchema(stringSchema);
+    Schema customTypeSchema = customType.addToSchema(Schema.create(Schema.Type.STRING));
+    Schema unionSchema = Schema.createUnion(Schema.create(Schema.Type.BOOLEAN), customTypeSchema);
+
+    // anonymous subclass
+    CustomType datum1 = new CustomType("foo") {
+    };
+    assertNotEquals(datum1.getClass(), CustomType.class);
+    int index = GenericData.get().resolveUnion(unionSchema, datum1);
+    assertEquals(1, index, "Should resolve custom type subclass correct schema");
+
+    List<Object> expected = Arrays.asList(datum1, false);
+    File test = write(unionSchema, datum1, false);
+    assertEquals(expected, read(GENERIC.createDatumReader(unionSchema), test),
+        "Should convert logical type subclasses");
   }
 }

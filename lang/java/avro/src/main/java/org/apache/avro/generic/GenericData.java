@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.Temporal;
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,6 +37,7 @@ import java.util.ServiceLoader;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
@@ -57,8 +59,6 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.FastReaderBuilder;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.util.internal.Accessor;
-
-import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.avro.util.springframework.ConcurrentReferenceHashMap;
 
 import static org.apache.avro.util.springframework.ConcurrentReferenceHashMap.ReferenceType.WEAK;
@@ -141,6 +141,8 @@ public class GenericData {
 
   private Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass = new IdentityHashMap<>();
 
+  private Map<String, List<Conversion<?>>> conversionsByLogialTypeName = new HashMap<>();
+
   public Collection<Conversion<?>> getConversions() {
     return conversions.values();
   }
@@ -153,11 +155,11 @@ public class GenericData {
    * @param conversion a logical type Conversion.
    */
   public void addLogicalTypeConversion(Conversion<?> conversion) {
-    conversions.put(conversion.getLogicalTypeName(), conversion);
+    String logicalTypeName = conversion.getLogicalTypeName();
+    conversions.put(logicalTypeName, conversion);
     Class<?> type = conversion.getConvertedType();
-    Map<String, Conversion<?>> conversionsForClass = conversionsByClass.computeIfAbsent(type,
-        k -> new LinkedHashMap<>());
-    conversionsForClass.put(conversion.getLogicalTypeName(), conversion);
+    conversionsByClass.computeIfAbsent(type, k -> new LinkedHashMap<>()).put(logicalTypeName, conversion);
+    conversionsByLogialTypeName.computeIfAbsent(logicalTypeName, k -> new ArrayList<>()).add(conversion);
   }
 
   /**
@@ -176,17 +178,23 @@ public class GenericData {
   }
 
   /**
-   * Returns the conversion for the given class and logical type.
+   * Returns the first conversion for the given datum class and logical type.
    *
-   * @param datumClass  a Class
+   * @param datumClass  a Class of the datum
    * @param logicalType a LogicalType
    * @return the conversion for the class and logical type, or null
    */
   @SuppressWarnings("unchecked")
-  public <T> Conversion<T> getConversionByClass(Class<T> datumClass, LogicalType logicalType) {
-    Map<String, Conversion<?>> conversions = conversionsByClass.get(datumClass);
+  public <T> Conversion<T> getConversionByClass(Class<? extends T> datumClass, LogicalType logicalType) {
+    // note this does not use conversionsByClass anymore - which assume instances are of
+    // type Class<T> and not Class<? extends T>
+    List<Conversion<?>> conversions = conversionsByLogialTypeName.get(logicalType.getName());
     if (conversions != null) {
-      return (Conversion<T>) conversions.get(logicalType.getName());
+      for (Conversion<?> conversion : conversions) {
+        if (conversion.getConvertedType().isAssignableFrom(datumClass)) {
+          return (Conversion<T>) conversion;
+        }
+      }
     }
     return null;
   }
@@ -916,14 +924,13 @@ public class GenericData {
     // this allows logical type concrete classes to overlap with supported ones
     // for example, a conversion could return a map
     if (datum != null) {
-      Map<String, Conversion<?>> conversions = conversionsByClass.get(datum.getClass());
-      if (conversions != null) {
-        List<Schema> candidates = union.getTypes();
-        for (int i = 0; i < candidates.size(); i += 1) {
-          LogicalType candidateType = candidates.get(i).getLogicalType();
-          if (candidateType != null) {
-            Conversion<?> conversion = conversions.get(candidateType.getName());
-            if (conversion != null) {
+      List<Schema> candidates = union.getTypes();
+      for (int i = 0; i < candidates.size(); i += 1) {
+        LogicalType candidateType = candidates.get(i).getLogicalType();
+        if (candidateType != null) {
+          Conversion<?> conversion = conversions.get(candidateType.getName());
+          if (conversion != null) {
+            if (conversion.getConvertedType().isInstance(datum)) {
               return i;
             }
           }
