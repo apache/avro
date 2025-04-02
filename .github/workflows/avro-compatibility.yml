@@ -28,7 +28,7 @@ jobs:
       matrix:
         avro: [ "1.11.0", "1.11.1" ]
         gradle: [ "7.6", "8.5" ]
-        java: [ "17" ]
+        java: [ "17", "21" ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
