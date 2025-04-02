@@ -87,6 +87,7 @@ avro_value_equal_fast(avro_value_t *val1, avro_value_t *val2)
 		}
 
 		case AVRO_BYTES:
+		case AVRO_DECIMAL:
 		{
 			const void  *buf1;
 			const void  *buf2;
@@ -312,6 +313,7 @@ avro_value_cmp_fast(avro_value_t *val1, avro_value_t *val2)
 		}
 
 		case AVRO_BYTES:
+		case AVRO_DECIMAL:
 		{
 			const void  *buf1;
 			const void  *buf2;
@@ -531,6 +533,7 @@ avro_value_copy_fast(avro_value_t *dest, const avro_value_t *src)
 		}
 
 		case AVRO_BYTES:
+		case AVRO_DECIMAL:
 		{
 			avro_wrapped_buffer_t  val;
 			check(rval, avro_value_grab_bytes(src, &val));
