@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FutureDataInputStreamBuilder;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -30,7 +31,6 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.avro.file.SeekableInput;
 
 import static org.apache.hadoop.fs.Options.OpenFileOptions.FS_OPTION_OPENFILE_READ_POLICY;
-import static org.apache.hadoop.fs.Options.OpenFileOptions.FS_OPTION_OPENFILE_READ_POLICY_ADAPTIVE;
 import static org.apache.hadoop.util.functional.FutureIO.awaitFuture;
 
 /** Adapt an {@link FSDataInputStream} to {@link SeekableInput}. */
@@ -47,17 +47,20 @@ public class FsInput implements Closeable, SeekableInput {
   public FsInput(Path path, FileSystem fileSystem) throws IOException {
     final FileStatus st = fileSystem.getFileStatus(path);
     this.len = st.getLen();
-    // use the hadoop 3.3.0 openFile API, pass in status
+    // use the hadoop 3.3.0 openFile API, passing in status
     // and read policy. object stores can use these to
-    // optimize read performance.
-    // the read policy "adaptive" means "start sequential but
-    // go to random IO when considered better"
-    // Filesystems which don't recognize the options will ignore them
-    // Importantly deployments which have switched the default read policy to
-    // "random"
-    // will not suffer when reading large avro files.
-    this.stream = awaitFuture(fileSystem.openFile(path)
-        .opt(FS_OPTION_OPENFILE_READ_POLICY, FS_OPTION_OPENFILE_READ_POLICY_ADAPTIVE).withFileStatus(st).build());
+    // optimize read performance and save on a HEAD request when opening
+    // a file.
+    // the first policy recognised is picked up; "avro" is recognised on
+    // later releases, falling back to sequential reading (not random IO),
+    // and finally "adapt to the read pattern".
+    final FutureDataInputStreamBuilder builder = fileSystem.openFile(path)
+        .opt(FS_OPTION_OPENFILE_READ_POLICY, "avro, sequential, adaptive");
+    if (path.equals(st.getPath())) {
+      // set the file status if this isn't any wrapped filesystem.
+      builder.withFileStatus(st);
+    }
+    this.stream = awaitFuture(builder.withFileStatus(st).build());
   }
 
   @Override
