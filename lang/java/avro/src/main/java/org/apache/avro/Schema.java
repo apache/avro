@@ -444,12 +444,13 @@ public abstract class Schema extends JsonProperties implements Serializable {
   String toString(Set<String> knownNames, boolean pretty) {
     try {
       StringWriter writer = new StringWriter();
-      JsonGenerator gen = FACTORY.createGenerator(writer);
-      if (pretty)
-        gen.useDefaultPrettyPrinter();
-      toJson(knownNames, null, gen);
-      gen.flush();
-      return writer.toString();
+      try (JsonGenerator gen = FACTORY.createGenerator(writer)) {
+        if (pretty)
+          gen.useDefaultPrettyPrinter();
+        toJson(knownNames, null, gen);
+        gen.flush();
+        return writer.toString();
+      }
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }

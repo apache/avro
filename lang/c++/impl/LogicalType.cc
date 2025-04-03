@@ -22,7 +22,14 @@
 namespace avro {
 
 LogicalType::LogicalType(Type type)
-    : type_(type), precision_(0), scale_(0) {}
+    : type_(type), precision_(0), scale_(0), custom_(nullptr) {
+    if (type == CUSTOM) {
+        throw Exception("Logical type CUSTOM must be initialized with a custom logical type");
+    }
+}
+
+LogicalType::LogicalType(std::shared_ptr<CustomLogicalType> custom)
+    : type_(CUSTOM), precision_(0), scale_(0), custom_(std::move(custom)) {}
 
 LogicalType::Type LogicalType::type() const {
     return type_;
@@ -51,6 +58,9 @@ void LogicalType::setScale(int32_t scale) {
 void LogicalType::printJson(std::ostream &os) const {
     switch (type_) {
         case LogicalType::NONE: break;
+        case LogicalType::BIG_DECIMAL:
+            os << R"("logicalType": "big-decimal")";
+            break;
         case LogicalType::DECIMAL:
             os << R"("logicalType": "decimal")";
             os << ", \"precision\": " << precision_;
@@ -89,7 +99,33 @@ void LogicalType::printJson(std::ostream &os) const {
         case UUID:
             os << R"("logicalType": "uuid")";
             break;
+        case CUSTOM:
+            custom_->printJson(os);
+            break;
     }
+}
+
+void CustomLogicalType::printJson(std::ostream &os) const {
+    os << R"("logicalType": ")" << name_ << "\"";
+}
+
+CustomLogicalTypeRegistry &CustomLogicalTypeRegistry::instance() {
+    static CustomLogicalTypeRegistry instance;
+    return instance;
+}
+
+void CustomLogicalTypeRegistry::registerType(const std::string &name, Factory factory) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    registry_[name] = factory;
+}
+
+std::shared_ptr<CustomLogicalType> CustomLogicalTypeRegistry::create(const std::string &name, const std::string &json) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = registry_.find(name);
+    if (it == registry_.end()) {
+        return nullptr;
+    }
+    return it->second(json);
 }
 
 } // namespace avro

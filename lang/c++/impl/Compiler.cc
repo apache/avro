@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <boost/algorithm/string/replace.hpp>
+
 #include <sstream>
 #include <unordered_set>
 #include <utility>
@@ -136,7 +136,21 @@ int64_t getLongField(const Entity &e, const Object &m,
 // Unescape double quotes (") for de-serialization.  This method complements the
 // method NodeImpl::escape() which is used for serialization.
 static void unescape(string &s) {
-    boost::replace_all(s, "\\\"", "\"");
+    size_t writePos = 0, readPos = 0;
+    while (readPos < s.length()) {
+        if (readPos + 1 < s.length() && s[readPos] == '\\' && s[readPos + 1] == '\"') {
+            s[writePos++] = '\"';
+            readPos += 2;
+        } else if (writePos != readPos) {
+            s[writePos++] = s[readPos++];
+        } else {
+            writePos++;
+            readPos++;
+        }
+    }
+    if (writePos != s.length()) {
+        s.resize(writePos);
+    }
 }
 
 string getDocField(const Entity &e, const Object &m) {
@@ -267,7 +281,7 @@ static const std::unordered_set<std::string> &getKnownFields() {
     // return known fields
     static const std::unordered_set<std::string> kKnownFields =
         {"name", "type", "aliases", "default", "doc", "size", "logicalType",
-         "values", "precision", "scale", "namespace", "items"};
+         "values", "precision", "scale", "namespace", "items", "symbols"};
     return kKnownFields;
 }
 
@@ -277,7 +291,8 @@ static void getCustomAttributes(const Object &m, CustomAttributes &customAttribu
     const std::unordered_set<std::string> &kKnownFields = getKnownFields();
     for (const auto &entry : m) {
         if (kKnownFields.find(entry.first) == kKnownFields.end()) {
-            customAttributes.addAttribute(entry.first, entry.second.stringValue());
+            bool addQuotes = entry.second.type() == json::EntityType::String;
+            customAttributes.addAttribute(entry.first, entry.second.toLiteralString(), addQuotes);
         }
     }
 }
@@ -359,7 +374,11 @@ static LogicalType makeLogicalType(const Entity &e, const Object &m) {
     }
 
     LogicalType::Type t = LogicalType::NONE;
-    if (typeField == "date")
+    if (typeField == "big-decimal"
+        && !containsField(m, "precision")
+        && !containsField(m, "scale"))
+        t = LogicalType::BIG_DECIMAL;
+    else if (typeField == "date")
         t = LogicalType::DATE;
     else if (typeField == "time-millis")
         t = LogicalType::TIME_MILLIS;
@@ -381,6 +400,12 @@ static LogicalType makeLogicalType(const Entity &e, const Object &m) {
         t = LogicalType::DURATION;
     else if (typeField == "uuid")
         t = LogicalType::UUID;
+    else {
+        auto custom = CustomLogicalTypeRegistry::instance().create(typeField, e.toString());
+        if (custom != nullptr) {
+            return LogicalType(std::move(custom));
+        }
+    }
     return LogicalType(t);
 }
 
@@ -399,6 +424,11 @@ static NodePtr makeEnumNode(const Entity &e,
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
+
+    CustomAttributes customAttributes;
+    getCustomAttributes(m, customAttributes);
+    node->addCustomAttributesForField(customAttributes);
+
     return node;
 }
 
@@ -413,6 +443,11 @@ static NodePtr makeFixedNode(const Entity &e,
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
+
+    CustomAttributes customAttributes;
+    getCustomAttributes(m, customAttributes);
+    node->addCustomAttributesForField(customAttributes);
+
     return node;
 }
 
@@ -439,6 +474,11 @@ static NodePtr makeMapNode(const Entity &e, const Object &m,
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
+
+    CustomAttributes customAttributes;
+    getCustomAttributes(m, customAttributes);
+    node->addCustomAttributesForField(customAttributes);
+
     return node;
 }
 

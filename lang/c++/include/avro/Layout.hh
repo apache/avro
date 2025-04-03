@@ -20,16 +20,20 @@
 #define avro_Layout_hh__
 
 #include "Config.hh"
-#include <boost/noncopyable.hpp>
+
+#include <stddef.h>
 
 /// \file Layout.hh
 ///
 
 namespace avro {
 
-class AVRO_DECL Layout : private boost::noncopyable {
+class AVRO_DECL Layout {
 protected:
     explicit Layout(size_t offset = 0) : offset_(offset) {}
+
+    Layout(const Layout &) = delete;
+    Layout &operator=(const Layout &) = delete;
 
 public:
     size_t offset() const {

@@ -19,7 +19,6 @@
 #ifndef avro_ResolverSchema_hh__
 #define avro_ResolverSchema_hh__
 
-#include <boost/noncopyable.hpp>
 #include <cstdint>
 #include <memory>
 

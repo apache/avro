@@ -121,19 +121,19 @@ module Avro
 
         case expected_schema.type_sym
         when :null
-          fail TypeMismatchError unless datum.nil?
+          return type_mismatch_error(expected_schema, datum, path, result) unless datum.nil?
         when :boolean
-          fail TypeMismatchError unless BOOLEAN_VALUES.include?(datum)
+          return type_mismatch_error(expected_schema, datum, path, result) unless BOOLEAN_VALUES.include?(datum)
         when :string, :bytes
-          fail TypeMismatchError unless datum.is_a?(String)
+          return type_mismatch_error(expected_schema, datum, path, result) unless datum.is_a?(String)
         when :int
-          fail TypeMismatchError unless datum.is_a?(Integer)
+          return type_mismatch_error(expected_schema, datum, path, result) unless datum.is_a?(Integer)
           result.add_error(path, "out of bound value #{datum}") unless INT_RANGE.cover?(datum)
         when :long
-          fail TypeMismatchError unless datum.is_a?(Integer)
+          return type_mismatch_error(expected_schema, datum, path, result) unless datum.is_a?(Integer)
           result.add_error(path, "out of bound value #{datum}") unless LONG_RANGE.cover?(datum)
         when :float, :double
-          fail TypeMismatchError unless datum.is_a?(Float) || datum.is_a?(Integer) || datum.is_a?(BigDecimal)
+          return type_mismatch_error(expected_schema, datum, path, result) unless datum.is_a?(Float) || datum.is_a?(Integer) || datum.is_a?(BigDecimal)
         when :fixed
           if datum.is_a? String
             result.add_error(path, fixed_string_message(expected_schema.size, datum)) unless datum.bytesize == expected_schema.size
@@ -143,7 +143,9 @@ module Avro
         when :enum
           result.add_error(path, enum_message(expected_schema.symbols, datum)) unless expected_schema.symbols.include?(datum)
         end
-      rescue TypeMismatchError
+      end
+
+      def type_mismatch_error(expected_schema, datum, path, result)
         result.add_error(path, "expected type #{expected_schema.type_sym}, got #{actual_value_message(datum)}")
       end
 

@@ -74,6 +74,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
   /** Construct given a {@link SpecificData}. */
   public SpecificDatumReader(SpecificData data) {
     super(data);
+    trustedPackages.addAll(Arrays.asList(SERIALIZABLE_PACKAGES));
   }
 
   /** Return the contained {@link SpecificData}. */
@@ -141,10 +142,10 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
           break;
         }
       }
-      if (!found) {
-        throw new SecurityException("Forbidden " + clazz
-            + "! This class is not trusted to be included in Avro schema using java-class. Please set org.apache.avro.SERIALIZABLE_PACKAGES system property with the packages you trust.");
-      }
+    }
+    if (!found) {
+      throw new SecurityException("Forbidden " + clazz
+          + "! This class is not trusted to be included in Avro schema using java-class. Please set org.apache.avro.SERIALIZABLE_PACKAGES system property with the packages you trust.");
     }
   }
 
