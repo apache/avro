@@ -54,8 +54,8 @@ public class FsInput implements Closeable, SeekableInput {
     // the first policy recognised is picked up; "avro" is recognised on
     // later releases, falling back to sequential reading (not random IO),
     // and finally "adapt to the read pattern".
-    final FutureDataInputStreamBuilder builder = fileSystem.openFile(path)
-        .opt(FS_OPTION_OPENFILE_READ_POLICY, "avro, sequential, adaptive");
+    final FutureDataInputStreamBuilder builder = fileSystem.openFile(path).opt(FS_OPTION_OPENFILE_READ_POLICY,
+        "avro, sequential, adaptive");
     if (path.equals(st.getPath())) {
       // set the file status if this isn't any wrapped filesystem.
       builder.withFileStatus(st);
