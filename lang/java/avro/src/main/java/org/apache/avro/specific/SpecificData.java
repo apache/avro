@@ -62,7 +62,9 @@ public class SpecificData extends GenericData {
 
   static {
     INSTANCE.addLogicalTypeConversion(new Conversions.UUIDConversion());
-    INSTANCE.addLogicalTypeConversion(new Conversions.DecimalConversion());
+    // Disable DecimalConversion since it's gated behind
+    // `compiler.setEnableDecimalLogicalType`
+    // INSTANCE.addLogicalTypeConversion(new Conversions.DecimalConversion());
     INSTANCE.addLogicalTypeConversion(new Conversions.BigDecimalConversion());
     INSTANCE.addLogicalTypeConversion(new Conversions.DurationConversion());
     INSTANCE.addLogicalTypeConversion(new TimeConversions.DateConversion());
