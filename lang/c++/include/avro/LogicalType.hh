@@ -26,6 +26,7 @@
 #include <unordered_map>
 
 #include "Config.hh"
+#include <cstdint>
 
 namespace avro {
 
