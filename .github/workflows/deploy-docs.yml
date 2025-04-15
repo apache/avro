@@ -288,7 +288,7 @@ jobs:
           # mv api-java/* $WEBSITE_API/java/
           mv api-python/* $WEBSITE_API/py/
           mv api-rust/* $WEBSITE_API/rust/
-          rmdir api-c api-c++ api-csharp api-java api-python api-rust
+          rmdir api-c api-c++ api-csharp api-python api-rust # api-java 
 
       - name: Checkout old docs versions from Subversion
         run: |
