@@ -193,9 +193,33 @@ jobs:
           name: api-python
           path: lang/py/docs/build/
 
+  build-api-rust:
+    name: Build Rust API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: 'apache/avro-rs'
+
+      - name: Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Build Rustdocs
+        run: |
+          set -x
+          cargo doc --all-features
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-rust
+          path: target/doc
+        
+
   push-website:
     name: Push website
-    needs: [build-website, build-api-c, build-api-cpp, build-api-csharp, build-api-java, build-api-python]
+    needs: [build-website, build-api-c, build-api-cpp, build-api-csharp, build-api-rust, build-api-python]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -245,6 +269,12 @@ jobs:
           name: api-python
           path: api-python
 
+      - name: Download api-rust
+        uses: actions/download-artifact@v4
+        with:
+          name: api-rust
+          path: api-rust
+
       - name: Copy the generated HTML
         run: |
           set -x
@@ -257,7 +287,8 @@ jobs:
           mv api-csharp/* $WEBSITE_API/csharp/html/
           mv api-java/* $WEBSITE_API/java/
           mv api-python/* $WEBSITE_API/py/
-          rmdir api-c api-c++ api-csharp api-java api-python
+          mv api-python/* $WEBSITE_API/rust/
+          rmdir api-c api-c++ api-csharp api-java api-python api-rust
 
       - name: Checkout old docs versions from Subversion
         run: |
