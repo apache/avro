@@ -2,7 +2,7 @@
 title: "Rust API"
 linkTitle: "Rust API"
 weight: 105
-manualLink: /docs/++version++/api/rust/
+manualLink: /docs/++version++/api/rust/apache_avro/
 ---
 
 <!--
@@ -26,4 +26,4 @@ manualLink: /docs/++version++/api/rust/
 
 -->
 
-The Rust API documentation can be found <a href="/docs/++version++/api/rust/">here</a>.
+The Rust API documentation can be found <a href="/docs/++version++/api/rust/apache_avro/">here</a>.
