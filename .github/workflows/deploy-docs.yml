@@ -219,7 +219,7 @@ jobs:
 
   push-website:
     name: Push website
-    needs: [build-website, build-api-c, build-api-cpp, build-api-csharp, build-api-rust, build-api-python]
+    needs: [build-website, build-api-c, build-api-cpp, build-api-csharp, build-api-java, build-api-rust, build-api-python]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -257,11 +257,11 @@ jobs:
           name: api-csharp
           path: api-csharp
 
-      # - name: Download api-java
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: api-java
-      #     path: api-java
+      - name: Download api-java
+        uses: actions/download-artifact@v4
+        with:
+          name: api-java
+          path: api-java
 
       - name: Download api-python
         uses: actions/download-artifact@v4
@@ -285,10 +285,10 @@ jobs:
           mv api-c/* $WEBSITE_API/c/
           mv api-c++/* $WEBSITE_API/cpp/html/
           mv api-csharp/* $WEBSITE_API/csharp/html/
-          # mv api-java/* $WEBSITE_API/java/
+          mv api-java/* $WEBSITE_API/java/
           mv api-python/* $WEBSITE_API/py/
           mv api-rust/* $WEBSITE_API/rust/
-          rmdir api-c api-c++ api-csharp api-python api-rust # api-java 
+          rmdir api-c api-c++ api-csharp api-python api-rust api-java 
 
       - name: Checkout old docs versions from Subversion
         run: |
