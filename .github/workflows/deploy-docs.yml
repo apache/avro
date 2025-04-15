@@ -280,7 +280,7 @@ jobs:
           set -x
 
           WEBSITE_API=${{ runner.temp }}/website/docs/++version++/api
-          mkdir -p $WEBSITE_API/{c,cpp/html,csharp/html,java,py/html}
+          mkdir -p $WEBSITE_API/{c,cpp/html,csharp/html,java,py/html,rust}
 
           mv api-c/* $WEBSITE_API/c/
           mv api-c++/* $WEBSITE_API/cpp/html/
