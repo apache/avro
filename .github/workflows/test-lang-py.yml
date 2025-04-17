@@ -35,7 +35,7 @@ concurrency:
 jobs:
   test:
     name: Python ${{ matrix.python }} Tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -44,8 +44,6 @@ jobs:
         - '3.11'
         - '3.10'
         - '3.9'
-        - '3.8'
-        - '3.7'
         - 'pypy-3.10'
 
     steps:
@@ -81,7 +79,7 @@ jobs:
 
   interop:
     name: Python ${{ matrix.python }} Interop
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -89,8 +87,6 @@ jobs:
         - '3.11'
         - '3.10'
         - '3.9'
-        - '3.8'
-        - '3.7'
         - 'pypy-3.10'
 
     steps:
