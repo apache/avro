@@ -163,7 +163,7 @@ jobs:
         run: |
           set -x
           cd lang/java
-          mvn javadoc::aggregate
+          ./build.sh dist
       - uses: actions/upload-artifact@v4
         with:
           name: api-java
