@@ -43,7 +43,7 @@ public class JsonGrammarGenerator extends ValidatingGrammarGenerator {
    * schema <tt>sc</tt>. If there is already an entry for the given schema in the
    * given map <tt>seen</tt> then that entry is returned. Otherwise a new symbol
    * is generated and an entry is inserted into the map.
-   * 
+   *
    * @param sc   The schema for which the start symbol is required
    * @param seen A map of schema to symbol mapping done so far.
    * @return The start symbol for the schema
@@ -82,7 +82,11 @@ public class JsonGrammarGenerator extends ValidatingGrammarGenerator {
         int n = 0;
         production[--i] = Symbol.RECORD_START;
         for (Field f : sc.getFields()) {
-          production[--i] = Symbol.fieldAdjustAction(n, f.name(), f.aliases());
+          if (f.hasDefaultValue()) {
+            production[--i] = Symbol.fieldAdjustAction(n, f.name(), f.aliases(), f.defaultVal());
+          } else {
+            production[--i] = Symbol.fieldAdjustAction(n, f.name(), f.aliases());
+          }
           production[--i] = generate(f.schema(), seen);
           production[--i] = Symbol.FIELD_END;
           n++;
