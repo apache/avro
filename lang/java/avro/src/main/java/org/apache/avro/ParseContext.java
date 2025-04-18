@@ -21,7 +21,6 @@ import org.apache.avro.util.SchemaResolver;
 import org.apache.avro.util.Schemas;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -253,7 +252,7 @@ public class ParseContext {
   }
 
   public SchemaParser.ParseResult commit(Schema mainSchema) {
-    Collection<Schema> parsedNamedSchemas = newSchemas.values();
+    List<Schema> parsedNamedSchemas = new ArrayList<>(newSchemas.values());
     SchemaParser.ParseResult parseResult = new SchemaParser.ParseResult() {
       @Override
       public Schema mainSchema() {

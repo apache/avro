@@ -87,7 +87,7 @@ public class TestSpecificCompiler {
 
   static void assertCompilesWithJavaCompiler(File dstDir, Collection<SpecificCompiler.OutputFile> outputs)
       throws IOException {
-    assertCompilesWithJavaCompiler(dstDir, outputs, false);
+    assertCompilesWithJavaCompiler(dstDir, outputs, true);
   }
 
   /**
