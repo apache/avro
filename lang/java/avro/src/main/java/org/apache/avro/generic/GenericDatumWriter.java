@@ -219,9 +219,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
 
   /** Helper method for adding a message to an Avro Type Exception . */
   protected AvroTypeException addAvroTypeMsg(AvroTypeException e, String s) {
-    AvroTypeException result = new AvroTypeException(e.getMessage() + s);
-    result.initCause(e.getCause() == null ? e : e.getCause());
-    return result;
+    return new AvroTypeException(e.getMessage() + s, e.getCause() == null ? e : e.getCause());
   }
 
   /**
@@ -282,7 +280,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     long actualSize = 0;
     out.writeArrayStart();
     out.setItemCount(size);
-    for (Iterator<? extends Object> it = getArrayElements(datum); it.hasNext();) {
+    for (Iterator<?> it = getArrayElements(datum); it.hasNext();) {
       out.startItem();
       try {
         write(element, it.next(), out);

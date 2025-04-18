@@ -25,7 +25,7 @@ import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.NonCopyingByteArrayOutputStream;
-import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
@@ -56,7 +56,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public class DataFileWriter<D> implements Closeable, Flushable {
   private Schema schema;
-  private DatumWriter<D> dout;
+  private final DatumWriter<D> dout;
 
   private OutputStream underlyingStream;
 
@@ -117,11 +117,10 @@ public class DataFileWriter<D> implements Closeable, Flushable {
    * is written. In this case, the {@linkplain #flush()} must be called to flush
    * the stream.
    *
-   * Invalid values throw IllegalArgumentException
-   *
    * @param syncInterval the approximate number of uncompressed bytes to write in
    *                     each block
    * @return this DataFileWriter
+   * @throws IllegalArgumentException if syncInterval is invalid
    */
   public DataFileWriter<D> setSyncInterval(int syncInterval) {
     if (syncInterval < 32 || syncInterval > (1 << 30)) {
@@ -193,7 +192,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
    * Set whether this writer should flush the block to the stream every time a
    * sync marker is written. By default, the writer will flush the buffer each
    * time a sync marker is written (if the block size limit is reached or the
-   * {@linkplain #sync()} is called.
+   * {@linkplain #sync()} is called).
    *
    * @param flushOnEveryBlock - If set to false, this writer will not flush the
    *                          block to the stream until {@linkplain #flush()} is
@@ -475,11 +474,11 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     }
   }
 
-  private class BufferedFileOutputStream extends BufferedOutputStream {
+  private static class BufferedFileOutputStream extends BufferedOutputStream {
     private long position; // start of buffer
 
     private class PositionFilter extends FilterOutputStream {
-      public PositionFilter(OutputStream out) throws IOException {
+      public PositionFilter(OutputStream out) {
         super(out);
       }
 
@@ -490,7 +489,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
       }
     }
 
-    public BufferedFileOutputStream(OutputStream out) throws IOException {
+    public BufferedFileOutputStream(OutputStream out) {
       super(null);
       this.out = new PositionFilter(out);
     }
