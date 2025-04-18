@@ -32,6 +32,9 @@ import java.util.Objects;
 import java.util.UUID;
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
+import org.apache.avro.CustomType;
+import org.apache.avro.CustomTypeConverter;
+import org.apache.avro.CustomTypeLogicalTypeFactory;
 import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
@@ -62,10 +65,11 @@ public class TestReflectLogicalTypes {
   public static final ReflectData REFLECT = new ReflectData();
 
   @BeforeAll
-  public static void addUUID() {
+  public static void addLogicalTypeConversions() {
     REFLECT.addLogicalTypeConversion(new Conversions.UUIDConversion());
     REFLECT.addLogicalTypeConversion(new Conversions.DecimalConversion());
     REFLECT.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
+    REFLECT.addLogicalTypeConversion(new CustomTypeConverter());
   }
 
   @Test
@@ -595,6 +599,26 @@ public class TestReflectLogicalTypes {
         LogicalTypes.fromSchema(actual.getField("localDateTime").schema()), "Should have the correct logical type");
   }
 
+  @Test
+  void customLogicalType() throws IOException {
+    Schema schema = REFLECT.getSchema(RecordWithCustomLogicalType.class);
+    Schema fieldSchema = schema.getField("customType").schema();
+    assertEquals(Schema.Type.STRING, fieldSchema.getType(), "Should have the correct physical type");
+    String actualLogicalTypeName = fieldSchema.getLogicalType().getName();
+    assertEquals("custom", actualLogicalTypeName, "Should have the correct logical type name");
+
+    RecordWithCustomLogicalType record1 = new RecordWithCustomLogicalType();
+    record1.customType = new CustomType("foo");
+    RecordWithCustomLogicalType record2 = new RecordWithCustomLogicalType();
+    // anonymous subclass
+    record2.customType = new CustomType("bar") {
+    };
+
+    File test = write(REFLECT, schema, record1, record2);
+    assertEquals(Arrays.asList(record1, record2), read(REFLECT.createDatumReader(schema), test),
+        "Should match the decimal after round trip");
+  }
+
   private static <D> List<D> read(DatumReader<D> reader, File file) throws IOException {
     List<D> data = new ArrayList<>();
 
@@ -729,5 +753,26 @@ class RecordWithTimestamps {
     }
     RecordWithTimestamps that = (RecordWithTimestamps) obj;
     return Objects.equals(localDateTime, that.localDateTime);
+  }
+}
+
+class RecordWithCustomLogicalType {
+  CustomType customType;
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(customType);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) {
+      return false;
+    }
+    if (!(obj instanceof RecordWithCustomLogicalType)) {
+      return false;
+    }
+    RecordWithCustomLogicalType that = (RecordWithCustomLogicalType) obj;
+    return Objects.equals(customType, that.customType);
   }
 }
