@@ -21,7 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 
+import foo.Bar;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData.Record;
@@ -70,4 +72,35 @@ public class TestDataFileSpecific {
     }
   }
 
+  @Test
+  public void testUnionWithLogicalType() throws IOException {
+    File file = new File(DIR.getPath(), "testSpecificDatumReaderDefaultCtorWithOptionalLogicalType");
+    Schema s1 = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Bar\",\"namespace\":\"foo\","
+        + "\"fields\":[{\"name\":\"title\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},"
+        + "{\"name\":\"created_at\",\"type\":[\"null\"," + "  {\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}"
+        + "]}]}");
+
+    // Create test data
+    Instant value = Instant.now();
+    try (DataFileWriter<Record> writer = new DataFileWriter<>(new GenericDatumWriter<Record>(s1)).create(s1, file)) {
+      for (int i = 0; i < 10; i++) {
+        Record r = new Record(s1);
+        r.put("title", "title" + i);
+        r.put("created_at", value.toEpochMilli() + i * 1000);
+        writer.append(r);
+      }
+    }
+
+    // read using a 'new SpecificDatumReader<T>()' to force inference of
+    // reader's schema from runtime
+    try (DataFileReader<Bar> reader = new DataFileReader<>(file, new SpecificDatumReader<>())) {
+      int i = 0;
+      for (Bar instance : reader) {
+        assertEquals("title" + i, instance.getTitle());
+        assertEquals(Instant.ofEpochMilli(value.plusSeconds(i).toEpochMilli()), instance.getCreatedAt());
+        i++;
+      }
+      assertEquals(10, i);
+    }
+  }
 }
