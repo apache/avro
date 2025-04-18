@@ -28,7 +28,7 @@ public class int$ extends SpecificRecordBase implements SpecificRecord {
 
   /**
    * Return the BinaryMessageEncoder instance used by this class.
-   * 
+   *
    * @return the message encoder used by this class
    */
   public static BinaryMessageEncoder<int$> getEncoder() {
@@ -37,7 +37,7 @@ public class int$ extends SpecificRecordBase implements SpecificRecord {
 
   /**
    * Return the BinaryMessageDecoder instance used by this class.
-   * 
+   *
    * @return the message decoder used by this class
    */
   public static BinaryMessageDecoder<int$> getDecoder() {
@@ -47,7 +47,7 @@ public class int$ extends SpecificRecordBase implements SpecificRecord {
   /**
    * Create a new BinaryMessageDecoder instance for this class that uses the
    * specified {@link SchemaStore}.
-   * 
+   *
    * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
    * @return a BinaryMessageDecoder instance for this class backed by the given
    *         SchemaStore
@@ -58,7 +58,7 @@ public class int$ extends SpecificRecordBase implements SpecificRecord {
 
   /**
    * Serializes this int to a ByteBuffer.
-   * 
+   *
    * @return a buffer holding the serialized data for this instance
    * @throws java.io.IOException if this instance could not be serialized
    */
@@ -68,7 +68,7 @@ public class int$ extends SpecificRecordBase implements SpecificRecord {
 
   /**
    * Deserializes a int from a ByteBuffer.
-   * 
+   *
    * @param b a byte buffer holding serialized data for an instance of this class
    * @return a int instance decoded from the given buffer
    * @throws java.io.IOException if the given bytes could not be deserialized into
@@ -78,10 +78,12 @@ public class int$ extends SpecificRecordBase implements SpecificRecord {
     return DECODER.decode(b);
   }
 
+  @org.apache.avro.specific.AvroInternal
   public SpecificData getSpecificData() {
     return MODEL$;
   }
 
+  @org.apache.avro.specific.AvroInternal
   public org.apache.avro.Schema getSchema() {
     return SCHEMA$;
   }
@@ -105,7 +107,7 @@ public class int$ extends SpecificRecordBase implements SpecificRecord {
 
   /**
    * Creates a new int$ RecordBuilder.
-   * 
+   *
    * @return A new int$ RecordBuilder
    */
   public static Builder newBuilder() {
@@ -114,7 +116,7 @@ public class int$ extends SpecificRecordBase implements SpecificRecord {
 
   /**
    * Creates a new int$ RecordBuilder by copying an existing Builder.
-   * 
+   *
    * @param other The existing builder to copy.
    * @return A new int$ RecordBuilder
    */
@@ -128,7 +130,7 @@ public class int$ extends SpecificRecordBase implements SpecificRecord {
 
   /**
    * Creates a new int$ RecordBuilder by copying an existing int$ instance.
-   * 
+   *
    * @param other The existing instance to copy.
    * @return A new int$ RecordBuilder
    */
@@ -154,7 +156,7 @@ public class int$ extends SpecificRecordBase implements SpecificRecord {
 
     /**
      * Creates a Builder by copying an existing Builder.
-     * 
+     *
      * @param other The existing Builder to copy.
      */
     private Builder(Builder other) {
@@ -163,7 +165,7 @@ public class int$ extends SpecificRecordBase implements SpecificRecord {
 
     /**
      * Creates a Builder by copying an existing int$ instance
-     * 
+     *
      * @param other The existing instance to copy.
      */
     private Builder(int$ other) {
