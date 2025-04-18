@@ -457,7 +457,8 @@
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithoutLogicalTypes.java</exclude>
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/int$.java</exclude>
                 <exclude>lang/java/ipc-netty/src/test/resources/**/*.txt</exclude>
-                <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/NullSafeAnnotationsFieldsTest.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/JetBrainsNullSafeAnnotationsFieldsTest.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/JSpecifyNullSafeAnnotationsFieldsTest.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Player.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Position.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/FieldTest.java</exclude>
