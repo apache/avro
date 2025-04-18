@@ -170,6 +170,9 @@ public:
         doAddCustomAttribute(customAttributes);
     }
 
+    virtual size_t customAttributes() const = 0;
+    virtual const CustomAttributes &customAttributesAt(size_t index) const = 0;
+
     virtual bool isValid() const = 0;
 
     virtual SchemaResolution resolve(const Node &reader) const = 0;
