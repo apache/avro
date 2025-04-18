@@ -92,7 +92,7 @@ class TestSchemaParser {
     SchemaParser.ParseResult parseResult = new SchemaParser().parse(DummySchemaParser.SCHEMA_TEXT_ONE);
     List<Schema> namedSchemas = parseResult.parsedNamedSchemas();
     assertEquals(1, namedSchemas.size());
-    assertEquals(DummySchemaParser.FIXED_SCHEMA, namedSchemas.getFirst());
+    assertEquals(DummySchemaParser.FIXED_SCHEMA, namedSchemas.get(0));
     Schema schema = parseResult.mainSchema();
     assertEquals(DummySchemaParser.FIXED_SCHEMA, schema);
   }
