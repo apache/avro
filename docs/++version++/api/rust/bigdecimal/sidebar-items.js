@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ParseBigDecimalError"],"externcrate":["num_bigint","num_traits"],"mod":["impl_serde","rounding","serde"],"struct":["BigDecimal","BigDecimalRef","Context"],"trait":["FromPrimitive","Num","One","Pow","Signed","ToPrimitive","Zero"]};

@@ -1,0 +1,33 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="LZMA/XZ encoding and decoding streams"><title>xz2 - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-6c3ea77c.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="xz2" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0 (05f9846f8 2025-03-31)" data-channel="1.86.0" data-search-js="search-581efc7a.js" data-settings-js="settings-6dad6058.js" ><script src="../static.files/storage-3a5871a4.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-4d63596a.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../xz2/index.html">xz2</a><span class="version">0.1.7</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#examples" title="Examples">Examples</a></li><li><a href="#async-io" title="Async I/O">Async I/O</a></li></ul><h3><a href="#modules">Crate Items</a></h3><ul class="block"><li><a href="#modules" title="Modules">Modules</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>xz2</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/xz2/lib.rs.html#1-53">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>LZMA/XZ encoding and decoding streams</p>
+<p>This library is a binding to liblzma currently to provide LZMA and xz
+encoding/decoding streams. I/O streams are provided in the <code>read</code>, <code>write</code>,
+and <code>bufread</code> modules (same types, different bounds). Raw in-memory
+compression/decompression is provided via the <code>stream</code> module and contains
+many of the raw APIs in liblzma.</p>
+<h2 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::io::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>xz2::read::{XzEncoder, XzDecoder};
+
+<span class="comment">// Round trip some bytes from a byte source, into a compressor, into a
+// decompressor, and finally into a vector.
+</span><span class="kw">let </span>data = <span class="string">"Hello, World!"</span>.as_bytes();
+<span class="kw">let </span>compressor = XzEncoder::new(data, <span class="number">9</span>);
+<span class="kw">let </span><span class="kw-2">mut </span>decompressor = XzDecoder::new(compressor);
+
+<span class="kw">let </span><span class="kw-2">mut </span>contents = String::new();
+decompressor.read_to_string(<span class="kw-2">&amp;mut </span>contents).unwrap();
+<span class="macro">assert_eq!</span>(contents, <span class="string">"Hello, World!"</span>);</code></pre></div>
+<h2 id="async-io"><a class="doc-anchor" href="#async-io">§</a>Async I/O</h2>
+<p>This crate optionally can support async I/O streams with the Tokio stack via
+the <code>tokio</code> feature of this crate:</p>
+<div class="example-wrap"><pre class="language-toml"><code>xz2 = { version = &quot;0.1.6&quot;, features = [&quot;tokio&quot;] }</code></pre></div>
+<p>All methods are internally capable of working with streams that may return
+<code>ErrorKind::WouldBlock</code> when they’re not ready to perform the particular
+operation.</p>
+<p>Note that care needs to be taken when using these objects, however. The
+Tokio runtime, in particular, requires that data is fully flushed before
+dropping streams. For compatibility with blocking streams all streams are
+flushed/written when they are dropped, and this is not always a suitable
+time to perform I/O. If I/O streams are flushed before drop, however, then
+these operations will be a noop.</p>
+</div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="bufread/index.html" title="mod xz2::bufread">bufread</a></dt><dd>I/O streams for wrapping <code>BufRead</code> types as encoders/decoders</dd><dt><a class="mod" href="read/index.html" title="mod xz2::read">read</a></dt><dd>Reader-based compression/decompression streams</dd><dt><a class="mod" href="stream/index.html" title="mod xz2::stream">stream</a></dt><dd>Raw in-memory LZMA streams.</dd><dt><a class="mod" href="write/index.html" title="mod xz2::write">write</a></dt><dd>Writer-based compression/decompression streams</dd></dl></section></div></main></body></html>
