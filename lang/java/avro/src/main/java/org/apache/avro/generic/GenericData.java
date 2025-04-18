@@ -17,25 +17,6 @@
  */
 package org.apache.avro.generic;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.time.temporal.Temporal;
-import java.util.AbstractList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentMap;
-
 import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
@@ -57,9 +38,26 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.FastReaderBuilder;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.util.internal.Accessor;
+import org.apache.avro.util.springframework.ConcurrentReferenceHashMap;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.avro.util.springframework.ConcurrentReferenceHashMap;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.time.temporal.Temporal;
+import java.util.AbstractList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentMap;
 
 import static org.apache.avro.util.springframework.ConcurrentReferenceHashMap.ReferenceType.WEAK;
 
@@ -118,7 +116,7 @@ public class GenericData {
   /** For subclasses. GenericData does not use a ClassLoader. */
   public GenericData(ClassLoader classLoader) {
     this.classLoader = (classLoader != null) ? classLoader : getClass().getClassLoader();
-    loadConversions();
+    this.conversions = new ConversionsContainer(classLoader);
   }
 
   /** Return the class loader that's used (by subclasses). */
@@ -126,38 +124,20 @@ public class GenericData {
     return classLoader;
   }
 
-  /**
-   * Use the Java 6 ServiceLoader to load conversions.
-   *
-   * @see #addLogicalTypeConversion(Conversion)
-   */
-  private void loadConversions() {
-    for (Conversion<?> conversion : ServiceLoader.load(Conversion.class, classLoader)) {
-      addLogicalTypeConversion(conversion);
-    }
-  }
-
-  private Map<String, Conversion<?>> conversions = new HashMap<>();
-
-  private Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass = new IdentityHashMap<>();
+  private final ConversionsContainer conversions;
 
   public Collection<Conversion<?>> getConversions() {
-    return conversions.values();
+    return this.conversions.getConversions();
   }
 
   /**
    * Registers the given conversion to be used when reading and writing with this
-   * data model. Conversions can also be registered automatically, as documented
-   * on the class {@link Conversion Conversion&lt;T&gt;}.
+   * data model.
    *
    * @param conversion a logical type Conversion.
    */
   public void addLogicalTypeConversion(Conversion<?> conversion) {
-    conversions.put(conversion.getLogicalTypeName(), conversion);
-    Class<?> type = conversion.getConvertedType();
-    Map<String, Conversion<?>> conversionsForClass = conversionsByClass.computeIfAbsent(type,
-        k -> new LinkedHashMap<>());
-    conversionsForClass.put(conversion.getLogicalTypeName(), conversion);
+    this.conversions.addLogicalTypeConversion(conversion);
   }
 
   /**
@@ -168,11 +148,7 @@ public class GenericData {
    */
   @SuppressWarnings("unchecked")
   public <T> Conversion<T> getConversionByClass(Class<T> datumClass) {
-    Map<String, Conversion<?>> conversions = conversionsByClass.get(datumClass);
-    if (conversions != null) {
-      return (Conversion<T>) conversions.values().iterator().next();
-    }
-    return null;
+    return this.conversions.getConversionByClass(datumClass);
   }
 
   /**
@@ -184,11 +160,7 @@ public class GenericData {
    */
   @SuppressWarnings("unchecked")
   public <T> Conversion<T> getConversionByClass(Class<T> datumClass, LogicalType logicalType) {
-    Map<String, Conversion<?>> conversions = conversionsByClass.get(datumClass);
-    if (conversions != null) {
-      return (Conversion<T>) conversions.get(logicalType.getName());
-    }
-    return null;
+    return this.conversions.getConversionByClass(datumClass, logicalType);
   }
 
   /**
@@ -199,10 +171,7 @@ public class GenericData {
    */
   @SuppressWarnings("unchecked")
   public <T> Conversion<T> getConversionFor(LogicalType logicalType) {
-    if (logicalType == null) {
-      return null;
-    }
-    return (Conversion<T>) conversions.get(logicalType.getName());
+    return this.conversions.getConversionFor(logicalType);
   }
 
   public static final String FAST_READER_PROP = "org.apache.avro.fastread";
@@ -916,14 +885,13 @@ public class GenericData {
     // this allows logical type concrete classes to overlap with supported ones
     // for example, a conversion could return a map
     if (datum != null) {
-      Map<String, Conversion<?>> conversions = conversionsByClass.get(datum.getClass());
-      if (conversions != null) {
+      final ConversionsContainer.ClassConversions classConversions = this.conversions.forClass(datum.getClass());
+      if (classConversions != null) {
         List<Schema> candidates = union.getTypes();
         for (int i = 0; i < candidates.size(); i += 1) {
           LogicalType candidateType = candidates.get(i).getLogicalType();
           if (candidateType != null) {
-            Conversion<?> conversion = conversions.get(candidateType.getName());
-            if (conversion != null) {
+            if (classConversions.containsKey(candidateType.getName())) {
               return i;
             }
           }
