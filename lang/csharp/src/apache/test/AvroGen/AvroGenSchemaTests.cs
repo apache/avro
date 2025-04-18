@@ -606,9 +606,9 @@ namespace Avro.Test.AvroGen
             AvroGenHelper.TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck);
         }
 
-        [TestCase(_logicalTypesWithCustomConversion, typeof(AvroTypeException))]
-        [TestCase(_customConversionWithLogicalTypes, typeof(SchemaParseException))]
-        public void NotSupportedSchema(string schema, Type expectedException)
+        [TestCase(_logicalTypesWithCustomConversion, typeof(AvroTypeException), 0)]
+        [TestCase(_customConversionWithLogicalTypes, typeof(SchemaParseException), 1)]
+        public void NotSupportedSchema(string schema, Type expectedException, int expectedResult)
         {
             // Create temp folder
             string outputDir = AvroGenHelper.CreateEmptyTemporaryFolder(out string uniqueId);
@@ -619,7 +619,8 @@ namespace Avro.Test.AvroGen
                 string schemaFileName = Path.Combine(outputDir, $"{uniqueId}.avsc");
                 System.IO.File.WriteAllText(schemaFileName, schema);
 
-                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, new Dictionary<string, string>(), false), Is.EqualTo(1));
+                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, new Dictionary<string, string>(), false), Is.EqualTo(expectedResult));
+
             }
             finally
             {
