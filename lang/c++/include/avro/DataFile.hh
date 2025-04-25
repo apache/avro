@@ -39,7 +39,11 @@ enum Codec {
     DEFLATE_CODEC,
 
 #ifdef SNAPPY_CODEC_AVAILABLE
-    SNAPPY_CODEC
+    SNAPPY_CODEC,
+#endif
+
+#ifdef ZSTD_CODEC_AVAILABLE
+    ZSTD_CODEC
 #endif
 
 };

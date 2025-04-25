@@ -27,6 +27,10 @@
 #include <snappy.h>
 #endif
 
+#ifdef ZSTD_CODEC_AVAILABLE
+#include <zstd.h>
+#endif
+
 #include <zlib.h>
 
 namespace avro {
@@ -47,6 +51,10 @@ const string AVRO_DEFLATE_CODEC("deflate");
 
 #ifdef SNAPPY_CODEC_AVAILABLE
 const string AVRO_SNAPPY_CODEC = "snappy";
+#endif
+
+#ifdef ZSTD_CODEC_AVAILABLE
+const string AVRO_ZSTD_CODEC = "zstd";
 #endif
 
 const size_t minSyncInterval = 32;
@@ -100,6 +108,10 @@ void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, co
 #ifdef SNAPPY_CODEC_AVAILABLE
     } else if (codec_ == SNAPPY_CODEC) {
         setMetadata(AVRO_CODEC_KEY, AVRO_SNAPPY_CODEC);
+#endif
+#ifdef ZSTD_CODEC_AVAILABLE
+    } else if (codec_ == ZSTD_CODEC) {
+        setMetadata(AVRO_CODEC_KEY, AVRO_ZSTD_CODEC);
 #endif
     } else {
         throw Exception("Unknown codec: {}", int(codec));
@@ -214,6 +226,39 @@ void DataFileWriterBase::sync() {
             reinterpret_cast<const uint8_t *>(temp.data()), temp.size());
         int64_t byteCount = temp.size();
         avro::encode(*encoderPtr_, byteCount);
+        encoderPtr_->flush();
+        copy(*in, *stream_);
+#endif
+#ifdef ZSTD_CODEC_AVAILABLE
+    } else if (codec_ == ZSTD_CODEC) {
+        // Read all uncompressed data into a single buffer
+        std::vector<char> uncompressed;
+        const uint8_t *data;
+        size_t len;
+        std::unique_ptr<InputStream> input = memoryInputStream(*buffer_);
+        while (input->next(&data, &len)) {
+            uncompressed.insert(uncompressed.end(), reinterpret_cast<const char *>(data),
+                                reinterpret_cast<const char *>(data) + len);
+        }
+
+        // Pre-allocate buffer for compressed data
+        size_t max_compressed_size = ZSTD_compressBound(uncompressed.size());
+        std::vector<char> compressed(max_compressed_size);
+
+        // Compress the data using ZSTD block API
+        size_t compressed_size = ZSTD_compress(
+            compressed.data(), max_compressed_size,
+            uncompressed.data(), uncompressed.size(),
+            ZSTD_CLEVEL_DEFAULT);
+
+        if (ZSTD_isError(compressed_size)) {
+            throw Exception("ZSTD compression error: {}", ZSTD_getErrorName(compressed_size));
+        }
+
+        compressed.resize(compressed_size);
+        std::unique_ptr<InputStream> in = memoryInputStream(
+            reinterpret_cast<const uint8_t *>(compressed.data()), compressed.size());
+        avro::encode(*encoderPtr_, static_cast<int64_t>(compressed_size));
         encoderPtr_->flush();
         copy(*in, *stream_);
 #endif
@@ -431,6 +476,46 @@ void DataFileReaderBase::readDataBlock() {
         dataDecoder_->init(*in);
         dataStream_ = std::move(in);
 #endif
+#ifdef ZSTD_CODEC_AVAILABLE
+    } else if (codec_ == ZSTD_CODEC) {
+        compressed_.clear();
+        const uint8_t *data;
+        size_t len;
+        while (st->next(&data, &len)) {
+            compressed_.insert(compressed_.end(), data, data + len);
+        }
+
+        // Get the decompressed size
+        size_t decompressed_size = ZSTD_getFrameContentSize(
+            reinterpret_cast<const char *>(compressed_.data()), compressed_.size());
+        if (decompressed_size == ZSTD_CONTENTSIZE_ERROR) {
+            throw Exception("ZSTD: Not a valid compressed frame");
+        } else if (decompressed_size == ZSTD_CONTENTSIZE_UNKNOWN) {
+            throw Exception("ZSTD: Unable to determine decompressed size");
+        }
+
+        // Decompress the data
+        uncompressed.clear();
+        uncompressed.resize(decompressed_size);
+        size_t result = ZSTD_decompress(
+            uncompressed.data(), decompressed_size,
+            reinterpret_cast<const char *>(compressed_.data()), compressed_.size());
+
+        if (ZSTD_isError(result)) {
+            throw Exception("ZSTD decompression error: {}", ZSTD_getErrorName(result));
+        }
+        if (result != decompressed_size) {
+            throw Exception("ZSTD: Decompressed size mismatch: expected {}, got {}",
+                            decompressed_size, result);
+        }
+
+        std::unique_ptr<InputStream> in = memoryInputStream(
+            reinterpret_cast<const uint8_t *>(uncompressed.data()),
+            uncompressed.size());
+
+        dataDecoder_->init(*in);
+        dataStream_ = std::move(in);
+#endif
     } else {
         compressed_.clear();
         uncompressed.clear();
@@ -530,6 +615,11 @@ void DataFileReaderBase::readHeader() {
     } else if (it != metadata_.end()
                && toString(it->second) == AVRO_SNAPPY_CODEC) {
         codec_ = SNAPPY_CODEC;
+#endif
+#ifdef ZSTD_CODEC_AVAILABLE
+    } else if (it != metadata_.end()
+               && toString(it->second) == AVRO_ZSTD_CODEC) {
+        codec_ = ZSTD_CODEC;
 #endif
     } else {
         codec_ = NULL_CODEC;
