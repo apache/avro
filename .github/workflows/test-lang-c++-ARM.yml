@@ -44,7 +44,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -q
-          sudo apt-get install -q -y gcc g++ libboost-all-dev libfmt-dev zlib1g-dev cmake
+          sudo apt-get install -q -y gcc g++ libboost-all-dev libfmt-dev zlib1g-dev libzstd-dev cmake
 
       - name: Build
         run: |

@@ -216,6 +216,12 @@ public:
     }
 #endif
 
+#ifdef ZSTD_CODEC_AVAILABLE
+    void testWriteWithZstdCodec() {
+        testWriteWithCodec(avro::ZSTD_CODEC);
+    }
+#endif
+
     void testWriteWithCodec(avro::Codec codec) {
         avro::DataFileWriter<ComplexInteger> df(filename, writerSchema, 100, codec);
         int64_t re = 3;
@@ -618,6 +624,39 @@ public:
     }
 #endif
 
+#ifdef ZSTD_CODEC_AVAILABLE
+    void testZstd() {
+        // Add enough objects to span multiple blocks
+        const size_t number_of_objects = 1000000;
+        // first create a large file
+        ValidSchema dschema = avro::compileJsonSchemaFromString(sch);
+        {
+            avro::DataFileWriter<ComplexInteger> writer(
+                filename, dschema, 16 * 1024, avro::ZSTD_CODEC);
+
+            for (size_t i = 0; i < number_of_objects; ++i) {
+                ComplexInteger d;
+                d.re = i;
+                d.im = 2 * i;
+                writer.write(d);
+            }
+        }
+        {
+            avro::DataFileReader<ComplexInteger> reader(filename, dschema);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::vector<int64_t> found;
+            ComplexInteger record;
+            while (reader.read(record)) {
+                found.push_back(record.re);
+            }
+            BOOST_CHECK_EQUAL(found.size(), number_of_objects);
+            for (unsigned int i = 0; i < found.size(); ++i) {
+                BOOST_CHECK_EQUAL(found[i], i);
+            }
+        }
+    }
+#endif
+
     void testSchemaReadWrite() {
         uint32_t a = 42;
         {
@@ -789,6 +828,13 @@ void testSkipStringDeflateCodec() {
 void testSkipStringSnappyCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
     testSkipString(avro::SNAPPY_CODEC);
+}
+#endif
+
+#ifdef ZSTD_CODEC_AVAILABLE
+void testSkipStringZstdCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testSkipString(avro::ZSTD_CODEC);
 }
 #endif
 
@@ -1005,6 +1051,13 @@ void testLastSyncSnappyCodec() {
 }
 #endif
 
+#ifdef ZSTD_CODEC_AVAILABLE
+void testLastSyncZstdCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testLastSync(avro::ZSTD_CODEC);
+}
+#endif
+
 void testReadRecordEfficientlyUsingLastSyncNullCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
     testReadRecordEfficientlyUsingLastSync(avro::NULL_CODEC);
@@ -1019,6 +1072,13 @@ void testReadRecordEfficientlyUsingLastSyncDeflateCodec() {
 void testReadRecordEfficientlyUsingLastSyncSnappyCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
     testReadRecordEfficientlyUsingLastSync(avro::SNAPPY_CODEC);
+}
+#endif
+
+#ifdef ZSTD_CODEC_AVAILABLE
+void testReadRecordEfficientlyUsingLastSyncZstdCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testReadRecordEfficientlyUsingLastSync(avro::ZSTD_CODEC);
 }
 #endif
 
@@ -1052,6 +1112,16 @@ init_unit_test_suite(int, char *[]) {
         shared_ptr<DataFileTest> t1(new DataFileTest("test1.snappy.df", sch, isch));
         ts->add(BOOST_CLASS_TEST_CASE(
             &DataFileTest::testWriteWithSnappyCodec, t1));
+        addReaderTests(ts, t1);
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+#endif
+#ifdef ZSTD_CODEC_AVAILABLE
+    {
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test1.zstd.df");
+        shared_ptr<DataFileTest> t1(new DataFileTest("test1.zstd.df", sch, isch));
+        ts->add(BOOST_CLASS_TEST_CASE(
+            &DataFileTest::testWriteWithZstdCodec, t1));
         addReaderTests(ts, t1);
         boost::unit_test::framework::master_test_suite().add(ts);
     }
@@ -1101,6 +1171,9 @@ init_unit_test_suite(int, char *[]) {
         shared_ptr<DataFileTest> t8(new DataFileTest("test8.df", dsch, dblsch));
 #ifdef SNAPPY_CODEC_AVAILABLE
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSnappy, t8));
+#endif
+#ifdef ZSTD_CODEC_AVAILABLE
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testZstd, t8));
 #endif
         boost::unit_test::framework::master_test_suite().add(ts);
     }
@@ -1165,17 +1238,26 @@ init_unit_test_suite(int, char *[]) {
 #ifdef SNAPPY_CODEC_AVAILABLE
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testSkipStringSnappyCodec));
 #endif
+#ifdef ZSTD_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testSkipStringZstdCodec));
+#endif
 
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testLastSyncNullCodec));
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testLastSyncDeflateCodec));
 #ifdef SNAPPY_CODEC_AVAILABLE
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testLastSyncSnappyCodec));
 #endif
+#ifdef ZSTD_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testLastSyncZstdCodec));
+#endif
 
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncNullCodec));
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncDeflateCodec));
 #ifdef SNAPPY_CODEC_AVAILABLE
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncSnappyCodec));
+#endif
+#ifdef ZSTD_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncZstdCodec));
 #endif
 
     return nullptr;
