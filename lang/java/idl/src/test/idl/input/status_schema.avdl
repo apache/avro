@@ -1,5 +1,0 @@
-namespace system;
-
-enum Status {
-       UNKNOWN, NEW, STARTUP, RUNNING, TERMINATING, SHUTDOWN, CRASHED
-} = UNKNOWN;

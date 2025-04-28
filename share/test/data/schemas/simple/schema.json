@@ -1,8 +1,0 @@
-{
-  "type": "record",
-  "name": "simple",
-  "fields": [{
-    "name": "text",
-    "type": "string"
-  }]
-}

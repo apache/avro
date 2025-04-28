@@ -1,1 +1,0 @@
-Treats union types. 
