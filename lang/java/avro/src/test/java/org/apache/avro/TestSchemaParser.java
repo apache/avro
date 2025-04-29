@@ -27,6 +27,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TestSchemaParser {
   private static final Schema SCHEMA_REAL = Schema.createFixed("Real", null, "tests", 42);
-  private static final String SCHEMA_JSON = SCHEMA_REAL.toString(false);
+  private static final String SCHEMA_JSON = SchemaFormatter.getInstance("json").format(SCHEMA_REAL);
   private static final Charset[] UTF_CHARSETS = { StandardCharsets.UTF_8, StandardCharsets.UTF_16LE,
       StandardCharsets.UTF_16BE };
 
@@ -88,7 +89,11 @@ class TestSchemaParser {
 
   @Test
   void testParseByCustomParser() {
-    Schema schema = new SchemaParser().parse(DummySchemaParser.SCHEMA_TEXT_ONE).mainSchema();
+    SchemaParser.ParseResult parseResult = new SchemaParser().parse(DummySchemaParser.SCHEMA_TEXT_ONE);
+    List<Schema> namedSchemas = parseResult.parsedNamedSchemas();
+    assertEquals(1, namedSchemas.size());
+    assertEquals(DummySchemaParser.FIXED_SCHEMA, namedSchemas.get(0));
+    Schema schema = parseResult.mainSchema();
     assertEquals(DummySchemaParser.FIXED_SCHEMA, schema);
   }
 

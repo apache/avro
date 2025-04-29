@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>33</version>
+    <version>34</version>
   </parent>
 
   <groupId>org.apache.avro</groupId>
@@ -49,11 +49,11 @@
     <!-- plugin versions -->
     <apache-rat-plugin.version>0.16.1</apache-rat-plugin.version>
     <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
-    <checkstyle.version>10.21.1</checkstyle.version>
+    <checkstyle.version>10.22.0</checkstyle.version>
     <enforcer-plugin.version>3.5.0</enforcer-plugin.version>
     <extra-enforcer-rules.version>1.9.0</extra-enforcer-rules.version>
     <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
-    <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+    <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
     <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
     <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
     <maven-plugin-plugin.version>3.15.1</maven-plugin-plugin.version>
@@ -62,7 +62,7 @@
     <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
     <maven-toolchains-plugin.version>3.2.0</maven-toolchains-plugin.version>
     <plugin-tools-javadoc.version>3.5.2</plugin-tools-javadoc.version>
-    <spotless-maven-plugin.version>2.44.2</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>2.44.3</spotless-maven-plugin.version>
     <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
 
     <!-- Pin output timestamp to make the Java build reproducible -->
