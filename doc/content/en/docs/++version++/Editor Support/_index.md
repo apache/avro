@@ -27,7 +27,7 @@ weight: 209
 
 ## Overview
 
-When editing an Avro schema, everyone has a preferred editor. Some use an IDE, like IntelliJ, Pycharm, RustRover or
+When editing an Avro schema, everyone has a preferred editor. Some use an IDE, like IntelliJ, PyCharm, RustRover or
 Visual Studio, while others prefer a more humble text editor like Atom/Pulsar, Emacs or Vim.
 
 Most provide help when working with Avro via JSON support (for JSON schemata) by offering syntax highlighting and
