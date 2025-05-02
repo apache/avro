@@ -27,8 +27,8 @@ weight: 209
 
 ## Overview
 
-When editing an Avro schema, everyone has a preferred editor. Some use an IDE, like IntelliJ, PyCharm, RustRover or
-Visual Studio, while others prefer a more humble text editor like Atom/Pulsar, Emacs or Vim.
+When editing an Avro schema, everyone has a preferred editor. Some use an IDE, like IntelliJ, Pycharm, RustRover or
+Visual Studio, while others prefer a more humble text editor like Pulsar, Emacs or Vim.
 
 Most provide help when working with Avro via JSON support (for JSON schemata) by offering syntax highlighting and
 formatting. Some provide more help, for example syntax highlighting for IDL schemata, code completion, error
@@ -81,7 +81,7 @@ All of them use the [Plugin Marketplace](https://plugins.jetbrains.com/) to load
 
 <img style="float: right; object-fit: contain; width: 160px; height: 160px;" src="jetbrainsAvroIdlSchemaSupport.svg"/>[Plugin](https://plugins.jetbrains.com/plugin/15728-apache-avro-idl-schema-support) ([source](https://github.com/opwvhk/avro-schema-support?tab=readme-ov-file#intellij-plugin-for-apache-avro-idl))
 
-Released in 2021, this plugin received its last update in November 2023.
+Released in 2021, this plugin received its last update in April 2025.
 
 Features for Avro schema & protocol definitions:
 
@@ -111,10 +111,10 @@ Released in 2023, this plugin is actively developed by JetBrains.
 
 Allows previewing `.avro` files, and shows its schema in the structure tool window.
 
-## Pulsar/Atom
+## Pulsar
 
-Though the Atom.io editor has been sunset late 2022, the public fork [Pulsar](https://pulsar-edit.dev/) has taken its
-place. Extensions can be found in its [Package Repository](https://web.pulsar-edit.dev/).
+A Chromium-based text editor, Pulsar touts itself as community-led and hyper-hackable. Extensions can be found in
+its [Package Repository](https://web.pulsar-edit.dev/).
 
 ### atom-language-avro
 
