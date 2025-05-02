@@ -30,6 +30,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends org.apache.
   private static final long serialVersionUID = ${this.fingerprint64($schema)}L;
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("${this.escapeForJavaString($schema.toString())}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+  @org.apache.avro.specific.AvroInternal
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
 
   /** Creates a new ${this.mangleTypeIdentifier($schema.getName())} */

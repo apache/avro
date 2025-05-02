@@ -45,7 +45,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
   /**
    * Return the BinaryMessageEncoder instance used by this class.
-   * 
+   *
    * @return the message encoder used by this class
    */
   public static BinaryMessageEncoder<TestRecordWithMapsAndArrays> getEncoder() {
@@ -54,7 +54,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
   /**
    * Return the BinaryMessageDecoder instance used by this class.
-   * 
+   *
    * @return the message decoder used by this class
    */
   public static BinaryMessageDecoder<TestRecordWithMapsAndArrays> getDecoder() {
@@ -64,7 +64,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
   /**
    * Create a new BinaryMessageDecoder instance for this class that uses the
    * specified {@link SchemaStore}.
-   * 
+   *
    * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
    * @return a BinaryMessageDecoder instance for this class backed by the given
    *         SchemaStore
@@ -75,7 +75,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
   /**
    * Serializes this TestRecordWithMapsAndArrays to a ByteBuffer.
-   * 
+   *
    * @return a buffer holding the serialized data for this instance
    * @throws java.io.IOException if this instance could not be serialized
    */
@@ -85,7 +85,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
   /**
    * Deserializes a TestRecordWithMapsAndArrays from a ByteBuffer.
-   * 
+   *
    * @param b a byte buffer holding serialized data for an instance of this class
    * @return a TestRecordWithMapsAndArrays instance decoded from the given buffer
    * @throws java.io.IOException if the given bytes could not be deserialized into
@@ -110,7 +110,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
   /**
    * All-args constructor.
-   * 
+   *
    * @param arr        The new value for arr
    * @param map        The new value for map
    * @param nested_arr The new value for nested_arr
@@ -126,11 +126,13 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
   }
 
   @Override
+  @org.apache.avro.specific.AvroInternal
   public SpecificData getSpecificData() {
     return MODEL$;
   }
 
   @Override
+  @org.apache.avro.specific.AvroInternal
   public org.apache.avro.Schema getSchema() {
     return SCHEMA$;
   }
@@ -176,7 +178,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
   /**
    * Gets the value of the 'arr' field.
-   * 
+   *
    * @return The value of the 'arr' field.
    */
   public java.util.List<String> getArr() {
@@ -185,7 +187,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
   /**
    * Sets the value of the 'arr' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setArr(java.util.List<String> value) {
@@ -194,7 +196,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
   /**
    * Gets the value of the 'map' field.
-   * 
+   *
    * @return The value of the 'map' field.
    */
   public java.util.Map<String, Long> getMap() {
@@ -203,7 +205,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
   /**
    * Sets the value of the 'map' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setMap(java.util.Map<String, Long> value) {
@@ -212,7 +214,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
   /**
    * Gets the value of the 'nested_arr' field.
-   * 
+   *
    * @return The value of the 'nested_arr' field.
    */
   public java.util.List<java.util.List<String>> getNestedArr() {
@@ -221,7 +223,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
   /**
    * Sets the value of the 'nested_arr' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setNestedArr(java.util.List<java.util.List<String>> value) {
@@ -230,7 +232,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
   /**
    * Gets the value of the 'nested_map' field.
-   * 
+   *
    * @return The value of the 'nested_map' field.
    */
   public java.util.Map<String, java.util.Map<String, Long>> getNestedMap() {
@@ -239,7 +241,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
   /**
    * Sets the value of the 'nested_map' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setNestedMap(java.util.Map<String, java.util.Map<String, Long>> value) {
@@ -248,7 +250,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
   /**
    * Creates a new TestRecordWithMapsAndArrays RecordBuilder.
-   * 
+   *
    * @return A new TestRecordWithMapsAndArrays RecordBuilder
    */
   public static Builder newBuilder() {
@@ -258,7 +260,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
   /**
    * Creates a new TestRecordWithMapsAndArrays RecordBuilder by copying an
    * existing Builder.
-   * 
+   *
    * @param other The existing builder to copy.
    * @return A new TestRecordWithMapsAndArrays RecordBuilder
    */
@@ -273,7 +275,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
   /**
    * Creates a new TestRecordWithMapsAndArrays RecordBuilder by copying an
    * existing TestRecordWithMapsAndArrays instance.
-   * 
+   *
    * @param other The existing instance to copy.
    * @return A new TestRecordWithMapsAndArrays RecordBuilder
    */
@@ -304,7 +306,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Creates a Builder by copying an existing Builder.
-     * 
+     *
      * @param other The existing Builder to copy.
      */
     private Builder(Builder other) {
@@ -329,7 +331,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Creates a Builder by copying an existing TestRecordWithMapsAndArrays instance
-     * 
+     *
      * @param other The existing instance to copy.
      */
     private Builder(TestRecordWithMapsAndArrays other) {
@@ -354,7 +356,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Gets the value of the 'arr' field.
-     * 
+     *
      * @return The value.
      */
     public java.util.List<String> getArr() {
@@ -363,7 +365,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Sets the value of the 'arr' field.
-     * 
+     *
      * @param value The value of 'arr'.
      * @return This builder.
      */
@@ -376,7 +378,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Checks whether the 'arr' field has been set.
-     * 
+     *
      * @return True if the 'arr' field has been set, false otherwise.
      */
     public boolean hasArr() {
@@ -385,7 +387,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Clears the value of the 'arr' field.
-     * 
+     *
      * @return This builder.
      */
     public Builder clearArr() {
@@ -396,7 +398,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Gets the value of the 'map' field.
-     * 
+     *
      * @return The value.
      */
     public java.util.Map<String, Long> getMap() {
@@ -405,7 +407,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Sets the value of the 'map' field.
-     * 
+     *
      * @param value The value of 'map'.
      * @return This builder.
      */
@@ -418,7 +420,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Checks whether the 'map' field has been set.
-     * 
+     *
      * @return True if the 'map' field has been set, false otherwise.
      */
     public boolean hasMap() {
@@ -427,7 +429,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Clears the value of the 'map' field.
-     * 
+     *
      * @return This builder.
      */
     public Builder clearMap() {
@@ -438,7 +440,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Gets the value of the 'nested_arr' field.
-     * 
+     *
      * @return The value.
      */
     public java.util.List<java.util.List<String>> getNestedArr() {
@@ -447,7 +449,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Sets the value of the 'nested_arr' field.
-     * 
+     *
      * @param value The value of 'nested_arr'.
      * @return This builder.
      */
@@ -460,7 +462,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Checks whether the 'nested_arr' field has been set.
-     * 
+     *
      * @return True if the 'nested_arr' field has been set, false otherwise.
      */
     public boolean hasNestedArr() {
@@ -469,7 +471,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Clears the value of the 'nested_arr' field.
-     * 
+     *
      * @return This builder.
      */
     public Builder clearNestedArr() {
@@ -480,7 +482,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Gets the value of the 'nested_map' field.
-     * 
+     *
      * @return The value.
      */
     public java.util.Map<String, java.util.Map<String, Long>> getNestedMap() {
@@ -489,7 +491,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Sets the value of the 'nested_map' field.
-     * 
+     *
      * @param value The value of 'nested_map'.
      * @return This builder.
      */
@@ -502,7 +504,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Checks whether the 'nested_map' field has been set.
-     * 
+     *
      * @return True if the 'nested_map' field has been set, false otherwise.
      */
     public boolean hasNestedMap() {
@@ -511,7 +513,7 @@ public class TestRecordWithMapsAndArrays extends SpecificRecordBase implements S
 
     /**
      * Clears the value of the 'nested_map' field.
-     * 
+     *
      * @return This builder.
      */
     public Builder clearNestedMap() {
