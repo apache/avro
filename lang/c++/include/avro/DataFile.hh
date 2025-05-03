@@ -35,11 +35,15 @@ namespace avro {
 
 /** Specify type of compression to use when writing data files. */
 enum Codec {
-    NULL_CODEC,
-    DEFLATE_CODEC,
+    NULL_CODEC = 0,
+    DEFLATE_CODEC = 1,
 
 #ifdef SNAPPY_CODEC_AVAILABLE
-    SNAPPY_CODEC
+    SNAPPY_CODEC = 2,
+#endif
+
+#ifdef ZSTD_CODEC_AVAILABLE
+    ZSTD_CODEC = 3,
 #endif
 
 };

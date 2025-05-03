@@ -164,10 +164,6 @@ public class IdlReader {
     return parseContext.find(fullName, null);
   }
 
-  private void addSchema(Schema schema) {
-    parseContext.put(schema);
-  }
-
   public IdlFile parse(Path location) throws IOException {
     return parse(location.toUri());
   }
@@ -437,7 +433,7 @@ public class IdlReader {
           try (InputStream stream = importLocation.toURL().openStream()) {
             Protocol importProtocol = Protocol.parse(stream);
             for (Schema s : importProtocol.getTypes()) {
-              addSchema(s);
+              parseContext.put(s);
             }
             if (protocol != null) {
               protocol.getMessages().putAll(importProtocol.getMessages());
@@ -515,7 +511,7 @@ public class IdlReader {
       Schema schema = Schema.createFixed(name, doc, space, size);
       properties.copyAliases(schema::addAlias);
       properties.copyProperties(schema);
-      addSchema(schema);
+      parseContext.put(schema);
     }
 
     @Override
@@ -539,7 +535,7 @@ public class IdlReader {
       enumSymbols.clear();
       enumDefaultSymbol = null;
 
-      addSchema(schema);
+      parseContext.put(schema);
     }
 
     @Override
@@ -590,7 +586,7 @@ public class IdlReader {
     public void exitRecordDeclaration(RecordDeclarationContext ctx) {
       schema.setFields(fields);
       fields.clear();
-      addSchema(schema);
+      parseContext.put(schema);
       schema = null;
 
       popNamespace();
