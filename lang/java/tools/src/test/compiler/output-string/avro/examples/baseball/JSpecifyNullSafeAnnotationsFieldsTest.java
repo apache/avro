@@ -11,28 +11,28 @@ import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.SchemaStore;
 
-/** Test that @org.jetbrains.annotations.Nullable and @org.jetbrains.annotations.NotNull annotations are created for all fields */
+/** Test that @org.jspecify.annotations.Nullable and @org.jspecify.annotations.NonNull annotations are created for all fields */
 @org.apache.avro.specific.AvroGenerated
-public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = 2020521726426674816L;
+public class JSpecifyNullSafeAnnotationsFieldsTest extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
+  private static final long serialVersionUID = 2433229483110849489L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NullSafeAnnotationsFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that @org.jetbrains.annotations.Nullable and @org.jetbrains.annotations.NotNull annotations are created for all fields\",\"fields\":[{\"name\":\"name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"nullable_name\",\"type\":[{\"type\":\"string\",\"avro.java.string\":\"String\"},\"null\"]},{\"name\":\"favorite_number\",\"type\":\"int\"},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"JSpecifyNullSafeAnnotationsFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that @org.jspecify.annotations.Nullable and @org.jspecify.annotations.NonNull annotations are created for all fields\",\"fields\":[{\"name\":\"name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"nullable_name\",\"type\":[{\"type\":\"string\",\"avro.java.string\":\"String\"},\"null\"]},{\"name\":\"favorite_number\",\"type\":\"int\"},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
 
-  private static final BinaryMessageEncoder<NullSafeAnnotationsFieldsTest> ENCODER =
+  private static final BinaryMessageEncoder<JSpecifyNullSafeAnnotationsFieldsTest> ENCODER =
       new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
 
-  private static final BinaryMessageDecoder<NullSafeAnnotationsFieldsTest> DECODER =
+  private static final BinaryMessageDecoder<JSpecifyNullSafeAnnotationsFieldsTest> DECODER =
       new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
 
   /**
    * Return the BinaryMessageEncoder instance used by this class.
    * @return the message encoder used by this class
    */
-  public static BinaryMessageEncoder<NullSafeAnnotationsFieldsTest> getEncoder() {
+  public static BinaryMessageEncoder<JSpecifyNullSafeAnnotationsFieldsTest> getEncoder() {
     return ENCODER;
   }
 
@@ -40,7 +40,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Return the BinaryMessageDecoder instance used by this class.
    * @return the message decoder used by this class
    */
-  public static BinaryMessageDecoder<NullSafeAnnotationsFieldsTest> getDecoder() {
+  public static BinaryMessageDecoder<JSpecifyNullSafeAnnotationsFieldsTest> getDecoder() {
     return DECODER;
   }
 
@@ -49,12 +49,12 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
    * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
    */
-  public static BinaryMessageDecoder<NullSafeAnnotationsFieldsTest> createDecoder(SchemaStore resolver) {
+  public static BinaryMessageDecoder<JSpecifyNullSafeAnnotationsFieldsTest> createDecoder(SchemaStore resolver) {
     return new BinaryMessageDecoder<>(MODEL$, SCHEMA$, resolver);
   }
 
   /**
-   * Serializes this NullSafeAnnotationsFieldsTest to a ByteBuffer.
+   * Serializes this JSpecifyNullSafeAnnotationsFieldsTest to a ByteBuffer.
    * @return a buffer holding the serialized data for this instance
    * @throws java.io.IOException if this instance could not be serialized
    */
@@ -63,12 +63,12 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
   }
 
   /**
-   * Deserializes a NullSafeAnnotationsFieldsTest from a ByteBuffer.
+   * Deserializes a JSpecifyNullSafeAnnotationsFieldsTest from a ByteBuffer.
    * @param b a byte buffer holding serialized data for an instance of this class
-   * @return a NullSafeAnnotationsFieldsTest instance decoded from the given buffer
+   * @return a JSpecifyNullSafeAnnotationsFieldsTest instance decoded from the given buffer
    * @throws java.io.IOException if the given bytes could not be deserialized into an instance of this class
    */
-  public static NullSafeAnnotationsFieldsTest fromByteBuffer(
+  public static JSpecifyNullSafeAnnotationsFieldsTest fromByteBuffer(
       java.nio.ByteBuffer b) throws java.io.IOException {
     return DECODER.decode(b);
   }
@@ -83,7 +83,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * to their default values from the schema.  If that is desired then
    * one should use <code>newBuilder()</code>.
    */
-  public NullSafeAnnotationsFieldsTest() {}
+  public JSpecifyNullSafeAnnotationsFieldsTest() {}
 
   /**
    * All-args constructor.
@@ -92,7 +92,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * @param favorite_number The new value for favorite_number
    * @param nullable_favorite_number The new value for nullable_favorite_number
    */
-  public NullSafeAnnotationsFieldsTest(@org.jetbrains.annotations.NotNull java.lang.String name, @org.jetbrains.annotations.Nullable java.lang.String nullable_name, @org.jetbrains.annotations.NotNull java.lang.Integer favorite_number, @org.jetbrains.annotations.Nullable java.lang.Integer nullable_favorite_number) {
+  public JSpecifyNullSafeAnnotationsFieldsTest(@org.jspecify.annotations.NonNull java.lang.String name, @org.jspecify.annotations.Nullable java.lang.String nullable_name, @org.jspecify.annotations.NonNull java.lang.Integer favorite_number, @org.jspecify.annotations.Nullable java.lang.Integer nullable_favorite_number) {
     this.name = name;
     this.nullable_name = nullable_name;
     this.favorite_number = favorite_number;
@@ -134,7 +134,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Gets the value of the 'name' field.
    * @return The value of the 'name' field.
    */
-  @org.jetbrains.annotations.NotNull
+  @org.jspecify.annotations.NonNull
   public java.lang.String getName() {
     return name;
   }
@@ -144,7 +144,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Sets the value of the 'name' field.
    * @param value the value to set.
    */
-  public void setName(@org.jetbrains.annotations.NotNull java.lang.String value) {
+  public void setName(@org.jspecify.annotations.NonNull java.lang.String value) {
     this.name = value;
   }
 
@@ -152,7 +152,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Gets the value of the 'nullable_name' field.
    * @return The value of the 'nullable_name' field.
    */
-  @org.jetbrains.annotations.Nullable
+  @org.jspecify.annotations.Nullable
   public java.lang.String getNullableName() {
     return nullable_name;
   }
@@ -162,7 +162,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Sets the value of the 'nullable_name' field.
    * @param value the value to set.
    */
-  public void setNullableName(@org.jetbrains.annotations.Nullable java.lang.String value) {
+  public void setNullableName(@org.jspecify.annotations.Nullable java.lang.String value) {
     this.nullable_name = value;
   }
 
@@ -170,7 +170,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Gets the value of the 'favorite_number' field.
    * @return The value of the 'favorite_number' field.
    */
-  @org.jetbrains.annotations.NotNull
+  @org.jspecify.annotations.NonNull
   public int getFavoriteNumber() {
     return favorite_number;
   }
@@ -180,7 +180,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Sets the value of the 'favorite_number' field.
    * @param value the value to set.
    */
-  public void setFavoriteNumber(@org.jetbrains.annotations.NotNull int value) {
+  public void setFavoriteNumber(@org.jspecify.annotations.NonNull int value) {
     this.favorite_number = value;
   }
 
@@ -188,7 +188,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Gets the value of the 'nullable_favorite_number' field.
    * @return The value of the 'nullable_favorite_number' field.
    */
-  @org.jetbrains.annotations.Nullable
+  @org.jspecify.annotations.Nullable
   public java.lang.Integer getNullableFavoriteNumber() {
     return nullable_favorite_number;
   }
@@ -198,50 +198,50 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Sets the value of the 'nullable_favorite_number' field.
    * @param value the value to set.
    */
-  public void setNullableFavoriteNumber(@org.jetbrains.annotations.Nullable java.lang.Integer value) {
+  public void setNullableFavoriteNumber(@org.jspecify.annotations.Nullable java.lang.Integer value) {
     this.nullable_favorite_number = value;
   }
 
   /**
-   * Creates a new NullSafeAnnotationsFieldsTest RecordBuilder.
-   * @return A new NullSafeAnnotationsFieldsTest RecordBuilder
+   * Creates a new JSpecifyNullSafeAnnotationsFieldsTest RecordBuilder.
+   * @return A new JSpecifyNullSafeAnnotationsFieldsTest RecordBuilder
    */
-  public static avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder newBuilder() {
-    return new avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder();
+  public static avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder newBuilder() {
+    return new avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder();
   }
 
   /**
-   * Creates a new NullSafeAnnotationsFieldsTest RecordBuilder by copying an existing Builder.
+   * Creates a new JSpecifyNullSafeAnnotationsFieldsTest RecordBuilder by copying an existing Builder.
    * @param other The existing builder to copy.
-   * @return A new NullSafeAnnotationsFieldsTest RecordBuilder
+   * @return A new JSpecifyNullSafeAnnotationsFieldsTest RecordBuilder
    */
-  public static avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder newBuilder(avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder other) {
+  public static avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder newBuilder(avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder other) {
     if (other == null) {
-      return new avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder();
+      return new avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder();
     } else {
-      return new avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder(other);
+      return new avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder(other);
     }
   }
 
   /**
-   * Creates a new NullSafeAnnotationsFieldsTest RecordBuilder by copying an existing NullSafeAnnotationsFieldsTest instance.
+   * Creates a new JSpecifyNullSafeAnnotationsFieldsTest RecordBuilder by copying an existing JSpecifyNullSafeAnnotationsFieldsTest instance.
    * @param other The existing instance to copy.
-   * @return A new NullSafeAnnotationsFieldsTest RecordBuilder
+   * @return A new JSpecifyNullSafeAnnotationsFieldsTest RecordBuilder
    */
-  public static avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder newBuilder(avro.examples.baseball.NullSafeAnnotationsFieldsTest other) {
+  public static avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder newBuilder(avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest other) {
     if (other == null) {
-      return new avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder();
+      return new avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder();
     } else {
-      return new avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder(other);
+      return new avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder(other);
     }
   }
 
   /**
-   * RecordBuilder for NullSafeAnnotationsFieldsTest instances.
+   * RecordBuilder for JSpecifyNullSafeAnnotationsFieldsTest instances.
    */
   @org.apache.avro.specific.AvroGenerated
-  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<NullSafeAnnotationsFieldsTest>
-    implements org.apache.avro.data.RecordBuilder<NullSafeAnnotationsFieldsTest> {
+  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<JSpecifyNullSafeAnnotationsFieldsTest>
+    implements org.apache.avro.data.RecordBuilder<JSpecifyNullSafeAnnotationsFieldsTest> {
 
     private java.lang.String name;
     private java.lang.String nullable_name;
@@ -257,7 +257,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
      * Creates a Builder by copying an existing Builder.
      * @param other The existing Builder to copy.
      */
-    private Builder(avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder other) {
+    private Builder(avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.name)) {
         this.name = data().deepCopy(fields()[0].schema(), other.name);
@@ -278,10 +278,10 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
     }
 
     /**
-     * Creates a Builder by copying an existing NullSafeAnnotationsFieldsTest instance
+     * Creates a Builder by copying an existing JSpecifyNullSafeAnnotationsFieldsTest instance
      * @param other The existing instance to copy.
      */
-    private Builder(avro.examples.baseball.NullSafeAnnotationsFieldsTest other) {
+    private Builder(avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest other) {
       super(SCHEMA$, MODEL$);
       if (isValidValue(fields()[0], other.name)) {
         this.name = data().deepCopy(fields()[0].schema(), other.name);
@@ -315,7 +315,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
       * @param value The value of 'name'.
       * @return This builder.
       */
-    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder setName(@org.jetbrains.annotations.NotNull java.lang.String value) {
+    public avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder setName(@org.jspecify.annotations.NonNull java.lang.String value) {
       validate(fields()[0], value);
       this.name = value;
       fieldSetFlags()[0] = true;
@@ -335,7 +335,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
       * Clears the value of the 'name' field.
       * @return This builder.
       */
-    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder clearName() {
+    public avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder clearName() {
       name = null;
       fieldSetFlags()[0] = false;
       return this;
@@ -355,7 +355,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
       * @param value The value of 'nullable_name'.
       * @return This builder.
       */
-    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder setNullableName(@org.jetbrains.annotations.Nullable java.lang.String value) {
+    public avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder setNullableName(@org.jspecify.annotations.Nullable java.lang.String value) {
       validate(fields()[1], value);
       this.nullable_name = value;
       fieldSetFlags()[1] = true;
@@ -375,7 +375,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
       * Clears the value of the 'nullable_name' field.
       * @return This builder.
       */
-    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder clearNullableName() {
+    public avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder clearNullableName() {
       nullable_name = null;
       fieldSetFlags()[1] = false;
       return this;
@@ -395,7 +395,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
       * @param value The value of 'favorite_number'.
       * @return This builder.
       */
-    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder setFavoriteNumber(@org.jetbrains.annotations.NotNull int value) {
+    public avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder setFavoriteNumber(@org.jspecify.annotations.NonNull int value) {
       validate(fields()[2], value);
       this.favorite_number = value;
       fieldSetFlags()[2] = true;
@@ -415,7 +415,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
       * Clears the value of the 'favorite_number' field.
       * @return This builder.
       */
-    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder clearFavoriteNumber() {
+    public avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder clearFavoriteNumber() {
       fieldSetFlags()[2] = false;
       return this;
     }
@@ -434,7 +434,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
       * @param value The value of 'nullable_favorite_number'.
       * @return This builder.
       */
-    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder setNullableFavoriteNumber(@org.jetbrains.annotations.Nullable java.lang.Integer value) {
+    public avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder setNullableFavoriteNumber(@org.jspecify.annotations.Nullable java.lang.Integer value) {
       validate(fields()[3], value);
       this.nullable_favorite_number = value;
       fieldSetFlags()[3] = true;
@@ -454,7 +454,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
       * Clears the value of the 'nullable_favorite_number' field.
       * @return This builder.
       */
-    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder clearNullableFavoriteNumber() {
+    public avro.examples.baseball.JSpecifyNullSafeAnnotationsFieldsTest.Builder clearNullableFavoriteNumber() {
       nullable_favorite_number = null;
       fieldSetFlags()[3] = false;
       return this;
@@ -462,9 +462,9 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
 
     @Override
     @SuppressWarnings("unchecked")
-    public NullSafeAnnotationsFieldsTest build() {
+    public JSpecifyNullSafeAnnotationsFieldsTest build() {
       try {
-        NullSafeAnnotationsFieldsTest record = new NullSafeAnnotationsFieldsTest();
+        JSpecifyNullSafeAnnotationsFieldsTest record = new JSpecifyNullSafeAnnotationsFieldsTest();
         record.name = fieldSetFlags()[0] ? this.name : (java.lang.String) defaultValue(fields()[0]);
         record.nullable_name = fieldSetFlags()[1] ? this.nullable_name : (java.lang.String) defaultValue(fields()[1]);
         record.favorite_number = fieldSetFlags()[2] ? this.favorite_number : (java.lang.Integer) defaultValue(fields()[2]);
@@ -479,8 +479,8 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
   }
 
   @SuppressWarnings("unchecked")
-  private static final org.apache.avro.io.DatumWriter<NullSafeAnnotationsFieldsTest>
-    WRITER$ = (org.apache.avro.io.DatumWriter<NullSafeAnnotationsFieldsTest>)MODEL$.createDatumWriter(SCHEMA$);
+  private static final org.apache.avro.io.DatumWriter<JSpecifyNullSafeAnnotationsFieldsTest>
+    WRITER$ = (org.apache.avro.io.DatumWriter<JSpecifyNullSafeAnnotationsFieldsTest>)MODEL$.createDatumWriter(SCHEMA$);
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
@@ -488,8 +488,8 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
   }
 
   @SuppressWarnings("unchecked")
-  private static final org.apache.avro.io.DatumReader<NullSafeAnnotationsFieldsTest>
-    READER$ = (org.apache.avro.io.DatumReader<NullSafeAnnotationsFieldsTest>)MODEL$.createDatumReader(SCHEMA$);
+  private static final org.apache.avro.io.DatumReader<JSpecifyNullSafeAnnotationsFieldsTest>
+    READER$ = (org.apache.avro.io.DatumReader<JSpecifyNullSafeAnnotationsFieldsTest>)MODEL$.createDatumReader(SCHEMA$);
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {

@@ -131,6 +131,9 @@ public class SpecificCompiler {
   private String suffix = ".java";
   private List<Object> additionalVelocityTools = Collections.emptyList();
 
+  private String nullSafeAnnotationNullable = "org.jetbrains.annotations.Nullable";
+  private String nullSafeAnnotationNotNull = "org.jetbrains.annotations.NotNull";
+
   private String recordSpecificClass = "org.apache.avro.specific.SpecificRecordBase";
 
   private String errorSpecificClass = "org.apache.avro.specific.SpecificExceptionBase";
@@ -244,10 +247,40 @@ public class SpecificCompiler {
   }
 
   /**
-   * Set to true to add jetbrains @Nullable and @NotNull annotations
+   * Set to true to add @Nullable and @NotNull annotations. By default, JetBrains
+   * annotations are used (org.jetbrains.annotations.Nullable and
+   * org.jetbrains.annotations.NotNull) but this can be overridden using
+   * {@link #setNullSafeAnnotationNullable)} and
+   * {@link #setNullSafeAnnotationNotNull)}.
    */
   public void setCreateNullSafeAnnotations(boolean createNullSafeAnnotations) {
     this.createNullSafeAnnotations = createNullSafeAnnotations;
+  }
+
+  public String getNullSafeAnnotationNullable() {
+    return this.nullSafeAnnotationNullable;
+  }
+
+  /**
+   * Sets the annotation to use for nullable fields. Default is
+   * "org.jetbrains.annotations.Nullable". The annotation must include the full
+   * package path.
+   */
+  public void setNullSafeAnnotationNullable(String nullSafeAnnotationNullable) {
+    this.nullSafeAnnotationNullable = nullSafeAnnotationNullable;
+  }
+
+  public String getNullSafeAnnotationNotNull() {
+    return this.nullSafeAnnotationNotNull;
+  }
+
+  /**
+   * Sets the annotation to use for non-nullable fields. Default is
+   * "org.jetbrains.annotations.NotNull". The annotation must include the full
+   * package path.
+   */
+  public void setNullSafeAnnotationNotNull(String nullSafeAnnotationNotNull) {
+    this.nullSafeAnnotationNotNull = nullSafeAnnotationNotNull;
   }
 
   public boolean isCreateOptionalGetters() {

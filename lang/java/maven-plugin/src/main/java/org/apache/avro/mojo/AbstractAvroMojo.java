@@ -183,9 +183,10 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected boolean createSetters;
 
   /**
-   * The createNullSafeAnnotations parameter adds JetBrains {@literal @}Nullable
-   * and {@literal @}NotNull annotations for fhe fields of the record. The default
-   * is to not include annotations.
+   * If set to true, {@literal @}Nullable and {@literal @}NotNull annotations are
+   * added to fields of the record. The default is false. If enabled, JetBrains
+   * annotations are used by default but other annotations can be specified via
+   * the nullSafeAnnotationNullable and nullSafeAnnotationNotNull parameters.
    *
    * @parameter property="createNullSafeAnnotations"
    *
@@ -194,6 +195,32 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    *      JetBrains nullability annotations</a>
    */
   protected boolean createNullSafeAnnotations = false;
+
+  /**
+   * Controls which annotation should be added to nullable fields if
+   * createNullSafeAnnotations is enabled. The default is
+   * org.jetbrains.annotations.Nullable.
+   *
+   * @parameter property="nullSafeAnnotationNullable"
+   *
+   * @see <a href=
+   *      "https://www.jetbrains.com/help/idea/annotating-source-code.html#nullability-annotations">
+   *      JetBrains nullability annotations</a>
+   */
+  protected String nullSafeAnnotationNullable = "org.jetbrains.annotations.Nullable";
+
+  /**
+   * Controls which annotation should be added to non-nullable fields if
+   * createNullSafeAnnotations is enabled. The default is
+   * org.jetbrains.annotations.NotNull.
+   *
+   * @parameter property="nullSafeAnnotationNotNull"
+   *
+   * @see <a href=
+   *      "https://www.jetbrains.com/help/idea/annotating-source-code.html#nullability-annotations">
+   *      JetBrains nullability annotations</a>
+   */
+  protected String nullSafeAnnotationNotNull = "org.jetbrains.annotations.NotNull";
 
   /**
    * A set of fully qualified class names of custom
@@ -405,6 +432,8 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
     compiler.setCreateSetters(createSetters);
     compiler.setCreateNullSafeAnnotations(createNullSafeAnnotations);
+    compiler.setNullSafeAnnotationNullable(nullSafeAnnotationNullable);
+    compiler.setNullSafeAnnotationNotNull(nullSafeAnnotationNotNull);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     try {
       for (String customConversion : customConversions) {
