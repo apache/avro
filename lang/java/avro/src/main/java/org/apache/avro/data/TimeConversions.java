@@ -125,6 +125,38 @@ public class TimeConversions {
     }
   }
 
+  public static class TimeNanosConversion extends Conversion<LocalTime> {
+    @Override
+    public Class<LocalTime> getConvertedType() {
+      return LocalTime.class;
+    }
+
+    @Override
+    public String getLogicalTypeName() {
+      return "time-nanos";
+    }
+
+    @Override
+    public String adjustAndSetValue(String varName, String valParamName) {
+      return varName + " = " + valParamName + ".truncatedTo(java.time.temporal.ChronoUnit.NANOS);";
+    }
+
+    @Override
+    public LocalTime fromLong(Long nanosFromMidnight, Schema schema, LogicalType type) {
+      return LocalTime.ofNanoOfDay(TimeUnit.NANOSECONDS.toNanos(nanosFromMidnight));
+    }
+
+    @Override
+    public Long toLong(LocalTime time, Schema schema, LogicalType type) {
+      return TimeUnit.NANOSECONDS.toNanos(time.toNanoOfDay());
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.timeNanos().addToSchema(Schema.create(Schema.Type.LONG));
+    }
+  }
+
   public static class TimestampMillisConversion extends Conversion<Instant> {
     @Override
     public Class<Instant> getConvertedType() {
