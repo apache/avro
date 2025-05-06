@@ -387,13 +387,13 @@ class DataFileReader(_DataFileMetadata):
 
     def _skip_sync(self) -> bool:
         """
-        Read the length of the sync marker; if it matches the sync marker,
-        return True. Otherwise, seek back to where we started and return False.
+        Check if the next bytes match the sync marker.
+        If not, rewind the read position.
         """
-        proposed_sync_marker = self.reader.read(SYNC_SIZE)
-        if proposed_sync_marker == self.sync_marker:
+        pos = self.reader.tell()
+        if self.reader.read(SYNC_SIZE) == self.sync_marker:
             return True
-        self.reader.seek(-SYNC_SIZE, 1)
+        self.reader.seek(pos)  # Reset position if sync doesn't match
         return False
 
     def __next__(self) -> object:
