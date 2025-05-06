@@ -319,7 +319,8 @@ public class ProtobufData extends GenericData {
     for (EnumValueDescriptor e : d.getValues()) {
       symbols.add(e.getName());
     }
-    return Schema.createEnum(d.getName(), null, getNamespace(d.getFile(), d.getContainingType()), symbols);
+    String enumDefault = symbols.isEmpty() ? null : symbols.get(0);
+    return Schema.createEnum(d.getName(), null, getNamespace(d.getFile(), d.getContainingType()), symbols, enumDefault);
   }
 
   private static final JsonFactory FACTORY = new JsonFactory();
