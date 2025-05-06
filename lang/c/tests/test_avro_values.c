@@ -146,7 +146,7 @@ _check_invalid_methods(const char *name, avro_value_t *val)
 		check_bad(set_boolean, val, dummy);
 	}
 
-	if (type != AVRO_BYTES) {
+	if (type != AVRO_BYTES && type != AVRO_DECIMAL) {
 		const void  *cbuf = NULL;
 		void  *buf = NULL;
 		size_t  size = 0;
@@ -198,7 +198,7 @@ _check_invalid_methods(const char *name, avro_value_t *val)
 		check_bad(set_enum, val, dummy);
 	}
 
-	if (type != AVRO_FIXED) {
+	if (type != AVRO_FIXED && type != AVRO_DECIMAL) {
 		const void  *cbuf = NULL;
 		void  *buf = NULL;
 		size_t  size = 0;
@@ -971,6 +971,167 @@ test_enum(void)
 }
 
 static int
+test_decimal_from_json(const char *json)
+{
+	/* This test assumes a fixed size of 4 and scale of 2. */
+	avro_schema_t decimal_schema = NULL;
+	if (avro_schema_from_json(json, 0, &decimal_schema, 0)) {
+		fprintf(stderr, "Error parsing schema:\n  %s\n",
+			avro_strerror());
+		return EXIT_FAILURE;
+	}
+
+	avro_value_iface_t *decimal_class =
+	    avro_generic_class_from_schema(decimal_schema);
+
+	int rval;
+	avro_value_t val;
+	try(avro_generic_value_new(decimal_class, &val),
+	    "Cannot create decimal");
+	check(rval, check_type_and_schema("decimal", &val, AVRO_DECIMAL,
+					  avro_schema_incref(decimal_schema)));
+	try(avro_value_reset(&val), "Cannot reset decimal");
+
+	char bytes[] = { 2, 4, 6, 8 };
+	try(avro_value_set_fixed(&val, bytes, sizeof(bytes)),
+	    "Cannot set_fixed for decimal");
+	const void *actual_bytes = NULL;
+	size_t actual_size = 0;
+	try(avro_value_get_fixed(&val, &actual_bytes, &actual_size),
+	    "Cannot get_fixed for decimal");
+	if (actual_size != sizeof(bytes)) {
+		fprintf(stderr, "Decimal has %zu bytes instead of %zu",
+			actual_size, sizeof(bytes));
+		return EXIT_FAILURE;
+	}
+	if (memcmp(actual_bytes, bytes, sizeof(bytes)) != 0) {
+		fprintf(stderr, "Decimal has different bytes");
+		return EXIT_FAILURE;
+	}
+
+	bytes[0] += 1;
+	try(avro_value_set_bytes(&val, bytes, sizeof(bytes)),
+	    "Cannot set_bytes for decimal");
+	try(avro_value_get_bytes(&val, &actual_bytes, &actual_size),
+	    "Cannot get_bytes for decimal");
+	if (actual_size != sizeof(bytes)) {
+		fprintf(stderr, "Decimal has %zu bytes instead of %zu",
+			actual_size, sizeof(bytes));
+		return EXIT_FAILURE;
+	}
+	if (memcmp(actual_bytes, bytes, sizeof(bytes)) != 0) {
+		fprintf(stderr, "Decimal has different bytes");
+		return EXIT_FAILURE;
+	}
+
+	bytes[0] -= 1;
+	try(avro_value_set_bytes(&val, bytes, sizeof(bytes)),
+	    "Cannot set_bytes for decimal");
+	avro_wrapped_buffer_t wbuf;
+	try(avro_value_grab_fixed(&val, &wbuf),
+	    "Cannot grab_fixed decimal");
+	if (wbuf.size != sizeof(bytes)) {
+		fprintf(stderr, "Decimal has %zu bytes instead of %zu",
+			actual_size, sizeof(bytes));
+		return EXIT_FAILURE;
+	}
+	if (memcmp(wbuf.buf, bytes, sizeof(bytes)) != 0) {
+		fprintf(stderr, "Decimal has different bytes");
+		return EXIT_FAILURE;
+	}
+	avro_wrapped_buffer_free(&wbuf);
+
+	bytes[0] += 1;
+	try(avro_value_set_fixed(&val, bytes, sizeof(bytes)),
+	    "Cannot set_fixed for decimal");
+	try(avro_value_grab_bytes(&val, &wbuf),
+	    "Cannot grab_bytes decimal");
+	if (wbuf.size != sizeof(bytes)) {
+		fprintf(stderr, "Decimal has %zu bytes instead of %zu",
+			actual_size, sizeof(bytes));
+		return EXIT_FAILURE;
+	}
+	if (memcmp(wbuf.buf, bytes, sizeof(bytes)) != 0) {
+		fprintf(stderr, "Decimal has different bytes");
+		return EXIT_FAILURE;
+	}
+	avro_wrapped_buffer_free(&wbuf);
+
+	int64_t unscaled = 1234;
+	int64_t lhs = 0;
+	uint64_t rhs = 0;
+	try(avro_value_set_decimal(&val, &unscaled, NULL, NULL),
+	    "Cannot set decimal from unscaled");
+	try(avro_value_get_decimal(&val, &unscaled, &lhs, &rhs),
+	    "Cannot get decimal");
+	if (unscaled != 1234 || lhs != 12 || rhs != 34) {
+		fprintf(stderr,
+			"Decimal has (unscaled, lhs, rhs) of"
+			" (%lld, %lld, %llu), not (1234, 12, 34)\n",
+			unscaled, lhs, rhs);
+		return EXIT_FAILURE;
+	}
+
+	unscaled = 0;
+	lhs = -12;
+	rhs = 34;
+	try(avro_value_set_decimal(&val, NULL, &lhs, &rhs),
+	    "Cannot set decimal from lhs and rhs");
+	try(avro_value_get_decimal(&val, &unscaled, &lhs, &rhs),
+	    "Cannot get decimal");
+	if (unscaled != -1234 || lhs != -12 || rhs != 34) {
+		fprintf(stderr,
+			"Decimal has (unscaled, lhs, rhs) of"
+			" (%lld, %lld, %llu), not (-1234, -12, 34)\n",
+			unscaled, lhs, rhs);
+		return EXIT_FAILURE;
+	}
+
+	check_invalid_methods("decimal", &val);
+	check_write_read(&val);
+	check_copy(&val);
+	avro_value_decref(&val);
+	avro_value_iface_decref(decimal_class);
+	avro_schema_decref(decimal_schema);
+
+	return EXIT_SUCCESS;
+}
+
+static int
+test_decimal(void)
+{
+	static const char BYTES_JSON[] =
+	"{"
+	"  \"type\": \"bytes\","
+	"  \"logicalType\": \"decimal\","
+	"  \"precision\": 4,"
+	"  \"scale\": 2"
+	"}";
+
+	static const char FIXED_JSON[] =
+	"{"
+	"  \"type\": \"fixed\","
+	"  \"size\": 4,"
+	"  \"name\": \"four\","
+	"  \"logicalType\": \"decimal\","
+	"  \"precision\": 4,"
+	"  \"scale\": 2"
+	"}";
+
+	int rval = test_decimal_from_json(BYTES_JSON);
+	if (rval != EXIT_SUCCESS) {
+		return rval;
+	}
+
+	rval = test_decimal_from_json(FIXED_JSON);
+	if (rval != EXIT_SUCCESS) {
+		return rval;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+static int
 test_fixed(void)
 {
 	static const char  SCHEMA_JSON[] =
@@ -1440,7 +1601,8 @@ int main(void)
 		{ "fixed", test_fixed },
 		{ "map", test_map },
 		{ "record", test_record },
-		{ "union", test_union }
+		{ "union", test_union },
+		{ "decimal", test_decimal },
 	};
 
 	init_rand();
