@@ -1,0 +1,9 @@
+{"namespace": "example",
+ "type": "record",
+ "name": "Event",
+ "fields": [
+     {"name": "name", "type": "string"},
+     {"name": "start", "type": {"type": "long", "logicalType": "timestamp-millis"} },
+     {"name": "timezone", "type": {"type": "string", "logicalType": "timezone"} }
+ ]
+}
