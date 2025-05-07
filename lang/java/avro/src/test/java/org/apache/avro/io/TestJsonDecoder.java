@@ -92,4 +92,16 @@ public class TestJsonDecoder {
     JsonDecoder decoder = DecoderFactory.get().jsonDecoder(schema, record);
     Assertions.assertThrows(AvroTypeException.class, () -> reader.read(null, decoder));
   }
+
+  @Test
+  void testUnionTypeQualification() throws Exception {
+    final Schema schema = SchemaBuilder.unionOf().nullType().and()
+        .type(SchemaBuilder.record("r").namespace("space").fields().endRecord()).endUnion();
+    GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(schema, schema);
+    JsonDecoder decoder = DecoderFactory.get().jsonDecoder(schema, "{\"space.r\": {}}");
+    assertEquals("space.r", reader.read(null, decoder).getSchema().getFullName());
+    // AVRO-4135: C json encoder uses unqualified types.
+    decoder = DecoderFactory.get().jsonDecoder(schema, "{\"r\": {}}");
+    assertEquals("space.r", reader.read(null, decoder).getSchema().getFullName());
+  }
 }
