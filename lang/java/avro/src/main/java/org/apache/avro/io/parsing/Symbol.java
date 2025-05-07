@@ -475,6 +475,16 @@ public abstract class Symbol {
             return i;
           }
         }
+        // AVRO-4135 We are a bit more flexible here since we have to deal with the C
+        // serializer being less strict, so
+        // we fall back to looking up unqualified names.
+        for (int i = 0; i < labels.length; i++) {
+          String candidate = labels[i];
+          if (candidate != null && candidate.length() > label.length()
+              && candidate.charAt(candidate.length() - label.length() - 1) == '.' && candidate.endsWith(label)) {
+            return i;
+          }
+        }
       }
       return -1;
     }
