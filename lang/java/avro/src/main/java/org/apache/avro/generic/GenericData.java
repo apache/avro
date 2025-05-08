@@ -74,15 +74,24 @@ public class GenericData {
 
   private static final GenericData INSTANCE = new GenericData();
 
-  private static final Map<Class<?>, String> PRIMITIVE_DATUM_TYPES = new IdentityHashMap<>();
+  /**
+   * The size of this map was specifically selected. This map services as a cache
+   * and there are many negative hits (misses). For negative hits, the best
+   * performance outcome is achieved when the key hits an empty bucket in the
+   * HashMap. Selecting a larger map of size 64 seems to be a sufficient size in
+   * benchmarks. Also, for many JDK implementations, none of the cached items
+   * collide and share a bucket, therefore there are never any linear scans
+   * involved in a lookup.
+   */
+  private static final Map<String, String> PRIMITIVE_DATUM_TYPES = new HashMap<>(64);
   static {
-    PRIMITIVE_DATUM_TYPES.put(Integer.class, Type.INT.getName());
-    PRIMITIVE_DATUM_TYPES.put(Long.class, Type.LONG.getName());
-    PRIMITIVE_DATUM_TYPES.put(Float.class, Type.FLOAT.getName());
-    PRIMITIVE_DATUM_TYPES.put(Double.class, Type.DOUBLE.getName());
-    PRIMITIVE_DATUM_TYPES.put(Boolean.class, Type.BOOLEAN.getName());
-    PRIMITIVE_DATUM_TYPES.put(String.class, Type.STRING.getName());
-    PRIMITIVE_DATUM_TYPES.put(Utf8.class, Type.STRING.getName());
+    PRIMITIVE_DATUM_TYPES.put(Integer.class.getName(), Type.INT.getName());
+    PRIMITIVE_DATUM_TYPES.put(Long.class.getName(), Type.LONG.getName());
+    PRIMITIVE_DATUM_TYPES.put(Float.class.getName(), Type.FLOAT.getName());
+    PRIMITIVE_DATUM_TYPES.put(Double.class.getName(), Type.DOUBLE.getName());
+    PRIMITIVE_DATUM_TYPES.put(Boolean.class.getName(), Type.BOOLEAN.getName());
+    PRIMITIVE_DATUM_TYPES.put(String.class.getName(), Type.STRING.getName());
+    PRIMITIVE_DATUM_TYPES.put(Utf8.class.getName(), Type.STRING.getName());
   }
 
   /** Used to specify the Java type for a string schema. */
@@ -96,7 +105,7 @@ public class GenericData {
   private final ClassLoader classLoader;
 
   /**
-   * Set the Java type to be used when reading this schema. Meaningful only only
+   * Set the Java type to be used when reading this schema. Meaningful only for
    * string schemas and map schemas (for the keys).
    */
   public static void setStringType(Schema s, StringType stringType) {
@@ -946,7 +955,7 @@ public class GenericData {
   protected String getSchemaName(Object datum) {
     if (datum == null || datum == JsonProperties.NULL_VALUE)
       return Type.NULL.getName();
-    String primativeType = getPrimitiveTypeCache().get(datum.getClass());
+    final String primativeType = getPrimitiveTypeCache().get(datum.getClass().getName());
     if (primativeType != null)
       return primativeType;
     if (isRecord(datum))
@@ -980,7 +989,7 @@ public class GenericData {
    * Called to obtain the primitive type cache. May be overridden for alternate
    * record representations.
    */
-  protected Map<Class<?>, String> getPrimitiveTypeCache() {
+  protected Map<String, String> getPrimitiveTypeCache() {
     return PRIMITIVE_DATUM_TYPES;
   }
 
