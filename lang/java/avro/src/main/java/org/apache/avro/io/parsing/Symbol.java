@@ -94,7 +94,7 @@ public abstract class Symbol {
 
   /**
    * A convenience method to construct a sequence.
-   * 
+   *
    * @param production The constituent symbols of the sequence.
    */
   static Symbol seq(Symbol... production) {
@@ -103,7 +103,7 @@ public abstract class Symbol {
 
   /**
    * A convenience method to construct a repeater.
-   * 
+   *
    * @param symsToRepeat The symbols to repeat in the repeater.
    */
   static Symbol repeat(Symbol endSymbol, Symbol... symsToRepeat) {
@@ -119,7 +119,7 @@ public abstract class Symbol {
 
   /**
    * A convenience method to construct an ErrorAction.
-   * 
+   *
    * @param e
    */
   static Symbol error(String e) {
@@ -128,7 +128,7 @@ public abstract class Symbol {
 
   /**
    * A convenience method to construct a ResolvingAction.
-   * 
+   *
    * @param w The writer symbol
    * @param r The reader symbol
    */
@@ -238,7 +238,7 @@ public abstract class Symbol {
   /**
    * Returns the amount of space required to flatten the given sub-array of
    * symbols.
-   * 
+   *
    * @param symbols The array of input symbols.
    * @param start   The index where the subarray starts.
    * @return The number of symbols that will be produced if one expands the given
@@ -583,16 +583,35 @@ public abstract class Symbol {
     return new FieldAdjustAction(rindex, fname, aliases);
   }
 
+  public static FieldAdjustAction fieldAdjustAction(int rindex, String fname, Set<String> aliases, Object defValue) {
+    return new FieldAdjustAction(rindex, fname, aliases, new DefaultValue(defValue));
+  }
+
+  public static class DefaultValue {
+    public final Object defaultValue;
+
+    public DefaultValue(Object defaultValue) {
+      this.defaultValue = defaultValue;
+    }
+  }
+
   public static class FieldAdjustAction extends ImplicitAction {
     public final int rindex;
     public final String fname;
     public final Set<String> aliases;
 
+    public final DefaultValue defaultValue;
+
     @Deprecated
     public FieldAdjustAction(int rindex, String fname, Set<String> aliases) {
+      this(rindex, fname, aliases, null);
+    }
+
+    public FieldAdjustAction(int rindex, String fname, Set<String> aliases, DefaultValue defaultValue) {
       this.rindex = rindex;
       this.fname = fname;
       this.aliases = aliases;
+      this.defaultValue = defaultValue;
     }
   }
 
