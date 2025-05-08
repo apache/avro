@@ -79,6 +79,6 @@ public class TestUnionError {
 
     GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(writerSchema, readerSchema);
     AvroTypeException avroException = assertThrows(AvroTypeException.class, () -> datumReader.read(null, decoder));
-    assertEquals("Found B, expecting union[A, float]", avroException.getMessage());
+    assertEquals("Field \"c\" content mismatch: Found B, expecting union[A, float]", avroException.getMessage());
   }
 }
