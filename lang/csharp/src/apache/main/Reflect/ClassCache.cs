@@ -19,17 +19,19 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using Avro.Reflect.Interfaces.Models;
+using Avro.Reflect.Interfaces.Services;
 
 namespace Avro.Reflect
 {
     /// <summary>
     /// Class holds a cache of C# classes and their properties. The key for the cache is the schema full name.
     /// </summary>
-    public class ClassCache
+    public class ClassCache : ICacheService, IArrayService
     {
         private static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
 
-        private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
+        private readonly ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
 
         private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
         private ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
@@ -186,6 +188,16 @@ namespace Avro.Reflect
             }
 
             return c;
+        }
+
+        /// <summary>
+        /// Find a class that matches the schema full name.
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <returns></returns>
+        IDotnetClass ICacheService.GetClass(RecordSchema schema)
+        {
+            return GetClass(schema);
         }
 
         /// <summary>
