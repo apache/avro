@@ -366,7 +366,7 @@ public class PrimitivesArrays {
       size++;
       for (int index = this.size / 8; index > (location / 8); index--) {
         elements[index] <<= 1;
-        if (index > 0 && (elements[index - 1] & (1 << Byte.SIZE)) > 0) {
+        if ((elements[index - 1] & (1 << Byte.SIZE)) > 0) {
           elements[index] |= 1;
         }
       }

@@ -223,7 +223,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     }
   }
 
-  private static EncoderFactory factory = new EncoderFactory().configureBufferSize(32);
+  private final static EncoderFactory ENCODER_FACTORY = new EncoderFactory().configureBufferSize(32);
 
   /**
    * Returns the Avro binary encoded version of <tt>n</tt> according to the schema
@@ -236,7 +236,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
    */
   private static byte[] getBinary(Schema s, JsonNode n) throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    Encoder e = factory.binaryEncoder(out, null);
+    Encoder e = ENCODER_FACTORY.binaryEncoder(out, null);
     encode(e, s, n);
     e.flush();
     return out.toByteArray();
