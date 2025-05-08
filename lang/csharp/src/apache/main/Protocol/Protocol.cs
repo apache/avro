@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -213,17 +214,25 @@ namespace Avro
         /// <summary>
         /// Tests equality of this protocol object with the passed object
         /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
+        /// <param name="obj">The <see cref="Object" /> to compare with this instance.</param>
+        /// <returns>
+        ///   <c>true</c> if the specified <see cref="Object" /> is equal to this instance; otherwise, <c>false</c>.
+        /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj == this) return true;
-            if (!(obj is Protocol)) return false;
+            if (obj == this)
+            {
+                return true;
+            }
 
-            Protocol that = obj as Protocol;
+            if (obj == null || obj.GetType() != typeof(Protocol))
+            {
+                return false;
+            }
 
-            return this.Name.Equals(that.Name, StringComparison.Ordinal)
-                && this.Namespace.Equals(that.Namespace, StringComparison.Ordinal)
+            Protocol that = (Protocol)obj;
+            return Name.Equals(that.Name, StringComparison.Ordinal)
+                && Namespace.Equals(that.Namespace, StringComparison.Ordinal)
                 && TypesEquals(that.Types)
                 && MessagesEquals(that.Messages);
         }

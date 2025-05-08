@@ -15,8 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -93,23 +95,19 @@ namespace Avro
         /// <returns>true if contents of the two maps are the same, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (this == obj) return true;
-
-            if (obj != null && obj is PropertyMap)
+            if (this == obj)
             {
-                var that = obj as PropertyMap;
-                if (this.Count != that.Count)
-                    return false;
-                foreach (KeyValuePair<string, string> pair in this)
-                {
-                    if (!that.ContainsKey(pair.Key))
-                        return false;
-                    if (!pair.Value.Equals(that[pair.Key], StringComparison.Ordinal))
-                        return false;
-                }
                 return true;
             }
-            return false;
+
+            if (obj == null || obj.GetType() != typeof(PropertyMap))
+            {
+                return false;
+            }
+
+            PropertyMap that = (PropertyMap)obj;
+            return this.Count == that.Count
+                && this.OrderBy(pair => pair.Key).SequenceEqual(that.OrderBy(pair => pair.Key));
         }
 
         /// <summary>
