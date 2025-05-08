@@ -188,6 +188,10 @@ else (JANSSON_FOUND)
     message(FATAL_ERROR "libjansson >=2.3 not found")
 endif (JANSSON_FOUND)
 
+set(MATH_LIBRARIES)
+if(NOT MSVC)
+    set(MATH_LIBRARIES m)
+endif(NOT MSVC)
 
 add_subdirectory(src)
 add_subdirectory(examples)
