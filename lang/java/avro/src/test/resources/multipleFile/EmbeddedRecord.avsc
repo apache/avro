@@ -1,0 +1,11 @@
+{
+  "namespace": "model",
+  "type" : "record",
+  "name" : "EmbeddedRecord",
+  "fields" : [
+    {
+      "name" : "type",
+      "type" : "string"
+    }
+  ]
+}

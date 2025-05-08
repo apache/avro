@@ -599,25 +599,30 @@ public class TestSchema {
     File f1 = new File(directory.getPath(), "ApplicationEvent.avsc");
     File f2 = new File(directory.getPath(), "DocumentInfo.avsc");
     File f3 = new File(directory.getPath(), "MyResponse.avsc");
+    File f4 = new File(directory.getPath(), "EmbeddedRecord.avsc");
     Assertions.assertTrue(f1.exists(), "File not exist for test " + f1.getPath());
     Assertions.assertTrue(f2.exists(), "File not exist for test " + f2.getPath());
     Assertions.assertTrue(f3.exists(), "File not exist for test " + f3.getPath());
+    Assertions.assertTrue(f4.exists(), "File not exist for test " + f4.getPath());
     SchemaParser parser = new SchemaParser();
     parser.parse(f1);
     parser.parse(f2);
     parser.parse(f3);
+    parser.parse(f4);
     final List<Schema> schemas = parser.getParsedNamedSchemas();
-    Assertions.assertEquals(3, schemas.size());
-    Schema schemaAppEvent = schemas.get(0);
-    Schema schemaDocInfo = schemas.get(1);
-    Schema schemaResponse = schemas.get(2);
+    Assertions.assertEquals(4, schemas.size());
+    Schema eventHeaderEvent = schemas.get(0);
+    Schema schemaAppEvent = schemas.get(1);
+    Schema schemaDocInfo = schemas.get(2);
+    Schema schemaResponse = schemas.get(3);
     Assertions.assertNotNull(schemaAppEvent);
-    Assertions.assertEquals(3, schemaAppEvent.getFields().size());
+    Assertions.assertEquals(4, schemaAppEvent.getFields().size());
     Field documents = schemaAppEvent.getField("documents");
     Schema docSchema = documents.schema().getTypes().get(1).getElementType();
     Assertions.assertEquals(docSchema, schemaDocInfo);
     Assertions.assertNotNull(schemaDocInfo);
     Assertions.assertNotNull(schemaResponse);
+    Assertions.assertNotNull(eventHeaderEvent);
   }
 
   @Test

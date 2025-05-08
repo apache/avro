@@ -5,6 +5,20 @@
   "name": "ApplicationEvent",
   "fields": [
     {
+      "name": "embedded_record",
+      "type": {
+        "type": "record",
+        "name": "EmbeddedRecord",
+        "namespace": "model",
+        "fields": [
+          {
+            "name": "type",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
       "name": "applicationId",
       "type": "string",
       "doc": "Application ID"
