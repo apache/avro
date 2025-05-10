@@ -50,6 +50,7 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.TestReflect.SampleRecord.AnotherSampleRecord;
 import org.apache.avro.util.Utf8;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
@@ -58,6 +59,12 @@ import org.junit.jupiter.api.condition.JRE;
 public class TestReflect {
 
   EncoderFactory factory = new EncoderFactory();
+
+  @BeforeEach
+  public void setup() {
+    System.setProperty("org.apache.avro.SERIALIZABLE_CLASSES",
+        "java.math.BigDecimal,java.math.BigInteger,java.net.URI,java.net.URL,java.io.File,java.lang.Integer,org.apache.avro.reflect.TestReflect$R10");
+  }
 
   // test primitive type inference
   @Test
@@ -615,6 +622,7 @@ public class TestReflect {
   }
 
   void checkReadWrite(Object object, Schema s) throws Exception {
+
     ReflectDatumWriter<Object> writer = new ReflectDatumWriter<>(s);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     writer.write(object, factory.directBinaryEncoder(out, null));
