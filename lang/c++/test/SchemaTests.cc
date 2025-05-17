@@ -333,6 +333,7 @@ const char *roundTripSchemas[] = {
     R"({"type":"long","logicalType":"local-timestamp-nanos"})",
     R"({"type":"fixed","name":"test","size":12,"logicalType":"duration"})",
     R"({"type":"string","logicalType":"uuid"})",
+    R"({"type":"fixed","name":"test","size":16,"logicalType":"uuid"})",
 
     // namespace with '$' in it.
     R"({
@@ -393,7 +394,9 @@ const char *malformedLogicalTypes[] = {
     // and scale is integrated in bytes.
     R"({"type":"bytes","logicalType": "big-decimal","precision": 9})",
     R"({"type":"bytes","logicalType": "big-decimal","scale": 2})",
-    R"({"type":"bytes","logicalType": "big-decimal","precision": 9,"scale": 2})"};
+    R"({"type":"bytes","logicalType": "big-decimal","precision": 9,"scale": 2})",
+    R"({"type":"fixed","logicalType":"uuid","size":12,"name":"invalid_uuid_size"})",
+};
 const char *schemasToCompact[] = {
     // Schema without any whitespace
     R"({"type":"record","name":"Test","fields":[]})",
@@ -508,7 +511,8 @@ static void testLogicalTypes() {
     const char *localTimestampMicrosType = R"({"type": "long", "logicalType": "local-timestamp-micros"})";
     const char *localTimestampNanosType = R"({"type": "long", "logicalType": "local-timestamp-nanos"})";
     const char *durationType = R"({"type": "fixed","size": 12,"name": "durationType","logicalType": "duration"})";
-    const char *uuidType = R"({"type": "string","logicalType": "uuid"})";
+    const char *uuidStringType = R"({"type": "string","logicalType": "uuid"})";
+    const char *uuidFixedType = R"({"type": "fixed", "size": 16, "name": "uuidFixedType", "logicalType": "uuid"})";
     // AVRO-2923 Union with LogicalType
     const char *unionType = R"([{"type":"string", "logicalType":"uuid"},"null"]})";
     {
@@ -631,9 +635,19 @@ static void testLogicalTypes() {
         BOOST_CHECK(datum.logicalType().type() == LogicalType::DURATION);
     }
     {
-        BOOST_TEST_CHECKPOINT(uuidType);
-        ValidSchema schema = compileJsonSchemaFromString(uuidType);
+        BOOST_TEST_CHECKPOINT(uuidStringType);
+        ValidSchema schema = compileJsonSchemaFromString(uuidStringType);
         BOOST_CHECK(schema.root()->type() == AVRO_STRING);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::UUID);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::UUID);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(uuidFixedType);
+        ValidSchema schema = compileJsonSchemaFromString(uuidFixedType);
+        BOOST_CHECK(schema.root()->type() == AVRO_FIXED);
+        BOOST_CHECK(schema.root()->fixedSize() == 16);
         LogicalType logicalType = schema.root()->logicalType();
         BOOST_CHECK(logicalType.type() == LogicalType::UUID);
         GenericDatum datum(schema);
