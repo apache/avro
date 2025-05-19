@@ -570,6 +570,7 @@ public class TestReflect {
   }
 
   void checkReadWrite(Object object, Schema s) throws Exception {
+
     ReflectDatumWriter<Object> writer = new ReflectDatumWriter<>(s);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     writer.write(object, factory.directBinaryEncoder(out, null));
