@@ -50,7 +50,7 @@ import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
  * JsonEncoder is not thread-safe.
  */
 public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler {
-  private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+  private static final String LINE_SEPARATOR = System.lineSeparator();
   final Parser parser;
   private JsonGenerator out;
   private boolean includeNamespace = true;
@@ -88,7 +88,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   enum JsonOptions {
     Pretty,
 
-    // Prevent underlying outputstream to be flush for optimisation purpose.
+    // Prevent underlying OutputStream to be flush for optimisation purpose.
     NoFlushStream
   }
 
@@ -98,7 +98,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     Objects.requireNonNull(out, "OutputStream cannot be null");
     JsonGenerator g = new JsonFactory().createGenerator(out, JsonEncoding.UTF8);
     if (options.contains(JsonOptions.NoFlushStream)) {
-      g = g.configure(JsonGenerator.Feature.FLUSH_PASSED_TO_STREAM, false);
+      g.configure(JsonGenerator.Feature.FLUSH_PASSED_TO_STREAM, false);
     }
     final PrettyPrinter pp;
     if (options.contains(JsonOptions.Pretty)) {
@@ -170,15 +170,13 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
    * @param generator The JsonGenerator to direct output to. Cannot be null.
    * @throws IOException
    * @throws NullPointerException if {@code generator} is {@code null}
-   * @return this JsonEncoder
    */
-  private JsonEncoder configure(JsonGenerator generator) throws IOException {
+  private void configure(JsonGenerator generator) throws IOException {
     Objects.requireNonNull(generator, "JsonGenerator cannot be null");
     if (null != parser) {
       flush();
     }
     this.out = generator;
-    return this;
   }
 
   @Override

@@ -619,7 +619,7 @@ public class SpecificData extends GenericData {
 
     boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
     Constructor<?> meth = CTOR_CACHE.apply(c);
-    Object[] params = useSchema ? new Object[] { schema } : (Object[]) null;
+    Object[] params = useSchema ? new Object[] { schema } : null;
 
     return (old, sch) -> {
       try {
