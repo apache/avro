@@ -623,7 +623,7 @@ public class PrimitivesArrays {
       if (o == null) {
         return null;
       }
-      return this.set(i, o.floatValue());
+      return this.set(i, o.doubleValue());
     }
 
     public double set(int i, double o) {
