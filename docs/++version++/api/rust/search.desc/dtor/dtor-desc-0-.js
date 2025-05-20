@@ -1,0 +1,1 @@
+searchState.loadedDescShard("dtor", 0, "dtor\nDeclarative forms of the <code>#[dtor]</code> macro.\nMarks a function as a library/executable destructor. This …\nParse a <code>#[dtor]</code>-annotated item as if it were a proc-macro.")
