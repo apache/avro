@@ -307,6 +307,17 @@ public class TestGenericData {
     assertEquals(r1, r0);
   }
 
+  // AVRO-4139
+  @Test
+  public void testEqualsMapInArray() {
+    Schema schema = Schema.createArray(Schema.createMap(Schema.create(Schema.Type.STRING)));
+    GenericData.Array<Map<String, String>> a1 = new GenericData.Array<>(10, schema);
+    GenericData.Array<Map<String, String>> a2 = new GenericData.Array<>(10, schema);
+    a1.add(Map.of("a", "b"));
+    a2.add(Map.of("a", "b"));
+    assertEquals(a1, a2);
+  }
+
   private Schema recordSchema() {
     List<Field> fields = new ArrayList<>();
     fields.add(new Field("anArray", Schema.createArray(Schema.create(Type.STRING)), null, null));
