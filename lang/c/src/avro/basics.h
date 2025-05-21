@@ -43,6 +43,7 @@ enum avro_type_t {
 	AVRO_UNION,
 	AVRO_LINK,
 	AVRO_INVALID = EINVAL,
+	AVRO_DECIMAL,
 };
 typedef enum avro_type_t avro_type_t;
 
@@ -91,6 +92,7 @@ struct avro_obj_t {
 #define is_avro_complex_type(obj) (!(is_avro_primitive(obj))
 #define is_avro_link(obj)     (obj && avro_typeof(obj) == AVRO_LINK)
 
+#define is_avro_decimal(obj)  (obj && avro_typeof(obj) == AVRO_DECIMAL)
 
 
 CLOSE_EXTERN
