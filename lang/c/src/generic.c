@@ -1780,6 +1780,8 @@ avro_generic_string_set_length(const avro_value_iface_t *iface,
 {
 	AVRO_UNUSED(iface);
 	check_param(EINVAL, val != NULL, "string contents");
+	check_param(EINVAL, size > 0, "string size");
+	check_param(EINVAL, val[size-1] == '\0', "string terminator");
 	avro_raw_string_t  *self = (avro_raw_string_t *) vself;
 	avro_raw_string_set_length(self, val, size);
 	return 0;
