@@ -19,6 +19,12 @@ package org.apache.avro.generic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,8 +32,24 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
+import org.apache.avro.TestReadingWritingDataInEvolvedSchemas;
+import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.Schema;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class TestGenericDatumReader {
 
@@ -59,7 +81,6 @@ public class TestGenericDatumReader {
     assertEquals(StringBuilder.class, object.getClass());
     StringBuilder builder = (StringBuilder) object;
     assertEquals("Hello", builder.toString());
-
   }
 
   static class WithSchema {
@@ -86,7 +107,6 @@ public class TestGenericDatumReader {
           Arrays.asList(new Schema.Field("field" + schemaNum, Schema.create(Schema.Type.STRING))));
       list.add(schema);
     }
-
     return list.get(schemaNum);
   }
 
@@ -115,6 +135,117 @@ public class TestGenericDatumReader {
       } catch (InterruptedException e) {
         throw new RuntimeException(e);
       }
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = { "true", "false" })
+  public void simple(String fastReaderProp) throws IOException {
+    final String current = System.getProperty(GenericData.FAST_READER_PROP);
+    try {
+      System.setProperty(GenericData.FAST_READER_PROP, fastReaderProp);
+      Schema schema = Schema.createRecord("Person", "doc", "foo", false,
+          Arrays.asList(new Schema.Field("lastname", Schema.create(Schema.Type.STRING), "doc", "Bond")));
+
+      String data = "{}";
+      byte[] toAvro = this.convertJsonToAvro(data.getBytes(), schema);
+
+      final IndexedRecord record = this.readOneRecord(schema, toAvro);
+      Assertions.assertEquals("Bond", record.get(schema.getField("lastname").pos()).toString());
+    } finally {
+      if (current == null) {
+        System.clearProperty(GenericData.FAST_READER_PROP);
+      } else {
+        System.setProperty(GenericData.FAST_READER_PROP, current);
+      }
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = { "true", "false" })
+  void wrong(String fastReaderProp) {
+    final String current = System.getProperty(GenericData.FAST_READER_PROP);
+    try {
+      System.setProperty(GenericData.FAST_READER_PROP, fastReaderProp);
+      Schema schema = Schema.createRecord("Person", "doc", "foo", false,
+          Arrays.asList(new Schema.Field("lastname", Schema.create(Schema.Type.STRING), "doc", "last")));
+
+      String data = "{ \"lastname\": 123 }";
+      AvroTypeException exception = Assertions.assertThrows(AvroTypeException.class,
+          () -> this.convertJsonToAvro(data.getBytes(), schema));
+
+    } finally {
+      if (current == null) {
+        System.clearProperty(GenericData.FAST_READER_PROP);
+      } else {
+        System.setProperty(GenericData.FAST_READER_PROP, current);
+      }
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = { "true", "false" })
+  public void multiField(String fastReaderProp) throws IOException {
+    final String current = System.getProperty(GenericData.FAST_READER_PROP);
+    try {
+      System.setProperty(GenericData.FAST_READER_PROP, fastReaderProp);
+      Schema schema = Schema.createRecord("Person", "doc", "foo", false,
+          Arrays.asList(new Schema.Field("lastname", Schema.create(Schema.Type.STRING), "doc", "Bond"),
+              new Schema.Field("firstname", Schema.create(Schema.Type.STRING), "doc", "James")));
+
+      String data = "{\"lastname\": \"Doe\" }";
+      byte[] toAvro = this.convertJsonToAvro(data.getBytes(), schema);
+
+      final IndexedRecord record = this.readOneRecord(schema, toAvro);
+      assertEquals("James", record.get(schema.getField("firstname").pos()).toString());
+      assertEquals("Doe", record.get(schema.getField("lastname").pos()).toString());
+    } finally {
+      if (current == null) {
+        System.clearProperty(GenericData.FAST_READER_PROP);
+      } else {
+        System.setProperty(GenericData.FAST_READER_PROP, current);
+      }
+    }
+  }
+
+  private IndexedRecord readOneRecord(Schema schema, byte[] avroBinaryData) throws IOException {
+    GenericDatumReader<Object> reader = new GenericDatumReader<>();
+    reader.setExpected(schema);
+    reader.setSchema(schema);
+    DataInputStream din = new DataInputStream(new ByteArrayInputStream(avroBinaryData));
+    Decoder decoder = DecoderFactory.get().binaryDecoder(din, null);
+
+    final Object record = reader.read(null, decoder);
+    Assertions.assertNotNull(record);
+    Assertions.assertTrue(record instanceof IndexedRecord);
+    return (IndexedRecord) record;
+  }
+
+  public byte[] convertJsonToAvro(byte[] data, Schema schema) {
+
+    DatumReader<GenericRecord> reader = new GenericDatumReader<>(schema);
+    try (InputStream input = new ByteArrayInputStream(data); DataInputStream din = new DataInputStream(input)) {
+
+      ByteArrayOutputStream output = new ByteArrayOutputStream();
+      GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(schema);
+      Encoder encoder = EncoderFactory.get().binaryEncoder(output, null);
+
+      Decoder decoder = DecoderFactory.get().jsonDecoder(schema, din);
+      GenericRecord datum = null;
+      while (true) {
+        try {
+          datum = reader.read(null, decoder);
+        } catch (EOFException eofe) {
+          break;
+        }
+        writer.write(datum, encoder);
+      }
+      encoder.flush();
+
+      output.flush();
+      return output.toByteArray();
+    } catch (IOException e1) {
+      throw new RuntimeException("Error decoding Json " + e1.getMessage(), e1);
     }
   }
 }

@@ -26,7 +26,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
+import com.fasterxml.jackson.core.JsonToken;
+
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.AvroTokenTypeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
@@ -257,7 +260,17 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    */
   protected void readField(Object record, Field field, Object oldDatum, ResolvingDecoder in, Object state)
       throws IOException {
-    data.setField(record, field.name(), field.pos(), read(oldDatum, field.schema(), in), state);
+    Object value;
+    try {
+      value = read(oldDatum, field.schema(), in);
+    } catch (AvroTokenTypeException ex) {
+      if (ex.getActualType() == JsonToken.END_OBJECT && field.hasDefaultValue()) {
+        value = field.defaultVal();
+      } else {
+        throw ex;
+      }
+    }
+    data.setField(record, field.name(), field.pos(), value, state);
   }
 
   /**

@@ -583,16 +583,35 @@ public abstract class Symbol {
     return new FieldAdjustAction(rindex, fname, aliases);
   }
 
+  public static FieldAdjustAction fieldAdjustAction(int rindex, String fname, Set<String> aliases, Object defValue) {
+    return new FieldAdjustAction(rindex, fname, aliases, new DefaultValue(defValue));
+  }
+
+  public static class DefaultValue {
+    public final Object defaultValue;
+
+    public DefaultValue(Object defaultValue) {
+      this.defaultValue = defaultValue;
+    }
+  }
+
   public static class FieldAdjustAction extends ImplicitAction {
     public final int rindex;
     public final String fname;
     public final Set<String> aliases;
 
+    public final DefaultValue defaultValue;
+
     @Deprecated
     public FieldAdjustAction(int rindex, String fname, Set<String> aliases) {
+      this(rindex, fname, aliases, null);
+    }
+
+    public FieldAdjustAction(int rindex, String fname, Set<String> aliases, DefaultValue defaultValue) {
       this.rindex = rindex;
       this.fname = fname;
       this.aliases = aliases;
+      this.defaultValue = defaultValue;
     }
   }
 

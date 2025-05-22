@@ -26,6 +26,9 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
+import com.fasterxml.jackson.core.JsonToken;
+
+import org.apache.avro.AvroTokenTypeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
@@ -176,15 +179,29 @@ public class FastReaderBuilder {
   private ExecutionStep createFieldSetter(Field field, FieldReader reader) {
     int pos = field.pos();
     if (reader.canReuse()) {
-      return (object, decoder) -> {
-        IndexedRecord record = (IndexedRecord) object;
-        record.put(pos, reader.read(record.get(pos), decoder));
+      return (Object object, Decoder decoder) -> {
+        final IndexedRecord record = (IndexedRecord) object;
+        final Object value = this.readValue(field, reader, record.get(pos), decoder);
+        record.put(pos, value);
       };
     } else {
-      return (object, decoder) -> {
-        IndexedRecord record = (IndexedRecord) object;
-        record.put(pos, reader.read(null, decoder));
+      return (Object object, Decoder decoder) -> {
+        final IndexedRecord record = (IndexedRecord) object;
+        final Object value = this.readValue(field, reader, null, decoder);
+        record.put(pos, value);
       };
+    }
+  }
+
+  private Object readValue(Field field, FieldReader reader, Object reuse, Decoder decoder) throws IOException {
+    try {
+      return reader.read(reuse, decoder);
+    } catch (AvroTokenTypeException ex) {
+      if (ex.getActualType() == JsonToken.END_OBJECT && field.hasDefaultValue()) {
+        return field.defaultVal();
+      } else {
+        throw ex;
+      }
     }
   }
 
@@ -606,6 +623,7 @@ public class FastReaderBuilder {
     }
   }
 
+  @FunctionalInterface
   public interface ExecutionStep {
     void execute(Object record, Decoder decoder) throws IOException;
   }
