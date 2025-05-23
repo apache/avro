@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
@@ -257,7 +258,12 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    */
   protected void readField(Object record, Field field, Object oldDatum, ResolvingDecoder in, Object state)
       throws IOException {
-    data.setField(record, field.name(), field.pos(), read(oldDatum, field.schema(), in), state);
+    try {
+      data.setField(record, field.name(), field.pos(), read(oldDatum, field.schema(), in), state);
+    } catch(AvroTypeException exception) {
+      String message = "Field \"" + field.name() + "\" content mismatch: " + exception.getMessage();
+      throw new AvroTypeException(message, exception.getCause());
+    }
   }
 
   /**
