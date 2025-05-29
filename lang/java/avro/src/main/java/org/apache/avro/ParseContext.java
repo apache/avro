@@ -277,7 +277,7 @@ public class ParseContext {
    * references, even if parsed from different files. Note: the context must be
    * committed for this method to work.
    *
-   * @return all parsed schemas, in the order they were parsed
+   * @return all parsed schemas
    * @throws AvroTypeException if a schema reference cannot be resolved
    */
   public List<Schema> resolveAllSchemas() {
