@@ -355,7 +355,7 @@ public class GenericData {
       if (!(o instanceof Collection)) {
         return false;
       }
-      return GenericData.get().compare(this, o, this.getSchema()) == 0;
+      return GenericData.get().compare(this, o, this.getSchema(), true) == 0;
     }
 
     @Override
