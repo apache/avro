@@ -27,6 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayOutputStream;
+import java.util.concurrent.Callable;
+
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -127,8 +129,9 @@ public class TestSchemaCompatibilityEnumDefaults {
     byte[] bytes = baos.toByteArray();
     Decoder decoder = DecoderFactory.get().resolvingDecoder(writerSchema, readerSchema,
         DecoderFactory.get().binaryDecoder(bytes, null));
-    DatumReader<Object> datumReader = new GenericDatumReader<>(readerSchema);
+    GenericData data = new GenericData();
+    data.setFastReaderEnabled(false);
+    DatumReader<Object> datumReader = new GenericDatumReader<>(readerSchema, readerSchema, data);
     return (GenericRecord) datumReader.read(null, decoder);
   }
-
 }
