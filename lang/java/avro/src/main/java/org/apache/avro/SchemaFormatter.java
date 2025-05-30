@@ -55,7 +55,10 @@ import java.util.ServiceLoader;
  *
  * <p>
  * Additional formats can be defined by implementing
- * {@link SchemaFormatterFactory}.
+ * {@link SchemaFormatterFactory}. They are located using a
+ * {@link java.util.ServiceLoader}, which loads them using the context
+ * ClassLoader when available, or the application ClassLoader when not. See the
+ * {@code ServiceLoader} class for more detailsπ.
  * </p>
  *
  * @see <a href=
@@ -66,6 +69,7 @@ import java.util.ServiceLoader;
  *      Parsing Canonical Form for Schemas</a>
  * @see <a href="https://avro.apache.org/docs/current/idl-language/">IDL
  *      Language</a>
+ * @see java.util.ServiceLoader
  */
 public interface SchemaFormatter {
   /**
