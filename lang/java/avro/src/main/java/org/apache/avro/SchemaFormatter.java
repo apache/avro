@@ -56,8 +56,9 @@ import java.util.ServiceLoader;
  * <p>
  * Additional formats can be defined by implementing
  * {@link SchemaFormatterFactory}. They are located using a
- * {@link java.util.ServiceLoader} and must therefore be threadsafe. See the
- * {@code ServiceLoader} class for details on loading your implementation.
+ * {@link java.util.ServiceLoader}, which loads them using the context ClassLoader
+ * when available, or the application ClassLoader when not. See the
+ * {@code ServiceLoader} class for more detailsπ.
  * </p>
  *
  * @see <a href=
