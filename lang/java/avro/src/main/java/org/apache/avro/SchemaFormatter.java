@@ -56,8 +56,8 @@ import java.util.ServiceLoader;
  * <p>
  * Additional formats can be defined by implementing
  * {@link SchemaFormatterFactory}. They are located using a
- * {@link java.util.ServiceLoader}, which loads them using the context ClassLoader
- * when available, or the application ClassLoader when not. See the
+ * {@link java.util.ServiceLoader}, which loads them using the context
+ * ClassLoader when available, or the application ClassLoader when not. See the
  * {@code ServiceLoader} class for more detailsπ.
  * </p>
  *
