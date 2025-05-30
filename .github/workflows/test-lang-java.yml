@@ -134,6 +134,7 @@ jobs:
             6.0.x
             7.0.x
             8.0.x
+            9.0.x
 
       - name: 'Create Interop Data Directory'
         working-directory: .
