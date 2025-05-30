@@ -260,7 +260,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       throws IOException {
     try {
       data.setField(record, field.name(), field.pos(), read(oldDatum, field.schema(), in), state);
-    } catch(AvroTypeException exception) {
+    } catch (AvroTypeException exception) {
       String message = "Field \"" + field.name() + "\" content mismatch: " + exception.getMessage();
       throw new AvroTypeException(message, exception.getCause());
     }

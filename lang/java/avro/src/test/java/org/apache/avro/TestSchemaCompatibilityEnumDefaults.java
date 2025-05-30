@@ -54,7 +54,8 @@ public class TestSchemaCompatibilityEnumDefaults {
     datum.put("field2", new GenericData.EnumSymbol(writerSchema, "B"));
     AvroTypeException avroTypeException = assertThrows(AvroTypeException.class,
         () -> serializeWithWriterThenDeserializeWithReader(writerSchema, datum, readerSchema));
-    assertTrue(avroTypeException.getMessage().contains("Found Record1, expecting Record1, missing required field field1"));
+    assertTrue(
+        avroTypeException.getMessage().contains("Found Record1, expecting Record1, missing required field field1"));
   }
 
   @Test
