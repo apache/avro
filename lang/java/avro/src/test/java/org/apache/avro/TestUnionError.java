@@ -23,6 +23,7 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
 
@@ -77,7 +78,9 @@ public class TestUnionError {
     InputStream ins = new ByteArrayInputStream(outs.toByteArray());
     BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(ins, null);
 
-    GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(writerSchema, readerSchema);
+    GenericData data = new GenericData();
+    data.setFastReaderEnabled(false);
+    GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(writerSchema, readerSchema, data);
     AvroTypeException avroException = assertThrows(AvroTypeException.class, () -> datumReader.read(null, decoder));
     assertEquals("Field \"c\" content mismatch: Found B, expecting union[A, float]", avroException.getMessage());
   }

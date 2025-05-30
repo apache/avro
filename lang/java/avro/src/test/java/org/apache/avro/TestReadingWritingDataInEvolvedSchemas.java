@@ -438,7 +438,9 @@ public class TestReadingWritingDataInEvolvedSchemas {
     if (blob == null) {
       return null;
     }
-    GenericDatumReader<Record> reader = new GenericDatumReader<>();
+    GenericData data = new GenericData();
+    data.setFastReaderEnabled(true);
+    GenericDatumReader<Record> reader = new GenericDatumReader<>(null, null, data);
     reader.setExpected(expectedSchema);
     reader.setSchema(schemaOfBlob);
     Decoder decoder = encoderType == EncoderType.BINARY ? DecoderFactory.get().binaryDecoder(blob, null)
