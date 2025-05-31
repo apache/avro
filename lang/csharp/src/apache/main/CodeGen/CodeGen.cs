@@ -25,7 +25,10 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using Avro.IO.Parsing;
 using Microsoft.CSharp;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Avro
 {
@@ -76,6 +79,12 @@ namespace Avro
         protected Dictionary<string, CodeNamespace> NamespaceLookup { get; private set; }
 
         /// <summary>
+        /// Set of schema property names which could contain a namespace reference.
+        /// </summary>
+        private static readonly HashSet<string> UnqualifiedProps = new HashSet<string>() { "doc", "symbols", "default", "size" };
+
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="CodeGen"/> class.
         /// </summary>
         public CodeGen()
@@ -113,6 +122,8 @@ namespace Avro
         {
             // Map namespaces
             protocolText = ReplaceMappedNamespacesInSchema(protocolText, namespaceMapping);
+            protocolText = ReplaceMappedNamespacesInSchemaTypes(protocolText, namespaceMapping);
+
             Protocol protocol = Protocol.Parse(protocolText);
             Protocols.Add(protocol);
         }
@@ -135,6 +146,8 @@ namespace Avro
         {
             // Map namespaces
             schemaText = ReplaceMappedNamespacesInSchema(schemaText, namespaceMapping);
+            schemaText = ReplaceMappedNamespacesInSchemaTypes(schemaText, namespaceMapping);
+
             Schema schema = Schema.Parse(schemaText);
             Schemas.Add(schema);
         }
@@ -1265,6 +1278,105 @@ namespace Avro
 
                 return $@"""namespace""{m.Groups[1].Value}:{m.Groups[2].Value}""{ns}""";
             });
+        }
+        /// <summary>
+        /// Replace namespaces in a parsed JSON schema object for all "type" fields.
+        /// </summary>
+        /// <param name="schemaJson">The JSON schema as a string.</param>
+        /// <param name="namespaceMapping">The mapping of old namespaces to new namespaces.</param>
+        /// <returns>The updated JSON schema as a string.</returns>
+        private static string ReplaceMappedNamespacesInSchemaTypes(string schemaJson, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+        {
+            if (string.IsNullOrWhiteSpace(schemaJson) || namespaceMapping == null)
+            {
+                return schemaJson;
+            }
+
+            var schemaToken = JToken.Parse(schemaJson);
+
+            UpdateNamespacesInJToken(schemaToken, namespaceMapping);
+
+            return schemaToken.ToString(Formatting.Indented);
+        }
+
+        /// <summary>
+        /// Recursively navigates and updates "type" fields in a JToken.
+        /// </summary>
+        /// <param name="token">The current JToken to process.</param>
+        /// <param name="namespaceMapping">The mapping of old namespaces to new namespaces.</param>
+        private static void UpdateNamespacesInJToken(JToken token, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+        {
+            if (token is JObject obj)
+            {
+                if (obj.ContainsKey("type"))
+                {
+                    var typeToken = obj["type"];
+                    if (typeToken is JValue) // Single type
+                    {
+                        string type = typeToken.ToString();
+                        obj["type"] = ReplaceNamespace(type, namespaceMapping);
+                    }
+                    else if (typeToken is JArray typeArray) // Array of types
+                    {
+                        for (int i = 0; i < typeArray.Count; i++)
+                        {
+                            var arrayItem = typeArray[i];
+                            if (arrayItem is JValue) // Simple type
+                            {
+                                string type = arrayItem.ToString();
+                                typeArray[i] = ReplaceNamespace(type, namespaceMapping);
+                            }
+                            else if (arrayItem is JObject nestedObj) // Nested object
+                            {
+                                UpdateNamespacesInJToken(nestedObj, namespaceMapping);
+                            }
+                        }
+                    }
+                    else if (typeToken is JObject nestedTypeObj) // Complex type
+                    {
+                        UpdateNamespacesInJToken(nestedTypeObj, namespaceMapping);
+                    }
+                }
+
+                // Recurse into all properties of the object
+                foreach (var property in obj.Properties())
+                {
+                    if (UnqualifiedProps.Contains(property.Name))
+                        continue;
+
+                    UpdateNamespacesInJToken(property.Value, namespaceMapping);
+                }
+            }
+            else if (token is JArray array)
+            {
+                // Recurse into all elements of the array
+                foreach (var element in array)
+                {
+                    UpdateNamespacesInJToken(element, namespaceMapping);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Replace a namespace in a string based on the provided mapping.
+        /// </summary>
+        /// <param name="originalNamespace">The original namespace string.</param>
+        /// <param name="namespaceMapping">The mapping of old namespaces to new namespaces.</param>
+        /// <returns>The updated namespace string.</returns>
+        private static string ReplaceNamespace(string originalNamespace, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+        {
+            foreach (var mapping in namespaceMapping)
+            {
+                if (originalNamespace == mapping.Key)
+                {
+                    return mapping.Value;
+                }
+                else if (originalNamespace.StartsWith($"{mapping.Key}.", StringComparison.Ordinal))
+                {
+                    return $"{mapping.Value}.{originalNamespace.Substring(mapping.Key.Length + 1)}";
+                }
+            }
+            return originalNamespace;
         }
     }
 }
