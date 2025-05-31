@@ -158,6 +158,9 @@ public class LogicalTypes {
       case TIME_MICROS:
         logicalType = TIME_MICROS_TYPE;
         break;
+      case TIME_NANOS:
+        logicalType = TIME_NANOS_TYPE;
+        break;
       case LOCAL_TIMESTAMP_MICROS:
         logicalType = LOCAL_TIMESTAMP_MICROS_TYPE;
         break;
@@ -197,6 +200,7 @@ public class LogicalTypes {
   private static final String DATE = "date";
   private static final String TIME_MILLIS = "time-millis";
   private static final String TIME_MICROS = "time-micros";
+  private static final String TIME_NANOS = "time-nanos";
   private static final String TIMESTAMP_MILLIS = "timestamp-millis";
   private static final String TIMESTAMP_MICROS = "timestamp-micros";
   private static final String TIMESTAMP_NANOS = "timestamp-nanos";
@@ -249,6 +253,12 @@ public class LogicalTypes {
 
   public static TimeMicros timeMicros() {
     return TIME_MICROS_TYPE;
+  }
+
+  private static final TimeNanos TIME_NANOS_TYPE = new TimeNanos();
+
+  public static TimeNanos timeNanos() {
+    return TIME_NANOS_TYPE;
   }
 
   private static final TimestampMillis TIMESTAMP_MILLIS_TYPE = new TimestampMillis();
@@ -494,6 +504,21 @@ public class LogicalTypes {
       super.validate(schema);
       if (schema.getType() != Schema.Type.LONG) {
         throw new IllegalArgumentException("Time (micros) can only be used with an underlying long type");
+      }
+    }
+  }
+
+  /** TimeNanos represents a time in nanoseconds without a date */
+  public static class TimeNanos extends LogicalType {
+    private TimeNanos() {
+      super(TIME_NANOS);
+    }
+
+    @Override
+    public void validate(Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.LONG) {
+        throw new IllegalArgumentException("Time (nanos) can only be used with an underlying long type");
       }
     }
   }
