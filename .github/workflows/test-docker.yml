@@ -20,6 +20,8 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+    paths:
+      - 'share/docker/*'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
