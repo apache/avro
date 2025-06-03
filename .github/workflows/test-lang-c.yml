@@ -28,7 +28,6 @@ defaults:
   run:
     working-directory: lang/c
 
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
