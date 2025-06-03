@@ -1,0 +1,1 @@
+searchState.loadedDescShard("bon_macros", 0, "<code>bon-macros</code>\nDerives a builder for the struct it’s placed on.\nCompanion macro for <code>builder</code>. You should place it on top of …\nGenerates a builder for the function or method it’s …\nCreates any map-like collection that implements …\nCreates any set-like collection that implements …")
