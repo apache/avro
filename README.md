@@ -17,17 +17,6 @@
 [![test python][test python img]][test python]
 [![test php][test php img]][test php]
 
-### Current CI status (ARM based servers)
-[![test c ARM][test c ARM img]][test c ARM]
-[![test c# ARM][test c# ARM img]][test c# ARM]
-[![test c++ ARM][test c++ ARM img]][test c++ ARM]
-[![test java ARM][test java ARM img]][test java ARM]
-[![test javascript ARM][test javascript ARM img]][test javascript ARM]
-[![test perl ARM][test perl ARM img]][test perl ARM]
-[![test ruby ARM][test ruby ARM img]][test ruby ARM]
-[![test python ARM][test python ARM img]][test python ARM]
-[![test php ARM][test php ARM img]][test php ARM]
-
 ### Current CodeQL status
 [![codeql c#][codeql c# img]][codeql c#]
 [![codeql java][codeql java img]][codeql java]
@@ -59,16 +48,6 @@ To contribute to Avro, please read:
 [test python]:     https://github.com/apache/avro/actions/workflows/test-lang-py.yml
 [test php]:        https://github.com/apache/avro/actions/workflows/test-lang-php.yml
 
-[test c ARM]:          https://github.com/apache/avro/actions/workflows/test-lang-c-ARM.yml
-[test c# ARM]:         https://github.com/apache/avro/actions/workflows/test-lang-csharp-ARM.yml
-[test c++ ARM]:        https://github.com/apache/avro/actions/workflows/test-lang-c++-ARM.yml
-[test java ARM]:       https://github.com/apache/avro/actions/workflows/test-lang-java-ARM.yml
-[test javascript ARM]: https://github.com/apache/avro/actions/workflows/test-lang-js-ARM.yml
-[test perl ARM]:       https://github.com/apache/avro/actions/workflows/test-lang-perl-ARM.yml
-[test ruby ARM]:       https://github.com/apache/avro/actions/workflows/test-lang-ruby-ARM.yml
-[test python ARM]:     https://github.com/apache/avro/actions/workflows/test-lang-py-ARM.yml
-[test php ARM]:        https://github.com/apache/avro/actions/workflows/test-lang-php-ARM.yml
-
 [codeql c#]:         https://github.com/apache/avro/actions/workflows/codeql-csharp-analysis.yml
 [codeql java]:       https://github.com/apache/avro/actions/workflows/codeql-java-analysis.yml
 [codeql javascript]: https://github.com/apache/avro/actions/workflows/codeql-js-analysis.yml
@@ -83,16 +62,6 @@ To contribute to Avro, please read:
 [test ruby img]:       https://github.com/apache/avro/actions/workflows/test-lang-ruby.yml/badge.svg
 [test python img]:     https://github.com/apache/avro/actions/workflows/test-lang-py.yml/badge.svg
 [test php img]:        https://github.com/apache/avro/actions/workflows/test-lang-php.yml/badge.svg
-
-[test c ARM img]:          https://github.com/apache/avro/actions/workflows/test-lang-c-ARM.yml/badge.svg
-[test c# ARM img]:         https://github.com/apache/avro/actions/workflows/test-lang-csharp-ARM.yml/badge.svg
-[test c++ ARM img]:        https://github.com/apache/avro/actions/workflows/test-lang-c++-ARM.yml/badge.svg
-[test java ARM img]:       https://github.com/apache/avro/actions/workflows/test-lang-java-ARM.yml/badge.svg
-[test javascript ARM img]: https://github.com/apache/avro/actions/workflows/test-lang-js-ARM.yml/badge.svg
-[test perl ARM img]:       https://github.com/apache/avro/actions/workflows/test-lang-perl-ARM.yml/badge.svg
-[test ruby ARM img]:       https://github.com/apache/avro/actions/workflows/test-lang-ruby-ARM.yml/badge.svg
-[test python ARM img]:     https://github.com/apache/avro/actions/workflows/test-lang-py-ARM.yml/badge.svg
-[test php ARM img]:        https://github.com/apache/avro/actions/workflows/test-lang-php-ARM.yml/badge.svg
 
 [codeql c# img]:         https://github.com/apache/avro/actions/workflows/codeql-csharp-analysis.yml/badge.svg
 [codeql java img]:       https://github.com/apache/avro/actions/workflows/codeql-java-analysis.yml/badge.svg

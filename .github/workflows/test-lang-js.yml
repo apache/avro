@@ -34,14 +34,16 @@ concurrency:
 
 jobs:
   test:
-    name: Node ${{ matrix.node }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: 
+          - ubuntu-latest
+          - ubuntu-24.04-arm
         node:
-        - 12
-        - 14
-        - 16
+          - 12
+          - 14
+          - 16
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
@@ -63,14 +65,16 @@ jobs:
         run: ./build.sh test
 
   interop:
-    name: Node ${{ matrix.node }} Interop
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: 
+          - ubuntu-latest
+          - ubuntu-24.04-arm
         node:
-        - 12
-        - 14
-        - 16
+          - 12
+          - 14
+          - 16
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
@@ -90,6 +94,7 @@ jobs:
 
       - name: Apt Install Compression Libs Required by Python
         run: |
+          sudo apt-get update && \
           sudo apt-get install -qqy --no-install-recommends libbz2-dev \
                                                             liblzma-dev \
                                                             libsnappy-dev \

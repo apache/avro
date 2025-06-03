@@ -36,7 +36,12 @@ concurrency:
 jobs:
   test:
     name: 'Java Test'
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: 
+          - ubuntu-latest
+          - ubuntu-24.04-arm
     steps:
       - name: 'Checkout sourcecode'
         uses: actions/checkout@v4
@@ -83,7 +88,12 @@ jobs:
 
   interop:
     name: 'Java Interop'
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: 
+          - ubuntu-latest
+          - ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
@@ -117,6 +127,7 @@ jobs:
 
       - name: 'Apt Install Compression Libs Required by Python'
         run: |
+          sudo apt-get update && \
           sudo apt-get install -qqy --no-install-recommends libbz2-dev \
                                                             liblzma-dev \
                                                             libsnappy-dev \
