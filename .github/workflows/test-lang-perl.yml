@@ -34,12 +34,14 @@ concurrency:
 
 jobs:
   test:
-    name: Perl ${{ matrix.perl }} Tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: 
+          - ubuntu-latest
+          - ubuntu-24.04-arm
         perl:
-        - '5.32'
+          - '5.32'
     steps:
       - uses: actions/checkout@v4
 
@@ -70,12 +72,14 @@ jobs:
         run: ./build.sh test
 
   interop:
-    name: Perl ${{ matrix.perl }} Interop
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: 
+          - ubuntu-latest
+          - ubuntu-24.04-arm
         perl:
-        - '5.32'
+          - '5.32'
     steps:
       - uses: actions/checkout@v4
 
@@ -85,6 +89,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          sudo apt-get update && \
           sudo apt-get -qqy install --no-install-recommends libjansson-dev \
                                                             libsnappy-dev
           cpanm --mirror https://www.cpan.org/ install CPAN::Uploader \

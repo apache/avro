@@ -28,18 +28,24 @@ defaults:
   run:
     working-directory: lang/c
 
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: 
+          - ubuntu-latest
+          - ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Dependencies
-        run: sudo apt-get install -qqy libjansson-dev libsnappy-dev
+        run: sudo apt-get update && sudo apt-get install -qqy libjansson-dev libsnappy-dev
 
       - name: Lint
         run: ./build.sh lint
@@ -97,12 +103,18 @@ jobs:
         run: ./build.sh interop-data-test
 
   interop:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: 
+          - ubuntu-latest
+          - ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: |
+          sudo apt-get update && \
           sudo apt-get install -qqy --no-install-recommends libbz2-dev \
                                                             libjansson-dev \
                                                             liblzma-dev \
