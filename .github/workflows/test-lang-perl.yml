@@ -49,7 +49,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
+          cpanm --mirror https://www.cpan.org/ install Bundle::LWP \
+                                                       Compress::Zstd \
                                                        Encode \
                                                        Error::Simple \
                                                        JSON::MaybeXS \
@@ -88,6 +89,7 @@ jobs:
           sudo apt-get -qqy install --no-install-recommends libjansson-dev \
                                                             libsnappy-dev
           cpanm --mirror https://www.cpan.org/ install CPAN::Uploader \
+                                                       Bundle::LWP \
                                                        Compress::Zstd \
                                                        Encode \
                                                        Error::Simple \
