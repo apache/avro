@@ -2850,11 +2850,16 @@ typedef struct avro_generic_record_value_iface {
 	avro_generic_value_iface_t  **field_ifaces;
 } avro_generic_record_value_iface_t;
 
+#ifdef _MSC_VER
+typedef struct avro_generic_record avro_generic_record_t;
+#define SIZEOF_avro_generic_record_t 0
+#else
 typedef struct avro_generic_record {
 	/* The rest of the struct is taken up by the inline storage
 	 * needed for each field. */
 } avro_generic_record_t;
-
+#define SIZEOF_avro_generic_record_t sizeof(avro_generic_record_t)
+#endif
 
 /** Return a pointer to the given field within a record struct. */
 #define avro_generic_record_field(iface, rec, index) \
@@ -3123,11 +3128,11 @@ avro_generic_record_class(avro_schema_t schema, memoize_state_t *state)
 		}
 	}
 
-	size_t  next_offset = sizeof(avro_generic_record_t);
+	size_t  next_offset = SIZEOF_avro_generic_record_t;
 #if DEBUG_FIELD_OFFSETS
 	fprintf(stderr, "  Record %s\n  Header: Offset 0, size %" PRIsz "\n",
 		avro_schema_type_name(schema),
-		sizeof(avro_generic_record_t));
+		SIZEOF_avro_generic_record_t);
 #endif
 	size_t  i;
 	for (i = 0; i < iface->field_count; i++) {
