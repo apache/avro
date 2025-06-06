@@ -50,6 +50,7 @@ jobs:
       - name: Install Dependencies
         run: |
           cpanm --mirror https://www.cpan.org/ install Bundle::LWP \
+                                                       LWP::UserAgent \
                                                        Compress::Zstd \
                                                        Encode \
                                                        Error::Simple \
@@ -90,6 +91,7 @@ jobs:
                                                             libsnappy-dev
           cpanm --mirror https://www.cpan.org/ install CPAN::Uploader \
                                                        Bundle::LWP \
+                                                       LWP::UserAgent \
                                                        Compress::Zstd \
                                                        Encode \
                                                        Error::Simple \
