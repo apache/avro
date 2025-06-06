@@ -301,7 +301,8 @@ public class ProtobufData extends GenericData {
     case SFIXED64:
       return Schema.create(Schema.Type.LONG);
     case ENUM:
-      return getSchema(f.getEnumType());
+      return f.hasDefaultValue() ? getSchema(f.getEnumType(), ((EnumValueDescriptor) f.getDefaultValue()).getName())
+          : getSchema(f.getEnumType());
     case MESSAGE:
       result = getSchema(f.getMessageType());
       if (f.isOptional())
@@ -315,11 +316,22 @@ public class ProtobufData extends GenericData {
   }
 
   public Schema getSchema(EnumDescriptor d) {
+    List<String> symbols = getEnumSymbols(d);
+    String enumDefault = symbols.isEmpty() ? null : symbols.get(0);
+    return Schema.createEnum(d.getName(), null, getNamespace(d.getFile(), d.getContainingType()), symbols, enumDefault);
+  }
+
+  public Schema getSchema(EnumDescriptor d, String enumDefault) {
+    List<String> symbols = getEnumSymbols(d);
+    return Schema.createEnum(d.getName(), null, getNamespace(d.getFile(), d.getContainingType()), symbols, enumDefault);
+  }
+
+  private List<String> getEnumSymbols(EnumDescriptor d) {
     List<String> symbols = new ArrayList<>(d.getValues().size());
     for (EnumValueDescriptor e : d.getValues()) {
       symbols.add(e.getName());
     }
-    return Schema.createEnum(d.getName(), null, getNamespace(d.getFile(), d.getContainingType()), symbols);
+    return symbols;
   }
 
   private static final JsonFactory FACTORY = new JsonFactory();
