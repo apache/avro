@@ -27,6 +27,7 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "jansson.h"
 #include "st.h"
@@ -119,9 +120,6 @@ static void avro_schema_free(avro_schema_t schema)
 	if (is_avro_schema(schema)) {
 		switch (avro_typeof(schema)) {
 		case AVRO_STRING:
-		case AVRO_BYTES:
-		case AVRO_INT32:
-		case AVRO_INT64:
 		case AVRO_FLOAT:
 		case AVRO_DOUBLE:
 		case AVRO_BOOLEAN:
@@ -129,6 +127,36 @@ static void avro_schema_free(avro_schema_t schema)
 		case AVRO_INVALID:
 			/* no memory allocated for primitives */
 			return;
+
+		case AVRO_BYTES:{
+				struct avro_bytes_schema_t *bytes;
+				bytes = avro_schema_to_bytes(schema);
+				if (bytes->logical_type) {
+					avro_freet(avro_logical_schema_t, bytes->logical_type);
+				}
+				avro_freet(struct avro_bytes_schema_t, bytes);
+			}
+			break;
+
+		case AVRO_INT32:{
+				struct avro_int_schema_t *int_schema;
+				int_schema = avro_schema_to_int(schema);
+				if (int_schema->logical_type) {
+					avro_freet(avro_logical_schema_t, int_schema->logical_type);
+				}
+				avro_freet(struct avro_int_schema_t, int_schema);
+			}
+			break;
+
+		case AVRO_INT64:{
+				struct avro_long_schema_t *long_schema;
+				long_schema = avro_schema_to_long(schema);
+				if (long_schema->logical_type) {
+					avro_freet(avro_logical_schema_t, long_schema->logical_type);
+				}
+				avro_freet(struct avro_long_schema_t, long_schema);
+			}
+			break;
 
 		case AVRO_RECORD:{
 				struct avro_record_schema_t *record;
@@ -166,6 +194,9 @@ static void avro_schema_free(avro_schema_t schema)
 				avro_str_free((char *) fixed->name);
 				if (fixed->space) {
 					avro_str_free((char *) fixed->space);
+				}
+				if (fixed->logical_type) {
+					avro_freet(avro_logical_schema_t, fixed->logical_type);
 				}
 				avro_freet(struct avro_fixed_schema_t, fixed);
 			}
@@ -232,6 +263,19 @@ avro_schema_decref(avro_schema_t schema)
 	return 1;
 }
 
+static avro_logical_schema_t*
+avro_logical_schema_init(avro_logical_type_t type,
+		int precision,
+		int scale)
+{
+	avro_logical_schema_t *logical_schema =
+			(avro_logical_schema_t *) avro_new(avro_logical_schema_t);
+	logical_schema->type = type;
+	logical_schema->precision = precision;
+	logical_schema->scale = scale;
+	return logical_schema;
+}
+
 avro_schema_t avro_schema_string(void)
 {
 	static struct avro_obj_t obj = {
@@ -244,32 +288,41 @@ avro_schema_t avro_schema_string(void)
 
 avro_schema_t avro_schema_bytes(void)
 {
-	static struct avro_obj_t obj = {
-		AVRO_BYTES,
-		AVRO_SCHEMA,
-		1
-	};
-	return avro_schema_incref(&obj);
+	struct avro_bytes_schema_t *bytes =
+			(struct avro_bytes_schema_t *) avro_new(struct avro_bytes_schema_t);
+	if (!bytes) {
+		avro_set_error("Cannot allocate new bytes schema");
+		return NULL;
+	}
+	bytes->logical_type = NULL;
+	avro_schema_init(&bytes->obj, AVRO_BYTES);
+	return &bytes->obj;
 }
 
 avro_schema_t avro_schema_int(void)
 {
-	static struct avro_obj_t obj = {
-		AVRO_INT32,
-		AVRO_SCHEMA,
-		1
-	};
-	return avro_schema_incref(&obj);
+	struct avro_int_schema_t *int_schema =
+			(struct avro_int_schema_t *) avro_new(struct avro_int_schema_t);
+	if (!int_schema) {
+		avro_set_error("Cannot allocate new int schema");
+		return NULL;
+	}
+	int_schema->logical_type = NULL;
+	avro_schema_init(&int_schema->obj, AVRO_INT32);
+	return &int_schema->obj;
 }
 
 avro_schema_t avro_schema_long(void)
 {
-	static struct avro_obj_t obj = {
-		AVRO_INT64,
-		AVRO_SCHEMA,
-		1
-	};
-	return avro_schema_incref(&obj);
+	struct avro_long_schema_t *long_schema =
+			(struct avro_long_schema_t *) avro_new(struct avro_long_schema_t);
+	if (!long_schema) {
+		avro_set_error("Cannot allocate new long schema");
+		return NULL;
+	}
+	long_schema->logical_type = NULL;
+	avro_schema_init(&long_schema->obj, AVRO_INT64);
+	return &long_schema->obj;
 }
 
 avro_schema_t avro_schema_float(void)
@@ -345,6 +398,7 @@ avro_schema_t avro_schema_fixed_ns(const char *name, const char *space,
 		return NULL;
 	}
 	fixed->size = size;
+  fixed->logical_type = NULL;
 	avro_schema_init(&fixed->obj, AVRO_FIXED);
 	return &fixed->obj;
 }
@@ -874,12 +928,74 @@ avro_type_from_json_t(json_t *json, avro_type_t *type,
 }
 
 static int
+avro_logical_schema_from_json(json_t *json, avro_logical_schema_t **schema)
+{
+	json_t *json_logical_type = json_object_get(json, "logicalType");
+
+	if (!json_logical_type) {
+		*schema = NULL;
+		return 0;
+	}
+
+	if (!json_is_string(json_logical_type)) {
+		avro_set_error("\"logicalType\" field must be a string");
+		return EINVAL;
+	}
+
+	avro_logical_type_t type;
+	int precision = 0;
+	int scale = 0;
+	const char *logical_type = json_string_value(json_logical_type);
+
+	if (strcmp(logical_type, "decimal") == 0) {
+		type = AVRO_DECIMAL;
+
+		json_t *json_precision = json_object_get(json, "precision");
+		if (!json_is_number(json_precision)) {
+			avro_set_error("\"precision\" must be set for decimal logical type");
+			return EINVAL;
+		}
+		precision = json_number_value(json_precision);
+
+		json_t *json_scale = json_object_get(json, "scale");
+		if (json_is_number(json_scale)) {
+			scale = json_number_value(json_scale);
+			if (scale > precision) {
+				avro_set_error("Decimal scale cannot exceeed precision");
+				return EINVAL;
+			}
+		} else {
+			scale = 0;
+		}
+	} else if (strcmp(logical_type, "date") == 0) {
+		type = AVRO_DATE;
+	} else if (strcmp(logical_type, "time-millis") == 0) {
+		type = AVRO_TIME_MILLIS;
+	} else if (strcmp(logical_type, "time-micros") == 0) {
+		type = AVRO_TIME_MICROS;
+	} else if (strcmp(logical_type, "timestamp-millis") == 0) {
+		type = AVRO_TIMESTAMP_MILLIS;
+	} else if (strcmp(logical_type, "timestamp-micros") == 0) {
+		type = AVRO_TIMESTAMP_MICROS;
+	} else if (strcmp(logical_type, "duration") == 0) {
+		type = AVRO_DURATION;
+	} else {
+		avro_set_error("Unknown Avro \"logicalType\": %s", logical_type);
+		return EINVAL;
+	}
+
+	*schema = avro_logical_schema_init(type, precision, scale);
+	return 0;
+}
+
+static int
 avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 			st_table *named_schemas, const char *parent_namespace)
 {
 	avro_type_t type = AVRO_INVALID;
 	unsigned int i;
 	avro_schema_t named_type = NULL;
+  avro_logical_schema_t *logical_schema = NULL;
 
 	if (avro_type_from_json_t(json, &type, named_schemas, &named_type, parent_namespace)) {
 		return EINVAL;
@@ -896,14 +1012,57 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 
 	case AVRO_BYTES:
 		*schema = avro_schema_bytes();
+
+		// parse logical schema if any
+		if (avro_logical_schema_from_json(json, &logical_schema)) {
+			avro_schema_decref(*schema);
+			return EINVAL;
+		}
+		if (logical_schema && logical_schema->type != AVRO_DECIMAL) {
+			avro_schema_decref(*schema);
+      avro_freet(avro_logical_schema_t, logical_schema);
+			avro_set_error("Bytes type can only be annotated with \"decimal\" logical type");
+			return EINVAL;
+		}
+		avro_schema_to_bytes(*schema)->logical_type = logical_schema;
 		break;
 
 	case AVRO_INT32:
 		*schema = avro_schema_int();
+
+		// parse logical schema if any
+		if (avro_logical_schema_from_json(json, &logical_schema)) {
+			avro_schema_decref(*schema);
+			return EINVAL;
+		}
+		if (logical_schema && logical_schema->type != AVRO_DATE
+				&& logical_schema->type != AVRO_TIME_MILLIS) {
+			avro_schema_decref(*schema);
+      avro_freet(avro_logical_schema_t, logical_schema);
+			avro_set_error("Int type can only be annotated with \"date\" or \"time-millis\" logical types");
+			return EINVAL;
+		}
+		avro_schema_to_int(*schema)->logical_type = logical_schema;
 		break;
 
 	case AVRO_INT64:
 		*schema = avro_schema_long();
+
+		// parse logical schema if any
+		if (avro_logical_schema_from_json(json, &logical_schema)) {
+			avro_schema_decref(*schema);
+			return EINVAL;
+		}
+		if (logical_schema
+				&& logical_schema->type != AVRO_TIME_MICROS
+				&& logical_schema->type != AVRO_TIMESTAMP_MILLIS
+				&& logical_schema->type != AVRO_TIMESTAMP_MICROS) {
+			avro_schema_decref(*schema);
+      avro_freet(avro_logical_schema_t, logical_schema);
+			avro_set_error("Int type can only be annotated with \"time-micros\", \"timestamp-millis\" or \"timestamp-micros\" logical types");
+			return EINVAL;
+		}
+		avro_schema_to_long(*schema)->logical_type = logical_schema;
 		break;
 
 	case AVRO_FLOAT:
@@ -1200,6 +1359,37 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 			if (*schema == NULL) {
 				return ENOMEM;
 			}
+
+			// parse logical schema if any
+			if (avro_logical_schema_from_json(json, &logical_schema)) {
+				avro_schema_decref(*schema);
+				return EINVAL;
+			}
+			if (logical_schema) {
+				if (logical_schema->type == AVRO_DECIMAL) {
+					int64_t max_precision = floor(log10(pow(2.0, 8.0 * ((int64_t) size) - 1) - 1));
+					if (logical_schema->precision > max_precision) {
+						avro_schema_decref(*schema);
+						avro_freet(avro_logical_schema_t, logical_schema);
+						avro_set_error("Decimal precision is too large for fixed type of this size");
+						return EINVAL;
+					}
+				} else if (logical_schema->type == AVRO_DURATION) {
+					if ((int64_t) size != 12) {
+						avro_schema_decref(*schema);
+						avro_freet(avro_logical_schema_t, logical_schema);
+						avro_set_error("Duration logical type can only annotate fixed type of size 12");
+						return EINVAL;
+					}
+				} else {
+					avro_schema_decref(*schema);
+					avro_freet(avro_logical_schema_t, logical_schema);
+					avro_set_error("Fixed type can only be annotated with \"decimal\" or \"duration\" logical types");
+					return EINVAL;
+				}
+			}
+			avro_schema_to_fixed(*schema)->logical_type = logical_schema;
+
 			if (save_named_schemas(*schema, named_schemas)) {
 				avro_set_error("Cannot save fixed schema");
 				return ENOMEM;
@@ -1285,6 +1475,17 @@ avro_schema_from_json_length(const char *jsontext, size_t length,
 	return avro_schema_from_json_root(root, schema);
 }
 
+avro_logical_schema_t*
+avro_logical_schema_copy(avro_logical_schema_t *logical_schema)
+{
+	if (!logical_schema) {
+		return NULL;
+	}
+
+	return avro_logical_schema_init(logical_schema->type, logical_schema->precision,
+						logical_schema->scale);
+}
+
 avro_schema_t avro_schema_copy_root(avro_schema_t schema, st_table *named_schemas)
 {
 	long i;
@@ -1294,17 +1495,47 @@ avro_schema_t avro_schema_copy_root(avro_schema_t schema, st_table *named_schema
 	}
 	switch (avro_typeof(schema)) {
 	case AVRO_STRING:
-	case AVRO_BYTES:
-	case AVRO_INT32:
-	case AVRO_INT64:
 	case AVRO_FLOAT:
 	case AVRO_DOUBLE:
 	case AVRO_BOOLEAN:
 	case AVRO_NULL:
 		/*
-		 * No need to copy primitives since they're static
+		 * No need to copy these primitives since they're static
 		 */
 		new_schema = schema;
+		break;
+
+	case AVRO_BYTES:
+		{
+			struct avro_bytes_schema_t *bytes_schema =
+			    avro_schema_to_bytes(schema);
+			new_schema = avro_schema_bytes();
+
+			avro_schema_to_bytes(new_schema)->logical_type =
+				avro_logical_schema_copy(bytes_schema->logical_type);
+		}
+		break;
+
+	case AVRO_INT32:
+		{
+			struct avro_int_schema_t *int_schema =
+			    avro_schema_to_int(schema);
+			new_schema = avro_schema_int();
+
+			avro_schema_to_int(new_schema)->logical_type =
+				avro_logical_schema_copy(int_schema->logical_type);
+		}
+		break;
+
+	case AVRO_INT64:
+		{
+			struct avro_long_schema_t *long_schema =
+			    avro_schema_to_long(schema);
+			new_schema = avro_schema_long();
+
+			avro_schema_to_long(new_schema)->logical_type =
+				avro_logical_schema_copy(long_schema->logical_type);
+		}
 		break;
 
 	case AVRO_RECORD:
@@ -1364,6 +1595,10 @@ avro_schema_t avro_schema_copy_root(avro_schema_t schema, st_table *named_schema
 			    avro_schema_fixed_ns(fixed_schema->name,
 					         fixed_schema->space,
 					         fixed_schema->size);
+
+			avro_schema_to_fixed(new_schema)->logical_type =
+				avro_logical_schema_copy(fixed_schema->logical_type);
+
  			if (save_named_schemas(new_schema, named_schemas)) {
  				avro_set_error("Cannot save fixed schema");
  				return NULL;
@@ -1586,6 +1821,29 @@ const char *avro_schema_type_name(const avro_schema_t schema)
 	return NULL;
 }
 
+const char *avro_logical_type_name(const avro_logical_schema_t *logical_schema)
+{
+	switch(logical_schema->type) {
+		case AVRO_DECIMAL:
+			return "decimal";
+		case AVRO_DATE:
+			return "date";
+		case AVRO_TIME_MILLIS:
+			return "time-millis";
+		case AVRO_TIME_MICROS:
+			return "time-micros";
+		case AVRO_TIMESTAMP_MILLIS:
+			return "timestamp-millis";
+		case AVRO_TIMESTAMP_MICROS:
+			return "timestamp-micros";
+		case AVRO_DURATION:
+			return "duration";
+    default:
+      avro_set_error("Unknown logical type");
+      return NULL;
+	}
+}
+
 avro_datum_t avro_datum_from_schema(const avro_schema_t schema)
 {
 	check_param(NULL, is_avro_schema(schema), "schema");
@@ -1595,13 +1853,13 @@ avro_datum_t avro_datum_from_schema(const avro_schema_t schema)
 			return avro_givestring("", NULL);
 
 		case AVRO_BYTES:
-			return avro_givebytes("", 0, NULL);
+			return avro_givebytes(schema, "", 0, NULL);
 
 		case AVRO_INT32:
-			return avro_int32(0);
+			return avro_int32(schema, 0);
 
 		case AVRO_INT64:
-			return avro_int64(0);
+			return avro_int64(schema, 0);
 
 		case AVRO_FLOAT:
 			return avro_float(0);
@@ -1675,6 +1933,35 @@ avro_datum_t avro_datum_from_schema(const avro_schema_t schema)
 static int avro_write_str(avro_writer_t out, const char *str)
 {
 	return avro_write(out, (char *)str, strlen(str));
+}
+
+static int avro_write_int(avro_writer_t out, int num)
+{
+	char buf[12];
+	snprintf(buf, sizeof(buf), "%d", num);
+	return avro_write_str(out, buf);
+}
+
+static int write_logical_schema(avro_writer_t out,
+		       const avro_logical_schema_t *logical_schema)
+{
+	if (logical_schema == NULL || logical_schema->type == AVRO_LOGICAL_TYPE_NONE) {
+		return 0;
+	}
+
+	int rval;
+	check(rval, avro_write_str(out, ",\"logicalType\":\""));
+	check(rval, avro_write_str(out, avro_logical_type_name(logical_schema)));
+	check(rval, avro_write_str(out, "\""));
+	if (logical_schema->type == AVRO_DECIMAL) {
+		check(rval, avro_write_str(out, ",\"precision\":"));
+		check(rval, avro_write_int(out, logical_schema->precision));
+		if (logical_schema->scale > 0) {
+			check(rval, avro_write_str(out, ",\"scale\":"));
+			check(rval, avro_write_int(out, logical_schema->scale));
+		}
+	}
+	return rval;
 }
 
 static int write_field(avro_writer_t out, const struct avro_record_field_t *field,
@@ -1770,6 +2057,7 @@ static int write_fixed(avro_writer_t out, const struct avro_fixed_schema_t *fixe
 	check(rval, avro_write_str(out, "\"size\":"));
 	snprintf(size, sizeof(size), "%" PRId64, fixed->size);
 	check(rval, avro_write_str(out, size));
+	check(rval, write_logical_schema(out, fixed->logical_type));
 	return avro_write_str(out, "}");
 }
 
@@ -1836,17 +2124,22 @@ avro_schema_to_json2(const avro_schema_t schema, avro_writer_t out,
 		check(rval, avro_write_str(out, "{\"type\":\""));
 	}
 
+	avro_logical_schema_t *logical_schema = NULL;
+
 	switch (avro_typeof(schema)) {
 	case AVRO_STRING:
 		check(rval, avro_write_str(out, "string"));
 		break;
 	case AVRO_BYTES:
+		logical_schema = avro_schema_to_bytes(schema)->logical_type;
 		check(rval, avro_write_str(out, "bytes"));
 		break;
 	case AVRO_INT32:
+		logical_schema = avro_schema_to_int(schema)->logical_type;
 		check(rval, avro_write_str(out, "int"));
 		break;
 	case AVRO_INT64:
+		logical_schema = avro_schema_to_long(schema)->logical_type;
 		check(rval, avro_write_str(out, "long"));
 		break;
 	case AVRO_FLOAT:
@@ -1880,7 +2173,9 @@ avro_schema_to_json2(const avro_schema_t schema, avro_writer_t out,
 	}
 
 	if (is_avro_primitive(schema)) {
-		return avro_write_str(out, "\"}");
+		check(rval, avro_write_str(out, "\""));
+		check(rval, write_logical_schema(out, logical_schema));
+		return avro_write_str(out, "}");
 	}
 	avro_set_error("Unknown schema type");
 	return EINVAL;
@@ -1889,4 +2184,20 @@ avro_schema_to_json2(const avro_schema_t schema, avro_writer_t out,
 int avro_schema_to_json(const avro_schema_t schema, avro_writer_t out)
 {
 	return avro_schema_to_json2(schema, out, NULL);
+}
+
+avro_logical_schema_t *avro_logical_schema(avro_schema_t schema)
+{
+	switch (avro_typeof(schema)) {
+	case AVRO_INT32:
+		return avro_schema_to_int(schema)->logical_type;
+	case AVRO_INT64:
+		return avro_schema_to_long(schema)->logical_type;
+	case AVRO_BYTES:
+		return avro_schema_to_bytes(schema)->logical_type;
+	case AVRO_FIXED:
+		return avro_schema_to_fixed(schema)->logical_type;
+  default:
+    return NULL;
+	}
 }
