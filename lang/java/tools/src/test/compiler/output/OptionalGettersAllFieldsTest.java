@@ -15,6 +15,8 @@ import java.util.Optional;
 @org.apache.avro.specific.AvroGenerated
 public class OptionalGettersAllFieldsTest extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = 874861432798554536L;
+
+
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OptionalGettersAllFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that optional getters are created for all fields\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"nullable_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"favorite_number\",\"type\":[\"int\"]},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
@@ -491,6 +493,40 @@ public class OptionalGettersAllFieldsTest extends org.apache.avro.specific.Speci
     READER$.read(this, SpecificData.getDecoder(in));
   }
 
+
+  @Override
+  public int hashCode() {
+    int result = 1;
+    result = 31 * result + (name == null ? 0 : name.hashCode());
+    result = 31 * result + (nullable_name == null ? 0 : nullable_name.hashCode());
+    result = 31 * result + (favorite_number == null ? 0 : favorite_number.hashCode());
+    result = 31 * result + (nullable_favorite_number == null ? 0 : nullable_favorite_number.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof OptionalGettersAllFieldsTest)) {
+      return false;
+    }
+    OptionalGettersAllFieldsTest other = (OptionalGettersAllFieldsTest) o;
+    if (Utf8.compareSequences(this.name, other.name) != 0) {
+      return false;
+    }
+    if (Utf8.compareSequences(this.nullable_name, other.nullable_name) != 0) {
+      return false;
+    }
+    if (!java.util.Objects.equals(this.favorite_number, other.favorite_number)) {
+      return false;
+    }
+    if (!java.util.Objects.equals(this.nullable_favorite_number, other.nullable_favorite_number)) {
+      return false;
+    }
+    return true;
+  }
 }
 
 

@@ -15,6 +15,8 @@ import org.apache.avro.message.SchemaStore;
 @org.apache.avro.specific.AvroGenerated
 public class FieldTest extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = 4609235620572341636L;
+
+
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"FieldTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test various field types\",\"fields\":[{\"name\":\"number\",\"type\":\"int\",\"doc\":\"The number of the player\"},{\"name\":\"last_name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"timestamp\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"timestampMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}},{\"name\":\"timeMillis\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"timeMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"time-micros\"}}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
@@ -659,6 +661,48 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
     READER$.read(this, SpecificData.getDecoder(in));
   }
 
+
+  @Override
+  public int hashCode() {
+    int result = 1;
+    result = 31 * result + Integer.hashCode(number);
+    result = 31 * result + (last_name == null ? 0 : last_name.hashCode());
+    result = 31 * result + (timestamp == null ? 0 : timestamp.hashCode());
+    result = 31 * result + (timestampMicros == null ? 0 : timestampMicros.hashCode());
+    result = 31 * result + (timeMillis == null ? 0 : timeMillis.hashCode());
+    result = 31 * result + (timeMicros == null ? 0 : timeMicros.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof FieldTest)) {
+      return false;
+    }
+    FieldTest other = (FieldTest) o;
+    if (this.number != other.number) {
+      return false;
+    }
+    if (!java.util.Objects.equals(this.last_name, other.last_name)) {
+      return false;
+    }
+    if (!java.util.Objects.equals(this.timestamp, other.timestamp)) {
+      return false;
+    }
+    if (!java.util.Objects.equals(this.timestampMicros, other.timestampMicros)) {
+      return false;
+    }
+    if (!java.util.Objects.equals(this.timeMillis, other.timeMillis)) {
+      return false;
+    }
+    if (!java.util.Objects.equals(this.timeMicros, other.timeMicros)) {
+      return false;
+    }
+    return true;
+  }
 }
 
 
