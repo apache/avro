@@ -633,9 +633,10 @@ class DatumReader:
     def read(self, decoder: "BinaryDecoder") -> object:
         if self.writers_schema is None:
             raise avro.errors.IONotReadyException("Cannot read without a writer's schema.")
-        if self.readers_schema is None:
-            self.readers_schema = self.writers_schema
-        return self.read_data(self.writers_schema, self.readers_schema, decoder)
+        reader_schema = self.readers_schema
+        if reader_schema is None:
+            reader_schema = self.writers_schema
+        return self.read_data(self.writers_schema, reader_schema, decoder)
 
     def read_data(self, writers_schema: avro.schema.Schema, readers_schema: avro.schema.Schema, decoder: "BinaryDecoder") -> object:
         # schema matching
