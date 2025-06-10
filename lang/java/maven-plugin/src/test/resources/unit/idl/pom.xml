@@ -47,6 +47,7 @@
           <sourceDirectory>${basedir}/src/test</sourceDirectory>
           <outputDirectory>${basedir}/target/test-harness/idl</outputDirectory>
           <stringType>String</stringType>
+          <createNullSafeAnnotations>true</createNullSafeAnnotations>
           <project implementation="org.apache.maven.plugin.testing.stubs.MavenProjectStub"/>
         </configuration>
       </plugin>
