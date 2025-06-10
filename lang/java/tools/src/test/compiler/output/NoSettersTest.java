@@ -15,6 +15,8 @@ import org.apache.avro.message.SchemaStore;
 @org.apache.avro.specific.AvroGenerated
 public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = 8604146783520861700L;
+
+
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NoSettersTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that setters are omitted\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"favorite_number\",\"type\":[\"int\",\"null\"]}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
@@ -385,6 +387,32 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
         }
       }
     }
+  }
+
+  @Override
+  public int hashCode() {
+    int result = 1;
+    result = 31 * result + (name == null ? 0 : name.hashCode());
+    result = 31 * result + (favorite_number == null ? 0 : favorite_number.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof NoSettersTest)) {
+      return false;
+    }
+    NoSettersTest other = (NoSettersTest) o;
+    if (Utf8.compareSequences(this.name, other.name) != 0) {
+      return false;
+    }
+    if (!java.util.Objects.equals(this.favorite_number, other.favorite_number)) {
+      return false;
+    }
+    return true;
   }
 }
 

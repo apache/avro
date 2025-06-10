@@ -1166,6 +1166,46 @@ public class SpecificCompiler {
     return SpecificData.mangle(word, reservedWords, isMethod);
   }
 
+  public boolean canGenerateEqualsAndHashCode(Schema schema) {
+    return getUsedCustomLogicalTypeFactories(schema).isEmpty();
+  }
+
+  public boolean isPrimitiveType(Schema schema) {
+    return !isUnboxedJavaTypeNullable(schema) && getConvertedLogicalType(schema) == null;
+  }
+
+  public String hashCodeFor(Schema schema, String name) {
+    switch (javaUnbox(schema, false)) {
+    case "int":
+      return "Integer.hashCode(" + name + ")";
+    case "long":
+      return "Long.hashCode(" + name + ")";
+    case "float":
+      return "Float.hashCode(" + name + ")";
+    case "double":
+      return "Double.hashCode(" + name + ")";
+    case "boolean":
+      return "Boolean.hashCode(" + name + ")";
+    default:
+      // Hashcode of Union is expected to match ordinal
+      if (schema.getType() == Schema.Type.ENUM || ((schema.getType() == Schema.Type.UNION)
+          && (schema.getTypes().stream().anyMatch(t -> t.getType() == Schema.Type.ENUM)))) {
+        if (schema.getType() == Schema.Type.ENUM
+            || (schema.getTypes().size() == 2 && schema.getTypes().contains(NULL_SCHEMA))) {
+          return "(" + name + " == null ? 0 : ((java.lang.Enum) " + name + ").ordinal())";
+        } else {
+          return "(" + name + " == null ? 0 : " + name + " instanceof java.lang.Enum ? ((java.lang.Enum) " + name
+              + ").ordinal() : " + name + ".hashCode())";
+        }
+      }
+      return "(" + name + " == null ? 0 : " + name + ".hashCode())";
+    }
+  }
+
+  public boolean ignoredField(Field field) {
+    return field.order() == Field.Order.IGNORE;
+  }
+
   /**
    * Utility for use by templates. Return schema fingerprint as a long.
    */

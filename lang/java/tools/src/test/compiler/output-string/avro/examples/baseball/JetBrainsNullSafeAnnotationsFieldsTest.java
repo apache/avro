@@ -581,6 +581,40 @@ public class JetBrainsNullSafeAnnotationsFieldsTest extends org.apache.avro.spec
       }
     }
   }
+
+  @Override
+  public int hashCode() {
+    int result = 1;
+    result = 31 * result + (name == null ? 0 : name.hashCode());
+    result = 31 * result + (nullable_name == null ? 0 : nullable_name.hashCode());
+    result = 31 * result + Integer.hashCode(favorite_number);
+    result = 31 * result + (nullable_favorite_number == null ? 0 : nullable_favorite_number.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof JetBrainsNullSafeAnnotationsFieldsTest)) {
+      return false;
+    }
+    JetBrainsNullSafeAnnotationsFieldsTest other = (JetBrainsNullSafeAnnotationsFieldsTest) o;
+    if (!java.util.Objects.equals(this.name, other.name)) {
+      return false;
+    }
+    if (!java.util.Objects.equals(this.nullable_name, other.nullable_name)) {
+      return false;
+    }
+    if (this.favorite_number != other.favorite_number) {
+      return false;
+    }
+    if (!java.util.Objects.equals(this.nullable_favorite_number, other.nullable_favorite_number)) {
+      return false;
+    }
+    return true;
+  }
 }
 
 
