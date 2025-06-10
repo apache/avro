@@ -478,6 +478,7 @@
                 <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.txt</exclude>
                 <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.avro/*</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/noopt/Test.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/noopt/TestProto3.java</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/A.java</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/Foo.java</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/FooOrBuilder.java</exclude>
