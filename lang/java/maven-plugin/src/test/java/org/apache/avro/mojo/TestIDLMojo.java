@@ -61,7 +61,8 @@ public class TestIDLMojo extends AbstractAvroMojoTest {
     assertFilesExist(outputDir, generatedFiles);
 
     final String idlUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
-    assertTrue(idlUserContent.contains("java.time.Instant"));
+    assertTrue(idlUserContent.contains("@org.jetbrains.annotations.Nullable\n  public java.lang.String getId"));
+    assertTrue(idlUserContent.contains("@org.jetbrains.annotations.NotNull\n  public java.time.Instant getModifiedOn"));
 
     assertEquals(Collections.singletonList("[WARN] Line 22, char 1: Ignoring out-of-place documentation comment.\n"
         + "Did you mean to use a multiline comment ( /* ... */ ) instead?"), log.getLogEntries());
