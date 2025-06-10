@@ -37,7 +37,7 @@
 
   <PropertyGroup Label="Target Frameworks">
     <!-- Exe -->
-    <DefaultExeTargetFrameworks>net6.0;net7.0;net8.0</DefaultExeTargetFrameworks>
+    <DefaultExeTargetFrameworks>net6.0;net7.0;net8.0;net9.0</DefaultExeTargetFrameworks>
     <!-- Library -->
     <DefaultLibraryTargetFrameworks>netstandard2.0;netstandard2.1</DefaultLibraryTargetFrameworks>
     <!-- Unit Tests -->
@@ -80,11 +80,10 @@
     <EditorConfigFiles Condition="'$(IsTestProject)' == 'true'" Include="$(MSBuildThisFileDirectory)/CodeAnalysis.test.globalconfig" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(RunAnalyzers)' != 'false'">
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="$(MicrosoftCodeAnalysisNetAnalyzersVersion)" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" Version="$(MicrosoftCodeAnalysisCSharpCodeStyleVersion)" PrivateAssets="all" />
-    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)" PrivateAssets="all" />
-  </ItemGroup>
+  <PropertyGroup Condition="'$(RunAnalyzers)' != 'false'">
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+  </PropertyGroup>
 
   <Target Name="PrintVersionInfo">
     <Message Importance="high" Text="VersionPrefix: $(VersionPrefix)" />

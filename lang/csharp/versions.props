@@ -26,8 +26,8 @@
     !!! SHIPPED CLASS LIBRARIES SHOULD USE MINIMUMVERSIONs FOR SOME LIBRARIES. SEE BELOW !!!
   -->
   <PropertyGroup Label="Latest Package Versions">
-    <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
-    <SystemCodeDomVersion>8.0.0</SystemCodeDomVersion>
+    <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
+    <SystemCodeDomVersion>9.0.0</SystemCodeDomVersion>
     <SystemReflectionVersion>4.3.0</SystemReflectionVersion>
     <SystemReflectionEmitILGenerationVersion>4.7.0</SystemReflectionEmitILGenerationVersion>
     <SystemReflectionEmitLightweightVersion>4.7.0</SystemReflectionEmitLightweightVersion>
@@ -58,19 +58,16 @@
 	Please sort the packages alphabetically
   -->
   <PropertyGroup Label="Build, Test, Code Analysis, Benchmark Package Versions">
-    <BenchmarkDotNetVersion>0.13.10</BenchmarkDotNetVersion>
-    <CoverletCollectorVersion>6.0.0</CoverletCollectorVersion>
-    <CoverletMSBuildVersion>6.0.0</CoverletMSBuildVersion>
-    <MicrosoftBuildFrameworkVersion>17.8.3</MicrosoftBuildFrameworkVersion>
-    <MicrosoftBuildUtilitiesCoreVersion>17.8.3</MicrosoftBuildUtilitiesCoreVersion>
-    <MicrosoftCodeAnalysisVersion>4.7.0</MicrosoftCodeAnalysisVersion>
-    <MicrosoftCodeAnalysisCSharpVersion>4.7.0</MicrosoftCodeAnalysisCSharpVersion>
-    <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.7.0</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
-    <MicrosoftCodeAnalysisNetAnalyzersVersion>8.0.0</MicrosoftCodeAnalysisNetAnalyzersVersion>
+    <BenchmarkDotNetVersion>0.14.0</BenchmarkDotNetVersion>
+    <CoverletCollectorVersion>6.0.2</CoverletCollectorVersion>
+    <CoverletMSBuildVersion>6.0.2</CoverletMSBuildVersion>
+    <MicrosoftBuildFrameworkVersion>17.12.6</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>17.12.6</MicrosoftBuildUtilitiesCoreVersion>
+    <MicrosoftCodeAnalysisVersion>4.11.0</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisCSharpVersion>4.11.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftNETTestSdkVersion>17.8.0</MicrosoftNETTestSdkVersion>
     <NUnitVersion>3.14.0</NUnitVersion>
     <NUnitConsoleRunnerVersion>3.16.3</NUnitConsoleRunnerVersion>
     <NUnit3TestAdapterVersion>4.5.0</NUnit3TestAdapterVersion>
-    <StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
   </PropertyGroup>
 </Project>

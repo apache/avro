@@ -49,6 +49,7 @@ jobs:
             6.0.x
             7.0.x
             8.0.x
+            9.0.x
 
       - uses: actions/cache@v4
         with:
@@ -79,6 +80,7 @@ jobs:
             6.0.x
             7.0.x
             8.0.x
+            9.0.x
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v4
@@ -145,6 +147,7 @@ jobs:
           bash ./dotnet-install.sh --channel "6.0" --install-dir "$HOME/.dotnet" # 6.0
           bash ./dotnet-install.sh --channel "7.0" --install-dir "$HOME/.dotnet" # 7.0
           bash ./dotnet-install.sh --channel "8.0" --install-dir "$HOME/.dotnet" # 8.0
+          bash ./dotnet-install.sh --channel "9.0" --install-dir "$HOME/.dotnet" # 9.0
           
       - name: Build
         run: |
