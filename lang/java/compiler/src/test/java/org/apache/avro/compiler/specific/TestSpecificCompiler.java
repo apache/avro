@@ -393,6 +393,7 @@ public class TestSpecificCompiler {
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
     Schema timeSchema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
     Schema timeMicrosSchema = LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
+    Schema timeNanosSchema = LogicalTypes.timeNanos().addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampMicrosSchema = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampNanosSchema = LogicalTypes.timestampNanos().addToSchema(Schema.create(Schema.Type.LONG));
@@ -407,6 +408,8 @@ public class TestSpecificCompiler {
         "Should use java.time.LocalTime for time-micros type");
     assertEquals("java.time.Instant", compiler.javaType(timestampMicrosSchema),
         "Should use java.time.Instant for timestamp-micros type");
+    assertEquals("java.time.LocalTime", compiler.javaType(timeNanosSchema),
+        "Should use java.time.LocalTime for time-nanos type");
     assertEquals("java.time.Instant", compiler.javaType(timestampNanosSchema),
         "Should use java.time.Instant for timestamp-nanos type");
   }

@@ -44,7 +44,8 @@ public class TestSpecificToFromByteArray {
     Instant instant = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
     final TestRecordWithLogicalTypes record = new TestRecordWithLogicalTypes(true, 34, 35L, 3.14F, 3019.34, null,
-        LocalDate.now(), t, instant, new BigDecimal("123.45"), new BigDecimal(-23.456562323));
+        LocalDate.now(), t, LocalTime.of(10, 54, 35, 123456), instant, new BigDecimal("123.45"),
+        new BigDecimal(-23.456562323));
 
     final ByteBuffer b = record.toByteBuffer();
     final TestRecordWithLogicalTypes copy = TestRecordWithLogicalTypes.fromByteBuffer(b);
@@ -81,8 +82,8 @@ public class TestSpecificToFromByteArray {
   void specificByteArrayIncompatibleWithoutLogicalTypes() throws IOException {
     assertThrows(MissingSchemaException.class, () -> {
       final TestRecordWithLogicalTypes withLogicalTypes = new TestRecordWithLogicalTypes(true, 34, 35L, 3.14F, 3019.34,
-          null, LocalDate.now(), LocalTime.now(), Instant.now(), new BigDecimal("123.45"),
-          new BigDecimal(-23.456562323));
+          null, LocalDate.now(), LocalTime.now(), LocalTime.of(10, 54, 35, 123456), Instant.now(),
+          new BigDecimal("123.45"), new BigDecimal(-23.456562323));
 
       final ByteBuffer b = withLogicalTypes.toByteBuffer();
       TestRecordWithoutLogicalTypes.fromByteBuffer(b);

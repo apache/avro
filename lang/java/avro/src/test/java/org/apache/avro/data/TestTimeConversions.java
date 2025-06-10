@@ -31,6 +31,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.data.TimeConversions.DateConversion;
 import org.apache.avro.data.TimeConversions.TimeMicrosConversion;
 import org.apache.avro.data.TimeConversions.TimeMillisConversion;
+import org.apache.avro.data.TimeConversions.TimeNanosConversion;
 import org.apache.avro.data.TimeConversions.TimestampMicrosConversion;
 import org.apache.avro.data.TimeConversions.TimestampMillisConversion;
 import org.apache.avro.reflect.ReflectData;
@@ -42,6 +43,7 @@ public class TestTimeConversions {
   public static Schema DATE_SCHEMA;
   public static Schema TIME_MILLIS_SCHEMA;
   public static Schema TIME_MICROS_SCHEMA;
+  public static Schema TIME_NANOS_SCHEMA;
   public static Schema TIMESTAMP_MILLIS_SCHEMA;
   public static Schema TIMESTAMP_MICROS_SCHEMA;
 
@@ -50,6 +52,7 @@ public class TestTimeConversions {
     TestTimeConversions.DATE_SCHEMA = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
     TestTimeConversions.TIME_MILLIS_SCHEMA = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
     TestTimeConversions.TIME_MICROS_SCHEMA = LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
+    TestTimeConversions.TIME_NANOS_SCHEMA = LogicalTypes.timeNanos().addToSchema(Schema.create(Schema.Type.LONG));
     TestTimeConversions.TIMESTAMP_MILLIS_SCHEMA = LogicalTypes.timestampMillis()
         .addToSchema(Schema.create(Schema.Type.LONG));
     TestTimeConversions.TIMESTAMP_MICROS_SCHEMA = LogicalTypes.timestampMicros()
@@ -114,6 +117,28 @@ public class TestTimeConversions {
         "01:00 should be 3,600,000,000");
     assertEquals(afternoonMicros, (long) conversion.toLong(afternoon, TIME_MICROS_SCHEMA, LogicalTypes.timeMicros()),
         "15:14:15.926551 should be " + afternoonMicros);
+  }
+
+  @Test
+  void timeNanosConversion() throws Exception {
+    TimeNanosConversion conversion = new TimeNanosConversion();
+    LocalTime oneAM = LocalTime.of(1, 0);
+    LocalTime afternoon = LocalTime.of(15, 14, 15, 926_551_123);
+    long afternoonNanos = ((long) (15 * 60 + 14) * 60 + 15) * 1_000_000_000 + 926_551_123;
+
+    assertEquals(LocalTime.MIDNIGHT, conversion.fromLong(0L, TIME_NANOS_SCHEMA, LogicalTypes.timeNanos()),
+        "Midnight should be 0");
+    assertEquals(oneAM, conversion.fromLong(3_600_000_000_000L, TIME_NANOS_SCHEMA, LogicalTypes.timeNanos()),
+        "01:00 should be 3,600,000,000,000");
+    assertEquals(afternoon, conversion.fromLong(afternoonNanos, TIME_NANOS_SCHEMA, LogicalTypes.timeNanos()),
+        "15:14:15.926551123 should be " + afternoonNanos);
+
+    assertEquals(0, (long) conversion.toLong(LocalTime.MIDNIGHT, TIME_NANOS_SCHEMA, LogicalTypes.timeNanos()),
+        "Midnight should be 0");
+    assertEquals(3_600_000_000_000L, (long) conversion.toLong(oneAM, TIME_NANOS_SCHEMA, LogicalTypes.timeNanos()),
+        "01:00 should be 3,600,000,000,000");
+    assertEquals(afternoonNanos, (long) conversion.toLong(afternoon, TIME_NANOS_SCHEMA, LogicalTypes.timeNanos()),
+        "15:14:15.926551123 should be " + afternoonNanos);
   }
 
   @Test
@@ -207,6 +232,12 @@ public class TestTimeConversions {
   void dynamicSchemaWithTimeMicrosConversion() throws ClassNotFoundException {
     Schema schema = getReflectedSchemaByName("java.time.LocalTime", new TimeConversions.TimeMicrosConversion());
     assertEquals(TIME_MICROS_SCHEMA, schema, "Reflected schema should be logicalType timeMicros");
+  }
+
+  @Test
+  void dynamicSchemaWithTimeNanosConversion() throws ClassNotFoundException {
+    Schema schema = getReflectedSchemaByName("java.time.LocalTime", new TimeConversions.TimeNanosConversion());
+    assertEquals(TIME_NANOS_SCHEMA, schema, "Reflected schema should be logicalType timeNanos");
   }
 
   @Test
