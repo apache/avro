@@ -15,6 +15,8 @@ import org.apache.avro.message.SchemaStore;
 @org.apache.avro.specific.AvroGenerated
 public class Player extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = 3865593031278745715L;
+
+
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Player\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"選手 is Japanese for player.\",\"fields\":[{\"name\":\"number\",\"type\":\"int\",\"doc\":\"The number of the player\"},{\"name\":\"first_name\",\"type\":\"string\"},{\"name\":\"last_name\",\"type\":\"string\"},{\"name\":\"position\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"enum\",\"name\":\"Position\",\"symbols\":[\"P\",\"C\",\"B1\",\"B2\",\"B3\",\"SS\",\"LF\",\"CF\",\"RF\",\"DH\"]}}}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
@@ -586,6 +588,40 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
         }
       }
     }
+  }
+
+  @Override
+  public int hashCode() {
+    int result = 1;
+    result = 31 * result + Integer.hashCode(number);
+    result = 31 * result + (first_name == null ? 0 : first_name.hashCode());
+    result = 31 * result + (last_name == null ? 0 : last_name.hashCode());
+    result = 31 * result + (position == null ? 0 : position.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof Player)) {
+      return false;
+    }
+    Player other = (Player) o;
+    if (this.number != other.number) {
+      return false;
+    }
+    if (Utf8.compareSequences(this.first_name, other.first_name) != 0) {
+      return false;
+    }
+    if (Utf8.compareSequences(this.last_name, other.last_name) != 0) {
+      return false;
+    }
+    if (!java.util.Objects.equals(this.position, other.position)) {
+      return false;
+    }
+    return true;
   }
 }
 

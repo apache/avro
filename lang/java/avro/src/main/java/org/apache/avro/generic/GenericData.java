@@ -1312,9 +1312,9 @@ public class GenericData {
     case NULL:
       return 0;
     case STRING:
-      Utf8 u1 = o1 instanceof Utf8 ? (Utf8) o1 : new Utf8(o1.toString());
-      Utf8 u2 = o2 instanceof Utf8 ? (Utf8) o2 : new Utf8(o2.toString());
-      return u1.compareTo(u2);
+      CharSequence cs1 = o1 instanceof CharSequence ? (CharSequence) o1 : o1.toString();
+      CharSequence cs2 = o2 instanceof CharSequence ? (CharSequence) o2 : o2.toString();
+      return Utf8.compareSequences(cs1, cs2);
     default:
       return ((Comparable) o1).compareTo(o2);
     }
