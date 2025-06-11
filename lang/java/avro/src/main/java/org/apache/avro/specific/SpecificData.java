@@ -61,21 +61,25 @@ public class SpecificData extends GenericData {
   private static final SpecificData INSTANCE = new SpecificData();
 
   static {
-    INSTANCE.addLogicalTypeConversion(new Conversions.UUIDConversion());
+    addLogicalTypeConversions(INSTANCE);
+  }
+
+  protected static void addLogicalTypeConversions(SpecificData instance) {
+    instance.addLogicalTypeConversion(new Conversions.UUIDConversion());
     // Disable DecimalConversion since it's gated behind
     // `compiler.setEnableDecimalLogicalType`
     // INSTANCE.addLogicalTypeConversion(new Conversions.DecimalConversion());
-    INSTANCE.addLogicalTypeConversion(new Conversions.BigDecimalConversion());
-    INSTANCE.addLogicalTypeConversion(new Conversions.DurationConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.DateConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.LocalTimestampMicrosConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.LocalTimestampNanosConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.TimeMillisConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.TimestampNanosConversion());
+    instance.addLogicalTypeConversion(new Conversions.BigDecimalConversion());
+    instance.addLogicalTypeConversion(new Conversions.DurationConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.DateConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.LocalTimestampMicrosConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.LocalTimestampNanosConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.TimeMillisConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.TimestampNanosConversion());
   }
 
   private static final Class<?>[] NO_ARG = new Class[] {};

@@ -20,14 +20,12 @@ package org.apache.avro.reflect;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
-import org.apache.avro.Conversions;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaNormalization;
-import org.apache.avro.data.TimeConversions;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericFixed;
@@ -105,22 +103,9 @@ public class ReflectData extends SpecificData {
   }
 
   private static final ReflectData INSTANCE = new ReflectData();
+
   static {
-    INSTANCE.addLogicalTypeConversion(new Conversions.UUIDConversion());
-    // Disable DecimalConversion since it's gated behind
-    // `compiler.setEnableDecimalLogicalType`
-    // INSTANCE.addLogicalTypeConversion(new Conversions.DecimalConversion());
-    INSTANCE.addLogicalTypeConversion(new Conversions.BigDecimalConversion());
-    INSTANCE.addLogicalTypeConversion(new Conversions.DurationConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.DateConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.LocalTimestampMicrosConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.LocalTimestampNanosConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.TimeMillisConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
-    INSTANCE.addLogicalTypeConversion(new TimeConversions.TimestampNanosConversion());
+    addLogicalTypeConversions(INSTANCE);
   }
 
   /** For subclasses. Applications normally use {@link ReflectData#get()}. */
