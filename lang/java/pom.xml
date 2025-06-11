@@ -37,36 +37,36 @@
     <main.basedir>${project.parent.basedir}</main.basedir>
 
     <!-- version properties for dependencies -->
-    <ant.version>1.10.14</ant.version>
-    <commons-cli.version>1.8.0</commons-cli.version>
-    <commons-compress.version>1.26.2</commons-compress.version>
-    <commons-text.version>1.12.0</commons-text.version>
-    <commons-lang3.version>3.15.0</commons-lang3.version>
-    <grpc.version>1.65.1</grpc.version>
-    <hadoop.version>3.3.6</hadoop.version>
-    <hamcrest.version>2.2</hamcrest.version>
-    <jackson-bom.version>2.17.2</jackson-bom.version>
-    <jetty.version>9.4.55.v20240627</jetty.version>
+    <ant.version>1.10.15</ant.version>
+    <commons-cli.version>1.9.0</commons-cli.version>
+    <commons-compress.version>1.27.1</commons-compress.version>
+    <commons-text.version>1.13.1</commons-text.version>
+    <commons-lang3.version>3.17.0</commons-lang3.version>
+    <grpc.version>1.73.0</grpc.version>
+    <hadoop.version>3.4.1</hadoop.version>
+    <hamcrest.version>3.0</hamcrest.version>
+    <jackson-bom.version>2.19.0</jackson-bom.version>
+    <jetty.version>9.4.57.v20241219</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
-    <junit5.version>5.10.3</junit5.version>
+    <junit5.version>5.13.1</junit5.version>
     <maven-core.version>3.9.6</maven-core.version>
-    <mockito.version>5.12.0</mockito.version>
-    <netty.version>4.1.112.Final</netty.version>
-    <protobuf.version>4.27.2</protobuf.version>
-    <reload4j.version>1.2.25</reload4j.version>
+    <mockito.version>5.18.0</mockito.version>
+    <netty.version>4.2.0.Final</netty.version>
+    <protobuf.version>4.31.1</protobuf.version>
+    <reload4j.version>1.2.26</reload4j.version>
     <servlet-api.version>4.0.1</servlet-api.version>
-    <slf4j.version>2.0.13</slf4j.version>
-    <snappy.version>1.1.10.5</snappy.version>
+    <slf4j.version>2.0.17</slf4j.version>
+    <snappy.version>1.1.10.7</snappy.version>
     <thrift.version>0.20.0</thrift.version>
-    <tukaani.version>1.9</tukaani.version>
-    <velocity.version>2.3</velocity.version>
-    <zstd-jni.version>1.5.6-4</zstd-jni.version>
+    <tukaani.version>1.10</tukaani.version>
+    <velocity.version>2.4.1</velocity.version>
+    <zstd-jni.version>1.5.7-3</zstd-jni.version>
     <!-- version properties for plugins -->
-    <archetype-plugin.version>3.2.1</archetype-plugin.version>
-    <bundle-plugin-version>5.1.9</bundle-plugin-version>
-    <cyclonedx-maven-plugin.version>2.8.0</cyclonedx-maven-plugin.version>
-    <exec-plugin.version>3.3.0</exec-plugin.version>
-    <file-management.version>3.1.0</file-management.version>
+    <archetype-plugin.version>3.4.0</archetype-plugin.version>
+    <bundle-plugin-version>6.0.0</bundle-plugin-version>
+    <cyclonedx-maven-plugin.version>2.9.1</cyclonedx-maven-plugin.version>
+    <exec-plugin.version>3.5.1</exec-plugin.version>
+    <file-management.version>3.2.0</file-management.version>
     <javacc-plugin.version>3.0.3</javacc-plugin.version>
     <javacc.version>7.0.13</javacc.version>
     <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
@@ -102,7 +102,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
-          <version>3.6.0</version>
+          <version>3.6.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
