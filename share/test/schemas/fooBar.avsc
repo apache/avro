@@ -16,6 +16,6 @@
       }
    ],
    "name" : "Bar",
-   "namespace" : "foo",
+   "namespace" : "example.avro",
    "type" : "record"
 }
