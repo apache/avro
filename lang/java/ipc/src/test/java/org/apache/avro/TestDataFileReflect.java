@@ -26,73 +26,39 @@ import java.time.Instant;
 import example.avro.Bar;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.generic.GenericData.Record;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.reflect.ReflectDatumReader;
+import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.specific.SpecificDatumReader;
 
-import org.apache.avro.specific.SpecificDatumWriter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class TestDataFileSpecific {
+public class TestDataFileReflect {
 
   @TempDir
   public File DIR;
 
-  /*
-   * Test when using SpecificDatumReader<T>() constructor to read from a file with
-   * a different schema that both reader & writer schemas are found.
-   */
   @Test
-  void specificDatumReaderDefaultCtor() throws IOException {
-    File file = new File(DIR.getPath(), "testSpecificDatumReaderDefaultCtor");
-
-    // like the specific Foo, but with another field
-    Schema s1 = new Schema.Parser()
-        .parse("{\"type\":\"record\",\"name\":\"Foo\"," + "\"namespace\":\"org.apache.avro\",\"fields\":["
-            + "{\"name\":\"label\",\"type\":\"string\"}," + "{\"name\":\"id\",\"type\":\"int\"}]}");
-
-    // write a file using generic objects
-    try (DataFileWriter<Record> writer = new DataFileWriter<>(new GenericDatumWriter<Record>(s1)).create(s1, file)) {
-      for (int i = 0; i < 10; i++) {
-        Record r = new Record(s1);
-        r.put("label", "" + i);
-        r.put("id", i);
-        writer.append(r);
-      }
-    }
-
-    // read using a 'new SpecificDatumReader<T>()' to force inference of
-    // reader's schema from runtime
-    try (DataFileReader<Foo> reader = new DataFileReader<>(file, new SpecificDatumReader<>())) {
-      int i = 0;
-      for (Foo f : reader) {
-        assertEquals("" + (i++), f.getLabel());
-      }
-      assertEquals(10, i);
-    }
-  }
-
-  @Test
-  public void specificDatumReaderUnionWithLogicalType() throws IOException {
-    File file = new File(DIR.getPath(), "testSpecificDatumReaderUnionWithLogicalType");
+  public void reflectDatumReaderUnionWithLogicalType() throws IOException {
+    File file = new File(DIR.getPath(), "testReflectDatumReaderUnionWithLogicalType");
     Schema schema = Bar.SCHEMA$;
-
     // Create test data
     Instant value = Instant.now();
-    try (DataFileWriter<Record> writer = new DataFileWriter<>(new GenericDatumWriter<Record>(schema)).create(schema,
-        file)) {
+    try (DataFileWriter<GenericData.Record> writer = new DataFileWriter<>(
+        new GenericDatumWriter<GenericData.Record>(schema)).create(schema, file)) {
       for (int i = 0; i < 10; i++) {
-        Record r = new Record(schema);
+        GenericData.Record r = new GenericData.Record(schema);
         r.put("title", "title" + i);
         r.put("created_at", value.toEpochMilli() + i * 1000);
         writer.append(r);
       }
     }
 
-    // read using a 'new SpecificDatumReader<T>()' to force inference of
+    // read using a 'new ReflectDatumReader<T>()' to force inference of
     // reader's schema from runtime
-    try (DataFileReader<Bar> reader = new DataFileReader<>(file, new SpecificDatumReader<>())) {
+    try (DataFileReader<Bar> reader = new DataFileReader<>(file, new ReflectDatumReader<>())) {
       int i = 0;
       for (Bar instance : reader) {
         assertEquals("title" + i, instance.getTitle());
@@ -104,13 +70,12 @@ public class TestDataFileSpecific {
   }
 
   @Test
-  public void specificDatumWriterUnionWithLogicalType() throws IOException {
-    File file = new File(DIR.getPath(), "testSpecificDatumWriterUnionWithLogicalType");
-    Schema schema = Bar.SCHEMA$;
+  public void reflectDatumWriterUnionWithLogicalType() throws IOException {
+    File file = new File(DIR.getPath(), "testReflectDatumWriterUnionWithLogicalType");
 
     // Create test data
     Instant value = Instant.now();
-    try (DataFileWriter<Bar> writer = new DataFileWriter<>(new SpecificDatumWriter<Bar>()).create(schema, file)) {
+    try (DataFileWriter<Bar> writer = new DataFileWriter<>(new ReflectDatumWriter<Bar>()).create(Bar.SCHEMA$, file)) {
       for (int i = 0; i < 10; i++) {
         Bar r = Bar.newBuilder().setTitle("title" + i).setCreatedAt(value.plusSeconds(i)).build();
         writer.append(r);
