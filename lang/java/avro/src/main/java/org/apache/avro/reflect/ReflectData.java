@@ -104,6 +104,10 @@ public class ReflectData extends SpecificData {
 
   private static final ReflectData INSTANCE = new ReflectData();
 
+  static {
+    addLogicalTypeConversions(INSTANCE);
+  }
+
   /** For subclasses. Applications normally use {@link ReflectData#get()}. */
   public ReflectData() {
   }
