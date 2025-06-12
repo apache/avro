@@ -1,0 +1,1 @@
+searchState.loadedDescShard("ctor_proc_macro", 0, "Support crate only")
