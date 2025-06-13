@@ -94,6 +94,14 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
                                                  php-mbstring \
                                                  php-dev
 
+# Required for Dotnet
+RUN export ARCH="$(dpkg --print-architecture)"; \
+  export LIBSSL_DEB="libssl1.1_1.1.1f-1ubuntu2.24_$ARCH.deb"; \
+  wget -q "http://security.ubuntu.com/ubuntu/pool/main/o/openssl/$LIBSSL_DEB" || \
+    wget -q "http://ports.ubuntu.com/ubuntu-ports/pool/main/o/openssl/$LIBSSL_DEB"; \
+  dpkg -i "$LIBSSL_DEB"; \
+  rm "$LIBSSL_DEB"
+
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/bbb9892e165d40fb35fa19f38929effc5d0c709b/Dockerfile#L30
 ENV MAVEN_VERSION 3.9.6
@@ -202,6 +210,7 @@ RUN case "${BUILDARCH:?}" in \
 
 RUN python3 -m pip install --upgrade pip setuptools wheel \
  && python3 -m pip install tox zstandard
+
 
 # Install Ruby
 RUN apt-get -qqy install ruby-full \
