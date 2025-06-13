@@ -222,6 +222,58 @@ avro_wrapped_alloc_new(avro_wrapped_buffer_t *dest,
 	return 0;
 }
 
+static int read_bytes(avro_reader_t reader, avro_value_t *dest)
+{
+	int  rval;
+	char  *bytes;
+	int64_t  len;
+	check_prefix(rval,
+		     avro_binary_encoding.read_bytes(reader, &bytes, &len),
+		     "Cannot read bytes value: ");
+
+	/*
+	 * read_bytes allocates an extra byte to always
+	 * ensure that the data is NUL terminated, but
+	 * that byte isn't included in the length.  We
+	 * include that extra byte in the allocated
+	 * size, but not in the length of the buffer.
+	 */
+
+	avro_wrapped_buffer_t  buf;
+	check(rval, avro_wrapped_alloc_new(&buf, bytes, len+1));
+
+	buf.size--;
+	return avro_value_give_bytes(dest, &buf);
+}
+
+static int read_fixed(avro_reader_t reader, avro_value_t *dest,
+		      avro_schema_t fixed_schema)
+{
+	char *bytes;
+	int64_t size = avro_schema_fixed_size(fixed_schema);
+
+	bytes = (char *) avro_malloc(size);
+	if (!bytes) {
+		avro_prefix_error("Cannot allocate new fixed value");
+		return ENOMEM;
+	}
+	int rval = avro_read(reader, bytes, size);
+	if (rval) {
+		avro_prefix_error("Cannot read fixed value: ");
+		avro_free(bytes, size);
+		return rval;
+	}
+
+	avro_wrapped_buffer_t  buf;
+	rval = avro_wrapped_alloc_new(&buf, bytes, size);
+	if (rval != 0) {
+		avro_free(bytes, size);
+		return rval;
+	}
+
+	return avro_value_give_fixed(dest, &buf);
+}
+
 
 static int
 read_value(avro_reader_t reader, avro_value_t *dest)
@@ -239,26 +291,7 @@ read_value(avro_reader_t reader, avro_value_t *dest)
 		}
 
 		case AVRO_BYTES:
-		{
-			char  *bytes;
-			int64_t  len;
-			check_prefix(rval, avro_binary_encoding.
-				     read_bytes(reader, &bytes, &len),
-				     "Cannot read bytes value: ");
-
-			/*
-			 * read_bytes allocates an extra byte to always
-			 * ensure that the data is NUL terminated, but
-			 * that byte isn't included in the length.  We
-			 * include that extra byte in the allocated
-			 * size, but not in the length of the buffer.
-			 */
-
-			avro_wrapped_buffer_t  buf;
-			check(rval, avro_wrapped_alloc_new(&buf, bytes, len+1));
-			buf.size--;
-			return avro_value_give_bytes(dest, &buf);
-		}
+			return read_bytes(reader, dest);
 
 		case AVRO_DOUBLE:
 		{
@@ -337,32 +370,8 @@ read_value(avro_reader_t reader, avro_value_t *dest)
 		}
 
 		case AVRO_FIXED:
-		{
-			avro_schema_t  schema = avro_value_get_schema(dest);
-			char *bytes;
-			int64_t size = avro_schema_fixed_size(schema);
-
-			bytes = (char *) avro_malloc(size);
-			if (!bytes) {
-				avro_prefix_error("Cannot allocate new fixed value");
-				return ENOMEM;
-			}
-			rval = avro_read(reader, bytes, size);
-			if (rval) {
-				avro_prefix_error("Cannot read fixed value: ");
-				avro_free(bytes, size);
-				return rval;
-			}
-
-			avro_wrapped_buffer_t  buf;
-			rval = avro_wrapped_alloc_new(&buf, bytes, size);
-			if (rval != 0) {
-				avro_free(bytes, size);
-				return rval;
-			}
-
-			return avro_value_give_fixed(dest, &buf);
-		}
+			return read_fixed(reader, dest,
+					  avro_value_get_schema(dest));
 
 		case AVRO_MAP:
 			return read_map_value(reader, dest);
@@ -372,6 +381,18 @@ read_value(avro_reader_t reader, avro_value_t *dest)
 
 		case AVRO_UNION:
 			return read_union_value(reader, dest);
+
+		case AVRO_DECIMAL:
+		{
+			const avro_schema_t underlying =
+			    avro_schema_logical_underlying(
+				avro_value_get_schema(dest));
+			if (is_avro_fixed(underlying)) {
+				return read_fixed(reader, dest, underlying);
+			}
+
+			return read_bytes(reader, dest);
+		}
 
 		default:
 		{
