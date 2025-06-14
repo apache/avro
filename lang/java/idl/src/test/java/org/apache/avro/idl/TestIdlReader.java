@@ -29,6 +29,8 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
@@ -168,19 +170,21 @@ public class TestIdlReader {
     }
 
     int failed = 0;
+    StringWriter errorBuffer = new StringWriter();
+    PrintWriter errorPrinter = new PrintWriter(errorBuffer);
 
     for (GenTest t : tests) {
       try {
         t.run();
       } catch (Exception e) {
         failed++;
-        System.err.println("Failed: " + t.testName());
-        e.printStackTrace(System.err);
+        errorPrinter.println("Failed: " + t.testName());
+        e.printStackTrace(errorPrinter);
       }
     }
 
     if (failed > 0) {
-      fail(failed + " tests failed");
+      fail(failed + " tests failed:\n" + errorBuffer);
     }
   }
 
