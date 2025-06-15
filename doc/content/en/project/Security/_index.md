@@ -49,9 +49,12 @@ handle exceptions instead of simply writing them to a log file.
 In some cases, like schema parsing, type conversions and based on explicit schema
 properties, Avro can execute code provided by the environment. Avro has opt-in
 mechanisms for code that is eligible for execution. Applications using Avro should
-have a secured supply chain, ensuring code registered to be executed is safe. This
-supply chain also includes the schemas being used: if they are user provided,
-additional validation is strongly advised.
+have a secured supply chain, ensuring code registered to be executed is safe.
+
+This supply chain also includes the schemas being used: if they are user provided,
+additional validation is strongly advised. Such validation can use the parsed schema,
+as schema parsing itself is safe: the parser allows SPIs, but is not otherwise
+configurable.
 
 
 Summary
@@ -63,3 +66,4 @@ In short, using Avro is safe, provided applications:
   data and otherwise interfering with the consumers of schemas
 * avoid leaking data by, for example, catching and handling exceptions
 * have a secured supply chain, ensuring code registered to be executed is safe
+* if schemas are user provided, validate the parsed schema before use
