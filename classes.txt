@@ -1,0 +1,2 @@
+org.apache.avro.Schema
+org.apache.avro.file.DataFileReader
