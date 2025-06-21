@@ -55,6 +55,11 @@ const int SyncSize = 16;
 typedef std::array<uint8_t, SyncSize> DataFileSync;
 
 /**
+ * The avro metadata.
+ */
+typedef std::map<std::string, std::vector<uint8_t>> Metadata;
+
+/**
  * Type-independent portion of DataFileWriter.
  *  At any given point in time, at most one file can be written using
  *  this object.
@@ -70,8 +75,6 @@ class AVRO_DECL DataFileWriterBase {
     std::unique_ptr<OutputStream> buffer_;
     const DataFileSync sync_;
     int64_t objectCount_;
-
-    typedef std::map<std::string, std::vector<uint8_t>> Metadata;
 
     Metadata metadata_;
     int64_t lastSync_;
@@ -212,7 +215,6 @@ class AVRO_DECL DataFileReaderBase {
     ValidSchema dataSchema_;
     DecoderPtr dataDecoder_;
     std::unique_ptr<InputStream> dataStream_;
-    typedef std::map<std::string, std::vector<uint8_t>> Metadata;
 
     Metadata metadata_;
     DataFileSync sync_{};
@@ -306,6 +308,11 @@ public:
      * Return the last synchronization point before our current position.
      */
     int64_t previousSync() const;
+
+    /**
+     * Return avro's metadata
+     */
+    Metadata &metadata() { return metadata_; }
 };
 
 /**
