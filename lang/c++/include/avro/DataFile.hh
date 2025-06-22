@@ -310,7 +310,7 @@ public:
     /**
      * Return avro's metadata
      */
-    const Metadata &metadata() { return metadata_; }
+    const Metadata &metadata() const { return metadata_; }
 };
 
 /**
