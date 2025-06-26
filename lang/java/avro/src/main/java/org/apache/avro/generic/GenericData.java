@@ -57,6 +57,7 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.FastReaderBuilder;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.util.internal.Accessor;
+import org.apache.avro.generic.PrimitivesArrays.PrimitiveArray;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.avro.util.springframework.ConcurrentReferenceHashMap;
@@ -137,9 +138,9 @@ public class GenericData {
     }
   }
 
-  private Map<String, Conversion<?>> conversions = new HashMap<>();
+  private final Map<String, Conversion<?>> conversions = new HashMap<>();
 
-  private Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass = new IdentityHashMap<>();
+  private final Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass = new IdentityHashMap<>();
 
   public Collection<Conversion<?>> getConversions() {
     return conversions.values();
@@ -206,7 +207,7 @@ public class GenericData {
   }
 
   public static final String FAST_READER_PROP = "org.apache.avro.fastread";
-  private boolean fastReaderEnabled = "true".equalsIgnoreCase(System.getProperty(FAST_READER_PROP));
+  private boolean fastReaderEnabled = "true".equalsIgnoreCase(System.getProperty(FAST_READER_PROP, "true"));
   private FastReaderBuilder fastReaderBuilder = null;
 
   public GenericData setFastReaderEnabled(boolean flag) {
@@ -354,7 +355,7 @@ public class GenericData {
       if (!(o instanceof Collection)) {
         return false;
       }
-      return GenericData.get().compare(this, o, this.getSchema()) == 0;
+      return GenericData.get().compare(this, o, this.getSchema(), true) == 0;
     }
 
     @Override
@@ -364,7 +365,7 @@ public class GenericData {
 
     @Override
     public Iterator<T> iterator() {
-      return new Iterator<T>() {
+      return new Iterator<>() {
         private int position = 0;
 
         @Override
@@ -551,8 +552,8 @@ public class GenericData {
 
   /** Default implementation of {@link GenericEnumSymbol}. */
   public static class EnumSymbol implements GenericEnumSymbol<EnumSymbol> {
-    private Schema schema;
-    private String symbol;
+    private final Schema schema;
+    private final String symbol;
 
     public EnumSymbol(Schema schema, String symbol) {
       this.schema = schema;
@@ -1259,9 +1260,7 @@ public class GenericData {
           }
         }
       }
-    } catch (ClassCastException unused) {
-      return 1;
-    } catch (NullPointerException unused) {
+    } catch (ClassCastException | NullPointerException unused) {
       return 1;
     }
 
@@ -1313,9 +1312,9 @@ public class GenericData {
     case NULL:
       return 0;
     case STRING:
-      Utf8 u1 = o1 instanceof Utf8 ? (Utf8) o1 : new Utf8(o1.toString());
-      Utf8 u2 = o2 instanceof Utf8 ? (Utf8) o2 : new Utf8(o2.toString());
-      return u1.compareTo(u2);
+      CharSequence cs1 = o1 instanceof CharSequence ? (CharSequence) o1 : o1.toString();
+      CharSequence cs2 = o2 instanceof CharSequence ? (CharSequence) o2 : o2.toString();
+      return Utf8.compareSequences(cs1, cs2);
     default:
       return ((Comparable) o1).compareTo(o2);
     }
@@ -1515,37 +1514,72 @@ public class GenericData {
 
   }
 
-  /*
+  /**
    * Called to create new array instances. Subclasses may override to use a
-   * different array implementation. By default, this returns a {@link
-   * GenericData.Array}.
+   * different array implementation. By default, this returns a
+   * {@link GenericData.Array}.
+   *
+   * @param old    the old array instance to reuse, if possible. If the old array
+   *               is an appropriate type, it may be cleared and returned.
+   * @param size   the size of the array to create.
+   * @param schema the schema of the array elements.
    */
   public Object newArray(Object old, int size, Schema schema) {
-    if (old instanceof GenericArray) {
-      ((GenericArray<?>) old).reset();
-      return old;
-    } else if (old instanceof Collection) {
-      ((Collection<?>) old).clear();
-      return old;
-    } else {
-      if (schema.getElementType().getType() == Type.INT) {
-        return new PrimitivesArrays.IntArray(size, schema);
+    final var logicalType = schema.getElementType().getLogicalType();
+    final var conversion = getConversionFor(logicalType);
+    final var optimalValueType = optimalValueType(schema, logicalType,
+        conversion == null ? null : conversion.getConvertedType());
+
+    if (old != null) {
+      if (old instanceof GenericData.Array<?>) {
+        ((GenericData.Array<?>) old).reset();
+        return old;
+      } else if (old instanceof PrimitiveArray) {
+        var primitiveOld = (PrimitiveArray<?>) old;
+        if (primitiveOld.valueType() == optimalValueType) {
+          primitiveOld.reset();
+          return old;
+        }
+      } else if (old instanceof Collection) {
+        ((Collection<?>) old).clear();
+        return old;
       }
-      if (schema.getElementType().getType() == Type.BOOLEAN) {
-        return new PrimitivesArrays.BooleanArray(size, schema);
-      }
-      if (schema.getElementType().getType() == Type.LONG) {
-        return new PrimitivesArrays.LongArray(size, schema);
-      }
-      if (schema.getElementType().getType() == Type.FLOAT) {
-        return new PrimitivesArrays.FloatArray(size, schema);
-      }
-      if (schema.getElementType().getType() == Type.DOUBLE) {
-        return new PrimitivesArrays.DoubleArray(size, schema);
-      }
-      return new GenericData.Array<Object>(size, schema);
     }
+    // we can't reuse the old array, so we create a new one
+    return PrimitivesArrays.createOptimizedArray(size, schema, optimalValueType);
   }
+
+  /**
+   * Determine the optimal value type for an array. The value type is determined
+   * form the convertedElementType if supplied, otherwise the underlying type from
+   * the schema
+   *
+   * @param schema               the schema of the array
+   * @param convertedElementType the converted elements value type. This may not
+   *                             be the same and the schema if for instance there
+   *                             is a logical type, and a convertor is use
+   * @return an indicator for the type of the array, useful for
+   *         {@link PrimitivesArrays#createOptimizedArray(int, Schema, Schema.Type)}.
+   *         May be null if the type is not optimised
+   */
+  public static Schema.Type optimalValueType(Schema schema, LogicalType logicalType, Class<?> convertedElementType) {
+    if (logicalType == null)
+      // if there are no logical types- use the schema type
+      return schema.getElementType().getType();
+    else if (convertedElementType == null)
+      // if there is no convertor
+      return null;
+    else
+      // use the converted type
+      return PRIMITIVE_TYPES_WITH_SPECIALISED_ARRAYS.get(convertedElementType);
+  }
+
+  private final static Map<Class<?>, Schema.Type> PRIMITIVE_TYPES_WITH_SPECIALISED_ARRAYS = Map.of(//
+      Long.TYPE, Schema.Type.LONG, //
+      Integer.TYPE, Schema.Type.INT, //
+      Float.TYPE, Schema.Type.FLOAT, //
+      Double.TYPE, Schema.Type.DOUBLE, //
+      Boolean.TYPE, Schema.Type.BOOLEAN);
 
   /**
    * Called to create new array instances. Subclasses may override to use a

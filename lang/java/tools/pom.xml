@@ -114,6 +114,9 @@
                     <exclude>META-INF/LICENSE.txt</exclude>
                     <exclude>META-INF/NOTICE.txt</exclude>
                     <exclude>META-INF/license/*</exclude>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
                   </excludes>
                 </filter>
               </filters>
@@ -121,6 +124,10 @@
                 <transformer
                   implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>org.apache.avro.tool.Main</mainClass>
+                  <manifestEntries>
+                    <!-- Needed because some dependencies (at least dnsjava) use multi-release jars. -->
+                    <Multi-Release>true</Multi-Release>
+                  </manifestEntries>
                 </transformer>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
               </transformers>
@@ -158,6 +165,8 @@
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
           <parallel>none</parallel>
+          <!-- Required for recent JDKs (fixes "UnsupportedOperationException: getSubject is supported only if a security manager is allowed") -->
+          <argLine>-Djava.security.manager=allow</argLine>
         </configuration>
       </plugin>
       <!-- Allow guava because hadoop brings it as a transitive dependency. -->

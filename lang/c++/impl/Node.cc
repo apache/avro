@@ -228,9 +228,14 @@ void Node::setLogicalType(LogicalType logicalType) {
             }
             break;
         case LogicalType::UUID:
-            if (type_ != AVRO_STRING) {
+            if (type_ != AVRO_STRING && (type_ != AVRO_FIXED || fixedSize() != 16)) {
                 throw Exception("UUID logical type can only annotate "
-                                "STRING type");
+                                "STRING type or FIXED type of length 16");
+            }
+            break;
+        case LogicalType::CUSTOM:
+            if (logicalType.customLogicalType() == nullptr) {
+                throw Exception("CUSTOM logical type is not set");
             }
             break;
     }

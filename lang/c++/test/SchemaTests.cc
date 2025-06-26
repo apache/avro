@@ -18,6 +18,7 @@
 
 #include "Compiler.hh"
 #include "GenericDatum.hh"
+#include "NodeImpl.hh"
 #include "ValidSchema.hh"
 
 #include <boost/algorithm/string/replace.hpp>
@@ -144,6 +145,10 @@ const char *basicSchemas[] = {
     })",
     R"({"type": "enum", "name": "Test", "symbols": ["A", "B"],"extra attribute": 1})",
     R"({"type": "array", "items": "long", "extra attribute": "1"})",
+    R"({"type": "array", "items": "long", "extra attribute": 1})",
+    R"({"type": "array", "items": "long", "extra attribute": true})",
+    R"({"type": "array", "items": "long", "extra attribute": 1.1})",
+    R"({"type": "array", "items": "long", "extra attribute": {"extra extra attribute": "1"}})",
     R"({"type": "map", "values": "long", "extra attribute": 1})",
     R"({"type": "fixed", "name": "Test", "size": 1, "extra attribute": 1})",
 
@@ -177,8 +182,7 @@ const char *basicSchemas[] = {
         "fields":[
             {"name": "f1","type": "long","extra field1": "1","extra field2": "2"}
         ]
-    })"
-};
+    })"};
 
 const char *basicSchemaErrors[] = {
     // Record
@@ -329,6 +333,7 @@ const char *roundTripSchemas[] = {
     R"({"type":"long","logicalType":"local-timestamp-nanos"})",
     R"({"type":"fixed","name":"test","size":12,"logicalType":"duration"})",
     R"({"type":"string","logicalType":"uuid"})",
+    R"({"type":"fixed","name":"test","size":16,"logicalType":"uuid"})",
 
     // namespace with '$' in it.
     R"({
@@ -357,7 +362,10 @@ const char *roundTripSchemas[] = {
             {"name":"f2","type":"int","extra_field1":"21","extra_field2":"22"}
         ]
     })",
-    R"({"type":"array","items":"long","extra":"1"})"
+    R"({"type":"array","items":"long","extra":"1"})",
+    R"({"type":"map","values":"long","extra":"1"})",
+    R"({"type":"fixed","name":"Test","size":1,"extra":"1"})",
+    R"({"type":"enum","name":"Test","symbols":["A","B"],"extra":"1"})",
 };
 
 const char *malformedLogicalTypes[] = {
@@ -386,7 +394,9 @@ const char *malformedLogicalTypes[] = {
     // and scale is integrated in bytes.
     R"({"type":"bytes","logicalType": "big-decimal","precision": 9})",
     R"({"type":"bytes","logicalType": "big-decimal","scale": 2})",
-    R"({"type":"bytes","logicalType": "big-decimal","precision": 9,"scale": 2})"};
+    R"({"type":"bytes","logicalType": "big-decimal","precision": 9,"scale": 2})",
+    R"({"type":"fixed","logicalType":"uuid","size":12,"name":"invalid_uuid_size"})",
+};
 const char *schemasToCompact[] = {
     // Schema without any whitespace
     R"({"type":"record","name":"Test","fields":[]})",
@@ -412,14 +422,13 @@ const char *compactSchemas[] = {
     "\"fields\":["
     "{\"name\":\"re1\",\"type\":\"long\",\"doc\":\"A \\\"quoted doc\\\"\"},"
     "{\"name\":\"re2\",\"type\":\"long\",\"doc\":\"extra slashes\\\\\\\\\"}"
-    "]}"
-};
+    "]}"};
 
 static const std::vector<char> whitespaces = {' ', '\f', '\n', '\r', '\t', '\v'};
 
-static std::string removeWhitespaceFromSchema(const std::string& schema){
+static std::string removeWhitespaceFromSchema(const std::string &schema) {
     std::string trimmedSchema = schema;
-    for (char toReplace : whitespaces){
+    for (char toReplace : whitespaces) {
         boost::algorithm::replace_all(trimmedSchema, std::string{toReplace}, "");
     }
     return trimmedSchema;
@@ -502,7 +511,8 @@ static void testLogicalTypes() {
     const char *localTimestampMicrosType = R"({"type": "long", "logicalType": "local-timestamp-micros"})";
     const char *localTimestampNanosType = R"({"type": "long", "logicalType": "local-timestamp-nanos"})";
     const char *durationType = R"({"type": "fixed","size": 12,"name": "durationType","logicalType": "duration"})";
-    const char *uuidType = R"({"type": "string","logicalType": "uuid"})";
+    const char *uuidStringType = R"({"type": "string","logicalType": "uuid"})";
+    const char *uuidFixedType = R"({"type": "fixed", "size": 16, "name": "uuidFixedType", "logicalType": "uuid"})";
     // AVRO-2923 Union with LogicalType
     const char *unionType = R"([{"type":"string", "logicalType":"uuid"},"null"]})";
     {
@@ -625,9 +635,19 @@ static void testLogicalTypes() {
         BOOST_CHECK(datum.logicalType().type() == LogicalType::DURATION);
     }
     {
-        BOOST_TEST_CHECKPOINT(uuidType);
-        ValidSchema schema = compileJsonSchemaFromString(uuidType);
+        BOOST_TEST_CHECKPOINT(uuidStringType);
+        ValidSchema schema = compileJsonSchemaFromString(uuidStringType);
         BOOST_CHECK(schema.root()->type() == AVRO_STRING);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::UUID);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::UUID);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(uuidFixedType);
+        ValidSchema schema = compileJsonSchemaFromString(uuidFixedType);
+        BOOST_CHECK(schema.root()->type() == AVRO_FIXED);
+        BOOST_CHECK(schema.root()->fixedSize() == 16);
         LogicalType logicalType = schema.root()->logicalType();
         BOOST_CHECK(logicalType.type() == LogicalType::UUID);
         GenericDatum datum(schema);
@@ -653,6 +673,257 @@ static void testMalformedLogicalTypes(const char *schema) {
     BOOST_CHECK(datum.logicalType().type() == LogicalType::NONE);
 }
 
+static void testCustomLogicalType() {
+    // Declare a custom logical type.
+    struct MapLogicalType : public CustomLogicalType {
+        MapLogicalType() : CustomLogicalType("map") {}
+    };
+
+    // Register the custom logical type with the registry.
+    CustomLogicalTypeRegistry::instance().registerType("map", [](const std::string &) {
+        return std::make_shared<MapLogicalType>();
+    });
+
+    auto verifyCustomLogicalType = [](const ValidSchema &schema) {
+        auto logicalType = schema.root()->logicalType();
+        BOOST_CHECK_EQUAL(logicalType.type(), LogicalType::CUSTOM);
+        BOOST_CHECK_EQUAL(logicalType.customLogicalType()->name(), "map");
+    };
+
+    const std::string schema =
+        R"({ "type": "array",
+             "logicalType": "map",
+             "items": {
+               "type": "record",
+               "name": "k12_v13",
+               "fields": [
+                 { "name": "key", "type": "int", "field-id": 12 },
+                 { "name": "value", "type": "string", "field-id": 13 }
+               ]
+             }
+           })";
+    auto compiledSchema = compileJsonSchemaFromString(schema);
+    verifyCustomLogicalType(compiledSchema);
+
+    auto json = compiledSchema.toJson();
+    auto parsedSchema = compileJsonSchemaFromString(json);
+    verifyCustomLogicalType(parsedSchema);
+}
+
+static void testParseCustomAttributes() {
+    const std::string schema = R"({
+        "type": "record",
+        "name": "my_record",
+        "fields": [
+            { "name": "long_field",
+              "type": ["null", "long"],
+              "field-id": 1 },
+            { "name": "array_field",
+              "type": { "type": "array", "items": "int", "element-id": 3 },
+              "field-id": 2,
+              "extra": "1", "extra2": "2" },
+            { "name": "map_field",
+              "type": { "type": "map", "values": "int", "key-id": 5, "value-id": 6 },
+              "field-id": 4,
+              "extra": "foo" },
+            { "name": "timestamp_field",
+              "type": "long", "logicalType": "timestamp-micros", "adjust-to-utc": true,
+              "field-id": 10,
+              "extra": "bar" },
+            { "name": "no_custom_attributes_field",
+              "type": "long" }
+        ]
+    })";
+
+    ValidSchema compiledSchema = compileJsonSchemaFromString(schema);
+    const NodePtr &root = compiledSchema.root();
+    BOOST_CHECK_EQUAL(root->customAttributes(), 5);
+
+    // long_field
+    {
+        auto customAttributes = root->customAttributesAt(0);
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("field-id").value(), "1");
+    }
+
+    // array_field
+    {
+        auto customAttributes = root->customAttributesAt(1);
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("extra").value(), "1");
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("extra2").value(), "2");
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("field-id").value(), "2");
+
+        auto arrayField = root->leafAt(1);
+        BOOST_CHECK_EQUAL(arrayField->customAttributes(), 1);
+        auto arrayFieldCustomAttributes = arrayField->customAttributesAt(0);
+        BOOST_CHECK_EQUAL(arrayFieldCustomAttributes.getAttribute("element-id").value(), "3");
+    }
+
+    // map_field
+    {
+        auto customAttributes = root->customAttributesAt(2);
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("field-id").value(), "4");
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("extra").value(), "foo");
+
+        auto mapField = root->leafAt(2);
+        BOOST_CHECK_EQUAL(mapField->customAttributes(), 1);
+        auto mapFieldCustomAttributes = mapField->customAttributesAt(0);
+        BOOST_CHECK_EQUAL(mapFieldCustomAttributes.getAttribute("key-id").value(), "5");
+        BOOST_CHECK_EQUAL(mapFieldCustomAttributes.getAttribute("value-id").value(), "6");
+    }
+
+    // timestamp_field
+    {
+        auto customAttributes = root->customAttributesAt(3);
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("field-id").value(), "10");
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("extra").value(), "bar");
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("adjust-to-utc").value(), "true");
+    }
+
+    // no_custom_attributes_field
+    {
+        auto customAttributes = root->customAttributesAt(4);
+        BOOST_CHECK_EQUAL(customAttributes.attributes().size(), 0);
+    }
+}
+
+static void testAddCustomAttributes() {
+    auto recordNode = std::make_shared<NodeRecord>();
+
+    // long_field
+    {
+        CustomAttributes customAttributes;
+        customAttributes.addAttribute("field-id", "1");
+        recordNode->addCustomAttributesForField(customAttributes);
+        recordNode->addLeaf(std::make_shared<NodePrimitive>(AVRO_LONG));
+        recordNode->addName("long_field");
+    }
+
+    // array_field
+    {
+        auto arrayField = std::make_shared<NodeArray>(SingleLeaf(std::make_shared<NodePrimitive>(AVRO_INT)));
+        CustomAttributes elementCustomAttributes;
+        elementCustomAttributes.addAttribute("element-id", "3");
+        arrayField->addCustomAttributesForField(elementCustomAttributes);
+
+        CustomAttributes customAttributes;
+        customAttributes.addAttribute("field-id", "2");
+        customAttributes.addAttribute("extra", "1");
+        customAttributes.addAttribute("extra2", "2");
+        recordNode->addCustomAttributesForField(customAttributes);
+        recordNode->addLeaf(arrayField);
+        recordNode->addName("array_field");
+    }
+
+    // map_field
+    {
+        auto mapField = std::make_shared<NodeMap>(SingleLeaf(std::make_shared<NodePrimitive>(AVRO_INT)));
+        CustomAttributes keyValueCustomAttributes;
+        keyValueCustomAttributes.addAttribute("key-id", "5");
+        keyValueCustomAttributes.addAttribute("value-id", "6");
+        mapField->addCustomAttributesForField(keyValueCustomAttributes);
+
+        CustomAttributes customAttributes;
+        customAttributes.addAttribute("field-id", "4");
+        customAttributes.addAttribute("extra", "foo");
+        recordNode->addCustomAttributesForField(customAttributes);
+        recordNode->addLeaf(mapField);
+        recordNode->addName("map_field");
+    }
+
+    // timestamp_field
+    {
+        auto timestampField = std::make_shared<NodePrimitive>(AVRO_LONG);
+        CustomAttributes customAttributes;
+        customAttributes.addAttribute("field-id", "10");
+        customAttributes.addAttribute("extra", "bar");
+        customAttributes.addAttribute("adjust-to-utc", "true");
+        recordNode->addCustomAttributesForField(customAttributes);
+        recordNode->addLeaf(timestampField);
+        recordNode->addName("timestamp_field");
+    }
+
+    const std::string expected = R"({
+        "type": "record",
+        "name": "",
+        "fields": [
+            { "name": "long_field",
+              "type": "long",
+              "field-id": "1" },
+            { "name": "array_field",
+              "type": { "type": "array", "items": "int", "element-id": "3" },
+              "extra": "1",
+              "extra2": "2",
+              "field-id": "2" },
+            { "name": "map_field",
+              "type": { "type": "map", "values": "int", "key-id": "5", "value-id": "6" },
+              "extra": "foo",
+              "field-id": "4" },
+            { "name": "timestamp_field",
+              "type": "long",
+              "adjust-to-utc": "true",
+              "extra": "bar",
+              "field-id": "10" }
+        ]
+    })";
+    ValidSchema schema(recordNode);
+    std::string json = schema.toJson();
+    BOOST_CHECK_EQUAL(removeWhitespaceFromSchema(json), removeWhitespaceFromSchema(expected));
+}
+
+static void testCustomAttributesJson2Schema2Json() {
+    const std::string schema = R"({
+        "type": "record",
+        "name": "my_record",
+        "fields": [
+            { "name": "long_field", "type": "long", "int_key": 1, "str_key": "1" }
+        ]
+    })";
+    ValidSchema compiledSchema = compileJsonSchemaFromString(schema);
+
+    // Verify custom attributes from parsed schema
+    auto customAttributes = compiledSchema.root()->customAttributesAt(0);
+    BOOST_CHECK_EQUAL(customAttributes.getAttribute("int_key").value(), "1");
+    BOOST_CHECK_EQUAL(customAttributes.getAttribute("str_key").value(), "1");
+
+    // Verify custom attributes from json result
+    std::string json = compiledSchema.toJson();
+    BOOST_CHECK_EQUAL(removeWhitespaceFromSchema(json), removeWhitespaceFromSchema(schema));
+}
+
+static void testCustomAttributesSchema2Json2Schema() {
+    const std::string expected = R"({
+        "type": "record",
+        "name": "my_record",
+        "fields": [
+            { "name": "long_field", "type": "long", "int_key": 1, "str_key": "1" }
+        ]
+    })";
+
+    auto recordNode = std::make_shared<NodeRecord>();
+    {
+        CustomAttributes customAttributes;
+        customAttributes.addAttribute("int_key", "1", /*addQuotes=*/false);
+        customAttributes.addAttribute("str_key", "1", /*addQuotes=*/true);
+        recordNode->addCustomAttributesForField(customAttributes);
+        recordNode->addLeaf(std::make_shared<NodePrimitive>(AVRO_LONG));
+        recordNode->addName("long_field");
+        recordNode->setName(Name("my_record"));
+    }
+
+    // Verify custom attributes from json result
+    ValidSchema schema(recordNode);
+    std::string json = schema.toJson();
+    BOOST_CHECK_EQUAL(removeWhitespaceFromSchema(json), removeWhitespaceFromSchema(expected));
+
+    // Verify custom attributes from parsed schema
+    {
+        auto parsedSchema = compileJsonSchemaFromString(json);
+        auto customAttributes = parsedSchema.root()->customAttributesAt(0);
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("int_key").value(), "1");
+        BOOST_CHECK_EQUAL(customAttributes.getAttribute("str_key").value(), "1");
+    }
+}
+
 } // namespace schema
 } // namespace avro
 
@@ -676,5 +947,10 @@ init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     ADD_PARAM_TEST(ts, avro::schema::testMalformedLogicalTypes,
                    avro::schema::malformedLogicalTypes);
     ts->add(BOOST_TEST_CASE(&avro::schema::testCompactSchemas));
+    ts->add(BOOST_TEST_CASE(&avro::schema::testCustomLogicalType));
+    ts->add(BOOST_TEST_CASE(&avro::schema::testParseCustomAttributes));
+    ts->add(BOOST_TEST_CASE(&avro::schema::testAddCustomAttributes));
+    ts->add(BOOST_TEST_CASE(&avro::schema::testCustomAttributesJson2Schema2Json));
+    ts->add(BOOST_TEST_CASE(&avro::schema::testCustomAttributesSchema2Json2Schema));
     return ts;
 }

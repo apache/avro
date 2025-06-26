@@ -47,7 +47,7 @@ import com.fasterxml.jackson.databind.util.TokenBuffer;
  */
 public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler {
   private JsonParser in;
-  private static JsonFactory jsonFactory = new JsonFactory();
+  private static final JsonFactory JSON_FACTORY = new JsonFactory();
   Stack<ReorderBuffer> reorderBuffers = new Stack<>();
   ReorderBuffer currentReorderBuffer;
 
@@ -97,7 +97,7 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
     parser.reset();
     reorderBuffers.clear();
     currentReorderBuffer = null;
-    this.in = jsonFactory.createParser(in);
+    this.in = JSON_FACTORY.createParser(in);
     this.in.nextToken();
     return this;
   }
@@ -268,8 +268,7 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
   }
 
   private byte[] readByteArray() throws IOException {
-    byte[] result = in.getText().getBytes(StandardCharsets.ISO_8859_1);
-    return result;
+    return in.getText().getBytes(StandardCharsets.ISO_8859_1);
   }
 
   @Override

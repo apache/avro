@@ -68,6 +68,11 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
     this.length = length;
   }
 
+  Utf8(String string, int length) {
+    this(string);
+    this.length = length;
+  }
+
   /**
    * Return UTF-8 encoded bytes. Only valid through {@link #getByteLength()}
    * assuming the bytes have been fully copied into the underlying buffer from the
@@ -173,9 +178,15 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
     if (h == 0) {
       byte[] bytes = this.bytes;
       int length = this.length;
-      h = 1;
-      for (int i = 0; i < length; i++) {
-        h = h * 31 + bytes[i];
+      // If the array is filled, use the underlying JDK hash functionality.
+      // Starting with JDK 21, the underlying implementation is vectorized.
+      if (length > 7 && bytes.length == length) {
+        h = Arrays.hashCode(bytes);
+      } else {
+        h = 1;
+        for (int i = 0; i < length; i++) {
+          h = h * 31 + bytes[i];
+        }
       }
       this.hash = h;
     }
@@ -218,5 +229,29 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
     setByteLength(in.readInt());
     in.readFully(bytes);
+  }
+
+  public static int compareSequences(CharSequence cs1, CharSequence cs2) {
+    if (cs1 == cs2) {
+      return 0;
+    }
+
+    if (cs1 == null || cs2 == null) {
+      return cs1 == null ? 1 : -1;
+    }
+
+    if (cs1.getClass() == cs2.getClass() && cs1 instanceof Comparable) {
+      return ((Comparable<Object>) cs1).compareTo(cs2);
+    }
+
+    for (int i = 0, len = Math.min(cs1.length(), cs2.length()); i < len; i++) {
+      char a = cs1.charAt(i);
+      char b = cs2.charAt(i);
+      if (a != b) {
+        return a - b;
+      }
+    }
+
+    return cs1.length() - cs2.length();
   }
 }

@@ -21,7 +21,6 @@ import org.apache.avro.util.SchemaResolver;
 import org.apache.avro.util.Schemas;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -253,7 +252,7 @@ public class ParseContext {
   }
 
   public SchemaParser.ParseResult commit(Schema mainSchema) {
-    Collection<Schema> parsedNamedSchemas = newSchemas.values();
+    List<Schema> parsedNamedSchemas = new ArrayList<>(newSchemas.values());
     SchemaParser.ParseResult parseResult = new SchemaParser.ParseResult() {
       @Override
       public Schema mainSchema() {
@@ -278,7 +277,7 @@ public class ParseContext {
    * references, even if parsed from different files. Note: the context must be
    * committed for this method to work.
    *
-   * @return all parsed schemas, in the order they were parsed
+   * @return all parsed schemas
    * @throws AvroTypeException if a schema reference cannot be resolved
    */
   public List<Schema> resolveAllSchemas() {

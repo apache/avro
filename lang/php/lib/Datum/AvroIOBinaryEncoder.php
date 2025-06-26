@@ -101,13 +101,24 @@ class AvroIOBinaryEncoder
     {
         $n = (int) $n;
         $n = ($n << 1) ^ ($n >> 63);
-        $str = '';
-        while (0 != ($n & ~0x7F)) {
-            $str .= chr(($n & 0x7F) | 0x80);
-            $n >>= 7;
+
+        if ($n >= 0 && $n < 0x80) {
+            return chr($n);
         }
-        $str .= chr($n);
-        return $str;
+
+        $buf = [];
+        if (($n & ~0x7F) != 0) {
+            $buf[] = ($n | 0x80) & 0xFF;
+            $n = ($n >> 7) ^ (($n >> 63) << 57); // unsigned shift right ($n >>> 7)
+
+            while ($n > 0x7F) {
+                $buf[] = ($n | 0x80) & 0xFF;
+                $n >>= 7; // $n is always positive here
+            }
+        }
+
+        $buf[] = $n;
+        return pack("C*", ...$buf);
     }
 
     /**

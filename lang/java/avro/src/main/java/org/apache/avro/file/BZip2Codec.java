@@ -64,7 +64,7 @@ public class BZip2Codec extends Codec {
 
     try (BZip2CompressorInputStream inputStream = new BZip2CompressorInputStream(bais)) {
 
-      int readCount = -1;
+      int readCount;
       while ((readCount = inputStream.read(buffer, compressedData.position(), buffer.length)) > 0) {
         baos.write(buffer, 0, readCount);
       }

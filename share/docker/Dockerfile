@@ -89,6 +89,7 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
                                                  libbz2-dev \
                                                  php \
                                                  php-bz2 \
+                                                 php-curl \
                                                  php-gmp \
                                                  php-xml \
                                                  php-mbstring \
@@ -200,7 +201,6 @@ RUN case "${BUILDARCH:?}" in \
 
 RUN python3 -m pip install --upgrade pip setuptools wheel \
  && python3 -m pip install tox zstandard
-
 
 # Install Ruby
 RUN apt-get -qqy install ruby-full \

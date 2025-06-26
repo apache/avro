@@ -177,5 +177,22 @@ std::string Entity::toString() const {
     return result;
 }
 
+std::string Entity::toLiteralString() const {
+    switch (type_) {
+        case EntityType::Null:
+            return "null";
+        case EntityType::Bool:
+            return boolValue() ? "true" : "false";
+        case EntityType::Long:
+            return std::to_string(longValue());
+        case EntityType::Double:
+            return std::to_string(doubleValue());
+        case EntityType::String:
+            return stringValue();
+        default:
+	    return toString();
+    }
+}
+
 } // namespace json
 } // namespace avro

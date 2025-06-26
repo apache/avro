@@ -55,6 +55,8 @@
             <forkCount>1</forkCount>
             <reuseForks>false</reuseForks>
             <parallel>none</parallel>
+            <!-- Required for recent JDKs (fixes "UnsupportedOperationException: getSubject is supported only if a security manager is allowed") -->
+            <argLine>-Djava.security.manager=allow</argLine>
           </configuration>
         </plugin>
       </plugins>

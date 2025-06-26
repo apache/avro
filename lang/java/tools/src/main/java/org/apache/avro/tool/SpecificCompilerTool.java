@@ -50,8 +50,10 @@ public class SpecificCompilerTool implements Tool {
     if (origArgs.size() < 3) {
       System.err
           .println("Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] [-fieldVisibility <visibilityType>] "
-              + "[-noSetters] [-nullSafeAnnotations] [-addExtraOptionalGetters] [-optionalGetters <optionalGettersType>] "
-              + "[-templateDir <templateDir>] (schema|protocol) input... outputdir");
+              + "[-noSetters] [-nullSafeAnnotations] [-nullSafeAnnotationNullable <nullableAnnotation>] "
+              + "[-nullSafeAnnotationNotNull <notNullAnnotation>] [-addExtraOptionalGetters] "
+              + "[-optionalGetters <optionalGettersType>] [-templateDir <templateDir>] "
+              + "(schema|protocol) input... outputdir");
       System.err.println(" input - input files or directories");
       System.err.println(" outputdir - directory to write generated java");
       System.err.println(" -encoding <outputencoding> - set the encoding of " + "output file(s)");
@@ -59,6 +61,9 @@ public class SpecificCompilerTool implements Tool {
       System.err.println(" -fieldVisibility [private|public] - use either and default private");
       System.err.println(" -noSetters - do not generate setters");
       System.err.println(" -nullSafeAnnotations - add @Nullable and @NotNull annotations");
+      System.err.println(" -nullSafeAnnotationNullable - full package path of annotation to use for nullable fields");
+      System.err
+          .println(" -nullSafeAnnotationNotNull - full package path of annotation to use for non-nullable fields");
       System.err
           .println(" -addExtraOptionalGetters - generate extra getters with this format: 'getOptional<FieldName>'");
       System.err.println(
@@ -74,6 +79,8 @@ public class SpecificCompilerTool implements Tool {
     compilerOpts.useLogicalDecimal = false;
     compilerOpts.createSetters = true;
     compilerOpts.createNullSafeAnnotations = false;
+    compilerOpts.nullSafeAnnotationNullable = Optional.empty();
+    compilerOpts.nullSafeAnnotationNotNull = Optional.empty();
     compilerOpts.optionalGettersType = Optional.empty();
     compilerOpts.addExtraOptionalGetters = false;
     compilerOpts.encoding = Optional.empty();
@@ -81,6 +88,7 @@ public class SpecificCompilerTool implements Tool {
     compilerOpts.fieldVisibility = Optional.empty();
 
     List<String> args = new ArrayList<>(origArgs);
+    int arg = 0;
 
     if (args.contains("-noSetters")) {
       compilerOpts.createSetters = false;
@@ -92,11 +100,24 @@ public class SpecificCompilerTool implements Tool {
       args.remove(args.indexOf("-nullSafeAnnotations"));
     }
 
+    if (args.contains("-nullSafeAnnotationNullable")) {
+      arg = args.indexOf("-nullSafeAnnotationNullable") + 1;
+      compilerOpts.nullSafeAnnotationNullable = Optional.of(args.get(arg));
+      args.remove(arg);
+      args.remove(arg - 1);
+    }
+
+    if (args.contains("-nullSafeAnnotationNotNull")) {
+      arg = args.indexOf("-nullSafeAnnotationNotNull") + 1;
+      compilerOpts.nullSafeAnnotationNotNull = Optional.of(args.get(arg));
+      args.remove(arg);
+      args.remove(arg - 1);
+    }
+
     if (args.contains("-addExtraOptionalGetters")) {
       compilerOpts.addExtraOptionalGetters = true;
       args.remove(args.indexOf("-addExtraOptionalGetters"));
     }
-    int arg = 0;
 
     if (args.contains("-optionalGetters")) {
       arg = args.indexOf("-optionalGetters") + 1;
@@ -180,6 +201,8 @@ public class SpecificCompilerTool implements Tool {
     compiler.setStringType(opts.stringType);
     compiler.setCreateSetters(opts.createSetters);
     compiler.setCreateNullSafeAnnotations(opts.createNullSafeAnnotations);
+    opts.nullSafeAnnotationNullable.ifPresent(compiler::setNullSafeAnnotationNullable);
+    opts.nullSafeAnnotationNotNull.ifPresent(compiler::setNullSafeAnnotationNotNull);
 
     opts.optionalGettersType.ifPresent(choice -> {
       compiler.setGettersReturnOptional(true);
@@ -276,6 +299,8 @@ public class SpecificCompilerTool implements Tool {
     boolean useLogicalDecimal;
     boolean createSetters;
     boolean createNullSafeAnnotations;
+    Optional<String> nullSafeAnnotationNullable;
+    Optional<String> nullSafeAnnotationNotNull;
     boolean addExtraOptionalGetters;
     Optional<OptionalGettersType> optionalGettersType;
     Optional<String> templateDir;

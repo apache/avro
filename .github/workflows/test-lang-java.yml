@@ -36,13 +36,18 @@ concurrency:
 jobs:
   test:
     name: 'Java Test'
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: 
+          - ubuntu-latest
+          - ubuntu-24.04-arm
     steps:
       - name: 'Checkout sourcecode'
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@v4
 
       - name: 'Cache Local Maven Repository'
-        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -50,7 +55,7 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: 'Setup Temurin JDK 11, 17 & 21'
-        uses: actions/setup-java@6a0805fcefea3d4657a47ac4c165951e33482018 # v4.2.2
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: |
@@ -83,10 +88,15 @@ jobs:
 
   interop:
     name: 'Java Interop'
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: 
+          - ubuntu-latest
+          - ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@v4
 
       - name: 'Cache Local Maven Repository'
         uses: actions/cache@v4
@@ -97,7 +107,7 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: 'Setup Temurin JDK 11, 17 & 21'
-        uses: actions/setup-java@6a0805fcefea3d4657a47ac4c165951e33482018 # v4.2.2
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: |
@@ -117,6 +127,7 @@ jobs:
 
       - name: 'Apt Install Compression Libs Required by Python'
         run: |
+          sudo apt-get update && \
           sudo apt-get install -qqy --no-install-recommends libbz2-dev \
                                                             liblzma-dev \
                                                             libsnappy-dev \

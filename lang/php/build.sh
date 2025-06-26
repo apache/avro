@@ -54,18 +54,18 @@ do
 
     test-interop)
       composer install -d "../.."
-      vendor/bin/phpunit test/InterOpTest.php
+      ../../vendor/bin/phpunit test/InterOpTest.php
       ;;
 
     lint)
       composer install -d "../.."
       find . -name "*.php" -print0 | xargs -0 -n1 -P8 php -l
-      vendor/bin/phpcs --standard=PSR12 lib
+      ../../vendor/bin/phpcs --standard=PSR12 lib
       ;;
 
     test)
       composer install -d "../.."
-      vendor/bin/phpunit -v
+      ../../vendor/bin/phpunit -v
       ;;
 
     dist)

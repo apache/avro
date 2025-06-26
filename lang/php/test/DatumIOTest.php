@@ -28,6 +28,12 @@ use Apache\Avro\IO\AvroStringIO;
 use Apache\Avro\Schema\AvroSchema;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @covers AvroIOBinaryDecoder
+ * @covers AvroIOBinaryEncoder
+ * @covers AvroIODatumReader
+ * @covers AvroIODatumWriter
+ */
 class DatumIOTest extends TestCase
 {
     /**
@@ -68,11 +74,33 @@ class DatumIOTest extends TestCase
             array('"int"', 1, "\002"),
             array('"int"', 2147483647, "\xFE\xFF\xFF\xFF\x0F"),
 
-            // array('"long"', (int) -9223372036854775808, "\001"),
+            array('"long"', (int) -9223372036854775808, "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x01"),
+            array('"long"', -(1<<62), "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x7F"),
+            array('"long"', -(1<<61), "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x3F"),
+            array('"long"', -4294967295, "\xFD\xFF\xFF\xFF\x1F"),
+            array('"long"', -1<<24, "\xFF\xFF\xFF\x0F"),
+            array('"long"', -1<<16, "\xFF\xFF\x07"),
+            array('"long"', -255, "\xFD\x03"),
+            array('"long"', -128, "\xFF\x01"),
+            array('"long"', -127, "\xFD\x01"),
+            array('"long"', -10, "\x13"),
+            array('"long"', -3, "\005"),
+            array('"long"', -2, "\003"),
             array('"long"', -1, "\001"),
-            array('"long"', 0, "\000"),
-            array('"long"', 1, "\002"),
-            // array('"long"', 9223372036854775807, "\002")
+            array('"long"',  0, "\000"),
+            array('"long"',  1, "\002"),
+            array('"long"',  2, "\004"),
+            array('"long"',  3, "\006"),
+            array('"long"', 10, "\x14"),
+            array('"long"', 127, "\xFE\x01"),
+            array('"long"', 128, "\x80\x02"),
+            array('"long"', 255, "\xFE\x03"),
+            array('"long"', 1<<16, "\x80\x80\x08"),
+            array('"long"', 1<<24, "\x80\x80\x80\x10"),
+            array('"long"', 4294967295, "\xFE\xFF\xFF\xFF\x1F"),
+            array('"long"', 1<<61, "\x80\x80\x80\x80\x80\x80\x80\x80\x40"),
+            array('"long"', 1<<62, "\x80\x80\x80\x80\x80\x80\x80\x80\x80\x01"),
+            array('"long"', 9223372036854775807, "\xFE\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x01"),
 
             array('"float"', (float) -10.0, "\000\000 \301"),
             array('"float"', (float) -1.0, "\000\000\200\277"),

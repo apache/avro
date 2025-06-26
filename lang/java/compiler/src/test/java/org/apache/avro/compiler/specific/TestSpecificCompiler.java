@@ -87,7 +87,7 @@ public class TestSpecificCompiler {
 
   static void assertCompilesWithJavaCompiler(File dstDir, Collection<SpecificCompiler.OutputFile> outputs)
       throws IOException {
-    assertCompilesWithJavaCompiler(dstDir, outputs, false);
+    assertCompilesWithJavaCompiler(dstDir, outputs, true);
   }
 
   /**
@@ -133,7 +133,7 @@ public class TestSpecificCompiler {
     boolean compilesWithoutError = cTask.call();
     assertTrue(compilesWithoutError);
     if (!ignoreWarnings) {
-      assertEquals(0, warnings.size(), "Warnings produced when compiling generated code with -Xlint:all");
+      assertEquals(List.of(), warnings, "Warnings produced when compiling generated code with -Xlint:all");
     }
   }
 

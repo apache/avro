@@ -40,8 +40,8 @@ class FieldAccessReflect extends FieldAccess {
 
   private static class ReflectionBasedAccessor extends FieldAccessor {
     protected final Field field;
-    private boolean isStringable;
-    private boolean isCustomEncoded;
+    private final boolean isStringable;
+    private final boolean isCustomEncoded;
 
     public ReflectionBasedAccessor(Field field) {
       this.field = field;
@@ -105,7 +105,7 @@ class FieldAccessReflect extends FieldAccess {
 
   private static final class ReflectionBasesAccessorCustomEncoded extends ReflectionBasedAccessor {
 
-    private CustomEncoding<?> encoding;
+    private final CustomEncoding<?> encoding;
 
     public ReflectionBasesAccessorCustomEncoded(Field f, CustomEncoding<?> encoding) {
       super(f);

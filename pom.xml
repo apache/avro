@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>33</version>
+    <version>35</version>
   </parent>
 
   <groupId>org.apache.avro</groupId>
@@ -49,11 +49,11 @@
     <!-- plugin versions -->
     <apache-rat-plugin.version>0.16.1</apache-rat-plugin.version>
     <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
-    <checkstyle.version>10.21.1</checkstyle.version>
+    <checkstyle.version>10.25.1</checkstyle.version>
     <enforcer-plugin.version>3.5.0</enforcer-plugin.version>
-    <extra-enforcer-rules.version>1.9.0</extra-enforcer-rules.version>
+    <extra-enforcer-rules.version>1.10.0</extra-enforcer-rules.version>
     <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
-    <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+    <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
     <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
     <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
     <maven-plugin-plugin.version>3.15.1</maven-plugin-plugin.version>
@@ -62,8 +62,8 @@
     <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
     <maven-toolchains-plugin.version>3.2.0</maven-toolchains-plugin.version>
     <plugin-tools-javadoc.version>3.5.2</plugin-tools-javadoc.version>
-    <spotless-maven-plugin.version>2.44.2</spotless-maven-plugin.version>
-    <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
+    <spotless-maven-plugin.version>2.44.5</spotless-maven-plugin.version>
+    <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
 
     <!-- Pin output timestamp to make the Java build reproducible -->
     <project.build.outputTimestamp>1723122283</project.build.outputTimestamp>
@@ -459,7 +459,8 @@
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithoutLogicalTypes.java</exclude>
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/int$.java</exclude>
                 <exclude>lang/java/ipc-netty/src/test/resources/**/*.txt</exclude>
-                <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/NullSafeAnnotationsFieldsTest.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/JetBrainsNullSafeAnnotationsFieldsTest.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/JSpecifyNullSafeAnnotationsFieldsTest.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Player.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Position.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/FieldTest.java</exclude>
@@ -479,6 +480,7 @@
                 <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.txt</exclude>
                 <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.avro/*</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/noopt/Test.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/noopt/TestProto3.java</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/A.java</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/Foo.java</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/FooOrBuilder.java</exclude>

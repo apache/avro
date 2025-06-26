@@ -81,9 +81,8 @@ public class RawMessageEncoder<D> implements MessageEncoder<D> {
    * @param shouldCopy whether to copy buffers before returning encoded results
    */
   public RawMessageEncoder(GenericData model, Schema schema, boolean shouldCopy) {
-    Schema writeSchema = schema;
     this.copyOutputBytes = shouldCopy;
-    this.writer = model.createDatumWriter(writeSchema);
+    this.writer = model.createDatumWriter(schema);
   }
 
   @Override

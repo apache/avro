@@ -281,7 +281,7 @@ static const std::unordered_set<std::string> &getKnownFields() {
     // return known fields
     static const std::unordered_set<std::string> kKnownFields =
         {"name", "type", "aliases", "default", "doc", "size", "logicalType",
-         "values", "precision", "scale", "namespace", "items"};
+         "values", "precision", "scale", "namespace", "items", "symbols"};
     return kKnownFields;
 }
 
@@ -291,7 +291,8 @@ static void getCustomAttributes(const Object &m, CustomAttributes &customAttribu
     const std::unordered_set<std::string> &kKnownFields = getKnownFields();
     for (const auto &entry : m) {
         if (kKnownFields.find(entry.first) == kKnownFields.end()) {
-            customAttributes.addAttribute(entry.first, entry.second.stringValue());
+            bool addQuotes = entry.second.type() == json::EntityType::String;
+            customAttributes.addAttribute(entry.first, entry.second.toLiteralString(), addQuotes);
         }
     }
 }
@@ -399,6 +400,12 @@ static LogicalType makeLogicalType(const Entity &e, const Object &m) {
         t = LogicalType::DURATION;
     else if (typeField == "uuid")
         t = LogicalType::UUID;
+    else {
+        auto custom = CustomLogicalTypeRegistry::instance().create(typeField, e.toString());
+        if (custom != nullptr) {
+            return LogicalType(std::move(custom));
+        }
+    }
     return LogicalType(t);
 }
 
@@ -417,6 +424,11 @@ static NodePtr makeEnumNode(const Entity &e,
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
+
+    CustomAttributes customAttributes;
+    getCustomAttributes(m, customAttributes);
+    node->addCustomAttributesForField(customAttributes);
+
     return node;
 }
 
@@ -431,6 +443,11 @@ static NodePtr makeFixedNode(const Entity &e,
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
+
+    CustomAttributes customAttributes;
+    getCustomAttributes(m, customAttributes);
+    node->addCustomAttributesForField(customAttributes);
+
     return node;
 }
 
@@ -457,6 +474,11 @@ static NodePtr makeMapNode(const Entity &e, const Object &m,
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
+
+    CustomAttributes customAttributes;
+    getCustomAttributes(m, customAttributes);
+    node->addCustomAttributesForField(customAttributes);
+
     return node;
 }
 

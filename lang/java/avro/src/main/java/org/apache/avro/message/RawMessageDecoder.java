@@ -78,9 +78,7 @@ public class RawMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
    * @param writeSchema the {@link Schema} used to decode buffers
    */
   public RawMessageDecoder(GenericData model, Schema writeSchema, Schema readSchema) {
-    Schema writeSchema1 = writeSchema;
-    Schema readSchema1 = readSchema;
-    this.reader = model.createDatumReader(writeSchema1, readSchema1);
+    this.reader = model.createDatumReader(writeSchema, readSchema);
   }
 
   @Override
