@@ -52,15 +52,15 @@ struct PendingSetterGetter {
     string type;
     string name;
     size_t idx;
+    bool optionalType;
 
-    PendingSetterGetter(string sn, string t, string n, size_t i) : structName(std::move(sn)), type(std::move(t)), name(std::move(n)), idx(i) {}
+    PendingSetterGetter(string sn, string t, string n, size_t i, bool o) : structName(std::move(sn)), type(std::move(t)), name(std::move(n)), idx(i), optionalType(o) {}
 };
 
 struct PendingConstructor {
     string structName;
     string memberName;
-    bool initMember;
-    PendingConstructor(string sn, string n, bool im) : structName(std::move(sn)), memberName(std::move(n)), initMember(im) {}
+    PendingConstructor(string sn, string n) : structName(std::move(sn)), memberName(std::move(n)) {}
 };
 
 class UnionCodeTracker {
@@ -307,53 +307,53 @@ void makeCanonical(string &s, bool foldCase) {
     }
 }
 
+static void generateGetter(ostream &os,
+                           const string &structName, const string &type, const string &name,
+                           size_t idx, bool optionalType, const string &dclspec) {
+    os << "inline\n"
+       << dclspec << type << "& " << structName << "::get_" << name << "() " << dclspec << " {\n"
+       << "    if (";
+    if (optionalType) {
+       os << "!value_.has_value()";
+    } else {
+       os << "value_.index() != " << idx;
+    }
+    os << ") {\n"
+       << "        throw avro::Exception(\"Invalid type for "
+       << "union " << structName << "\");\n"
+       << "    }\n"
+       << "    return ";
+    if (optionalType) {
+       os << "*value_";
+    } else {
+       os << "std::get<" << type << ">(value_)";
+    }
+    os << ";\n}\n\n";
+}
+
 static void generateGetterAndSetter(ostream &os,
                                     const string &structName, const string &type, const string &name,
-                                    size_t idx) {
-    string sn = " " + structName + "::";
-
-    os << "inline\n";
-
-    os << "const " << type << "&" << sn << "get_" << name << "() const {\n"
-       << "    if (idx_ != " << idx << ") {\n"
-       << "        throw avro::Exception(\"Invalid type for "
-       << "union " << structName << "\");\n"
-       << "    }\n"
-       << "    return *std::any_cast<" << type << " >(&value_);\n"
-       << "}\n\n";
+                                    size_t idx, bool optionalType) {
+    generateGetter(os, structName, type, name, idx, optionalType, "const " );
+    generateGetter(os, structName, type, name, idx, optionalType, "" );
 
     os << "inline\n"
-       << type << "&" << sn << "get_" << name << "() {\n"
-       << "    if (idx_ != " << idx << ") {\n"
-       << "        throw avro::Exception(\"Invalid type for "
-       << "union " << structName << "\");\n"
-       << "    }\n"
-       << "    return *std::any_cast<" << type << " >(&value_);\n"
-       << "}\n\n";
-
-    os << "inline\n"
-       << "void" << sn << "set_" << name
+       << "void " << structName << "::set_" << name
        << "(const " << type << "& v) {\n"
-       << "    idx_ = " << idx << ";\n"
        << "    value_ = v;\n"
        << "}\n\n";
 
     os << "inline\n"
-       << "void" << sn << "set_" << name
+       << "void " << structName << "::set_" << name
        << "(" << type << "&& v) {\n"
-       << "    idx_ = " << idx << ";\n"
        << "    value_ = std::move(v);\n"
        << "}\n\n";
 }
 
 static void generateConstructor(ostream &os,
-                                const string &structName, bool initMember,
+                                const string &structName,
                                 const string &type) {
-    os << "inline " << structName << "::" << structName << "() : idx_(0)";
-    if (initMember) {
-        os << ", value_(" << type << "())";
-    }
-    os << " { }\n";
+    os << "inline " << structName << "::" << structName << "() : value_(" << type <<"()) { }\n";
 }
 
 /**
@@ -392,11 +392,25 @@ string CodeGen::generateUnionType(const NodePtr &n) {
         return existingName.value();
     }
     const std::string result = unionTracker_.generateNewUnionName(types);
+    bool optionalType = (c == 2 && (n->leafAt(0)->type() == avro::AVRO_NULL || n->leafAt(1)->type() == avro::AVRO_NULL));
+    bool idx_0_null = n->leafAt(0)->type() == avro::AVRO_NULL;
 
     os_ << "struct " << result << " {\n"
-        << "private:\n"
-        << "    size_t idx_;\n"
-        << "    std::any value_;\n"
+        << "private:\n";
+    if (optionalType) {
+        os_ << "    std::optional<" << (idx_0_null ? types[1] : types[0]);
+    } else {
+        os_ << "    std::variant<";
+        for (size_t i = 0; i < c; ++i) {
+            if (i > 0) os_ << ", ";
+            if (names[i] == "null") {
+                os_ << "std::monostate";
+            } else {
+                os_ << types[i];
+            }
+        }
+    }
+    os_ << "> value_;\n"
         << "public:\n";
 
     os_ << "    /** enum representing union branches as returned by the idx() function */\n"
@@ -422,19 +436,25 @@ string CodeGen::generateUnionType(const NodePtr &n) {
     }
     os_ << "    };\n";
 
-    os_ << "    size_t idx() const { return idx_; }\n";
-    os_ << "    Branch branch() const { return static_cast<Branch>(idx_); }\n";
+    if (optionalType) {
+       os_ << "    size_t idx() const { return value_.has_value() ? "
+           << (idx_0_null ? "1 : 0" : "0 : 1") << "; }\n"
+           << "    Branch branch() const { return static_cast<Branch>(idx()); }\n";
+    } else {
+       os_ << "    size_t idx() const { return value_.index(); }\n"
+           << "    Branch branch() const { return static_cast<Branch>(value_.index()); }\n";
+    }
 
     for (size_t i = 0; i < c; ++i) {
         const NodePtr &nn = n->leafAt(i);
         if (nn->type() == avro::AVRO_NULL) {
-            os_ << "    bool is_null() const {\n"
-                << "        return (idx_ == " << i << ");\n"
-                << "    }\n"
-                << "    void set_null() {\n"
-                << "        idx_ = " << i << ";\n"
-                << "        value_ = std::any();\n"
-                << "    }\n";
+            if (optionalType) {
+                os_ << "    bool is_null() const { return !value_.has_value(); }\n"
+                    << "    void set_null() { value_.reset(); }\n";
+            } else {
+                os_ << "    bool is_null() const { return value_.index() == " << i <<"; }\n"
+                    << "    void set_null() { value_.emplace<" << i << ">(); }\n";
+            }
         } else {
             const string &type = types[i];
             const string &name = names[i];
@@ -443,13 +463,14 @@ string CodeGen::generateUnionType(const NodePtr &n) {
                 << "    " << type << "& get_" << name << "();\n"
                 << "    void set_" << name << "(const " << type << "& v);\n"
                 << "    void set_" << name << "(" << type << "&& v);\n";
-            pendingGettersAndSetters.emplace_back(result, type, name, i);
+            pendingGettersAndSetters.emplace_back(result, type, name, i, optionalType);
         }
     }
 
-    os_ << "    " << result << "();\n";
-    pendingConstructors.emplace_back(result, types[0],
-                                     n->leafAt(0)->type() != avro::AVRO_NULL);
+    if ( n->leafAt(0)->type() != avro::AVRO_NULL ) {
+        os_ << "    " << result << "();\n";
+        pendingConstructors.emplace_back(result, types[0]);
+    }
     os_ << "};\n\n";
 
     return result;
@@ -818,7 +839,8 @@ void CodeGen::generate(const ValidSchema &schema) {
     os_ << "#define " << h << "\n\n\n";
 
     os_ << "#include <sstream>\n"
-        << "#include <any>\n"
+        << "#include <variant>\n"
+        << "#include <optional>\n"
         << "#include <utility>\n"
         << "#include \"" << includePrefix_ << "Specific.hh\"\n"
         << "#include \"" << includePrefix_ << "Encoder.hh\"\n"
@@ -837,14 +859,13 @@ void CodeGen::generate(const ValidSchema &schema) {
              pendingGettersAndSetters.begin();
          it != pendingGettersAndSetters.end(); ++it) {
         generateGetterAndSetter(os_, it->structName, it->type, it->name,
-                                it->idx);
+                                it->idx, it->optionalType);
     }
 
     for (vector<PendingConstructor>::const_iterator it =
              pendingConstructors.begin();
          it != pendingConstructors.end(); ++it) {
-        generateConstructor(os_, it->structName,
-                            it->initMember, it->memberName);
+        generateConstructor(os_, it->structName, it->memberName);
     }
 
     if (!ns_.empty()) {
