@@ -52,7 +52,7 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * Compared to {@link Period java.time.Period}, this class has a smaller range
  * ('only' supporting a little less than 358 million years), and cannot support
- * negative time periods.
+ * negative periods.
  * </p>
  *
  * <p>
@@ -82,9 +82,9 @@ import static java.util.Objects.requireNonNull;
  * </tr>
  * <tr>
  * <td>Time range (approx.)</td>
- * <td>0 - 49 days</td>
+ * <td>0 &endash; 49 days</td>
  * <td>unsupported</td>
- * <td>-68 - 68 years</td>
+ * <td>-68 &endash; 68 years</td>
  * </tr>
  * <tr>
  * <td>Date range (approx.)</td>
@@ -95,7 +95,7 @@ import static java.util.Objects.requireNonNull;
  * </table>
  *
  * @see <a href=
- *      "https://avro.apache.org/docs/1.11.1/specification/#duration">Avro 1.11
+ *      "https://avro.apache.org/docs/current/specification/#duration">Avro
  *      specification on duration</a>
  */
 public final class TimePeriod implements TemporalAmount, Serializable {
