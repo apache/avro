@@ -2,7 +2,6 @@
 title: "Security"
 linkTitle: "Security"
 weight: 10
-manualLink: https://www.apache.org/security/
 ---
 
 <!--
