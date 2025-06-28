@@ -28,7 +28,7 @@ jobs:
     strategy:
       matrix:
         avro: [ "1.12.0" ]
-        gradle: [ "8.5" ]
+        gradle: [ "8.14" ]
         java: [ "17" ]
     steps:
       - uses: actions/checkout@v4
@@ -47,7 +47,7 @@ jobs:
     strategy:
       matrix:
         avro: [ "1.12.0" ]
-        gradle: [ "8.5" ]
+        gradle: [ "8.14" ]
         java: [ "17" ]
     steps:
       - uses: actions/checkout@v4
@@ -66,7 +66,7 @@ jobs:
     strategy:
       matrix:
         avro: [ "1.12.0" ]
-        gradle: [ "8.5" ]
+        gradle: [ "8.14" ]
         java: [ "18" ]
     steps:
       - uses: actions/checkout@v4
@@ -85,7 +85,7 @@ jobs:
     strategy:
       matrix:
         avro: [ "1.12.0" ]
-        gradle: [ "8.5" ]
+        gradle: [ "8.14" ]
         java: [ "19" ]
     steps:
       - uses: actions/checkout@v4
@@ -105,7 +105,7 @@ jobs:
     strategy:
       matrix:
         avro: [ "1.12.0" ]
-        gradle: [ "8.5" ]
+        gradle: [ "8.14" ]
         java: [ "21" ]
       fail-fast: false
     steps:

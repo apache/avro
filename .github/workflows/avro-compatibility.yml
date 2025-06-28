@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         avro: [ "1.11.4", "1.12.0" ]
-        gradle: [ "8.5" ]
+        gradle: [ "8.14" ]
         java: [ "17", "21" ]
     steps:
       - uses: actions/checkout@v4
