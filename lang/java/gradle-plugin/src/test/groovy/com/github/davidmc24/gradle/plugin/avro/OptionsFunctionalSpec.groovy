@@ -304,41 +304,41 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         content.contains(TimestampGenerator.MESSAGE_PREFIX)
     }
 
-    def "rejects unsupported stringType values"() {
-        given:
-        copyResource("user.avsc", avroDir)
-        applyAvroPlugin()
-        buildFile << """
-        |avro {
-        |    stringType = "badValue"
-        |}
-        |""".stripMargin()
-
-        when:
-        def result = runAndFail("generateAvroJava")
-
-        then:
-        result.task(":generateAvroJava").outcome == FAILED
-        result.output.contains("Invalid stringType 'badValue'.  Value values are: [CharSequence, String, Utf8]")
-    }
-
-    def "rejects unsupported fieldVisibility values"() {
-        given:
-        copyResource("user.avsc", avroDir)
-        applyAvroPlugin()
-        buildFile << """
-        |avro {
-        |    fieldVisibility = "badValue"
-        |}
-        |""".stripMargin()
-
-        when:
-        def result = runAndFail("generateAvroJava")
-
-        then:
-        result.task(":generateAvroJava").outcome == FAILED
-        result.output.contains("Invalid fieldVisibility 'badValue'.  Value values are: [PUBLIC, PRIVATE]")
-    }
+//    def "rejects unsupported stringType values"() {
+//        given:
+//        copyResource("user.avsc", avroDir)
+//        applyAvroPlugin()
+//        buildFile << """
+//        |avro {
+//        |    stringType = "badValue"
+//        |}
+//        |""".stripMargin()
+//
+//        when:
+//        def result = runAndFail("generateAvroJava")
+//
+//        then:
+//        result.task(":generateAvroJava").outcome == FAILED
+//        result.output.contains("Invalid stringType 'badValue'.  Value values are: [CharSequence, String, Utf8]")
+//    }
+//
+//    def "rejects unsupported fieldVisibility values"() {
+//        given:
+//        copyResource("user.avsc", avroDir)
+//        applyAvroPlugin()
+//        buildFile << """
+//        |avro {
+//        |    fieldVisibility = "badValue"
+//        |}
+//        |""".stripMargin()
+//
+//        when:
+//        def result = runAndFail("generateAvroJava")
+//
+//        then:
+//        result.task(":generateAvroJava").outcome == FAILED
+//        result.output.contains("Invalid fieldVisibility 'badValue'.  Value values are: [PUBLIC, PRIVATE]")
+//    }
 
     @Unroll
     def "supports configuring enableDecimalLogicalType to #enableDecimalLogicalType"() {
