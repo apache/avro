@@ -140,6 +140,9 @@ public class LogicalTypes {
       case BIG_DECIMAL:
         logicalType = BIG_DECIMAL_TYPE;
         break;
+      case DURATION:
+        logicalType = DURATION_TYPE;
+        break;
       case UUID:
         logicalType = UUID_TYPE;
         break;
