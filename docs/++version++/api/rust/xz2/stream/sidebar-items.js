@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CONCATENATED","IGNORE_CHECK","TELL_ANY_CHECK","TELL_NO_CHECK","TELL_UNSUPPORTED_CHECK"],"enum":["Action","Check","Error","MatchFinder","Mode","Status"],"struct":["Filters","LzmaOptions","MtStreamBuilder","Stream"]};
