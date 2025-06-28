@@ -18,7 +18,7 @@
 # You may wish to alter this file to override the set of languages analyzed,
 # or to provide custom queries or build logic.
 
-name: "Gradle plugin"
+name: Gradle plugin build
 on: [ pull_request ]
 jobs:
   build:

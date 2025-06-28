@@ -19,7 +19,7 @@
 # or to provide custom queries or build logic.
 
 # See https://docs.gradle.org/current/userguide/compatibility.html
-name: Gradle - Java Compatibility Tests
+name: Gradle Java Compatibility Tests
 on: [ pull_request ]
 jobs:
   java8-11:
