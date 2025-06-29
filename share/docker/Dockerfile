@@ -167,10 +167,24 @@ RUN curl -sSL https://cpanmin.us \
                                                  Module::Install::Repository \
  && rm -rf .cpanm
 
-# Install Python packages
-ENV PIP_NO_CACHE_DIR=off
+# Install Python3
+ENV PATH="${PATH}:/opt/pypy3.10/bin" \
+    PIP_NO_CACHE_DIR=off
+
+# https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
+ARG BUILDARCH
+RUN case "${BUILDARCH:?}" in \
+      arm64) pypyarch=aarch64;; \
+      *) pypyarch=linux64;; \
+    esac \
+ && cd /opt \
+ && for url in https://downloads.python.org/pypy/pypy3.10-v7.3.12-"$pypyarch".tar.bz2; \
+    do curl -fsSL "$url" | tar -xvjpf -; \
+    done \
+ && ln -s pypy3.10* pypy3.10
 
 # Install Python3 packages
+ENV PIP_NO_CACHE_DIR=off
 RUN python3 -m pip install --upgrade pip setuptools wheel \
  && python3 -m pip install tox zstandard
 
