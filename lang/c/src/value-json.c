@@ -337,10 +337,12 @@ avro_value_to_json_t(const avro_value_t *value)
 		case AVRO_UNION:
 		{
 			int  disc;
-			avro_value_t  branch;
+			avro_value_t   branch;
 			avro_schema_t  union_schema;
 			avro_schema_t  branch_schema;
-			const char  *branch_name;
+			const char    *branch_name;
+			const char    *namespace;
+			json_t        *full_name_buf = NULL;
 
 			check_return(NULL, avro_value_get_current_branch(value, &branch));
 
@@ -352,26 +354,40 @@ avro_value_to_json_t(const avro_value_t *value)
 			union_schema = avro_value_get_schema(value);
 			branch_schema =
 			    avro_schema_union_branch(union_schema, disc);
+
+			namespace = avro_schema_namespace(branch_schema);
 			branch_name = avro_schema_type_name(branch_schema);
+			if (namespace != NULL) {
+				full_name_buf = json_sprintf("%s.%s", namespace, branch_name);
+				if (full_name_buf == NULL) {
+					avro_set_error("Cannot allocate full name union");
+					return NULL;
+				}
+				branch_name = json_string_value(full_name_buf);
+			}
 
 			json_t  *result = json_object();
 			if (result == NULL) {
 				avro_set_error("Cannot allocate JSON union");
+				json_decref(full_name_buf);
 				return NULL;
 			}
 
 			json_t  *branch_json = avro_value_to_json_t(&branch);
 			if (branch_json == NULL) {
 				json_decref(result);
+				json_decref(full_name_buf);
 				return NULL;
 			}
 
 			if (json_object_set_new(result, branch_name, branch_json)) {
 				avro_set_error("Cannot append branch to union");
 				json_decref(result);
+				json_decref(full_name_buf);
 				return NULL;
 			}
 
+			json_decref(full_name_buf);
 			return result;
 		}
 
