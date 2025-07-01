@@ -34,10 +34,20 @@ namespace Avro.test
         [TestCase(-10.10)]
         [TestCase(-0.1)]
         [TestCase(-0.01)]
-        [TestCase(4.1748330066797328106875724512m)]
-        [TestCase(-4.1748330066797328106875724512m)]
         public void TestAvroDecimalToString(decimal value)
         {
+            var valueString = value.ToString();
+
+            var avroDecimal = new AvroDecimal(value);
+            var avroDecimalString = avroDecimal.ToString();
+
+            Assert.AreEqual(valueString, avroDecimalString);
+        }
+
+        [Test]
+        public void TestHighPrecisionAvroDecimalToString()
+        {
+            var value = 4.1748330066797328106875724512m; // High precision decimal value
             var valueString = value.ToString();
 
             var avroDecimal = new AvroDecimal(value);
