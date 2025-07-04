@@ -91,6 +91,7 @@
     <module>integration-test</module>
     <module>perf</module>
     <module>interop-data-test</module>
+    <module>java17-test</module>
   </modules>
 
   <build>
@@ -393,6 +394,7 @@
                       <pluginExecutionFilter>
                         <groupId>com.diffplug.spotless</groupId>
                         <artifactId>spotless-maven-plugin</artifactId>
+                        <versionRange>[0,)</versionRange>
                         <goals>
                           <goal>check</goal>
                         </goals>
@@ -405,6 +407,7 @@
                       <pluginExecutionFilter>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-plugin-plugin</artifactId>
+                        <versionRange>[0,)</versionRange>
                         <goals>
                           <goal>helpmojo</goal>
                           <goal>descriptor</goal>
