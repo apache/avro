@@ -61,6 +61,10 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
     super(reflectData);
   }
 
+  private ReflectData getReflectData() {
+    return (ReflectData) getSpecificData();
+  }
+
   /**
    * Called to write a array. May be overridden for alternate array
    * representations.
@@ -158,7 +162,13 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
       datum = ((Optional) datum).orElse(null);
     }
     try {
-      super.write(schema, datum, out);
+
+      CustomEncoding encoder = getReflectData().getCustomEncoding(schema);
+      if (encoder != null) {
+        encoder.write(datum, out);
+      } else {
+        super.write(schema, datum, out);
+      }
     } catch (NullPointerException e) { // improve error message
       throw npe(e, " in " + schema.getFullName());
     }
