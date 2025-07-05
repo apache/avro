@@ -1,0 +1,18 @@
+plugins {
+    id "com.github.davidmc24.gradle.plugin.avro" version "1.2.1"
+}
+
+repositories {
+    mavenCentral()
+}
+dependencies {
+    compileOnly "org.apache.avro:avro:1.10.1"
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs "src/main/avro"
+        }
+    }
+}
