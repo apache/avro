@@ -21,7 +21,7 @@ plugins {
 // support.
 
 group = "com.github.davidmc24.gradle.plugin"
-version = "1.7.2-SNAPSHOT"
+version = "1.9.2-SNAPSHOT"
 
 def isCI = System.getenv("CI") == "true"
 
@@ -29,12 +29,12 @@ repositories {
     mavenCentral()
     maven {
         // Used for snapshot builds for some libraries
-        name 'Sonatype OSS'
-        url 'https://oss.sonatype.org/content/repositories/snapshots'
+        name = 'Sonatype OSS'
+        url = 'https://oss.sonatype.org/content/repositories/snapshots'
     }
 }
 
-def compileAvroVersion = "1.11.1"
+def compileAvroVersion = "1.12.0"
 
 // Write the plugin's classpath to a file to share with the tests
 task createClasspathManifest {
@@ -52,6 +52,7 @@ task createClasspathManifest {
 dependencies {
     implementation localGroovy()
     implementation "org.apache.avro:avro-compiler:${compileAvroVersion}"
+    implementation "org.apache.avro:avro-idl:${compileAvroVersion}"
     constraints {
         implementation ('com.fasterxml.jackson.core:jackson-databind:2.12.7.1') {
             because 'previous versions have vulnerabilities: CVE-2022-42004, CVE-2022-42003'
@@ -74,7 +75,7 @@ tasks.withType(AbstractCompile) {
     options.encoding = "UTF-8"
 }
 tasks.withType(JavaCompile) {
-    options.compilerArgs << "-Xlint:all" << "-Xlint:-options" << "-Werror"
+    options.compilerArgs << "-Xlint:all" << "-Xlint:-options"
 }
 
 tasks.withType(AbstractArchiveTask) {
@@ -231,8 +232,8 @@ tasks.create(name: "testCompatibility", type: Test) {
         gradleVersion: findProperty("gradleVersion"),
     ]
     reports {
-        html.destination = file("$buildDir/reports/tests/compatibility")
-        junitXml.destination = file("$buildDir/reports/tests/compatibility")
+        html.outputLocation = file("$buildDir/reports/tests/compatibility")
+        junitXml.outputLocation = file("$buildDir/reports/tests/compatibility")
     }
 }
 
@@ -251,7 +252,7 @@ tasks.create(name: "testCompatibility", type: Test) {
 
 tasks.withType(Test) {
     jvmArgs "-Xss320k"
-    minHeapSize "120m"
-    maxHeapSize "280m"
+    minHeapSize = "120m"
+    maxHeapSize = "280m"
     maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
 }

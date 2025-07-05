@@ -69,10 +69,10 @@ public class AvroPlugin implements Plugin<Project> {
             // IntelliJ doesn't allow source directories beneath an excluded directory.
             // Thus, we remove the build directory exclude and add all non-generated sub-directories as excludes.
             SetBuilder<File> excludeDirs = new SetBuilder<>();
-            excludeDirs.addAll(module.getExcludeDirs()).remove(project.getBuildDir());
-            File buildDir = project.getBuildDir();
+            excludeDirs.addAll(module.getExcludeDirs()).remove(project.getLayout().getBuildDirectory().getAsFile().get());
+            File buildDir = project.getLayout().getBuildDirectory().getAsFile().get();
             if (buildDir.isDirectory()) {
-                excludeDirs.addAll(project.getBuildDir().listFiles(new NonGeneratedDirectoryFileFilter()));
+                excludeDirs.addAll(project.getLayout().getBuildDirectory().getAsFile().get().listFiles(new NonGeneratedDirectoryFileFilter()));
             }
             module.setExcludeDirs(excludeDirs.build());
         });

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import org.apache.avro.Protocol;
 import org.apache.avro.compiler.idl.Idl;
+import org.apache.avro.idl.IdlReader;
 import org.apache.avro.compiler.idl.ParseException;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;

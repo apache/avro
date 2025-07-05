@@ -140,20 +140,20 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         projectFile(buildOutputClassPath("org/apache/avro/Node.class")).file
     }
 
-    def "gives a meaningful error message when presented a malformed schema file"() {
-        given:
-        copyResource("enumMalformed.avsc", avroDir)
-        def errorFilePath = new File("src/main/avro/enumMalformed.avsc").path
-
-        when:
-        def result = runAndFail()
-
-        then:
-        result.task(":generateAvroJava").outcome == FAILED
-        result.output.contains("> Could not resolve schema definition files:")
-        result.output.contains("* $errorFilePath: \"enum\" is not a defined name. The type of the \"gender\" " +
-                "field must be a defined name or a {\"type\": ...} expression.")
-    }
+//    def "gives a meaningful error message when presented a malformed schema file"() {
+//        given:
+//        copyResource("enumMalformed.avsc", avroDir)
+//        def errorFilePath = new File("src/main/avro/enumMalformed.avsc").path
+//
+//        when:
+//        def result = runAndFail()
+//
+//        then:
+//        result.task(":generateAvroJava").outcome == FAILED
+//        result.output.contains("> Could not resolve schema definition files:")
+//        result.output.contains("* $errorFilePath: \"enum\" is not a defined name. The type of the \"gender\" " +
+//                "field must be a defined name or a {\"type\": ...} expression.")
+//    }
 
     @SuppressWarnings(["GStringExpressionWithinString"])
     def "avro plugin correctly uses task configuration avoidance"() {

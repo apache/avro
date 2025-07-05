@@ -23,7 +23,7 @@ tasks.test {
 }
 
 avro {
-    stringType.set("CharSequence")
-    fieldVisibility.set("private")
+    setStringType("CharSequence")
+    setFieldVisibility("private")
     customConversion(org.apache.avro.Conversions.UUIDConversion::class.java)
 }
