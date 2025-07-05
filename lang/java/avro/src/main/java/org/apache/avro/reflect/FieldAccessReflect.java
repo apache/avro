@@ -28,7 +28,7 @@ class FieldAccessReflect extends FieldAccess {
 
   @Override
   protected FieldAccessor getAccessor(Field field) {
-    AvroEncode enc = field.getAnnotation(AvroEncode.class);
+    AvroEncode enc = ReflectionUtil.getAvroEncode(field);
     if (enc != null)
       try {
         return new ReflectionBasesAccessorCustomEncoded(field, enc.using().getDeclaredConstructor().newInstance());
@@ -47,7 +47,7 @@ class FieldAccessReflect extends FieldAccess {
       this.field = field;
       this.field.setAccessible(true);
       isStringable = field.isAnnotationPresent(Stringable.class);
-      isCustomEncoded = field.isAnnotationPresent(AvroEncode.class);
+      isCustomEncoded = ReflectionUtil.getAvroEncode(field) != null;
     }
 
     @Override

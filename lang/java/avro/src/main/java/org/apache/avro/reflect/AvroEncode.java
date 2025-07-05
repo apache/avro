@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
  * file. Use of {@link org.apache.avro.io.ValidatingEncoder} is recommended.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target({ ElementType.FIELD, ElementType.TYPE })
 public @interface AvroEncode {
   Class<? extends CustomEncoding<?>> using();
 }
