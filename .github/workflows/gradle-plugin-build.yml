@@ -33,4 +33,4 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
       - name: Execute Gradle build
-        run: ./lang/java/gradle-plugin/gradlew/gradlew build
+        run: ./gradlew build
