@@ -54,6 +54,14 @@ namespace Avro.test
             var avroDecimalString = avroDecimal.ToString();
 
             Assert.AreEqual(valueString, avroDecimalString);
+
+            value = -4.1748330066797328106875724512m; // High precision decimal value
+            valueString = value.ToString();
+
+            avroDecimal = new AvroDecimal(value);
+            avroDecimalString = avroDecimal.ToString();
+
+            Assert.AreEqual(valueString, avroDecimalString);
         }
     }
 }
