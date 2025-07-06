@@ -32,5 +32,11 @@ jobs:
           java-version: 17
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+      - name: debug pwd
+        run: |
+          echo "pwd:
+          pwd
+          echo "ls"
+          ls -la
       - name: Execute Gradle build
-        run: ./gradlew build
+        run: ./lang/java/gradle-plugin/gradlew build
