@@ -39,4 +39,5 @@ jobs:
           echo "ls"
           ls -la
       - name: Execute Gradle build
-        run: ./lang/java/gradle-plugin/gradlew build
+        working-directory: lang/java/gradle-plugin
+        run: ./gradlew build
