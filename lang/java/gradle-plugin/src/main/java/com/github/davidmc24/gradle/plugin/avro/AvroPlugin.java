@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.nio.charset.Charset;
 import java.util.Optional;
-
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
@@ -73,7 +72,9 @@ public class AvroPlugin implements Plugin<Project> {
             excludeDirs.addAll(module.getExcludeDirs()).remove(project.getLayout().getBuildDirectory().getAsFile().get());
             File buildDir = project.getLayout().getBuildDirectory().getAsFile().get();
             if (buildDir.isDirectory()) {
-                excludeDirs.addAll(project.getLayout().getBuildDirectory().getAsFile().get().listFiles(new NonGeneratedDirectoryFileFilter()));
+                excludeDirs.addAll(
+                    project.getLayout().getBuildDirectory().getAsFile().get().listFiles(new NonGeneratedDirectoryFileFilter())
+                );
             }
             module.setExcludeDirs(excludeDirs.build());
         });
@@ -97,24 +98,28 @@ public class AvroPlugin implements Plugin<Project> {
         });
     }
 
-    private static TaskProvider<GenerateAvroJavaTask> configureJavaGenerationTask(final Project project, final SourceSet sourceSet,
-                                                                                  TaskProvider<GenerateAvroProtocolTask> protoTaskProvider) {
+    private static TaskProvider<GenerateAvroJavaTask> configureJavaGenerationTask(
+        final Project project,
+        final SourceSet sourceSet,
+        TaskProvider<GenerateAvroProtocolTask> protoTaskProvider
+    ) {
         String taskName = sourceSet.getTaskName("generate", "avroJava");
-        TaskProvider<GenerateAvroJavaTask> javaTaskProvider = project.getTasks().register(taskName, GenerateAvroJavaTask.class, task -> {
-            task.setDescription(String.format("Generates %s Avro Java source files from schema/protocol definition files.",
-                sourceSet.getName()));
-            task.setGroup(Constants.GROUP_SOURCE_GENERATION);
-            task.source(getAvroSourceDir(project, sourceSet));
-            task.source(protoTaskProvider);
-            task.include("**/*." + Constants.SCHEMA_EXTENSION, "**/*." + Constants.PROTOCOL_EXTENSION);
-            task.getOutputDir().convention(getGeneratedOutputDir(project, sourceSet, Constants.JAVA_EXTENSION));
+        TaskProvider<GenerateAvroJavaTask> javaTaskProvider =
+            project.getTasks().register(taskName, GenerateAvroJavaTask.class, task -> {
+                task.setDescription(String.format("Generates %s Avro Java source files from schema/protocol definition files.",
+                    sourceSet.getName()));
+                task.setGroup(Constants.GROUP_SOURCE_GENERATION);
+                task.source(getAvroSourceDir(project, sourceSet));
+                task.source(protoTaskProvider);
+                task.include("**/*." + Constants.SCHEMA_EXTENSION, "**/*." + Constants.PROTOCOL_EXTENSION);
+                task.getOutputDir().convention(getGeneratedOutputDir(project, sourceSet, Constants.JAVA_EXTENSION));
 
-            sourceSet.getJava().srcDir(task.getOutputDir());
+                sourceSet.getJava().srcDir(task.getOutputDir());
 
-            JavaCompile compileJavaTask = project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class).get();
-            task.getOutputCharacterEncoding().convention(project.provider(() ->
-                Optional.ofNullable(compileJavaTask.getOptions().getEncoding()).orElse(Charset.defaultCharset().name())));
-        });
+                JavaCompile compileJavaTask = project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class).get();
+                task.getOutputCharacterEncoding().convention(project.provider(() ->
+                    Optional.ofNullable(compileJavaTask.getOptions().getEncoding()).orElse(Charset.defaultCharset().name())));
+            });
         project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class, compileJavaTask -> {
             compileJavaTask.source(javaTaskProvider);
         });
