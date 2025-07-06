@@ -34,7 +34,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
       - name: debug pwd
         run: |
-          echo "pwd:
+          echo "pwd:"
           pwd
           echo "ls"
           ls -la
