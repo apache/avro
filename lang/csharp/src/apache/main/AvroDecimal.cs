@@ -53,8 +53,11 @@ namespace Avro
         {
             var bytes = GetBytesFromDecimal(value);
 
-            var unscaledValueBytes = new byte[12];
-            Array.Copy(bytes, unscaledValueBytes, unscaledValueBytes.Length);
+            // Copy the first 12 bytes of the decimal into an array of size 13
+            // so that the last byte is 0, which is required by the
+            // BigInteger constructor to ensure the unscaled value is positive.
+            var unscaledValueBytes = new byte[13];
+            Array.Copy(bytes, unscaledValueBytes, 12);
 
             var unscaledValue = new BigInteger(unscaledValueBytes);
             var scale = bytes[14];
