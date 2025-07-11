@@ -38,8 +38,28 @@ namespace Avro.test
         {
             var valueString = value.ToString();
 
-            var avroDecimal = new AvroDecimal(value);            
+            var avroDecimal = new AvroDecimal(value);
             var avroDecimalString = avroDecimal.ToString();
+
+            Assert.AreEqual(valueString, avroDecimalString);
+        }
+
+        [Test]
+        public void TestHighPrecisionAvroDecimalToString()
+        {
+            var value = 4.1748330066797328106875724512m; // High precision decimal value
+            var valueString = value.ToString();
+
+            var avroDecimal = new AvroDecimal(value);
+            var avroDecimalString = avroDecimal.ToString();
+
+            Assert.AreEqual(valueString, avroDecimalString);
+
+            value = -4.1748330066797328106875724512m; // High precision decimal value
+            valueString = value.ToString();
+
+            avroDecimal = new AvroDecimal(value);
+            avroDecimalString = avroDecimal.ToString();
 
             Assert.AreEqual(valueString, avroDecimalString);
         }
