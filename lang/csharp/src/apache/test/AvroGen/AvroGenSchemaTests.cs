@@ -309,6 +309,46 @@ namespace Avro.Test.AvroGen
   ]
 }";
 
+        private const string _fullyQualifiedTypeReferences = @"
+[
+    {
+        ""namespace"": ""org.apache.avro.codegentest.testdata.common"",
+        ""type"": ""enum"",
+        ""name"": ""Planet"",
+        ""doc"" : ""Test mapping of types in other namespaces post-map"",
+        ""symbols"": [
+            ""Mercury"",
+            ""Venus"",
+            ""Earth"",
+            ""Mars"",
+            ""Jupiter"",
+            ""Saturn"",
+            ""Neptune"",
+            ""Uranus""
+        ],
+    },
+    {
+        ""namespace"": ""org.apache.avro.codegentest.testdata.users"",
+        ""type"": ""record"",
+        ""name"": ""User"",
+        ""doc"" : ""Test mapping of types in other namespaces post-map"",
+        ""fields"": [
+        {
+            ""name"": ""homePlanet"",
+            ""type"": ""org.apache.avro.codegentest.testdata.common.Planet""
+        },
+        {
+            ""name"": ""favouritePlanet"",
+            ""type"":  [
+              ""null"",
+              ""org.apache.avro.codegentest.testdata.common.Planet""
+            ],
+            ""default"": null
+        }]
+    },
+
+]";
+
         private Assembly TestSchema(
             string schema,
             IEnumerable<string> typeNamesToCheck = null,
@@ -604,6 +644,37 @@ namespace Avro.Test.AvroGen
             IEnumerable<string> generatedFilesToCheck)
         {
             AvroGenHelper.TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck);
+        }
+
+        [TestCase(_fullyQualifiedTypeReferences,
+            new string[]
+            {
+                "org.apache.avro.codegentest.testdata.common:Test.Common",
+                "org.apache.avro.codegentest.testdata.users:Test.Users"
+            },
+            new string[]
+            {
+                "Test.Common.Planet",
+                "Test.Users.User",
+            },
+            new string[]
+            {
+                "Test/Common/Planet.cs",
+                "Test/Users/User.cs"
+            })]
+        public void GenerateSchemaWithMultipleNamespaceMapping(
+            string schema,
+            IEnumerable<string> namespaceMappings,
+            IEnumerable<string> typeNamesToCheck,
+            IEnumerable<string> generatedFilesToCheck)
+        {
+            var namespaceMappingsDict = new Dictionary<string, string>();
+
+            foreach(var mapping in namespaceMappings)
+            {
+                namespaceMappingsDict.Add(mapping.Split(':')[0], mapping.Split(':')[1]);
+            }
+            AvroGenHelper.TestSchema(schema, typeNamesToCheck, namespaceMappingsDict, generatedFilesToCheck);
         }
 
         [TestCase(_logicalTypesWithCustomConversion, typeof(AvroTypeException))]
