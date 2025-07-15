@@ -141,7 +141,7 @@ target_compile_definitions(avrocpp_s PRIVATE AVRO_SOURCE)
 set_target_properties (avrocpp PROPERTIES VERSION ${AVRO_VERSION})
 set_target_properties (avrocpp_s PROPERTIES VERSION ${AVRO_VERSION})
 
-target_link_libraries(avrocpp PUBLIC 
+target_link_libraries(avrocpp PUBLIC
   $<BUILD_INTERFACE:fmt::fmt-header-only>
   $<BUILD_INTERFACE:ZLIB::ZLIB>
   $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
@@ -258,13 +258,13 @@ include (CPack)
 
 install (TARGETS avrocpp avrocpp_s
     EXPORT avrocpp_targets
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION lib
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     INCLUDES DESTINATION include)
 
 if (AVRO_BUILD_EXECUTABLES)
-    install (TARGETS avrogencpp EXPORT avrocpp_targets RUNTIME DESTINATION bin)
+    install (TARGETS avrogencpp EXPORT avrocpp_targets RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif ()
 
 install (DIRECTORY include/avro DESTINATION include
