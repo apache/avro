@@ -181,14 +181,14 @@ static int test_string(void)
 
 static int test_bytes(void)
 {
-	char bytes[] = { 0xDE, 0xAD, 0xBE, 0xEF };
+	char bytes[] = { 0xDE, 0xAD, 0x00, 0xBE, 0xEF };
 	avro_schema_t writer_schema = avro_schema_bytes();
 	avro_datum_t datum;
 	avro_datum_t expected_datum;
 
 	datum = avro_givebytes(bytes, sizeof(bytes), NULL);
 	write_read_check(writer_schema, datum, NULL, NULL, "bytes");
-	test_json(datum, "\"\\u00de\\u00ad\\u00be\\u00ef\"");
+	test_json(datum, "\"\\u00de\\u00ad\\u0000\\u00be\\u00ef\"");
 	avro_datum_decref(datum);
 	avro_schema_decref(writer_schema);
 
@@ -613,14 +613,14 @@ static int test_union(void)
 
 static int test_fixed(void)
 {
-	char bytes[] = { 0xD, 0xA, 0xD, 0xA, 0xB, 0xA, 0xB, 0xA };
+	char bytes[] = { 0xD, 0xA, 0xD, 0xA, 0xB, 0x0, 0xB, 0xA };
 	avro_schema_t schema = avro_schema_fixed("msg", sizeof(bytes));
 	avro_datum_t datum;
 	avro_datum_t expected_datum;
 
 	datum = avro_givefixed(schema, bytes, sizeof(bytes), NULL);
 	write_read_check(schema, datum, NULL, NULL, "fixed");
-	test_json(datum, "\"\\r\\n\\r\\n\\u000b\\n\\u000b\\n\"");
+	test_json(datum, "\"\\r\\n\\r\\n\\u000b\\u0000\\u000b\\n\"");
 	avro_datum_decref(datum);
 
 	datum = avro_givefixed(schema, NULL, sizeof(bytes), NULL);
