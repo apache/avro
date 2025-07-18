@@ -18,6 +18,7 @@
 package org.apache.avro.reflect;
 
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -30,6 +31,7 @@ import java.lang.annotation.Target;
  * file. Use of {@link org.apache.avro.io.ValidatingEncoder} is recommended.
  */
 @Retention(RetentionPolicy.RUNTIME)
+@Inherited
 @Target({ ElementType.FIELD, ElementType.TYPE })
 public @interface AvroEncode {
   Class<? extends CustomEncoding<?>> using();

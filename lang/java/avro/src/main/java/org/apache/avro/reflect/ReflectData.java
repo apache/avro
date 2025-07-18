@@ -1063,7 +1063,7 @@ public class ReflectData extends SpecificData {
     return new CustomEncodingWrapper(null);
   }
 
-  private class CustomEncodingWrapper {
+  private static class CustomEncodingWrapper {
 
     private final CustomEncoding customEncoding;
 

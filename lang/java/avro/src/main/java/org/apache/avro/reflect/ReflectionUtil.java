@@ -202,15 +202,6 @@ public class ReflectionUtil {
     if (clazz == null) {
       return null;
     }
-    AvroEncode enc = clazz.getAnnotation(AvroEncode.class);
-    if (enc != null) {
-      return enc;
-    }
-    // try superclasses
-    Class<?> superclass = clazz.getSuperclass();
-    if (superclass != null && superclass != Object.class) {
-      return getAvroEncode(superclass);
-    }
-    return null;
+    return clazz.getAnnotation(AvroEncode.class);
   }
 }
