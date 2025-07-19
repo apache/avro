@@ -73,6 +73,10 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     super(data);
   }
 
+  private ReflectData getReflectData() {
+    return (ReflectData) getSpecificData();
+  }
+
   @Override
   protected Object newArray(Object old, int size, Schema schema) {
     Class<?> collectionClass = ReflectData.getClassProp(schema, SpecificData.CLASS_PROP);
@@ -248,6 +252,16 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       return result;
     } else {
       return bytes;
+    }
+  }
+
+  @Override
+  protected Object read(Object old, Schema expected, ResolvingDecoder in) throws IOException {
+    CustomEncoding encoder = getReflectData().getCustomEncoding(expected);
+    if (encoder != null) {
+      return encoder.read(old, in);
+    } else {
+      return super.read(old, expected, in);
     }
   }
 
