@@ -56,8 +56,25 @@ set(AVRO_VERSION "${AVRO_VERSION_MAJOR}.${AVRO_VERSION_MINOR}.${AVRO_VERSION_PAT
 project (Avro-cpp)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR})
 
+# Try to respect BUILD_SHARED_LIBS if set. If not set, then fall back to the original default of
+# both static and shared.
+if (DEFINED BUILD_SHARED_LIBS)
+    if (BUILD_SHARED_LIBS)
+        set(AVRO_DEFAULT_BUILD_SHARED ON)
+        set(AVRO_DEFAULT_BUILD_STATIC OFF)
+    else ()
+        set(AVRO_DEFAULT_BUILD_SHARED OFF)
+        set(AVRO_DEFAULT_BUILD_STATIC ON)
+    endif ()
+else ()
+    set(AVRO_DEFAULT_BUILD_SHARED ON)
+    set(AVRO_DEFAULT_BUILD_STATIC ON)
+endif ()
+
 option(AVRO_BUILD_EXECUTABLES "Build executables" ON)
 option(AVRO_BUILD_TESTS "Build tests" ON)
+option(AVRO_BUILD_SHARED "Build shared library" ${AVRO_DEFAULT_BUILD_SHARED})
+option(AVRO_BUILD_STATIC "Build static library" ${AVRO_DEFAULT_BUILD_STATIC})
 option(AVRO_USE_BOOST "Use Boost" OFF)
 
 if (WIN32 AND NOT CYGWIN AND NOT MSYS)
@@ -77,6 +94,10 @@ if (AVRO_BUILD_TESTS OR AVRO_USE_BOOST)
     # It guarantees that Boost::system target exists if found.
     # See https://cmake.org/cmake/help/latest/policy/CMP0167.html
     find_package (Boost 1.70 REQUIRED CONFIG COMPONENTS system)
+endif ()
+
+if (NOT AVRO_BUILD_STATIC AND NOT AVRO_BUILD_SHARED)
+    message(FATAL_ERROR "At least one of AVRO_BUILD_STATIC or AVRO_BUILD_SHARED must be ON.")
 endif ()
 
 include(FetchContent)
@@ -132,54 +153,64 @@ set (AVRO_SOURCE_FILES
         impl/CustomAttributes.cc
         )
 
-add_library (avrocpp SHARED ${AVRO_SOURCE_FILES})
-add_library (avrocpp_s STATIC ${AVRO_SOURCE_FILES})
+set (AVRO_INSTALL_LIBS)
 
-target_compile_definitions(avrocpp PRIVATE AVRO_SOURCE AVRO_DYN_LINK)
-target_compile_definitions(avrocpp_s PRIVATE AVRO_SOURCE)
+if (AVRO_BUILD_SHARED)
+    add_library (avrocpp SHARED ${AVRO_SOURCE_FILES})
+    target_compile_definitions(avrocpp PRIVATE AVRO_SOURCE PUBLIC AVRO_DYN_LINK)
+    set_target_properties (avrocpp PROPERTIES VERSION ${AVRO_VERSION})
+    target_link_libraries(avrocpp PUBLIC
+      $<BUILD_INTERFACE:fmt::fmt-header-only>
+      $<BUILD_INTERFACE:ZLIB::ZLIB>
+      $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
+      $<$<BOOL:${zstd_FOUND}>:$<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
+      $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
+      $<INSTALL_INTERFACE:ZLIB::ZLIB>
+      $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
+      $<$<BOOL:${zstd_FOUND}>:$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
+      $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
+    )
+    target_include_directories(avrocpp PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:include>
+    )
 
-set_target_properties (avrocpp PROPERTIES VERSION ${AVRO_VERSION})
-set_target_properties (avrocpp_s PROPERTIES VERSION ${AVRO_VERSION})
+    list (APPEND AVRO_INSTALL_LIBS avrocpp)
+    set (AVRO_LINK_LIB avrocpp)
+endif ()
 
-target_link_libraries(avrocpp PUBLIC 
-  $<BUILD_INTERFACE:fmt::fmt-header-only>
-  $<BUILD_INTERFACE:ZLIB::ZLIB>
-  $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
-  $<$<BOOL:${zstd_FOUND}>:$<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
-  $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
-  $<INSTALL_INTERFACE:ZLIB::ZLIB>
-  $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
-  $<$<BOOL:${zstd_FOUND}>:$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
-  $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
-)
-target_link_libraries(avrocpp_s PUBLIC
-  $<BUILD_INTERFACE:fmt::fmt-header-only>
-  $<BUILD_INTERFACE:ZLIB::ZLIB>
-  $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
-  $<$<BOOL:${zstd_FOUND}>:$<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
-  $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
-  $<INSTALL_INTERFACE:ZLIB::ZLIB>
-  $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
-  $<$<BOOL:${zstd_FOUND}>:$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
-  $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
-)
+if (AVRO_BUILD_STATIC)
+    add_library (avrocpp_s STATIC ${AVRO_SOURCE_FILES})
+    target_compile_definitions(avrocpp_s PRIVATE AVRO_SOURCE)
+    set_target_properties (avrocpp_s PROPERTIES VERSION ${AVRO_VERSION})
+    target_link_libraries(avrocpp_s PUBLIC
+      $<BUILD_INTERFACE:fmt::fmt-header-only>
+      $<BUILD_INTERFACE:ZLIB::ZLIB>
+      $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
+      $<$<BOOL:${zstd_FOUND}>:$<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
+      $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
+      $<INSTALL_INTERFACE:ZLIB::ZLIB>
+      $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
+      $<$<BOOL:${zstd_FOUND}>:$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
+      $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
+    )
+    target_include_directories(avrocpp_s PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:include>
+    )
 
-target_include_directories(avrocpp PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
-target_include_directories(avrocpp_s PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
+    list (APPEND AVRO_INSTALL_LIBS avrocpp_s)
+    # Static takes precedence for linking if both are set.
+    set (AVRO_LINK_LIB avrocpp_s)
+endif ()
 
 if (AVRO_BUILD_EXECUTABLES)
     add_executable (precompile test/precompile.cc)
 
-    target_link_libraries (precompile avrocpp_s)
+    target_link_libraries (precompile ${AVRO_LINK_LIB})
 
     add_executable (avrogencpp impl/avrogencpp.cc)
-    target_link_libraries (avrogencpp avrocpp_s)
+    target_link_libraries (avrogencpp ${AVRO_LINK_LIB})
     target_compile_definitions(avrogencpp PRIVATE AVRO_VERSION="${AVRO_VERSION}")
 endif ()
 
@@ -219,7 +250,7 @@ if (AVRO_BUILD_TESTS)
 
     macro (unittest name)
         add_executable (${name} test/${name}.cc)
-        target_link_libraries (${name} avrocpp_s Boost::system ZLIB::ZLIB $<TARGET_NAME_IF_EXISTS:Snappy::snappy> $<$<BOOL:${zstd_FOUND}>:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>)
+        target_link_libraries (${name} ${AVRO_LINK_LIB} Boost::system ZLIB::ZLIB $<TARGET_NAME_IF_EXISTS:Snappy::snappy> $<$<BOOL:${zstd_FOUND}>:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>)
         add_test (NAME ${name} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name})
     endmacro (unittest)
@@ -256,7 +287,7 @@ set (CPACK_PACKAGE_FILE_NAME "avrocpp-${AVRO_VERSION_MAJOR}")
 
 include (CPack)
 
-install (TARGETS avrocpp avrocpp_s
+install (TARGETS ${AVRO_INSTALL_LIBS}
     EXPORT avrocpp_targets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
