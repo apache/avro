@@ -24,6 +24,7 @@ import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -188,4 +189,19 @@ public class ReflectionUtil {
     }
   }
 
+  protected static AvroEncode getAvroEncode(Field field) {
+    var enc = field.getAnnotation(AvroEncode.class);
+    if (enc != null) {
+      return enc;
+    } else {
+      return getAvroEncode(field.getType());
+    }
+  }
+
+  protected static AvroEncode getAvroEncode(Class<?> clazz) {
+    if (clazz == null) {
+      return null;
+    }
+    return clazz.getAnnotation(AvroEncode.class);
+  }
 }
