@@ -27,6 +27,7 @@ import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileStream;
@@ -76,10 +77,73 @@ public class TestPolymorphicEncoding {
   public static sealed interface Animal permits Cat,Dog {
   }
 
-  public static record Dog(int size) implements Animal {
+  public static final class Dog implements Animal {
+
+    private int size;
+
+    public Dog() {
+    }
+
+    public Dog(int size) {
+      this.size = size;
+    }
+
+    public int getSize() {
+      return size;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(size);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      Dog other = (Dog) obj;
+      return size == other.size;
+    }
+
   }
 
-  public static record Cat(String color) implements Animal {
+  public static final class Cat implements Animal {
+
+    private String color;
+
+    public Cat() {
+    }
+
+    public Cat(String color) {
+      super();
+      this.color = color;
+    }
+
+    public String getColor() {
+      return color;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(color);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      Cat other = (Cat) obj;
+      return Objects.equals(color, other.color);
+    }
+
   }
 
 }
