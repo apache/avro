@@ -306,6 +306,11 @@ public:
      * Return the last synchronization point before our current position.
      */
     int64_t previousSync() const;
+
+    /**
+     * Return avro's metadata
+     */
+    const Metadata &metadata() const { return metadata_; }
 };
 
 /**
