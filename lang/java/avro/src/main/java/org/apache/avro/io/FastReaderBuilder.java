@@ -447,11 +447,8 @@ public class FastReaderBuilder {
 
   private Optional<Class<?>> findClass(String clazz) {
     try {
-      // Only apply security checks if we have SpecificData that supports security
-      if (data instanceof SpecificData) {
-        ValidateClassLoading securityChecker = new ValidateClassLoading();
-        securityChecker.checkSecurity(clazz);
-      }
+      ValidateClassLoading securityChecker = new ValidateClassLoading();
+      securityChecker.checkSecurity(clazz);
       return Optional.of(data.getClassLoader().loadClass(clazz));
     } catch (ReflectiveOperationException e) {
       return Optional.empty();

@@ -229,11 +229,10 @@ public class TestFastReaderBuilderSecurity {
   }
 
   /**
-   * Test that FastReaderBuilder with GenericData doesn't apply security
-   * restrictions
+   * Test that FastReaderBuilder with GenericData applies security restrictions
    */
   @Test
-  void testGenericDataDoesNotApplySecurity() throws IOException {
+  void testGenericDataAppliesSecurity() throws IOException {
     // Clear system properties to ensure no classes are trusted
     System.clearProperty("org.apache.avro.SERIALIZABLE_CLASSES");
     System.clearProperty("org.apache.avro.SERIALIZABLE_PACKAGES");
@@ -247,9 +246,8 @@ public class TestFastReaderBuilderSecurity {
     FastReaderBuilder builder = FastReaderBuilder.get();
 
     // Should not throw SecurityException with GenericData
-    assertDoesNotThrow(() -> {
-      DatumReader<Object> reader = builder.createDatumReader(stringSchema);
-      assertNotNull(reader);
+    assertThrows(SecurityException.class, () -> {
+      builder.createDatumReader(stringSchema);
     });
   }
 
