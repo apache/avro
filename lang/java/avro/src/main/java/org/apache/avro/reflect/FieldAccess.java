@@ -19,6 +19,8 @@ package org.apache.avro.reflect;
 
 import java.lang.reflect.Field;
 
+import org.apache.avro.Schema;
+
 abstract class FieldAccess {
 
   protected static final int INT_DEFAULT_VALUE = 0;
@@ -37,6 +39,6 @@ abstract class FieldAccess {
 
   protected static final double DOUBLE_DEFAULT_VALUE = 0.0d;
 
-  protected abstract FieldAccessor getAccessor(Field field);
+  protected abstract FieldAccessor getAccessor(Field field, Schema schema);
 
 }

@@ -364,20 +364,12 @@ public class ReflectData extends SpecificData {
 
   static class ClassAccessorData {
     private final Class<?> clazz;
-    private final Map<String, FieldAccessor> byName = new HashMap<>();
-    // getAccessorsFor replaces this map with each modification
+    private final Map<String, FieldAccessor> byName;
     volatile Map<Schema, FieldAccessor[]> bySchema = new WeakHashMap<>();
 
     private ClassAccessorData(Class<?> c) {
       clazz = c;
-      for (Field f : getFields(c, false)) {
-        if (f.isAnnotationPresent(AvroIgnore.class)) {
-          continue;
-        }
-        FieldAccessor accessor = ReflectionUtil.getFieldAccess().getAccessor(f);
-        AvroName avroname = f.getAnnotation(AvroName.class);
-        byName.put((avroname != null ? avroname.value() : f.getName()), accessor);
-      }
+      byName = buildByName(c, null);
     }
 
     /**
@@ -397,10 +389,12 @@ public class ReflectData extends SpecificData {
     }
 
     private FieldAccessor[] createAccessorsFor(Schema schema) {
+
+      var byNameSchema = buildByName(clazz, schema);
       List<Schema.Field> avroFields = schema.getFields();
       FieldAccessor[] result = new FieldAccessor[avroFields.size()];
       for (Schema.Field avroField : schema.getFields()) {
-        result[avroField.pos()] = byName.get(avroField.name());
+        result[avroField.pos()] = byNameSchema.get(avroField.name());
       }
       return result;
     }
@@ -411,6 +405,25 @@ public class ReflectData extends SpecificData {
         throw new AvroRuntimeException("No field named " + fieldName + " in: " + clazz);
       }
       return result;
+    }
+
+    private static Map<String, FieldAccessor> buildByName(Class<?> c, Schema schema) {
+      Map<String, FieldAccessor> byName = new HashMap<>();
+      for (Field f : getFields(c, false)) {
+        if (f.isAnnotationPresent(AvroIgnore.class)) {
+          continue;
+        }
+        AvroName avroname = f.getAnnotation(AvroName.class);
+        var name = (avroname != null ? avroname.value() : f.getName());
+        Schema fieldSchema = null;
+        if (schema != null) {
+          var field = schema.getField(name);
+          fieldSchema = field != null ? field.schema() : null;
+        }
+        FieldAccessor accessor = ReflectionUtil.getFieldAccess().getAccessor(f, fieldSchema);
+        byName.put(name, accessor);
+      }
+      return byName;
     }
   }
 
@@ -1055,7 +1068,8 @@ public class ReflectData extends SpecificData {
     var enc = ReflectionUtil.getAvroEncode(getClass(schema));
     if (enc != null) {
       try {
-        return new CustomEncodingWrapper(enc.using().getDeclaredConstructor().newInstance());
+        var customEncodingClass = enc.using().getDeclaredConstructor().newInstance();
+        return new CustomEncodingWrapper(customEncodingClass.withSchema(schema));
       } catch (Exception e) {
         throw new AvroRuntimeException("Could not instantiate custom Encoding");
       }
