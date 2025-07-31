@@ -423,36 +423,37 @@ public class TestReflectLogicalTypes {
     r1.uuid = u1.toString();
 
     File test = write(ReflectData.get().getSchema(RecordWithStringUUID.class), r1);
-    assertThrows(IllegalArgumentException.class,
-        () -> read(ReflectData.get().createDatumReader(uuidSchema), test).get(0));
+    RecordWithUUID result = (RecordWithUUID) read(ReflectData.get().createDatumReader(uuidSchema), test).get(0);
+    assertEquals(u1, result.uuid);
   }
 
   @Test
   void writeUUIDMissingLogicalType() throws IOException {
-    assertThrows(DataFileWriter.AppendWriteException.class, () -> {
-      Schema uuidSchema = SchemaBuilder.record(RecordWithUUID.class.getName()).fields().requiredString("uuid")
-          .endRecord();
-      LogicalTypes.uuid().addToSchema(uuidSchema.getField("uuid").schema());
+    Schema uuidSchema = SchemaBuilder.record(RecordWithUUID.class.getName()).fields().requiredString("uuid")
+        .endRecord();
+    LogicalTypes.uuid().addToSchema(uuidSchema.getField("uuid").schema());
 
-      UUID u1 = UUID.randomUUID();
-      UUID u2 = UUID.randomUUID();
+    UUID u1 = UUID.randomUUID();
+    UUID u2 = UUID.randomUUID();
 
-      RecordWithUUID r1 = new RecordWithUUID();
-      r1.uuid = u1;
-      RecordWithUUID r2 = new RecordWithUUID();
-      r2.uuid = u2;
+    RecordWithUUID r1 = new RecordWithUUID();
+    r1.uuid = u1;
+    RecordWithUUID r2 = new RecordWithUUID();
+    r2.uuid = u2;
 
-      // write without using REFLECT, which has the logical type
-      File test = write(uuidSchema, r1, r2);
+    // write without using REFLECT, which has the logical type
+    File test = write(uuidSchema, r1, r2);
 
-      // verify that the field's type overrides the logical type
-      Schema uuidStringSchema = SchemaBuilder.record(RecordWithStringUUID.class.getName()).fields()
-          .requiredString("uuid").endRecord();
+    // verify that the field's type overrides the logical type
+    Schema uuidStringSchema = SchemaBuilder.record(RecordWithStringUUID.class.getName()).fields().requiredString("uuid")
+        .endRecord();
 
-      // this fails with an AppendWriteException wrapping ClassCastException
-      // because the UUID isn't converted to a CharSequence expected internally
-      read(ReflectData.get().createDatumReader(uuidStringSchema), test);
-    });
+    // this fails with an AppendWriteException wrapping ClassCastException
+    // because the UUID isn't converted to a CharSequence expected internally
+    List<RecordWithStringUUID> items = (List<RecordWithStringUUID>) read(
+        ReflectData.get().createDatumReader(uuidStringSchema), test);
+    assertEquals(r1.uuid.toString(), items.get(0).uuid);
+    assertEquals(r2.uuid.toString(), items.get(1).uuid);
   }
 
   @Test

@@ -98,6 +98,16 @@ else ()
     message("Disabled snappy codec.")
 endif ()
 
+find_package(zstd CONFIG)
+if(zstd_FOUND)
+    message("Enabled zstd codec, version: ${zstd_VERSION}")
+    set(ZSTD_TARGET $<IF:$<TARGET_EXISTS:zstd::libzstd_shared>,zstd::libzstd_shared,zstd::libzstd_static>)
+    add_definitions(-DZSTD_CODEC_AVAILABLE)
+else()
+    message("Disabled zstd codec.")
+    set(ZSTD_TARGET "")
+endif()
+
 # FindZLIB guarantees that ZLIB::ZLIB target exists if found
 # See https://cmake.org/cmake/help/latest/module/FindZLIB.html#imported-targets
 find_package(ZLIB REQUIRED)
@@ -131,22 +141,26 @@ target_compile_definitions(avrocpp_s PRIVATE AVRO_SOURCE)
 set_target_properties (avrocpp PROPERTIES VERSION ${AVRO_VERSION})
 set_target_properties (avrocpp_s PROPERTIES VERSION ${AVRO_VERSION})
 
-target_link_libraries(avrocpp PUBLIC 
+target_link_libraries(avrocpp PUBLIC
   $<BUILD_INTERFACE:fmt::fmt-header-only>
   $<BUILD_INTERFACE:ZLIB::ZLIB>
   $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
+  $<$<BOOL:${zstd_FOUND}>:$<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
   $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
   $<INSTALL_INTERFACE:ZLIB::ZLIB>
   $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
+  $<$<BOOL:${zstd_FOUND}>:$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
   $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
 )
 target_link_libraries(avrocpp_s PUBLIC
   $<BUILD_INTERFACE:fmt::fmt-header-only>
   $<BUILD_INTERFACE:ZLIB::ZLIB>
   $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
+  $<$<BOOL:${zstd_FOUND}>:$<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
   $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
   $<INSTALL_INTERFACE:ZLIB::ZLIB>
   $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
+  $<$<BOOL:${zstd_FOUND}>:$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
   $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
 )
 
@@ -205,7 +219,7 @@ if (AVRO_BUILD_TESTS)
 
     macro (unittest name)
         add_executable (${name} test/${name}.cc)
-        target_link_libraries (${name} avrocpp_s Boost::system ZLIB::ZLIB $<TARGET_NAME_IF_EXISTS:Snappy::snappy>)
+        target_link_libraries (${name} avrocpp_s Boost::system ZLIB::ZLIB $<TARGET_NAME_IF_EXISTS:Snappy::snappy> $<$<BOOL:${zstd_FOUND}>:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>)
         add_test (NAME ${name} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name})
     endmacro (unittest)
@@ -244,13 +258,13 @@ include (CPack)
 
 install (TARGETS avrocpp avrocpp_s
     EXPORT avrocpp_targets
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION lib
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     INCLUDES DESTINATION include)
 
 if (AVRO_BUILD_EXECUTABLES)
-    install (TARGETS avrogencpp EXPORT avrocpp_targets RUNTIME DESTINATION bin)
+    install (TARGETS avrogencpp EXPORT avrocpp_targets RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif ()
 
 install (DIRECTORY include/avro DESTINATION include

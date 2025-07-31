@@ -190,7 +190,7 @@ class DirectBinaryDecoder extends BinaryDecoder {
   }
 
   @Override
-  public boolean isEnd() throws IOException {
+  public boolean isEnd() {
     throw new UnsupportedOperationException();
   }
 }

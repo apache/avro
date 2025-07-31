@@ -20,7 +20,6 @@ package org.apache.avro.mojo;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.avro.generic.GenericData;
 import org.apache.avro.idl.IdlFile;
 import org.apache.avro.idl.IdlReader;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
@@ -97,19 +96,10 @@ public class IDLMojo extends AbstractAvroMojo {
         } else {
           compiler = new SpecificCompiler(idlFile.getNamedSchemas().values());
         }
-        compiler.setStringType(GenericData.StringType.valueOf(stringType));
-        compiler.setTemplateDir(templateDirectory);
-        compiler.setFieldVisibility(getFieldVisibility());
-        compiler.setCreateOptionalGetters(createOptionalGetters);
-        compiler.setGettersReturnOptional(gettersReturnOptional);
-        compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
-        compiler.setCreateSetters(createSetters);
-        compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
-        compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
+        setCompilerProperties(compiler);
         for (String customConversion : customConversions) {
           compiler.addCustomConversion(projPathLoader.loadClass(customConversion));
         }
-        compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
         compiler.compileToDestination(sourceFilePath.toFile(), outputDirectory);
       } finally {
         Thread.currentThread().setContextClassLoader(contextClassLoader);

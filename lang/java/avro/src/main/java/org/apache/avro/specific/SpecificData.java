@@ -19,9 +19,11 @@ package org.apache.avro.specific;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.Conversions;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.data.TimeConversions;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
@@ -57,6 +59,28 @@ import java.util.function.Function;
 public class SpecificData extends GenericData {
 
   private static final SpecificData INSTANCE = new SpecificData();
+
+  static {
+    addLogicalTypeConversions(INSTANCE);
+  }
+
+  protected static void addLogicalTypeConversions(SpecificData instance) {
+    instance.addLogicalTypeConversion(new Conversions.UUIDConversion());
+    // Disable DecimalConversion since it's gated behind
+    // `compiler.setEnableDecimalLogicalType`
+    // INSTANCE.addLogicalTypeConversion(new Conversions.DecimalConversion());
+    instance.addLogicalTypeConversion(new Conversions.BigDecimalConversion());
+    instance.addLogicalTypeConversion(new Conversions.DurationConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.DateConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.LocalTimestampMicrosConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.LocalTimestampNanosConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.TimeMillisConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
+    instance.addLogicalTypeConversion(new TimeConversions.TimestampNanosConversion());
+  }
 
   private static final Class<?>[] NO_ARG = new Class[] {};
   private static final Class<?>[] SCHEMA_ARG = new Class[] { Schema.class };
@@ -619,7 +643,7 @@ public class SpecificData extends GenericData {
 
     boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
     Constructor<?> meth = CTOR_CACHE.apply(c);
-    Object[] params = useSchema ? new Object[] { schema } : (Object[]) null;
+    Object[] params = useSchema ? new Object[] { schema } : null;
 
     return (old, sch) -> {
       try {

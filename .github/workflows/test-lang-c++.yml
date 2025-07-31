@@ -34,12 +34,17 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: 
+          - ubuntu-latest
+          - ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Dependencies
-        run: sudo apt update && sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev libfmt-dev zlib1g-dev cmake
+        run: sudo apt update && sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev libfmt-dev zlib1g-dev libzstd-dev cmake
 
       - name: Print Versions
         run: |

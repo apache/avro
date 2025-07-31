@@ -69,6 +69,9 @@ public class ReflectData extends SpecificData {
 
   private static final String STRING_OUTER_PARENT_REFERENCE = "this$0";
 
+  // holds a wrapper so null entries will have a cached value
+  private final ConcurrentMap<Schema, CustomEncodingWrapper> encoderCache = new ConcurrentHashMap<>();
+
   /**
    * Always false since custom coders are not available for {@link ReflectData}.
    */
@@ -103,6 +106,10 @@ public class ReflectData extends SpecificData {
   }
 
   private static final ReflectData INSTANCE = new ReflectData();
+
+  static {
+    addLogicalTypeConversions(INSTANCE);
+  }
 
   /** For subclasses. Applications normally use {@link ReflectData#get()}. */
   public ReflectData() {
@@ -545,8 +552,7 @@ public class ReflectData extends SpecificData {
     String name = getNameForNonStringMapRecord(keyType, valueType, keySchema, valueSchema);
     Schema elementSchema = Schema.createRecord(name, null, null, false);
     elementSchema.setFields(Arrays.asList(keyField, valueField));
-    Schema arraySchema = Schema.createArray(elementSchema);
-    return arraySchema;
+    return Schema.createArray(elementSchema);
   }
 
   /*
@@ -724,7 +730,6 @@ public class ReflectData extends SpecificData {
           boolean error = Throwable.class.isAssignableFrom(c);
           schema = Schema.createRecord(name, doc, space, error);
           consumeAvroAliasAnnotation(c, schema);
-          names.put(c.getName(), schema);
           for (Field field : getCachedFields(c))
             if ((field.getModifiers() & (Modifier.TRANSIENT | Modifier.STATIC)) == 0
                 && !field.isAnnotationPresent(AvroIgnore.class)) {
@@ -770,6 +775,7 @@ public class ReflectData extends SpecificData {
         }
         names.put(fullName, schema);
       }
+      names.put(c.getName(), schema);
       return schema;
     }
     return super.createSchema(type, names);
@@ -861,7 +867,7 @@ public class ReflectData extends SpecificData {
 
   /** Create a schema for a field. */
   protected Schema createFieldSchema(Field field, Map<String, Schema> names) {
-    AvroEncode enc = field.getAnnotation(AvroEncode.class);
+    AvroEncode enc = ReflectionUtil.getAvroEncode(field);
     if (enc != null)
       try {
         return enc.using().getDeclaredConstructor().newInstance().getSchema();
@@ -908,11 +914,7 @@ public class ReflectData extends SpecificData {
       }
     }
 
-    // reverse types, since they were defined in reference order
-    List<Schema> types = new ArrayList<>(names.values());
-    Collections.reverse(types);
-    protocol.setTypes(types);
-
+    protocol.setTypes(new ArrayList<>(names.values()));
     return protocol;
   }
 
@@ -1043,4 +1045,36 @@ public class ReflectData extends SpecificData {
     }
     return super.newRecord(old, schema);
   }
+
+  public CustomEncoding getCustomEncoding(Schema schema) {
+
+    return this.encoderCache.computeIfAbsent(schema, this::populateEncoderCache).get();
+  }
+
+  private CustomEncodingWrapper populateEncoderCache(Schema schema) {
+    var enc = ReflectionUtil.getAvroEncode(getClass(schema));
+    if (enc != null) {
+      try {
+        return new CustomEncodingWrapper(enc.using().getDeclaredConstructor().newInstance());
+      } catch (Exception e) {
+        throw new AvroRuntimeException("Could not instantiate custom Encoding");
+      }
+    }
+    return new CustomEncodingWrapper(null);
+  }
+
+  private static class CustomEncodingWrapper {
+
+    private final CustomEncoding customEncoding;
+
+    private CustomEncodingWrapper(CustomEncoding customEncoding) {
+      this.customEncoding = customEncoding;
+    }
+
+    public CustomEncoding get() {
+      return customEncoding;
+    }
+
+  }
+
 }

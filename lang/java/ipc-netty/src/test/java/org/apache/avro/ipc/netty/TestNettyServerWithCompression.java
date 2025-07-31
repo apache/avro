@@ -31,7 +31,7 @@ public class TestNettyServerWithCompression extends TestNettyServer {
   public static void initializeConnections() throws Exception {
     initializeConnections(ch -> {
       ch.pipeline().addFirst("deflater", new JdkZlibEncoder(6));
-      ch.pipeline().addFirst("inflater", new JdkZlibDecoder());
+      ch.pipeline().addFirst("inflater", new JdkZlibDecoder(0));
     });
   }
 

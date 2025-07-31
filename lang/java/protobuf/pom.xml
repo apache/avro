@@ -65,6 +65,10 @@
                       <arg value="--java_out=src/test/java/"/>
                       <arg value="src/test/protobuf/test_multiple_files.proto"/>
                     </exec>
+                    <exec executable="protoc">
+                      <arg value="--java_out=src/test/java/"/>
+                      <arg value="src/test/protobuf/test_proto3.proto"/>
+                    </exec>
                   </target>
                 </configuration>
                 <goals>
