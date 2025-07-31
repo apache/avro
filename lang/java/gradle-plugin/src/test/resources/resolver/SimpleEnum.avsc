@@ -1,0 +1,6 @@
+{
+    "name": "SimpleEnum",
+    "namespace": "resolver",
+    "type": "enum",
+    "symbols" : ["val1", "val2", "val3"]
+}
