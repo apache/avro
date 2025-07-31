@@ -37,23 +37,23 @@ public class TestAvroEncode {
   @Test
   void testWithinClass() throws IOException {
 
-    var wrapper = new Wrapper(new R1("test"));
+    var wrapper = new Wrapper(new R1("321"));
 
     var read = readWrite(wrapper);
 
-    assertEquals("test", wrapper.getR1().getValue());
-    assertEquals("test used this", read.getR1().getValue());
+    assertEquals("321", wrapper.getR1().getValue());
+    assertEquals("321 used this", read.getR1().getValue());
   }
 
   @Test
   void testDirect() throws IOException {
 
-    var r1 = new R1("test");
+    var r1 = new R1("123");
 
     var read = readWrite(r1);
 
-    assertEquals("test", r1.getValue());
-    assertEquals("test used this", read.getValue());
+    assertEquals("123", r1.getValue());
+    assertEquals("123 used this", read.getValue());
   }
 
   @Test
@@ -127,14 +127,15 @@ public class TestAvroEncode {
   public static class R1Encoding extends CustomEncoding<R1> {
 
     {
-      schema = Schema.createRecord("R1", null, null, false,
-          Arrays.asList(new Schema.Field("value", Schema.create(Schema.Type.STRING), null, null)));
+      schema = Schema.createRecord("R1", null, "org.apache.avro.reflect.TestAvroEncode", false,
+          Arrays.asList(new Schema.Field("value", Schema.create(Schema.Type.INT), null, null)));
     }
 
     @Override
     protected void write(Object datum, Encoder out) throws IOException {
       if (datum instanceof R1) {
-        out.writeString(((R1) datum).getValue());
+        var value = ((R1) datum).getValue();
+        out.writeInt(Integer.parseInt(value));
       } else {
         throw new AvroTypeException("Expected R1, got " + datum.getClass());
       }
@@ -143,7 +144,7 @@ public class TestAvroEncode {
 
     @Override
     protected R1 read(Object reuse, Decoder in) throws IOException {
-      return new R1(in.readString() + " used this");
+      return new R1(in.readInt() + " used this");
     }
   }
 
