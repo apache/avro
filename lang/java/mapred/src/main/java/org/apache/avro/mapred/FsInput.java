@@ -47,20 +47,17 @@ public class FsInput implements Closeable, SeekableInput {
   public FsInput(Path path, FileSystem fileSystem) throws IOException {
     final FileStatus st = fileSystem.getFileStatus(path);
     this.len = st.getLen();
-    // use the hadoop 3.3.0 openFile API, passing in status
+    // use the hadoop 3.3+ openFile API, passing in status
     // and read policy. object stores can use these to
     // optimize read performance and save on a HEAD request when opening
     // a file.
-    // the first policy recognised is picked up; "avro" is recognised on
-    // later releases, falling back to sequential reading (not random IO),
-    // and finally "adapt to the read pattern".
     final FutureDataInputStreamBuilder builder = fileSystem.openFile(path).opt(FS_OPTION_OPENFILE_READ_POLICY,
         "avro, sequential, adaptive");
     if (path.equals(st.getPath())) {
       // set the file status if this isn't any wrapped filesystem.
       builder.withFileStatus(st);
     }
-    this.stream = awaitFuture(builder.withFileStatus(st).build());
+    this.stream = awaitFuture(builder.build());
   }
 
   @Override

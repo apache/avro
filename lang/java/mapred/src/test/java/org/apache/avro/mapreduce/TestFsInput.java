@@ -21,8 +21,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -121,6 +123,51 @@ public class TestFsInput {
     fsInput.seek(expectedTellPos);
     long actualTellPos = fsInput.tell();
     assertThat(actualTellPos, is(equalTo(expectedTellPos)));
+  }
+
+  /**
+   * How does a negative seek manifest itself? It's expected to fail on the seek()
+   * call and not move the file position. Most streams raise EOFExceotion; some
+   * raise IllegalArgumentException instead.
+   */
+  @Test
+  void seekNegative() throws Exception {
+    fsInput.seek(1);
+    assertThrows(Exception.class, () -> fsInput.seek(-1));
+    assertThat("file position after a negative seek", fsInput.tell(), is(equalTo(1L)));
+  }
+
+  /**
+   * Seek past the EOF then read.
+   */
+  @Test
+  void seekPastEOF() throws Exception {
+    fsInput.seek(FILE_CONTENTS.length() + 2);
+    final int l = 8;
+    byte[] readBytes = new byte[l];
+    assertThat("bytes read from beyond EOF", fsInput.read(readBytes, 0, l), is(equalTo(0)));
+  }
+
+  /**
+   * Read across the end of file.
+   */
+  @Test
+  void readAcrossEOF() throws Exception {
+    fsInput.seek(FILE_CONTENTS.length() - 2);
+    final int l = 8;
+    byte[] readBytes = new byte[l];
+    assertThat("bytes read from beyond EOF", fsInput.read(readBytes, 0, l), is(equalTo(2)));
+  }
+
+  /**
+   * Delete the file before trying to open it. Because getFileStatus() is always
+   * called to measure file length, there's an automatic existence check even if
+   * the inner open() call is doing a lazy eval.
+   */
+  @Test
+  void openMissingFile() {
+    file.delete();
+    assertThrows(FileNotFoundException.class, () -> new FsInput(new Path(file.getPath()), conf).close());
   }
 
 }
