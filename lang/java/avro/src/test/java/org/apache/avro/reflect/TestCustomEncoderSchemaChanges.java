@@ -33,28 +33,32 @@ import org.junit.jupiter.api.Test;
 
 public class TestCustomEncoderSchemaChanges {
 
-  private static final Schema SCHEMA1 = Schema.createRecord("R1", null, "org.apache.avro.reflect.TestCustomEncoderSchemaChanges",
-      false, Arrays.asList(new Schema.Field("v1", Schema.create(Schema.Type.STRING), null, null)));
+  private static final Schema SCHEMA1 = Schema.createRecord("R1", null,
+      "org.apache.avro.reflect.TestCustomEncoderSchemaChanges", false,
+      Arrays.asList(new Schema.Field("v1", Schema.create(Schema.Type.STRING), null, null)));
 
-  private static final Schema SCHEMA2 = Schema.createRecord("R1", null, "org.apache.avro.reflect.TestCustomEncoderSchemaChanges",
-      false, Arrays.asList(new Schema.Field("v1", Schema.create(Schema.Type.STRING), null, null),
+  private static final Schema SCHEMA2 = Schema.createRecord("R1", null,
+      "org.apache.avro.reflect.TestCustomEncoderSchemaChanges", false,
+      Arrays.asList(new Schema.Field("v1", Schema.create(Schema.Type.STRING), null, null),
           new Schema.Field("v2", Schema.create(Schema.Type.STRING), null, null)));
 
-  private static final Schema SCHEMA3 = Schema.createRecord("R1", null, "org.apache.avro.reflect.TestCustomEncoderSchemaChanges",
-      false,
+  private static final Schema SCHEMA3 = Schema.createRecord("R1", null,
+      "org.apache.avro.reflect.TestCustomEncoderSchemaChanges", false,
       Arrays.asList(new Schema.Field("v1", Schema.create(Schema.Type.STRING), null, null),
           new Schema.Field("v2", Schema.create(Schema.Type.STRING), null, null),
           new Schema.Field("v3", Schema.create(Schema.Type.STRING), null, null)));
 
-  private static final Schema SCHEMA_INT1 = Schema.createRecord("R1", null, "org.apache.avro.reflect.TestCustomEncoderSchemaChanges",
-      false, Arrays.asList(new Schema.Field("v1", Schema.create(Schema.Type.INT), null, null)));
+  private static final Schema SCHEMA_INT1 = Schema.createRecord("R1", null,
+      "org.apache.avro.reflect.TestCustomEncoderSchemaChanges", false,
+      Arrays.asList(new Schema.Field("v1", Schema.create(Schema.Type.INT), null, null)));
 
-  private static final Schema SCHEMA_INT2 = Schema.createRecord("R1", null, "org.apache.avro.reflect.TestCustomEncoderSchemaChanges",
-      false, Arrays.asList(new Schema.Field("v1", Schema.create(Schema.Type.INT), null, null),
+  private static final Schema SCHEMA_INT2 = Schema.createRecord("R1", null,
+      "org.apache.avro.reflect.TestCustomEncoderSchemaChanges", false,
+      Arrays.asList(new Schema.Field("v1", Schema.create(Schema.Type.INT), null, null),
           new Schema.Field("v2", Schema.create(Schema.Type.INT), null, null)));
 
-  private static final Schema SCHEMA_INT3 = Schema.createRecord("R1", null, "org.apache.avro.reflect.TestCustomEncoderSchemaChanges",
-      false,
+  private static final Schema SCHEMA_INT3 = Schema.createRecord("R1", null,
+      "org.apache.avro.reflect.TestCustomEncoderSchemaChanges", false,
       Arrays.asList(new Schema.Field("v1", Schema.create(Schema.Type.INT), null, null),
           new Schema.Field("v2", Schema.create(Schema.Type.INT), null, null),
           new Schema.Field("v3", Schema.create(Schema.Type.INT), null, null)));
