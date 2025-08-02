@@ -79,15 +79,18 @@ if (AVRO_BUILD_TESTS OR AVRO_USE_BOOST)
     find_package (Boost 1.70 REQUIRED CONFIG COMPONENTS system)
 endif ()
 
-include(FetchContent)
-FetchContent_Declare(
-        fmt
-        GIT_REPOSITORY  https://github.com/fmtlib/fmt.git
-        GIT_TAG         10.2.1
-        GIT_PROGRESS    TRUE
-        USES_TERMINAL_DOWNLOAD TRUE
-)
-FetchContent_MakeAvailable(fmt)
+find_package(fmt)
+if (NOT fmt_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+            fmt
+            GIT_REPOSITORY  https://github.com/fmtlib/fmt.git
+            GIT_TAG         10.2.1
+            GIT_PROGRESS    TRUE
+            USES_TERMINAL_DOWNLOAD TRUE
+    )
+    FetchContent_MakeAvailable(fmt)
+endif ()
 
 find_package(Snappy CONFIG)
 if (Snappy_FOUND)
