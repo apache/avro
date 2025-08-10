@@ -1,0 +1,1 @@
+searchState.loadedDescShard("apache_avro_test_helper", 0, "Contains the error value\nContains the success value\nA custom error type for tests.\nProvides a set of Avro schema examples that are used in …\nReturns the argument unchanged.\nDoes nothing. Just loads the crate. Should be used in the …\nCalls <code>U::from(self)</code>.")
