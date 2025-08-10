@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * {@link org.apache.avro.io.DatumReader DatumReader} for generated Java
@@ -47,12 +48,29 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
 
   static {
     // no serializable classes by default
-    String serializableClassesProp = System.getProperty("org.apache.avro.SERIALIZABLE_CLASSES");
-    SERIALIZABLE_CLASSES = (serializableClassesProp == null) ? new String[0] : serializableClassesProp.split(",");
+    SERIALIZABLE_CLASSES = streamPropertyEntries(System.getProperty("org.apache.avro.SERIALIZABLE_CLASSES"))
+        .toArray(String[]::new);
 
     // no serializable packages by default
-    String serializablePackagesProp = System.getProperty("org.apache.avro.SERIALIZABLE_PACKAGES");
-    SERIALIZABLE_PACKAGES = (serializablePackagesProp == null) ? new String[0] : serializablePackagesProp.split(",");
+    SERIALIZABLE_PACKAGES = streamPropertyEntries(System.getProperty("org.apache.avro.SERIALIZABLE_PACKAGES"))
+        // Add a '.' suffix to ensure we'll be matching package names instead of
+        // arbitrary prefixes, except for the wildcard "*", which allows all
+        // packages (this is only safe in fully controlled environments!).
+        .map(entry -> "*".equals(entry) ? entry : entry + ".").toArray(String[]::new);
+  }
+
+  /**
+   * Parse a comma separated list into non-empty entries. Leading and trailing
+   * whitespace is stripped.
+   *
+   * @param commaSeparatedEntries the comma separated list of entries
+   * @return a stream of the entries
+   */
+  private static Stream<String> streamPropertyEntries(String commaSeparatedEntries) {
+    if (commaSeparatedEntries == null) {
+      return Stream.empty();
+    }
+    return Stream.of(commaSeparatedEntries.split(",")).map(String::trim).filter(s -> !s.isEmpty());
   }
 
   // The primitive "class names" based on Class.isPrimitive()
@@ -167,8 +185,10 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
       }
     }
 
-    throw new SecurityException("Forbidden " + className
-        + "! This class is not trusted to be included in Avro schema using java-class. Please set org.apache.avro.SERIALIZABLE_CLASSES system property with the class you trust or org.apache.avro.SERIALIZABLE_PACKAGES system property with the packages you trust.");
+    throw new SecurityException("Forbidden " + className + "! This class is not trusted to be included in Avro "
+        + "schemas using java-class. Please set the system property org.apache.avro.SERIALIZABLE_CLASSES to the comma "
+        + "separated list of classes you trust. You can also set the system property "
+        + "org.apache.avro.SERIALIZABLE_PACKAGES to the comma separated list of the packages you trust.");
   }
 
   /**
