@@ -871,7 +871,6 @@ void testCompatibility(const char *filename, avro::Codec codec) {
                                   "{\"name\": \"time\", \"type\": \"long\"},"
                                   "{\"name\": \"temp\", \"type\": \"int\"}"
                                   "]}";
-    // std::cout << readerSchemaStr << std::endl;
     avro::ValidSchema readerSchema =
         avro::compileJsonSchemaFromString(readerSchemaStr);
     avro::DataFileReader<Weather> df(filename, readerSchema);
