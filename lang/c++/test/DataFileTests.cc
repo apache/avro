@@ -864,7 +864,7 @@ struct codec_traits<Weather> {
 };
 } // namespace avro
 
-void testCompatibility(const char *filename, avro::Codec codec) {
+void testCompatibility(const char *filename) {
     const char *readerSchemaStr = "{"
                                   "\"type\": \"record\", \"name\": \"test.Weather\", \"fields\":["
                                   "{\"name\": \"station\", \"type\": \"string\", \"order\": \"ignore\"},"
@@ -891,25 +891,25 @@ void testCompatibility(const char *filename, avro::Codec codec) {
 
 void testCompatibilityNullCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
-    testCompatibility("../../share/test/data/weather.avro", avro::NULL_CODEC);
+    testCompatibility("../../share/test/data/weather.avro");
 }
 
 void testCompatibilityDeflateCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
-    testCompatibility("../../share/test/data/weather-deflate.avro", avro::DEFLATE_CODEC);
+    testCompatibility("../../share/test/data/weather-deflate.avro");
 }
 
 #ifdef SNAPPY_CODEC_AVAILABLE
 void testCompatibilitySnappyCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
-    testCompatibility("../../share/test/data/weather-snappy.avro", avro::SNAPPY_CODEC);
+    testCompatibility("../../share/test/data/weather-snappy.avro");
 }
 #endif
 
 #ifdef ZSTD_CODEC_AVAILABLE
 void testCompatibilityZstdCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
-    testCompatibility("../../share/test/data/weather-zstd.avro", avro::ZSTD_CODEC);
+    testCompatibility("../../share/test/data/weather-zstd.avro");
 }
 #endif
 
