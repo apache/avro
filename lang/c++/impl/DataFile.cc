@@ -55,7 +55,6 @@ const string AVRO_SNAPPY_CODEC = "snappy";
 
 #ifdef ZSTD_CODEC_AVAILABLE
 const string AVRO_ZSTD_CODEC = "zstandard";
-const string AVRO_ZSTD_CODEC_LEGACY = "zstd";
 #endif
 
 const size_t minSyncInterval = 32;
@@ -341,8 +340,7 @@ void DataFileReaderBase::init(const ValidSchema &readerSchema) {
 static void drain(InputStream &in) {
     const uint8_t *p = nullptr;
     size_t n = 0;
-    while (in.next(&p, &n))
-        ;
+    while (in.next(&p, &n));
 }
 
 char hex(unsigned int x) {
@@ -637,8 +635,7 @@ void DataFileReaderBase::readHeader() {
         codec_ = SNAPPY_CODEC;
 #endif
 #ifdef ZSTD_CODEC_AVAILABLE
-    } else if ((it != metadata_.end() && toString(it->second) == AVRO_ZSTD_CODEC)
-               || (it != metadata_.end() && toString(it->second) == AVRO_ZSTD_CODEC_LEGACY)) {
+    } else if (it != metadata_.end() && toString(it->second) == AVRO_ZSTD_CODEC) {
         codec_ = ZSTD_CODEC;
 #endif
     } else {
