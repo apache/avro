@@ -43,7 +43,7 @@ namespace avro {
  * \li Avro <tt>float</tt> maps to C++ <tt>float</tt>.
  * \li Avro <tt>double</tt> maps to C++ <tt>double</tt>.
  * \li Avro <tt>string</tt> maps to C++ <tt>std::string</tt>.
- * \li Avro <tt>bytes</tt> maps to C++ <tt>std::vector&lt;uint_t&gt;</tt>.
+ * \li Avro <tt>bytes</tt> maps to C++ <tt>std::vector&lt;uint8_t&gt;</tt>.
  * \li Avro <tt>fixed</tt> maps to C++ class <tt>GenericFixed</tt>.
  * \li Avro <tt>enum</tt> maps to C++ class <tt>GenericEnum</tt>.
  * \li Avro <tt>array</tt> maps to C++ class <tt>GenericArray</tt>.
