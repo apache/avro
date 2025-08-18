@@ -2188,6 +2188,59 @@ describe('types', function () {
       assert.equal(type._fields[1]._type._name, 'all.Alien');
     });
 
+    it('namespace inheritance', function () {
+      // When nested types don't specify a namespace, they should inherit the parent's 
+      // namespace, but other nested types with explicit namespaces shouldn't corrupt 
+      // the inherited context.
+      var schema = {
+        type: 'record',
+        name: 'Parent',
+        namespace: 'parent.ns',
+        fields: [
+          {
+            name: 'child_field',
+            type: {
+              type: 'record',
+              name: 'Child', // No namespace - should inherit 'parent.ns'
+              fields: [{name: 'value', type: 'int'}]
+            }
+          },
+          {
+            name: 'other_field', 
+            type: {
+              type: 'record',
+              name: 'Other',
+              namespace: 'different.ns', // Different namespace
+              fields: [{name: 'data', type: 'int'}]
+            }
+          },
+          {
+            name: 'reference_field',
+            type: 'Child' // Should resolve to 'parent.ns.Child'
+          }
+        ]
+      };
+      
+      var type = createType(schema);
+      assert.equal(type.getName(), 'parent.ns.Parent');
+      
+      var fields = type.getFields();
+      assert.equal(fields.length, 3);
+      
+      // The critical test: reference_field should resolve Child to parent.ns.Child
+      assert.equal(fields[2].getType().getName(), 'parent.ns.Child');
+      
+      // Verify the schema works for serialization
+      var testData = {
+        child_field: { value: 42 },
+        other_field: { data: 123 },
+        reference_field: { value: 99 }
+      };
+      assert(type.isValid(testData));
+      var buf = type.toBuffer(testData);
+      assert.deepEqual(type.fromBuffer(buf), testData);
+    });
+
     it('wrapped primitive', function () {
       var type = createType({
         type: 'record',

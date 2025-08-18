@@ -2029,9 +2029,20 @@ function getOpts(attrs, opts) {
     throw new Error('invalid type: null (did you mean "null"?)');
   }
   opts = opts || {};
-  opts.registry = opts.registry || {};
-  opts.namespace = attrs.namespace || opts.namespace;
-  opts.logicalTypes = opts.logicalTypes || {};
+  // Create a new opts object if namespace would change to avoid modifying shared state
+  if (attrs.namespace && attrs.namespace !== opts.namespace) {
+    opts = {
+      registry: opts.registry || {},
+      namespace: attrs.namespace,
+      logicalTypes: opts.logicalTypes || {},
+      typeHook: opts.typeHook,
+      assertLogicalTypes: opts.assertLogicalTypes
+    };
+  } else {
+    opts.registry = opts.registry || {};
+    opts.namespace = attrs.namespace || opts.namespace;
+    opts.logicalTypes = opts.logicalTypes || {};
+  }
   return opts;
 }
 
