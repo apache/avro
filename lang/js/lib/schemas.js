@@ -2029,21 +2029,23 @@ function getOpts(attrs, opts) {
     throw new Error('invalid type: null (did you mean "null"?)');
   }
   opts = opts || {};
-  // Create a new opts object if namespace would change to avoid modifying shared state
-  if (attrs.namespace && attrs.namespace !== opts.namespace) {
-    opts = {
-      registry: opts.registry || {},
-      namespace: attrs.namespace,
-      logicalTypes: opts.logicalTypes || {},
-      typeHook: opts.typeHook,
-      assertLogicalTypes: opts.assertLogicalTypes
-    };
-  } else {
-    opts.registry = opts.registry || {};
-    opts.namespace = attrs.namespace || opts.namespace;
-    opts.logicalTypes = opts.logicalTypes || {};
+  
+  // Ensure registry and logicalTypes exist and are preserved by reference so 
+  // type definitions can accumulate across recursive calls.
+  if (!opts.registry) {
+    opts.registry = {};
   }
-  return opts;
+  if (!opts.logicalTypes) {
+    opts.logicalTypes = {};
+  }
+  
+  return {
+    registry: opts.registry,  // Preserve same object reference
+    namespace: attrs.namespace || opts.namespace,
+    logicalTypes: opts.logicalTypes,  // Preserve same object reference
+    typeHook: opts.typeHook,
+    assertLogicalTypes: opts.assertLogicalTypes
+  };
 }
 
 /**

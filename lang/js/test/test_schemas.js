@@ -2227,8 +2227,10 @@ describe('types', function () {
       var fields = type.getFields();
       assert.equal(fields.length, 3);
       
-      // The critical test: reference_field should resolve Child to parent.ns.Child
-      assert.equal(fields[2].getType().getName(), 'parent.ns.Child');
+      // Test all field types to demonstrate the fix works for all namespace scenarios
+      assert.equal(fields[0].getType().getName(), 'parent.ns.Child');    // Inherited namespace
+      assert.equal(fields[1].getType().getName(), 'different.ns.Other'); // Explicit namespace
+      assert.equal(fields[2].getType().getName(), 'parent.ns.Child');    // Reference resolution
       
       // Verify the schema works for serialization
       var testData = {
@@ -2236,6 +2238,112 @@ describe('types', function () {
         other_field: { data: 123 },
         reference_field: { value: 99 }
       };
+      assert(type.isValid(testData));
+      var buf = type.toBuffer(testData);
+      assert.deepEqual(type.fromBuffer(buf), testData);
+    });
+
+    it('deep namespace inheritance', function () {
+      // Test namespace inheritance across multiple levels of nesting with various
+      // namespace changes to ensure the fix works robustly in complex scenarios.
+      var schema = {
+        type: 'record',
+        name: 'Root',
+        namespace: 'level1',
+        fields: [
+          {
+            name: 'level2_inherited',
+            type: {
+              type: 'record',
+              name: 'Level2Inherited', // Inherits 'level1'
+              fields: [
+                {
+                  name: 'level3_inherited',
+                  type: {
+                    type: 'record', 
+                    name: 'Level3Inherited', // Also inherits 'level1'
+                    fields: [{name: 'deep_value', type: 'int'}]
+                  }
+                },
+                {
+                  name: 'level3_override',
+                  type: {
+                    type: 'record',
+                    name: 'Level3Override',
+                    namespace: 'level3.ns', // Changes namespace context
+                    fields: [{name: 'override_value', type: 'string'}]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            name: 'level2_different',
+            type: {
+              type: 'record',
+              name: 'Level2Different',
+              namespace: 'level2.ns', // Different namespace
+              fields: [
+                {
+                  name: 'nested_inherited',
+                  type: {
+                    type: 'record',
+                    name: 'NestedInherited', // Should inherit 'level2.ns'
+                    fields: [{name: 'nested_data', type: 'double'}]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            name: 'ref_level2_inherited',
+            type: 'Level2Inherited' // Should resolve to 'level1.Level2Inherited'
+          },
+          {
+            name: 'ref_level3_inherited', 
+            type: 'Level3Inherited' // Should resolve to 'level1.Level3Inherited'
+          }
+        ]
+      };
+      
+      var type = createType(schema);
+      assert.equal(type.getName(), 'level1.Root');
+      
+      var fields = type.getFields();
+      assert.equal(fields.length, 4);
+      
+      // Verify deep inheritance worked correctly
+      assert.equal(fields[0].getType().getName(), 'level1.Level2Inherited');
+      assert.equal(fields[1].getType().getName(), 'level2.ns.Level2Different');
+      
+      // Critical tests: references should resolve to correct namespaces
+      assert.equal(fields[2].getType().getName(), 'level1.Level2Inherited');
+      assert.equal(fields[3].getType().getName(), 'level1.Level3Inherited');
+      
+      // Verify nested types have correct namespaces
+      var level2Fields = fields[0].getType().getFields();
+      assert.equal(level2Fields[0].getType().getName(), 'level1.Level3Inherited');
+      assert.equal(level2Fields[1].getType().getName(), 'level3.ns.Level3Override');
+      
+      var level2DiffFields = fields[1].getType().getFields();
+      assert.equal(level2DiffFields[0].getType().getName(), 'level2.ns.NestedInherited');
+      
+      // Test serialization works correctly
+      var testData = {
+        level2_inherited: {
+          level3_inherited: { deep_value: 42 },
+          level3_override: { override_value: 'test' }
+        },
+        level2_different: {
+          nested_inherited: { nested_data: 3.14 }
+        },
+        ref_level2_inherited: {
+          level3_inherited: { deep_value: 99 },
+          level3_override: { override_value: 'ref' }
+        },
+        ref_level3_inherited: { deep_value: 123 }
+      };
+      
       assert(type.isValid(testData));
       var buf = type.toBuffer(testData);
       assert.deepEqual(type.fromBuffer(buf), testData);
