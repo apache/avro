@@ -114,8 +114,11 @@ RUN set -eux; \
 ENV PATH="/opt/maven/bin:${PATH}"
 
 # Install nodejs
+# The node deprecation warnings cause a 20 second sleep.
+# But mom, I'm not even tired!
 RUN curl -sSL https://deb.nodesource.com/setup_14.x \
-  | bash - \
+  | sed 's/sleep/echo "But mom!"/' \
+  | bash \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
  && npm install -g grunt-cli \
