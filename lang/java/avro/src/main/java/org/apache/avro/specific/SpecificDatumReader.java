@@ -157,7 +157,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
       return null;
     try {
       checkSecurity(name);
-      Class clazz = ClassUtils.forName(getData().getClassLoader(), name);
+      Class clazz = ClassUtils.forName(name);
       return clazz;
     } catch (ClassNotFoundException e) {
       throw new AvroRuntimeException(e);
