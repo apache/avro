@@ -55,6 +55,11 @@ const int SyncSize = 16;
 typedef std::array<uint8_t, SyncSize> DataFileSync;
 
 /**
+ * The metadata for the data file.
+ */
+typedef std::map<std::string, std::vector<uint8_t>> Metadata;
+
+/**
  * Type-independent portion of DataFileWriter.
  *  At any given point in time, at most one file can be written using
  *  this object.
@@ -70,8 +75,6 @@ class AVRO_DECL DataFileWriterBase {
     std::unique_ptr<OutputStream> buffer_;
     const DataFileSync sync_;
     int64_t objectCount_;
-
-    typedef std::map<std::string, std::vector<uint8_t>> Metadata;
 
     Metadata metadata_;
     int64_t lastSync_;
@@ -119,9 +122,11 @@ public:
      * Constructs a data file writer with the given sync interval and name.
      */
     DataFileWriterBase(const char *filename, const ValidSchema &schema,
-                       size_t syncInterval, Codec codec = NULL_CODEC);
+                       size_t syncInterval, Codec codec = NULL_CODEC,
+                       const Metadata &metadata = {});
     DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
-                       const ValidSchema &schema, size_t syncInterval, Codec codec);
+                       const ValidSchema &schema, size_t syncInterval, Codec codec,
+                       const Metadata &metadata = {});
 
     DataFileWriterBase(const DataFileWriterBase &) = delete;
     DataFileWriterBase &operator=(const DataFileWriterBase &) = delete;
@@ -156,10 +161,12 @@ public:
      * Constructs a new data file.
      */
     DataFileWriter(const char *filename, const ValidSchema &schema,
-                   size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) : base_(new DataFileWriterBase(filename, schema, syncInterval, codec)) {}
+                   size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC,
+                   const Metadata &metadata = {}) : base_(std::make_unique<DataFileWriterBase>(filename, schema, syncInterval, codec, metadata)) {}
 
     DataFileWriter(std::unique_ptr<OutputStream> outputStream, const ValidSchema &schema,
-                   size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) : base_(new DataFileWriterBase(std::move(outputStream), schema, syncInterval, codec)) {}
+                   size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC,
+                   const Metadata &metadata = {}) : base_(std::make_unique<DataFileWriterBase>(std::move(outputStream), schema, syncInterval, codec, metadata)) {}
 
     DataFileWriter(const DataFileWriter &) = delete;
     DataFileWriter &operator=(const DataFileWriter &) = delete;
@@ -212,7 +219,6 @@ class AVRO_DECL DataFileReaderBase {
     ValidSchema dataSchema_;
     DecoderPtr dataDecoder_;
     std::unique_ptr<InputStream> dataStream_;
-    typedef std::map<std::string, std::vector<uint8_t>> Metadata;
 
     Metadata metadata_;
     DataFileSync sync_{};
@@ -306,6 +312,11 @@ public:
      * Return the last synchronization point before our current position.
      */
     int64_t previousSync() const;
+
+    /**
+     * Return the metadata for the data file.
+     */
+    const Metadata &metadata() const { return metadata_; }
 };
 
 /**
@@ -421,6 +432,11 @@ public:
      * Return the last synchronization point before our current position.
      */
     int64_t previousSync() { return base_->previousSync(); }
+
+    /**
+     * Return the metadata for the data file.
+     */
+    const Metadata &metadata() const { return base_->metadata(); }
 };
 
 } // namespace avro
