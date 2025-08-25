@@ -95,7 +95,7 @@
         <version>@maven-surefire-plugin.version@</version>
         <configuration>
           <systemProperties>
-            <org.apache.avro.SERIALIZABLE_CLASSES>java.math.BigDecimal,java.math.BigInteger,java.net.URI,java.net.URL,java.io.File,java.lang.Integer,org.apache.avro.reflect.TestReflect$R10</org.apache.avro.SERIALIZABLE_CLASSES>
+            <org.apache.avro.SERIALIZABLE_CLASSES>java.math.BigDecimal,java.math.BigInteger,java.net.URI,java.net.URL,java.io.File,java.lang.Integer,org.apache.avro.reflect.TestReflect$R10,org.apache.avro.reflect.TestReflect$R6</org.apache.avro.SERIALIZABLE_CLASSES>
           </systemProperties>
           <useModulePath>false</useModulePath>
           <failIfNoTests>true</failIfNoTests>
