@@ -66,30 +66,33 @@ const size_t zlibBufGrowSize = 128 * 1024;
 } // namespace
 
 DataFileWriterBase::DataFileWriterBase(const char *filename, const ValidSchema &schema, size_t syncInterval,
-                                       Codec codec) : filename_(filename),
-                                                      schema_(schema),
-                                                      encoderPtr_(binaryEncoder()),
-                                                      syncInterval_(syncInterval),
-                                                      codec_(codec),
-                                                      stream_(fileOutputStream(filename)),
-                                                      buffer_(memoryOutputStream()),
-                                                      sync_(makeSync()),
-                                                      objectCount_(0),
-                                                      lastSync_(0) {
+                                       Codec codec, const Metadata &metadata) : filename_(filename),
+                                                                                schema_(schema),
+                                                                                encoderPtr_(binaryEncoder()),
+                                                                                syncInterval_(syncInterval),
+                                                                                codec_(codec),
+                                                                                stream_(fileOutputStream(filename)),
+                                                                                buffer_(memoryOutputStream()),
+                                                                                sync_(makeSync()),
+                                                                                objectCount_(0),
+                                                                                metadata_(metadata),
+                                                                                lastSync_(0) {
     init(schema, syncInterval, codec);
 }
 
 DataFileWriterBase::DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
-                                       const ValidSchema &schema, size_t syncInterval, Codec codec) : filename_(),
-                                                                                                      schema_(schema),
-                                                                                                      encoderPtr_(binaryEncoder()),
-                                                                                                      syncInterval_(syncInterval),
-                                                                                                      codec_(codec),
-                                                                                                      stream_(std::move(outputStream)),
-                                                                                                      buffer_(memoryOutputStream()),
-                                                                                                      sync_(makeSync()),
-                                                                                                      objectCount_(0),
-                                                                                                      lastSync_(0) {
+                                       const ValidSchema &schema, size_t syncInterval,
+                                       Codec codec, const Metadata &metadata) : filename_(),
+                                                                                schema_(schema),
+                                                                                encoderPtr_(binaryEncoder()),
+                                                                                syncInterval_(syncInterval),
+                                                                                codec_(codec),
+                                                                                stream_(std::move(outputStream)),
+                                                                                buffer_(memoryOutputStream()),
+                                                                                sync_(makeSync()),
+                                                                                objectCount_(0),
+                                                                                metadata_(metadata),
+                                                                                lastSync_(0) {
     init(schema, syncInterval, codec);
 }
 
