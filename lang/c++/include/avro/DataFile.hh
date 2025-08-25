@@ -55,7 +55,18 @@ const int SyncSize = 16;
 typedef std::array<uint8_t, SyncSize> DataFileSync;
 
 /**
- * The metadata for the data file.
+ * Avro files may include arbitrary user-specified metadata.
+ * File metadata is written as if defined by the following map schema:
+ *
+ * `{"type": "map", "values": "bytes"}`
+ *
+ * All metadata properties that start with "avro." are reserved.
+ * The following file metadata properties are currently used:
+ *
+ * - `avro.schema` contains the schema of objects stored in the file, as JSON data (required).
+ * - `avro.codec`, the name of the compression codec used to compress blocks, as a string.
+ *   Implementations are required to support the following codecs: "null" and "deflate".
+ *   If codec is absent, it is assumed to be "null". See avro.codecs for implementation details.
  */
 typedef std::map<std::string, std::vector<uint8_t>> Metadata;
 
