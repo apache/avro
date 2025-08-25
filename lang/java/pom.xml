@@ -42,7 +42,7 @@
     <commons-compress.version>1.27.1</commons-compress.version>
     <commons-text.version>1.14.0</commons-text.version>
     <commons-lang3.version>3.18.0</commons-lang3.version>
-    <grpc.version>1.73.0</grpc.version>
+    <grpc.version>1.75.0</grpc.version>
     <hadoop.version>3.4.1</hadoop.version>
     <hamcrest.version>3.0</hamcrest.version>
     <jackson-bom.version>2.19.2</jackson-bom.version>
