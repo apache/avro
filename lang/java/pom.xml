@@ -38,7 +38,7 @@
 
     <!-- version properties for dependencies -->
     <ant.version>1.10.15</ant.version>
-    <commons-cli.version>1.9.0</commons-cli.version>
+    <commons-cli.version>1.10.0</commons-cli.version>
     <commons-compress.version>1.28.0</commons-compress.version>
     <commons-text.version>1.14.0</commons-text.version>
     <commons-lang3.version>3.18.0</commons-lang3.version>
