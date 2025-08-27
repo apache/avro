@@ -85,7 +85,7 @@ if (AVRO_BUILD_TESTS OR AVRO_USE_BOOST)
     find_package (Boost 1.70 REQUIRED CONFIG COMPONENTS system)
 endif ()
 
-find_package(fmt)
+find_package(fmt QUIET)
 if (NOT fmt_FOUND)
     include(FetchContent)
     FetchContent_Declare(
