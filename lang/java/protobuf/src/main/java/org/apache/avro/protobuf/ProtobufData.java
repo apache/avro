@@ -404,7 +404,7 @@ public class ProtobufData extends GenericData {
     String dot = namespace.endsWith("$") ? "" : "."; // back-compatibly handle $
 
     try {
-      Class clazz = ClassUtils.forName(getClassLoader(), namespace + dot + name);
+      Class clazz = ClassUtils.forName(namespace + dot + name);
       return getConversionByClass(clazz);
     } catch (ClassNotFoundException e) {
       return null;

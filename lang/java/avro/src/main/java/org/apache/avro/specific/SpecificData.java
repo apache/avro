@@ -389,7 +389,7 @@ public class SpecificData extends GenericData {
         return null;
       Class<?> c = classCache.computeIfAbsent(name, n -> {
         try {
-          return ClassUtils.forName(getClassLoader(), getClassName(schema));
+          return ClassUtils.forName(getClassName(schema));
         } catch (ClassNotFoundException e) {
           // This might be a nested namespace. Try using the last tokens in the
           // namespace as an enclosing class by progressively replacing period
@@ -399,7 +399,7 @@ public class SpecificData extends GenericData {
           while (lastDot != -1) {
             nestedName.setCharAt(lastDot, '$');
             try {
-              return ClassUtils.forName(getClassLoader(), nestedName.toString());
+              return ClassUtils.forName(nestedName.toString());
             } catch (ClassNotFoundException ignored) {
             }
             lastDot = n.lastIndexOf('.', lastDot - 1);
