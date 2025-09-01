@@ -42,10 +42,12 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
         python:
+          - '3.13'
           - '3.12'
           - '3.11'
           - '3.10'
           - '3.9'
+          - 'pypy-3.11'
           - 'pypy-3.10'
 
     steps:
@@ -70,11 +72,11 @@ jobs:
           python3 -m pip install --upgrade pip setuptools tox
 
       - name: Lint
-        if: ${{ matrix.python == '3.10' }}
+        if: ${{ matrix.python == '3.13' }}
         run: python3 -m tox -e lint
 
       - name: Typechecks
-        if: ${{ matrix.python == '3.10' }}
+        if: ${{ matrix.python == '3.13' }}
         run: python3 -m tox -e typechecks
 
       - name: Test
@@ -89,9 +91,12 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
         python:
+          - '3.13'
+          - '3.12'
           - '3.11'
           - '3.10'
           - '3.9'
+          - 'pypy-3.11'
           - 'pypy-3.10'
 
     steps:

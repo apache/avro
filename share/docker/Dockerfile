@@ -68,13 +68,10 @@ RUN apt-get -qqy update \
                                                  python3-snappy \
                                                  python3-venv \
                                                  python3-wheel \
-                                                 python3.10 \
+                                                 python3.13 \
                                                  python3.11 \
-                                                 python3.11-dev \
-                                                 python3.7 \
-                                                 python3.7-distutils \
-                                                 python3.8 \
-                                                 python3.8-distutils \
+                                                 python3.12 \
+                                                 python3.10 \
                                                  python3.9 \
                                                  python3.9-distutils \
                                                  source-highlight \
@@ -184,7 +181,7 @@ RUN curl -sSL https://cpanmin.us \
  && rm -rf .cpanm
 
 # Install Python3
-ENV PATH="${PATH}:/opt/pypy3.10/bin" \
+ENV PATH="${PATH}:/opt/pypy3.11/bin" \
     PIP_NO_CACHE_DIR=off
 
 # https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
@@ -194,10 +191,10 @@ RUN case "${BUILDARCH:?}" in \
       *) pypyarch=linux64;; \
     esac \
  && cd /opt \
- && for url in https://downloads.python.org/pypy/pypy3.10-v7.3.12-"$pypyarch".tar.bz2; \
+ && for url in https://downloads.python.org/pypy/pypy3.11-v7.3.20-"$pypyarch".tar.bz2; \
     do curl -fsSL "$url" | tar -xvjpf -; \
     done \
- && ln -s pypy3.10* pypy3.10
+ && ln -s pypy3.11* pypy3.11
 
 RUN python3 -m pip install --upgrade pip setuptools wheel \
  && python3 -m pip install tox zstandard
