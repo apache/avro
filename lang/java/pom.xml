@@ -201,7 +201,7 @@
           <artifactId>maven-javadoc-plugin</artifactId>
           <configuration>
             <links>
-              <link>https://hadoop.apache.org/docs/current/api/</link>
+              <link>https://hadoop.apache.org/docs/stable/api/</link>
             </links>
             <tagletArtifacts>
               <tagletArtifact>
