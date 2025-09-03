@@ -258,6 +258,17 @@ struct avro_consumer_t {
 			    avro_consumer_t **branch_consumer,
 			    void **branch_user_data,
 			    void *user_data);
+
+	/**
+	 * Called when a decimal value is encountered.  The @ref value
+	 * pointer is only guaranteed to be valid for the duration of
+	 * the callback function.  If you need to save the data for
+	 * processing later, you must copy it into another buffer.
+	 */
+
+	int (*decimal_value)(avro_consumer_t *consumer,
+			     const void *value, size_t value_len,
+			     void *user_data);
 };
 
 

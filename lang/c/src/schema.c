@@ -27,6 +27,7 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "jansson.h"
 #include "st.h"
@@ -37,7 +38,7 @@
 /* forward declaration */
 static int
 avro_schema_to_json2(const avro_schema_t schema, avro_writer_t out,
-		     const char *parent_namespace);
+		     const char *parent_namespace, int should_close);
 
 static void avro_schema_init(avro_schema_t schema, avro_type_t type)
 {
@@ -209,6 +210,14 @@ static void avro_schema_free(avro_schema_t schema)
 				 */
 				avro_freet(struct avro_link_schema_t, link);
 			}
+			break;
+
+		case AVRO_DECIMAL:{
+				struct avro_decimal_schema_t *decimal;
+				decimal = avro_schema_to_decimal(schema);
+				avro_schema_decref(decimal->underlying);
+				avro_freet(struct avro_decimal_schema_t, decimal);
+		        }
 			break;
 		}
 	}
@@ -770,6 +779,95 @@ avro_schema_t avro_schema_link_target(avro_schema_t schema)
 	return link->to;
 }
 
+static size_t uint_pow(size_t base, size_t exponent)
+{
+	size_t value = 1;
+	while (exponent != 0) {
+		if (exponent % 2 != 0) {
+			value *= base;
+		}
+
+		exponent /= 2;
+		base *= base;
+	}
+
+	return value;
+}
+
+static size_t max_precision_for_fixed_size(size_t fixed_size)
+{
+	return (size_t) log10(uint_pow(2, 8 * fixed_size - 1) - 1);
+}
+
+avro_schema_t avro_schema_decimal(const avro_schema_t underlying,
+				  size_t scale, size_t precision)
+{
+	if (!is_avro_bytes(underlying) && !is_avro_fixed(underlying)) {
+		avro_set_error("Decimal schemas expect either bytes or fixed"
+			       " as underlying schemas, not %s",
+			       avro_schema_type_name(underlying));
+		return NULL;
+	}
+
+	if (precision == 0) {
+		avro_set_error("Decimal precision cannot be zero");
+		return NULL;
+	}
+
+	if (is_avro_fixed(underlying)) {
+		size_t fixed_size = avro_schema_fixed_size(underlying);
+		size_t max_precision =
+				max_precision_for_fixed_size(fixed_size);
+		if (precision > max_precision) {
+			avro_set_error("Decimal schemas with underlying fixed"
+				       " schemas of size %zu can store up to"
+				       " %zu digits of base 10, not %zu",
+				       fixed_size, max_precision, precision);
+			return NULL;
+		}
+	}
+
+	if (scale > precision) {
+		avro_set_error("Decimal scale of %zu cannot be greater than"
+			       " precision %zu", scale, precision);
+		return NULL;
+	}
+
+	struct avro_decimal_schema_t *decimal =
+			avro_new(struct avro_decimal_schema_t);
+	if (decimal == NULL) {
+		avro_set_error("Cannot allocate new decimal schema");
+		return NULL;
+	}
+
+	decimal->underlying = avro_schema_incref(underlying);
+	decimal->scale = scale;
+	decimal->precision = precision;
+	avro_schema_init(&decimal->obj, AVRO_DECIMAL);
+	return &decimal->obj;
+}
+
+size_t avro_schema_decimal_scale(const avro_schema_t decimal)
+{
+	return avro_schema_to_decimal(decimal)->scale;
+}
+
+size_t avro_schema_decimal_precision(const avro_schema_t decimal)
+{
+	return avro_schema_to_decimal(decimal)->precision;
+}
+
+avro_schema_t avro_schema_logical_underlying(const avro_schema_t logical)
+{
+	switch (logical->type) {
+	case AVRO_DECIMAL:
+		return avro_schema_incref(avro_schema_to_decimal(
+		    logical)->underlying);
+	default:
+		return NULL;
+	}
+}
+
 static const char *
 qualify_name(const char *name, const char *namespace)
 {
@@ -812,17 +910,20 @@ find_named_schemas(const char *name, const char *namespace, st_table *st)
 
 static int
 avro_type_from_json_t(json_t *json, avro_type_t *type,
-		      st_table *named_schemas, avro_schema_t *named_type,
-		      const char *namespace)
+		      avro_type_t *logical_type, st_table *named_schemas,
+		      avro_schema_t *named_type, const char *namespace)
 {
 	json_t *json_type;
+	json_t *json_logical_type = NULL;
 	const char *type_str;
+	const char *logical_type_str = NULL;
 
 	if (json_is_array(json)) {
 		*type = AVRO_UNION;
 		return 0;
 	} else if (json_is_object(json)) {
 		json_type = json_object_get(json, "type");
+		json_logical_type = json_object_get(json, "logicalType");
 	} else {
 		json_type = json;
 	}
@@ -835,6 +936,23 @@ avro_type_from_json_t(json_t *json, avro_type_t *type,
 		avro_set_error("\"type\" field must be a string");
 		return EINVAL;
 	}
+
+	/*
+	 * The spec requires that we ignore unknown or invalid logicals and use
+	 * their underlying types instead.
+	 */
+	if (json_logical_type != NULL && json_is_string(json_logical_type)) {
+		logical_type_str = json_string_value(json_logical_type);
+	}
+
+	if (logical_type_str == NULL) {
+		*logical_type = AVRO_INVALID;
+	} else if (strcmp(logical_type_str, "decimal") == 0) {
+		*logical_type = AVRO_DECIMAL;
+	} else {
+		*logical_type = AVRO_INVALID;
+	}
+
 	/*
 	 * TODO: gperf/re2c this
 	 */
@@ -878,10 +996,12 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 			st_table *named_schemas, const char *parent_namespace)
 {
 	avro_type_t type = AVRO_INVALID;
+	avro_type_t logical_type = AVRO_INVALID;
 	unsigned int i;
 	avro_schema_t named_type = NULL;
 
-	if (avro_type_from_json_t(json, &type, named_schemas, &named_type, parent_namespace)) {
+	if (avro_type_from_json_t(json, &type, &logical_type, named_schemas,
+				  &named_type, parent_namespace)) {
 		return EINVAL;
 	}
 
@@ -1211,6 +1331,50 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 		avro_set_error("Unknown schema type");
 		return EINVAL;
 	}
+
+	/*
+	 * The spec requires that we ignore unknown or invalid logicals and use
+	 * their underlying types instead.
+	 */
+	switch (logical_type) {
+	case AVRO_DECIMAL:
+		{
+			/* scale defaults to 0, precision is required. */
+			json_t *json_scale = json_object_get(json, "scale");
+			json_t *json_precision =
+			    json_object_get(json, "precision");
+
+			json_int_t scale;
+			if (json_scale == NULL) {
+				scale = 0;
+			} else if (json_is_integer(json_scale)) {
+				scale = json_integer_value(json_scale);
+			} else {
+				break;
+			}
+
+			json_int_t precision;
+			if (json_precision == NULL) {
+				break;
+			} else if (json_is_integer(json_precision)) {
+				precision = json_integer_value(json_precision);
+			} else {
+				break;
+			}
+
+			avro_schema_t decimal =
+			    avro_schema_decimal(*schema, scale, precision);
+			if (decimal != NULL) {
+				*schema = decimal;
+			}
+
+			break;
+		}
+
+        default:
+		break;
+	};
+
 	return 0;
 }
 
@@ -1437,6 +1601,22 @@ avro_schema_t avro_schema_copy_root(avro_schema_t schema, st_table *named_schema
 		}
 		break;
 
+	case AVRO_DECIMAL:
+		{
+			struct avro_decimal_schema_t *decimal_schema =
+			    avro_schema_to_decimal(schema);
+			avro_schema_t underlying_copy = avro_schema_copy_root(
+			    decimal_schema->underlying, named_schemas);
+			if (underlying_copy == NULL) {
+				return NULL;
+			}
+			new_schema = avro_schema_decimal(
+			    underlying_copy, decimal_schema->scale,
+			    decimal_schema->precision);
+			avro_schema_decref(underlying_copy);
+		}
+		break;
+
 	default:
 		return NULL;
 	}
@@ -1581,6 +1761,8 @@ const char *avro_schema_type_name(const avro_schema_t schema)
 	} else if (is_avro_link(schema)) {
 		avro_schema_t  target = avro_schema_link_target(schema);
 		return avro_schema_type_name(target);
+	} else if (is_avro_decimal(schema)) {
+		return "decimal";
 	}
 	avro_set_error("Unknown schema type");
 	return NULL;
@@ -1665,6 +1847,10 @@ avro_datum_t avro_datum_from_schema(const avro_schema_t schema)
 				return avro_datum_from_schema(link_schema->to);
 			}
 
+		case AVRO_DECIMAL:
+			return avro_datum_from_schema(
+			    avro_schema_logical_underlying(schema));
+
 		default:
 			avro_set_error("Unknown schema type");
 			return NULL;
@@ -1684,12 +1870,12 @@ static int write_field(avro_writer_t out, const struct avro_record_field_t *fiel
 	check(rval, avro_write_str(out, "{\"name\":\""));
 	check(rval, avro_write_str(out, field->name));
 	check(rval, avro_write_str(out, "\",\"type\":"));
-	check(rval, avro_schema_to_json2(field->type, out, parent_namespace));
+	check(rval, avro_schema_to_json2(field->type, out, parent_namespace, 1));
 	return avro_write_str(out, "}");
 }
 
 static int write_record(avro_writer_t out, const struct avro_record_schema_t *record,
-			const char *parent_namespace)
+			const char *parent_namespace, int should_close)
 {
 	int rval;
 	long i;
@@ -1716,11 +1902,15 @@ static int write_record(avro_writer_t out, const struct avro_record_schema_t *re
 		}
 		check(rval, write_field(out, val.field, record->space));
 	}
-	return avro_write_str(out, "]}");
+	check(rval, avro_write_str(out, "]"));
+	if (should_close) {
+		check(rval, avro_write_str(out, "}"));
+	}
+	return 0;
 }
 
 static int write_enum(avro_writer_t out, const struct avro_enum_schema_t *enump,
-			const char *parent_namespace)
+			const char *parent_namespace, int should_close)
 {
 	int rval;
 	long i;
@@ -1749,11 +1939,15 @@ static int write_enum(avro_writer_t out, const struct avro_enum_schema_t *enump,
 		check(rval, avro_write_str(out, val.sym));
 		check(rval, avro_write_str(out, "\""));
 	}
-	return avro_write_str(out, "]}");
+	check(rval, avro_write_str(out, "]"));
+	if (should_close) {
+		check(rval, avro_write_str(out, "}"));
+	}
+	return 0;
 }
 
 static int write_fixed(avro_writer_t out, const struct avro_fixed_schema_t *fixed,
-			const char *parent_namespace)
+		       const char *parent_namespace, int should_close)
 {
 	int rval;
 	char size[16];
@@ -1770,24 +1964,33 @@ static int write_fixed(avro_writer_t out, const struct avro_fixed_schema_t *fixe
 	check(rval, avro_write_str(out, "\"size\":"));
 	snprintf(size, sizeof(size), "%" PRId64, fixed->size);
 	check(rval, avro_write_str(out, size));
-	return avro_write_str(out, "}");
+	if (should_close) {
+		check(rval, avro_write_str(out, "}"));
+	}
+	return 0;
 }
 
 static int write_map(avro_writer_t out, const struct avro_map_schema_t *map,
-		     const char *parent_namespace)
+		     const char *parent_namespace, int should_close)
 {
 	int rval;
 	check(rval, avro_write_str(out, "{\"type\":\"map\",\"values\":"));
-	check(rval, avro_schema_to_json2(map->values, out, parent_namespace));
-	return avro_write_str(out, "}");
+	check(rval, avro_schema_to_json2(map->values, out, parent_namespace, 1));
+	if (should_close) {
+		check(rval, avro_write_str(out, "}"));
+	}
+	return 0;
 }
 static int write_array(avro_writer_t out, const struct avro_array_schema_t *array,
-		       const char *parent_namespace)
+		       const char *parent_namespace, int should_close)
 {
 	int rval;
 	check(rval, avro_write_str(out, "{\"type\":\"array\",\"items\":"));
-	check(rval, avro_schema_to_json2(array->items, out, parent_namespace));
-	return avro_write_str(out, "}");
+	check(rval, avro_schema_to_json2(array->items, out, parent_namespace, 1));
+	if (should_close) {
+		check(rval, avro_write_str(out, "}"));
+	}
+	return 0;
 }
 static int write_union(avro_writer_t out, const struct avro_union_schema_t *unionp,
 		       const char *parent_namespace)
@@ -1805,7 +2008,7 @@ static int write_union(avro_writer_t out, const struct avro_union_schema_t *unio
 		if (i) {
 			check(rval, avro_write_str(out, ","));
 		}
-		check(rval, avro_schema_to_json2(val.schema, out, parent_namespace));
+		check(rval, avro_schema_to_json2(val.schema, out, parent_namespace, 1));
 	}
 	return avro_write_str(out, "]");
 }
@@ -1822,10 +2025,32 @@ static int write_link(avro_writer_t out, const struct avro_link_schema_t *link,
 	check(rval, avro_write_str(out, avro_schema_name(link->to)));
 	return avro_write_str(out, "\"");
 }
+static int write_decimal(avro_writer_t out,
+			 const struct avro_decimal_schema_t *decimal,
+			 const char *parent_namespace)
+{
+	int rval;
+	char num[21]; /* 64 bit ints use up to 20 base-10 digits, plus NUL. */
+	check(rval, avro_write_str(out, "{"));
+	check(rval, avro_schema_to_json2(decimal->underlying, out,
+					 parent_namespace, 0));
+	check(rval, avro_write_str(out, ",\"logicalType\":\"decimal\""));
+
+	check(rval, avro_write_str(out, ",\"precision\":"));
+	snprintf(num, sizeof(num), "%zu", decimal->precision);
+	check(rval, avro_write_str(out, num));
+
+	check(rval, avro_write_str(out, ",\"scale\":"));
+	snprintf(num, sizeof(num), "%zu", decimal->scale);
+        check(rval, avro_write_str(out, num));
+
+	check(rval, avro_write_str(out, "}"));
+	return 0;
+}
 
 static int
 avro_schema_to_json2(const avro_schema_t schema, avro_writer_t out,
-		     const char *parent_namespace)
+		     const char *parent_namespace, int should_close)
 {
 	check_param(EINVAL, is_avro_schema(schema), "schema");
 	check_param(EINVAL, out, "writer");
@@ -1862,25 +2087,32 @@ avro_schema_to_json2(const avro_schema_t schema, avro_writer_t out,
 		check(rval, avro_write_str(out, "null"));
 		break;
 	case AVRO_RECORD:
-		return write_record(out, avro_schema_to_record(schema), parent_namespace);
+		return write_record(out, avro_schema_to_record(schema), parent_namespace, should_close);
 	case AVRO_ENUM:
-		return write_enum(out, avro_schema_to_enum(schema), parent_namespace);
+		return write_enum(out, avro_schema_to_enum(schema), parent_namespace, should_close);
 	case AVRO_FIXED:
-		return write_fixed(out, avro_schema_to_fixed(schema), parent_namespace);
+		return write_fixed(out, avro_schema_to_fixed(schema), parent_namespace, should_close);
 	case AVRO_MAP:
-		return write_map(out, avro_schema_to_map(schema), parent_namespace);
+		return write_map(out, avro_schema_to_map(schema), parent_namespace, should_close);
 	case AVRO_ARRAY:
-		return write_array(out, avro_schema_to_array(schema), parent_namespace);
+		return write_array(out, avro_schema_to_array(schema), parent_namespace, should_close);
 	case AVRO_UNION:
 		return write_union(out, avro_schema_to_union(schema), parent_namespace);
 	case AVRO_LINK:
 		return write_link(out, avro_schema_to_link(schema), parent_namespace);
 	case AVRO_INVALID:
 		return EINVAL;
+	case AVRO_DECIMAL:
+		return write_decimal(out, avro_schema_to_decimal(schema),
+				     parent_namespace);
 	}
 
 	if (is_avro_primitive(schema)) {
-		return avro_write_str(out, "\"}");
+		check(rval, avro_write_str(out, "\""));
+		if (should_close) {
+			check(rval, avro_write_str(out, "}"));
+		}
+		return 0;
 	}
 	avro_set_error("Unknown schema type");
 	return EINVAL;
@@ -1888,5 +2120,5 @@ avro_schema_to_json2(const avro_schema_t schema, avro_writer_t out,
 
 int avro_schema_to_json(const avro_schema_t schema, avro_writer_t out)
 {
-	return avro_schema_to_json2(schema, out, NULL);
+	return avro_schema_to_json2(schema, out, NULL, 1);
 }
