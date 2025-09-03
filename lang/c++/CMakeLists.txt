@@ -306,3 +306,12 @@ install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config-version.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/avro-cpp
 )
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/avro-cpp.pc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp.pc"
+    @ONLY
+)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp.pc"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+)
