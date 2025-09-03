@@ -41,7 +41,7 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Add libzstd
         shell: bash
@@ -76,7 +76,7 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Add libzstd
         shell: bash
@@ -99,7 +99,7 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: 'Setup Temurin JDK 8, 11, 17 & 21'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: |

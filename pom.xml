@@ -49,13 +49,13 @@
     <!-- plugin versions -->
     <apache-rat-plugin.version>0.16.1</apache-rat-plugin.version>
     <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
-    <checkstyle.version>10.26.1</checkstyle.version>
+    <checkstyle.version>11.0.1</checkstyle.version>
     <enforcer-plugin.version>3.6.1</enforcer-plugin.version>
     <extra-enforcer-rules.version>1.10.0</extra-enforcer-rules.version>
     <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
     <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
     <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
-    <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
+    <maven-javadoc-plugin.version>3.11.3</maven-javadoc-plugin.version>
     <maven-plugin-plugin.version>3.15.1</maven-plugin-plugin.version>
     <maven-remote-resources-plugin.version>3.3.0</maven-remote-resources-plugin.version>
     <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>

@@ -38,21 +38,21 @@
 
     <!-- version properties for dependencies -->
     <ant.version>1.10.15</ant.version>
-    <commons-cli.version>1.9.0</commons-cli.version>
-    <commons-compress.version>1.27.1</commons-compress.version>
+    <commons-cli.version>1.10.0</commons-cli.version>
+    <commons-compress.version>1.28.0</commons-compress.version>
     <commons-text.version>1.14.0</commons-text.version>
     <commons-lang3.version>3.18.0</commons-lang3.version>
-    <grpc.version>1.73.0</grpc.version>
-    <hadoop.version>3.4.1</hadoop.version>
+    <grpc.version>1.75.0</grpc.version>
+    <hadoop.version>3.4.2</hadoop.version>
     <hamcrest.version>3.0</hamcrest.version>
-    <jackson-bom.version>2.19.2</jackson-bom.version>
-    <jetty.version>9.4.57.v20241219</jetty.version>
+    <jackson-bom.version>2.20.0</jackson-bom.version>
+    <jetty.version>9.4.58.v20250814</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit5.version>5.13.4</junit5.version>
     <maven-core.version>3.9.6</maven-core.version>
-    <mockito.version>5.18.0</mockito.version>
-    <netty.version>4.2.3.Final</netty.version>
-    <protobuf.version>4.31.1</protobuf.version>
+    <mockito.version>5.19.0</mockito.version>
+    <netty.version>4.2.4.Final</netty.version>
+    <protobuf.version>4.32.0</protobuf.version>
     <reload4j.version>1.2.26</reload4j.version>
     <servlet-api.version>4.0.1</servlet-api.version>
     <slf4j.version>2.0.17</slf4j.version>
