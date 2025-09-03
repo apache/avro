@@ -17,8 +17,13 @@
  */
 
 #include "NodeImpl.hh"
-#include <sstream>
+
+#include <cctype>
+#include <locale>
+#include <ostream>
+#include <string>
 #include <utility>
+#include <vector>
 
 using std::string;
 namespace avro {
