@@ -53,7 +53,7 @@ list(GET AVRO_VERSION 1 AVRO_VERSION_MINOR)
 list(GET AVRO_VERSION 2 AVRO_VERSION_PATCH)
 set(AVRO_VERSION "${AVRO_VERSION_MAJOR}.${AVRO_VERSION_MINOR}.${AVRO_VERSION_PATCH}")
 
-project (Avro-cpp)
+project (AvroCpp)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR})
 
 option(AVRO_BUILD_EXECUTABLES "Build executables" ON)
@@ -286,24 +286,24 @@ endif (NOT CMAKE_BUILD_TYPE)
 include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/AvroConfigVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/AvroCppConfigVersion.cmake"
     VERSION ${AVRO_VERSION}
     COMPATIBILITY SameMajorVersion)
 
 configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/AvroConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/AvroConfig.cmake"
-    INSTALL_DESTINATION lib/cmake/Avro
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/AvroCppConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/AvroCppConfig.cmake"
+    INSTALL_DESTINATION lib/cmake/AvroCpp
 )
 
 install(EXPORT avrocpp_targets
-    NAMESPACE Avro::
-    DESTINATION lib/cmake/Avro
-    FILE "AvroTargets.cmake"
+    NAMESPACE AvroCpp::
+    DESTINATION lib/cmake/AvroCpp
+    FILE "AvroCppTargets.cmake"
 )
 
 install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/AvroConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/AvroConfigVersion.cmake"
-    DESTINATION lib/cmake/Avro
+    "${CMAKE_CURRENT_BINARY_DIR}/AvroCppConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/AvroCppConfigVersion.cmake"
+    DESTINATION lib/cmake/AvroCpp
 )
