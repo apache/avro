@@ -286,24 +286,24 @@ endif (NOT CMAKE_BUILD_TYPE)
 include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/AvroConfigVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config-version.cmake"
     VERSION ${AVRO_VERSION}
     COMPATIBILITY SameMajorVersion)
 
 configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/AvroConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/AvroConfig.cmake"
-    INSTALL_DESTINATION lib/cmake/Avro
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/avro-cpp-config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config.cmake"
+    INSTALL_DESTINATION lib/cmake/avro-cpp
 )
 
 install(EXPORT avrocpp_targets
-    NAMESPACE Avro::
-    DESTINATION lib/cmake/Avro
-    FILE "AvroTargets.cmake"
+    NAMESPACE avro-cpp::
+    DESTINATION lib/cmake/avro-cpp
+    FILE "avro-cpp-targets.cmake"
 )
 
 install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/AvroConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/AvroConfigVersion.cmake"
-    DESTINATION lib/cmake/Avro
+    "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config-version.cmake"
+    DESTINATION lib/cmake/avro-cpp
 )
