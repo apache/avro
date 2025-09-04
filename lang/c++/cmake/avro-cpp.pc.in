@@ -1,6 +1,7 @@
 prefix=@CMAKE_INSTALL_PREFIX@
-includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
-libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+exec_prefix=${prefix}
+includedir=@pc_install_includedir@
+libdir=@pc_install_libdir@
 
 Name: avro-cpp
 Description: C++ library for parsing Avro data
