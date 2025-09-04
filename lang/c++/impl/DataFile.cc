@@ -54,7 +54,7 @@ const string AVRO_SNAPPY_CODEC = "snappy";
 #endif
 
 #ifdef ZSTD_CODEC_AVAILABLE
-const string AVRO_ZSTD_CODEC = "zstd";
+const string AVRO_ZSTD_CODEC = "zstandard";
 #endif
 
 const size_t minSyncInterval = 32;
