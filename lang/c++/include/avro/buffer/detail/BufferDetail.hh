@@ -19,9 +19,6 @@
 #ifndef avro_BufferDetail_hh__
 #define avro_BufferDetail_hh__
 
-#ifdef HAVE_BOOST_ASIO
-#include <boost/asio/buffer.hpp>
-#endif
 #include <cassert>
 #include <deque>
 #include <exception>
@@ -42,10 +39,6 @@ namespace detail {
 
 typedef char data_type;
 typedef size_t size_type;
-#ifdef HAVE_BOOST_ASIO
-typedef boost::asio::const_buffer ConstAsioBuffer;
-typedef boost::asio::mutable_buffer MutableAsioBuffer;
-#endif
 
 /// The size in bytes for blocks backing buffer chunks.
 const size_type kMinBlockSize = 4096;
