@@ -307,6 +307,8 @@ install(FILES
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/avro-cpp
 )
 
+cmake_path(APPEND pc_install_includedir "\${prefix}" "${CMAKE_INSTALL_INCLUDEDIR}")
+cmake_path(APPEND pc_install_libdir "\${exec_prefix}" "${CMAKE_INSTALL_LIBDIR}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/avro-cpp.pc.in"
     "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp.pc"
