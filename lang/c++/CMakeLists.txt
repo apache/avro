@@ -258,6 +258,7 @@ if (AVRO_BUILD_TESTS)
 endif ()
 
 include (InstallRequiredSystemLibraries)
+include (GNUInstallDirs)
 
 set (CPACK_PACKAGE_FILE_NAME "avrocpp-${AVRO_VERSION_MAJOR}")
 
@@ -268,13 +269,13 @@ install (TARGETS ${AVRO_INSTALL_LIBS}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    INCLUDES DESTINATION include)
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 if (AVRO_BUILD_EXECUTABLES)
     install (TARGETS avrogencpp EXPORT avrocpp_targets RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif ()
 
-install (DIRECTORY include/avro DESTINATION include
+install (DIRECTORY include/avro DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN *.hh)
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -293,17 +294,17 @@ write_basic_package_version_file(
 configure_package_config_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/avro-cpp-config.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config.cmake"
-    INSTALL_DESTINATION lib/cmake/avro-cpp
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/avro-cpp
 )
 
 install(EXPORT avrocpp_targets
     NAMESPACE avro-cpp::
-    DESTINATION lib/cmake/avro-cpp
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/avro-cpp
     FILE "avro-cpp-targets.cmake"
 )
 
 install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config-version.cmake"
-    DESTINATION lib/cmake/avro-cpp
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/avro-cpp
 )
