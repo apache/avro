@@ -22,6 +22,7 @@
 #include "Config.hh"
 #include <cstdint>
 #include <istream>
+#include <map>
 
 namespace avro {
 
@@ -33,6 +34,7 @@ class AVRO_DECL InputStream;
 /// build up an avro parse tree as the avro spec is parsed.
 
 class AVRO_DECL ValidSchema;
+class AVRO_DECL Name;
 
 /// Given a stream containing a JSON schema, compiles the schema to a
 /// ValidSchema object.  Throws if the schema cannot be compiled to a valid
@@ -57,6 +59,9 @@ AVRO_DECL ValidSchema compileJsonSchemaFromString(const char *input);
 AVRO_DECL ValidSchema compileJsonSchemaFromString(const std::string &input);
 
 AVRO_DECL ValidSchema compileJsonSchemaFromFile(const char *filename);
+
+AVRO_DECL ValidSchema compileJsonSchemaWithNamedReferences(std::istream &is, 
+                                                           const std::map<Name, ValidSchema> &namedReferences);
 
 } // namespace avro
 

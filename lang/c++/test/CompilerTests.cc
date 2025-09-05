@@ -22,6 +22,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Compiler.hh"
+#include "Node.hh"
 #include "ValidSchema.hh"
 
 // Assert that empty defaults don't make json schema compilation violate bounds
@@ -82,6 +83,66 @@ void test2dArray() {
     BOOST_CHECK_EQUAL(expected, actual.str());
 }
 
+void testRecordWithNamedReference() {
+    std::string nestedSchema = "{\"name\":\"NestedRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"stringField\",\"type\":\"string\"}]}";
+    // The root schema references the nested schema above by name only.
+    // This mimics tools that allow schemas to have references to other schemas.
+    std::string rootSchema = "{\"name\":\"RootRecord\",\"type\":\"record\",\"fields\":[{\"name\": \"nestedField\",\"type\":\"NestedRecord\"}]}";
+
+    // First compile the nested schema
+    avro::ValidSchema nestedRecord = avro::compileJsonSchemaFromString(nestedSchema);
+
+    // Create a map of named references
+    std::map<avro::Name, avro::ValidSchema> namedReferences;
+    namedReferences[avro::Name("NestedRecord")] = nestedRecord;
+
+    // Parse the root schema with named references
+    std::istringstream rootSchemaStream(rootSchema);
+    avro::ValidSchema rootRecord = avro::compileJsonSchemaWithNamedReferences(rootSchemaStream, namedReferences);
+
+    // Verify the schema was compiled correctly
+    BOOST_CHECK_EQUAL("RootRecord", rootRecord.root()->name().simpleName());
+
+    // Get the nested field and verify its type
+    const avro::NodePtr &rootNode = rootRecord.root();
+    BOOST_CHECK_EQUAL(avro::AVRO_RECORD, rootNode->type());
+    BOOST_CHECK_EQUAL(1, rootNode->leaves());
+
+    const avro::NodePtr &nestedFieldNode = rootNode->leafAt(0);
+    BOOST_CHECK_EQUAL("NestedRecord", nestedFieldNode->name().simpleName());
+}
+
+// Verify recursive schemas don't create shared_ptr cycles by ensuring the
+// root node expires once the ValidSchema goes out of scope. Example: binary
+// tree node with left/right as union of null and the node type itself.
+void testRecursiveBinaryTreeWeakPtrExpires() {
+    std::weak_ptr<avro::Node> weakRoot;
+
+    {
+        const std::string schema = R"({
+            "type": "record",
+            "name": "Node",
+            "fields": [
+                {"name": "value", "type": "int"},
+                {"name": "left",  "type": ["null", "Node"],  "default": null},
+                {"name": "right", "type": ["null", "Node"],  "default": null}
+            ]
+        })";
+
+        avro::ValidSchema s = avro::compileJsonSchemaFromString(schema);
+        // Capture a weak reference to the root node while the schema is alive.
+        weakRoot = s.root();
+
+        // Optionally exercise the schema to ensure validation completed.
+        BOOST_CHECK_EQUAL(avro::AVRO_RECORD, s.root()->type());
+        BOOST_CHECK_EQUAL("Node", s.root()->name().simpleName());
+    }
+
+    // After the ValidSchema (and any strong references) go out of scope,
+    // the weak pointer must not be lockable if there are no cycles.
+    BOOST_CHECK(weakRoot.expired());
+}
+
 boost::unit_test::test_suite *
 init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     using namespace boost::unit_test;
@@ -89,5 +150,7 @@ init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     auto *ts = BOOST_TEST_SUITE("Avro C++ unit tests for Compiler.cc");
     ts->add(BOOST_TEST_CASE(&testEmptyBytesDefault));
     ts->add(BOOST_TEST_CASE(&test2dArray));
+    ts->add(BOOST_TEST_CASE(&testRecordWithNamedReference));
+    ts->add(BOOST_TEST_CASE(&testRecursiveBinaryTreeWeakPtrExpires));
     return ts;
 }
