@@ -24,6 +24,7 @@ libdir=@pc_install_libdir@
 Name: avro-cpp
 Description: C++ library for parsing Avro data
 URL: https://avro.apache.org/
+License: Apache-2.0
 Version: @AVRO_VERSION@
 
 Cflags: -I${includedir}
