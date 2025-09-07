@@ -29,7 +29,6 @@
 
 #ifdef ZSTD_CODEC_AVAILABLE
 #include "ZstdCodecWrapper.hh"
-#include <zstd.h>
 #endif
 
 #include <zlib.h>
