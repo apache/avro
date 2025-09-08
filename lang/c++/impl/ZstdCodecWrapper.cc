@@ -31,6 +31,9 @@ std::vector<char> ZstdCodecWrapper::compress(const std::vector<char> &uncompress
     }
     // Pre-allocate buffer for compressed data
     size_t max_compressed_size = ZSTD_compressBound(uncompressed.size());
+    if (ZSTD_isError(max_compressed_size)) {
+        throw Exception("ZSTD compression error: {}", ZSTD_getErrorName(max_compressed_size));
+    }
     std::vector<char> compressed(max_compressed_size);
 
     // Compress the data using ZSTD block API
