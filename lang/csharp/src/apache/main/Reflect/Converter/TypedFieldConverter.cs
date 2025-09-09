@@ -18,7 +18,7 @@
 
 using System;
 
-namespace Avro.Reflect
+namespace Avro.Reflect.Converter
 {
     /// <summary>
     /// Constructor
@@ -53,7 +53,7 @@ namespace Avro.Reflect
         {
             if (!typeof(TAvro).IsAssignableFrom(o.GetType()))
             {
-                throw new AvroException($"Converter from {typeof(TAvro).Name} to {typeof(TProperty).Name} cannot convert object of type {o.GetType().Name} to {typeof(TAvro).Name}, object {o.ToString()}");
+                throw new AvroException($"Converter from {typeof(TAvro).Name} to {typeof(TProperty).Name} cannot convert object of type {o.GetType().Name} to {typeof(TAvro).Name}, object {o}");
             }
 
             return From((TAvro)o, s);
@@ -87,7 +87,7 @@ namespace Avro.Reflect
         {
             if (!typeof(TProperty).IsAssignableFrom(o.GetType()))
             {
-                throw new AvroException($"Converter from {typeof(TAvro).Name} to {typeof(TProperty).Name} cannot convert object of type {o.GetType().Name} to {typeof(TProperty).Name}, object {o.ToString()}");
+                throw new AvroException($"Converter from {typeof(TAvro).Name} to {typeof(TProperty).Name} cannot convert object of type {o.GetType().Name} to {typeof(TProperty).Name}, object {o}");
             }
 
             return To((TProperty)o, s);
