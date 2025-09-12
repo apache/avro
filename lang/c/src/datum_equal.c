@@ -182,9 +182,11 @@ int avro_datum_equal(const avro_datum_t a, const avro_datum_t b)
 		 */
 		return 0;
 	case AVRO_INVALID:
+	case AVRO_DECIMAL:
 		/*
 		 * Invalid datums should not be compared and returning 0
-		 * matches the other error conditions
+		 * matches the other error conditions. Datums will also not be
+		 * created from logical schemas, only their underlying schemas.
 		 */
 		return 0;
 	}
