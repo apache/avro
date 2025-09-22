@@ -16,36 +16,30 @@
  * limitations under the License.
  */
 
-#ifndef avro_ZstdCodecWrapper_hh__
-#define avro_ZstdCodecWrapper_hh__
+#ifndef avro_ZstdCompressWrapper_hh__
+#define avro_ZstdCompressWrapper_hh__
 
 #ifdef ZSTD_CODEC_AVAILABLE
 
-#include <string>
 #include <vector>
 
 #include <zstd.h>
 
 namespace avro {
 
-class ZstdCodecWrapper {
+class ZstdCompressWrapper {
 public:
-    ZstdCodecWrapper(){};
-    ~ZstdCodecWrapper();
+    ZstdCompressWrapper();
+    ~ZstdCompressWrapper();
 
     std::vector<char> compress(const std::vector<char> &uncompressed);
-    std::string decompress(const std::vector<char> &compressed);
 
 private:
-    void initCCtx();
-    void initDCtx();
-
     ZSTD_CCtx *cctx_ = nullptr;
-    ZSTD_DCtx *dctx_ = nullptr;
 };
 
 } // namespace avro
 
 #endif // ZSTD_CODEC_AVAILABLE
 
-#endif // avro_ZstdCodecWrapper_hh__
+#endif // avro_ZstdCompressWrapper_hh__

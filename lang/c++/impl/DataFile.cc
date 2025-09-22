@@ -28,7 +28,8 @@
 #endif
 
 #ifdef ZSTD_CODEC_AVAILABLE
-#include "ZstdCodecWrapper.hh"
+#include "ZstdCompressWrapper.hh"
+#include "ZstdDecompressWrapper.hh"
 #endif
 
 #include <zlib.h>
@@ -244,8 +245,8 @@ void DataFileWriterBase::sync() {
                                 reinterpret_cast<const char *>(data) + len);
         }
 
-        ZstdCodecWrapper zstdCodecWrapper;
-        std::vector<char> compressed = zstdCodecWrapper.compress(uncompressed);
+        ZstdCompressWrapper zstdCompressWrapper;
+        std::vector<char> compressed = zstdCompressWrapper.compress(uncompressed);
 
         std::unique_ptr<InputStream> in = memoryInputStream(
             reinterpret_cast<const uint8_t *>(compressed.data()), compressed.size());
@@ -477,8 +478,8 @@ void DataFileReaderBase::readDataBlock() {
             compressed_.insert(compressed_.end(), data, data + len);
         }
 
-        ZstdCodecWrapper zstdCodecWrapper;
-        uncompressed = zstdCodecWrapper.decompress(compressed_);
+        ZstdDecompressWrapper zstdDecompressWrapper;
+        uncompressed = zstdDecompressWrapper.decompress(compressed_);
 
         std::unique_ptr<InputStream> in = memoryInputStream(
             reinterpret_cast<const uint8_t *>(uncompressed.data()),

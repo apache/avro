@@ -131,7 +131,8 @@ set (AVRO_SOURCE_FILES
         impl/Stream.cc impl/FileStream.cc
         impl/Generic.cc impl/GenericDatum.cc
         impl/DataFile.cc
-        impl/ZstdCodecWrapper.cc
+        impl/ZstdCompressWrapper.cc
+        impl/ZstdDecompressWrapper.cc
         impl/parsing/Symbol.cc
         impl/parsing/ValidatingCodec.cc
         impl/parsing/JsonCodec.cc

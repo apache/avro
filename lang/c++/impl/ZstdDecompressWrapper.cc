@@ -18,41 +18,14 @@
 
 #ifdef ZSTD_CODEC_AVAILABLE
 
-#include "ZstdCodecWrapper.hh"
+#include "ZstdDecompressWrapper.hh"
 #include "Exception.hh"
 
 #include <zstd.h>
 
 namespace avro {
 
-std::vector<char> ZstdCodecWrapper::compress(const std::vector<char> &uncompressed) {
-    if (cctx_ == nullptr) {
-        initCCtx();
-    }
-    // Pre-allocate buffer for compressed data
-    size_t max_compressed_size = ZSTD_compressBound(uncompressed.size());
-    if (ZSTD_isError(max_compressed_size)) {
-        throw Exception("ZSTD compression error: {}", ZSTD_getErrorName(max_compressed_size));
-    }
-    std::vector<char> compressed(max_compressed_size);
-
-    // Compress the data using ZSTD block API
-    size_t compressed_size = ZSTD_compress(
-        compressed.data(), max_compressed_size,
-        uncompressed.data(), uncompressed.size(),
-        ZSTD_CLEVEL_DEFAULT);
-
-    if (ZSTD_isError(compressed_size)) {
-        throw Exception("ZSTD compression error: {}", ZSTD_getErrorName(compressed_size));
-    }
-    compressed.resize(compressed_size);
-    return compressed;
-}
-
-std::string ZstdCodecWrapper::decompress(const std::vector<char> &compressed) {
-    if (dctx_ == nullptr) {
-        initDCtx();
-    }
+std::string ZstdDecompressWrapper::decompress(const std::vector<char> &compressed) {
     std::string uncompressed;
     // Get the decompressed size
     size_t decompressed_size = ZSTD_getFrameContentSize(
@@ -91,22 +64,15 @@ std::string ZstdCodecWrapper::decompress(const std::vector<char> &compressed) {
     return uncompressed;
 }
 
-void ZstdCodecWrapper::initCCtx() {
-    cctx_ = ZSTD_createCCtx();
-    if (!cctx_) {
-        throw Exception("ZSTD_createCCtx() failed");
-    }
-}
-
-void ZstdCodecWrapper::initDCtx() {
+ZstdDecompressWrapper::ZstdDecompressWrapper() {
     dctx_ = ZSTD_createDCtx();
     if (!dctx_) {
+        ZSTD_freeDCtx(dctx_);
         throw Exception("ZSTD_createDCtx() failed");
     }
 }
 
-ZstdCodecWrapper::~ZstdCodecWrapper() {
-    ZSTD_freeCCtx(cctx_);
+ZstdDecompressWrapper::~ZstdDecompressWrapper() {
     ZSTD_freeDCtx(dctx_);
 }
 
