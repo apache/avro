@@ -21,6 +21,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/parameterized_test.hpp>
 
+#include <cstdio>
 #include <filesystem>
 
 namespace avro {
@@ -134,36 +135,34 @@ void testNonEmpty2(const TestData &td) {
     Verify1()(*is, td.dataSize);
 }
 
-static const char filename[] = "test_str.bin";
-
-struct FileRemover {
-    const std::filesystem::path file;
-    explicit FileRemover(const char *fn) : file(fn) {}
-    ~FileRemover() { std::filesystem::remove(file); }
+struct FileGuard {
+    const std::filesystem::path path{ std::tmpnam(nullptr) };
+    ~FileGuard() { std::filesystem::remove(path); }
+    const char* filename() const { return path.c_str(); };
 };
 
 template<typename V>
 void testEmpty_fileStream() {
-    FileRemover fr(filename);
+    FileGuard fg;
     {
-        std::unique_ptr<OutputStream> os = fileOutputStream(filename);
+        std::unique_ptr<OutputStream> os = fileOutputStream(fg.filename());
     }
-    std::unique_ptr<InputStream> is = fileInputStream(filename);
+    std::unique_ptr<InputStream> is = fileInputStream(fg.filename());
     V()
     (*is);
 }
 
 template<typename F, typename V>
 void testNonEmpty_fileStream(const TestData &td) {
-    FileRemover fr(filename);
+    FileGuard fg;
     {
-        std::unique_ptr<OutputStream> os = fileOutputStream(filename,
+        std::unique_ptr<OutputStream> os = fileOutputStream(fg.filename(),
                                                             td.chunkSize);
         F()
         (*os, td.dataSize);
     }
 
-    std::unique_ptr<InputStream> is = fileInputStream(filename, td.chunkSize);
+    std::unique_ptr<InputStream> is = fileInputStream(fg.filename(), td.chunkSize);
     V()
     (*is, td.dataSize);
 }
