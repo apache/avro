@@ -57,15 +57,6 @@ struct InputIteratorHelper {
         return iter_->dataSize();
     }
 
-    /// Conversion operator.   It doesn't check for null, because the only
-    /// the only time the chunk should be null is when it's the iterator
-    /// end(), which should never be dereferenced anyway.
-#ifdef HAVE_BOOST_ASIO
-    operator ConstAsioBuffer() const {
-        return ConstAsioBuffer(data(), size());
-    }
-#endif
-
     BufferImpl::ChunkList::const_iterator iter_; ///< the current iterator
 };
 
@@ -94,15 +85,6 @@ struct OutputIteratorHelper {
     size_type size() const {
         return iter_->freeSize();
     }
-
-    /// Conversion operator.   It doesn't check for null, because the only
-    /// the only time the chunk should be null is when it's the iterator
-    /// end(), which should never be dereferenced anyway.
-#ifdef HAVE_BOOST_ASIO
-    operator MutableAsioBuffer() const {
-        return MutableAsioBuffer(data(), size());
-    }
-#endif
 
     BufferImpl::ChunkList::const_iterator iter_; ///< the current iterator
 };
