@@ -55,7 +55,11 @@ endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/avro-cpp-targets.cmake")
 
-add_library(avro-cpp::avrocpp_static ALIAS avro-cpp::avrocpp_s)
-add_library(avro-cpp::avrocpp_shared ALIAS avro-cpp::avrocpp)
+if(@AVRO_BUILD_STATIC@)
+  add_library(avro-cpp::avrocpp_static ALIAS avro-cpp::avrocpp_s)
+endif()
+if(@AVRO_BUILD_SHARED@)
+  add_library(avro-cpp::avrocpp_shared ALIAS avro-cpp::avrocpp)
+endif()
 
 check_required_components(avro-cpp)
