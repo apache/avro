@@ -73,14 +73,19 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     super(data);
   }
 
+  @Override
+  public T read(T reuse, Decoder in) throws IOException {
+    return super.read(reuse, in);
+  }
+
   private ReflectData getReflectData() {
     return (ReflectData) getSpecificData();
   }
 
   @Override
   protected Object newArray(Object old, int size, Schema schema) {
-    Class<?> collectionClass = ReflectData.getClassProp(schema, SpecificData.CLASS_PROP);
-    Class<?> elementClass = ReflectData.getClassProp(schema, SpecificData.ELEMENT_PROP);
+    Class<?> collectionClass = getSecureClassProp(schema, SpecificData.CLASS_PROP);
+    Class<?> elementClass = getSecureClassProp(schema, SpecificData.ELEMENT_PROP);
 
     if (elementClass == null) {
       // see if the element class will be converted and use that class
@@ -245,7 +250,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   @Override
   protected Object readBytes(Object old, Schema s, Decoder in) throws IOException {
     ByteBuffer bytes = in.readBytes(null);
-    Class<?> c = ReflectData.getClassProp(s, SpecificData.CLASS_PROP);
+    Class<?> c = getSecureClassProp(s, SpecificData.CLASS_PROP);
     if (c != null && c.isArray()) {
       byte[] result = new byte[bytes.remaining()];
       bytes.get(result);
@@ -257,6 +262,12 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
 
   @Override
   protected Object read(Object old, Schema expected, ResolvingDecoder in) throws IOException {
+    // Apply security validation before getting custom encoding
+    String classProp = expected.getProp(SpecificData.CLASS_PROP);
+    if (classProp != null) {
+      this.securityChecker.checkSecurity(classProp);
+    }
+
     CustomEncoding encoder = getReflectData().getCustomEncoding(expected);
     if (encoder != null) {
       return encoder.read(old, in);
@@ -330,5 +341,18 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       }
     }
     super.readField(record, field, oldDatum, in, state);
+  }
+
+  /**
+   * Secure version of ReflectData.getClassProp that applies security checks
+   * before class loading.
+   */
+  private Class<?> getSecureClassProp(Schema schema, String prop) {
+    String name = schema.getProp(prop);
+    if (name == null)
+      return null;
+    // Apply security check using inherited method from SpecificDatumReader
+    this.securityChecker.checkSecurity(name);
+    return ReflectData.getClassProp(schema, prop);
   }
 }
