@@ -48,7 +48,7 @@ jobs:
         run: sudo apt-get install -y libzstd-dev
 
       - name: Install .NET SDKs
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
             6.0.x
@@ -83,7 +83,7 @@ jobs:
         run: sudo apt-get install -y libzstd-dev
 
       - name: Install .NET SDKs
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
             6.0.x
