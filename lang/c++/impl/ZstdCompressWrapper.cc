@@ -49,7 +49,6 @@ std::vector<char> ZstdCompressWrapper::compress(const std::vector<char> &uncompr
 ZstdCompressWrapper::ZstdCompressWrapper() {
     cctx_ = ZSTD_createCCtx();
     if (!cctx_) {
-        ZSTD_freeCCtx(cctx_);
         throw Exception("ZSTD_createCCtx() failed");
     }
 }

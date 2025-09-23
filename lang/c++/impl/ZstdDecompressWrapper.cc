@@ -28,8 +28,7 @@ namespace avro {
 std::string ZstdDecompressWrapper::decompress(const std::vector<char> &compressed) {
     std::string uncompressed;
     // Get the decompressed size
-    size_t decompressed_size = ZSTD_getFrameContentSize(
-        reinterpret_cast<const char *>(compressed.data()), compressed.size());
+    size_t decompressed_size = ZSTD_getFrameContentSize(compressed.data(), compressed.size());
     if (decompressed_size == ZSTD_CONTENTSIZE_ERROR) {
         throw Exception("ZSTD: Not a valid compressed frame");
     } else if (decompressed_size == ZSTD_CONTENTSIZE_UNKNOWN) {
@@ -50,8 +49,7 @@ std::string ZstdDecompressWrapper::decompress(const std::vector<char> &compresse
         // Batch decompress the data
         uncompressed.resize(decompressed_size);
         size_t result = ZSTD_decompress(
-            uncompressed.data(), decompressed_size,
-            reinterpret_cast<const char *>(compressed.data()), compressed.size());
+            uncompressed.data(), decompressed_size, compressed.data(), compressed.size());
 
         if (ZSTD_isError(result)) {
             throw Exception("ZSTD decompression error: {}", ZSTD_getErrorName(result));
@@ -67,7 +65,6 @@ std::string ZstdDecompressWrapper::decompress(const std::vector<char> &compresse
 ZstdDecompressWrapper::ZstdDecompressWrapper() {
     dctx_ = ZSTD_createDCtx();
     if (!dctx_) {
-        ZSTD_freeDCtx(dctx_);
         throw Exception("ZSTD_createDCtx() failed");
     }
 }
