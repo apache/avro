@@ -892,6 +892,81 @@ void testSkipStringZstdCodec() {
 }
 #endif
 
+struct Weather {
+    std::string station;
+    int64_t time;
+    int32_t temp;
+    Weather(const char *station, int64_t time, int32_t temp)
+        : station(station), time(time), temp(temp) {}
+
+    bool operator==(const Weather &other) const {
+        return station == other.station && time == other.time && temp == other.temp;
+    }
+    friend std::ostream &operator<<(std::ostream &os, const Weather &w) {
+        return os << w.station << ' ' << w.time << ' ' << w.temp;
+    }
+};
+
+namespace avro {
+template<>
+struct codec_traits<Weather> {
+    static void decode(Decoder &d, Weather &v) {
+        avro::decode(d, v.station);
+        avro::decode(d, v.time);
+        avro::decode(d, v.temp);
+    }
+};
+} // namespace avro
+
+void testCompatibility(const char *filename) {
+    const char *readerSchemaStr = "{"
+                                  "\"type\": \"record\", \"name\": \"test.Weather\", \"fields\":["
+                                  "{\"name\": \"station\", \"type\": \"string\", \"order\": \"ignore\"},"
+                                  "{\"name\": \"time\", \"type\": \"long\"},"
+                                  "{\"name\": \"temp\", \"type\": \"int\"}"
+                                  "]}";
+    avro::ValidSchema readerSchema =
+        avro::compileJsonSchemaFromString(readerSchemaStr);
+    avro::DataFileReader<Weather> df(filename, readerSchema);
+
+    Weather ro("", -1, -1);
+    BOOST_CHECK_EQUAL(df.read(ro), true);
+    BOOST_CHECK_EQUAL(ro, Weather("011990-99999", -619524000000L, 0));
+    BOOST_CHECK_EQUAL(df.read(ro), true);
+    BOOST_CHECK_EQUAL(ro, Weather("011990-99999", -619506000000L, 22));
+    BOOST_CHECK_EQUAL(df.read(ro), true);
+    BOOST_CHECK_EQUAL(ro, Weather("011990-99999", -619484400000L, -11));
+    BOOST_CHECK_EQUAL(df.read(ro), true);
+    BOOST_CHECK_EQUAL(ro, Weather("012650-99999", -655531200000L, 111));
+    BOOST_CHECK_EQUAL(df.read(ro), true);
+    BOOST_CHECK_EQUAL(ro, Weather("012650-99999", -655509600000L, 78));
+    BOOST_CHECK_EQUAL(df.read(ro), false);
+}
+
+void testCompatibilityNullCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testCompatibility("../../share/test/data/weather.avro");
+}
+
+void testCompatibilityDeflateCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testCompatibility("../../share/test/data/weather-deflate.avro");
+}
+
+#ifdef SNAPPY_CODEC_AVAILABLE
+void testCompatibilitySnappyCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testCompatibility("../../share/test/data/weather-snappy.avro");
+}
+#endif
+
+#ifdef ZSTD_CODEC_AVAILABLE
+void testCompatibilityZstdCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testCompatibility("../../share/test/data/weather-zstd.avro");
+}
+#endif
+
 struct TestRecord {
     std::string s1;
     int64_t id;
@@ -1374,6 +1449,15 @@ init_unit_test_suite(int, char *[]) {
 #endif
 #ifdef ZSTD_CODEC_AVAILABLE
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testSkipStringZstdCodec));
+#endif
+
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testCompatibilityNullCodec));
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testCompatibilityDeflateCodec));
+#ifdef SNAPPY_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testCompatibilitySnappyCodec));
+#endif
+#ifdef ZSTD_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testCompatibilityZstdCodec));
 #endif
 
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testLastSyncNullCodec));
