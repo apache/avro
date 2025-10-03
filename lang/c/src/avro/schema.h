@@ -86,6 +86,13 @@ avro_schema_t avro_schema_union_branch_by_name
 avro_schema_t avro_schema_link(avro_schema_t schema);
 avro_schema_t avro_schema_link_target(avro_schema_t schema);
 
+avro_schema_t avro_schema_decimal(const avro_schema_t underlying,
+				  size_t scale, size_t precision);
+size_t avro_schema_decimal_scale(const avro_schema_t decimal);
+size_t avro_schema_decimal_precision(const avro_schema_t decimal);
+
+avro_schema_t avro_schema_logical_underlying(const avro_schema_t logical);
+
 typedef struct avro_schema_error_t_ *avro_schema_error_t;
 
 int avro_schema_from_json(const char *jsontext, int32_t unused1,

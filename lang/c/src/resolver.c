@@ -1228,6 +1228,53 @@ error:
 	return NULL;
 }
 
+/*-----------------------------------------------------------------------
+ * decimal
+ */
+
+static int
+avro_resolver_decimal_fixed_value(avro_consumer_t *consumer, const void *value,
+				  size_t value_len, void *user_data)
+{
+	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
+	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
+	debug("Storing (decimal) %" PRIsz " bytes into %p", value_len, dest);
+	return avro_givefixed_set(dest, (const char *) value, value_len,
+				  avro_alloc_free_func);
+}
+
+static int
+avro_resolver_decimal_bytes_value(avro_consumer_t *consumer, const void *value,
+				  size_t value_len, void *user_data)
+{
+	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
+	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
+	debug("Storing (decimal) %" PRIsz " bytes into %p", value_len, dest);
+	return avro_givebytes_set(dest, (const char *) value, value_len,
+				  free_bytes);
+}
+
+static int
+try_decimal(avro_memoize_t *mem, avro_resolver_t **resolver,
+	    avro_schema_t wschema, avro_schema_t rschema,
+	    avro_schema_t root_rschema)
+{
+	if (avro_schema_equal(wschema, rschema)) {
+		*resolver = avro_resolver_create(wschema, root_rschema);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
+		if (is_avro_fixed(avro_schema_logical_underlying(wschema))) {
+			(*resolver)->parent.decimal_value =
+			    avro_resolver_decimal_fixed_value;
+		} else {
+			(*resolver)->parent.decimal_value =
+			    avro_resolver_decimal_bytes_value;
+		}
+	}
+
+	return 0;
+}
 
 /*-----------------------------------------------------------------------
  * schema type dispatcher
@@ -1316,6 +1363,10 @@ avro_resolver_new_memoized(avro_memoize_t *mem,
 
 		case AVRO_UNION:
 			return try_union(mem, wschema, rschema);
+
+		case AVRO_DECIMAL:
+			check_simple_writer(mem, wschema, rschema, decimal);
+			return NULL;
 
 		default:
 			avro_set_error("Unknown schema type");

@@ -2758,6 +2758,74 @@ error:
 
 
 /*-----------------------------------------------------------------------
+ * decimal
+ */
+
+static int
+avro_resolved_writer_set_decimal(const avro_value_iface_t *viface, void *vself,
+				 void *buf, size_t size)
+{
+	int  rval;
+	const avro_resolved_writer_t  *iface =
+	    container_of(viface, avro_resolved_writer_t, parent);
+	avro_value_t  *self = (avro_value_t *) vself;
+	avro_value_t  dest;
+	check(rval, avro_resolved_writer_get_real_dest(iface, self, &dest));
+	DEBUG("Storing <%p:%" PRIsz "> into (decimal) %p", buf, size,
+	      dest.self);
+	return avro_value_set_bytes(&dest, buf, size);
+}
+
+static int
+avro_resolved_writer_give_decimal(const avro_value_iface_t *viface,
+				  void *vself, avro_wrapped_buffer_t *buf)
+{
+	int  rval;
+	const avro_resolved_writer_t  *iface =
+	    container_of(viface, avro_resolved_writer_t, parent);
+	avro_value_t  *self = (avro_value_t *) vself;
+	avro_value_t  dest;
+	check(rval, avro_resolved_writer_get_real_dest(iface, self, &dest));
+	DEBUG("Storing [%p] into (decimal) %p", buf, dest.self);
+	return avro_value_give_bytes(&dest, buf);
+}
+
+static int
+avro_resolved_writer_set_decoded_decimal(const avro_value_iface_t *viface,
+					 void *vself, const int64_t *unscaled,
+					 const int64_t *lhs,
+					 const uint64_t *rhs)
+{
+	int  rval;
+	const avro_resolved_writer_t  *iface =
+	    container_of(viface, avro_resolved_writer_t, parent);
+	avro_value_t  *self = (avro_value_t *) vself;
+	avro_value_t  dest;
+	check(rval, avro_resolved_writer_get_real_dest(iface, self, &dest));
+	return avro_value_set_decimal(&dest, unscaled, lhs, rhs);
+}
+
+static int
+try_decimal(memoize_state_t *state, avro_resolved_writer_t **self,
+	    avro_schema_t wschema, avro_schema_t rschema,
+	    avro_schema_t root_rschema)
+{
+	if (avro_schema_equal(wschema, rschema)) {
+		*self = avro_resolved_writer_create(wschema, root_rschema);
+		avro_memoize_set(&state->mem, wschema, root_rschema, *self);
+		(*self)->parent.set_bytes = avro_resolved_writer_set_decimal;
+		(*self)->parent.give_bytes = avro_resolved_writer_give_decimal;
+		(*self)->parent.set_fixed = avro_resolved_writer_set_decimal;
+		(*self)->parent.give_fixed = avro_resolved_writer_give_decimal;
+		(*self)->parent.set_decimal =
+		    avro_resolved_writer_set_decoded_decimal;
+	}
+
+	return 0;
+}
+
+
+/*-----------------------------------------------------------------------
  * Schema type dispatcher
  */
 
@@ -2855,6 +2923,10 @@ avro_resolved_writer_new_memoized(memoize_state_t *state,
 
 		case AVRO_LINK:
 			check_simple_writer(state, wschema, rschema, link);
+			return NULL;
+
+		case AVRO_DECIMAL:
+			check_simple_writer(state, wschema, rschema, decimal);
 			return NULL;
 
 		default:

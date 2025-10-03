@@ -3223,6 +3223,66 @@ error:
 
 
 /*-----------------------------------------------------------------------
+ * decimal
+ */
+
+static int
+avro_resolved_reader_get_decimal(const avro_value_iface_t *viface,
+				 const void *vself, const void **buf,
+				 size_t *size)
+{
+	AVRO_UNUSED(viface);
+	const avro_value_t  *src = (const avro_value_t *) vself;
+	DEBUG("Getting decimal from %p", vself);
+	return avro_value_get_bytes(src, buf, size);
+}
+
+static int
+avro_resolved_reader_grab_decimal(const avro_value_iface_t *viface,
+				  const void *vself,
+				  avro_wrapped_buffer_t *dest)
+{
+	AVRO_UNUSED(viface);
+	const avro_value_t  *src = (const avro_value_t *) vself;
+	DEBUG("Grabbing decimal from %p", vself);
+	return avro_value_grab_bytes(src, dest);
+}
+
+static int
+avro_resolved_reader_get_decoded_decimal(const avro_value_iface_t *viface,
+					 const void *vself, int64_t *unscaled,
+					 int64_t *lhs, uint64_t *rhs)
+{
+	AVRO_UNUSED(viface);
+	const avro_value_t  *src = (const avro_value_t *) vself;
+	DEBUG("Calling get_decimal from %p", vself);
+	return avro_value_get_decimal(src, unscaled, lhs, rhs);
+}
+
+static avro_resolved_reader_t *
+try_decimal(memoize_state_t *state, avro_schema_t wschema,
+	    avro_schema_t rschema)
+{
+	if (avro_schema_equal(wschema, rschema)) {
+		avro_resolved_reader_t  *self =
+		    avro_resolved_reader_create(wschema, rschema);
+		avro_memoize_set(&state->mem, wschema, rschema, self);
+		self->parent.get_bytes = avro_resolved_reader_get_decimal;
+		self->parent.grab_bytes = avro_resolved_reader_grab_decimal;
+		self->parent.get_fixed = avro_resolved_reader_get_decimal;
+		self->parent.grab_fixed = avro_resolved_reader_grab_decimal;
+		self->parent.get_decimal =
+	            avro_resolved_reader_get_decoded_decimal;
+		return self;
+	}
+	avro_set_error("Writer %s not compatible with reader %s",
+		       avro_schema_type_name(wschema),
+		       avro_schema_type_name(rschema));
+	return NULL;
+}
+
+
+/*-----------------------------------------------------------------------
  * Schema type dispatcher
  */
 
@@ -3322,6 +3382,9 @@ avro_resolved_reader_new_memoized(memoize_state_t *state,
 
 		case AVRO_LINK:
 			return try_rlink(state, wschema, rschema);
+
+		case AVRO_DECIMAL:
+			return try_decimal(state, wschema, rschema);
 
 		default:
 			avro_set_error("Unknown reader schema type");

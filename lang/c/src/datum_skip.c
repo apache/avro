@@ -199,6 +199,17 @@ int avro_skip_data(avro_reader_t reader, avro_schema_t writers_schema)
 	case AVRO_INVALID:
 		rval = EINVAL;
 		break;
+
+	case AVRO_DECIMAL:
+		if (is_avro_fixed(avro_schema_logical_underlying(
+			writers_schema))) {
+			rval = avro_skip(reader, avro_schema_to_fixed(
+			    avro_schema_logical_underlying(
+				writers_schema))->size);
+		} else {
+			rval = enc->skip_bytes(reader);
+		}
+		break;
 	}
 
 	return rval;

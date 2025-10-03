@@ -257,6 +257,24 @@ struct avro_value_iface {
 	int (*set_branch)(const avro_value_iface_t *iface,
 			  void *self, int discriminant,
 			  avro_value_t *branch);
+
+	/*
+	 * Returns the unscaled value, along with the values to the left and
+	 * right hand sides of the decimal point. Any of unscaled, lhs, and rhs
+	 * may be NULL.
+	 */
+	int (*get_decimal)(const avro_value_iface_t *iface,
+			   const void *self, int64_t *unscaled,
+			   int64_t *lhs, uint64_t *rhs);
+
+	/*
+	 * Sets the decimal value from either unscaled or lhs and rhs. If
+	 * unscaled is non-NULL, lhs and rhs are ignored. Otherwise, lhs and
+	 * rhs must be non-NULL.
+	 */
+	int (*set_decimal)(const avro_value_iface_t *iface,
+			   void *self, const int64_t *unscaled,
+			   const int64_t *lhs, const uint64_t *rhs);
 };
 
 
@@ -493,6 +511,11 @@ avro_value_to_json(const avro_value_t *value,
     avro_value_call(value, add, EINVAL, key, child, index, is_new)
 #define avro_value_set_branch(value, discriminant, branch) \
     avro_value_call(value, set_branch, EINVAL, discriminant, branch)
+
+#define avro_value_get_decimal(value, unscaled, lhs, rhs) \
+    avro_value_call(value, get_decimal, EINVAL, unscaled, lhs, rhs)
+#define avro_value_set_decimal(value, unscaled, lhs, rhs) \
+    avro_value_call(value, set_decimal, EINVAL, unscaled, lhs, rhs)
 
 CLOSE_EXTERN
 #endif

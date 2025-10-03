@@ -211,6 +211,27 @@ sizeof_value(avro_value_t *src, size_t *size)
 		case AVRO_UNION:
 			return sizeof_union_value(src, size);
 
+		case AVRO_DECIMAL:
+		{
+			const avro_schema_t underlying =
+			    avro_schema_logical_underlying(
+				avro_value_get_schema(src));
+			if (is_avro_fixed(underlying)) {
+				size_t sz;
+				check(rval, avro_value_get_fixed(
+				    src, NULL, &sz));
+				*size += sz;
+				return 0;
+			}
+
+			const void *buf;
+			size_t sz;
+			check(rval, avro_value_get_bytes(src, &buf, &sz));
+			*size += avro_binary_encoding.size_bytes(
+			    NULL, (const char *) buf, sz);
+			return 0;
+		}
+
 		default:
 		{
 			avro_set_error("Unknown schema type");
