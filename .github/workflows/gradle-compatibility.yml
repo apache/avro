@@ -22,7 +22,7 @@ name: Gradle Compatibility Tests
 on: [ pull_request ]
 jobs:
   test:
-    name: "Compatibility: gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
+    name: "Compatibility: gradle ${{ matrix.gradle }}, java ${{ matrix.java }}, avro ${{matrix.avro}}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
