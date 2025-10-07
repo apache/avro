@@ -19,16 +19,17 @@
 
 ARG BUILDPLATFORM
 
-FROM --platform=$BUILDPLATFORM ubuntu:22.04
+FROM --platform=$BUILDPLATFORM ubuntu:24.04
 WORKDIR /root
 
-ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
-    DEBIAN_FRONTEND=noninteractive
+#ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies from vanilla system packages
 RUN apt-get -qqy update \
  && apt-get -qqy install software-properties-common \
  && add-apt-repository ppa:deadsnakes/ppa \
+ && add-apt-repository ppa:longsleep/golang-backports \
  && apt-get -qqy update \
  && apt-get -qqy install --no-install-recommends ant \
                                                  apt-transport-https \
@@ -46,6 +47,8 @@ RUN apt-get -qqy update \
                                                  gcc \
                                                  git \
                                                  gnupg2 \
+                                                 golang-go \
+                                                 hugo \
                                                  libboost-all-dev \
                                                  libfontconfig1-dev \
                                                  libfreetype6-dev \
@@ -84,26 +87,14 @@ RUN apt-get -qqy update \
                                                  wget \
  && apt-get -qqy clean
 
-# Install PHP
-RUN apt-get -qqy install --no-install-recommends libzstd-dev \
-                                                 libbz2-dev \
-                                                 php \
-                                                 php-bz2 \
-                                                 php-curl \
-                                                 php-gmp \
-                                                 php-xml \
-                                                 php-mbstring \
-                                                 php-dev
-
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/bbb9892e165d40fb35fa19f38929effc5d0c709b/Dockerfile#L30
-ENV MAVEN_VERSION 3.9.6
-ENV APACHE_DIST_URLS \
-  https://www.apache.org/dyn/closer.cgi?action=download&filename= \
-  # if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
+ENV MAVEN_VERSION=3.9.11
+# Ideally we use the 1st URL only, but if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
+ENV APACHE_DIST_URLS="https://www.apache.org/dyn/closer.cgi?action=download&filename= \
   https://www-us.apache.org/dist/ \
   https://www.apache.org/dist/ \
-  https://archive.apache.org/dist/
+  https://archive.apache.org/dist/"
 RUN set -eux; \
   download() { \
     local f="$1"; shift; \
@@ -125,10 +116,7 @@ RUN set -eux; \
 ENV PATH="/opt/maven/bin:${PATH}"
 
 # Install nodejs
-# The node deprecation warnings cause a 20 second sleep.
-# But mom, I'm not even tired!
-RUN curl -sSL https://deb.nodesource.com/setup_14.x \
-  | sed 's/sleep/echo "But mom!"/' \
+RUN curl -sSL https://deb.nodesource.com/setup_24.x \
   | bash \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
@@ -136,8 +124,18 @@ RUN curl -sSL https://deb.nodesource.com/setup_14.x \
  && npm install -g browserify \
  && npm cache clean --force
 
+# Install PHP
+RUN apt-get -qqy install --no-install-recommends libzstd-dev \
+                                                 libbz2-dev \
+                                                 php \
+                                                 php-bz2 \
+                                                 php-curl \
+                                                 php-gmp \
+                                                 php-xml \
+                                                 php-mbstring \
+                                                 php-dev
 # Install PHP-snappy and PHP-zstd
-ENV PHP8_VERSION=8.1
+ENV PHP8_VERSION=8.3
 RUN mkdir -p "/etc/php/${PHP8_VERSION}/cli/conf.d"
 RUN mkdir tmp && cd tmp \
  && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-zstd.git \
@@ -214,7 +212,7 @@ RUN gem install bundler --no-document && \
 
 # Install Rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.73.0
-ENV PATH $PATH:/root/.cargo/bin/
+ENV PATH=$PATH:/root/.cargo/bin/
 
 # Install .NET SDK
 RUN cd /opt ; \
@@ -223,7 +221,7 @@ RUN cd /opt ; \
     bash ./dotnet-install.sh --channel "7.0" --install-dir "/opt/dotnet" ; \
     bash ./dotnet-install.sh --channel "8.0" --install-dir "/opt/dotnet" ;
     
-ENV PATH $PATH:/opt/dotnet
+ENV PATH=$PATH:/opt/dotnet
 
 # Since we want the JDK21 as a default, we have to re-prepend it to the PATH.
 RUN update-java-alternatives  -s "java-1.21.*"

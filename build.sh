@@ -184,8 +184,9 @@ do
       cp -r doc/ build/staging-web/
       find build/staging-web/ -type f -print0 | xargs -0 sed -r -i "s#\+\+version\+\+#${VERSION,,}#g"
       mkdir -p build/staging-web/public/docs/
-      mv build/staging-web/doc/content/en/docs/++version++ build/staging-web/public/docs/"${VERSION,,}"
-      read -n 1 -s -r -p "Build build/staging-web/ manually now. Press a key to continue..."
+      mv build/staging-web/content/en/docs/++version++ build/staging-web/public/docs/"${VERSION,,}"
+      (cd build/staging-web/ && npm install && hugo --gc --minify)
+      #read -n 1 -s -r -p "Build build/staging-web/ manually now. Press a key to continue..."
       # If it was a SNAPSHOT, it was lowercased during the build.
       cp -R build/staging-web/public/docs/"${VERSION,,}"/* "build/$DOC_DIR/"
       cp -R "build/$DOC_DIR/api" build/staging-web/public/docs/"${VERSION,,}"/
@@ -304,9 +305,10 @@ do
       DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME:-"avro-build-$USER_NAME:latest"}
       {
         cat share/docker/Dockerfile
-        echo "ENV HOME /home/$USER_NAME"
+        echo "ENV HOME=/home/$USER_NAME"
         echo "RUN getent group $GROUP_ID || groupadd -g $GROUP_ID $USER_NAME"
-        echo "RUN getent passwd $USER_ID || useradd -g $GROUP_ID -u $USER_ID -k /root -m $USER_NAME"
+        echo "RUN getent passwd $USER_ID && userdel \$(getent passwd $USER_ID | cut -d: -f1)"
+        echo "RUN useradd -N -g $GROUP_ID -u $USER_ID -k /root -m $USER_NAME"
         echo "RUN mkdir -p /home/$USER_NAME/.m2/repository"
       } > Dockerfile
 

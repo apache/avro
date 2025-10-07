@@ -55,14 +55,14 @@
     <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
     <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
     <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
-    <maven-javadoc-plugin.version>3.11.3</maven-javadoc-plugin.version>
+    <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
     <maven-plugin-plugin.version>3.15.1</maven-plugin-plugin.version>
     <maven-remote-resources-plugin.version>3.3.0</maven-remote-resources-plugin.version>
     <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
     <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
     <maven-toolchains-plugin.version>3.2.0</maven-toolchains-plugin.version>
     <plugin-tools-javadoc.version>3.5.2</plugin-tools-javadoc.version>
-    <spotless-maven-plugin.version>2.46.1</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>3.0.0</spotless-maven-plugin.version>
     <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
 
     <!-- Pin output timestamp to make the Java build reproducible -->
@@ -586,10 +586,10 @@
 
                 <mkdir dir="${avro.docDir}"/>
                 <copy todir="${avro.docDir}/java">
-                  <fileset dir="lang/java/target/site/apidocs"/>
+                  <fileset dir="lang/java/target/reports/apidocs"/>
                 </copy>
                 <copy todir="build/avro-doc-${project.version}/trevni">
-                  <fileset dir="lang/java/trevni/target/site"/>
+                  <fileset dir="lang/java/trevni/doc/target/site"/>
                 </copy>
               </target>
             </configuration>
