@@ -59,27 +59,10 @@ RUN apt-get -qqy update \
                                                  libsnappy1v5 \
                                                  libssl-dev \
                                                  make \
-                                                 mypy \
                                                  openjdk-11-jdk \
                                                  openjdk-17-jdk \
                                                  openjdk-21-jdk \
                                                  perl \
-                                                 python3 \
-                                                 python3-pip \
-                                                 python3-distutils \
-                                                 python3-setuptools \
-                                                 python3-snappy \
-                                                 python3-venv \
-                                                 python3-wheel \
-                                                 python3.10 \
-                                                 python3.11 \
-                                                 python3.11-dev \
-                                                 python3.7 \
-                                                 python3.7-distutils \
-                                                 python3.8 \
-                                                 python3.8-distutils \
-                                                 python3.9 \
-                                                 python3.9-distutils \
                                                  source-highlight \
                                                  subversion \
                                                  valgrind \
@@ -182,7 +165,7 @@ RUN curl -sSL https://cpanmin.us \
  && rm -rf .cpanm
 
 # Install Python3
-ENV PATH="${PATH}:/opt/pypy3.10/bin" \
+ENV PATH="${PATH}:/opt/pypy3.11/bin:/opt/pypy3.10/bin" \
     PIP_NO_CACHE_DIR=off
 
 # https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
@@ -192,13 +175,29 @@ RUN case "${BUILDARCH:?}" in \
       *) pypyarch=linux64;; \
     esac \
  && cd /opt \
- && for url in https://downloads.python.org/pypy/pypy3.10-v7.3.12-"$pypyarch".tar.bz2; \
-    do curl -fsSL "$url" | tar -xvjpf -; \
+ && for url in \
+    https://downloads.python.org/pypy/pypy3.11-v7.3.20-"$pypyarch".tar.bz2 \
+    https://downloads.python.org/pypy/pypy3.10-v7.3.19-"$pypyarch".tar.bz2 \
+    ; do curl -fsSL "$url" | tar -xvjpf -; \
     done \
- && ln -s pypy3.10* pypy3.10
+ && ln -s pypy3.11* pypy3.11 && ln -s pypy3.10* pypy3.10
 
-RUN python3 -m pip install --upgrade pip setuptools wheel \
- && python3 -m pip install tox zstandard
+# Note: python3-distutils was removed with Python 3.12; see here for migration advise: https://peps.python.org/pep-0632/#migration-advice
+RUN apt-get -qqy install --no-install-recommends mypy \
+                                                 python3 \
+                                                 python3.10 \
+                                                 python3.11 \
+                                                 python3.12 \
+                                                 python3.13 \
+                                                 python3.13-dev \
+                                                 python3-pip \
+                                                 python3-setuptools \
+                                                 python3-snappy \
+                                                 python3-venv \
+                                                 python3-wheel \
+                                                 python3-zstandard \
+                                                 tox \
+ && apt-get -qqy clean
 
 # Install Ruby
 RUN apt-get -qqy install ruby-full \
