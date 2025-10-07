@@ -23,7 +23,7 @@
     "issues": "https://issues.apache.org/jira/browse/AVRO"
   },
   "require": {
-    "php": "^7.1 || ^8.0"
+    "php": "^7.3 || ^8.0"
   },
   "deps": [
     "vendor/phpunit/phpunit",

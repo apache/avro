@@ -21,6 +21,7 @@
 namespace Apache\Avro\Schema;
 
 use Apache\Avro\AvroUtil;
+use Apache\Avro\Schema\LogicalSchema\AvroUuidSchema;
 
 /** TODO
  * - ARRAY have only type and item attributes (what about metadata?)
@@ -118,6 +119,34 @@ class AvroSchema
      * @var string bytes schema type name
      */
     public const BYTES_TYPE = 'bytes';
+
+    // Logical Types
+    /** @var string */
+    public const DECIMAL_LOGICAL_TYPE = 'decimal';
+
+    /** @var string */
+    public const UUID_LOGICAL_TYPE = 'uuid';
+
+    /** @var string  */
+    public const DATE_LOGICAL_TYPE = 'date';
+
+    /** @var string */
+    public const TIME_MILLIS_LOGICAL_TYPE = 'time-millis';
+
+    /** @var string */
+    public const TIME_MICROS_LOGICAL_TYPE = 'time-micros';
+
+    /** @var string */
+    public const TIMESTAMP_MILLIS_LOGICAL_TYPE = 'timestamp-millis';
+
+    /** @var string */
+    public const TIMESTAMP_MICROS_LOGICAL_TYPE = 'timestamp-micros';
+
+    /** @var string */
+    public const LOCAL_TIMESTAMP_MILLIS_LOGICAL_TYPE = 'local-timestamp-millis';
+
+    /** @var string */
+    public const LOCAL_TIMESTAMP_MICROS_LOGICAL_TYPE = 'local-timestamp-micros';
 
     // Complex Types
     // Unnamed Schema
@@ -225,6 +254,9 @@ class AvroSchema
     /** @var string aliases string attribute name */
     public const ALIASES_ATTR = 'aliases';
 
+    /** @var string logical type attribute name */
+    public const LOGICAL_TYPE_ATTR = 'logicalType';
+
     /**
      * @var array list of primitive schema type names
      */
@@ -304,7 +336,13 @@ class AvroSchema
             $type = $avro[self::TYPE_ATTR] ?? null;
 
             if (self::isPrimitiveType($type)) {
-                return new AvroPrimitiveSchema($type);
+
+                switch ($avro[self::LOGICAL_TYPE_ATTR] ?? null) {
+                    case self::UUID_LOGICAL_TYPE:
+                        return new AvroUuidSchema();
+                    default:
+                        return new AvroPrimitiveSchema($type);
+                }
             }
 
             if (self::isNamedType($type)) {
@@ -450,7 +488,7 @@ class AvroSchema
      *                  and false otherwise.
      * @throws AvroSchemaParseException
      */
-    public static function isValidDatum($expected_schema, $datum)
+    public static function isValidDatum($expected_schema, $datum): bool
     {
         switch ($expected_schema->type) {
             case self::NULL_TYPE:
@@ -550,7 +588,7 @@ class AvroSchema
     /**
      * @returns string schema type name of this schema
      */
-    public function type()
+    public function type(): string
     {
         return $this->type;
     }
@@ -563,12 +601,9 @@ class AvroSchema
         return (string) json_encode($this->toAvro());
     }
 
-    /**
-     * @returns mixed
-     */
     public function toAvro()
     {
-        return array(self::TYPE_ATTR => $this->type);
+        return [self::TYPE_ATTR => $this->type];
     }
 
     /**

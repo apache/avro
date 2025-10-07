@@ -486,19 +486,19 @@ class SchemaTest extends TestCase
         }
     }
 
-    public function testToAvroIncludesAliases()
+    public function testToAvroIncludesAliases(): void
     {
         $hash = <<<SCHEMA
-{
-    "type": "record",
-    "name": "test_record",
-    "aliases": ["alt_record"],
-    "fields": [
-        { "name": "f", "type": { "type": "fixed", "size": 2, "name": "test_fixed", "aliases": ["alt_fixed"] } },
-        { "name": "e", "type": { "type": "enum", "symbols": ["A", "B"], "name": "test_enum", "aliases": ["alt_enum"] } }
-    ]
-}
-SCHEMA;
+                {
+                    "type": "record",
+                    "name": "test_record",
+                    "aliases": ["alt_record"],
+                    "fields": [
+                        { "name": "f", "type": { "type": "fixed", "size": 2, "name": "test_fixed", "aliases": ["alt_fixed"] } },
+                        { "name": "e", "type": { "type": "enum", "symbols": ["A", "B"], "name": "test_enum", "aliases": ["alt_enum"] } }
+                    ]
+                }
+                SCHEMA;
         $schema = AvroSchema::parse($hash);
         $this->assertEquals($schema->toAvro(), json_decode($hash, true));
     }
@@ -584,20 +584,35 @@ SCHEMA);
     {
         $this->expectNotToPerformAssertions();
         AvroSchema::parse(<<<SCHEMA
-{
-    "type": "record",
-    "name": "fruits",
-    "fields": [
-        {
-            "name": "banana",
-            "type": "string",
-            "aliases": [
-                "yellow",
-                "yellow"
-            ]
-        }
-    ]
-}
-SCHEMA);
+            {
+                "type": "record",
+                "name": "fruits",
+                "fields": [
+                    {
+                        "name": "banana",
+                        "type": "string",
+                        "aliases": [
+                            "yellow",
+                            "yellow"
+                        ]
+                    }
+                ]
+            }
+            SCHEMA);
+    }
+
+    public function testLogicalTypes(): void
+    {
+        $avro = <<<AVRO
+                {
+                  "type": "string",
+                  "logicalType": "uuid"
+                }
+                AVRO;
+
+
+        $schema = AvroSchema::parse($avro);
+
+        self::assertEquals($schema->toAvro(), json_decode($avro, true));
     }
 }
