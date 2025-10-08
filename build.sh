@@ -186,8 +186,6 @@ do
       mkdir -p build/staging-web/public/docs/
       mv build/staging-web/content/en/docs/++version++ build/staging-web/public/docs/"${VERSION,,}"
       (cd build/staging-web/ && npm install && hugo --gc --minify)
-      #read -n 1 -s -r -p "Build build/staging-web/ manually now. Press a key to continue..."
-      # If it was a SNAPSHOT, it was lowercased during the build.
       cp -R build/staging-web/public/docs/"${VERSION,,}"/* "build/$DOC_DIR/"
       cp -R "build/$DOC_DIR/api" build/staging-web/public/docs/"${VERSION,,}"/
       ( cd build/staging-web/public/docs/; ln -s "${VERSION,,}" current )
