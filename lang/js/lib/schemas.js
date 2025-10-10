@@ -2030,19 +2030,10 @@ function getOpts(attrs, opts) {
   }
   opts = opts || {};
   
-  // Ensure registry and logicalTypes exist and are preserved by reference so 
-  // type definitions can accumulate across recursive calls.
-  if (!opts.registry) {
-    opts.registry = {};
-  }
-  if (!opts.logicalTypes) {
-    opts.logicalTypes = {};
-  }
-  
   return {
-    registry: opts.registry,  // Preserve same object reference
+    registry: opts.registry || {},  // Preserve same object reference
     namespace: attrs.namespace || opts.namespace,
-    logicalTypes: opts.logicalTypes,  // Preserve same object reference
+    logicalTypes: opts.logicalTypes || {},  // Preserve same object reference
     typeHook: opts.typeHook,
     assertLogicalTypes: opts.assertLogicalTypes
   };
