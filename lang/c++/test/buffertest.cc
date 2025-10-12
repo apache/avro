@@ -604,6 +604,47 @@ void TestIterator() {
     }
 }
 
+// Historical context: Prior to AVRO-4178, InputBuffer and OutputBuffer iterators
+// had implicit conversion operators to boost::asio::const_buffer and
+// boost::asio::mutable_buffer (via ConstAsioBuffer and MutableAsioBuffer typedefs).
+// These conversions were removed to eliminate the Boost::system dependency.
+// This test demonstrates the recommended workaround: users should access the
+// public data() and size() member functions of the dereferenced iterator instead.
+// These functions provide the same underlying buffer pointer and size information
+// that the ASIO conversions provided, allowing integration with any I/O library.
+void TestAsioBuffer() {
+    BOOST_TEST_MESSAGE("TestAsioBuffer");
+    {
+        std::string hello = "hello ";
+        std::string world = "world";
+
+        // Create a buffer with data
+        avro::OutputBuffer buf;
+        buf.writeTo(hello.c_str(), hello.size());
+
+        avro::OutputBuffer buf2;
+        buf2.writeTo(world.c_str(), world.size());
+
+        buf.append(buf2);
+        BOOST_CHECK_EQUAL(buf.size(), hello.size() + world.size());
+
+        // Convert to InputBuffer for reading
+        const avro::InputBuffer rbuf(buf);
+
+        // Demonstrate the workaround: instead of relying on implicit ASIO conversions,
+        // users can access data() and size() directly from the dereferenced iterator.
+        std::string reconstructed;
+        avro::InputBuffer::const_iterator iter = rbuf.begin();
+        while (iter != rbuf.end()) {
+            reconstructed.append(iter->data(), iter->size());
+            ++iter;
+        }
+
+        BOOST_CHECK_EQUAL(reconstructed, "hello world");
+        BOOST_CHECK_EQUAL(reconstructed.size(), rbuf.size());
+    }
+}
+
 void TestSplit() {
     BOOST_TEST_MESSAGE("TestSplit");
     {
@@ -974,6 +1015,7 @@ struct BufferTestSuite : public boost::unit_test::test_suite {
         add(BOOST_TEST_CASE(TestReadSome));
         add(BOOST_TEST_CASE(TestSeek));
         add(BOOST_TEST_CASE(TestIterator));
+        add(BOOST_TEST_CASE(TestAsioBuffer));
         add(BOOST_TEST_CASE(TestSplit));
         add(BOOST_TEST_CASE(TestSplitOnBorder));
         add(BOOST_TEST_CASE(TestSplitTwice));
