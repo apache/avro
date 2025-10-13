@@ -20,9 +20,6 @@
 
 #include <boost/bind/bind.hpp>
 
-#ifdef HAVE_BOOST_ASIO
-#include <boost/asio.hpp>
-#endif
 #include "buffer/BufferPrint.hh"
 #include "buffer/BufferReader.hh"
 #include "buffer/BufferStream.hh"
@@ -607,108 +604,46 @@ void TestIterator() {
     }
 }
 
-#ifdef HAVE_BOOST_ASIO
-void server(boost::barrier &b) {
-    using boost::asio::ip::tcp;
-    boost::asio::io_service io_service;
-    tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), 33333));
-    tcp::socket sock(io_service);
-    a.listen();
-
-    b.wait();
-
-    a.accept(sock);
-    avro::OutputBuffer buf(100);
-
-    size_t length = sock.receive(buf);
-    buf.wroteTo(length);
-    cout << "Server got " << length << " bytes\n";
-
-    InputBuffer rbuf(buf);
-
-    std::string res;
-
-    avro::InputBuffer::const_iterator iter = rbuf.begin();
-    while (iter != rbuf.end()) {
-        res.append(boost::asio::buffer_cast<const char *>(*iter), boost::asio::buffer_size(*iter));
-        cout << "Received Buffer size: " << boost::asio::buffer_size(*iter) << endl;
-        BOOST_CHECK_EQUAL(length, boost::asio::buffer_size(*iter));
-        cout << "Received Buffer: \"" << res << '"' << endl;
-        ++iter;
-    }
-
-    BOOST_CHECK_EQUAL(res, "hello world");
-}
-
+// Historical context: Prior to AVRO-4178, InputBuffer and OutputBuffer iterators
+// had implicit conversion operators to boost::asio::const_buffer and
+// boost::asio::mutable_buffer (via ConstAsioBuffer and MutableAsioBuffer typedefs).
+// These conversions were removed to eliminate the Boost::system dependency.
+// This test demonstrates the recommended workaround: users should access the
+// public data() and size() member functions of the dereferenced iterator instead.
+// These functions provide the same underlying buffer pointer and size information
+// that the ASIO conversions provided, allowing integration with any I/O library.
 void TestAsioBuffer() {
-    using boost::asio::ip::tcp;
     BOOST_TEST_MESSAGE("TestAsioBuffer");
     {
-        boost::barrier b(2);
-
-        boost::thread t(boost::bind(server, boost::ref(b)));
-
-        b.wait();
-
-        // set up the thing
-        boost::asio::io_service io_service;
-
-        tcp::resolver resolver(io_service);
-        tcp::resolver::query query(tcp::v4(), "localhost", "33333");
-        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-        tcp::resolver::iterator end;
-
-        tcp::socket socket(io_service);
-        boost::system::error_code error = boost::asio::error::host_not_found;
-        while (error && endpoint_iterator != end) {
-            socket.close();
-            socket.connect(*endpoint_iterator++, error);
-        }
-        if (error) {
-            throw error;
-        }
-
         std::string hello = "hello ";
         std::string world = "world";
+
+        // Create a buffer with data
         avro::OutputBuffer buf;
         buf.writeTo(hello.c_str(), hello.size());
 
-        BOOST_CHECK_EQUAL(buf.size(), hello.size());
-
         avro::OutputBuffer buf2;
         buf2.writeTo(world.c_str(), world.size());
-        BOOST_CHECK_EQUAL(buf2.size(), world.size());
 
         buf.append(buf2);
         BOOST_CHECK_EQUAL(buf.size(), hello.size() + world.size());
 
-        cout << "Distance " << std::distance(buf.begin(), buf.end()) << endl;
-        BOOST_CHECK_EQUAL(std::distance(buf.begin(), buf.end()), 1);
-
+        // Convert to InputBuffer for reading
         const avro::InputBuffer rbuf(buf);
 
+        // Demonstrate the workaround: instead of relying on implicit ASIO conversions,
+        // users can access data() and size() directly from the dereferenced iterator.
+        std::string reconstructed;
         avro::InputBuffer::const_iterator iter = rbuf.begin();
         while (iter != rbuf.end()) {
-            std::string str(boost::asio::buffer_cast<const char *>(*iter), boost::asio::buffer_size(*iter));
-            cout << "Buffer size: " << boost::asio::buffer_size(*iter) << endl;
-            cout << "Buffer: \"" << str << '"' << endl;
+            reconstructed.append(iter->data(), iter->size());
             ++iter;
         }
 
-        cout << "Buffer size " << rbuf.size() << endl;
-
-        std::size_t wrote = boost::asio::write(socket, rbuf);
-        cout << "Wrote " << wrote << endl;
-        BOOST_CHECK_EQUAL(wrote, rbuf.size());
-
-        t.join();
+        BOOST_CHECK_EQUAL(reconstructed, "hello world");
+        BOOST_CHECK_EQUAL(reconstructed.size(), rbuf.size());
     }
 }
-#else
-void TestAsioBuffer() {
-    cout << "Skipping asio test\n";
-}
-#endif // HAVE_BOOST_ASIO
 
 void TestSplit() {
     BOOST_TEST_MESSAGE("TestSplit");

@@ -70,7 +70,6 @@ if (WIN32 AND NOT CYGWIN AND NOT MSYS)
     add_definitions (/EHa)
     add_definitions (
         -DNOMINMAX
-        -DBOOST_SYSTEM_DYN_LINK
         -DBOOST_ALL_NO_LIB)
 endif()
 
@@ -80,9 +79,8 @@ endif ()
 
 if (AVRO_BUILD_TESTS OR AVRO_USE_BOOST)
     # Boost 1.70 and above provide a BoostConfig.cmake package configuration file.
-    # It guarantees that Boost::system target exists if found.
     # See https://cmake.org/cmake/help/latest/policy/CMP0167.html
-    find_package (Boost 1.70 REQUIRED CONFIG COMPONENTS system)
+    find_package (Boost 1.70 REQUIRED CONFIG)
 endif ()
 
 find_package(fmt QUIET)
@@ -153,11 +151,9 @@ function (setup_avro_lib target lib_type)
       $<BUILD_INTERFACE:ZLIB::ZLIB>
       $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
       $<$<BOOL:${zstd_FOUND}>:$<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
-      $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
       $<INSTALL_INTERFACE:ZLIB::ZLIB>
       $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
       $<$<BOOL:${zstd_FOUND}>:$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
-      $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
     )
     target_include_directories (${target} PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -226,7 +222,7 @@ if (AVRO_BUILD_TESTS)
 
     macro (unittest name)
         add_executable (${name} test/${name}.cc)
-        target_link_libraries (${name} ${AVRO_LINK_LIB} Boost::system ZLIB::ZLIB $<TARGET_NAME_IF_EXISTS:Snappy::snappy> $<$<BOOL:${zstd_FOUND}>:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>)
+        target_link_libraries (${name} ${AVRO_LINK_LIB} ZLIB::ZLIB $<TARGET_NAME_IF_EXISTS:Snappy::snappy> $<$<BOOL:${zstd_FOUND}>:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>)
         add_test (NAME ${name} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name})
     endmacro (unittest)
