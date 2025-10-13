@@ -76,6 +76,12 @@ namespace Avro
         protected Dictionary<string, CodeNamespace> NamespaceLookup { get; private set; }
 
         /// <summary>
+        /// Gets the collection of namespace mappings used to replace namespaces in the schema text when adding schemas or protocols.
+        /// Used to reverse the namespace replacement later to keep the original schema text intact within the "Schema" property.
+        /// </summary>
+        protected IDictionary<string, string> ReplacedNamespaceMappings { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="CodeGen"/> class.
         /// </summary>
         public CodeGen()
@@ -83,6 +89,7 @@ namespace Avro
             Schemas = new List<Schema>();
             Protocols = new List<Protocol>();
             NamespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
+            ReplacedNamespaceMappings = new Dictionary<string, string>();
         }
 
         /// <summary>
@@ -134,9 +141,26 @@ namespace Avro
         public virtual void AddSchema(string schemaText, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
         {
             // Map namespaces
-            schemaText = ReplaceMappedNamespacesInSchema(schemaText, namespaceMapping);
-            Schema schema = Schema.Parse(schemaText);
-            Schemas.Add(schema);
+            var namespaceAdjustedSchemaText = ReplaceMappedNamespacesInSchema(schemaText, namespaceMapping);
+            Schema namspaceAdjustedSchema = Schema.Parse(namespaceAdjustedSchemaText);
+            Schemas.Add(namspaceAdjustedSchema);
+
+            AddReplacedNamespaceMappings(namespaceMapping);
+        }
+
+        /// <summary>
+        /// Adds namespace mappings in the schema text to ReplacedNamespaceMappings, so that they can be reversed later to keep the original schema text intact within the "Schema" property.
+        /// </summary>
+        /// <param name="namespaceMapping"></param>
+        protected void AddReplacedNamespaceMappings(IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+        {
+            if(namespaceMapping == null)
+                return;
+
+            foreach (var item in namespaceMapping.Where(item => !ReplacedNamespaceMappings.ContainsKey(item.Key)))
+            {
+                ReplacedNamespaceMappings.Add(item.Key, item.Value);
+            }
         }
 
         /// <summary>
@@ -206,7 +230,7 @@ namespace Avro
         /// <exception cref="CodeGenException">Names in schema should only be of type NamedSchema, type found " + sn.Value.Tag.</exception>
         protected virtual void ProcessSchemas()
         {
-            foreach (Schema schema in Schemas)
+            foreach (var schema in Schemas)
             {
                 SchemaNames names = GenerateNames(schema);
                 foreach (KeyValuePair<SchemaName, NamedSchema> sn in names)
@@ -1073,8 +1097,19 @@ namespace Avro
             var codeField = new CodeMemberField(ctrfield, schemaFname);
             codeField.Attributes = MemberAttributes.Public | MemberAttributes.Static;
 
+
+            //restore Avro Namespaces
+            var inverseDict = new Dictionary<string, string>();
+
+            foreach (var kvp in ReplacedNamespaceMappings)
+            {
+                inverseDict[kvp.Value] = kvp.Key;
+            }
+
+            var namespaceRestoredSchemaText = ReplaceMappedNamespacesInSchema(schema.ToString(), inverseDict);
+
             // create function call Schema.Parse(json)
-            var cpe = new CodePrimitiveExpression(schema.ToString());
+            var cpe = new CodePrimitiveExpression(namespaceRestoredSchemaText);
             var cmie = new CodeMethodInvokeExpression(
                 new CodeMethodReferenceExpression(new CodeTypeReferenceExpression(ctrfield), "Parse"),
                 new CodeExpression[] { cpe });
@@ -1266,5 +1301,6 @@ namespace Avro
                 return $@"""namespace""{m.Groups[1].Value}:{m.Groups[2].Value}""{ns}""";
             });
         }
+
     }
 }
