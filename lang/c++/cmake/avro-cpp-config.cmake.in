@@ -43,7 +43,7 @@ if(@Snappy_FOUND@)
     find_dependency(Snappy REQUIRED)
 endif()
 if(@Boost_FOUND@)
-    find_dependency(Boost 1.70 REQUIRED COMPONENTS system)
+    find_dependency(Boost 1.70 REQUIRED)
 endif()
 
 if(DEFINED AVRO_CMAKE_MODULE_PATH_OLD)
