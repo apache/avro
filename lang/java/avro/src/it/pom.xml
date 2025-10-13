@@ -56,16 +56,12 @@
         <executions>
           <execution>
             <goals>
-              <goal>toolchain</goal>
+              <goal>select-jdk-toolchain</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
-          <toolchains>
-            <jdk>
-              <version>@integrationTestingJDK@</version>
-            </jdk>
-          </toolchains>
+          <version>@integrationTestingJDK@</version>
         </configuration>
       </plugin>
 

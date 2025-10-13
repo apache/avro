@@ -310,6 +310,7 @@ do
         echo "RUN getent passwd $USER_ID && userdel \$(getent passwd $USER_ID | cut -d: -f1)"
         echo "RUN useradd -N -g $GROUP_ID -u $USER_ID -k /root -m $USER_NAME"
         echo "RUN mkdir -p /home/$USER_NAME/.m2/repository"
+        echo "RUN chown -R --reference=/home/$USER_NAME /home/$USER_NAME/.m2/"
       } > Dockerfile
 
       if [ -z "$BUILDPLATFORM" ]; then
@@ -334,10 +335,7 @@ do
         --env "JAVA=${JAVA:-21}" \
         --user "${USER_NAME}" \
         --volume "${HOME}/.gnupg:/home/${USER_NAME}/.gnupg" \
-        --volume "${PWD}/share/docker/m2:/home/${USER_NAME}/.m2/" \
-        --volume "${PWD}/share/docker/m2/toolchains.xml:/home/${USER_NAME}/.m2/toolchains.xml" \
         --volume "${HOME}/.m2/repository:/home/${USER_NAME}/.m2/repository${DOCKER_MOUNT_FLAG}" \
-        --volume "${HOME}/.m2/build-cache:/home/${USER_NAME}/.m2/build-cache${DOCKER_MOUNT_FLAG}" \
         --volume "${PWD}:/home/${USER_NAME}/avro${DOCKER_MOUNT_FLAG}" \
         --workdir "/home/${USER_NAME}/avro" \
         ${DOCKER_RUN_XTRA_ARGS} "$DOCKER_IMAGE_NAME" ${DOCKER_RUN_ENTRYPOINT}

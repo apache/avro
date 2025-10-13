@@ -163,7 +163,7 @@
             </goals>
             <configuration>
               <filterProperties>
-                <integrationTestingJDK>11</integrationTestingJDK>
+                <integrationTestingJDK>[11,12)</integrationTestingJDK>
               </filterProperties>
               <properties>
                 <maven.compiler.release>11</maven.compiler.release>
@@ -179,7 +179,7 @@
             </goals>
             <configuration>
               <filterProperties>
-                <integrationTestingJDK>17</integrationTestingJDK>
+                <integrationTestingJDK>[17,18)</integrationTestingJDK>
               </filterProperties>
               <properties>
                 <maven.compiler.release>17</maven.compiler.release>
@@ -195,7 +195,7 @@
             </goals>
             <configuration>
               <filterProperties>
-                <integrationTestingJDK>21</integrationTestingJDK>
+                <integrationTestingJDK>[21,22)</integrationTestingJDK>
               </filterProperties>
               <properties>
                 <maven.compiler.release>21</maven.compiler.release>

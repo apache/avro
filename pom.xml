@@ -184,41 +184,30 @@
           <execution>
             <id>Ensure ToolChain for JDK 11 is available</id>
             <goals>
-              <goal>toolchain</goal>
+              <goal>select-jdk-toolchain</goal>
             </goals>
             <configuration>
-              <toolchains>
-                <jdk>
-                  <version>11</version>
-                </jdk>
-              </toolchains>
+              <version>[11,12)</version>
             </configuration>
           </execution>
           <execution>
             <id>Ensure ToolChain for JDK 17 is available</id>
             <goals>
-              <goal>toolchain</goal>
+              <goal>select-jdk-toolchain</goal>
             </goals>
             <configuration>
-              <toolchains>
-                <jdk>
-                  <version>17</version>
-                </jdk>
-              </toolchains>
+              <version>[17,18)</version>
             </configuration>
           </execution>
           <execution>
             <!-- The last one in this list is the version used for actually building the software -->
             <id>Build using JDK 21</id>
             <goals>
-              <goal>toolchain</goal>
+              <goal>select-jdk-toolchain</goal>
             </goals>
             <configuration>
-              <toolchains>
-                <jdk>
-                  <version>21</version>
-                </jdk>
-              </toolchains>
+              <useJdk>IfSame</useJdk>
+              <version>[21,22)</version>
             </configuration>
           </execution>
         </executions>
@@ -435,7 +424,6 @@
                 <exclude>**/*.rej</exclude>
                 <exclude>**/*.egg-info/**</exclude>
                 <exclude>build/**</exclude>
-                <exclude>share/docker/m2/build-cache/**</exclude>
                 <exclude>lang/java/archetypes/**</exclude>
                 <exclude>lang/java/**/target/**</exclude>
                 <exclude>lang/js/node_modules/**</exclude>
