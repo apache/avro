@@ -160,7 +160,8 @@ namespace Avro.Test.AvroGen
             string outputDir,
             string assemblyName,
             IEnumerable<string> typeNamesToCheck = null,
-            IEnumerable<string> generatedFilesToCheck = null)
+            IEnumerable<string> generatedFilesToCheck = null,
+            IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
         {
             // Check if all generated files exist
             if (generatedFilesToCheck != null)
@@ -230,6 +231,20 @@ namespace Avro.Test.AvroGen
                         {
                             // Read record's schema object
                             Assert.That(record.Schema, Is.Not.Null);
+
+                            if(namespaceMapping is not null)
+                            {
+                                var schema = record.Schema.ToString();
+                                foreach (var mapping in namespaceMapping)
+                                {
+                                    if(mapping.Key == mapping.Value)
+                                        continue;
+
+                                    Assert.That(schema, Does.Contain($"\"namespace\":\"{mapping.Key}\""));
+                                    Assert.That(schema, Does.Not.Contain($"\"namespace\":\"{mapping.Value}\""));
+                                }
+                            }
+
                             // Force exception by reading/writing invalid field
                             Assert.Throws<AvroRuntimeException>(() => record.Get(-1));
                             Assert.Throws<AvroRuntimeException>(() => record.Put(-1, null));
@@ -260,7 +275,7 @@ namespace Avro.Test.AvroGen
                 // Generate from schema file
                 Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, namespaceMapping ?? new Dictionary<string, string>(), skipDirectories), Is.EqualTo(0));
 
-                return CompileCSharpFilesAndCheckTypes(outputDir, uniqueId, typeNamesToCheck, generatedFilesToCheck);
+                return CompileCSharpFilesAndCheckTypes(outputDir, uniqueId, typeNamesToCheck, generatedFilesToCheck, namespaceMapping ?? new Dictionary<string, string>());
             }
             finally
             {
@@ -286,7 +301,7 @@ namespace Avro.Test.AvroGen
                 // Generate from protocol file
                 Assert.That(AvroGenTool.GenProtocol(schemaFileName, outputDir, namespaceMapping ?? new Dictionary<string, string>()), Is.EqualTo(0));
 
-                return CompileCSharpFilesAndCheckTypes(outputDir, uniqueId, typeNamesToCheck, generatedFilesToCheck);
+                return CompileCSharpFilesAndCheckTypes(outputDir, uniqueId, typeNamesToCheck, generatedFilesToCheck, namespaceMapping ?? new Dictionary<string, string>());
             }
             finally
             {
