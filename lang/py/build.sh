@@ -23,16 +23,7 @@ usage() {
 }
 
 clean() {
-  git clean -xdf '*.avpr' \
-                 '*.avsc' \
-                 '*.egg-info' \
-                 '*.py[co]' \
-                 '__pycache__' \
-                 '.tox' \
-                 'avro/test/interop' \
-                 'dist' \
-                 'docs/build' \
-                 'userlogs'
+  git clean -xdf
 }
 
 dist() (

@@ -41,9 +41,9 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
         node:
-          - 12
-          - 14
-          - 16
+          - 20
+          - 22
+          - 24
     steps:
       - uses: actions/checkout@v5
       - name: Setup Node
@@ -72,9 +72,9 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
         node:
-          - 12
-          - 14
-          - 16
+          - 20
+          - 22
+          - 24
     steps:
       - uses: actions/checkout@v5
       - name: Setup Node
