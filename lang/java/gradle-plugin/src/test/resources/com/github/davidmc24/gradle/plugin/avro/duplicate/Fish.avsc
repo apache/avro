@@ -1,0 +1,26 @@
+{
+    "name": "Fish",
+    "namespace": "example",
+    "type": "record",
+    "fields": [
+        { "name": "name", "type": "string" },
+        {
+            "name": "owner",
+            "type": {
+                "name": "Person",
+                "type": "record",
+                "fields": [
+                    { "name": "name", "type": "string" },
+                    {
+                        "name": "gender",
+                        "type": {
+                            "name": "Gender",
+                            "type": "enum",
+                            "symbols": [ "MALE", "FEMALE", "OTHER" ]
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

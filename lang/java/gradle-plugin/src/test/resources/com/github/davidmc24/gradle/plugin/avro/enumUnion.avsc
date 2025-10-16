@@ -1,0 +1,18 @@
+{
+    "namespace": "example.avro",
+    "type": "record",
+    "name": "Test",
+    "fields": [
+        {
+            "name": "kind",
+            "type": [
+                "null",
+                {
+                    "name": "Kind",
+                    "type": "enum",
+                    "symbols": ["X", "Y", "Z"]
+                }
+            ]
+        }
+    ]
+}
