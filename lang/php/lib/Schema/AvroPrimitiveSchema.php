@@ -26,6 +26,9 @@ namespace Apache\Avro\Schema;
  */
 class AvroPrimitiveSchema extends AvroSchema
 {
+    /** @var null|AvroLogicalType */
+    private $logicalType = null;
+
     /**
      * @param string $type the primitive schema type name
      * @throws AvroSchemaParseException if the given $type is not a
@@ -39,16 +42,30 @@ class AvroPrimitiveSchema extends AvroSchema
         parent::__construct($type);
     }
 
+    public static function uuid(): self
+    {
+        $self = new self(AvroSchema::STRING_TYPE);
+        $self->logicalType = new AvroLogicalType(AvroSchema::UUID_LOGICAL_TYPE);
+
+        return $self;
+    }
+
     /**
      * @returns mixed
      */
     public function toAvro()
     {
         $avro = parent::toAvro();
+        if (!is_null($this->logicalType)) {
+            $avro[AvroSchema::LOGICAL_TYPE_ATTR] = $this->logicalType->name();
+            $avro = array_merge($avro, $this->logicalType->attributes());
+        }
+
         // FIXME: Is this if really necessary? When *wouldn't* this be the case?
         if (1 == count($avro)) {
             return $this->type;
         }
+
         return $avro;
     }
 }

@@ -21,7 +21,6 @@
 namespace Apache\Avro\Schema;
 
 use Apache\Avro\AvroUtil;
-use Apache\Avro\Schema\LogicalSchema\AvroUuidSchema;
 
 /** TODO
  * - ARRAY have only type and item attributes (what about metadata?)
@@ -339,7 +338,7 @@ class AvroSchema
 
                 switch ($avro[self::LOGICAL_TYPE_ATTR] ?? null) {
                     case self::UUID_LOGICAL_TYPE:
-                        return new AvroUuidSchema();
+                        return AvroPrimitiveSchema::uuid();
                     default:
                         return new AvroPrimitiveSchema($type);
                 }
