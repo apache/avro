@@ -64,12 +64,12 @@ class AvroSchema
     public const INT_MAX_VALUE = 2147483647;
 
     /**
-     * @var long lower bound of long values: -(1 << 63)
+     * @var int lower bound of long values: -(1 << 63)
      */
     public const LONG_MIN_VALUE = -9223372036854775808;
 
     /**
-     * @var long upper bound of long values: (1 << 63) - 1
+     * @var int upper bound of long values: (1 << 63) - 1
      */
     public const LONG_MAX_VALUE = 9223372036854775807;
 
@@ -146,6 +146,9 @@ class AvroSchema
 
     /** @var string */
     public const LOCAL_TIMESTAMP_MICROS_LOGICAL_TYPE = 'local-timestamp-micros';
+
+    /** @var string */
+    public const DURATION_LOGICAL_TYPE = 'duration';
 
     // Complex Types
     // Unnamed Schema
@@ -297,6 +300,9 @@ class AvroSchema
      */
     public $type;
 
+    /** @var null|AvroLogicalType */
+    protected $logicalType = null;
+
     /**
      * @param string $type a schema type name
      * @internal Should only be called from within the constructor of
@@ -335,10 +341,37 @@ class AvroSchema
             $type = $avro[self::TYPE_ATTR] ?? null;
 
             if (self::isPrimitiveType($type)) {
-
                 switch ($avro[self::LOGICAL_TYPE_ATTR] ?? null) {
+                    case self::DECIMAL_LOGICAL_TYPE:
+                        $precision = $avro[AvroLogicalType::ATTRIBUTE_DECIMAL_PRECISION] ?? null;
+                        if (!is_numeric($precision)) {
+                            throw new AvroSchemaParseException(
+                                'Decimal logical type requires valid "precision" attribute.'
+                            );
+                        }
+                        $scale = $avro[AvroLogicalType::ATTRIBUTE_DECIMAL_SCALE] ?? null;
+                        if (!is_numeric($scale)) {
+                            throw new AvroSchemaParseException(
+                                'Decimal logical type requires valid "scale" attribute.'
+                            );
+                        }
+                        return AvroPrimitiveSchema::decimal((int) $precision, (int) $scale);
                     case self::UUID_LOGICAL_TYPE:
                         return AvroPrimitiveSchema::uuid();
+                    case self::DATE_LOGICAL_TYPE:
+                        return AvroPrimitiveSchema::date();
+                    case self::TIME_MILLIS_LOGICAL_TYPE:
+                        return AvroPrimitiveSchema::timeMillis();
+                    case self::TIME_MICROS_LOGICAL_TYPE:
+                        return AvroPrimitiveSchema::timeMicros();
+                    case self::TIMESTAMP_MILLIS_LOGICAL_TYPE:
+                        return AvroPrimitiveSchema::timestampMillis();
+                    case self::TIMESTAMP_MICROS_LOGICAL_TYPE:
+                        return AvroPrimitiveSchema::timestampMicros();
+                    case self::LOCAL_TIMESTAMP_MILLIS_LOGICAL_TYPE:
+                        return AvroPrimitiveSchema::localTimestampMillis();
+                    case self::LOCAL_TIMESTAMP_MICROS_LOGICAL_TYPE:
+                        return AvroPrimitiveSchema::localTimestampMicros();
                     default:
                         return new AvroPrimitiveSchema($type);
                 }
@@ -353,6 +386,18 @@ class AvroSchema
                 switch ($type) {
                     case self::FIXED_SCHEMA:
                         $size = $avro[self::SIZE_ATTR] ?? null;
+                        if (
+                            array_key_exists(self::LOGICAL_TYPE_ATTR, $avro)
+                            && $avro[self::LOGICAL_TYPE_ATTR] === self::DURATION_LOGICAL_TYPE
+                        ) {
+                            return AvroFixedSchema::duration(
+                                $new_name,
+                                $doc,
+                                $schemata,
+                                $aliases
+                            );
+                        }
+
                         return new AvroFixedSchema(
                             $new_name,
                             $doc,
@@ -585,11 +630,16 @@ class AvroSchema
     }
 
     /**
-     * @returns string schema type name of this schema
+     * @returns string|AvroNamedSchema schema type name of this schema
      */
-    public function type(): string
+    public function type()
     {
         return $this->type;
+    }
+
+    public function logicalType(): ?AvroLogicalType
+    {
+        return $this->logicalType;
     }
 
     /**
@@ -602,7 +652,13 @@ class AvroSchema
 
     public function toAvro()
     {
-        return [self::TYPE_ATTR => $this->type];
+        $avro = [self::TYPE_ATTR => $this->type];
+
+        if (!is_null($this->logicalType)) {
+            $avro = array_merge($avro, $this->logicalType->toAvro());
+        }
+
+        return $avro;
     }
 
     /**

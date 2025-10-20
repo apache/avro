@@ -67,4 +67,17 @@ class AvroFixedSchema extends AvroNamedSchema
         $avro[AvroSchema::SIZE_ATTR] = $this->size;
         return $avro;
     }
+
+    public static function duration(
+        AvroName $name,
+        ?string $doc,
+        AvroNamedSchemata &$schemata = null,
+        ?array $aliases = null
+    ): self {
+        $fixedSchema = new self($name, $doc, 12, $schemata, $aliases);
+
+        $fixedSchema->logicalType = AvroLogicalType::duration();
+
+        return $fixedSchema;
+    }
 }
