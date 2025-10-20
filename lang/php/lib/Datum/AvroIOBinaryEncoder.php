@@ -21,6 +21,7 @@
 namespace Apache\Avro\Datum;
 
 use Apache\Avro\Avro;
+use Apache\Avro\AvroException;
 use Apache\Avro\AvroGMP;
 use Apache\Avro\AvroIO;
 
@@ -186,5 +187,47 @@ class AvroIOBinaryEncoder
     {
         $this->writeLong(strlen($bytes));
         $this->write($bytes);
+    }
+
+    public function writeDecimal($decimal, int $scale, int $precision): void
+    {
+        if (!is_numeric($decimal)) {
+            throw new AvroException('Decimal must be a numeric value');
+        }
+
+        $value = $decimal * (10 ** $scale);
+        if (!is_int($value)) {
+            $value = (int) round($value);
+        }
+        if (abs($value) > (10 ** $precision - 1)) {
+            throw new AvroException('Decimal value is out of range');
+        }
+
+        $packed = pack('J', $value);
+        $significantBit = self::getMostSignificantBitAt($packed, 0);
+        $trimByte = $significantBit ? 0xff : 0x00;
+
+        $offset = 0;
+        $packedLength = strlen($packed);
+        while ($offset < $packedLength - 1) {
+            if (ord($packed[$offset]) !== $trimByte) {
+                break;
+            }
+
+            if (self::getMostSignificantBitAt($packed, $offset + 1) !== $significantBit) {
+                break;
+            }
+
+            $offset++;
+        }
+
+        $value = substr($packed, $offset);
+
+        $this->writeBytes($value);
+    }
+
+    private static function getMostSignificantBitAt($bytes, $offset): int
+    {
+        return ord($bytes[$offset]) & 0x80;
     }
 }

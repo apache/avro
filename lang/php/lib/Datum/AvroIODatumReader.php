@@ -21,6 +21,7 @@
 namespace Apache\Avro\Datum;
 
 use Apache\Avro\AvroException;
+use Apache\Avro\Schema\AvroLogicalType;
 use Apache\Avro\Schema\AvroName;
 use Apache\Avro\Schema\AvroSchema;
 
@@ -111,7 +112,7 @@ class AvroIODatumReader
             case AvroSchema::STRING_TYPE:
                 return $decoder->readString();
             case AvroSchema::BYTES_TYPE:
-                return $decoder->readBytes();
+                return $this->readBytes($writers_schema, $readers_schema, $decoder);
             case AvroSchema::ARRAY_SCHEMA:
                 return $this->readArray($writers_schema, $readers_schema, $decoder);
             case AvroSchema::MAP_SCHEMA:
@@ -253,6 +254,29 @@ class AvroIODatumReader
             }
         }
         return true;
+    }
+
+    public function readBytes(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
+    {
+        $bytes = $decoder->readBytes();
+        $logicalTypeWriters = $writers_schema->logicalType();
+        $logicalTypeReaders = $readers_schema->logicalType();
+        if (
+            $logicalTypeWriters instanceof AvroLogicalType
+            && $logicalTypeWriters->name() === AvroSchema::DECIMAL_LOGICAL_TYPE
+        ) {
+            if ($logicalTypeWriters !== $logicalTypeReaders) {
+                throw new AvroIOSchemaMatchException($writers_schema, $readers_schema);
+            }
+
+            $scale = $logicalTypeWriters->attributes()['scale'] ?? 0;
+            $mostSignificantBit = ord($bytes[0]) & 0x80;
+            $padded = str_pad($bytes, 8, $mostSignificantBit ? "\xff" : "\x00", STR_PAD_LEFT);
+            $int = unpack('J', $padded)[1];
+            $bytes = (string) ($scale > 0 ? ($int / (10 ** $scale)) : $int);
+        }
+
+        return $bytes;
     }
 
     /**

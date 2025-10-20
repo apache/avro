@@ -21,6 +21,7 @@
 namespace Apache\Avro\Datum;
 
 use Apache\Avro\AvroException;
+use Apache\Avro\Schema\AvroLogicalType;
 use Apache\Avro\Schema\AvroSchema;
 
 /**
@@ -76,7 +77,7 @@ class AvroIODatumWriter
      * @param AvroSchema $writers_schema
      * @param $datum
      * @param AvroIOBinaryEncoder $encoder
-     * @return mixed
+     * @return void
      *
      * @throws AvroIOTypeException if $datum is invalid for $writers_schema
      */
@@ -98,7 +99,8 @@ class AvroIODatumWriter
             case AvroSchema::STRING_TYPE:
                 return $encoder->writeString($datum);
             case AvroSchema::BYTES_TYPE:
-                return $encoder->writeBytes($datum);
+                $this->writeBytes($writers_schema, $datum, $encoder);
+                return;
             case AvroSchema::ARRAY_SCHEMA:
                 return $this->writeArray($writers_schema, $datum, $encoder);
             case AvroSchema::MAP_SCHEMA:
@@ -119,6 +121,26 @@ class AvroIODatumWriter
                     $writers_schema->type
                 ));
         }
+    }
+
+    private function writeBytes(AvroSchema $writers_schema, $datum, AvroIOBinaryEncoder $encoder): void
+    {
+        $logicalType = $writers_schema->logicalType();
+        if (
+            $logicalType instanceof AvroLogicalType
+            && $logicalType->name() === AvroSchema::DECIMAL_LOGICAL_TYPE
+        ) {
+            $scale = $logicalType->attributes()['scale'] ?? 0;
+            $precision = $logicalType->attributes()['precision'] ?? null;
+            if ($precision === null) {
+                throw new AvroException('Decimal precision is required');
+            }
+
+            $encoder->writeDecimal($datum, $scale, $precision);
+            return;
+        }
+
+        $encoder->writeBytes($datum);
     }
 
     /**

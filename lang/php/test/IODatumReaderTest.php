@@ -122,4 +122,56 @@ _JSON
 
         $this->assertEquals(['field1' => "foobar"], $record);
     }
+
+    public function testRecordWithLogicalTypes(): void
+    {
+        $schema = AvroSchema::parse(<<<_JSON
+{
+  "name": "RecordWithLogicalTypes",
+  "type": "record",
+  "fields": [
+    {
+      "name": "decimal_field",
+      "type": "bytes",
+      "logicalType": "decimal",
+      "precision": 4,
+      "scale": 2
+    },
+    {
+      "name": "uuid_field",
+      "type": "string",
+      "logicalType": "uuid"
+    }
+  ]
+}
+_JSON
+        );
+
+        $io = new AvroStringIO();
+        $writer = new AvroIODatumWriter();
+        $writer->writeData(
+            $schema,
+            [
+                'decimal_field' => "10.91",
+                'uuid_field' => "9fb9ea49-2f7e-4df3-b02b-96d881e27a6b"
+            ],
+            new AvroIOBinaryEncoder($io)
+        );
+
+        $bin = $io->string();
+        $reader = new AvroIODatumReader();
+        $record = $reader->readRecord(
+            $schema,
+            $schema,
+            new AvroIOBinaryDecoder(new AvroStringIO($bin))
+        );
+
+        $this->assertEquals(
+            [
+                'decimal_field' => "10.91",
+                'uuid_field' => "9fb9ea49-2f7e-4df3-b02b-96d881e27a6b",
+            ],
+            $record
+        );
+    }
 }
