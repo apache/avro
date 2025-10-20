@@ -22,6 +22,7 @@ on:
     branches: [ main ]
     paths:
     - .github/workflows/test-lang-php.yml
+    - composer.json
     - lang/php/**
 
 defaults:
