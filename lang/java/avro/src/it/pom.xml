@@ -92,8 +92,9 @@
         <configuration>
           <useModulePath>false</useModulePath>
           <failIfNoTests>true</failIfNoTests>
-          <!-- Repeating the related system properties here because this pom does not inherit the configuration. -->
           <systemPropertyVariables>
+
+            <!-- Repeating the related system properties here because this pom does not inherit the configuration. -->
             <org.apache.avro.SERIALIZABLE_CLASSES>
               java.net.URI,java.net.URL,
               java.io.File,
@@ -107,6 +108,7 @@
               java.util.TreeMap
             </org.apache.avro.SERIALIZABLE_CLASSES>
             <org.apache.avro.SERIALIZABLE_PACKAGES>org.apache.avro</org.apache.avro.SERIALIZABLE_PACKAGES>
+
           </systemPropertyVariables>
         </configuration>
       </plugin>
