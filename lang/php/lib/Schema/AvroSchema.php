@@ -293,7 +293,8 @@ class AvroSchema
         self::ITEMS_ATTR,
         self::SIZE_ATTR,
         self::SYMBOLS_ATTR,
-        self::VALUES_ATTR
+        self::VALUES_ATTR,
+        self::LOGICAL_TYPE_ATTR,
     );
     /**
      * @var string|AvroNamedSchema

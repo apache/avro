@@ -49,65 +49,65 @@ class SchemaExample
 
 class SchemaTest extends TestCase
 {
-    static $examples = array();
-    static $valid_examples = array();
+    private static $examples = [];
+    private static $valid_examples = [];
 
-    public function test_json_decode()
+    public function test_json_decode(): void
     {
-        $this->assertEquals(json_decode('null', true), null);
-        $this->assertEquals(json_decode('32', true), 32);
-        $this->assertEquals(json_decode('"32"', true), '32');
-        $this->assertEquals((array) json_decode('{"foo": 27}'), array("foo" => 27));
-        $this->assertTrue(is_array(json_decode('{"foo": 27}', true)));
-        $this->assertEquals(json_decode('{"foo": 27}', true), array("foo" => 27));
-        $this->assertEquals(json_decode('["bar", "baz", "blurfl"]', true),
-            array("bar", "baz", "blurfl"));
-        $this->assertFalse(is_array(json_decode('null', true)));
-        $this->assertEquals(json_decode('{"type": "null"}', true), array("type" => 'null'));
+        $this->assertEquals(null, json_decode('null', true));
+        $this->assertEquals(32, json_decode('32', true));
+        $this->assertEquals('32', json_decode('"32"', true));
+        $this->assertEquals(["foo" => 27], (array) json_decode('{"foo": 27}'));
+        $this->assertIsArray(json_decode('{"foo": 27}', true));
+        $this->assertEquals(["foo" => 27], json_decode('{"foo": 27}', true));
+        $this->assertEquals(["bar", "baz", "blurfl"],
+            json_decode('["bar", "baz", "blurfl"]', true));
+        $this->assertIsNotArray(json_decode('null', true));
+        $this->assertEquals(["type" => 'null'], json_decode('{"type": "null"}', true));
 
         // PHP now only accept lowercase true, and rejects TRUE etc.
         // https://php.net/manual/en/migration56.incompatible.php#migration56.incompatible.json-decode
-        $this->assertEquals(json_decode('true', true), true, 'true');
+        $this->assertEquals(true, json_decode('true', true), 'true');
 
-        $this->assertEquals(json_decode('"boolean"'), 'boolean');
+        $this->assertEquals('boolean', json_decode('"boolean"'));
     }
 
-    public function schema_examples_provider()
+    public function schema_examples_provider(): array
     {
         self::make_examples();
-        $ary = array();
+        $ary = [];
         foreach (self::$examples as $example) {
-            $ary[] = array($example);
+            $ary[] = [$example];
         }
         return $ary;
     }
 
-    protected static function make_examples()
+    protected static function make_examples(): void
     {
-        $primitive_examples = array_merge(array(
+        $primitive_examples = array_merge([
             new SchemaExample('"True"', false),
             new SchemaExample('{"no_type": "test"}', false),
             new SchemaExample('{"type": "panther"}', false)
-        ),
+        ],
             self::make_primitive_examples());
 
-        $array_examples = array(
+        $array_examples = [
             new SchemaExample('{"type": "array", "items": "long"}', true),
             new SchemaExample('
     {"type": "array",
      "items": {"type": "enum", "name": "Test", "symbols": ["A", "B"]}}
     ', true)
-        );
+        ];
 
-        $map_examples = array(
+        $map_examples = [
             new SchemaExample('{"type": "map", "values": "long"}', true),
             new SchemaExample('
     {"type": "map",
      "values": {"type": "enum", "name": "Test", "symbols": ["A", "B"]}}
     ', true)
-        );
+        ];
 
-        $union_examples = array(
+        $union_examples = [
             new SchemaExample('["string", "null", "long"]', true),
             new SchemaExample('["null", "null"]', false),
             new SchemaExample('["long", "long"]', false),
@@ -151,7 +151,7 @@ class SchemaTest extends TestCase
       {"type": "array", "items": "string"}]
     ', true,
                 '[{"type":"record","name":"subtract","namespace":"com.example","fields":[{"name":"minuend","type":"int"},{"name":"subtrahend","type":"int"}]},{"type":"record","name":"divide","namespace":"com.example","fields":[{"name":"quotient","type":"int"},{"name":"dividend","type":"int"}]},{"type":"array","items":"string"}]'),
-        );
+        ];
 
         $fixed_examples = [
             new SchemaExample('{"type": "fixed", "name": "Test", "size": 1}', true),
@@ -447,7 +447,7 @@ class SchemaTest extends TestCase
 
     protected static function make_primitive_examples()
     {
-        $examples = array();
+        $examples = [];
         foreach ([
                      'null',
                      'boolean',
@@ -468,7 +468,7 @@ class SchemaTest extends TestCase
     /**
      * @dataProvider schema_examples_provider
      */
-    function test_parse($example)
+    function test_parse($example): void
     {
         $schema_string = $example->schema_string;
         try {
@@ -598,17 +598,94 @@ SCHEMA);
                     }
                 ]
             }
-            SCHEMA);
+            SCHEMA
+        );
     }
 
-    public function testLogicalTypes(): void
+    public function testLogicalTypesInRecord(): void
     {
         $avro = <<<AVRO
                 {
-                  "type": "string",
-                  "logicalType": "uuid"
-                }
-                AVRO;
+                "type": "record",
+                "name": "fruits",
+                "fields": [
+                    {
+                        "name": "UUID",
+                        "type": {
+                            "type": "string",
+                            "logicalType": "uuid"
+                        }
+                    },
+                    {
+                        "name": "decimal",
+                        "type": {
+                            "type": "bytes",
+                            "logicalType": "decimal",
+                            "precision": 6,
+                            "scale": 2
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "type": {
+                            "type": "int",
+                            "logicalType": "date"
+                        }
+                    },
+                    {
+                        "name": "timeMillis",
+                        "type": {
+                            "type": "int",
+                            "logicalType": "time-millis"
+                        }
+                    },
+                    {
+                        "name": "timeMicros",
+                        "type": {
+                            "type": "long",
+                            "logicalType": "time-micros"
+                        }
+                    },
+                    {
+                        "name": "timestampMillis",
+                        "type": {
+                            "type": "long",
+                            "logicalType": "timestamp-millis"
+                        }
+                    },
+                    {
+                        "name": "timestampMicros",
+                        "type": {
+                            "type": "long",
+                            "logicalType": "timestamp-micros"
+                        }
+                    },
+                    {
+                        "name": "localTimestampMillis",
+                        "type": {
+                            "type": "long",
+                            "logicalType": "local-timestamp-millis"
+                        }
+                    },
+                    {
+                        "name": "localTimestampMicros",
+                        "type": {
+                            "type": "long",
+                            "logicalType": "local-timestamp-micros"
+                        }
+                    },
+                    {
+                        "name": "duration",
+                        "type": {
+                            "name": "inner_fixed",
+                            "type": "fixed",
+                            "size": 12,
+                            "logicalType": "duration"
+                        }
+                    }
+                ]
+            }
+            AVRO;
 
 
         $schema = AvroSchema::parse($avro);

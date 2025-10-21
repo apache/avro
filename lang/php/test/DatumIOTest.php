@@ -227,7 +227,7 @@ class DatumIOTest extends TestCase
             'logical type in a record' => [
                 '{"name":"x","type":"record","fields":[{"name":"price","type":"bytes","logicalType":"decimal","precision":4,"scale":2}]}',
                 '{"price": "\u0000\u0000"}',
-                ['price' => "\x00\x00"],
+                ['price' => "0"],
 
             ],
         ];
