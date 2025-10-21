@@ -49,7 +49,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
    * @see ClassSecurityValidator
    */
   @Deprecated
-  public static final String[] SERIALIZABLE_CLASSES = SystemPropertiesPredicate.SERIALIZABLE_PACKAGES
+  public static final String[] SERIALIZABLE_CLASSES = SystemPropertiesPredicate.SERIALIZABLE_CLASSES
       .toArray(new String[0]);
 
   public SpecificDatumReader() {

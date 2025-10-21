@@ -93,7 +93,8 @@ public class ClassUtils {
     if (classLoader != null && className != null) {
       try {
         // Load the class without initializing it so we can distinguish between
-        // ClassNotFoundException and SecurityException may be thrown by the validator.
+        // ClassNotFoundException and SecurityException (that may be thrown by the
+        // validator).
         c = Class.forName(className, false, classLoader);
         ClassSecurityValidator.validate(c);
       } catch (ClassNotFoundException e) {

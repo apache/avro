@@ -61,11 +61,7 @@
           <!-- some tests hang if not run in a separate JVM -->
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
-           <parallel>none</parallel>
-          <systemProperties>
-            <org.apache.avro.SERIALIZABLE_CLASSES>java.net.URI,java.net.URL,java.io.File,java.util.HashMap,java.util.List,java.util.Collection,java.util.Map,java.util.Set,java.util.concurrent.ConcurrentHashMap,java.util.LinkedHashMap,java.util.TreeMap</org.apache.avro.SERIALIZABLE_CLASSES>
-            <org.apache.avro.SERIALIZABLE_PACKAGES>org.apache.avro</org.apache.avro.SERIALIZABLE_PACKAGES>
-          </systemProperties>
+          <parallel>none</parallel>
         </configuration>
       </plugin>
       <plugin>

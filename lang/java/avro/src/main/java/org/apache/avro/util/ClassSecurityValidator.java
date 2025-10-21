@@ -106,7 +106,7 @@ public final class ClassSecurityValidator {
       throw new SecurityException("Forbidden " + className + "! This class is not trusted to be included in Avro "
           + "schemas. You may either use the system properties org.apache.avro.SERIALIZABLE_CLASSES and "
           + "org.apache.avro.SERIALIZABLE_PACKAGES to set the comma separated list of the classes or packages you trust, "
-          + "or you can set them via the API (see org.apache.avro.util.ReflectDataValidator).");
+          + "or you can set them via the API (see org.apache.avro.util.ClassSecurityValidator).");
     }
   }
 
