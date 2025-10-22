@@ -194,6 +194,30 @@
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <failIfNoTests>false</failIfNoTests>
             <argLine>-Xmx1000m</argLine>
+            <systemPropertyVariables>
+
+              <!-- Using the related system properties to set the trusted classes/packages for all tests (in every module). -->
+              <org.apache.avro.SERIALIZABLE_CLASSES>
+                java.net.URI,
+                java.net.URL,
+                java.io.File,
+                java.util.HashMap,
+                java.util.List,
+                java.util.Collection,
+                java.util.Map,
+                java.util.Set,
+                java.util.concurrent.ConcurrentHashMap,
+                java.util.LinkedHashMap,
+                java.util.TreeMap,
+                example.avro.Bar,
+                com.google.protobuf.Timestamp
+              </org.apache.avro.SERIALIZABLE_CLASSES>
+              <org.apache.avro.SERIALIZABLE_PACKAGES>
+                org.apache.avro,
+                test
+              </org.apache.avro.SERIALIZABLE_PACKAGES>
+
+            </systemPropertyVariables>
           </configuration>
         </plugin>
         <plugin>
