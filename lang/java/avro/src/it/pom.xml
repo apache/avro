@@ -90,11 +90,26 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>@maven-surefire-plugin.version@</version>
         <configuration>
-          <systemProperties>
-            <org.apache.avro.SERIALIZABLE_CLASSES>java.math.BigDecimal,java.math.BigInteger,java.net.URI,java.net.URL,java.io.File,java.lang.Integer,org.apache.avro.reflect.TestReflect$R10</org.apache.avro.SERIALIZABLE_CLASSES>
-          </systemProperties>
           <useModulePath>false</useModulePath>
           <failIfNoTests>true</failIfNoTests>
+          <systemPropertyVariables>
+
+            <!-- Repeating the related system properties here because this pom does not inherit the configuration. -->
+            <org.apache.avro.SERIALIZABLE_CLASSES>
+              java.net.URI,java.net.URL,
+              java.io.File,
+              java.util.HashMap,
+              java.util.List,
+              java.util.Collection,
+              java.util.Map,
+              java.util.Set,
+              java.util.concurrent.ConcurrentHashMap,
+              java.util.LinkedHashMap,
+              java.util.TreeMap
+            </org.apache.avro.SERIALIZABLE_CLASSES>
+            <org.apache.avro.SERIALIZABLE_PACKAGES>org.apache.avro</org.apache.avro.SERIALIZABLE_PACKAGES>
+
+          </systemPropertyVariables>
         </configuration>
       </plugin>
     </plugins>

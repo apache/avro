@@ -99,6 +99,23 @@
           <redirectTestOutputToFile>false</redirectTestOutputToFile>
           <systemPropertyVariables>
             <test.dir>${interop.datadir}</test.dir>
+
+            <!-- Repeating the related system properties here because this pom does not inherit the configuration. -->
+            <org.apache.avro.SERIALIZABLE_CLASSES>
+              java.net.URI,
+              java.net.URL,
+              java.io.File,
+              java.util.HashMap,
+              java.util.List,
+              java.util.Collection,
+              java.util.Map,
+              java.util.Set,
+              java.util.concurrent.ConcurrentHashMap,
+              java.util.LinkedHashMap,
+              java.util.TreeMap
+            </org.apache.avro.SERIALIZABLE_CLASSES>
+            <org.apache.avro.SERIALIZABLE_PACKAGES>org.apache.avro</org.apache.avro.SERIALIZABLE_PACKAGES>
+
           </systemPropertyVariables>
         </configuration>
       </plugin>
