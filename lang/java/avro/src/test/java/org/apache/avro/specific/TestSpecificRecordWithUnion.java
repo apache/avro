@@ -30,6 +30,8 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.Decoder;
 
+import org.apache.avro.util.ClassSecurityValidator;
+import org.apache.avro.util.ClassSecurityValidator.ClassSecurityPredicate;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -38,8 +40,30 @@ import java.io.IOException;
 import java.math.BigDecimal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class TestSpecificRecordWithUnion {
+  /**
+   * Test that the deserialization of a class that is not trusted throws a
+   * SecurityException.
+   */
+  @Test
+  void testNotSerializableClasses() throws IOException {
+    final TestUnionRecord record = TestUnionRecord.newBuilder().setAmount(BigDecimal.ZERO).build();
+    final Schema schema = SchemaBuilder.unionOf().nullType().and().type(record.getSchema()).endUnion();
+
+    byte[] recordBytes = serializeRecord(
+        "{ \"org.apache.avro.specific.TestUnionRecord\": { \"amount\": { \"bytes\": \"\\u0000\" } } }", schema);
+
+    ClassSecurityPredicate originalValidator = ClassSecurityValidator.getGlobal();
+    try {
+      ClassSecurityValidator.setGlobal(ClassSecurityValidator.builder().build());
+      assertThrows(SecurityException.class, () -> deserializeRecord(schema, recordBytes));
+    } finally {
+      ClassSecurityValidator.setGlobal(originalValidator);
+    }
+  }
+
   @Test
   void unionLogicalDecimalConversion() throws IOException {
     final TestUnionRecord record = TestUnionRecord.newBuilder().setAmount(BigDecimal.ZERO).build();
@@ -48,11 +72,14 @@ public class TestSpecificRecordWithUnion {
     byte[] recordBytes = serializeRecord(
         "{ \"org.apache.avro.specific.TestUnionRecord\": { \"amount\": { \"bytes\": \"\\u0000\" } } }", schema);
 
+    assertEquals(record, deserializeRecord(schema, recordBytes));
+  }
+
+  private static SpecificRecord deserializeRecord(Schema schema, byte[] recordBytes) throws IOException {
     SpecificDatumReader<SpecificRecord> specificDatumReader = new SpecificDatumReader<>(schema);
     ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(recordBytes);
     Decoder decoder = DecoderFactory.get().binaryDecoder(byteArrayInputStream, null);
-    final SpecificRecord deserialized = specificDatumReader.read(null, decoder);
-    assertEquals(record, deserialized);
+    return specificDatumReader.read(null, decoder);
   }
 
   public static byte[] serializeRecord(String value, Schema schema) throws IOException {

@@ -48,7 +48,7 @@ jobs:
         run: sudo apt-get install -y libzstd-dev
 
       - name: Install .NET SDKs
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
             6.0.x
@@ -83,7 +83,7 @@ jobs:
         run: sudo apt-get install -y libzstd-dev
 
       - name: Install .NET SDKs
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
             6.0.x
@@ -108,10 +108,10 @@ jobs:
             17
             21
 
-      - name: 'Setup Maven 3.9.6'
+      - name: 'Setup Maven 3.9.11'
         uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
         with:
-          maven-version: 3.9.6
+          maven-version: 3.9.11
 
       - name: Install Java Avro for Interop Test
         working-directory: .
