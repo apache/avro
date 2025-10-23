@@ -121,7 +121,7 @@ jobs:
           maven-version: 3.9.11
 
       - name: 'Setup Python for Generating Input Data'
-        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: '3.12'
 
