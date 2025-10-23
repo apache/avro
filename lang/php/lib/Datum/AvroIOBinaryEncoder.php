@@ -202,7 +202,9 @@ class AvroIOBinaryEncoder
 
         $maxValue = 10 ** $precision;
         if (abs($value) >= $maxValue) {
-            throw new AvroException("Decimal value '{$decimal}' is out of range for precision={$precision}, scale={$scale}");
+            throw new AvroException(
+                "Decimal value '{$decimal}' is out of range for precision={$precision}, scale={$scale}"
+            );
         }
 
         $packed = pack('J', $value);

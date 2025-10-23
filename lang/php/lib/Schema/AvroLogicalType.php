@@ -66,7 +66,9 @@ class AvroLogicalType
         }
 
         if ($scale >= $precision) {
-            throw new AvroException("Scale must be a lower than precision (scale='{$scale}', precision='{$precision}').");
+            throw new AvroException(
+                "Scale must be a lower than precision (scale='{$scale}', precision='{$precision}')."
+            );
         }
 
         return new AvroLogicalType(
