@@ -138,7 +138,7 @@ void testNonEmpty2(const TestData &td) {
 struct FileGuard {
     const std::filesystem::path path{ std::tmpnam(nullptr) };
     ~FileGuard() { std::filesystem::remove(path); }
-    const char* filename() const { return path.c_str(); };
+    const char* filename() const { return path.c_str(); }
 };
 
 template<typename V>
