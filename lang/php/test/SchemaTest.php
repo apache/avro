@@ -701,6 +701,14 @@ SCHEMA);
                 '{"type": "bytes", "logicalType": "decimal", "precision": -1, "scale": 2}',
                 new AvroException("Precision '-1' is invalid. It must be a positive integer."),
             ],
+            'invalid value for precision (float)' => [
+                '{"type": "bytes", "logicalType": "decimal", "precision": 11.23, "scale": 2}',
+                new AvroException("Invalid value '11.23' for 'precision' attribute of decimal logical type."),
+            ],
+            'invalid value for precision (string)' => [
+                '{"type": "bytes", "logicalType": "decimal", "precision": "banana", "scale": 2}',
+                new AvroException("Invalid value 'banana' for 'precision' attribute of decimal logical type."),
+            ],
             'invalid scale' => [
                 '{"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": -1}',
                 new AvroException("Scale '-1' is invalid. It must be a non-negative integer."),
@@ -708,6 +716,14 @@ SCHEMA);
             'invalid scale for precision' => [
                 '{"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": 2}',
                 new AvroException("Scale must be a lower than precision (scale='2', precision='2')."),
+            ],
+            'invalid value for scale (float)' => [
+                '{"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": 9.12}',
+                new AvroException("Invalid value '9.12' for 'scale' attribute of decimal logical type."),
+            ],
+            'invalid value for scale (string)' => [
+                '{"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": "two"}',
+                new AvroException("Invalid value 'two' for 'scale' attribute of decimal logical type."),
             ],
         ];
     }
