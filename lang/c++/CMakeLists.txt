@@ -70,7 +70,6 @@ if (WIN32 AND NOT CYGWIN AND NOT MSYS)
     add_definitions (/EHa)
     add_definitions (
         -DNOMINMAX
-        -DBOOST_SYSTEM_DYN_LINK
         -DBOOST_ALL_NO_LIB)
 endif()
 
@@ -80,9 +79,8 @@ endif ()
 
 if (AVRO_BUILD_TESTS OR AVRO_USE_BOOST)
     # Boost 1.70 and above provide a BoostConfig.cmake package configuration file.
-    # It guarantees that Boost::system target exists if found.
     # See https://cmake.org/cmake/help/latest/policy/CMP0167.html
-    find_package (Boost 1.70 REQUIRED CONFIG COMPONENTS system)
+    find_package (Boost 1.70 REQUIRED CONFIG)
 endif ()
 
 find_package(fmt QUIET)
@@ -131,6 +129,8 @@ set (AVRO_SOURCE_FILES
         impl/Stream.cc impl/FileStream.cc
         impl/Generic.cc impl/GenericDatum.cc
         impl/DataFile.cc
+        impl/ZstdCompressWrapper.cc
+        impl/ZstdDecompressWrapper.cc
         impl/parsing/Symbol.cc
         impl/parsing/ValidatingCodec.cc
         impl/parsing/JsonCodec.cc
@@ -153,11 +153,9 @@ function (setup_avro_lib target lib_type)
       $<BUILD_INTERFACE:ZLIB::ZLIB>
       $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
       $<$<BOOL:${zstd_FOUND}>:$<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
-      $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
       $<INSTALL_INTERFACE:ZLIB::ZLIB>
       $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
       $<$<BOOL:${zstd_FOUND}>:$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
-      $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
     )
     target_include_directories (${target} PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -226,7 +224,7 @@ if (AVRO_BUILD_TESTS)
 
     macro (unittest name)
         add_executable (${name} test/${name}.cc)
-        target_link_libraries (${name} ${AVRO_LINK_LIB} Boost::system ZLIB::ZLIB $<TARGET_NAME_IF_EXISTS:Snappy::snappy> $<$<BOOL:${zstd_FOUND}>:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>)
+        target_link_libraries (${name} ${AVRO_LINK_LIB} ZLIB::ZLIB $<TARGET_NAME_IF_EXISTS:Snappy::snappy> $<$<BOOL:${zstd_FOUND}>:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>)
         add_test (NAME ${name} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name})
     endmacro (unittest)
@@ -258,6 +256,7 @@ if (AVRO_BUILD_TESTS)
 endif ()
 
 include (InstallRequiredSystemLibraries)
+include (GNUInstallDirs)
 
 set (CPACK_PACKAGE_FILE_NAME "avrocpp-${AVRO_VERSION_MAJOR}")
 
@@ -268,13 +267,13 @@ install (TARGETS ${AVRO_INSTALL_LIBS}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    INCLUDES DESTINATION include)
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 if (AVRO_BUILD_EXECUTABLES)
     install (TARGETS avrogencpp EXPORT avrocpp_targets RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif ()
 
-install (DIRECTORY include/avro DESTINATION include
+install (DIRECTORY include/avro DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN *.hh)
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -293,17 +292,17 @@ write_basic_package_version_file(
 configure_package_config_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/avro-cpp-config.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config.cmake"
-    INSTALL_DESTINATION lib/cmake/avro-cpp
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/avro-cpp
 )
 
 install(EXPORT avrocpp_targets
     NAMESPACE avro-cpp::
-    DESTINATION lib/cmake/avro-cpp
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/avro-cpp
     FILE "avro-cpp-targets.cmake"
 )
 
 install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config-version.cmake"
-    DESTINATION lib/cmake/avro-cpp
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/avro-cpp
 )

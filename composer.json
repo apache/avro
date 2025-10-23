@@ -65,5 +65,10 @@
       "!/lang/php/README.md",
       "!/lang/php/lib"
     ]
+  },
+  "config": {
+    "allow-plugins": {
+      "beberlei/composer-monorepo-plugin": true
+    }
   }
 }

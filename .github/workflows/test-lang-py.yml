@@ -42,17 +42,18 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
         python:
+          - '3.13'
           - '3.12'
           - '3.11'
           - '3.10'
-          - '3.9'
+          - 'pypy-3.11'
           - 'pypy-3.10'
 
     steps:
       - uses: actions/checkout@v5
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
 
@@ -98,7 +99,7 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
 
@@ -134,10 +135,10 @@ jobs:
             17
             21
 
-      - name: 'Setup Maven 3.9.6'
+      - name: 'Setup Maven 3.9.11'
         uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
         with:
-          maven-version: 3.9.6
+          maven-version: 3.9.11
 
       - name: Install Java Avro for Interop Test
         working-directory: .
