@@ -36,6 +36,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.avro.Conversion;
@@ -1012,19 +1013,35 @@ public class SpecificCompiler {
    */
   public String[] javaAnnotations(JsonProperties props) {
     final Object value = props.getObjectProp("javaAnnotation");
-    if (value == null)
-      return new String[0];
-    if (value instanceof String)
+    if (value instanceof String && isValidAsAnnotation((String) value))
       return new String[] { value.toString() };
     if (value instanceof List) {
       final List<?> list = (List<?>) value;
       final List<String> annots = new ArrayList<>(list.size());
       for (Object o : list) {
-        annots.add(o.toString());
+        if (isValidAsAnnotation(o.toString()))
+          annots.add(o.toString());
       }
       return annots.toArray(new String[0]);
     }
     return new String[0];
+  }
+
+  private static final String PATTERN_IDENTIFIER_PART = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
+  private static final String PATTERN_IDENTIFIER = String.format("(?:%s(?:\\.%s)*)", PATTERN_IDENTIFIER_PART,
+      PATTERN_IDENTIFIER_PART);
+  private static final String PATTERN_STRING = "\"(?:\\\\[\\\\\"ntfb]|(?<!\\\\).)*\"";
+  private static final String PATTERN_NUMBER = "(?:\\((?:byte|char|short|int|long|float|double)\\))?[x0-9_.]*[fl]?";
+  private static final String PATTERN_LITERAL_VALUE = String.format("(?:%s|%s|true|false)", PATTERN_STRING,
+      PATTERN_NUMBER);
+  private static final String PATTERN_PARAMETER_LIST = String.format(
+      "\\(\\s*(?:%s|%s\\s*=\\s*%s(?:\\s*,\\s*%s\\s*=\\s*%s)*)?\\s*\\)", PATTERN_LITERAL_VALUE, PATTERN_IDENTIFIER,
+      PATTERN_LITERAL_VALUE, PATTERN_IDENTIFIER, PATTERN_LITERAL_VALUE);
+  private static final Pattern VALID_AS_ANNOTATION = Pattern
+      .compile(String.format("%s(?:%s)?", PATTERN_IDENTIFIER, PATTERN_PARAMETER_LIST));
+
+  private boolean isValidAsAnnotation(String value) {
+    return VALID_AS_ANNOTATION.matcher(value.trim()).matches();
   }
 
   // maximum size for string constants, to avoid javac limits
@@ -1032,7 +1049,7 @@ public class SpecificCompiler {
 
   /**
    * Utility for template use. Takes a (potentially overly long) string and splits
-   * it into a quoted, comma-separted sequence of escaped strings.
+   * it into a quoted, comma-separated sequence of escaped strings.
    *
    * @param s The string to split
    * @return A sequence of quoted, comma-separated, escaped strings
@@ -1044,7 +1061,7 @@ public class SpecificCompiler {
       if (i != 0)
         b.append("\",\""); // insert quote-comma-quote
       String chunk = s.substring(i, Math.min(s.length(), i + maxStringChars));
-      b.append(javaEscape(chunk)); // escape chunks
+      b.append(escapeForJavaString(chunk)); // escape chunks
     }
     b.append("\""); // final quote
     return b.toString();
@@ -1053,15 +1070,25 @@ public class SpecificCompiler {
   /**
    * Utility for template use. Escapes quotes and backslashes.
    */
-  public static String javaEscape(String o) {
+  public static String escapeForJavaString(String o) {
     return o.replace("\\", "\\\\").replace("\"", "\\\"");
+  }
+
+  /**
+   * Utility for template use (previous name). Escapes quotes and backslashes.
+   *
+   * @deprecated Use {@link #escapeForJavaString(String)} instead
+   */
+  @Deprecated
+  public static String javaEscape(String o) {
+    return escapeForJavaString(o);
   }
 
   /**
    * Utility for template use. Escapes comment end with HTML entities.
    */
   public static String escapeForJavadoc(String s) {
-    return s.replace("*/", "*&#47;");
+    return s.replace("*/", "*&#47;").replace("<", "&lt;").replace(">", "&gt;");
   }
 
   /**

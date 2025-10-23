@@ -30,7 +30,7 @@ import org.apache.avro.message.SchemaStore;
 #if (${this.gettersReturnOptional} || ${this.createOptionalGetters})import java.util.Optional;#end
 
 #if ($schema.getDoc())
-/** $schema.getDoc() */
+/** $this.escapeForJavadoc($schema.getDoc()) */
 #end
 #foreach ($annotation in $this.javaAnnotations($schema))
 @$annotation
@@ -117,7 +117,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 
 #foreach ($field in $schema.getFields())
 #if ($field.doc())
-  /** $field.doc() */
+  /** $this.escapeForJavadoc($field.doc()) */
 #end
 #foreach ($annotation in $this.javaAnnotations($field))
   @$annotation
@@ -156,7 +156,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
   /**
    * All-args constructor.
 #foreach ($field in $schema.getFields())
-#if ($field.doc())   * @param ${this.mangle($field.name())} $field.doc()
+#if ($field.doc())   * @param ${this.mangle($field.name())} $this.escapeForJavadoc($field.doc())
 #else   * @param ${this.mangle($field.name())} The new value for ${field.name()}
 #end
 #end
@@ -228,8 +228,8 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #foreach ($field in $schema.getFields())
 #if (${this.gettersReturnOptional} && (!${this.optionalGettersForNullableFieldsOnly} || ${field.schema().isNullable()}))
   /**
-   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
-#if ($field.doc())   * $field.doc()
+   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.escapeForJavadoc(${this.javaType($field.schema())})}&gt;.
+#if ($field.doc())   * $this.escapeForJavadoc($field.doc())
 #end
    * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
    */
@@ -239,7 +239,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #else
   /**
    * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
-#if ($field.doc())   * @return $field.doc()
+#if ($field.doc())   * @return $this.escapeForJavadoc($field.doc())
 #else   * @return The value of the '${this.mangle($field.name(), $schema.isError())}' field.
 #end
    */
@@ -250,8 +250,8 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 
 #if (${this.createOptionalGetters})
   /**
-   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
-#if ($field.doc())   * $field.doc()
+   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.escapeForJavadoc(${this.javaType($field.schema())})}&gt;.
+#if ($field.doc())   * $this.escapeForJavadoc($field.doc())
 #end
    * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
    */
@@ -263,7 +263,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #if ($this.createSetters)
   /**
    * Sets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
-#if ($field.doc())   * $field.doc()
+#if ($field.doc())   * $this.escapeForJavadoc($field.doc())
 #end
    * @param value the value to set.
    */
@@ -317,7 +317,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 
 #foreach ($field in $schema.getFields())
 #if ($field.doc())
-    /** $field.doc() */
+    /** $this.escapeForJavadoc($field.doc()) */
 #end
     private ${this.javaUnbox($field.schema(), false)} ${this.mangle($field.name(), $schema.isError())};
 #if (${this.hasBuilder($field.schema())})
@@ -396,7 +396,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #foreach ($field in $schema.getFields())
     /**
       * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
-#if ($field.doc())      * $field.doc()
+#if ($field.doc())      * $this.escapeForJavadoc($field.doc())
 #end
       * @return The value.
       */
@@ -406,8 +406,8 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 
 #if (${this.createOptionalGetters})
     /**
-      * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
-#if ($field.doc())      * $field.doc()
+      * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.escapeForJavadoc(${this.javaType($field.schema())})}&gt;.
+#if ($field.doc())      * $this.escapeForJavadoc($field.doc())
 #end
       * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
       */
@@ -418,7 +418,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 
     /**
       * Sets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
-#if ($field.doc())      * $field.doc()
+#if ($field.doc())      * $this.escapeForJavadoc($field.doc())
 #end
       * @param value The value of '${this.mangle($field.name(), $schema.isError())}'.
       * @return This builder.
@@ -435,7 +435,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 
     /**
       * Checks whether the '${this.mangle($field.name(), $schema.isError())}' field has been set.
-#if ($field.doc())      * $field.doc()
+#if ($field.doc())      * $this.escapeForJavadoc($field.doc())
 #end
       * @return True if the '${this.mangle($field.name(), $schema.isError())}' field has been set, false otherwise.
       */
@@ -446,7 +446,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #if (${this.hasBuilder($field.schema())})
     /**
      * Gets the Builder instance for the '${this.mangle($field.name(), $schema.isError())}' field and creates one if it doesn't exist yet.
-#if ($field.doc())     * $field.doc()
+#if ($field.doc())     * $this.escapeForJavadoc($field.doc())
 #end
      * @return This builder.
      */
@@ -463,7 +463,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 
     /**
      * Sets the Builder instance for the '${this.mangle($field.name(), $schema.isError())}' field
-#if ($field.doc())     * $field.doc()
+#if ($field.doc())     * $this.escapeForJavadoc($field.doc())
 #end
      * @param value The builder instance that must be set.
      * @return This builder.
@@ -477,7 +477,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 
     /**
      * Checks whether the '${this.mangle($field.name(), $schema.isError())}' field has an active Builder instance
-#if ($field.doc())     * $field.doc()
+#if ($field.doc())     * $this.escapeForJavadoc($field.doc())
 #end
      * @return True if the '${this.mangle($field.name(), $schema.isError())}' field has an active Builder instance
      */
@@ -488,7 +488,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 
     /**
       * Clears the value of the '${this.mangle($field.name(), $schema.isError())}' field.
-#if ($field.doc())      * $field.doc()
+#if ($field.doc())      * $this.escapeForJavadoc($field.doc())
 #end
       * @return This builder.
       */

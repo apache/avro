@@ -18,90 +18,189 @@
 //! Port of https://github.com/apache/avro/blob/release-1.9.1/lang/py/test/test_io.py
 use apache_avro::{from_avro_datum, to_avro_datum, types::Value, Error, Schema};
 use apache_avro_test_helper::TestResult;
-use lazy_static::lazy_static;
 use pretty_assertions::assert_eq;
-use std::io::Cursor;
+use std::{io::Cursor, sync::OnceLock};
 
-lazy_static! {
-    static ref SCHEMAS_TO_VALIDATE: Vec<(&'static str, Value)> = vec![
-        (r#""null""#, Value::Null),
-        (r#""boolean""#, Value::Boolean(true)),
-        (r#""string""#, Value::String("adsfasdf09809dsf-=adsf".to_string())),
-        (r#""bytes""#, Value::Bytes("12345abcd".to_string().into_bytes())),
-        (r#""int""#, Value::Int(1234)),
-        (r#""long""#, Value::Long(1234)),
-        (r#""float""#, Value::Float(1234.0)),
-        (r#""double""#, Value::Double(1234.0)),
-        (r#"{"type": "fixed", "name": "Test", "size": 1}"#, Value::Fixed(1, vec![b'B'])),
-        (r#"{"type": "enum", "name": "Test", "symbols": ["A", "B"]}"#, Value::Enum(1, "B".to_string())),
-        (r#"{"type": "array", "items": "long"}"#, Value::Array(vec![Value::Long(1), Value::Long(3), Value::Long(2)])),
-        (r#"{"type": "map", "values": "long"}"#, Value::Map([("a".to_string(), Value::Long(1i64)), ("b".to_string(), Value::Long(3i64)), ("c".to_string(), Value::Long(2i64))].iter().cloned().collect())),
-        (r#"["string", "null", "long"]"#, Value::Union(1, Box::new(Value::Null))),
-        (r#"{"type": "record", "name": "Test", "fields": [{"name": "f", "type": "long"}]}"#, Value::Record(vec![("f".to_string(), Value::Long(1))]))
-    ];
-
-    static ref BINARY_ENCODINGS: Vec<(i64, Vec<u8>)> = vec![
-        (0, vec![0x00]),
-        (-1, vec![0x01]),
-        (1, vec![0x02]),
-        (-2, vec![0x03]),
-        (2, vec![0x04]),
-        (-64, vec![0x7f]),
-        (64, vec![0x80, 0x01]),
-        (8192, vec![0x80, 0x80, 0x01]),
-        (-8193, vec![0x81, 0x80, 0x01]),
-    ];
-
-    static ref DEFAULT_VALUE_EXAMPLES: Vec<(&'static str, &'static str, Value)> = vec![
-        (r#""null""#, "null", Value::Null),
-        (r#""boolean""#, "true", Value::Boolean(true)),
-        (r#""string""#, r#""foo""#, Value::String("foo".to_string())),
-        (r#""bytes""#, r#""a""#, Value::Bytes(vec![97])), // ASCII 'a' => one byte
-        (r#""bytes""#, r#""\u00FF""#, Value::Bytes(vec![195, 191])), // The value is between U+0080 and U+07FF => two bytes
-        (r#""int""#, "5", Value::Int(5)),
-        (r#""long""#, "5", Value::Long(5)),
-        (r#""float""#, "1.1", Value::Float(1.1)),
-        (r#""double""#, "1.1", Value::Double(1.1)),
-        (r#"{"type": "fixed", "name": "F", "size": 2}"#, r#""a""#, Value::Fixed(1, vec![97])), // ASCII 'a' => one byte
-        (r#"{"type": "fixed", "name": "F", "size": 2}"#, r#""\u00FF""#, Value::Fixed(2, vec![195, 191])), // The value is between U+0080 and U+07FF => two bytes
-        (r#"{"type": "enum", "name": "F", "symbols": ["FOO", "BAR"]}"#, r#""FOO""#, Value::Enum(0, "FOO".to_string())),
-        (r#"{"type": "array", "items": "int"}"#, "[1, 2, 3]", Value::Array(vec![Value::Int(1), Value::Int(2), Value::Int(3)])),
-        (r#"{"type": "map", "values": "int"}"#, r#"{"a": 1, "b": 2}"#, Value::Map([("a".to_string(), Value::Int(1)), ("b".to_string(), Value::Int(2))].iter().cloned().collect())),
-        (r#"["int", "null"]"#, "5", Value::Union(0, Box::new(Value::Int(5)))),
-        (r#"{"type": "record", "name": "F", "fields": [{"name": "A", "type": "int"}]}"#, r#"{"A": 5}"#,Value::Record(vec![("A".to_string(), Value::Int(5))])),
-        (r#"["null", "int"]"#, "null", Value::Union(0, Box::new(Value::Null))),
-    ];
-
-    static ref LONG_RECORD_SCHEMA: Schema = Schema::parse_str(r#"
-    {
-        "type": "record",
-        "name": "Test",
-        "fields": [
-            {"name": "A", "type": "int"},
-            {"name": "B", "type": "int"},
-            {"name": "C", "type": "int"},
-            {"name": "D", "type": "int"},
-            {"name": "E", "type": "int"},
-            {"name": "F", "type": "int"},
-            {"name": "G", "type": "int"}
+fn schemas_to_validate() -> &'static Vec<(&'static str, Value)> {
+    static SCHEMAS_TO_VALIDATE_ONCE: OnceLock<Vec<(&'static str, Value)>> = OnceLock::new();
+    SCHEMAS_TO_VALIDATE_ONCE.get_or_init(|| {
+        vec![
+            (r#""null""#, Value::Null),
+            (r#""boolean""#, Value::Boolean(true)),
+            (
+                r#""string""#,
+                Value::String("adsfasdf09809dsf-=adsf".to_string()),
+            ),
+            (
+                r#""bytes""#,
+                Value::Bytes("12345abcd".to_string().into_bytes()),
+            ),
+            (r#""int""#, Value::Int(1234)),
+            (r#""long""#, Value::Long(1234)),
+            (r#""float""#, Value::Float(1234.0)),
+            (r#""double""#, Value::Double(1234.0)),
+            (
+                r#"{"type": "fixed", "name": "Test", "size": 1}"#,
+                Value::Fixed(1, vec![b'B']),
+            ),
+            (
+                r#"{"type": "enum", "name": "Test", "symbols": ["A", "B"]}"#,
+                Value::Enum(1, "B".to_string()),
+            ),
+            (
+                r#"{"type": "array", "items": "long"}"#,
+                Value::Array(vec![Value::Long(1), Value::Long(3), Value::Long(2)]),
+            ),
+            (
+                r#"{"type": "map", "values": "long"}"#,
+                Value::Map(
+                    [
+                        ("a".to_string(), Value::Long(1i64)),
+                        ("b".to_string(), Value::Long(3i64)),
+                        ("c".to_string(), Value::Long(2i64)),
+                    ]
+                    .iter()
+                    .cloned()
+                    .collect(),
+                ),
+            ),
+            (
+                r#"["string", "null", "long"]"#,
+                Value::Union(1, Box::new(Value::Null)),
+            ),
+            (
+                r#"{"type": "record", "name": "Test", "fields": [{"name": "f", "type": "long"}]}"#,
+                Value::Record(vec![("f".to_string(), Value::Long(1))]),
+            ),
         ]
-    }
-    "#).unwrap();
+    })
+}
 
-    static ref LONG_RECORD_DATUM: Value = Value::Record(vec![
-        ("A".to_string(), Value::Int(1)),
-        ("B".to_string(), Value::Int(2)),
-        ("C".to_string(), Value::Int(3)),
-        ("D".to_string(), Value::Int(4)),
-        ("E".to_string(), Value::Int(5)),
-        ("F".to_string(), Value::Int(6)),
-        ("G".to_string(), Value::Int(7)),
-    ]);
+fn binary_encodings() -> &'static Vec<(i64, Vec<u8>)> {
+    static BINARY_ENCODINGS_ONCE: OnceLock<Vec<(i64, Vec<u8>)>> = OnceLock::new();
+    BINARY_ENCODINGS_ONCE.get_or_init(|| {
+        vec![
+            (0, vec![0x00]),
+            (-1, vec![0x01]),
+            (1, vec![0x02]),
+            (-2, vec![0x03]),
+            (2, vec![0x04]),
+            (-64, vec![0x7f]),
+            (64, vec![0x80, 0x01]),
+            (8192, vec![0x80, 0x80, 0x01]),
+            (-8193, vec![0x81, 0x80, 0x01]),
+        ]
+    })
+}
+
+fn default_value_examples() -> &'static Vec<(&'static str, &'static str, Value)> {
+    static DEFAULT_VALUE_EXAMPLES_ONCE: OnceLock<Vec<(&'static str, &'static str, Value)>> =
+        OnceLock::new();
+    DEFAULT_VALUE_EXAMPLES_ONCE.get_or_init(|| {
+        vec![
+            (r#""null""#, "null", Value::Null),
+            (r#""boolean""#, "true", Value::Boolean(true)),
+            (r#""string""#, r#""foo""#, Value::String("foo".to_string())),
+            (r#""bytes""#, r#""a""#, Value::Bytes(vec![97])), // ASCII 'a' => one byte
+            (r#""bytes""#, r#""\u00FF""#, Value::Bytes(vec![195, 191])), // The value is between U+0080 and U+07FF => two bytes
+            (r#""int""#, "5", Value::Int(5)),
+            (r#""long""#, "5", Value::Long(5)),
+            (r#""float""#, "1.1", Value::Float(1.1)),
+            (r#""double""#, "1.1", Value::Double(1.1)),
+            (
+                r#"{"type": "fixed", "name": "F", "size": 2}"#,
+                r#""a""#,
+                Value::Fixed(1, vec![97]),
+            ), // ASCII 'a' => one byte
+            (
+                r#"{"type": "fixed", "name": "F", "size": 2}"#,
+                r#""\u00FF""#,
+                Value::Fixed(2, vec![195, 191]),
+            ), // The value is between U+0080 and U+07FF => two bytes
+            (
+                r#"{"type": "enum", "name": "F", "symbols": ["FOO", "BAR"]}"#,
+                r#""FOO""#,
+                Value::Enum(0, "FOO".to_string()),
+            ),
+            (
+                r#"{"type": "array", "items": "int"}"#,
+                "[1, 2, 3]",
+                Value::Array(vec![Value::Int(1), Value::Int(2), Value::Int(3)]),
+            ),
+            (
+                r#"{"type": "map", "values": "int"}"#,
+                r#"{"a": 1, "b": 2}"#,
+                Value::Map(
+                    [
+                        ("a".to_string(), Value::Int(1)),
+                        ("b".to_string(), Value::Int(2)),
+                    ]
+                    .iter()
+                    .cloned()
+                    .collect(),
+                ),
+            ),
+            (
+                r#"["int", "null"]"#,
+                "5",
+                Value::Union(0, Box::new(Value::Int(5))),
+            ),
+            (
+                r#"{"type": "record", "name": "F", "fields": [{"name": "A", "type": "int"}]}"#,
+                r#"{"A": 5}"#,
+                Value::Record(vec![("A".to_string(), Value::Int(5))]),
+            ),
+            (
+                r#"["null", "int"]"#,
+                "null",
+                Value::Union(0, Box::new(Value::Null)),
+            ),
+        ]
+    })
+}
+
+fn long_record_schema() -> &'static Schema {
+    static LONG_RECORD_SCHEMA_ONCE: OnceLock<Schema> = OnceLock::new();
+    LONG_RECORD_SCHEMA_ONCE.get_or_init(|| {
+        Schema::parse_str(
+            r#"
+{
+    "type": "record",
+    "name": "Test",
+    "fields": [
+        {"name": "A", "type": "int"},
+        {"name": "B", "type": "int"},
+        {"name": "C", "type": "int"},
+        {"name": "D", "type": "int"},
+        {"name": "E", "type": "int"},
+        {"name": "F", "type": "int"},
+        {"name": "G", "type": "int"}
+    ]
+}
+"#,
+        )
+        .unwrap()
+    })
+}
+
+fn long_record_datum() -> &'static Value {
+    static LONG_RECORD_DATUM_ONCE: OnceLock<Value> = OnceLock::new();
+    LONG_RECORD_DATUM_ONCE.get_or_init(|| {
+        Value::Record(vec![
+            ("A".to_string(), Value::Int(1)),
+            ("B".to_string(), Value::Int(2)),
+            ("C".to_string(), Value::Int(3)),
+            ("D".to_string(), Value::Int(4)),
+            ("E".to_string(), Value::Int(5)),
+            ("F".to_string(), Value::Int(6)),
+            ("G".to_string(), Value::Int(7)),
+        ])
+    })
 }
 
 #[test]
 fn test_validate() -> TestResult {
-    for (raw_schema, value) in SCHEMAS_TO_VALIDATE.iter() {
+    for (raw_schema, value) in schemas_to_validate().iter() {
         let schema = Schema::parse_str(raw_schema)?;
         assert!(
             value.validate(&schema),
@@ -114,7 +213,7 @@ fn test_validate() -> TestResult {
 
 #[test]
 fn test_round_trip() -> TestResult {
-    for (raw_schema, value) in SCHEMAS_TO_VALIDATE.iter() {
+    for (raw_schema, value) in schemas_to_validate().iter() {
         let schema = Schema::parse_str(raw_schema)?;
         let encoded = to_avro_datum(&schema, value.clone()).unwrap();
         let decoded = from_avro_datum(&schema, &mut Cursor::new(encoded), None).unwrap();
@@ -126,7 +225,7 @@ fn test_round_trip() -> TestResult {
 
 #[test]
 fn test_binary_int_encoding() -> TestResult {
-    for (number, hex_encoding) in BINARY_ENCODINGS.iter() {
+    for (number, hex_encoding) in binary_encodings().iter() {
         let encoded = to_avro_datum(&Schema::Int, Value::Int(*number as i32))?;
         assert_eq!(&encoded, hex_encoding);
     }
@@ -136,7 +235,7 @@ fn test_binary_int_encoding() -> TestResult {
 
 #[test]
 fn test_binary_long_encoding() -> TestResult {
-    for (number, hex_encoding) in BINARY_ENCODINGS.iter() {
+    for (number, hex_encoding) in binary_encodings().iter() {
         let encoded = to_avro_datum(&Schema::Long, Value::Long(*number))?;
         assert_eq!(&encoded, hex_encoding);
     }
@@ -196,7 +295,7 @@ fn test_unknown_symbol() -> TestResult {
 
 #[test]
 fn test_default_value() -> TestResult {
-    for (field_type, default_json, default_datum) in DEFAULT_VALUE_EXAMPLES.iter() {
+    for (field_type, default_json, default_datum) in default_value_examples().iter() {
         let reader_schema = Schema::parse_str(&format!(
             r#"{{
                 "type": "record",
@@ -207,9 +306,9 @@ fn test_default_value() -> TestResult {
             }}"#
         ))?;
         let datum_to_read = Value::Record(vec![("H".to_string(), default_datum.clone())]);
-        let encoded = to_avro_datum(&LONG_RECORD_SCHEMA, LONG_RECORD_DATUM.clone())?;
+        let encoded = to_avro_datum(long_record_schema(), long_record_datum().clone())?;
         let datum_read = from_avro_datum(
-            &LONG_RECORD_SCHEMA,
+            long_record_schema(),
             &mut Cursor::new(encoded),
             Some(&reader_schema),
         )?;
@@ -234,9 +333,9 @@ fn test_no_default_value() -> TestResult {
             ]
         }"#,
     )?;
-    let encoded = to_avro_datum(&LONG_RECORD_SCHEMA, LONG_RECORD_DATUM.clone())?;
+    let encoded = to_avro_datum(long_record_schema(), long_record_datum().clone())?;
     let result = from_avro_datum(
-        &LONG_RECORD_SCHEMA,
+        long_record_schema(),
         &mut Cursor::new(encoded),
         Some(&reader_schema),
     );
@@ -263,9 +362,9 @@ fn test_projection() -> TestResult {
         ("E".to_string(), Value::Int(5)),
         ("F".to_string(), Value::Int(6)),
     ]);
-    let encoded = to_avro_datum(&LONG_RECORD_SCHEMA, LONG_RECORD_DATUM.clone())?;
+    let encoded = to_avro_datum(long_record_schema(), long_record_datum().clone())?;
     let datum_read = from_avro_datum(
-        &LONG_RECORD_SCHEMA,
+        long_record_schema(),
         &mut Cursor::new(encoded),
         Some(&reader_schema),
     )?;
@@ -292,9 +391,9 @@ fn test_field_order() -> TestResult {
         ("F".to_string(), Value::Int(6)),
         ("E".to_string(), Value::Int(5)),
     ]);
-    let encoded = to_avro_datum(&LONG_RECORD_SCHEMA, LONG_RECORD_DATUM.clone())?;
+    let encoded = to_avro_datum(long_record_schema(), long_record_datum().clone())?;
     let datum_read = from_avro_datum(
-        &LONG_RECORD_SCHEMA,
+        long_record_schema(),
         &mut Cursor::new(encoded),
         Some(&reader_schema),
     )?;

@@ -114,8 +114,11 @@ RUN set -eux; \
 ENV PATH="/opt/maven/bin:${PATH}"
 
 # Install nodejs
+# The node deprecation warnings cause a 20 second sleep.
+# But mom, I'm not even tired!
 RUN curl -sSL https://deb.nodesource.com/setup_14.x \
-  | bash - \
+  | sed 's/sleep/echo "But mom!"/' \
+  | bash \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
  && npm install -g grunt-cli \
@@ -167,20 +170,36 @@ RUN curl -sSL https://cpanmin.us \
                                                  Module::Install::Repository \
  && rm -rf .cpanm
 
-# Install Python packages
-ENV PIP_NO_CACHE_DIR=off
+# Install Python3
+ENV PATH="${PATH}:/opt/pypy3.10/bin" \
+    PIP_NO_CACHE_DIR=off
+
+# https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
+ARG BUILDARCH
+RUN case "${BUILDARCH:?}" in \
+      arm64) pypyarch=aarch64;; \
+      *) pypyarch=linux64;; \
+    esac \
+ && cd /opt \
+ && for url in https://downloads.python.org/pypy/pypy3.10-v7.3.12-"$pypyarch".tar.bz2; \
+    do curl -fsSL "$url" | tar -xvjpf -; \
+    done \
+ && ln -s pypy3.10* pypy3.10
 
 # Install Python3 packages
+ENV PIP_NO_CACHE_DIR=off
 RUN python3 -m pip install --upgrade pip setuptools wheel \
  && python3 -m pip install tox zstandard
 
 # Install .NET SDK
-RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
- && dpkg -i packages-microsoft-prod.deb \
- && rm packages-microsoft-prod.deb \
- && apt-get update \
- && apt-get -qqy install --no-install-recommends dotnet-sdk-3.1 dotnet-sdk-5.0 dotnet-sdk-6.0 dotnet-sdk-7.0 \
- && apt-get -qqy clean
+RUN cd /opt ; \
+    wget https://dot.net/v1/dotnet-install.sh ; \
+    bash ./dotnet-install.sh --channel "3.1" --install-dir "/opt/dotnet" ; \
+    bash ./dotnet-install.sh --channel "5.0" --install-dir "/opt/dotnet" ; \
+    bash ./dotnet-install.sh --channel "6.0" --install-dir "/opt/dotnet" ; \
+    bash ./dotnet-install.sh --channel "7.0" --install-dir "/opt/dotnet" ;
+
+ENV PATH $PATH:/opt/dotnet
 
 # Install Ruby
 RUN apt-get -qqy install ruby-full \
@@ -188,22 +207,14 @@ RUN apt-get -qqy install ruby-full \
 RUN mkdir -p /tmp/lang/ruby/lib/avro && mkdir -p /tmp/share
 COPY lang/ruby/* /tmp/lang/ruby/
 COPY share/VERSION.txt /tmp/share/
-RUN gem install bundler --no-document && \
+RUN gem install bundler -v 2.4.22 --no-document && \
     apt-get install -qqy libyaml-dev && \
     cd /tmp/lang/ruby && bundle install
 
 # Install Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.65.0
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.74.0
+ENV PATH $PATH:/root/.cargo/bin/
 
-# Note: This "ubertool" container has two JDK versions:
-# - OpenJDK 8
-# - OpenJDK 11
-# - OpenJDK 17
-# - The root build.sh script switches between the versions according to
-#   the JAVA environment variable.
-
-# Since we want the JDK8 as a default, we have to re-prepend it to the PATH.
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
-ENV PATH $JAVA_HOME/bin:$PATH
+RUN update-java-alternatives -s "java-1.8.*"
 
 CMD ["/bin/bash", "-i"]

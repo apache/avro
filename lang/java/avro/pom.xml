@@ -23,7 +23,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.11.4-SNAPSHOT</version>
+    <version>1.11.5</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -72,6 +72,9 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <parallel>none</parallel>
+          <systemProperties>
+            <org.apache.avro.SERIALIZABLE_CLASSES>java.math.BigDecimal,java.math.BigInteger,java.net.URI,java.net.URL,java.io.File,java.lang.Integer,org.apache.avro.reflect.TestReflect$R10</org.apache.avro.SERIALIZABLE_CLASSES>
+          </systemProperties>
         </configuration>
         <executions>
           <execution>
@@ -248,6 +251,11 @@
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-library</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

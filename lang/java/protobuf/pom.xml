@@ -23,7 +23,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.11.4-SNAPSHOT</version>
+    <version>1.11.5</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -55,7 +55,7 @@
               <execution>
                 <phase>generate-test-sources</phase>
                 <configuration>
-                  <tasks>
+                  <target>
                     <mkdir dir="target/protobuf-tmp"/>
                     <exec executable="protoc">
                       <arg value="--java_out=src/test/java/"/>
@@ -65,7 +65,7 @@
                       <arg value="--java_out=src/test/java/"/>
                       <arg value="src/test/protobuf/test_multiple_files.proto"/>
                     </exec>
-                  </tasks>
+                  </target>
                 </configuration>
                 <goals>
                   <goal>run</goal>

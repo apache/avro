@@ -44,10 +44,7 @@ jobs:
         - '3.10'
         - '3.9'
         - '3.8'
-        - '3.7'
-        - '3.6'
-        - 'pypy-3.7'
-        - 'pypy-3.6'
+        - 'pypy-3.10'
 
     steps:
       - uses: actions/checkout@v4
@@ -91,10 +88,17 @@ jobs:
         - '3.10'
         - '3.9'
         - '3.8'
+<<<<<<< HEAD
         - '3.7'
+<<<<<<< HEAD
         - '3.6'
         - 'pypy-3.7'
         - 'pypy-3.6'
+=======
+=======
+>>>>>>> 6e5e37876b (Drop apparently unsupported pypy version)
+        - 'pypy-3.10'
+>>>>>>> 982ad792ce (ci: Remove deprecated pypy-3.9 test (#3211))
 
     steps:
       - uses: actions/checkout@v4
@@ -118,7 +122,7 @@ jobs:
           python3 -m pip install python-snappy zstandard
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}

@@ -36,6 +36,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
@@ -50,6 +52,7 @@ import java.util.Set;
 
 import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
+import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData.StringType;
@@ -951,4 +954,49 @@ public class TestSpecificCompiler {
     }
   }
 
+  @Test
+  public void docsAreEscaped_avro4053() {
+    String jsonSchema = "{\n" + "  \"protocol\": \"DummyProtocol\",\n"
+        + "  \"doc\": \"*/\\nTest escaping <threats>\\n/*\",\n" + "  \"types\" : [\n"
+        + "    {\"type\": \"fixed\", \"name\": \"Hash\", \"size\": 16, \"doc\": \"*/\\nTest escaping <threats>\\n/*\""
+        + "},\n"
+        + "    {\"type\": \"enum\", \"name\": \"Status\", \"symbols\": [\"ON\", \"OFF\"], \"doc\": \"*/\\nTest escaping <threats>\\n/*\"},\n"
+        + "   " + " {\"type\": \"record\", \"name\": \"Message\", \"fields\" : [\n"
+        + "      {\"name\": \"content\", \"type\": \"string\", \"doc\":  \"*/\\nTest escaping <threats>\\n/*\"},\n"
+        + "      {\"name\": \"status\", \"type\": \"Status\", \"doc\":  \"*/\\nTest escaping <threats>\\n/*\"},\n"
+        + "      {\"name\": \"signature\", \"type\": \"Hash\", \"doc\":  \"*/\\nTest escaping <threats>\\n/*\"}\n"
+        + "    ]}\n" + "  ],\n" + "  \"messages\" : {\n" + "    \"echo\": {\"request\": ["
+        + "{\"name\": \"msg\", \"type\": \"Message\"}"
+        + "], \"response\": \"Message\", \"doc\": \"*/\\nTest escaping <threats>\\n/*\"}\n" + "  },\n"
+        + "  \"javaAnnotation\": [\n" + "    \"Deprecated(forRemoval = true, since = \\\"forever\\\")\",\n"
+        + "    \"SuppressWarnings(\\\"ALL\\\")\",\n" + "    \"SuppressWarnings(\\\"CodeInjection\\\")/*\",\n"
+        + "    \" This is inside a comment as each line is prefixed with @\",\n"
+        + "    \" and the next bit is really dangerous... */ static { System.exit(); }\"\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(Protocol.parse(jsonSchema)).compile();
+    for (SpecificCompiler.OutputFile outputFile : outputs) {
+      assertFalse("Threats present?", outputFile.contents.contains("*/\\nTest escaping <threats>\\n/*"));
+
+      int expectedEscapeCount = countOccurrences(Pattern.compile("Test escaping", Pattern.LITERAL),
+          outputFile.contents);
+      int escapedJavaDocCount = countOccurrences(Pattern.compile("\\*&#47;\\s*Test escaping &lt;threats&gt;\\s*/\\*"),
+          outputFile.contents);
+      // noinspection RegExpRedundantEscape
+      int escapedDocStringCount = countOccurrences(
+          Pattern.compile("\\\"doc\\\":\\\"*/\\\\nTest escaping <threats>\\\\n/*\\\"", Pattern.LITERAL),
+          outputFile.contents);
+      assertEquals("Escaped threats in " + outputFile.path, expectedEscapeCount,
+          escapedJavaDocCount + escapedDocStringCount);
+
+      assertFalse("Code injection present? " + outputFile.contents,
+          Pattern.compile("\\{ System.exit\\(\\); }(?!\\\\\")").matcher(outputFile.contents).find());
+    }
+  }
+
+  private int countOccurrences(Pattern pattern, String textToSearch) {
+    int count = 0;
+    for (Matcher matcher = pattern.matcher(textToSearch); matcher.find();) {
+      count++;
+    }
+    return count;
+  }
 }

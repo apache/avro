@@ -24,8 +24,9 @@ on:
     branches: [ branch-1.11 ]
     paths:
       - .github/workflows/test-lang-rust-audit.yml
-      - lang/rust/Cargo.toml
+      - lang/rust/**/Cargo.toml
       - lang/rust/Cargo.lock
+      - lang/rust/deny.toml
 
 permissions:
   contents: read
@@ -49,8 +50,19 @@ jobs:
         uses: actions/checkout@v4
       - name: Dependency Review
         if: github.event_name == 'pull_request'
-        uses: actions/dependency-review-action@v3
+        uses: actions/dependency-review-action@v4
       - name: Install Cargo Audit
         run: cargo install cargo-audit
       - name: Audit
         run: cargo audit
+
+  deny:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Cargo Deny
+        run: cargo install cargo-deny
+      - name: Check
+        run: cargo deny check
+      

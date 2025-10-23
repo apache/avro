@@ -31,7 +31,6 @@ permissions:
 
 env:
   RUSTFLAGS: -Dwarnings
-  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: 'git' # TODO: remove this env var once MSRV is 1.70.0+
 
 defaults:
   run:
@@ -50,7 +49,7 @@ jobs:
           - 'stable'
           - 'beta'
           - 'nightly'
-          - '1.65.0'  # MSRV
+          - '1.73.0'  # MSRV
         target:
           - x86_64-unknown-linux-gnu
           - wasm32-unknown-unknown
@@ -60,14 +59,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Cache Cargo
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           # these represent dependencies downloaded by cargo
           # and thus do not depend on the OS, arch nor rust version.
           path: ~/.cargo
           key: ${{ runner.os }}-target-cache1-${{ hashFiles('**/Cargo.lock') }}
       - name: Cache Rust dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           # these represent compiled steps of both dependencies and avro
           # and thus are specific for a particular OS, arch and rust version.
@@ -83,7 +82,7 @@ jobs:
 
       - name: Cache cargo-rdme
         if: matrix.rust == 'stable' && matrix.target == 'x86_64-unknown-linux-gnu'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cargo-${{ matrix.rust }}/cargo-rdme
           key: cargo-rdme-
@@ -130,14 +129,14 @@ jobs:
           toolchain: stable
 
       - name: Cache Cargo
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           # these represent dependencies downloaded by cargo
           # and thus do not depend on the OS, arch nor rust version.
           path: ~/.cargo
           key: ${{ runner.os }}-target-cache1-${{ hashFiles('**/Cargo.lock') }}
       - name: Cache Rust dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           # these represent compiled steps of both dependencies and avro
           # and thus are specific for a particular OS, arch and rust version.
@@ -145,7 +144,7 @@ jobs:
           key: ${{ runner.os }}-target-cache1-stable-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -215,7 +214,7 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Cache Cargo
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           # these represent dependencies downloaded by cargo
           # and thus do not depend on the OS, arch nor rust version.
@@ -223,7 +222,7 @@ jobs:
           key: ${{ runner.os }}-target-cache1-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Cache Rust dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           # these represent compiled steps of both dependencies and avro
           # and thus are specific for a particular OS, arch and rust version.
@@ -248,7 +247,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Cache Cargo
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           # these represent dependencies downloaded by cargo
           # and thus do not depend on the OS, arch nor rust version.
@@ -256,7 +255,7 @@ jobs:
           key: ${{ runner.os }}-target-arm64-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Cache Rust dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           # these represent compiled steps of both dependencies and avro
           # and thus are specific for a particular OS, arch and rust version.

@@ -17,6 +17,7 @@
 
 //! Logic handling the intermediate representation of Avro values.
 use crate::{
+    bigdecimal::{deserialize_big_decimal, serialize_big_decimal},
     decimal::Decimal,
     duration::Duration,
     schema::{
@@ -25,11 +26,11 @@ use crate::{
     },
     AvroResult, Error,
 };
+use bigdecimal::BigDecimal;
 use serde_json::{Number, Value as JsonValue};
 use std::{
     borrow::Borrow,
     collections::{BTreeMap, HashMap},
-    convert::TryFrom,
     fmt::Debug,
     hash::BuildHasher,
     str::FromStr,
@@ -100,6 +101,8 @@ pub enum Value {
     Date(i32),
     /// An Avro Decimal value. Bytes are in big-endian order, per the Avro spec.
     Decimal(Decimal),
+    /// An Avro Decimal value.
+    BigDecimal(BigDecimal),
     /// Time in milliseconds.
     TimeMillis(i32),
     /// Time in microseconds.
@@ -108,15 +111,20 @@ pub enum Value {
     TimestampMillis(i64),
     /// Timestamp in microseconds.
     TimestampMicros(i64),
+    /// Timestamp in nanoseconds.
+    TimestampNanos(i64),
     /// Local timestamp in milliseconds.
     LocalTimestampMillis(i64),
     /// Local timestamp in microseconds.
     LocalTimestampMicros(i64),
+    /// Local timestamp in nanoseconds.
+    LocalTimestampNanos(i64),
     /// Avro Duration. An amount of time defined by months, days and milliseconds.
     Duration(Duration),
     /// Universally unique identifier.
     Uuid(Uuid),
 }
+
 /// Any structure implementing the [ToAvro](trait.ToAvro.html) trait will be usable
 /// from a [Writer](../writer/struct.Writer.html).
 #[deprecated(
@@ -154,6 +162,7 @@ to_value!(String, Value::String);
 to_value!(Vec<u8>, Value::Bytes);
 to_value!(uuid::Uuid, Value::Uuid);
 to_value!(Decimal, Value::Decimal);
+to_value!(BigDecimal, Value::BigDecimal);
 to_value!(Duration, Value::Duration);
 
 impl From<()> for Value {
@@ -272,7 +281,14 @@ impl From<JsonValue> for Value {
         match value {
             JsonValue::Null => Self::Null,
             JsonValue::Bool(b) => b.into(),
-            JsonValue::Number(ref n) if n.is_i64() => Value::Long(n.as_i64().unwrap()),
+            JsonValue::Number(ref n) if n.is_i64() => {
+                let n = n.as_i64().unwrap();
+                if n >= i32::MIN as i64 && n <= i32::MAX as i64 {
+                    Value::Int(n as i32)
+                } else {
+                    Value::Long(n)
+                }
+            }
             JsonValue::Number(ref n) if n.is_f64() => Value::Double(n.as_f64().unwrap()),
             JsonValue::Number(n) => Value::Long(n.as_u64().unwrap() as i64), // TODO: Not so great
             JsonValue::String(s) => s.into(),
@@ -327,12 +343,18 @@ impl TryFrom<Value> for JsonValue {
             Value::Date(d) => Ok(Self::Number(d.into())),
             Value::Decimal(ref d) => <Vec<u8>>::try_from(d)
                 .map(|vec| Self::Array(vec.into_iter().map(|v| v.into()).collect())),
+            Value::BigDecimal(ref bg) => {
+                let vec1: Vec<u8> = serialize_big_decimal(bg);
+                Ok(Self::Array(vec1.into_iter().map(|b| b.into()).collect()))
+            }
             Value::TimeMillis(t) => Ok(Self::Number(t.into())),
             Value::TimeMicros(t) => Ok(Self::Number(t.into())),
             Value::TimestampMillis(t) => Ok(Self::Number(t.into())),
             Value::TimestampMicros(t) => Ok(Self::Number(t.into())),
+            Value::TimestampNanos(t) => Ok(Self::Number(t.into())),
             Value::LocalTimestampMillis(t) => Ok(Self::Number(t.into())),
             Value::LocalTimestampMicros(t) => Ok(Self::Number(t.into())),
+            Value::LocalTimestampNanos(t) => Ok(Self::Number(t.into())),
             Value::Duration(d) => Ok(Self::Array(
                 <[u8; 12]>::from(d).iter().map(|&v| v.into()).collect(),
             )),
@@ -419,12 +441,15 @@ impl Value {
             (&Value::Long(_), &Schema::LocalTimestampMicros) => None,
             (&Value::TimestampMicros(_), &Schema::TimestampMicros) => None,
             (&Value::TimestampMillis(_), &Schema::TimestampMillis) => None,
+            (&Value::TimestampNanos(_), &Schema::TimestampNanos) => None,
             (&Value::LocalTimestampMicros(_), &Schema::LocalTimestampMicros) => None,
             (&Value::LocalTimestampMillis(_), &Schema::LocalTimestampMillis) => None,
+            (&Value::LocalTimestampNanos(_), &Schema::LocalTimestampNanos) => None,
             (&Value::TimeMicros(_), &Schema::TimeMicros) => None,
             (&Value::TimeMillis(_), &Schema::TimeMillis) => None,
             (&Value::Date(_), &Schema::Date) => None,
             (&Value::Decimal(_), &Schema::Decimal { .. }) => None,
+            (&Value::BigDecimal(_), &Schema::BigDecimal) => None,
             (&Value::Duration(_), &Schema::Duration) => None,
             (&Value::Uuid(_), &Schema::Uuid) => None,
             (&Value::Float(_), &Schema::Float) => None,
@@ -505,14 +530,14 @@ impl Value {
             (Value::Array(items), Schema::Array(inner)) => items.iter().fold(None, |acc, item| {
                 Value::accumulate(
                     acc,
-                    item.validate_internal(inner, names, enclosing_namespace),
+                    item.validate_internal(&inner.items, names, enclosing_namespace),
                 )
             }),
             (Value::Map(items), Schema::Map(inner)) => {
                 items.iter().fold(None, |acc, (_, value)| {
                     Value::accumulate(
                         acc,
-                        value.validate_internal(inner, names, enclosing_namespace),
+                        value.validate_internal(&inner.types, names, enclosing_namespace),
                     )
                 })
             }
@@ -588,7 +613,10 @@ impl Value {
                     }
                 })
             }
-            (_v, _s) => Some("Unsupported value-schema combination".to_string()),
+            (v, s) => Some(format!(
+                "Unsupported value-schema combination! Value: {:?}, schema: {:?}",
+                v, s
+            )),
         }
     }
 
@@ -634,7 +662,6 @@ impl Value {
             };
             self = v;
         }
-
         match *schema {
             Schema::Ref { ref name } => {
                 let name = name.fully_qualified_name(enclosing_namespace);
@@ -664,8 +691,10 @@ impl Value {
                 ref default,
                 ..
             }) => self.resolve_enum(symbols, default, field_default),
-            Schema::Array(ref inner) => self.resolve_array(inner, names, enclosing_namespace),
-            Schema::Map(ref inner) => self.resolve_map(inner, names, enclosing_namespace),
+            Schema::Array(ref inner) => {
+                self.resolve_array(&inner.items, names, enclosing_namespace)
+            }
+            Schema::Map(ref inner) => self.resolve_map(&inner.types, names, enclosing_namespace),
             Schema::Record(RecordSchema { ref fields, .. }) => {
                 self.resolve_record(fields, names, enclosing_namespace)
             }
@@ -674,13 +703,16 @@ impl Value {
                 precision,
                 ref inner,
             }) => self.resolve_decimal(precision, scale, inner),
+            Schema::BigDecimal => self.resolve_bigdecimal(),
             Schema::Date => self.resolve_date(),
             Schema::TimeMillis => self.resolve_time_millis(),
             Schema::TimeMicros => self.resolve_time_micros(),
             Schema::TimestampMillis => self.resolve_timestamp_millis(),
             Schema::TimestampMicros => self.resolve_timestamp_micros(),
+            Schema::TimestampNanos => self.resolve_timestamp_nanos(),
             Schema::LocalTimestampMillis => self.resolve_local_timestamp_millis(),
             Schema::LocalTimestampMicros => self.resolve_local_timestamp_micros(),
+            Schema::LocalTimestampNanos => self.resolve_local_timestamp_nanos(),
             Schema::Duration => self.resolve_duration(),
             Schema::Uuid => self.resolve_uuid(),
         }
@@ -693,6 +725,14 @@ impl Value {
                 Value::Uuid(Uuid::from_str(string).map_err(Error::ConvertStrToUuid)?)
             }
             other => return Err(Error::GetUuid(other.into())),
+        })
+    }
+
+    fn resolve_bigdecimal(self) -> Result<Self, Error> {
+        Ok(match self {
+            bg @ Value::BigDecimal(_) => bg,
+            Value::Bytes(b) => Value::BigDecimal(deserialize_big_decimal(&b).unwrap()),
+            other => return Err(Error::GetBigdecimal(other.into())),
         })
     }
 
@@ -796,6 +836,14 @@ impl Value {
         }
     }
 
+    fn resolve_timestamp_nanos(self) -> Result<Self, Error> {
+        match self {
+            Value::TimestampNanos(ts) | Value::Long(ts) => Ok(Value::TimestampNanos(ts)),
+            Value::Int(ts) => Ok(Value::TimestampNanos(i64::from(ts))),
+            other => Err(Error::GetTimestampNanos(other.into())),
+        }
+    }
+
     fn resolve_local_timestamp_millis(self) -> Result<Self, Error> {
         match self {
             Value::LocalTimestampMillis(ts) | Value::Long(ts) => {
@@ -813,6 +861,14 @@ impl Value {
             }
             Value::Int(ts) => Ok(Value::LocalTimestampMicros(i64::from(ts))),
             other => Err(Error::GetLocalTimestampMicros(other.into())),
+        }
+    }
+
+    fn resolve_local_timestamp_nanos(self) -> Result<Self, Error> {
+        match self {
+            Value::LocalTimestampNanos(ts) | Value::Long(ts) => Ok(Value::LocalTimestampNanos(ts)),
+            Value::Int(ts) => Ok(Value::LocalTimestampNanos(i64::from(ts))),
+            other => Err(Error::GetLocalTimestampNanos(other.into())),
         }
     }
 
@@ -900,6 +956,13 @@ impl Value {
                 }
             }
             Value::String(s) => Ok(Value::Fixed(s.len(), s.into_bytes())),
+            Value::Bytes(s) => {
+                if s.len() == size {
+                    Ok(Value::Fixed(size, s))
+                } else {
+                    Err(Error::CompareFixedSizes { size, n: s.len() })
+                }
+            }
             other => Err(Error::GetStringForFixed(other.into())),
         }
     }
@@ -1090,10 +1153,8 @@ impl Value {
 mod tests {
     use super::*;
     use crate::{
-        decimal::Decimal,
-        duration::{Days, Duration, Millis, Months},
-        schema::{Name, RecordField, RecordFieldOrder, Schema, UnionSchema},
-        types::Value,
+        duration::{Days, Millis, Months},
+        schema::RecordFieldOrder,
     };
     use apache_avro_test_helper::{
         logger::{assert_logged, assert_not_logged},
@@ -1101,7 +1162,7 @@ mod tests {
     };
     use num_bigint::BigInt;
     use pretty_assertions::assert_eq;
-    use uuid::Uuid;
+    use serde_json::json;
 
     #[test]
     fn avro_3809_validate_nested_records_with_implicit_namespace() -> TestResult {
@@ -1164,7 +1225,7 @@ mod tests {
                 Value::Int(42),
                 Schema::Boolean,
                 false,
-                "Invalid value: Int(42) for schema: Boolean. Reason: Unsupported value-schema combination",
+                "Invalid value: Int(42) for schema: Boolean. Reason: Unsupported value-schema combination! Value: Int(42), schema: Boolean",
             ),
             (
                 Value::Union(0, Box::new(Value::Null)),
@@ -1182,7 +1243,7 @@ mod tests {
                 Value::Union(0, Box::new(Value::Null)),
                 Schema::Union(UnionSchema::new(vec![Schema::Double, Schema::Int])?),
                 false,
-                "Invalid value: Union(0, Null) for schema: Union(UnionSchema { schemas: [Double, Int], variant_index: {Int: 1, Double: 0} }). Reason: Unsupported value-schema combination",
+                "Invalid value: Union(0, Null) for schema: Union(UnionSchema { schemas: [Double, Int], variant_index: {Int: 1, Double: 0} }). Reason: Unsupported value-schema combination! Value: Null, schema: Double",
             ),
             (
                 Value::Union(3, Box::new(Value::Int(42))),
@@ -1214,17 +1275,17 @@ mod tests {
             ),
             (
                 Value::Array(vec![Value::Long(42i64)]),
-                Schema::Array(Box::new(Schema::Long)),
+                Schema::array(Schema::Long),
                 true,
                 "",
             ),
             (
                 Value::Array(vec![Value::Boolean(true)]),
-                Schema::Array(Box::new(Schema::Long)),
+                Schema::array(Schema::Long),
                 false,
-                "Invalid value: Array([Boolean(true)]) for schema: Array(Long). Reason: Unsupported value-schema combination",
+                "Invalid value: Array([Boolean(true)]) for schema: Array(ArraySchema { items: Long, attributes: {} }). Reason: Unsupported value-schema combination! Value: Boolean(true), schema: Long",
             ),
-            (Value::Record(vec![]), Schema::Null, false, "Invalid value: Record([]) for schema: Null. Reason: Unsupported value-schema combination"),
+            (Value::Record(vec![]), Schema::Null, false, "Invalid value: Record([]) for schema: Null. Reason: Unsupported value-schema combination! Value: Record([]), schema: Null"),
             (
                 Value::Fixed(12, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]),
                 Schema::Duration,
@@ -1310,6 +1371,7 @@ mod tests {
             name: Name::new("some_fixed").unwrap(),
             aliases: None,
             doc: None,
+            default: None,
             attributes: Default::default(),
         });
 
@@ -1493,7 +1555,7 @@ mod tests {
         ]);
         assert!(!value.validate(&schema));
         assert_logged(
-            r#"Invalid value: Record([("a", Boolean(false)), ("b", String("foo"))]) for schema: Record(RecordSchema { name: Name { name: "some_record", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: "a", doc: None, aliases: None, default: None, schema: Long, order: Ascending, position: 0, custom_attributes: {} }, RecordField { name: "b", doc: None, aliases: None, default: None, schema: String, order: Ascending, position: 1, custom_attributes: {} }, RecordField { name: "c", doc: None, aliases: None, default: Some(Null), schema: Union(UnionSchema { schemas: [Null, Int], variant_index: {Null: 0, Int: 1} }), order: Ascending, position: 2, custom_attributes: {} }], lookup: {"a": 0, "b": 1, "c": 2}, attributes: {} }). Reason: Unsupported value-schema combination"#,
+            r#"Invalid value: Record([("a", Boolean(false)), ("b", String("foo"))]) for schema: Record(RecordSchema { name: Name { name: "some_record", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: "a", doc: None, aliases: None, default: None, schema: Long, order: Ascending, position: 0, custom_attributes: {} }, RecordField { name: "b", doc: None, aliases: None, default: None, schema: String, order: Ascending, position: 1, custom_attributes: {} }, RecordField { name: "c", doc: None, aliases: None, default: Some(Null), schema: Union(UnionSchema { schemas: [Null, Int], variant_index: {Null: 0, Int: 1} }), order: Ascending, position: 2, custom_attributes: {} }], lookup: {"a": 0, "b": 1, "c": 2}, attributes: {} }). Reason: Unsupported value-schema combination! Value: Boolean(false), schema: Long"#,
         );
 
         let value = Value::Record(vec![
@@ -1665,6 +1727,7 @@ Field with name '"b"' is not a member of the map items"#,
                     aliases: None,
                     size: 20,
                     doc: None,
+                    default: None,
                     attributes: Default::default(),
                 }))
             }))
@@ -1714,6 +1777,16 @@ Field with name '"b"' is not a member of the map items"#,
     }
 
     #[test]
+    fn test_avro_3914_resolve_timestamp_nanos() {
+        let value = Value::TimestampNanos(10);
+        assert!(value.clone().resolve(&Schema::TimestampNanos).is_ok());
+        assert!(value.resolve(&Schema::Int).is_err());
+
+        let value = Value::Double(10.0);
+        assert!(value.resolve(&Schema::TimestampNanos).is_err());
+    }
+
+    #[test]
     fn test_avro_3853_resolve_timestamp_millis() {
         let value = Value::LocalTimestampMillis(10);
         assert!(value.clone().resolve(&Schema::LocalTimestampMillis).is_ok());
@@ -1731,6 +1804,16 @@ Field with name '"b"' is not a member of the map items"#,
 
         let value = Value::Double(10.0);
         assert!(value.resolve(&Schema::LocalTimestampMicros).is_err());
+    }
+
+    #[test]
+    fn test_avro_3916_resolve_timestamp_nanos() {
+        let value = Value::LocalTimestampNanos(10);
+        assert!(value.clone().resolve(&Schema::LocalTimestampNanos).is_ok());
+        assert!(value.resolve(&Schema::Int).is_err());
+
+        let value = Value::Double(10.0);
+        assert!(value.resolve(&Schema::LocalTimestampNanos).is_err());
     }
 
     #[test]
@@ -1770,7 +1853,7 @@ Field with name '"b"' is not a member of the map items"#,
                 {
                     "name": "event",
                     "type": [
-                        "null", 
+                        "null",
                         {
                             "type": "record",
                             "name": "event",
@@ -1939,11 +2022,19 @@ Field with name '"b"' is not a member of the map items"#,
             JsonValue::Number(1.into())
         );
         assert_eq!(
+            JsonValue::try_from(Value::TimestampNanos(1))?,
+            JsonValue::Number(1.into())
+        );
+        assert_eq!(
             JsonValue::try_from(Value::LocalTimestampMillis(1))?,
             JsonValue::Number(1.into())
         );
         assert_eq!(
             JsonValue::try_from(Value::LocalTimestampMicros(1))?,
+            JsonValue::Number(1.into())
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::LocalTimestampNanos(1))?,
             JsonValue::Number(1.into())
         );
         assert_eq!(
@@ -2848,7 +2939,7 @@ Field with name '"b"' is not a member of the map items"#,
 
         let schemas = Schema::parse_list(&[main_schema, referenced_schema])?;
 
-        let main_schema = schemas.get(0).unwrap();
+        let main_schema = schemas.first().unwrap();
         let schemata: Vec<_> = schemas.iter().skip(1).collect();
 
         let resolve_result = avro_value.clone().resolve_schemata(main_schema, schemata);
@@ -2924,5 +3015,106 @@ Field with name '"b"' is not a member of the map items"#,
         );
 
         Ok(())
+    }
+
+    #[test]
+    fn test_avro_3892_resolve_fixed_from_bytes() -> TestResult {
+        let value = Value::Bytes(vec![97, 98, 99]);
+        assert_eq!(
+            value.resolve(&Schema::Fixed(FixedSchema {
+                name: "test".into(),
+                aliases: None,
+                doc: None,
+                size: 3,
+                default: None,
+                attributes: Default::default()
+            }))?,
+            Value::Fixed(3, vec![97, 98, 99])
+        );
+
+        let value = Value::Bytes(vec![97, 99]);
+        assert!(value
+            .resolve(&Schema::Fixed(FixedSchema {
+                name: "test".into(),
+                aliases: None,
+                doc: None,
+                size: 3,
+                default: None,
+                attributes: Default::default()
+            }))
+            .is_err(),);
+
+        let value = Value::Bytes(vec![97, 98, 99, 100]);
+        assert!(value
+            .resolve(&Schema::Fixed(FixedSchema {
+                name: "test".into(),
+                aliases: None,
+                doc: None,
+                size: 3,
+                default: None,
+                attributes: Default::default()
+            }))
+            .is_err(),);
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3779_bigdecimal_resolving() -> TestResult {
+        let schema =
+            r#"{"name": "bigDecimalSchema", "logicalType": "big-decimal", "type": "bytes" }"#;
+
+        let avro_value = Value::BigDecimal(BigDecimal::from(12345678u32));
+        let schema = Schema::parse_str(schema)?;
+        let resolve_result: AvroResult<Value> = avro_value.resolve(&schema);
+        assert!(
+            resolve_result.is_ok(),
+            "resolve result must be ok, got: {resolve_result:?}"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3928_from_serde_value_to_types_value() {
+        assert_eq!(Value::from(serde_json::Value::Null), Value::Null);
+        assert_eq!(Value::from(json!(true)), Value::Boolean(true));
+        assert_eq!(Value::from(json!(false)), Value::Boolean(false));
+        assert_eq!(Value::from(json!(0)), Value::Int(0));
+        assert_eq!(Value::from(json!(i32::MIN)), Value::Int(i32::MIN));
+        assert_eq!(Value::from(json!(i32::MAX)), Value::Int(i32::MAX));
+        assert_eq!(
+            Value::from(json!(i32::MIN as i64 - 1)),
+            Value::Long(i32::MIN as i64 - 1)
+        );
+        assert_eq!(
+            Value::from(json!(i32::MAX as i64 + 1)),
+            Value::Long(i32::MAX as i64 + 1)
+        );
+        assert_eq!(Value::from(json!(1.23)), Value::Double(1.23));
+        assert_eq!(Value::from(json!(-1.23)), Value::Double(-1.23));
+        assert_eq!(Value::from(json!(u64::MIN)), Value::Int(u64::MIN as i32));
+        assert_eq!(Value::from(json!(u64::MAX)), Value::Long(u64::MAX as i64));
+        assert_eq!(
+            Value::from(json!("some text")),
+            Value::String("some text".into())
+        );
+        assert_eq!(
+            Value::from(json!(["text1", "text2", "text3"])),
+            Value::Array(vec![
+                Value::String("text1".into()),
+                Value::String("text2".into()),
+                Value::String("text3".into())
+            ])
+        );
+        assert_eq!(
+            Value::from(json!({"key1": "value1", "key2": "value2"})),
+            Value::Map(
+                vec![
+                    ("key1".into(), Value::String("value1".into())),
+                    ("key2".into(), Value::String("value2".into()))
+                ]
+                .into_iter()
+                .collect()
+            )
+        );
     }
 }

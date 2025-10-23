@@ -17,14 +17,14 @@
  */
 package org.apache.avro.file;
 
+import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -274,6 +274,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     if (blockRemaining != blockCount)
       throw new IllegalStateException("Not at block start.");
     blockRemaining = 0;
+    blockFinished();
     datumIn = null;
     return blockBuffer;
   }

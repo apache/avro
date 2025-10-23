@@ -27,7 +27,7 @@
 
   <groupId>org.apache.avro</groupId>
   <artifactId>avro-toplevel</artifactId>
-  <version>1.11.4-SNAPSHOT</version>
+  <version>1.11.5</version>
   <packaging>pom</packaging>
 
   <name>Apache Avro Toplevel</name>
@@ -47,24 +47,24 @@
     <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>
 
     <!-- plugin versions -->
-    <apache-rat-plugin.version>0.15</apache-rat-plugin.version>
-    <checkstyle-plugin.version>3.2.2</checkstyle-plugin.version>
+    <apache-rat-plugin.version>0.16.1</apache-rat-plugin.version>
+    <checkstyle-plugin.version>3.3.1</checkstyle-plugin.version>
     <checkstyle.version>9.3</checkstyle.version>
     <enforcer-plugin.version>3.3.0</enforcer-plugin.version>
-    <extra-enforcer-rules.version>1.7.0</extra-enforcer-rules.version>
+    <extra-enforcer-rules.version>1.8.0</extra-enforcer-rules.version>
     <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
     <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
-    <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
-    <maven-plugin-plugin.version>3.8.2</maven-plugin-plugin.version>
-    <maven-remote-resources-plugin.version>3.0.0</maven-remote-resources-plugin.version>
-    <maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
-    <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
+    <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
+    <maven-plugin-plugin.version>3.11.0</maven-plugin-plugin.version>
+    <maven-remote-resources-plugin.version>3.1.0</maven-remote-resources-plugin.version>
+    <maven-shade-plugin.version>3.5.2</maven-shade-plugin.version>
+    <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
     <plugin-tools-javadoc.version>3.5.2</plugin-tools-javadoc.version>
     <spotless-maven-plugin.version>2.27.2</spotless-maven-plugin.version>
-    <maven-surefire-plugin.version>3.1.0</maven-surefire-plugin.version>
+    <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
 
     <!-- Pin output timestamp to make the Java build reproducible -->
-    <project.build.outputTimestamp>1695661894</project.build.outputTimestamp>
+    <project.build.outputTimestamp>1754831786</project.build.outputTimestamp>
   </properties>
 
   <modules>
@@ -470,6 +470,7 @@
                 <exclude>lang/py/build/**</exclude>
                 <exclude>lang/py/dist/**</exclude>
                 <exclude>lang/py/userlogs/**</exclude>
+                <exclude>lang/py/docs/build/**</exclude>
                 <exclude>lang/ruby/Manifest</exclude>
                 <!-- text documentation files -->
                 <exclude>CHANGES.txt</exclude>

@@ -54,7 +54,7 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get install -qqy libsnappy-dev
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: .gem
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
@@ -95,7 +95,7 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get install -qqy libsnappy-dev
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: .gem
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
@@ -106,7 +106,7 @@ jobs:
         run: bundle config path .gem
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -152,7 +152,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Cache gems
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .gem
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}

@@ -17,23 +17,27 @@
 
 #[cfg(not(target_arch = "wasm32"))]
 use ctor::{ctor, dtor};
+use std::cell::RefCell;
 
-use ref_thread_local::ref_thread_local;
-
-ref_thread_local! {
+thread_local! {
     // The unit tests run in parallel
     // We need to keep the log messages in a thread-local variable
     // and clear them after assertion
-    pub(crate) static managed LOG_MESSAGES: Vec<String> = Vec::new();
+    pub(crate) static LOG_MESSAGES: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
 }
 
+pub mod data;
 pub mod logger;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[ctor]
 fn before_all() {
     // better stacktraces in tests
-    color_backtrace::install();
+    better_panic::Settings::new()
+        .most_recent_first(true)
+        .lineno_suffix(false)
+        .backtrace_first(true)
+        .install();
 
     // enable logging in tests
     logger::install();

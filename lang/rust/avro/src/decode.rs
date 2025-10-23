@@ -16,8 +16,10 @@
 // under the License.
 
 use crate::{
+    bigdecimal::deserialize_big_decimal,
     decimal::Decimal,
     duration::Duration,
+    encode::encode_long,
     schema::{
         DecimalSchema, EnumSchema, FixedSchema, Name, Namespace, RecordSchema, ResolvedSchema,
         Schema,
@@ -29,14 +31,13 @@ use crate::{
 use std::{
     borrow::Borrow,
     collections::HashMap,
-    convert::TryFrom,
     io::{ErrorKind, Read},
     str::FromStr,
 };
 use uuid::Uuid;
 
 #[inline]
-fn decode_long<R: Read>(reader: &mut R) -> AvroResult<Value> {
+pub(crate) fn decode_long<R: Read>(reader: &mut R) -> AvroResult<Value> {
     zag_i64(reader).map(Value::Long)
 }
 
@@ -46,7 +47,7 @@ fn decode_int<R: Read>(reader: &mut R) -> AvroResult<Value> {
 }
 
 #[inline]
-fn decode_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
+pub(crate) fn decode_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
     let len = zag_i64(reader)?;
     safe_len(usize::try_from(len).map_err(|e| Error::ConvertI64ToUsize(e, len))?)
 }
@@ -114,15 +115,67 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
             },
             schema => Err(Error::ResolveDecimalSchema(schema.into())),
         },
-        Schema::Uuid => Ok(Value::Uuid(
-            Uuid::from_str(
-                match decode_internal(&Schema::String, names, enclosing_namespace, reader)? {
-                    Value::String(ref s) => s,
-                    value => return Err(Error::GetUuidFromStringValue(value.into())),
-                },
-            )
-            .map_err(Error::ConvertStrToUuid)?,
-        )),
+        Schema::BigDecimal => {
+            match decode_internal(&Schema::Bytes, names, enclosing_namespace, reader)? {
+                Value::Bytes(bytes) => deserialize_big_decimal(&bytes).map(Value::BigDecimal),
+                value => Err(Error::BytesValue(value.into())),
+            }
+        }
+        Schema::Uuid => {
+            let len = decode_len(reader)?;
+            let mut bytes = vec![0u8; len];
+            reader.read_exact(&mut bytes).map_err(Error::ReadIntoBuf)?;
+
+            // use a Vec to be able re-read the bytes more than once if needed
+            let mut reader = Vec::with_capacity(len + 1);
+            encode_long(len as i64, &mut reader);
+            reader.extend_from_slice(&bytes);
+
+            let decode_from_string = |reader| match decode_internal(
+                &Schema::String,
+                names,
+                enclosing_namespace,
+                reader,
+            )? {
+                Value::String(ref s) => Uuid::from_str(s).map_err(Error::ConvertStrToUuid),
+                value => Err(Error::GetUuidFromStringValue(value.into())),
+            };
+
+            let uuid: Uuid = if len == 16 {
+                // most probably a Fixed schema
+                let fixed_result = decode_internal(
+                    &Schema::Fixed(FixedSchema {
+                        size: 16,
+                        name: "uuid".into(),
+                        aliases: None,
+                        doc: None,
+                        default: None,
+                        attributes: Default::default(),
+                    }),
+                    names,
+                    enclosing_namespace,
+                    &mut bytes.as_slice(),
+                );
+                if fixed_result.is_ok() {
+                    match fixed_result? {
+                        Value::Fixed(ref size, ref bytes) => {
+                            if *size != 16 {
+                                return Err(Error::ConvertFixedToUuid(*size));
+                            }
+                            Uuid::from_slice(bytes).map_err(Error::ConvertSliceToUuid)?
+                        }
+                        _ => decode_from_string(&mut reader.as_slice())?,
+                    }
+                } else {
+                    // try to decode as string
+                    decode_from_string(&mut reader.as_slice())?
+                }
+            } else {
+                // definitely a string
+                decode_from_string(&mut reader.as_slice())?
+            };
+            Ok(Value::Uuid(uuid))
+        }
         Schema::Int => decode_int(reader),
         Schema::Date => zag_i32(reader).map(Value::Date),
         Schema::TimeMillis => zag_i32(reader).map(Value::TimeMillis),
@@ -130,8 +183,10 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
         Schema::TimeMicros => zag_i64(reader).map(Value::TimeMicros),
         Schema::TimestampMillis => zag_i64(reader).map(Value::TimestampMillis),
         Schema::TimestampMicros => zag_i64(reader).map(Value::TimestampMicros),
+        Schema::TimestampNanos => zag_i64(reader).map(Value::TimestampNanos),
         Schema::LocalTimestampMillis => zag_i64(reader).map(Value::LocalTimestampMillis),
         Schema::LocalTimestampMicros => zag_i64(reader).map(Value::LocalTimestampMicros),
+        Schema::LocalTimestampNanos => zag_i64(reader).map(Value::LocalTimestampNanos),
         Schema::Duration => {
             let mut buf = [0u8; 12];
             reader.read_exact(&mut buf).map_err(Error::ReadDuration)?;
@@ -187,7 +242,12 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
 
                 items.reserve(len);
                 for _ in 0..len {
-                    items.push(decode_internal(inner, names, enclosing_namespace, reader)?);
+                    items.push(decode_internal(
+                        &inner.items,
+                        names,
+                        enclosing_namespace,
+                        reader,
+                    )?);
                 }
             }
 
@@ -206,7 +266,8 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
                 for _ in 0..len {
                     match decode_internal(&Schema::String, names, enclosing_namespace, reader)? {
                         Value::String(key) => {
-                            let value = decode_internal(inner, names, enclosing_namespace, reader)?;
+                            let value =
+                                decode_internal(&inner.types, names, enclosing_namespace, reader)?;
                             items.insert(key, value);
                         }
                         value => return Err(Error::MapKeyType(value.into())),
@@ -263,7 +324,7 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
             Ok(if let Value::Int(raw_index) = decode_int(reader)? {
                 let index = usize::try_from(raw_index)
                     .map_err(|e| Error::ConvertI32ToUsize(e, raw_index))?;
-                if (0..=symbols.len()).contains(&index) {
+                if (0..symbols.len()).contains(&index) {
                     let symbol = symbols[index].clone();
                     Value::Enum(raw_index as u32, symbol)
                 } else {
@@ -308,11 +369,12 @@ mod tests {
     use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
     use std::collections::HashMap;
+    use uuid::Uuid;
 
     #[test]
     fn test_decode_array_without_size() -> TestResult {
         let mut input: &[u8] = &[6, 2, 4, 6, 0];
-        let result = decode(&Schema::Array(Box::new(Schema::Int)), &mut input);
+        let result = decode(&Schema::array(Schema::Int), &mut input);
         assert_eq!(Array(vec!(Int(1), Int(2), Int(3))), result?);
 
         Ok(())
@@ -321,7 +383,7 @@ mod tests {
     #[test]
     fn test_decode_array_with_size() -> TestResult {
         let mut input: &[u8] = &[5, 6, 2, 4, 6, 0];
-        let result = decode(&Schema::Array(Box::new(Schema::Int)), &mut input);
+        let result = decode(&Schema::array(Schema::Int), &mut input);
         assert_eq!(Array(vec!(Int(1), Int(2), Int(3))), result?);
 
         Ok(())
@@ -330,7 +392,7 @@ mod tests {
     #[test]
     fn test_decode_map_without_size() -> TestResult {
         let mut input: &[u8] = &[0x02, 0x08, 0x74, 0x65, 0x73, 0x74, 0x02, 0x00];
-        let result = decode(&Schema::Map(Box::new(Schema::Int)), &mut input);
+        let result = decode(&Schema::map(Schema::Int), &mut input);
         let mut expected = HashMap::new();
         expected.insert(String::from("test"), Int(1));
         assert_eq!(Map(expected), result?);
@@ -341,7 +403,7 @@ mod tests {
     #[test]
     fn test_decode_map_with_size() -> TestResult {
         let mut input: &[u8] = &[0x01, 0x0C, 0x08, 0x74, 0x65, 0x73, 0x74, 0x02, 0x00];
-        let result = decode(&Schema::Map(Box::new(Schema::Int)), &mut input);
+        let result = decode(&Schema::map(Schema::Int), &mut input);
         let mut expected = HashMap::new();
         expected.insert(String::from("test"), Int(1));
         assert_eq!(Map(expected), result?);
@@ -358,6 +420,7 @@ mod tests {
             doc: None,
             name: Name::new("decimal")?,
             aliases: None,
+            default: None,
             attributes: Default::default(),
         }));
         let schema = Schema::Decimal(DecimalSchema {
@@ -387,6 +450,7 @@ mod tests {
             name: Name::new("decimal")?,
             aliases: None,
             doc: None,
+            default: None,
             attributes: Default::default(),
         }));
         let schema = Schema::Decimal(DecimalSchema {
@@ -803,6 +867,45 @@ mod tests {
                 &schema
             ))
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3926_encode_decode_uuid_to_string() -> TestResult {
+        use crate::encode::encode;
+
+        let schema = Schema::String;
+        let value = Value::Uuid(Uuid::parse_str("550e8400-e29b-41d4-a716-446655440000")?);
+
+        let mut buffer = Vec::new();
+        encode(&value, &schema, &mut buffer).expect(&success(&value, &schema));
+
+        let result = decode(&Schema::Uuid, &mut &buffer[..])?;
+        assert_eq!(result, value);
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3926_encode_decode_uuid_to_fixed() -> TestResult {
+        use crate::encode::encode;
+
+        let schema = Schema::Fixed(FixedSchema {
+            size: 16,
+            name: "uuid".into(),
+            aliases: None,
+            doc: None,
+            default: None,
+            attributes: Default::default(),
+        });
+        let value = Value::Uuid(Uuid::parse_str("550e8400-e29b-41d4-a716-446655440000")?);
+
+        let mut buffer = Vec::new();
+        encode(&value, &schema, &mut buffer).expect(&success(&value, &schema));
+
+        let result = decode(&Schema::Uuid, &mut &buffer[..])?;
+        assert_eq!(result, value);
 
         Ok(())
     }

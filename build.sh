@@ -182,7 +182,8 @@ do
       # build docs
       cp -r doc/ build/staging-web/
       find build/staging-web/ -type f -print0 | xargs -0 sed -r -i "s#\+\+version\+\+#${VERSION,,}#g"
-      mv build/staging-web/content/en/docs/++version++ build/staging-web/content/en/docs/"${VERSION,,}"
+      mkdir -p build/staging-web/public/docs/
+      mv build/staging-web/content/en/docs/++version++ build/staging-web/public/docs/"${VERSION,,}"
       read -n 1 -s -r -p "Build build/staging-web/ manually now. Press a key to continue..."
       # If it was a SNAPSHOT, it was lowercased during the build.
       cp -R build/staging-web/public/docs/"${VERSION,,}"/* "build/$DOC_DIR/"
@@ -217,7 +218,6 @@ do
         else
           gpg --pinentry-mode loopback --local-user="$GPG_LOCAL_USER" --passphrase "$password" --armor --output "$f.asc" --detach-sig "$f"
         fi
-        
       done
 
       set -x
@@ -311,7 +311,7 @@ do
       } > Dockerfile
       # Include the ruby gemspec for preinstallation.
       # shellcheck disable=SC2086
-      tar -cf- Dockerfile $DOCKER_EXTRA_CONTEXT | docker build $DOCKER_BUILD_XTRA_ARGS -t "$DOCKER_IMAGE_NAME" -
+      tar -cf- Dockerfile $DOCKER_EXTRA_CONTEXT | DOCKER_BUILDKIT=1 docker build $DOCKER_BUILD_XTRA_ARGS -t "$DOCKER_IMAGE_NAME" -
       rm Dockerfile
       # By mapping the .m2 directory you can do an mvn install from
       # within the container and use the result on your normal

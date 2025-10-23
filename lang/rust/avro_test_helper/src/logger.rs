@@ -16,9 +16,8 @@
 // under the License.
 
 use crate::LOG_MESSAGES;
-use lazy_static::lazy_static;
 use log::{LevelFilter, Log, Metadata};
-use ref_thread_local::RefThreadLocal;
+use std::sync::OnceLock;
 
 struct TestLogger {
     delegate: env_logger::Logger,
@@ -32,7 +31,7 @@ impl Log for TestLogger {
 
     fn log(&self, record: &log::Record) {
         if self.enabled(record.metadata()) {
-            LOG_MESSAGES.borrow_mut().push(format!("{}", record.args()));
+            LOG_MESSAGES.with(|msgs| msgs.borrow_mut().push(format!("{}", record.args())));
 
             self.delegate.log(record);
         }
@@ -41,36 +40,54 @@ impl Log for TestLogger {
     fn flush(&self) {}
 }
 
-lazy_static! {
+fn test_logger() -> &'static TestLogger {
     // Lazy static because the Logger has to be 'static
-    static ref TEST_LOGGER: TestLogger = TestLogger {
+    static TEST_LOGGER_ONCE: OnceLock<TestLogger> = OnceLock::new();
+    TEST_LOGGER_ONCE.get_or_init(|| TestLogger {
         delegate: env_logger::Builder::from_default_env()
             .filter_level(LevelFilter::Off)
             .parse_default_env()
             .build(),
-    };
+    })
 }
 
 pub fn clear_log_messages() {
-    LOG_MESSAGES.borrow_mut().clear();
+    LOG_MESSAGES.with(|msgs| match msgs.try_borrow_mut() {
+        Ok(mut log_messages) => log_messages.clear(),
+        Err(err) => panic!("Failed to clear log messages: {err:?}"),
+    });
 }
 
 pub fn assert_not_logged(unexpected_message: &str) {
-    match LOG_MESSAGES.borrow().last() {
+    LOG_MESSAGES.with(|msgs| match msgs.borrow().last() {
         Some(last_log) if last_log == unexpected_message => {
             panic!("The following log message should not have been logged: '{unexpected_message}'")
         }
         _ => (),
-    }
+    });
 }
 
 pub fn assert_logged(expected_message: &str) {
-    assert_eq!(LOG_MESSAGES.borrow_mut().pop().unwrap(), expected_message);
+    let mut deleted = false;
+    LOG_MESSAGES.with(|msgs| {
+        msgs.borrow_mut().retain(|msg| {
+            if msg == expected_message {
+                deleted = true;
+                false
+            } else {
+                true
+            }
+        })
+    });
+
+    if !deleted {
+        panic!("Expected log message has not been logged: '{expected_message}'");
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn install() {
-    log::set_logger(&*TEST_LOGGER)
+    log::set_logger(test_logger())
         .map(|_| log::set_max_level(LevelFilter::Trace))
         .map_err(|err| {
             eprintln!("Failed to set the custom logger: {err:?}");

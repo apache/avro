@@ -47,8 +47,16 @@ jobs:
       - name: Test
         run: ./build.sh test
 
+      - name: Check pkg-config
+        run: |
+          mkdir -p build
+          cd build
+          cmake ..
+          export PKG_CONFIG_PATH=./src
+          pkg-config --libs avro-c
+
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -87,7 +95,7 @@ jobs:
                                                             libzstd-dev
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}

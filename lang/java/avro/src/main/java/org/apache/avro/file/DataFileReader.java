@@ -17,18 +17,19 @@
  */
 package org.apache.avro.file;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.File;
-import java.util.Arrays;
-
 import org.apache.avro.InvalidAvroMagicException;
+import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.commons.compress.utils.IOUtils;
-import org.apache.avro.io.DatumReader;
-import static org.apache.avro.file.DataFileConstants.SYNC_SIZE;
+
+import java.io.EOFException;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+
 import static org.apache.avro.file.DataFileConstants.MAGIC;
+import static org.apache.avro.file.DataFileConstants.SYNC_SIZE;
 
 /**
  * Random access to files written with {@link DataFileWriter}.
@@ -170,7 +171,7 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
     vin = DecoderFactory.get().binaryDecoder(this.sin, vin);
     datumIn = null;
     blockRemaining = 0;
-    blockStart = position;
+    blockFinished();
   }
 
   /**

@@ -17,6 +17,10 @@
  */
 package org.apache.avro.mojo;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import org.codehaus.plexus.util.FileUtils;
 import org.junit.Test;
 
@@ -37,6 +41,10 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
   @Test
   public void testIdlProtocolMojo() throws Exception {
+    // Clear output directory to ensure files are recompiled.
+    final File outputDir = new File(getBasedir(), "target/test-harness/idl/test/");
+    FileUtils.deleteDirectory(outputDir);
+
     final IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", testPom);
     final TestLog log = new TestLog();
     mojo.setLog(log);
@@ -44,7 +52,6 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
     assertNotNull(mojo);
     mojo.execute();
 
-    final File outputDir = new File(getBasedir(), "target/test-harness/idl/test/");
     final Set<String> generatedFiles = new HashSet<>(Arrays.asList("IdlPrivacy.java", "IdlTest.java", "IdlUser.java",
         "IdlUserWrapper.java", "IdlClasspathImportTest.java"));
     assertFilesExist(outputDir, generatedFiles);
@@ -60,6 +67,10 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
   @Test
   public void testSetCompilerVelocityAdditionalTools() throws Exception {
+    // Clear output directory to ensure files are recompiled.
+    final File outputDir = new File(getBasedir(), "target/test-harness/idl-inject/test");
+    FileUtils.deleteDirectory(outputDir);
+
     final IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", injectingVelocityToolsTestPom);
     final TestLog log = new TestLog();
     mojo.setLog(log);
@@ -67,7 +78,6 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
     assertNotNull(mojo);
     mojo.execute();
 
-    final File outputDir = new File(getBasedir(), "target/test-harness/idl-inject/test");
     final Set<String> generatedFiles = new HashSet<>(Arrays.asList("IdlPrivacy.java", "IdlTest.java", "IdlUser.java",
         "IdlUserWrapper.java", "IdlClasspathImportTest.java"));
 
@@ -78,5 +88,39 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
     // The previous test already verifies the warnings.
     assertFalse(log.getLogEntries().isEmpty());
+  }
+
+  @Test
+  public void testIdlProtocolMojoDoesntReplaceUpToDateFiles() throws Exception {
+    // Ensure that the IDL files have already been compiled once.
+    final IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", testPom);
+    final TestLog log = new TestLog();
+    mojo.setLog(log);
+
+    assertNotNull(mojo);
+    mojo.execute();
+
+    // Remove one file to ensure it is recreated and the others are not.
+    final Path outputDirPath = Paths.get(getBasedir(), "target/test-harness/idl/test/");
+    final File outputDir = outputDirPath.toFile();
+
+    final Path idlPrivacyFilePath = outputDirPath.resolve("IdlPrivacy.java");
+    final FileTime idpPrivacyModificationTime = Files.getLastModifiedTime(idlPrivacyFilePath);
+    Files.delete(idlPrivacyFilePath);
+
+    final Path idlUserFilePath = outputDirPath.resolve("IdlUser.java");
+    final FileTime idlUserModificationTime = Files.getLastModifiedTime(idlUserFilePath);
+
+    Thread.sleep(1000);
+    mojo.execute();
+
+    // Asserting contents is done in previous tests so just assert existence.
+    final Set<String> generatedFiles = new HashSet<>(Arrays.asList("IdlPrivacy.java", "IdlTest.java", "IdlUser.java",
+        "IdlUserWrapper.java", "IdlClasspathImportTest.java"));
+    assertFilesExist(outputDir, generatedFiles);
+
+    assertTrue(idlPrivacyFilePath.toFile().exists());
+    assertEquals(Files.getLastModifiedTime(idlUserFilePath), idlUserModificationTime);
+    assertTrue(Files.getLastModifiedTime(idlPrivacyFilePath).compareTo(idpPrivacyModificationTime) > 0);
   }
 }

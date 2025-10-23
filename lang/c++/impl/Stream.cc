@@ -117,7 +117,7 @@ public:
     }
 };
 
-class MemoryOutputStream : public OutputStream {
+class MemoryOutputStream final : public OutputStream {
 public:
     const size_t chunkSize_;
     std::vector<uint8_t *> data_;

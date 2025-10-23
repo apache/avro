@@ -23,13 +23,64 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.ResolvingDecoder;
 import org.apache.avro.util.ClassUtils;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * {@link org.apache.avro.io.DatumReader DatumReader} for generated Java
  * classes.
  */
 public class SpecificDatumReader<T> extends GenericDatumReader<T> {
+
+  /**
+   * @deprecated prefer to use {@link #SERIALIZABLE_CLASSES} instead.
+   */
+  @Deprecated
+  public static final String[] SERIALIZABLE_PACKAGES;
+
+  public static final String[] SERIALIZABLE_CLASSES;
+
+  static {
+    // no serializable classes by default
+    SERIALIZABLE_CLASSES = streamPropertyEntries(System.getProperty("org.apache.avro.SERIALIZABLE_CLASSES"))
+        .toArray(String[]::new);
+
+    // no serializable packages by default
+    SERIALIZABLE_PACKAGES = streamPropertyEntries(System.getProperty("org.apache.avro.SERIALIZABLE_PACKAGES"))
+        // Add a '.' suffix to ensure we'll be matching package names instead of
+        // arbitrary prefixes, except for the wildcard "*", which allows all
+        // packages (this is only safe in fully controlled environments!).
+        .map(entry -> "*".equals(entry) ? entry : entry + ".").toArray(String[]::new);
+  }
+
+  /**
+   * Parse a comma separated list into non-empty entries. Leading and trailing
+   * whitespace is stripped.
+   *
+   * @param commaSeparatedEntries the comma separated list of entries
+   * @return a stream of the entries
+   */
+  private static Stream<String> streamPropertyEntries(String commaSeparatedEntries) {
+    if (commaSeparatedEntries == null) {
+      return Stream.empty();
+    }
+    return Stream.of(commaSeparatedEntries.split(",")).map(String::trim).filter(s -> !s.isEmpty());
+  }
+
+  // The primitive "class names" based on Class.isPrimitive()
+  private static final Set<String> PRIMITIVES = new HashSet<>(Arrays.asList(Boolean.TYPE.getName(),
+      Character.TYPE.getName(), Byte.TYPE.getName(), Short.TYPE.getName(), Integer.TYPE.getName(), Long.TYPE.getName(),
+      Float.TYPE.getName(), Double.TYPE.getName(), Void.TYPE.getName()));
+
+  private final List<String> trustedPackages = new ArrayList<>();
+  private final List<String> trustedClasses = new ArrayList<>();
+
   public SpecificDatumReader() {
     this(null, null, SpecificData.get());
   }
@@ -55,11 +106,15 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
    */
   public SpecificDatumReader(Schema writer, Schema reader, SpecificData data) {
     super(writer, reader, data);
+    trustedPackages.addAll(Arrays.asList(SERIALIZABLE_PACKAGES));
+    trustedClasses.addAll(Arrays.asList(SERIALIZABLE_CLASSES));
   }
 
   /** Construct given a {@link SpecificData}. */
   public SpecificDatumReader(SpecificData data) {
     super(data);
+    trustedPackages.addAll(Arrays.asList(SERIALIZABLE_PACKAGES));
+    trustedClasses.addAll(Arrays.asList(SERIALIZABLE_CLASSES));
   }
 
   /** Return the contained {@link SpecificData}. */
@@ -101,10 +156,51 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     if (name == null)
       return null;
     try {
-      return ClassUtils.forName(getData().getClassLoader(), name);
+      checkSecurity(name);
+      Class clazz = ClassUtils.forName(getData().getClassLoader(), name);
+      return clazz;
     } catch (ClassNotFoundException e) {
       throw new AvroRuntimeException(e);
     }
+  }
+
+  private boolean trustAllPackages() {
+    return (trustedPackages.size() == 1 && "*".equals(trustedPackages.get(0)));
+  }
+
+  private void checkSecurity(String className) throws ClassNotFoundException {
+    if (trustAllPackages() || PRIMITIVES.contains(className)) {
+      return;
+    }
+
+    for (String trustedClass : getTrustedClasses()) {
+      if (className.equals(trustedClass)) {
+        return;
+      }
+    }
+
+    for (String trustedPackage : getTrustedPackages()) {
+      if (className.startsWith(trustedPackage)) {
+        return;
+      }
+    }
+
+    throw new SecurityException("Forbidden " + className + "! This class is not trusted to be included in Avro "
+        + "schemas using java-class. Please set the system property org.apache.avro.SERIALIZABLE_CLASSES to the comma "
+        + "separated list of classes you trust. You can also set the system property "
+        + "org.apache.avro.SERIALIZABLE_PACKAGES to the comma separated list of the packages you trust.");
+  }
+
+  /**
+   * @deprecated Use getTrustedClasses() instead
+   */
+  @Deprecated
+  public final List<String> getTrustedPackages() {
+    return trustedPackages;
+  }
+
+  public final List<String> getTrustedClasses() {
+    return trustedClasses;
   }
 
   @Override

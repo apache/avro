@@ -49,8 +49,7 @@ All data in Avro is schematized, as in the following example:
 There are basically two ways of handling Avro data in Rust:
 
 * **as Avro-specialized data types** based on an Avro schema;
-* **as generic Rust serde-compatible types** implementing/deriving `Serialize` and
-`Deserialize`;
+* **as generic Rust serde-compatible types** implementing/deriving `Serialize` and `Deserialize`;
 
 **apache-avro** provides a way to read and write both these data representations easily and
 efficiently.
@@ -264,15 +263,15 @@ Avro supports three different compression codecs when encoding data:
 
 * **Null**: leaves data uncompressed;
 * **Deflate**: writes the data block using the deflate algorithm as specified in RFC 1951, and
-typically implemented using the zlib library. Note that this format (unlike the "zlib format" in
-RFC 1950) does not have a checksum.
+  typically implemented using the zlib library. Note that this format (unlike the "zlib format" in
+  RFC 1950) does not have a checksum.
 * **Snappy**: uses Google's [Snappy](http://google.github.io/snappy/) compression library. Each
-compressed block is followed by the 4-byte, big-endianCRC32 checksum of the uncompressed data in
-the block. You must enable the `snappy` feature to use this codec.
+  compressed block is followed by the 4-byte, big-endianCRC32 checksum of the uncompressed data in
+  the block. You must enable the `snappy` feature to use this codec.
 * **Zstandard**: uses Facebook's [Zstandard](https://facebook.github.io/zstd/) compression library.
-You must enable the `zstandard` feature to use this codec.
+  You must enable the `zstandard` feature to use this codec.
 * **Bzip2**: uses [BZip2](https://sourceware.org/bzip2/) compression library.
-You must enable the `bzip` feature to use this codec.
+  You must enable the `bzip` feature to use this codec.
 * **Xz**: uses [xz2](https://github.com/alexcrichton/xz2-rs) compression library.
   You must enable the `xz` feature to use this codec.
 
@@ -428,8 +427,8 @@ fn main() -> Result<(), Error> {
 
 `apache-avro` also supports the logical types listed in the [Avro specification](https://avro.apache.org/docs/current/spec.html#Logical+Types):
 
-1. `Decimal` using the [`num_bigint`](https://docs.rs/num-bigint/0.2.6/num_bigint) crate
-1. UUID using the [`uuid`](https://docs.rs/uuid/1.0.0/uuid) crate
+1. `Decimal` using the [`num_bigint`](https://docs.rs/num-bigint/latest/num_bigint) crate
+1. UUID using the [`uuid`](https://docs.rs/uuid/latest/uuid) crate
 1. Date, Time (milli) as `i32` and Time (micro) as `i64`
 1. Timestamp (milli and micro) as `i64`
 1. Local timestamp (milli and micro) as `i64`
@@ -531,15 +530,17 @@ fn main() -> Result<(), Error> {
 
     let mut record = Record::new(writer.schema()).unwrap();
     record.put("decimal_fixed", Decimal::from(9936.to_bigint().unwrap().to_signed_bytes_be()));
-    record.put("decimal_var", Decimal::from((-32442.to_bigint().unwrap()).to_signed_bytes_be()));
+    record.put("decimal_var", Decimal::from(((-32442).to_bigint().unwrap()).to_signed_bytes_be()));
     record.put("uuid", uuid::Uuid::parse_str("550e8400-e29b-41d4-a716-446655440000").unwrap());
     record.put("date", Value::Date(1));
     record.put("time_millis", Value::TimeMillis(2));
     record.put("time_micros", Value::TimeMicros(3));
     record.put("timestamp_millis", Value::TimestampMillis(4));
     record.put("timestamp_micros", Value::TimestampMicros(5));
+    record.put("timestamp_nanos", Value::TimestampNanos(6));
     record.put("local_timestamp_millis", Value::LocalTimestampMillis(4));
     record.put("local_timestamp_micros", Value::LocalTimestampMicros(5));
+    record.put("local_timestamp_nanos", Value::LocalTimestampMicros(6));
     record.put("duration", Duration::new(Months::new(6), Days::new(7), Millis::new(8)));
 
     writer.append(record)?;
@@ -634,7 +635,7 @@ use apache_avro::{Schema, schema_compatibility::SchemaCompatibility};
 
 let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
 let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
-assert_eq!(true, SchemaCompatibility::can_read(&writers_schema, &readers_schema));
+assert!(SchemaCompatibility::can_read(&writers_schema, &readers_schema).is_ok());
 ```
 
 2. Incompatible schemas (a long array schema cannot be read by an int array schema)
@@ -647,14 +648,88 @@ use apache_avro::{Schema, schema_compatibility::SchemaCompatibility};
 
 let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
 let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
-assert_eq!(false, SchemaCompatibility::can_read(&writers_schema, &readers_schema));
+assert!(SchemaCompatibility::can_read(&writers_schema, &readers_schema).is_err());
 ```
+### Custom names validators
+
+By default the library follows the rules by the
+[Avro specification](https://avro.apache.org/docs/1.11.1/specification/#names)!
+
+Some of the other Apache Avro language SDKs are not that strict and allow more
+characters in names. For interoperability with those SDKs, the library provides
+a way to customize the names validation.
+
+```rust
+use apache_avro::AvroResult;
+use apache_avro::schema::Namespace;
+use apache_avro::validator::{SchemaNameValidator, set_schema_name_validator};
+
+struct MyCustomValidator;
+
+impl SchemaNameValidator for MyCustomValidator {
+    fn validate(&self, name: &str) -> AvroResult<(String, Namespace)> {
+        todo!()
+    }
+}
+
+// don't parse any schema before registering the custom validator(s) !
+
+set_schema_name_validator(Box::new(MyCustomValidator));
+
+// ... use the library
+```
+
+Similar logic could be applied to the schema namespace, enum symbols and field names validation.
+
+**Note**: the library allows to set a validator only once per the application lifetime!
+If the application parses schemas before setting a validator, the default validator will be
+registered and used!
+
+### Custom schema equality comparators
+
+The library provides two implementations of schema equality comparators:
+1. `SpecificationEq` - a comparator that serializes the schemas to their
+   canonical forms (i.e. JSON) and compares them as strings. It is the only implementation
+   until apache_avro 0.16.0.
+   See the [Avro specification](https://avro.apache.org/docs/1.11.1/specification/#parsing-canonical-form-for-schemas)
+   for more information!
+2. `StructFieldEq` - a comparator that compares the schemas structurally.
+   It is faster than the `SpecificationEq` because it returns `false` as soon as a difference
+   is found and is recommended for use!
+   It is the default comparator since apache_avro 0.17.0.
+
+To use a custom comparator, you need to implement the `SchemataEq` trait and set it using the
+`set_schemata_equality_comparator` function:
+
+```rust
+use apache_avro::{AvroResult, Schema};
+use apache_avro::schema::Namespace;
+use apache_avro::schema_equality::{SchemataEq, set_schemata_equality_comparator};
+
+#[derive(Debug)]
+struct MyCustomSchemataEq;
+
+impl SchemataEq for MyCustomSchemataEq {
+    fn compare(&self, schema_one: &Schema, schema_two: &Schema) -> bool {
+        todo!()
+    }
+}
+
+// don't parse any schema before registering the custom comparator !
+
+set_schemata_equality_comparator(Box::new(MyCustomSchemataEq));
+
+// ... use the library
+```
+**Note**: the library allows to set a comparator only once per the application lifetime!
+If the application parses schemas before setting a comparator, the default comparator will be
+registered and used!
 
 <!-- cargo-rdme end -->
 
 ## Minimal supported Rust version
 
-1.65.0
+1.73.0
 
 ## License
 This project is licensed under [Apache License 2.0](https://github.com/apache/avro/blob/master/LICENSE.txt).

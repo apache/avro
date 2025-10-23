@@ -16,10 +16,17 @@
 // under the License.
 
 //! Logic for parsing and interacting with schemas in Avro format.
-use crate::{error::Error, types, util::MapHelper, AvroResult};
+use crate::{
+    error::Error,
+    schema_equality, types,
+    util::MapHelper,
+    validator::{
+        validate_enum_symbol_name, validate_namespace, validate_record_field_name,
+        validate_schema_name,
+    },
+    AvroResult,
+};
 use digest::Digest;
-use lazy_static::lazy_static;
-use regex_lite::Regex;
 use serde::{
     ser::{SerializeMap, SerializeSeq},
     Deserialize, Serialize, Serializer,
@@ -28,26 +35,13 @@ use serde_json::{Map, Value};
 use std::{
     borrow::{Borrow, Cow},
     collections::{BTreeMap, HashMap, HashSet},
-    convert::{TryFrom, TryInto},
     fmt,
     fmt::Debug,
     hash::Hash,
     io::Read,
     str::FromStr,
 };
-use strum_macros::{EnumDiscriminants, EnumString};
-
-lazy_static! {
-    static ref ENUM_SYMBOL_NAME_R: Regex = Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap();
-
-    // An optional namespace (with optional dots) followed by a name without any dots in it.
-    static ref SCHEMA_NAME_R: Regex =
-        Regex::new(r"^((?P<namespace>([A-Za-z_][A-Za-z0-9_\.]*)*)\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$").unwrap();
-
-    static ref FIELD_NAME_R: Regex = Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap();
-
-    static ref NAMESPACE_R: Regex = Regex::new(r"^([A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*)?$").unwrap();
-}
+use strum_macros::{Display, EnumDiscriminants, EnumString};
 
 /// Represents an Avro schema fingerprint
 /// More information about Avro schema fingerprints can be found in the
@@ -73,7 +67,7 @@ impl fmt::Display for SchemaFingerprint {
 /// Represents any valid Avro schema
 /// More information about Avro schemas can be found in the
 /// [Avro Specification](https://avro.apache.org/docs/current/spec.html#schemas)
-#[derive(Clone, Debug, EnumDiscriminants)]
+#[derive(Clone, Debug, EnumDiscriminants, Display)]
 #[strum_discriminants(name(SchemaKind), derive(Hash, Ord, PartialOrd))]
 pub enum Schema {
     /// A `null` Avro schema.
@@ -96,11 +90,11 @@ pub enum Schema {
     String,
     /// A `array` Avro schema. Avro arrays are required to have the same type for each element.
     /// This variant holds the `Schema` for the array element type.
-    Array(Box<Schema>),
+    Array(ArraySchema),
     /// A `map` Avro schema.
     /// `Map` holds a pointer to the `Schema` of its values, which must all be the same schema.
     /// `Map` keys are assumed to be `string`.
-    Map(Box<Schema>),
+    Map(MapSchema),
     /// A `union` Avro schema.
     Union(UnionSchema),
     /// A `record` Avro schema.
@@ -112,6 +106,9 @@ pub enum Schema {
     /// Logical type which represents `Decimal` values. The underlying type is serialized and
     /// deserialized as `Schema::Bytes` or `Schema::Fixed`.
     Decimal(DecimalSchema),
+    /// Logical type which represents `Decimal` values without predefined scale.
+    /// The underlying type is serialized and deserialized as `Schema::Bytes`
+    BigDecimal,
     /// A universally unique identifier, annotating a string.
     Uuid,
     /// Logical type which represents the number of days since the unix epoch.
@@ -127,23 +124,39 @@ pub enum Schema {
     TimestampMillis,
     /// An instant in time represented as the number of microseconds after the UNIX epoch.
     TimestampMicros,
+    /// An instant in time represented as the number of nanoseconds after the UNIX epoch.
+    TimestampNanos,
     /// An instant in localtime represented as the number of milliseconds after the UNIX epoch.
     LocalTimestampMillis,
     /// An instant in local time represented as the number of microseconds after the UNIX epoch.
     LocalTimestampMicros,
+    /// An instant in local time represented as the number of nanoseconds after the UNIX epoch.
+    LocalTimestampNanos,
     /// An amount of time defined by a number of months, days and milliseconds.
     Duration,
     /// A reference to another schema.
     Ref { name: Name },
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct MapSchema {
+    pub types: Box<Schema>,
+    pub attributes: BTreeMap<String, Value>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ArraySchema {
+    pub items: Box<Schema>,
+    pub attributes: BTreeMap<String, Value>,
+}
+
 impl PartialEq for Schema {
     /// Assess equality of two `Schema` based on [Parsing Canonical Form].
     ///
     /// [Parsing Canonical Form]:
-    /// https://avro.apache.org/docs/1.8.2/spec.html#Parsing+Canonical+Form+for+Schemas
+    /// https://avro.apache.org/docs/1.11.1/specification/#parsing-canonical-form-for-schemas
     fn eq(&self, other: &Self) -> bool {
-        self.canonical_form() == other.canonical_form()
+        schema_equality::compare_schemata(self, other)
     }
 }
 
@@ -189,14 +202,17 @@ impl From<&types::Value> for SchemaKind {
             Value::Enum(_, _) => Self::Enum,
             Value::Fixed(_, _) => Self::Fixed,
             Value::Decimal { .. } => Self::Decimal,
+            Value::BigDecimal(_) => Self::BigDecimal,
             Value::Uuid(_) => Self::Uuid,
             Value::Date(_) => Self::Date,
             Value::TimeMillis(_) => Self::TimeMillis,
             Value::TimeMicros(_) => Self::TimeMicros,
             Value::TimestampMillis(_) => Self::TimestampMillis,
             Value::TimestampMicros(_) => Self::TimestampMicros,
+            Value::TimestampNanos(_) => Self::TimestampNanos,
             Value::LocalTimestampMillis(_) => Self::LocalTimestampMillis,
             Value::LocalTimestampMicros(_) => Self::LocalTimestampMicros,
+            Value::LocalTimestampNanos(_) => Self::LocalTimestampNanos,
             Value::Duration { .. } => Self::Duration,
         }
     }
@@ -242,13 +258,7 @@ impl Name {
     }
 
     fn get_name_and_namespace(name: &str) -> AvroResult<(String, Namespace)> {
-        let caps = SCHEMA_NAME_R
-            .captures(name)
-            .ok_or_else(|| Error::InvalidSchemaName(name.to_string(), SCHEMA_NAME_R.as_str()))?;
-        Ok((
-            caps["name"].to_string(),
-            caps.name("namespace").map(|s| s.as_str().to_string()),
-        ))
+        validate_schema_name(name)
     }
 
     /// Parse a `serde_json::Value` into a `Name`.
@@ -275,12 +285,7 @@ impl Name {
             .filter(|ns| !ns.is_empty());
 
         if let Some(ref ns) = namespace {
-            if !NAMESPACE_R.is_match(ns) {
-                return Err(Error::InvalidNamespace(
-                    ns.to_string(),
-                    NAMESPACE_R.as_str(),
-                ));
-            }
+            validate_namespace(ns)?;
         }
 
         Ok(Self {
@@ -470,8 +475,11 @@ impl<'s> ResolvedSchema<'s> {
     ) -> AvroResult<()> {
         for schema in schemata {
             match schema {
-                Schema::Array(schema) | Schema::Map(schema) => {
-                    self.resolve(vec![schema], enclosing_namespace, known_schemata)?
+                Schema::Array(schema) => {
+                    self.resolve(vec![&schema.items], enclosing_namespace, known_schemata)?
+                }
+                Schema::Map(schema) => {
+                    self.resolve(vec![&schema.types], enclosing_namespace, known_schemata)?
                 }
                 Schema::Union(UnionSchema { schemas, .. }) => {
                     for schema in schemas {
@@ -537,7 +545,7 @@ impl TryFrom<Schema> for ResolvedOwnedSchema {
             names,
             root_schema: schema,
         };
-        Self::from_internal(&rs.root_schema, &mut rs.names, &None)?;
+        resolve_names(&rs.root_schema, &mut rs.names, &None)?;
         Ok(rs)
     }
 }
@@ -549,58 +557,68 @@ impl ResolvedOwnedSchema {
     pub(crate) fn get_names(&self) -> &Names {
         &self.names
     }
+}
 
-    fn from_internal(
-        schema: &Schema,
-        names: &mut Names,
-        enclosing_namespace: &Namespace,
-    ) -> AvroResult<()> {
-        match schema {
-            Schema::Array(schema) | Schema::Map(schema) => {
-                Self::from_internal(schema, names, enclosing_namespace)
+pub(crate) fn resolve_names(
+    schema: &Schema,
+    names: &mut Names,
+    enclosing_namespace: &Namespace,
+) -> AvroResult<()> {
+    match schema {
+        Schema::Array(schema) => resolve_names(&schema.items, names, enclosing_namespace),
+        Schema::Map(schema) => resolve_names(&schema.types, names, enclosing_namespace),
+        Schema::Union(UnionSchema { schemas, .. }) => {
+            for schema in schemas {
+                resolve_names(schema, names, enclosing_namespace)?
             }
-            Schema::Union(UnionSchema { schemas, .. }) => {
-                for schema in schemas {
-                    Self::from_internal(schema, names, enclosing_namespace)?
+            Ok(())
+        }
+        Schema::Enum(EnumSchema { name, .. }) | Schema::Fixed(FixedSchema { name, .. }) => {
+            let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+            if names
+                .insert(fully_qualified_name.clone(), schema.clone())
+                .is_some()
+            {
+                Err(Error::AmbiguousSchemaDefinition(fully_qualified_name))
+            } else {
+                Ok(())
+            }
+        }
+        Schema::Record(RecordSchema { name, fields, .. }) => {
+            let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+            if names
+                .insert(fully_qualified_name.clone(), schema.clone())
+                .is_some()
+            {
+                Err(Error::AmbiguousSchemaDefinition(fully_qualified_name))
+            } else {
+                let record_namespace = fully_qualified_name.namespace;
+                for field in fields {
+                    resolve_names(&field.schema, names, &record_namespace)?
                 }
                 Ok(())
             }
-            Schema::Enum(EnumSchema { name, .. }) | Schema::Fixed(FixedSchema { name, .. }) => {
-                let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
-                if names
-                    .insert(fully_qualified_name.clone(), schema.clone())
-                    .is_some()
-                {
-                    Err(Error::AmbiguousSchemaDefinition(fully_qualified_name))
-                } else {
-                    Ok(())
-                }
-            }
-            Schema::Record(RecordSchema { name, fields, .. }) => {
-                let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
-                if names
-                    .insert(fully_qualified_name.clone(), schema.clone())
-                    .is_some()
-                {
-                    Err(Error::AmbiguousSchemaDefinition(fully_qualified_name))
-                } else {
-                    let record_namespace = fully_qualified_name.namespace;
-                    for field in fields {
-                        Self::from_internal(&field.schema, names, &record_namespace)?
-                    }
-                    Ok(())
-                }
-            }
-            Schema::Ref { name } => {
-                let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
-                names
-                    .get(&fully_qualified_name)
-                    .map(|_| ())
-                    .ok_or(Error::SchemaResolutionError(fully_qualified_name))
-            }
-            _ => Ok(()),
         }
+        Schema::Ref { name } => {
+            let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+            names
+                .get(&fully_qualified_name)
+                .map(|_| ())
+                .ok_or(Error::SchemaResolutionError(fully_qualified_name))
+        }
+        _ => Ok(()),
     }
+}
+
+pub(crate) fn resolve_names_with_schemata(
+    schemata: &Vec<&Schema>,
+    names: &mut Names,
+    enclosing_namespace: &Namespace,
+) -> AvroResult<()> {
+    for schema in schemata {
+        resolve_names(schema, names, enclosing_namespace)?;
+    }
+    Ok(())
 }
 
 /// Represents a `field` in a `record` Avro schema.
@@ -647,9 +665,7 @@ impl RecordField {
     ) -> AvroResult<Self> {
         let name = field.name().ok_or(Error::GetNameFieldFromRecord)?;
 
-        if !FIELD_NAME_R.is_match(&name) {
-            return Err(Error::FieldName(name));
-        }
+        validate_record_field_name(&name)?;
 
         // TODO: "type" = "<record name>"
         let schema = parser.parse_complex(field, &enclosing_record.namespace)?;
@@ -684,10 +700,10 @@ impl RecordField {
             doc: field.doc(),
             default,
             aliases,
-            schema,
             order,
             position,
-            custom_attributes: RecordField::get_field_custom_attributes(field),
+            custom_attributes: RecordField::get_field_custom_attributes(field, &schema),
+            schema,
         })
     }
 
@@ -711,7 +727,7 @@ impl RecordField {
                     });
 
                     if !resolved {
-                        let schema: Option<&Schema> = schemas.get(0);
+                        let schema: Option<&Schema> = schemas.first();
                         return match schema {
                             Some(first_schema) => Err(Error::GetDefaultUnion(
                                 SchemaKind::from(first_schema),
@@ -740,14 +756,19 @@ impl RecordField {
         Ok(())
     }
 
-    fn get_field_custom_attributes(field: &Map<String, Value>) -> BTreeMap<String, Value> {
+    fn get_field_custom_attributes(
+        field: &Map<String, Value>,
+        schema: &Schema,
+    ) -> BTreeMap<String, Value> {
         let mut custom_attributes: BTreeMap<String, Value> = BTreeMap::new();
         for (key, value) in field {
             match key.as_str() {
-                "type" | "name" | "doc" | "default" | "order" | "position" => continue,
+                "type" | "name" | "doc" | "default" | "order" | "position" | "aliases"
+                | "logicalType" => continue,
+                key if key == "symbols" && matches!(schema, Schema::Enum(_)) => continue,
+                key if key == "size" && matches!(schema, Schema::Fixed(_)) => continue,
                 _ => custom_attributes.insert(key.clone(), value.clone()),
             };
-            custom_attributes.insert(key.to_string(), value.clone());
         }
         custom_attributes
     }
@@ -807,8 +828,37 @@ pub struct FixedSchema {
     pub doc: Documentation,
     /// The size of the fixed schema
     pub size: usize,
+    /// An optional default symbol used for compatibility
+    pub default: Option<String>,
     /// The custom attributes of the schema
     pub attributes: BTreeMap<String, Value>,
+}
+
+impl FixedSchema {
+    fn serialize_to_map<S>(&self, mut map: S::SerializeMap) -> Result<S::SerializeMap, S::Error>
+    where
+        S: Serializer,
+    {
+        map.serialize_entry("type", "fixed")?;
+        if let Some(ref n) = self.name.namespace {
+            map.serialize_entry("namespace", n)?;
+        }
+        map.serialize_entry("name", &self.name.name)?;
+        if let Some(ref docstr) = self.doc {
+            map.serialize_entry("doc", docstr)?;
+        }
+        map.serialize_entry("size", &self.size)?;
+
+        if let Some(ref aliases) = self.aliases {
+            map.serialize_entry("aliases", aliases)?;
+        }
+
+        for attr in &self.attributes {
+            map.serialize_entry(attr.0, attr.1)?;
+        }
+
+        Ok(map)
+    }
 }
 
 /// A description of a Union schema.
@@ -863,7 +913,7 @@ impl UnionSchema {
 
     /// Returns true if the any of the variants of this `UnionSchema` is `Null`.
     pub fn is_nullable(&self) -> bool {
-        !self.schemas.is_empty() && self.schemas.iter().any(|s| s == &Schema::Null)
+        self.schemas.iter().any(|x| matches!(x, Schema::Null))
     }
 
     /// Optionally returns a reference to the schema matched by this value, as well as its position
@@ -1063,7 +1113,9 @@ impl Schema {
         match self {
             Schema::Record(RecordSchema { attributes, .. })
             | Schema::Enum(EnumSchema { attributes, .. })
-            | Schema::Fixed(FixedSchema { attributes, .. }) => Some(attributes),
+            | Schema::Fixed(FixedSchema { attributes, .. })
+            | Schema::Array(ArraySchema { attributes, .. })
+            | Schema::Map(MapSchema { attributes, .. }) => Some(attributes),
             _ => None,
         }
     }
@@ -1102,6 +1154,38 @@ impl Schema {
             | Schema::Fixed(FixedSchema { doc, .. }) => doc.as_ref(),
             _ => None,
         }
+    }
+
+    /// Returns a Schema::Map with the given types.
+    pub fn map(types: Schema) -> Self {
+        Schema::Map(MapSchema {
+            types: Box::new(types),
+            attributes: Default::default(),
+        })
+    }
+
+    /// Returns a Schema::Map with the given types and custom attributes.
+    pub fn map_with_attributes(types: Schema, attributes: BTreeMap<String, Value>) -> Self {
+        Schema::Map(MapSchema {
+            types: Box::new(types),
+            attributes,
+        })
+    }
+
+    /// Returns a Schema::Array with the given items.
+    pub fn array(items: Schema) -> Self {
+        Schema::Array(ArraySchema {
+            items: Box::new(items),
+            attributes: Default::default(),
+        })
+    }
+
+    /// Returns a Schema::Array with the given items and custom attributes.
+    pub fn array_with_attributes(items: Schema, attributes: BTreeMap<String, Value>) -> Self {
+        Schema::Array(ArraySchema {
+            items: Box::new(items),
+            attributes,
+        })
     }
 }
 
@@ -1200,7 +1284,7 @@ impl Parser {
         let name = Name::new(name)?;
         let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
 
-        if self.parsed_schemas.get(&fully_qualified_name).is_some() {
+        if self.parsed_schemas.contains_key(&fully_qualified_name) {
             return Ok(Schema::Ref {
                 name: fully_qualified_name,
             });
@@ -1269,182 +1353,174 @@ impl Parser {
         complex: &Map<String, Value>,
         enclosing_namespace: &Namespace,
     ) -> AvroResult<Schema> {
-        fn logical_verify_type(
+        // Try to parse this as a native complex type.
+        fn parse_as_native_complex(
             complex: &Map<String, Value>,
-            kinds: &[SchemaKind],
             parser: &mut Parser,
             enclosing_namespace: &Namespace,
         ) -> AvroResult<Schema> {
             match complex.get("type") {
-                Some(value) => {
-                    let ty = match value {
-                        Value::String(s) if s == "fixed" => {
-                            parser.parse_fixed(complex, enclosing_namespace)?
-                        }
-                        _ => parser.parse(value, enclosing_namespace)?,
-                    };
-
-                    if kinds
-                        .iter()
-                        .any(|&kind| SchemaKind::from(ty.clone()) == kind)
-                    {
-                        Ok(ty)
-                    } else {
-                        match get_type_rec(value.clone()) {
-                            Ok(v) => Err(Error::GetLogicalTypeVariant(v)),
-                            Err(err) => Err(err),
-                        }
+                Some(value) => match value {
+                    Value::String(s) if s == "fixed" => {
+                        parser.parse_fixed(complex, enclosing_namespace)
                     }
-                }
+                    _ => parser.parse(value, enclosing_namespace),
+                },
                 None => Err(Error::GetLogicalTypeField),
             }
         }
 
-        fn get_type_rec(json_value: Value) -> AvroResult<Value> {
-            match json_value {
-                typ @ Value::String(_) => Ok(typ),
-                Value::Object(ref complex) => match complex.get("type") {
-                    Some(v) => get_type_rec(v.clone()),
-                    None => Err(Error::GetComplexTypeField),
-                },
-                _ => Err(Error::GetComplexTypeField),
-            }
-        }
-
-        // checks whether the logicalType is supported by the type
-        fn try_logical_type(
+        // This crate support some logical types natively, and this function tries to convert
+        // a native complex type with a logical type attribute to these logical types.
+        // This function:
+        // 1. Checks whether the native complex type is in the supported kinds.
+        // 2. If it is, using the convert function to convert the native complex type to
+        // a logical type.
+        fn try_convert_to_logical_type<F>(
             logical_type: &str,
-            complex: &Map<String, Value>,
-            kinds: &[SchemaKind],
-            ok_schema: Schema,
-            parser: &mut Parser,
-            enclosing_namespace: &Namespace,
-        ) -> AvroResult<Schema> {
-            match logical_verify_type(complex, kinds, parser, enclosing_namespace) {
-                // type and logicalType match!
-                Ok(_) => Ok(ok_schema),
-                // the logicalType is not expected for this type!
-                Err(Error::GetLogicalTypeVariant(json_value)) => match json_value {
-                    Value::String(_) => match parser.parse(&json_value, enclosing_namespace) {
-                        Ok(schema) => {
-                            warn!(
-                                "Ignoring invalid logical type '{}' for schema of type: {:?}!",
-                                logical_type, schema
-                            );
-                            Ok(schema)
-                        }
-                        Err(parse_err) => Err(parse_err),
-                    },
-                    _ => Err(Error::GetLogicalTypeVariant(json_value)),
-                },
-                err => err,
+            schema: Schema,
+            supported_schema_kinds: &[SchemaKind],
+            convert: F,
+        ) -> AvroResult<Schema>
+        where
+            F: Fn(Schema) -> AvroResult<Schema>,
+        {
+            let kind = SchemaKind::from(schema.clone());
+            if supported_schema_kinds.contains(&kind) {
+                convert(schema)
+            } else {
+                warn!(
+                    "Ignoring unknown logical type '{}' for schema of type: {:?}!",
+                    logical_type, schema
+                );
+                Ok(schema)
             }
         }
 
         match complex.get("logicalType") {
             Some(Value::String(t)) => match t.as_str() {
                 "decimal" => {
-                    let inner = Box::new(logical_verify_type(
-                        complex,
+                    return try_convert_to_logical_type(
+                        "decimal",
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Fixed, SchemaKind::Bytes],
-                        self,
-                        enclosing_namespace,
-                    )?);
-
-                    let (precision, scale) = Self::parse_precision_and_scale(complex)?;
-
-                    return Ok(Schema::Decimal(DecimalSchema {
-                        precision,
-                        scale,
-                        inner,
-                    }));
+                        |inner| -> AvroResult<Schema> {
+                            match Self::parse_precision_and_scale(complex) {
+                                Ok((precision, scale)) => Ok(Schema::Decimal(DecimalSchema {
+                                    precision,
+                                    scale,
+                                    inner: Box::new(inner),
+                                })),
+                                Err(err) => {
+                                    warn!("Ignoring invalid decimal logical type: {}", err);
+                                    Ok(inner)
+                                }
+                            }
+                        },
+                    );
+                }
+                "big-decimal" => {
+                    return try_convert_to_logical_type(
+                        "big-decimal",
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
+                        &[SchemaKind::Bytes],
+                        |_| -> AvroResult<Schema> { Ok(Schema::BigDecimal) },
+                    );
                 }
                 "uuid" => {
-                    logical_verify_type(complex, &[SchemaKind::String], self, enclosing_namespace)?;
-                    return Ok(Schema::Uuid);
+                    return try_convert_to_logical_type(
+                        "uuid",
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
+                        &[SchemaKind::String, SchemaKind::Fixed],
+                        |schema| match schema {
+                            Schema::String => Ok(Schema::Uuid),
+                            Schema::Fixed(FixedSchema { size: 16, .. }) => Ok(Schema::Uuid),
+                            Schema::Fixed(FixedSchema { size, .. }) => {
+                                warn!("Ignoring uuid logical type for a Fixed schema because its size ({size:?}) is not 16! Schema: {:?}", schema);
+                                Ok(schema)
+                            }
+                            _ => {
+                                warn!(
+                                    "Ignoring invalid uuid logical type for schema: {:?}",
+                                    schema
+                                );
+                                Ok(schema)
+                            }
+                        },
+                    );
                 }
                 "date" => {
-                    return try_logical_type(
+                    return try_convert_to_logical_type(
                         "date",
-                        complex,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Int],
-                        Schema::Date,
-                        self,
-                        enclosing_namespace,
+                        |_| -> AvroResult<Schema> { Ok(Schema::Date) },
                     );
                 }
                 "time-millis" => {
-                    return try_logical_type(
-                        "time-millis",
-                        complex,
+                    return try_convert_to_logical_type(
+                        "date",
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Int],
-                        Schema::TimeMillis,
-                        self,
-                        enclosing_namespace,
+                        |_| -> AvroResult<Schema> { Ok(Schema::TimeMillis) },
                     );
                 }
                 "time-micros" => {
-                    return try_logical_type(
+                    return try_convert_to_logical_type(
                         "time-micros",
-                        complex,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
-                        Schema::TimeMicros,
-                        self,
-                        enclosing_namespace,
+                        |_| -> AvroResult<Schema> { Ok(Schema::TimeMicros) },
                     );
                 }
                 "timestamp-millis" => {
-                    return try_logical_type(
+                    return try_convert_to_logical_type(
                         "timestamp-millis",
-                        complex,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
-                        Schema::TimestampMillis,
-                        self,
-                        enclosing_namespace,
+                        |_| -> AvroResult<Schema> { Ok(Schema::TimestampMillis) },
                     );
                 }
                 "timestamp-micros" => {
-                    return try_logical_type(
+                    return try_convert_to_logical_type(
                         "timestamp-micros",
-                        complex,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
-                        Schema::TimestampMicros,
-                        self,
-                        enclosing_namespace,
+                        |_| -> AvroResult<Schema> { Ok(Schema::TimestampMicros) },
                     );
                 }
                 "local-timestamp-millis" => {
-                    return try_logical_type(
+                    return try_convert_to_logical_type(
                         "local-timestamp-millis",
-                        complex,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
-                        Schema::LocalTimestampMillis,
-                        self,
-                        enclosing_namespace,
+                        |_| -> AvroResult<Schema> { Ok(Schema::LocalTimestampMillis) },
                     );
                 }
                 "local-timestamp-micros" => {
-                    return try_logical_type(
+                    return try_convert_to_logical_type(
                         "local-timestamp-micros",
-                        complex,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
-                        Schema::LocalTimestampMicros,
-                        self,
-                        enclosing_namespace,
+                        |_| -> AvroResult<Schema> { Ok(Schema::LocalTimestampMicros) },
                     );
                 }
                 "duration" => {
-                    logical_verify_type(complex, &[SchemaKind::Fixed], self, enclosing_namespace)?;
-                    return Ok(Schema::Duration);
+                    return try_convert_to_logical_type(
+                        "duration",
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
+                        &[SchemaKind::Fixed],
+                        |_| -> AvroResult<Schema> { Ok(Schema::Duration) },
+                    );
                 }
-                // In this case, of an unknown logical type, we just pass through to the underlying
+                // In this case, of an unknown logical type, we just pass through the underlying
                 // type.
                 _ => {}
             },
-            // The spec says to ignore invalid logical types and just continue through to the
-            // underlying type - It is unclear whether that applies to this case or not, where the
+            // The spec says to ignore invalid logical types and just pass through the
+            // underlying type. It is unclear whether that applies to this case or not, where the
             // `logicalType` is not a string.
-            Some(_) => return Err(Error::GetLogicalTypeFieldType),
+            Some(value) => return Err(Error::GetLogicalTypeFieldType(value.clone())),
             _ => {}
         }
         match complex.get("type") {
@@ -1543,6 +1619,8 @@ impl Parser {
 
         self.register_resolving_schema(&fully_qualified_name, &aliases);
 
+        debug!("Going to parse record schema: {:?}", &fully_qualified_name);
+
         let fields: Vec<RecordField> = fields_opt
             .and_then(|fields| fields.as_array())
             .ok_or(Error::GetRecordFieldsJson)
@@ -1613,9 +1691,8 @@ impl Parser {
             }
         }
 
-        let name = Name::parse(complex, enclosing_namespace)?;
-        let fully_qualified_name = name.clone();
-        let aliases = fix_aliases_namespace(complex.aliases(), &name.namespace);
+        let fully_qualified_name = Name::parse(complex, enclosing_namespace)?;
+        let aliases = fix_aliases_namespace(complex.aliases(), &fully_qualified_name.namespace);
 
         let symbols: Vec<String> = symbols_opt
             .and_then(|v| v.as_array())
@@ -1630,10 +1707,7 @@ impl Parser {
 
         let mut existing_symbols: HashSet<&String> = HashSet::with_capacity(symbols.len());
         for symbol in symbols.iter() {
-            // Ensure enum symbol names match [A-Za-z_][A-Za-z0-9_]*
-            if !ENUM_SYMBOL_NAME_R.is_match(symbol) {
-                return Err(Error::EnumSymbolName(symbol.to_string()));
-            }
+            validate_enum_symbol_name(symbol)?;
 
             // Ensure there are no duplicate symbols
             if existing_symbols.contains(&symbol) {
@@ -1689,7 +1763,12 @@ impl Parser {
             .get("items")
             .ok_or(Error::GetArrayItemsField)
             .and_then(|items| self.parse(items, enclosing_namespace))
-            .map(|schema| Schema::Array(Box::new(schema)))
+            .map(|items| {
+                Schema::array_with_attributes(
+                    items,
+                    self.get_custom_attributes(complex, vec!["items"]),
+                )
+            })
     }
 
     /// Parse a `serde_json::Value` representing a Avro map type into a
@@ -1703,7 +1782,12 @@ impl Parser {
             .get("values")
             .ok_or(Error::GetMapValuesField)
             .and_then(|items| self.parse(items, enclosing_namespace))
-            .map(|schema| Schema::Map(Box::new(schema)))
+            .map(|items| {
+                Schema::map_with_attributes(
+                    items,
+                    self.get_custom_attributes(complex, vec!["values"]),
+                )
+            })
     }
 
     /// Parse a `serde_json::Value` representing a Avro union type into a
@@ -1717,7 +1801,22 @@ impl Parser {
             .iter()
             .map(|v| self.parse(v, enclosing_namespace))
             .collect::<Result<Vec<_>, _>>()
-            .and_then(|schemas| Ok(Schema::Union(UnionSchema::new(schemas)?)))
+            .and_then(|schemas| {
+                if schemas.is_empty() {
+                    error!(
+                        "Union schemas should have at least two members! \
+                    Please enable debug logging to find out which Record schema \
+                    declares the union with 'RUST_LOG=apache_avro::schema=debug'."
+                    );
+                } else if schemas.len() == 1 {
+                    warn!(
+                        "Union schema with just one member! Consider dropping the union! \
+                    Please enable debug logging to find out which Record schema \
+                    declares the union with 'RUST_LOG=apache_avro::schema=debug'."
+                    );
+                }
+                Ok(Schema::Union(UnionSchema::new(schemas)?))
+            })
     }
 
     /// Parse a `serde_json::Value` representing a Avro fixed type into a
@@ -1746,15 +1845,27 @@ impl Parser {
             None => Err(Error::GetFixedSizeField),
         }?;
 
-        let name = Name::parse(complex, enclosing_namespace)?;
-        let fully_qualified_name = name.clone();
-        let aliases = fix_aliases_namespace(complex.aliases(), &name.namespace);
+        let default = complex.get("default").and_then(|v| match &v {
+            Value::String(ref default) => Some(default.clone()),
+            _ => None,
+        });
+
+        if default.is_some() {
+            let len = default.clone().unwrap().len();
+            if len != size as usize {
+                return Err(Error::FixedDefaultLenSizeMismatch(len, size));
+            }
+        }
+
+        let fully_qualified_name = Name::parse(complex, enclosing_namespace)?;
+        let aliases = fix_aliases_namespace(complex.aliases(), &fully_qualified_name.namespace);
 
         let schema = Schema::Fixed(FixedSchema {
             name: fully_qualified_name.clone(),
             aliases: aliases.clone(),
             doc,
             size: size as usize,
+            default,
             attributes: self.get_custom_attributes(complex, vec!["size"]),
         });
 
@@ -1814,15 +1925,21 @@ impl Serialize for Schema {
             Schema::Bytes => serializer.serialize_str("bytes"),
             Schema::String => serializer.serialize_str("string"),
             Schema::Array(ref inner) => {
-                let mut map = serializer.serialize_map(Some(2))?;
+                let mut map = serializer.serialize_map(Some(2 + inner.attributes.len()))?;
                 map.serialize_entry("type", "array")?;
-                map.serialize_entry("items", &*inner.clone())?;
+                map.serialize_entry("items", &*inner.items.clone())?;
+                for attr in &inner.attributes {
+                    map.serialize_entry(attr.0, attr.1)?;
+                }
                 map.end()
             }
             Schema::Map(ref inner) => {
-                let mut map = serializer.serialize_map(Some(2))?;
+                let mut map = serializer.serialize_map(Some(2 + inner.attributes.len()))?;
                 map.serialize_entry("type", "map")?;
-                map.serialize_entry("values", &*inner.clone())?;
+                map.serialize_entry("values", &*inner.types.clone())?;
+                for attr in &inner.attributes {
+                    map.serialize_entry(attr.0, attr.1)?;
+                }
                 map.end()
             }
             Schema::Union(ref inner) => {
@@ -1838,6 +1955,7 @@ impl Serialize for Schema {
                 ref aliases,
                 ref doc,
                 ref fields,
+                ref attributes,
                 ..
             }) => {
                 let mut map = serializer.serialize_map(None)?;
@@ -1853,12 +1971,16 @@ impl Serialize for Schema {
                     map.serialize_entry("aliases", aliases)?;
                 }
                 map.serialize_entry("fields", fields)?;
+                for attr in attributes {
+                    map.serialize_entry(attr.0, attr.1)?;
+                }
                 map.end()
             }
             Schema::Enum(EnumSchema {
                 ref name,
                 ref symbols,
                 ref aliases,
+                ref attributes,
                 ..
             }) => {
                 let mut map = serializer.serialize_map(None)?;
@@ -1872,29 +1994,14 @@ impl Serialize for Schema {
                 if let Some(ref aliases) = aliases {
                     map.serialize_entry("aliases", aliases)?;
                 }
+                for attr in attributes {
+                    map.serialize_entry(attr.0, attr.1)?;
+                }
                 map.end()
             }
-            Schema::Fixed(FixedSchema {
-                ref name,
-                ref doc,
-                ref size,
-                ref aliases,
-                ..
-            }) => {
+            Schema::Fixed(ref fixed_schema) => {
                 let mut map = serializer.serialize_map(None)?;
-                map.serialize_entry("type", "fixed")?;
-                if let Some(ref n) = name.namespace {
-                    map.serialize_entry("namespace", n)?;
-                }
-                map.serialize_entry("name", &name.name)?;
-                if let Some(ref docstr) = doc {
-                    map.serialize_entry("doc", docstr)?;
-                }
-                map.serialize_entry("size", size)?;
-
-                if let Some(ref aliases) = aliases {
-                    map.serialize_entry("aliases", aliases)?;
-                }
+                map = fixed_schema.serialize_to_map::<S>(map)?;
                 map.end()
             }
             Schema::Decimal(DecimalSchema {
@@ -1903,10 +2010,30 @@ impl Serialize for Schema {
                 ref inner,
             }) => {
                 let mut map = serializer.serialize_map(None)?;
-                map.serialize_entry("type", &*inner.clone())?;
+                match inner.as_ref() {
+                    Schema::Fixed(fixed_schema) => {
+                        map = fixed_schema.serialize_to_map::<S>(map)?;
+                    }
+                    Schema::Bytes => {
+                        map.serialize_entry("type", "bytes")?;
+                    }
+                    others => {
+                        return Err(serde::ser::Error::custom(format!(
+                            "DecimalSchema inner type must be Fixed or Bytes, got {:?}",
+                            SchemaKind::from(others)
+                        )));
+                    }
+                }
                 map.serialize_entry("logicalType", "decimal")?;
                 map.serialize_entry("scale", scale)?;
                 map.serialize_entry("precision", precision)?;
+                map.end()
+            }
+
+            Schema::BigDecimal => {
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "bytes")?;
+                map.serialize_entry("logicalType", "big-decimal")?;
                 map.end()
             }
             Schema::Uuid => {
@@ -1945,6 +2072,12 @@ impl Serialize for Schema {
                 map.serialize_entry("logicalType", "timestamp-micros")?;
                 map.end()
             }
+            Schema::TimestampNanos => {
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "long")?;
+                map.serialize_entry("logicalType", "timestamp-nanos")?;
+                map.end()
+            }
             Schema::LocalTimestampMillis => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "long")?;
@@ -1957,6 +2090,12 @@ impl Serialize for Schema {
                 map.serialize_entry("logicalType", "local-timestamp-micros")?;
                 map.end()
             }
+            Schema::LocalTimestampNanos => {
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "long")?;
+                map.serialize_entry("logicalType", "local-timestamp-nanos")?;
+                map.end()
+            }
             Schema::Duration => {
                 let mut map = serializer.serialize_map(None)?;
 
@@ -1967,6 +2106,7 @@ impl Serialize for Schema {
                     aliases: None,
                     doc: None,
                     size: 12,
+                    default: None,
                     attributes: Default::default(),
                 });
                 map.serialize_entry("type", &inner)?;
@@ -1994,6 +2134,10 @@ impl Serialize for RecordField {
             map.serialize_entry("aliases", aliases)?;
         }
 
+        for attr in &self.custom_attributes {
+            map.serialize_entry(attr.0, attr.1)?;
+        }
+
         map.end()
     }
 }
@@ -2012,6 +2156,7 @@ fn parsing_canonical_form(schema: &Value) -> String {
 fn pcf_map(schema: &Map<String, Value>) -> String {
     // Look for the namespace variant up front.
     let ns = schema.get("namespace").and_then(|v| v.as_str());
+    let typ = schema.get("type").and_then(|v| v.as_str());
     let mut fields = Vec::new();
     for (k, v) in schema {
         // Reduce primitive types to their simple form. ([PRIMITIVE] rule)
@@ -2023,7 +2168,12 @@ fn pcf_map(schema: &Map<String, Value>) -> String {
         }
 
         // Strip out unused fields ([STRIP] rule)
-        if field_ordering_position(k).is_none() || k == "default" || k == "doc" || k == "aliases" {
+        if field_ordering_position(k).is_none()
+            || k == "default"
+            || k == "doc"
+            || k == "aliases"
+            || k == "logicalType"
+        {
             continue;
         }
 
@@ -2032,7 +2182,9 @@ fn pcf_map(schema: &Map<String, Value>) -> String {
             // Invariant: Only valid schemas. Must be a string.
             let name = v.as_str().unwrap();
             let n = match ns {
-                Some(namespace) if !name.contains('.') => Cow::Owned(format!("{namespace}.{name}")),
+                Some(namespace) if is_named_type(typ) && !name.contains('.') => {
+                    Cow::Owned(format!("{namespace}.{name}"))
+                }
                 _ => Cow::Borrowed(name),
             };
 
@@ -2065,6 +2217,13 @@ fn pcf_map(schema: &Map<String, Value>) -> String {
         .collect::<Vec<_>>()
         .join(",");
     format!("{{{inter}}}")
+}
+
+fn is_named_type(typ: Option<&str>) -> bool {
+    matches!(
+        typ,
+        Some("record") | Some("enum") | Some("fixed") | Some("ref")
+    )
 }
 
 fn pcf_array(arr: &[Value]) -> String {
@@ -2179,7 +2338,7 @@ pub mod derive {
         }
     }
 
-    macro_rules! impl_schema(
+    macro_rules! impl_schema (
         ($type:ty, $variant_constructor:expr) => (
             impl AvroSchemaComponent for $type {
                 fn get_schema_in_ctxt(_: &mut Names, _: &Namespace) -> Schema {
@@ -2211,10 +2370,7 @@ pub mod derive {
             named_schemas: &mut Names,
             enclosing_namespace: &Namespace,
         ) -> Schema {
-            Schema::Array(Box::new(T::get_schema_in_ctxt(
-                named_schemas,
-                enclosing_namespace,
-            )))
+            Schema::array(T::get_schema_in_ctxt(named_schemas, enclosing_namespace))
         }
     }
 
@@ -2246,10 +2402,7 @@ pub mod derive {
             named_schemas: &mut Names,
             enclosing_namespace: &Namespace,
         ) -> Schema {
-            Schema::Map(Box::new(T::get_schema_in_ctxt(
-                named_schemas,
-                enclosing_namespace,
-            )))
+            Schema::map(T::get_schema_in_ctxt(named_schemas, enclosing_namespace))
         }
     }
 
@@ -2261,10 +2414,7 @@ pub mod derive {
             named_schemas: &mut Names,
             enclosing_namespace: &Namespace,
         ) -> Schema {
-            Schema::Map(Box::new(T::get_schema_in_ctxt(
-                named_schemas,
-                enclosing_namespace,
-            )))
+            Schema::map(T::get_schema_in_ctxt(named_schemas, enclosing_namespace))
         }
     }
 
@@ -2308,8 +2458,11 @@ pub mod derive {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apache_avro_test_helper::TestResult;
-    use pretty_assertions::assert_eq;
+    use crate::rabin::Rabin;
+    use apache_avro_test_helper::{
+        logger::{assert_logged, assert_not_logged},
+        TestResult,
+    };
     use serde_json::json;
 
     #[test]
@@ -2328,14 +2481,14 @@ mod tests {
     #[test]
     fn test_array_schema() -> TestResult {
         let schema = Schema::parse_str(r#"{"type": "array", "items": "string"}"#)?;
-        assert_eq!(Schema::Array(Box::new(Schema::String)), schema);
+        assert_eq!(Schema::array(Schema::String), schema);
         Ok(())
     }
 
     #[test]
     fn test_map_schema() -> TestResult {
         let schema = Schema::parse_str(r#"{"type": "map", "values": "double"}"#)?;
-        assert_eq!(Schema::Map(Box::new(Schema::Double)), schema);
+        assert_eq!(Schema::map(Schema::Double), schema);
         Ok(())
     }
 
@@ -2510,7 +2663,7 @@ mod tests {
 
         match schema_a {
             Schema::Record(RecordSchema { fields, .. }) => {
-                let f1 = fields.get(0);
+                let f1 = fields.first();
 
                 let ref_schema = Schema::Ref {
                     name: Name::new("B")?,
@@ -2689,9 +2842,9 @@ mod tests {
                             doc: None,
                             default: None,
                             aliases: None,
-                            schema: Schema::Array(Box::new(Schema::Ref {
+                            schema: Schema::array(Schema::Ref {
                                 name: Name::new("Node")?,
-                            })),
+                            }),
                             order: RecordFieldOrder::Ascending,
                             position: 1,
                             custom_attributes: Default::default(),
@@ -3082,6 +3235,7 @@ mod tests {
                         aliases: None,
                         doc: None,
                         size: 456,
+                        default: None,
                         attributes: Default::default(),
                     }),
                     order: RecordFieldOrder::Ascending,
@@ -3101,6 +3255,7 @@ mod tests {
                         aliases: None,
                         doc: None,
                         size: 456,
+                        default: None,
                         attributes: Default::default(),
                     }),
                     order: RecordFieldOrder::Ascending,
@@ -3175,7 +3330,8 @@ mod tests {
             name: Name::new("test")?,
             aliases: None,
             doc: None,
-            size: 16usize,
+            size: 16_usize,
+            default: None,
             attributes: Default::default(),
         });
 
@@ -3194,7 +3350,8 @@ mod tests {
             name: Name::new("test")?,
             aliases: None,
             doc: Some(String::from("FixedSchema documentation")),
-            size: 16usize,
+            size: 16_usize,
+            default: None,
             attributes: Default::default(),
         });
 
@@ -3274,16 +3431,16 @@ mod tests {
 
         let schema = Schema::parse_str(raw_schema)?;
         assert_eq!(
-            "abf662f831715ff78f88545a05a9262af75d6406b54e1a8a174ff1d2b75affc4",
+            "7eb3b28d73dfc99bdd9af1848298b40804a2f8ad5d2642be2ecc2ad34842b987",
             format!("{}", schema.fingerprint::<Sha256>())
         );
 
         assert_eq!(
-            "6e21c350f71b1a34e9efe90970f1bc69",
+            "cb11615e412ee5d872620d8df78ff6ae",
             format!("{}", schema.fingerprint::<Md5>())
         );
         assert_eq!(
-            "28cf0a67d9937bb3",
+            "92f2ccef718c6754",
             format!("{}", schema.fingerprint::<Rabin>())
         );
 
@@ -3310,7 +3467,7 @@ mod tests {
             schema,
             Schema::Union(UnionSchema::new(vec![
                 Schema::Null,
-                Schema::TimestampMicros
+                Schema::TimestampMicros,
             ])?)
         );
 
@@ -4383,7 +4540,7 @@ mod tests {
                 assert_eq!(union.schemas[0], Schema::Null);
 
                 if let Schema::Array(ref array_schema) = union.schemas[1] {
-                    if let Schema::Long = **array_schema {
+                    if let Schema::Long = *array_schema.items {
                         // OK
                     } else {
                         panic!("Expected a Schema::Array of type Long");
@@ -4492,26 +4649,26 @@ mod tests {
 
             assert_eq!(
                 schema.custom_attributes(),
-                Some(&expected_custom_attibutes())
+                Some(&expected_custom_attributes())
             );
         }
 
         Ok(())
     }
 
-    fn expected_custom_attibutes() -> BTreeMap<String, Value> {
-        let mut expected_attibutes: BTreeMap<String, Value> = Default::default();
-        expected_attibutes.insert("string_key".to_string(), Value::String("value".to_string()));
-        expected_attibutes.insert("number_key".to_string(), json!(1.23));
-        expected_attibutes.insert("null_key".to_string(), Value::Null);
-        expected_attibutes.insert(
+    fn expected_custom_attributes() -> BTreeMap<String, Value> {
+        let mut expected_attributes: BTreeMap<String, Value> = Default::default();
+        expected_attributes.insert("string_key".to_string(), Value::String("value".to_string()));
+        expected_attributes.insert("number_key".to_string(), json!(1.23));
+        expected_attributes.insert("null_key".to_string(), Value::Null);
+        expected_attributes.insert(
             "array_key".to_string(),
             Value::Array(vec![json!(1), json!(2), json!(3)]),
         );
         let mut object_value: HashMap<String, Value> = HashMap::new();
         object_value.insert("key".to_string(), Value::String("value".to_string()));
-        expected_attibutes.insert("object_key".to_string(), json!(object_value));
-        expected_attibutes
+        expected_attributes.insert("object_key".to_string(), json!(object_value));
+        expected_attributes
     }
 
     #[test]
@@ -4541,7 +4698,7 @@ mod tests {
                 assert_eq!(fields.len(), 1);
                 let field = &fields[0];
                 assert_eq!(&field.name, "field_one");
-                assert_eq!(field.custom_attributes, expected_custom_attibutes());
+                assert_eq!(field.custom_attributes, expected_custom_attributes());
             }
             _ => panic!("Expected Schema::Record"),
         }
@@ -4666,6 +4823,44 @@ mod tests {
     }
 
     #[test]
+    fn avro_3649_default_notintfirst() -> TestResult {
+        let schema_str = String::from(
+            r#"
+            {
+                "type": "record",
+                "name": "union_schema_test",
+                "fields": [
+                    {"name": "a", "type": ["string", "int"], "default": 123}
+                ]
+            }
+        "#,
+        );
+
+        let schema = Schema::parse_str(&schema_str)?;
+
+        match schema {
+            Schema::Record(RecordSchema { name, fields, .. }) => {
+                assert_eq!(name, Name::new("union_schema_test")?);
+                assert_eq!(fields.len(), 1);
+                let field = &fields[0];
+                assert_eq!(&field.name, "a");
+                assert_eq!(&field.default, &Some(json!(123)));
+                match &field.schema {
+                    Schema::Union(union) => {
+                        assert_eq!(union.variants().len(), 2);
+                        assert_eq!(union.variants()[0], Schema::String);
+                        assert_eq!(union.variants()[1], Schema::Int);
+                    }
+                    _ => panic!("Expected Schema::Union"),
+                }
+            }
+            _ => panic!("Expected Schema::Record"),
+        }
+
+        Ok(())
+    }
+
+    #[test]
     fn avro_3709_parsing_of_record_field_aliases() -> TestResult {
         let schema = r#"
         {
@@ -4720,7 +4915,7 @@ mod tests {
                     "type": "Bar"
                 }
             ]
-        } 
+        }
         "#;
 
         #[derive(
@@ -5118,6 +5313,30 @@ mod tests {
     }
 
     #[test]
+    fn test_avro_3779_bigdecimal_schema() -> TestResult {
+        let schema = json!(
+            {
+                "name": "decimal",
+                "type": "bytes",
+                "logicalType": "big-decimal"
+            }
+        );
+
+        let parse_result = Schema::parse(&schema);
+        assert!(
+            parse_result.is_ok(),
+            "parse result must be ok, got: {:?}",
+            parse_result
+        );
+        match parse_result? {
+            Schema::BigDecimal => (),
+            other => panic!("Expected Schema::BigDecimal but got: {other:?}"),
+        }
+
+        Ok(())
+    }
+
+    #[test]
     fn test_avro_3820_deny_invalid_field_names() -> TestResult {
         let schema_str = r#"
         {
@@ -5178,7 +5397,7 @@ mod tests {
         match Schema::parse_str(schema_str) {
             Err(Error::FieldNameDuplicate(_)) => (),
             other => {
-                return Err(format!("Expected Error::FieldNameDuplicate, got {other:?}").into())
+                return Err(format!("Expected Error::FieldNameDuplicate, got {other:?}").into());
             }
         };
 
@@ -5524,42 +5743,6 @@ mod tests {
         };
 
         Ok(())
-    }
-
-    #[test]
-    fn avro_3649_default_notintfirst() {
-        let schema_str = String::from(
-            r#"
-            {
-                "type": "record",
-                "name": "union_schema_test",
-                "fields": [
-                    {"name": "a", "type": ["string", "int"], "default": 123}
-                ]
-            }
-        "#,
-        );
-
-        let schema = Schema::parse_str(&schema_str).unwrap();
-
-        match schema {
-            Schema::Record(RecordSchema { name, fields, .. }) => {
-                assert_eq!(name, Name::new("union_schema_test").unwrap());
-                assert_eq!(fields.len(), 1);
-                let field = &fields[0];
-                assert_eq!(&field.name, "a");
-                assert_eq!(&field.default, &Some(json!(123)));
-                match &field.schema {
-                    Schema::Union(union) => {
-                        assert_eq!(union.variants().len(), 2);
-                        assert_eq!(union.variants()[0], Schema::String);
-                        assert_eq!(union.variants()[1], Schema::Int);
-                    }
-                    _ => panic!("Expected Schema::Union"),
-                }
-            }
-            _ => panic!("Expected Schema::Record"),
-        }
     }
 
     #[test]
@@ -6083,6 +6266,542 @@ mod tests {
             some => panic!("Expected None, got {some:?}"),
         }
 
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3886_serialize_attributes() -> TestResult {
+        let attributes = BTreeMap::from([
+            ("string_key".into(), "value".into()),
+            ("number_key".into(), 1.23.into()),
+            ("null_key".into(), Value::Null),
+            (
+                "array_key".into(),
+                Value::Array(vec![1.into(), 2.into(), 3.into()]),
+            ),
+            ("object_key".into(), Value::Object(Map::default())),
+        ]);
+
+        // Test serialize enum attributes
+        let schema = Schema::Enum(EnumSchema {
+            name: Name::new("a")?,
+            aliases: None,
+            doc: None,
+            symbols: vec![],
+            default: None,
+            attributes: attributes.clone(),
+        });
+        let serialized = serde_json::to_string(&schema)?;
+        assert_eq!(
+            r#"{"type":"enum","name":"a","symbols":[],"array_key":[1,2,3],"null_key":null,"number_key":1.23,"object_key":{},"string_key":"value"}"#,
+            &serialized
+        );
+
+        // Test serialize fixed custom_attributes
+        let schema = Schema::Fixed(FixedSchema {
+            name: Name::new("a")?,
+            aliases: None,
+            doc: None,
+            size: 1,
+            default: None,
+            attributes: attributes.clone(),
+        });
+        let serialized = serde_json::to_string(&schema)?;
+        assert_eq!(
+            r#"{"type":"fixed","name":"a","size":1,"array_key":[1,2,3],"null_key":null,"number_key":1.23,"object_key":{},"string_key":"value"}"#,
+            &serialized
+        );
+
+        // Test serialize record custom_attributes
+        let schema = Schema::Record(RecordSchema {
+            name: Name::new("a")?,
+            aliases: None,
+            doc: None,
+            fields: vec![],
+            lookup: BTreeMap::new(),
+            attributes,
+        });
+        let serialized = serde_json::to_string(&schema)?;
+        assert_eq!(
+            r#"{"type":"record","name":"a","fields":[],"array_key":[1,2,3],"null_key":null,"number_key":1.23,"object_key":{},"string_key":"value"}"#,
+            &serialized
+        );
+
+        Ok(())
+    }
+
+    /// A test cases showing that names and namespaces can be constructed
+    /// entirely by underscores.
+    #[test]
+    fn test_avro_3897_funny_valid_names_and_namespaces() -> TestResult {
+        for funny_name in ["_", "_._", "__._", "_.__", "_._._"] {
+            let name = Name::new(funny_name);
+            assert!(name.is_ok());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3896_decimal_schema() -> TestResult {
+        // bytes decimal, represented as native logical type.
+        let schema = json!(
+        {
+          "type": "bytes",
+          "name": "BytesDecimal",
+          "logicalType": "decimal",
+          "size": 38,
+          "precision": 9,
+          "scale": 2
+        });
+        let parse_result = Schema::parse(&schema)?;
+        assert!(matches!(
+            parse_result,
+            Schema::Decimal(DecimalSchema {
+                precision: 9,
+                scale: 2,
+                ..
+            })
+        ));
+
+        // long decimal, represents as native complex type.
+        let schema = json!(
+        {
+          "type": "long",
+          "name": "LongDecimal",
+          "logicalType": "decimal"
+        });
+        let parse_result = Schema::parse(&schema)?;
+        // assert!(matches!(parse_result, Schema::Long));
+        assert_eq!(parse_result, Schema::Long);
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3896_uuid_schema_for_string() -> TestResult {
+        // string uuid, represents as native logical type.
+        let schema = json!(
+        {
+          "type": "string",
+          "name": "StringUUID",
+          "logicalType": "uuid"
+        });
+        let parse_result = Schema::parse(&schema)?;
+        assert_eq!(parse_result, Schema::Uuid);
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3926_uuid_schema_for_fixed_with_size_16() -> TestResult {
+        let schema = json!(
+        {
+            "type": "fixed",
+            "name": "FixedUUID",
+            "size": 16,
+            "logicalType": "uuid"
+        });
+        let parse_result = Schema::parse(&schema)?;
+        assert_eq!(parse_result, Schema::Uuid);
+        assert_not_logged(
+            r#"Ignoring uuid logical type for a Fixed schema because its size (6) is not 16! Schema: Fixed(FixedSchema { name: Name { name: "FixedUUID", namespace: None }, aliases: None, doc: None, size: 6, attributes: {"logicalType": String("uuid")} })"#,
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3926_uuid_schema_for_fixed_with_size_different_than_16() -> TestResult {
+        let schema = json!(
+        {
+            "type": "fixed",
+            "name": "FixedUUID",
+            "size": 6,
+            "logicalType": "uuid"
+        });
+        let parse_result = Schema::parse(&schema)?;
+
+        assert_eq!(
+            parse_result,
+            Schema::Fixed(FixedSchema {
+                name: Name::new("FixedUUID")?,
+                aliases: None,
+                doc: None,
+                size: 6,
+                default: None,
+                attributes: BTreeMap::from([("logicalType".to_string(), "uuid".into())]),
+            })
+        );
+        assert_logged(
+            r#"Ignoring uuid logical type for a Fixed schema because its size (6) is not 16! Schema: Fixed(FixedSchema { name: Name { name: "FixedUUID", namespace: None }, aliases: None, doc: None, size: 6, default: None, attributes: {"logicalType": String("uuid")} })"#,
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3896_timestamp_millis_schema() -> TestResult {
+        // long timestamp-millis, represents as native logical type.
+        let schema = json!(
+        {
+          "type": "long",
+          "name": "LongTimestampMillis",
+          "logicalType": "timestamp-millis"
+        });
+        let parse_result = Schema::parse(&schema)?;
+        assert_eq!(parse_result, Schema::TimestampMillis);
+
+        // int timestamp-millis, represents as native complex type.
+        let schema = json!(
+        {
+            "type": "int",
+            "name": "IntTimestampMillis",
+            "logicalType": "timestamp-millis"
+        });
+        let parse_result = Schema::parse(&schema)?;
+        assert_eq!(parse_result, Schema::Int);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3896_custom_bytes_schema() -> TestResult {
+        // log type, represents as complex type.
+        let schema = json!(
+        {
+            "type": "bytes",
+            "name": "BytesLog",
+            "logicalType": "custom"
+        });
+        let parse_result = Schema::parse(&schema)?;
+        assert_eq!(parse_result, Schema::Bytes);
+        assert_eq!(parse_result.custom_attributes(), None);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3899_parse_decimal_type() -> TestResult {
+        let schema = Schema::parse_str(
+            r#"{
+             "name": "InvalidDecimal",
+             "type": "fixed",
+             "size": 16,
+             "logicalType": "decimal",
+             "precision": 2,
+             "scale": 3
+         }"#,
+        )?;
+        match schema {
+            Schema::Fixed(fixed_schema) => {
+                let attrs = fixed_schema.attributes;
+                let precision = attrs
+                    .get("precision")
+                    .expect("The 'precision' attribute is missing");
+                let scale = attrs
+                    .get("scale")
+                    .expect("The 'scale' attribute is missing");
+                assert_logged(&format!("Ignoring invalid decimal logical type: The decimal precision ({}) must be bigger or equal to the scale ({})", precision, scale));
+            }
+            _ => unreachable!("Expected Schema::Fixed, got {:?}", schema),
+        }
+
+        let schema = Schema::parse_str(
+            r#"{
+            "name": "ValidDecimal",
+             "type": "bytes",
+             "logicalType": "decimal",
+             "precision": 3,
+             "scale": 2
+         }"#,
+        )?;
+        match schema {
+            Schema::Decimal(_) => {
+                assert_not_logged("Ignoring invalid decimal logical type: The decimal precision (2) must be bigger or equal to the scale (3)");
+            }
+            _ => unreachable!("Expected Schema::Decimal, got {:?}", schema),
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3920_serialize_record_with_custom_attributes() -> TestResult {
+        let expected = {
+            let mut lookup = BTreeMap::new();
+            lookup.insert("value".to_owned(), 0);
+            Schema::Record(RecordSchema {
+                name: Name {
+                    name: "LongList".to_owned(),
+                    namespace: None,
+                },
+                aliases: Some(vec![Alias::new("LinkedLongs").unwrap()]),
+                doc: None,
+                fields: vec![RecordField {
+                    name: "value".to_string(),
+                    doc: None,
+                    default: None,
+                    aliases: None,
+                    schema: Schema::Long,
+                    order: RecordFieldOrder::Ascending,
+                    position: 0,
+                    custom_attributes: BTreeMap::from([("field-id".to_string(), 1.into())]),
+                }],
+                lookup,
+                attributes: BTreeMap::from([("custom-attribute".to_string(), "value".into())]),
+            })
+        };
+
+        let value = serde_json::to_value(&expected)?;
+        let serialized = serde_json::to_string(&value)?;
+        assert_eq!(
+            r#"{"aliases":["LinkedLongs"],"custom-attribute":"value","fields":[{"field-id":1,"name":"value","type":"long"}],"name":"LongList","type":"record"}"#,
+            &serialized
+        );
+        assert_eq!(expected, Schema::parse_str(&serialized)?);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3925_serialize_decimal_inner_fixed() -> TestResult {
+        let schema = Schema::Decimal(DecimalSchema {
+            precision: 36,
+            scale: 10,
+            inner: Box::new(Schema::Fixed(FixedSchema {
+                name: Name::new("decimal_36_10").unwrap(),
+                aliases: None,
+                doc: None,
+                size: 16,
+                default: None,
+                attributes: Default::default(),
+            })),
+        });
+
+        let serialized_json = serde_json::to_string_pretty(&schema)?;
+
+        let expected_json = r#"{
+  "type": "fixed",
+  "name": "decimal_36_10",
+  "size": 16,
+  "logicalType": "decimal",
+  "scale": 10,
+  "precision": 36
+}"#;
+
+        assert_eq!(serialized_json, expected_json);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3925_serialize_decimal_inner_bytes() -> TestResult {
+        let schema = Schema::Decimal(DecimalSchema {
+            precision: 36,
+            scale: 10,
+            inner: Box::new(Schema::Bytes),
+        });
+
+        let serialized_json = serde_json::to_string_pretty(&schema)?;
+
+        let expected_json = r#"{
+  "type": "bytes",
+  "logicalType": "decimal",
+  "scale": 10,
+  "precision": 36
+}"#;
+
+        assert_eq!(serialized_json, expected_json);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3925_serialize_decimal_inner_invalid() -> TestResult {
+        let schema = Schema::Decimal(DecimalSchema {
+            precision: 36,
+            scale: 10,
+            inner: Box::new(Schema::String),
+        });
+
+        let serialized_json = serde_json::to_string_pretty(&schema);
+
+        assert!(serialized_json.is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3927_serialize_array_with_custom_attributes() -> TestResult {
+        let expected = Schema::array_with_attributes(
+            Schema::Long,
+            BTreeMap::from([("field-id".to_string(), "1".into())]),
+        );
+
+        let value = serde_json::to_value(&expected)?;
+        let serialized = serde_json::to_string(&value)?;
+        assert_eq!(
+            r#"{"field-id":"1","items":"long","type":"array"}"#,
+            &serialized
+        );
+        let actual_schema = Schema::parse_str(&serialized)?;
+        assert_eq!(expected, actual_schema);
+        assert_eq!(
+            expected.custom_attributes(),
+            actual_schema.custom_attributes()
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3927_serialize_map_with_custom_attributes() -> TestResult {
+        let expected = Schema::map_with_attributes(
+            Schema::Long,
+            BTreeMap::from([("field-id".to_string(), "1".into())]),
+        );
+
+        let value = serde_json::to_value(&expected)?;
+        let serialized = serde_json::to_string(&value)?;
+        assert_eq!(
+            r#"{"field-id":"1","type":"map","values":"long"}"#,
+            &serialized
+        );
+        let actual_schema = Schema::parse_str(&serialized)?;
+        assert_eq!(expected, actual_schema);
+        assert_eq!(
+            expected.custom_attributes(),
+            actual_schema.custom_attributes()
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3928_parse_int_based_schema_with_default() -> TestResult {
+        let schema = r#"
+        {
+          "type": "record",
+          "name": "DateLogicalType",
+          "fields": [ {
+            "name": "birthday",
+            "type": {"type": "int", "logicalType": "date"},
+            "default": 1681601653
+          } ]
+        }"#;
+
+        match Schema::parse_str(schema)? {
+            Schema::Record(record_schema) => {
+                assert_eq!(record_schema.fields.len(), 1);
+                let field = record_schema.fields.first().unwrap();
+                assert_eq!(field.name, "birthday");
+                assert_eq!(field.schema, Schema::Date);
+                assert_eq!(
+                    types::Value::from(field.default.clone().unwrap()),
+                    types::Value::Int(1681601653)
+                );
+            }
+            _ => unreachable!("Expected Schema::Record"),
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3946_union_with_single_type() -> TestResult {
+        let schema = r#"
+        {
+          "type": "record",
+          "name": "Issue",
+          "namespace": "invalid.example",
+          "fields": [
+            {
+              "name": "myField",
+              "type": ["long"]
+            }
+          ]
+        }"#;
+
+        let _ = Schema::parse_str(schema)?;
+
+        assert_logged(
+            "Union schema with just one member! Consider dropping the union! \
+                    Please enable debug logging to find out which Record schema \
+                    declares the union with 'RUST_LOG=apache_avro::schema=debug'.",
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3946_union_without_any_types() -> TestResult {
+        let schema = r#"
+        {
+          "type": "record",
+          "name": "Issue",
+          "namespace": "invalid.example",
+          "fields": [
+            {
+              "name": "myField",
+              "type": []
+            }
+          ]
+        }"#;
+
+        let _ = Schema::parse_str(schema)?;
+
+        assert_logged(
+            "Union schemas should have at least two members! \
+                    Please enable debug logging to find out which Record schema \
+                    declares the union with 'RUST_LOG=apache_avro::schema=debug'.",
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3965_fixed_schema_with_default_bigger_than_size() -> TestResult {
+        match Schema::parse_str(
+            r#"{
+                "type": "fixed",
+                "name": "test",
+                "size": 1,
+                "default": "123456789"
+               }"#,
+        ) {
+            Ok(_schema) => panic!("Must fail!"),
+            Err(err) => {
+                assert_eq!(
+                    err.to_string(),
+                    "Fixed schema's default value length (9) does not match its size (1)"
+                );
+            }
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_4004_canonical_form_strip_logical_types() -> TestResult {
+        let schema_str = r#"
+      {
+        "type": "record",
+        "name": "test",
+        "fields": [
+            {"name": "a", "type": "long", "default": 42, "doc": "The field a"},
+            {"name": "b", "type": "string", "namespace": "test.a"},
+            {"name": "c", "type": "long", "logicalType": "timestamp-micros"}
+        ]
+    }"#;
+
+        let schema = Schema::parse_str(schema_str)?;
+        let canonical_form = schema.canonical_form();
+        let fp_rabin = schema.fingerprint::<Rabin>();
+        assert_eq!(
+            r#"{"name":"test","type":"record","fields":[{"name":"a","type":"long"},{"name":"b","type":"string"},{"name":"c","type":{"type":"long"}}]}"#,
+            canonical_form
+        );
+        assert_eq!("92f2ccef718c6754", fp_rabin.to_string());
         Ok(())
     }
 }

@@ -31,10 +31,8 @@ readme = "README.md"
 
 
 [dependencies]
-anyhow = { default-features = false, version = "1.0.75", features = ["std"] }
-color-backtrace = { default-features = false, version = "0.5.1" }
-ctor = { default-features = false, version = "0.2.4" }
-env_logger = { default-features = false, version = "0.10.0" }
-lazy_static = { default-features = false, version = "1.4.0" }
-log = { default-features = false, version = "0.4.20" }
-ref_thread_local = { default-features = false, version = "0.1.1" }
+anyhow = { default-features = false, version = "1.0.86", features = ["std"] }
+better-panic = { default-features = false, version = "0.3.0" }
+ctor = { default-features = false, version = "0.2.8" }
+env_logger = { default-features = false, version = "0.10.2" }
+log = { workspace = true }
