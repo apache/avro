@@ -46,7 +46,7 @@ jobs:
           - '8.0'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -84,7 +84,7 @@ jobs:
           - '8.0'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -101,7 +101,7 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: 'Setup Temurin JDK 8, 11, 17 & 21'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: |
@@ -110,10 +110,10 @@ jobs:
             17
             21
 
-      - name: 'Setup Maven 3.9.6'
+      - name: 'Setup Maven 3.9.11'
         uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
         with:
-          maven-version: 3.9.6
+          maven-version: 3.9.11
 
       - name: Install Java Avro for Interop Test
         working-directory: .
@@ -127,7 +127,7 @@ jobs:
         working-directory: lang/java/avro
         run: mvn -B -P interop-data-generate generate-resources
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: kjdev/php-ext-zstd
           path: lang/php/php-ext-zstd
@@ -143,7 +143,7 @@ jobs:
           echo "extension=zstd.so" | sudo tee -a /etc/php/${{ matrix.php }}/cli/conf.d/10-zstd.ini
           php -m
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: kjdev/php-ext-snappy
           path: lang/php/php-ext-snappy

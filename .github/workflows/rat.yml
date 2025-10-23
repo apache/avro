@@ -29,7 +29,7 @@ jobs:
   rat:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v4
@@ -40,7 +40,7 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: 'Setup Temurin JDK 8, 11, 17 & 21'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: |
@@ -49,10 +49,10 @@ jobs:
             17
             21
 
-      - name: 'Setup Maven 3.9.6'
+      - name: 'Setup Maven 3.9.11'
         uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
         with:
-          maven-version: 3.9.6
+          maven-version: 3.9.11
 
       - name: Run Rat
         run: mvn test -Dmaven.main.skip=true -Dmaven.test.skip=true -DskipTests=true -Dinvoker.skip=true -P rat -pl :avro-toplevel

@@ -41,6 +41,8 @@ main() {
         ;;
       clean)
         mvn clean
+        # Remove spotless P2 cache: it contains absolute paths (failing if running both in and out of docker)
+        rm -rf ~/.m2/repository/dev/equo/p2-data/queries
         ;;
       *)
         usage

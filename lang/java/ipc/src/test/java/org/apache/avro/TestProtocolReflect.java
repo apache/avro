@@ -146,8 +146,9 @@ public class TestProtocolReflect {
   }
 
   @Test
-  // FIXME: Why does this test fail under JDK 21?
-  @EnabledForJreRange(min = JRE.JAVA_8, max = JRE.JAVA_17, disabledReason = "Doesn't work under JRE 21, no clue why")
+  // The JRE range is because reflection based protocols try to (among others)
+  // make the field Throwable.cause accessible, and are not allowed to.
+  @EnabledForJreRange(min = JRE.JAVA_8, max = JRE.JAVA_11, disabledReason = "Java 11 announced: All illegal access operations will be denied in a future release")
   void error() throws IOException {
     SimpleException error = null;
     try {

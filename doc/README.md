@@ -19,26 +19,6 @@ docker run --rm -v $(pwd):/src -p 1313:1313 jakejarvis/hugo-extended:latest --so
     --buildDrafts --buildFuture --bind 0.0.0.0 --navigateToChanged
 ```
 
-## Building the website in a distribution
-
-When you build an Avro distribution with the script, there is currently a manual step required.
-
-After all the binary artifacts and source have been created and copied to the `dist/` directory, the process will 
-stop with **Build build/staging-web/ manually now. Press a key to continue...**
-
-At this point, from another terminal and in the Avro root directory, you can build the website:
-
-```sh
-# Install the necessary npm packages
-docker run --entrypoint=sh --rm -v $(pwd):/src -p 1313:1313 jakejarvis/hugo-extended:latest \
-    -c "cd build/staging-web && npm install"
-# Generate the website and the release documentation
-docker run --rm -v $(pwd):/src -p 1313:1313 jakejarvis/hugo-extended:latest \
-    --source build/staging-web/  --gc --minify
-# Optional: docker leaves some files with unmanageable permissions 
-sudo chown -R $USER:$USER build/staging-web
-```
-
 ## New release
 
 When a new version of Apache Avro is released:

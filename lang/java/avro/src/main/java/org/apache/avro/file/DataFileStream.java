@@ -330,7 +330,10 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     vin.readFixed(syncBuffer);
     availableBlock = false;
     if (!Arrays.equals(syncBuffer, header.sync))
-      throw new IOException("Invalid sync!");
+      throw new IOException("Invalid sync marker! The sync marker in the data block doesn't match the "
+          + "file header's sync marker. This likely indicates data corruption, truncated file, "
+          + "or incorrectly concatenated Avro files. Verify file integrity and ensure proper "
+          + "file transmission or creation.");
     return reuse;
   }
 

@@ -215,7 +215,7 @@ public class TestLogicalType {
   @Test
   void durationExtendsFixed12() {
     Schema durationSchema = LogicalTypes.duration().addToSchema(Schema.createFixed("f", null, null, 12));
-    assertEquals(LogicalTypes.duration(), durationSchema.getLogicalType());
+    assertEquals(LogicalTypes.duration(), LogicalTypes.fromSchema(durationSchema));
 
     assertThrows("Duration requires a fixed(12)", IllegalArgumentException.class,
         "Duration can only be used with an underlying fixed type of size 12.",

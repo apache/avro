@@ -69,6 +69,9 @@ public class ReflectData extends SpecificData {
 
   private static final String STRING_OUTER_PARENT_REFERENCE = "this$0";
 
+  // holds a wrapper so null entries will have a cached value
+  private final ConcurrentMap<Schema, CustomEncodingWrapper> encoderCache = new ConcurrentHashMap<>();
+
   /**
    * Always false since custom coders are not available for {@link ReflectData}.
    */
@@ -680,6 +683,14 @@ public class ReflectData extends SpecificData {
         setElement(result, component);
         return result;
       }
+      AvroEncode enc = ReflectionUtil.getAvroEncode(c);
+      if (enc != null) {
+        try {
+          return enc.using().getDeclaredConstructor().newInstance().getSchema();
+        } catch (Exception e) {
+          throw new AvroRuntimeException("Could not create schema from custom serializer for " + c.getName());
+        }
+      }
       AvroSchema explicit = c.getAnnotation(AvroSchema.class);
       if (explicit != null) // explicit schema
         return new Schema.Parser().parse(explicit.value());
@@ -864,7 +875,7 @@ public class ReflectData extends SpecificData {
 
   /** Create a schema for a field. */
   protected Schema createFieldSchema(Field field, Map<String, Schema> names) {
-    AvroEncode enc = field.getAnnotation(AvroEncode.class);
+    AvroEncode enc = ReflectionUtil.getAvroEncode(field);
     if (enc != null)
       try {
         return enc.using().getDeclaredConstructor().newInstance().getSchema();
@@ -1042,4 +1053,36 @@ public class ReflectData extends SpecificData {
     }
     return super.newRecord(old, schema);
   }
+
+  public CustomEncoding getCustomEncoding(Schema schema) {
+
+    return this.encoderCache.computeIfAbsent(schema, this::populateEncoderCache).get();
+  }
+
+  private CustomEncodingWrapper populateEncoderCache(Schema schema) {
+    var enc = ReflectionUtil.getAvroEncode(getClass(schema));
+    if (enc != null) {
+      try {
+        return new CustomEncodingWrapper(enc.using().getDeclaredConstructor().newInstance());
+      } catch (Exception e) {
+        throw new AvroRuntimeException("Could not instantiate custom Encoding");
+      }
+    }
+    return new CustomEncodingWrapper(null);
+  }
+
+  private static class CustomEncodingWrapper {
+
+    private final CustomEncoding customEncoding;
+
+    private CustomEncodingWrapper(CustomEncoding customEncoding) {
+      this.customEncoding = customEncoding;
+    }
+
+    public CustomEncoding get() {
+      return customEncoding;
+    }
+
+  }
+
 }
