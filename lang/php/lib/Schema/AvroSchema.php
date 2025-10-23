@@ -345,13 +345,13 @@ class AvroSchema
                 switch ($avro[self::LOGICAL_TYPE_ATTR] ?? null) {
                     case self::DECIMAL_LOGICAL_TYPE:
                         $precision = $avro[AvroLogicalType::ATTRIBUTE_DECIMAL_PRECISION] ?? null;
-                        if (!is_numeric($precision) || !is_int($precision)) {
+                        if (!is_int($precision)) {
                             throw new AvroSchemaParseException(
                                 "Invalid value '{$precision}' for 'precision' attribute of decimal logical type."
                             );
                         }
                         $scale = $avro[AvroLogicalType::ATTRIBUTE_DECIMAL_SCALE] ?? 0;
-                        if (!is_numeric($scale) || !is_int($scale)) {
+                        if (!is_int($scale)) {
                             throw new AvroSchemaParseException(
                                 "Invalid value '{$scale}' for 'scale' attribute of decimal logical type."
                             );
