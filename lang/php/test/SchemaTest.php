@@ -19,6 +19,7 @@
 
 namespace Apache\Avro\Tests;
 
+use Apache\Avro\AvroException;
 use Apache\Avro\Schema\AvroSchema;
 use Apache\Avro\Schema\AvroSchemaParseException;
 use PHPUnit\Framework\TestCase;
@@ -691,5 +692,33 @@ SCHEMA);
         $schema = AvroSchema::parse($avro);
 
         self::assertEquals($schema->toAvro(), json_decode($avro, true));
+    }
+
+    public static function invalidDecimalLogicalTypeDataProvider(): array
+    {
+        return [
+            'invalid precision' => [
+                '{"type": "bytes", "logicalType": "decimal", "precision": -1, "scale": 2}',
+                new AvroException("Precision '-1' is invalid. It must be a positive integer."),
+            ],
+            'invalid scale' => [
+                '{"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": -1}',
+                new AvroException("Scale '-1' is invalid. It must be a non-negative integer."),
+            ],
+            'invalid scale for precision' => [
+                '{"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": 2}',
+                new AvroException("Scale must be a lower than precision (scale='2', precision='2')."),
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider invalidDecimalLogicalTypeDataProvider
+     */
+    public function testDecimalLogicalTypeWithInvalidParameters(string $schema, AvroException $exception): void
+    {
+        $this->expectException(get_class($exception));
+        $this->expectExceptionMessage($exception->getMessage());
+        AvroSchema::parse($schema);
     }
 }
