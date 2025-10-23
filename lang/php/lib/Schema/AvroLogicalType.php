@@ -20,6 +20,8 @@
 
 namespace Apache\Avro\Schema;
 
+use Apache\Avro\AvroException;
+
 class AvroLogicalType
 {
     public const ATTRIBUTE_DECIMAL_PRECISION = 'precision';
@@ -55,6 +57,18 @@ class AvroLogicalType
 
     public static function decimal(int $precision, int $scale): self
     {
+        if ($precision <= 0) {
+            throw new AvroException("Precision '{$precision}' is invalid. It must be a positive integer.");
+        }
+
+        if ($scale < 0) {
+            throw new AvroException("Scale '{$scale}' is invalid. It must be a non-negative integer.");
+        }
+
+        if ($scale >= $precision) {
+            throw new AvroException("Scale must be a lower than precision (scale='{$scale}', precision='{$precision}').");
+        }
+
         return new AvroLogicalType(
             AvroSchema::DECIMAL_LOGICAL_TYPE,
             [

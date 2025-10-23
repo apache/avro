@@ -192,15 +192,17 @@ class AvroIOBinaryEncoder
     public function writeDecimal($decimal, int $scale, int $precision): void
     {
         if (!is_numeric($decimal)) {
-            throw new AvroException('Decimal must be a numeric value');
+            throw new AvroException("Decimal value '{$decimal}' must be numeric");
         }
 
         $value = $decimal * (10 ** $scale);
         if (!is_int($value)) {
             $value = (int) round($value);
         }
-        if (abs($value) > (10 ** $precision - 1)) {
-            throw new AvroException('Decimal value is out of range');
+
+        $maxValue = 10 ** $precision;
+        if (abs($value) >= $maxValue) {
+            throw new AvroException("Decimal value '{$decimal}' is out of range for precision={$precision}, scale={$scale}");
         }
 
         $packed = pack('J', $value);
