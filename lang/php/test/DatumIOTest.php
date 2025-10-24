@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -28,20 +29,19 @@ use Apache\Avro\Datum\AvroIODatumWriter;
 use Apache\Avro\Datum\Type\AvroDuration;
 use Apache\Avro\IO\AvroStringIO;
 use Apache\Avro\Schema\AvroSchema;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers AvroIOBinaryDecoder
- * @covers AvroIOBinaryEncoder
- * @covers AvroIODatumReader
- * @covers AvroIODatumWriter
+ * @covers \AvroIOBinaryDecoder
+ * @covers \AvroIOBinaryEncoder
+ * @covers \AvroIODatumReader
+ * @covers \AvroIODatumWriter
  */
 class DatumIOTest extends TestCase
 {
-    /**
-     * @dataProvider data_provider
-     */
-    public function test_datum_round_trip(string $schema_json, $datum, string $binary): void
+    #[DataProvider('data_provider')]
+    public function test_datum_round_trip(string $schema_json, mixed $datum, string $binary): void
     {
         $this->assertIsValidDatumForSchema($schema_json, $datum, $binary);
     }
@@ -61,11 +61,11 @@ class DatumIOTest extends TestCase
             ['"int"', 2147483647, "\xFE\xFF\xFF\xFF\x0F"],
 
             ['"long"', (int) -9223372036854775808, "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x01"],
-            ['"long"', -(1<<62), "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x7F"],
-            ['"long"', -(1<<61), "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x3F"],
+            ['"long"', -(1 << 62), "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x7F"],
+            ['"long"', -(1 << 61), "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x3F"],
             ['"long"', -4294967295, "\xFD\xFF\xFF\xFF\x1F"],
-            ['"long"', -1<<24, "\xFF\xFF\xFF\x0F"],
-            ['"long"', -1<<16, "\xFF\xFF\x07"],
+            ['"long"', -1 << 24, "\xFF\xFF\xFF\x0F"],
+            ['"long"', -1 << 16, "\xFF\xFF\x07"],
             ['"long"', -255, "\xFD\x03"],
             ['"long"', -128, "\xFF\x01"],
             ['"long"', -127, "\xFD\x01"],
@@ -81,11 +81,11 @@ class DatumIOTest extends TestCase
             ['"long"', 127, "\xFE\x01"],
             ['"long"', 128, "\x80\x02"],
             ['"long"', 255, "\xFE\x03"],
-            ['"long"', 1<<16, "\x80\x80\x08"],
-            ['"long"', 1<<24, "\x80\x80\x80\x10"],
+            ['"long"', 1 << 16, "\x80\x80\x08"],
+            ['"long"', 1 << 24, "\x80\x80\x80\x10"],
             ['"long"', 4294967295, "\xFE\xFF\xFF\xFF\x1F"],
-            ['"long"', 1<<61, "\x80\x80\x80\x80\x80\x80\x80\x80\x40"],
-            ['"long"', 1<<62, "\x80\x80\x80\x80\x80\x80\x80\x80\x80\x01"],
+            ['"long"', 1 << 61, "\x80\x80\x80\x80\x80\x80\x80\x80\x40"],
+            ['"long"', 1 << 62, "\x80\x80\x80\x80\x80\x80\x80\x80\x80\x01"],
             ['"long"', 9223372036854775807, "\xFE\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x01"],
 
             ['"float"', (float) -10.0, "\000\000 \301"],
@@ -94,11 +94,11 @@ class DatumIOTest extends TestCase
             ['"float"', (float) 2.0, "\000\000\000@"],
             ['"float"', (float) 9.0, "\000\000\020A"],
 
-            ['"double"', (double) -10.0, "\000\000\000\000\000\000$\300"],
-            ['"double"', (double) -1.0, "\000\000\000\000\000\000\360\277"],
-            ['"double"', (double) 0.0, "\000\000\000\000\000\000\000\000"],
-            ['"double"', (double) 2.0, "\000\000\000\000\000\000\000@"],
-            ['"double"', (double) 9.0, "\000\000\000\000\000\000\"@"],
+            ['"double"', (float) -10.0, "\000\000\000\000\000\000$\300"],
+            ['"double"', (float) -1.0, "\000\000\000\000\000\000\360\277"],
+            ['"double"', (float) 0.0, "\000\000\000\000\000\000\000\000"],
+            ['"double"', (float) 2.0, "\000\000\000\000\000\000\000@"],
+            ['"double"', (float) 9.0, "\000\000\000\000\000\000\"@"],
 
             ['"string"', 'foo', "\x06foo"],
             ['"bytes"', "\x01\x02\x03", "\x06\x01\x02\x03"],
@@ -106,28 +106,28 @@ class DatumIOTest extends TestCase
             [
                 '{"type":"array","items":"int"}',
                 [1, 2, 3],
-                "\x06\x02\x04\x06\x00"
+                "\x06\x02\x04\x06\x00",
             ],
             [
                 '{"type":"map","values":"int"}',
                 ['foo' => 1, 'bar' => 2, 'baz' => 3],
-                "\x06\x06foo\x02\x06bar\x04\x06baz\x06\x00"
+                "\x06\x06foo\x02\x06bar\x04\x06baz\x06\x00",
             ],
             ['["null", "int"]', 1, "\x02\x02"],
             [
                 '{"name":"fix","type":"fixed","size":3}',
                 "\xAA\xBB\xCC",
-                "\xAA\xBB\xCC"
+                "\xAA\xBB\xCC",
             ],
             [
                 '{"name":"enm","type":"enum","symbols":["A","B","C"]}',
                 'B',
-                "\x02"
+                "\x02",
             ],
             [
                 '{"name":"rec","type":"record","fields":[{"name":"a","type":"int"},{"name":"b","type":"boolean"}]}',
                 ['a' => 1, 'b' => false],
-                "\x02\x00"
+                "\x02\x00",
             ],
         ];
     }
@@ -216,48 +216,46 @@ class DatumIOTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider validBytesDecimalLogicalType
-     */
-    public function testValidBytesDecimalLogicalType(string $datum, int $precision, int $scale, string $expected): void
+    #[DataProvider('validBytesDecimalLogicalType')]
+    public function test_valid_bytes_decimal_logical_type(string $datum, int $precision, int $scale, string $expected): void
     {
         $bytesSchemaJson = <<<JSON
-        {
-          "name": "number",
-          "type": "bytes",
-          "logicalType": "decimal",
-          "precision": {$precision},
-          "scale": {$scale}
-        }
-        JSON;
+            {
+              "name": "number",
+              "type": "bytes",
+              "logicalType": "decimal",
+              "precision": {$precision},
+              "scale": {$scale}
+            }
+            JSON;
 
         $this->assertIsValidDatumForSchema($bytesSchemaJson, $datum, $expected);
 
         $fixedSchemaJson = <<<JSON
-        {
-          "name": "number",
-          "type": "fixed",
-          "size": 8,
-          "logicalType": "decimal",
-          "precision": {$precision},
-          "scale": {$scale}
-        }
-        JSON;
+            {
+              "name": "number",
+              "type": "fixed",
+              "size": 8,
+              "logicalType": "decimal",
+              "precision": {$precision},
+              "scale": {$scale}
+            }
+            JSON;
 
         $this->assertIsValidDatumForSchema($fixedSchemaJson, $datum, $expected);
     }
 
-    public function testInvalidBytesLogicalTypeOutOfRange(): void
+    public function test_invalid_bytes_logical_type_out_of_range(): void
     {
         $schemaJson = <<<JSON
-        {
-          "name": "number",
-          "type": "bytes",
-          "logicalType": "decimal",
-          "precision": 4,
-          "scale": 0
-        }
-        JSON;
+            {
+              "name": "number",
+              "type": "bytes",
+              "logicalType": "decimal",
+              "precision": 4,
+              "scale": 0
+            }
+            JSON;
 
         $schema = AvroSchema::parse($schemaJson);
         $written = new AvroStringIO();
@@ -278,19 +276,17 @@ class DatumIOTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider validDurationLogicalTypes
-     */
-    public function testDurationLogicalType(AvroDuration $avroDuration): void
+    #[DataProvider('validDurationLogicalTypes')]
+    public function test_duration_logical_type(AvroDuration $avroDuration): void
     {
         $bytesSchemaJson = <<<JSON
-        {
-          "name": "number",
-          "type": "fixed",
-          "size": 12,
-          "logicalType": "duration"
-        }
-        JSON;
+            {
+              "name": "number",
+              "type": "fixed",
+              "size": 12,
+              "logicalType": "duration"
+            }
+            JSON;
 
         $this->assertIsValidDatumForSchema(
             $bytesSchemaJson,
@@ -311,10 +307,8 @@ class DatumIOTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider durationLogicalTypeOutOfBounds
-     */
-    public function testDurationLogicalTypeOutOfBounds(int $months, int $days, int $milliseconds): void
+    #[DataProvider('durationLogicalTypeOutOfBounds')]
+    public function test_duration_logical_type_out_of_bounds(int $months, int $days, int $milliseconds): void
     {
         $this->expectException(AvroException::class);
         new AvroDuration($months, $days, $milliseconds);
@@ -365,7 +359,7 @@ class DatumIOTest extends TestCase
             [
                 '{"type":"array","items":"int"}',
                 '[5,4,3,2]',
-                [5, 4, 3, 2]
+                [5, 4, 3, 2],
             ],
             [
                 '{"type":"map","values":"int"}',
@@ -407,20 +401,20 @@ class DatumIOTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider default_provider
-     */
+    #[DataProvider('default_provider')]
     public function test_field_default_value(
-        $field_schema_json,
-        $default_json,
-        $default_value
+        string $field_schema_json,
+        string $default_json,
+        mixed $default_value
     ): void {
         $writers_schema_json = '{"name":"foo","type":"record","fields":[]}';
         $writers_schema = AvroSchema::parse($writers_schema_json);
 
         $readers_schema_json = sprintf(
             '{"name":"foo","type":"record","fields":[{"name":"f","type":%s,"default":%s}]}',
-            $field_schema_json, $default_json);
+            $field_schema_json,
+            $default_json
+        );
         $readers_schema = AvroSchema::parse($readers_schema_json);
 
         $reader = new AvroIODatumReader($writers_schema, $readers_schema);
@@ -428,16 +422,16 @@ class DatumIOTest extends TestCase
         if (array_key_exists('f', $record)) {
             $this->assertEquals($default_value, $record['f']);
         } else {
-            $this->assertTrue(false, sprintf('expected field record[f]: %s',
-                print_r($record, true)));
+            $this->assertTrue(false, sprintf(
+                'expected field record[f]: %s',
+                print_r($record, true)
+            ));
         }
     }
 
     /**
-     * @param string $schemaJson
      * @param string $datum
      * @param string $expected
-     * @return void
      * @throws \Apache\Avro\IO\AvroIOException
      */
     private function assertIsValidDatumForSchema(string $schemaJson, $datum, $expected): void
@@ -449,10 +443,15 @@ class DatumIOTest extends TestCase
 
         $writer->write($datum, $encoder);
         $output = (string) $written;
-        $this->assertEquals($expected, $output,
-            sprintf("expected: %s\n  actual: %s",
+        $this->assertEquals(
+            $expected,
+            $output,
+            sprintf(
+                "expected: %s\n  actual: %s",
                 AvroDebug::asciiString($expected, 'hex'),
-                AvroDebug::asciiString($output, 'hex')));
+                AvroDebug::asciiString($output, 'hex')
+            )
+        );
 
         $read = new AvroStringIO((string) $expected);
         $decoder = new AvroIOBinaryDecoder($read);

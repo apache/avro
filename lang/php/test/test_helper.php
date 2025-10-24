@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,11 +17,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-if (file_exists(__DIR__ . '/../../../vendor/autoload.php')) {
-    include __DIR__ . '/../../../vendor/autoload.php';
+if (file_exists(__DIR__.'/../../../vendor/autoload.php')) {
+    include __DIR__.'/../../../vendor/autoload.php';
 } else {
-    include __DIR__ . '/../lib/autoload.php';
+    include __DIR__.'/../lib/autoload.php';
 }
 
 define('AVRO_TEST_HELPER_DIR', __DIR__);
