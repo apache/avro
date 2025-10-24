@@ -169,8 +169,8 @@
       <artifactId>velocity-engine-core</artifactId>
     </dependency>
     <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
+        <groupId>jakarta.servlet</groupId>
+        <artifactId>jakarta.servlet-api</artifactId>
         <scope>provided</scope>
     </dependency>
     <!-- javax.annotation-api dependency must be explicit for forward compatibility (Java > 9) -->

@@ -20,8 +20,8 @@ import org.apache.avro.ipc.stats.StatsServlet;
  * limitations under the License.
  */
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee9.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee9.servlet.ServletHolder;
 
 /* This is a server that displays live information from a StatsPlugin.
  *
@@ -42,11 +42,11 @@ public class StatsServer {
     this.httpServer = new Server(port);
     this.plugin = plugin;
 
-    ServletHandler handler = new ServletHandler();
-    httpServer.setHandler(handler);
-    handler.addServletWithMapping(new ServletHolder(new StaticServlet()), "/");
+    ServletContextHandler sch = new ServletContextHandler();
+    httpServer.setHandler(sch);
+    sch.getServletHandler().addServletWithMapping(new ServletHolder(new StaticServlet()), "/");
 
-    handler.addServletWithMapping(new ServletHolder(new StatsServlet(plugin)), "/");
+    sch.getServletHandler().addServletWithMapping(new ServletHolder(new StatsServlet(plugin)), "/");
 
     httpServer.start();
   }
