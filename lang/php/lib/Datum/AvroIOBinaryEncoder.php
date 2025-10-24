@@ -208,6 +208,7 @@ class AvroIOBinaryEncoder
         }
 
         $packed = pack('J', $value);
+
         $significantBit = self::getMostSignificantBitAt($packed, 0);
         $trimByte = $significantBit ? 0xff : 0x00;
 

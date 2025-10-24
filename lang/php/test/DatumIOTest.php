@@ -189,6 +189,30 @@ class DatumIOTest extends TestCase
                 0,
                 "\x04\xFF\x7F",
             ],
+            'high precision positive number' => [
+                '549755813887',
+                12,
+                0,
+                "\x0A\x7F\xFF\xFF\xFF\xFF",
+            ],
+            'high precision positive number with scale' => [
+                '54975581.3887',
+                12,
+                4,
+                "\x0A\x7F\xFF\xFF\xFF\xFF",
+            ],
+            'high precision negative number' => [
+                '-549755813888',
+                12,
+                0,
+                "\x0A\x80\x00\x00\x00\x00",
+            ],
+            'high precision negative number with scale' => [
+                '-54975581.3888',
+                12,
+                4,
+                "\x0A\x80\x00\x00\x00\x00",
+            ],
         ];
     }
 
@@ -209,7 +233,7 @@ class DatumIOTest extends TestCase
 
         $this->assertIsValidDatumForSchema($bytesSchemaJson, $datum, $expected);
 
-        $bytesSchemaJson = <<<JSON
+        $fixedSchemaJson = <<<JSON
         {
           "name": "number",
           "type": "fixed",
@@ -220,7 +244,7 @@ class DatumIOTest extends TestCase
         }
         JSON;
 
-        $this->assertIsValidDatumForSchema($bytesSchemaJson, $datum, $expected);
+        $this->assertIsValidDatumForSchema($fixedSchemaJson, $datum, $expected);
     }
 
     public function testInvalidBytesLogicalTypeOutOfRange(): void
@@ -424,7 +448,7 @@ class DatumIOTest extends TestCase
         $writer = new AvroIODatumWriter($schema);
 
         $writer->write($datum, $encoder);
-        $output = (string)$written;
+        $output = (string) $written;
         $this->assertEquals($expected, $output,
             sprintf("expected: %s\n  actual: %s",
                 AvroDebug::asciiString($expected, 'hex'),
