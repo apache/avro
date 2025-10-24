@@ -29,7 +29,7 @@ use PHPUnit\Framework\TestCase;
 
 class IODatumReaderTest extends TestCase
 {
-    public function testSchemaMatching()
+    public function testSchemaMatching(): void
     {
         $writers_schema = <<<JSON
         {
@@ -80,7 +80,7 @@ class IODatumReaderTest extends TestCase
         $this->assertEquals(['field2' => 1], $record);
     }
 
-    public function testRecordNullField()
+    public function testRecordNullField(): void
     {
         $schema_json = <<<JSON
             {
@@ -105,7 +105,7 @@ class IODatumReaderTest extends TestCase
         $this->assertSame('0200', bin2hex($bin));
     }
 
-    public function testRecordFieldWithDefault()
+    public function testRecordFieldWithDefault(): void
     {
         $schema = AvroSchema::parse(
             <<<JSON

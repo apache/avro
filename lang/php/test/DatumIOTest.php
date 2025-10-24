@@ -20,6 +20,7 @@
 namespace Apache\Avro\Tests;
 
 use Apache\Avro\AvroDebug;
+use Apache\Avro\AvroException;
 use Apache\Avro\Datum\AvroIOBinaryDecoder;
 use Apache\Avro\Datum\AvroIOBinaryEncoder;
 use Apache\Avro\Datum\AvroIODatumReader;
@@ -142,8 +143,124 @@ class DatumIOTest extends TestCase
                 '{"name":"rec","type":"record","fields":[{"name":"a","type":"int"},{"name":"b","type":"boolean"}]}',
                 ['a' => 1, 'b' => false],
                 "\x02\x00"
-            ]
+            ],
         ];
+    }
+
+    public static function validBytesDecimalLogicalType(): array
+    {
+        return [
+            'positive' => [
+                '10.95',
+                4,
+                2,
+                "\x04\x04\x47",
+            ],
+            'negative' => [
+                '-10.95',
+                4,
+                2,
+                "\x04\xFB\xB9",
+            ],
+            'small positive' => [
+                '0.05',
+                3,
+                2,
+                "\x02\x05",
+            ],
+            'zero value' => [
+                '0',
+                4,
+                2,
+                "\x02\x00",
+            ],
+            'unscaled positive' => [
+                '12345',
+                6,
+                0,
+                "\x04\x30\x39",
+            ],
+            'trimming edge case 127' => [
+                '127',
+                3,
+                0,
+                "\x02\x7F",
+            ],
+            'trimming edge case 128' => [
+                '128',
+                3,
+                0,
+                "\x04\x00\x80",
+            ],
+            'negative trimming -1' => [
+                '-1',
+                3,
+                0,
+                "\x02\xFF",
+            ],
+            'negative trimming -129' => [
+                '-129',
+                3,
+                0,
+                "\x04\xFF\x7F",
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider validBytesDecimalLogicalType
+     */
+    public function testValidBytesDecimalLogicalType(string $datum, int $precision, int $scale, string $expected): void
+    {
+        $schemaJson = <<<JSON
+        {
+          "name": "number",
+          "type": "bytes",
+          "logicalType": "decimal",
+          "precision": {$precision},
+          "scale": {$scale}
+        }
+        JSON;
+
+        $schema = AvroSchema::parse($schemaJson);
+        $written = new AvroStringIO();
+        $encoder = new AvroIOBinaryEncoder($written);
+        $writer = new AvroIODatumWriter($schema);
+
+        $writer->write($datum, $encoder);
+        $output = (string) $written;
+        $this->assertEquals($expected, $output,
+            sprintf("expected: %s\n  actual: %s",
+                AvroDebug::asciiString($expected, 'hex'),
+                AvroDebug::asciiString($output, 'hex')));
+
+        $read = new AvroStringIO($expected);
+        $decoder = new AvroIOBinaryDecoder($read);
+        $reader = new AvroIODatumReader($schema);
+        $read_datum = $reader->read($decoder);
+        $this->assertEquals($datum, $read_datum);
+    }
+
+    public function testInvalidBytesLogicalTypeOutOfRange(): void
+    {
+        $schemaJson = <<<JSON
+        {
+          "name": "number",
+          "type": "bytes",
+          "logicalType": "decimal",
+          "precision": 4,
+          "scale": 0
+        }
+        JSON;
+
+        $schema = AvroSchema::parse($schemaJson);
+        $written = new AvroStringIO();
+        $encoder = new AvroIOBinaryEncoder($written);
+        $writer = new AvroIODatumWriter($schema);
+
+        $this->expectException(AvroException::class);
+        $this->expectExceptionMessage("Decimal value '10000' is out of range for precision=4, scale=0");
+        $writer->write("10000", $encoder);
     }
 
     public static function default_provider(): array
