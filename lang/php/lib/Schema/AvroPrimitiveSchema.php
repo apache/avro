@@ -39,16 +39,90 @@ class AvroPrimitiveSchema extends AvroSchema
         parent::__construct($type);
     }
 
+    public static function decimal(int $precision, int $scale): self
+    {
+        $self = new self(AvroSchema::BYTES_TYPE);
+        $self->logicalType = AvroLogicalType::decimal($precision, $scale);
+
+        return $self;
+    }
+
+    public static function uuid(): self
+    {
+        $self = new self(AvroSchema::STRING_TYPE);
+        $self->logicalType = AvroLogicalType::uuid();
+
+        return $self;
+    }
+
+    public static function date(): self
+    {
+        $self = new self(AvroSchema::INT_TYPE);
+        $self->logicalType = AvroLogicalType::date();
+
+        return $self;
+    }
+
+    public static function timeMillis(): self
+    {
+        $self = new self(AvroSchema::INT_TYPE);
+        $self->logicalType = AvroLogicalType::timeMillis();
+
+        return $self;
+    }
+
+    public static function timeMicros(): self
+    {
+        $self = new self(AvroSchema::LONG_TYPE);
+        $self->logicalType = AvroLogicalType::timeMicros();
+
+        return $self;
+    }
+
+    public static function timestampMillis(): self
+    {
+        $self = new self(AvroSchema::LONG_TYPE);
+        $self->logicalType = AvroLogicalType::timestampMillis();
+
+        return $self;
+    }
+
+    public static function timestampMicros(): self
+    {
+        $self = new self(AvroSchema::LONG_TYPE);
+        $self->logicalType = AvroLogicalType::timestampMicros();
+
+        return $self;
+    }
+
+    public static function localTimestampMillis(): self
+    {
+        $self = new self(AvroSchema::LONG_TYPE);
+        $self->logicalType = AvroLogicalType::localTimestampMillis();
+
+        return $self;
+    }
+
+    public static function localTimestampMicros(): self
+    {
+        $self = new self(AvroSchema::LONG_TYPE);
+        $self->logicalType = AvroLogicalType::localTimestampMicros();
+
+        return $self;
+    }
+
     /**
      * @returns mixed
      */
     public function toAvro()
     {
         $avro = parent::toAvro();
+
         // FIXME: Is this if really necessary? When *wouldn't* this be the case?
         if (1 == count($avro)) {
             return $this->type;
         }
+
         return $avro;
     }
 }

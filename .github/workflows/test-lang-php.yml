@@ -22,6 +22,7 @@ on:
     branches: [ main ]
     paths:
     - .github/workflows/test-lang-php.yml
+    - composer.json
     - lang/php/**
 
 defaults:
@@ -44,6 +45,10 @@ jobs:
           - '7.3'
           - '7.4'
           - '8.0'
+          - '8.1'
+          - '8.2'
+          - '8.3'
+          - '8.4'
 
     steps:
       - uses: actions/checkout@v5
@@ -52,7 +57,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          tools: composer:2.2.5
+          tools: composer:2.8.12
 
       - name: Get Composer Cache Directory
         id: composer-cache
@@ -82,6 +87,10 @@ jobs:
           - '7.3'
           - '7.4'
           - '8.0'
+          - '8.1'
+          - '8.2'
+          - '8.3'
+          - '8.4'
 
     steps:
       - uses: actions/checkout@v5
@@ -90,7 +99,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          tools: composer:2.2.5
+          tools: composer:2.8.12
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v4

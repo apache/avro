@@ -136,7 +136,7 @@ class AvroDataIOWriter
     /**
      * Writes the header of the AvroIO object container
      */
-    private function writeHeader()
+    private function writeHeader(): void
     {
         $this->write(AvroDataIO::magic());
         $this->datum_writer->writeData(
