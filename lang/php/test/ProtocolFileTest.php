@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -26,328 +27,328 @@ use PHPUnit\Framework\TestCase;
 
 class ProtocolFileTest extends TestCase
 {
-    private $prot_parseable = array(true, true, true, true, true, true, false, true, true);
-    private $prot_data = array(
+    private $prot_parseable = [true, true, true, true, true, true, false, true, true];
+    private $prot_data = [
         <<<'DATUM'
-{
-  "namespace": "com.acme",
-  "protocol": "HelloWorld",
+            {
+              "namespace": "com.acme",
+              "protocol": "HelloWorld",
 
-  "types": [
-    {"name": "Greeting", "type": "record", "fields": [
-      {"name": "message", "type": "string"}]},
-    {"name": "Curse", "type": "error", "fields": [
-      {"name": "message", "type": "string"}]}
-  ],
+              "types": [
+                {"name": "Greeting", "type": "record", "fields": [
+                  {"name": "message", "type": "string"}]},
+                {"name": "Curse", "type": "error", "fields": [
+                  {"name": "message", "type": "string"}]}
+              ],
 
-  "messages": {
-    "hello": {
-      "request": [{"name": "greeting", "type": "Greeting" }],
-      "response": "Greeting",
-      "errors": ["Curse"]
-    }
-  }
-}
-DATUM
-    ,
+              "messages": {
+                "hello": {
+                  "request": [{"name": "greeting", "type": "Greeting" }],
+                  "response": "Greeting",
+                  "errors": ["Curse"]
+                }
+              }
+            }
+            DATUM
+        ,
         <<<'DATUM'
-{"namespace": "org.apache.avro.test",
- "protocol": "Simple",
+            {"namespace": "org.apache.avro.test",
+             "protocol": "Simple",
 
- "types": [
-     {"name": "Kind", "type": "enum", "symbols": ["FOO","BAR","BAZ"]},
+             "types": [
+                 {"name": "Kind", "type": "enum", "symbols": ["FOO","BAR","BAZ"]},
 
-     {"name": "MD5", "type": "fixed", "size": 16},
+                 {"name": "MD5", "type": "fixed", "size": 16},
 
-     {"name": "TestRecord", "type": "record",
-      "fields": [
-          {"name": "name", "type": "string", "order": "ignore"},
-          {"name": "kind", "type": "Kind", "order": "descending"},
-          {"name": "hash", "type": "MD5"}
-      ]
-     },
+                 {"name": "TestRecord", "type": "record",
+                  "fields": [
+                      {"name": "name", "type": "string", "order": "ignore"},
+                      {"name": "kind", "type": "Kind", "order": "descending"},
+                      {"name": "hash", "type": "MD5"}
+                  ]
+                 },
 
-     {"name": "TestError", "type": "error", "fields": [
-         {"name": "message", "type": "string"}
-      ]
-     }
+                 {"name": "TestError", "type": "error", "fields": [
+                     {"name": "message", "type": "string"}
+                  ]
+                 }
 
- ],
+             ],
 
- "messages": {
+             "messages": {
 
-     "hello": {
-         "request": [{"name": "greeting", "type": "string"}],
-         "response": "string"
-     },
+                 "hello": {
+                     "request": [{"name": "greeting", "type": "string"}],
+                     "response": "string"
+                 },
 
-     "echo": {
-         "request": [{"name": "record", "type": "TestRecord"}],
-         "response": "TestRecord"
-     },
+                 "echo": {
+                     "request": [{"name": "record", "type": "TestRecord"}],
+                     "response": "TestRecord"
+                 },
 
-     "add": {
-         "request": [{"name": "arg1", "type": "int"}, {"name": "arg2", "type": "int"}],
-         "response": "int"
-     },
+                 "add": {
+                     "request": [{"name": "arg1", "type": "int"}, {"name": "arg2", "type": "int"}],
+                     "response": "int"
+                 },
 
-     "echoBytes": {
-         "request": [{"name": "data", "type": "bytes"}],
-         "response": "bytes"
-     },
+                 "echoBytes": {
+                     "request": [{"name": "data", "type": "bytes"}],
+                     "response": "bytes"
+                 },
 
-     "error": {
-         "request": [],
-         "response": "null",
-         "errors": ["TestError"]
-     }
- }
+                 "error": {
+                     "request": [],
+                     "response": "null",
+                     "errors": ["TestError"]
+                 }
+             }
 
-}
-DATUM
-    ,
+            }
+            DATUM
+        ,
         <<<'DATUM'
-{"namespace": "org.apache.avro.test.namespace",
- "protocol": "TestNamespace",
+            {"namespace": "org.apache.avro.test.namespace",
+             "protocol": "TestNamespace",
 
- "types": [
-     {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
-     {"name": "TestRecord", "type": "record",
-      "fields": [ {"name": "hash", "type": "org.apache.avro.test.util.MD5"} ]
-     },
-     {"name": "TestError", "namespace": "org.apache.avro.test.errors",
-      "type": "error", "fields": [ {"name": "message", "type": "string"} ]
-     }
- ],
+             "types": [
+                 {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
+                 {"name": "TestRecord", "type": "record",
+                  "fields": [ {"name": "hash", "type": "org.apache.avro.test.util.MD5"} ]
+                 },
+                 {"name": "TestError", "namespace": "org.apache.avro.test.errors",
+                  "type": "error", "fields": [ {"name": "message", "type": "string"} ]
+                 }
+             ],
 
- "messages": {
-     "echo": {
-         "request": [{"name": "record", "type": "TestRecord"}],
-         "response": "TestRecord"
-     },
+             "messages": {
+                 "echo": {
+                     "request": [{"name": "record", "type": "TestRecord"}],
+                     "response": "TestRecord"
+                 },
 
-     "error": {
-         "request": [],
-         "response": "null",
-         "errors": ["org.apache.avro.test.errors.TestError"]
-     }
+                 "error": {
+                     "request": [],
+                     "response": "null",
+                     "errors": ["org.apache.avro.test.errors.TestError"]
+                 }
 
- }
+             }
 
-}
-DATUM
-    ,
+            }
+            DATUM
+        ,
         <<<'DATUM'
-{"namespace": "org.apache.avro.test.namespace",
- "protocol": "TestImplicitNamespace",
+            {"namespace": "org.apache.avro.test.namespace",
+             "protocol": "TestImplicitNamespace",
 
- "types": [
-     {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
-     {"name": "ReferencedRecord", "type": "record", 
-       "fields": [ {"name": "foo", "type": "string"} ] },
-     {"name": "TestRecord", "type": "record",
-      "fields": [ {"name": "hash", "type": "org.apache.avro.test.util.MD5"},
-                  {"name": "unqalified", "type": "ReferencedRecord"} ]
-     },
-     {"name": "TestError",
-      "type": "error", "fields": [ {"name": "message", "type": "string"} ]
-     }
- ],
+             "types": [
+                 {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
+                 {"name": "ReferencedRecord", "type": "record", 
+                   "fields": [ {"name": "foo", "type": "string"} ] },
+                 {"name": "TestRecord", "type": "record",
+                  "fields": [ {"name": "hash", "type": "org.apache.avro.test.util.MD5"},
+                              {"name": "unqalified", "type": "ReferencedRecord"} ]
+                 },
+                 {"name": "TestError",
+                  "type": "error", "fields": [ {"name": "message", "type": "string"} ]
+                 }
+             ],
 
- "messages": {
-     "echo": {
-         "request": [{"name": "qualified", 
-             "type": "org.apache.avro.test.namespace.TestRecord"}],
-         "response": "TestRecord"
-     },
+             "messages": {
+                 "echo": {
+                     "request": [{"name": "qualified", 
+                         "type": "org.apache.avro.test.namespace.TestRecord"}],
+                     "response": "TestRecord"
+                 },
 
-     "error": {
-         "request": [],
-         "response": "null",
-         "errors": ["org.apache.avro.test.namespace.TestError"]
-     }
+                 "error": {
+                     "request": [],
+                     "response": "null",
+                     "errors": ["org.apache.avro.test.namespace.TestError"]
+                 }
 
- }
+             }
 
-}
-DATUM
-    ,
+            }
+            DATUM
+        ,
         <<<'DATUM'
-{"namespace": "org.apache.avro.test.namespace",
- "protocol": "TestNamespaceTwo",
+            {"namespace": "org.apache.avro.test.namespace",
+             "protocol": "TestNamespaceTwo",
 
- "types": [
-     {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
-     {"name": "ReferencedRecord", "type": "record", 
-       "namespace": "org.apache.avro.other.namespace", 
-       "fields": [ {"name": "foo", "type": "string"} ] },
-     {"name": "TestRecord", "type": "record",
-      "fields": [ {"name": "hash", "type": "org.apache.avro.test.util.MD5"},
-                  {"name": "qualified", 
-                    "type": "org.apache.avro.other.namespace.ReferencedRecord"} 
-                ]
-     },
-     {"name": "TestError",
-      "type": "error", "fields": [ {"name": "message", "type": "string"} ]
-     }
- ],
+             "types": [
+                 {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
+                 {"name": "ReferencedRecord", "type": "record", 
+                   "namespace": "org.apache.avro.other.namespace", 
+                   "fields": [ {"name": "foo", "type": "string"} ] },
+                 {"name": "TestRecord", "type": "record",
+                  "fields": [ {"name": "hash", "type": "org.apache.avro.test.util.MD5"},
+                              {"name": "qualified", 
+                                "type": "org.apache.avro.other.namespace.ReferencedRecord"} 
+                            ]
+                 },
+                 {"name": "TestError",
+                  "type": "error", "fields": [ {"name": "message", "type": "string"} ]
+                 }
+             ],
 
- "messages": {
-     "echo": {
-         "request": [{"name": "qualified", 
-             "type": "org.apache.avro.test.namespace.TestRecord"}],
-         "response": "TestRecord"
-     },
+             "messages": {
+                 "echo": {
+                     "request": [{"name": "qualified", 
+                         "type": "org.apache.avro.test.namespace.TestRecord"}],
+                     "response": "TestRecord"
+                 },
 
-     "error": {
-         "request": [],
-         "response": "null",
-         "errors": ["org.apache.avro.test.namespace.TestError"]
-     }
+                 "error": {
+                     "request": [],
+                     "response": "null",
+                     "errors": ["org.apache.avro.test.namespace.TestError"]
+                 }
 
- }
+             }
 
-}
-DATUM
-    ,
+            }
+            DATUM
+        ,
         <<<'DATUM'
-{"namespace": "org.apache.avro.test.namespace",
- "protocol": "TestValidRepeatedName",
+            {"namespace": "org.apache.avro.test.namespace",
+             "protocol": "TestValidRepeatedName",
 
- "types": [
-     {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
-     {"name": "ReferencedRecord", "type": "record", 
-       "namespace": "org.apache.avro.other.namespace", 
-       "fields": [ {"name": "foo", "type": "string"} ] },
-     {"name": "ReferencedRecord", "type": "record", 
-       "fields": [ {"name": "bar", "type": "double"} ] },
-     {"name": "TestError",
-      "type": "error", "fields": [ {"name": "message", "type": "string"} ]
-     }
- ],
+             "types": [
+                 {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
+                 {"name": "ReferencedRecord", "type": "record", 
+                   "namespace": "org.apache.avro.other.namespace", 
+                   "fields": [ {"name": "foo", "type": "string"} ] },
+                 {"name": "ReferencedRecord", "type": "record", 
+                   "fields": [ {"name": "bar", "type": "double"} ] },
+                 {"name": "TestError",
+                  "type": "error", "fields": [ {"name": "message", "type": "string"} ]
+                 }
+             ],
 
- "messages": {
-     "echo": {
-         "request": [{"name": "qualified", 
-             "type": "ReferencedRecord"}],
-         "response": "org.apache.avro.other.namespace.ReferencedRecord"
-     },
+             "messages": {
+                 "echo": {
+                     "request": [{"name": "qualified", 
+                         "type": "ReferencedRecord"}],
+                     "response": "org.apache.avro.other.namespace.ReferencedRecord"
+                 },
 
-     "error": {
-         "request": [],
-         "response": "null",
-         "errors": ["org.apache.avro.test.namespace.TestError"]
-     }
+                 "error": {
+                     "request": [],
+                     "response": "null",
+                     "errors": ["org.apache.avro.test.namespace.TestError"]
+                 }
 
- }
+             }
 
-}
-DATUM
-    ,
+            }
+            DATUM
+        ,
         <<<'DATUM'
-{"namespace": "org.apache.avro.test.namespace",
- "protocol": "TestInvalidRepeatedName",
+            {"namespace": "org.apache.avro.test.namespace",
+             "protocol": "TestInvalidRepeatedName",
 
- "types": [
-     {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
-     {"name": "ReferencedRecord", "type": "record", 
-       "fields": [ {"name": "foo", "type": "string"} ] },
-     {"name": "ReferencedRecord", "type": "record", 
-       "fields": [ {"name": "bar", "type": "double"} ] },
-     {"name": "TestError",
-      "type": "error", "fields": [ {"name": "message", "type": "string"} ]
-     }
- ],
+             "types": [
+                 {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
+                 {"name": "ReferencedRecord", "type": "record", 
+                   "fields": [ {"name": "foo", "type": "string"} ] },
+                 {"name": "ReferencedRecord", "type": "record", 
+                   "fields": [ {"name": "bar", "type": "double"} ] },
+                 {"name": "TestError",
+                  "type": "error", "fields": [ {"name": "message", "type": "string"} ]
+                 }
+             ],
 
- "messages": {
-     "echo": {
-         "request": [{"name": "qualified", 
-             "type": "ReferencedRecord"}],
-         "response": "org.apache.avro.other.namespace.ReferencedRecord"
-     },
+             "messages": {
+                 "echo": {
+                     "request": [{"name": "qualified", 
+                         "type": "ReferencedRecord"}],
+                     "response": "org.apache.avro.other.namespace.ReferencedRecord"
+                 },
 
-     "error": {
-         "request": [],
-         "response": "null",
-         "errors": ["org.apache.avro.test.namespace.TestError"]
-     }
+                 "error": {
+                     "request": [],
+                     "response": "null",
+                     "errors": ["org.apache.avro.test.namespace.TestError"]
+                 }
 
- }
+             }
 
-}
-DATUM
-    ,
+            }
+            DATUM
+        ,
         <<<'DATUM'
-{"namespace": "org.apache.avro.test",
- "protocol": "BulkData",
+            {"namespace": "org.apache.avro.test",
+             "protocol": "BulkData",
 
- "types": [],
+             "types": [],
 
- "messages": {
+             "messages": {
 
-     "read": {
-         "request": [],
-         "response": "bytes"
-     },
+                 "read": {
+                     "request": [],
+                     "response": "bytes"
+                 },
 
-     "write": {
-         "request": [ {"name": "data", "type": "bytes"} ],
-         "response": "null"
-     }
+                 "write": {
+                     "request": [ {"name": "data", "type": "bytes"} ],
+                     "response": "null"
+                 }
 
- }
+             }
 
-}
-DATUM
-    ,
+            }
+            DATUM
+        ,
         <<<'DATUM'
-{
-  "protocol" : "API",
-  "namespace" : "xyz.api",
-  "types" : [ {
-    "type" : "enum",
-    "name" : "Symbology",
-    "namespace" : "xyz.api.product",
-    "symbols" : [ "OPRA", "CUSIP", "ISIN", "SEDOL" ]
-  }, {
-    "type" : "record",
-    "name" : "Symbol",
-    "namespace" : "xyz.api.product",
-    "fields" : [ {
-      "name" : "symbology",
-      "type" : "xyz.api.product.Symbology"
-    }, {
-      "name" : "symbol",
-      "type" : "string"
-    } ]
-  }, {
-    "type" : "record",
-    "name" : "MultiSymbol",
-    "namespace" : "xyz.api.product",
-    "fields" : [ {
-      "name" : "symbols",
-      "type" : {
-        "type" : "map",
-        "values" : "xyz.api.product.Symbol"
-      }
-    } ]
-  } ],
-  "messages" : {
-  }
-}
-DATUM
-    );
+            {
+              "protocol" : "API",
+              "namespace" : "xyz.api",
+              "types" : [ {
+                "type" : "enum",
+                "name" : "Symbology",
+                "namespace" : "xyz.api.product",
+                "symbols" : [ "OPRA", "CUSIP", "ISIN", "SEDOL" ]
+              }, {
+                "type" : "record",
+                "name" : "Symbol",
+                "namespace" : "xyz.api.product",
+                "fields" : [ {
+                  "name" : "symbology",
+                  "type" : "xyz.api.product.Symbology"
+                }, {
+                  "name" : "symbol",
+                  "type" : "string"
+                } ]
+              }, {
+                "type" : "record",
+                "name" : "MultiSymbol",
+                "namespace" : "xyz.api.product",
+                "fields" : [ {
+                  "name" : "symbols",
+                  "type" : {
+                    "type" : "map",
+                    "values" : "xyz.api.product.Symbol"
+                  }
+                } ]
+              } ],
+              "messages" : {
+              }
+            }
+            DATUM,
+    ];
 
     // test data
 
-    public function testParsing()
+    public function test_parsing(): void
     {
         $cnt = count($this->prot_parseable);
         for ($i = 0; $i < $cnt; $i++) {
             try {
-                //print($i . " " . ($this->prot_parseable[$i]?"true":"false") . " \n");
+                // print($i . " " . ($this->prot_parseable[$i]?"true":"false") . " \n");
                 $prot = AvroProtocol::parse($this->prot_data[$i]);
-            } catch (AvroSchemaParseException $x) {
+            } catch (AvroSchemaParseException) {
                 // exception ok if we expected this protocol spec to be unparseable
                 $this->assertEquals(false, $this->prot_parseable[$i]);
             }

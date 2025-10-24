@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -23,141 +24,162 @@ use Apache\Avro\Avro;
 use Apache\Avro\AvroGMP;
 use Apache\Avro\Datum\AvroIOBinaryDecoder;
 use Apache\Avro\Datum\AvroIOBinaryEncoder;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class LongEncodingTest extends TestCase
 {
     public function setUp(): void
     {
+        parent::setUp();
         Avro::checkPlatform();
     }
 
-    /**
-     * @dataProvider bit_shift_provider
-     */
-    function test_bit_shift($val, $shift, $expected_lval, $expected_rval, $lbin, $rbin)
-    {
+    #[DataProvider('bit_shift_provider')]
+    public function test_bit_shift(
+        string $val,
+        int $shift,
+        string $expected_lval,
+        string $expected_rval,
+        string $lbin,
+        string $rbin
+    ): void {
 
         $this->skip_64_bit_test_on_32_bit();
 
-        $lval = (int) ((int) $val << $shift);
-        $this->assert_bit_shift($expected_lval, strval($lval),
-            'lshift', $lbin, decbin($lval));
+        $lval = ((int) $val << $shift);
+        $this->assert_bit_shift(
+            expected: $expected_lval,
+            actual: (string) $lval,
+            shift_type: 'lshift',
+            expected_binary: $lbin,
+            actual_binary: decbin($lval)
+        );
         $rval = ((int) $val >> $shift);
-        $this->assert_bit_shift($expected_rval, strval($rval),
-            'rshift', $rbin, decbin($rval));
+        $this->assert_bit_shift(
+            expected: $expected_rval,
+            actual: (string) $rval,
+            shift_type: 'rshift',
+            expected_binary: $rbin,
+            actual_binary: decbin($rval)
+        );
     }
 
-    function skip_64_bit_test_on_32_bit()
+    public function skip_64_bit_test_on_32_bit(): void
     {
         if (!self::is_64_bit()) {
             $this->markTestSkipped('Requires 64-bit platform');
         }
     }
 
-    static function is_64_bit()
+    public static function is_64_bit(): bool
     {
-        return (PHP_INT_SIZE == 8);
+        return PHP_INT_SIZE === 8;
     }
 
-    function assert_bit_shift(
+    public function assert_bit_shift(
         $expected,
         $actual,
         $shift_type,
         $expected_binary,
         $actual_binary
-    ) {
+    ): void {
         $this->assertEquals(
-            $expected, $actual,
-            sprintf("%s\nexpected: %d\n  actual: %d\nexpected b: %s\n  actual b: %s",
-                $shift_type, $expected, $actual,
-                $expected_binary, $actual_binary));
+            $expected,
+            $actual,
+            sprintf(
+                "%s\nexpected: %d\n  actual: %d\nexpected b: %s\n  actual b: %s",
+                $shift_type,
+                $expected,
+                $actual,
+                $expected_binary,
+                $actual_binary
+            )
+        );
     }
 
-    /**
-     * @dataProvider bit_shift_provider
-     */
-    function test_left_shift_gmp(
-        $val,
-        $shift,
-        $expected_lval,
-        $expected_rval,
-        $lbin,
-        $rbin
-    ) {
+    #[DataProvider('bit_shift_provider')]
+    public function test_left_shift_gmp(
+        string $val,
+        int $shift,
+        string $expected_lval,
+        string $expected_rval,
+        string $lbin,
+        string $rbin
+    ): void {
         $this->skip_if_no_gmp();
         $lval = gmp_strval(AvroGMP::shiftLeft($val, $shift));
-        $this->assert_bit_shift($expected_lval, $lval, 'gmp left shift',
-            $lbin, decbin((int) $lval));
+        $this->assert_bit_shift(
+            $expected_lval,
+            $lval,
+            'gmp left shift',
+            $lbin,
+            decbin((int) $lval)
+        );
     }
 
-    function skip_if_no_gmp()
+    public function skip_if_no_gmp(): void
     {
         if (!extension_loaded('gmp')) {
             $this->markTestSkipped('Requires GMP PHP Extension.');
         }
     }
 
-    /**
-     * @dataProvider bit_shift_provider
-     */
-    function test_right_shift_gmp(
-        $val,
-        $shift,
-        $expected_lval,
-        $expected_rval,
-        $lbin,
-        $rbin
-    ) {
+    #[DataProvider('bit_shift_provider')]
+    public function test_right_shift_gmp(
+        string $val,
+        int $shift,
+        string $expected_lval,
+        string $expected_rval,
+        string $lbin,
+        string $rbin
+    ): void {
         $this->skip_if_no_gmp();
         $rval = gmp_strval(AvroGMP::shiftRight($val, $shift));
-        $this->assert_bit_shift($expected_rval, $rval, 'gmp right shift',
-            $rbin, decbin((int) $rval));
+        $this->assert_bit_shift(
+            $expected_rval,
+            $rval,
+            'gmp right shift',
+            $rbin,
+            decbin((int) $rval)
+        );
     }
 
-    /**
-     * @dataProvider long_provider
-     */
-    function test_encode_long($val, $expected_bytes)
+    #[DataProvider('long_provider')]
+    public function test_encode_long(string $val, string $expected_bytes): void
     {
         $this->skip_64_bit_test_on_32_bit();
         $bytes = AvroIOBinaryEncoder::encodeLong($val);
         $this->assertEquals($expected_bytes, $bytes);
     }
 
-    /**
-     * @dataProvider long_provider
-     */
-    function test_gmp_encode_long($val, $expected_bytes)
+    #[DataProvider('long_provider')]
+    public function test_gmp_encode_long(string $val, string $expected_bytes): void
     {
         $this->skip_if_no_gmp();
         $bytes = AvroGMP::encodeLong($val);
         $this->assertEquals($expected_bytes, $bytes);
     }
 
-    /**
-     * @dataProvider long_provider
-     */
-    function test_decode_long_from_array($expected_val, $bytes)
+    #[DataProvider('long_provider')]
+    public function test_decode_long_from_array(string $expected_val, string $bytes): void
     {
         $this->skip_64_bit_test_on_32_bit();
-        $ary = array_map('ord', str_split($bytes));
+        $ary = array_map(ord(...), str_split($bytes));
         $val = AvroIOBinaryDecoder::decodeLongFromArray($ary);
         $this->assertEquals($expected_val, $val);
     }
 
-    /**
-     * @dataProvider long_provider
-     */
-    function test_gmp_decode_long_from_array($expected_val, $bytes)
+    #[DataProvider('long_provider')]
+    public function test_gmp_decode_long_from_array(string $expected_val, string $bytes): void
     {
         $this->skip_if_no_gmp();
-        $ary = array_map('ord', str_split($bytes));
+        $ary = array_map(ord(...), str_split($bytes));
         $val = AvroGMP::decodeLongFromArray($ary);
         $this->assertEquals($expected_val, $val);
     }
 
-    function long_provider()
+    public static function long_provider()
     {
         return [
             ['0', "\x0"],
@@ -170,12 +192,12 @@ class LongEncodingTest extends TestCase
             ['-7', "\xd"],
             ['-10000', "\x9f\x9c\x1"],
             ['-2147483648', "\xff\xff\xff\xff\xf"],
-            ['-98765432109', "\xd9\x94\x87\xee\xdf\x5"]
+            ['-98765432109', "\xd9\x94\x87\xee\xdf\x5"],
         ];
 
     }
 
-    function bit_shift_provider()
+    public static function bit_shift_provider()
     {
         // val shift lval rval
         return [
@@ -185,7 +207,7 @@ class LongEncodingTest extends TestCase
                 '0',
                 '0',
                 '0',
-                '0'
+                '0',
             ],
             [
                 '0',
@@ -193,7 +215,7 @@ class LongEncodingTest extends TestCase
                 '0',
                 '0',
                 '0',
-                '0'
+                '0',
             ],
             [
                 '0',
@@ -201,7 +223,7 @@ class LongEncodingTest extends TestCase
                 '0',
                 '0',
                 '0',
-                '0'
+                '0',
             ],
             [
                 '0',
@@ -209,7 +231,7 @@ class LongEncodingTest extends TestCase
                 '0',
                 '0',
                 '0',
-                '0'
+                '0',
             ],
             [
                 '1',
@@ -217,7 +239,7 @@ class LongEncodingTest extends TestCase
                 '1',
                 '1',
                 '1',
-                '1'
+                '1',
             ],
             [
                 '1',
@@ -225,7 +247,7 @@ class LongEncodingTest extends TestCase
                 '2',
                 '0',
                 '10',
-                '0'
+                '0',
             ],
             [
                 '1',
@@ -233,7 +255,7 @@ class LongEncodingTest extends TestCase
                 '128',
                 '0',
                 '10000000',
-                '0'
+                '0',
             ],
             [
                 '1',
@@ -241,7 +263,7 @@ class LongEncodingTest extends TestCase
                 '-9223372036854775808',
                 '0',
                 '1000000000000000000000000000000000000000000000000000000000000000',
-                '0'
+                '0',
             ],
             [
                 '100',
@@ -249,7 +271,7 @@ class LongEncodingTest extends TestCase
                 '100',
                 '100',
                 '1100100',
-                '1100100'
+                '1100100',
             ],
             [
                 '100',
@@ -257,7 +279,7 @@ class LongEncodingTest extends TestCase
                 '200',
                 '50',
                 '11001000',
-                '110010'
+                '110010',
             ],
             [
                 '100',
@@ -265,7 +287,7 @@ class LongEncodingTest extends TestCase
                 '12800',
                 '0',
                 '11001000000000',
-                '0'
+                '0',
             ],
             [
                 '100',
@@ -273,7 +295,7 @@ class LongEncodingTest extends TestCase
                 '0',
                 '0',
                 '0',
-                '0'
+                '0',
             ],
             [
                 '1000000',
@@ -281,7 +303,7 @@ class LongEncodingTest extends TestCase
                 '1000000',
                 '1000000',
                 '11110100001001000000',
-                '11110100001001000000'
+                '11110100001001000000',
             ],
             [
                 '1000000',
@@ -289,7 +311,7 @@ class LongEncodingTest extends TestCase
                 '2000000',
                 '500000',
                 '111101000010010000000',
-                '1111010000100100000'
+                '1111010000100100000',
             ],
             [
                 '1000000',
@@ -297,7 +319,7 @@ class LongEncodingTest extends TestCase
                 '128000000',
                 '7812',
                 '111101000010010000000000000',
-                '1111010000100'
+                '1111010000100',
             ],
             [
                 '1000000',
@@ -305,7 +327,7 @@ class LongEncodingTest extends TestCase
                 '0',
                 '0',
                 '0',
-                '0'
+                '0',
             ],
             [
                 '2147483647',
@@ -313,7 +335,7 @@ class LongEncodingTest extends TestCase
                 '2147483647',
                 '2147483647',
                 '1111111111111111111111111111111',
-                '1111111111111111111111111111111'
+                '1111111111111111111111111111111',
             ],
             [
                 '2147483647',
@@ -321,7 +343,7 @@ class LongEncodingTest extends TestCase
                 '4294967294',
                 '1073741823',
                 '11111111111111111111111111111110',
-                '111111111111111111111111111111'
+                '111111111111111111111111111111',
             ],
             [
                 '2147483647',
@@ -329,7 +351,7 @@ class LongEncodingTest extends TestCase
                 '274877906816',
                 '16777215',
                 '11111111111111111111111111111110000000',
-                '111111111111111111111111'
+                '111111111111111111111111',
             ],
             [
                 '2147483647',
@@ -337,7 +359,7 @@ class LongEncodingTest extends TestCase
                 '-9223372036854775808',
                 '0',
                 '1000000000000000000000000000000000000000000000000000000000000000',
-                '0'
+                '0',
             ],
             [
                 '10000000000',
@@ -345,7 +367,7 @@ class LongEncodingTest extends TestCase
                 '10000000000',
                 '10000000000',
                 '1001010100000010111110010000000000',
-                '1001010100000010111110010000000000'
+                '1001010100000010111110010000000000',
             ],
             [
                 '10000000000',
@@ -353,7 +375,7 @@ class LongEncodingTest extends TestCase
                 '20000000000',
                 '5000000000',
                 '10010101000000101111100100000000000',
-                '100101010000001011111001000000000'
+                '100101010000001011111001000000000',
             ],
             [
                 '10000000000',
@@ -361,7 +383,7 @@ class LongEncodingTest extends TestCase
                 '1280000000000',
                 '78125000',
                 '10010101000000101111100100000000000000000',
-                '100101010000001011111001000'
+                '100101010000001011111001000',
             ],
             [
                 '10000000000',
@@ -369,7 +391,7 @@ class LongEncodingTest extends TestCase
                 '0',
                 '0',
                 '0',
-                '0'
+                '0',
             ],
             [
                 '9223372036854775807',
@@ -377,7 +399,7 @@ class LongEncodingTest extends TestCase
                 '9223372036854775807',
                 '9223372036854775807',
                 '111111111111111111111111111111111111111111111111111111111111111',
-                '111111111111111111111111111111111111111111111111111111111111111'
+                '111111111111111111111111111111111111111111111111111111111111111',
             ],
             [
                 '9223372036854775807',
@@ -385,7 +407,7 @@ class LongEncodingTest extends TestCase
                 '-2',
                 '4611686018427387903',
                 '1111111111111111111111111111111111111111111111111111111111111110',
-                '11111111111111111111111111111111111111111111111111111111111111'
+                '11111111111111111111111111111111111111111111111111111111111111',
             ],
             [
                 '9223372036854775807',
@@ -393,7 +415,7 @@ class LongEncodingTest extends TestCase
                 '-128',
                 '72057594037927935',
                 '1111111111111111111111111111111111111111111111111111111110000000',
-                '11111111111111111111111111111111111111111111111111111111'
+                '11111111111111111111111111111111111111111111111111111111',
             ],
             [
                 '9223372036854775807',
@@ -401,7 +423,7 @@ class LongEncodingTest extends TestCase
                 '-9223372036854775808',
                 '0',
                 '1000000000000000000000000000000000000000000000000000000000000000',
-                '0'
+                '0',
             ],
             [
                 '-1',
@@ -409,7 +431,7 @@ class LongEncodingTest extends TestCase
                 '-1',
                 '-1',
                 '1111111111111111111111111111111111111111111111111111111111111111',
-                '1111111111111111111111111111111111111111111111111111111111111111'
+                '1111111111111111111111111111111111111111111111111111111111111111',
             ],
             [
                 '-1',
@@ -417,7 +439,7 @@ class LongEncodingTest extends TestCase
                 '-2',
                 '-1',
                 '1111111111111111111111111111111111111111111111111111111111111110',
-                '1111111111111111111111111111111111111111111111111111111111111111'
+                '1111111111111111111111111111111111111111111111111111111111111111',
             ],
             [
                 '-1',
@@ -425,7 +447,7 @@ class LongEncodingTest extends TestCase
                 '-128',
                 '-1',
                 '1111111111111111111111111111111111111111111111111111111110000000',
-                '1111111111111111111111111111111111111111111111111111111111111111'
+                '1111111111111111111111111111111111111111111111111111111111111111',
             ],
             [
                 '-1',
@@ -433,7 +455,7 @@ class LongEncodingTest extends TestCase
                 '-9223372036854775808',
                 '-1',
                 '1000000000000000000000000000000000000000000000000000000000000000',
-                '1111111111111111111111111111111111111111111111111111111111111111'
+                '1111111111111111111111111111111111111111111111111111111111111111',
             ],
             [
                 '-100',
@@ -441,7 +463,7 @@ class LongEncodingTest extends TestCase
                 '-100',
                 '-100',
                 '1111111111111111111111111111111111111111111111111111111110011100',
-                '1111111111111111111111111111111111111111111111111111111110011100'
+                '1111111111111111111111111111111111111111111111111111111110011100',
             ],
             [
                 '-100',
@@ -449,7 +471,7 @@ class LongEncodingTest extends TestCase
                 '-200',
                 '-50',
                 '1111111111111111111111111111111111111111111111111111111100111000',
-                '1111111111111111111111111111111111111111111111111111111111001110'
+                '1111111111111111111111111111111111111111111111111111111111001110',
             ],
             [
                 '-100',
@@ -457,7 +479,7 @@ class LongEncodingTest extends TestCase
                 '-12800',
                 '-1',
                 '1111111111111111111111111111111111111111111111111100111000000000',
-                '1111111111111111111111111111111111111111111111111111111111111111'
+                '1111111111111111111111111111111111111111111111111111111111111111',
             ],
             [
                 '-100',
@@ -465,7 +487,7 @@ class LongEncodingTest extends TestCase
                 '0',
                 '-1',
                 '0',
-                '1111111111111111111111111111111111111111111111111111111111111111'
+                '1111111111111111111111111111111111111111111111111111111111111111',
             ],
             [
                 '-1000000',
@@ -473,7 +495,7 @@ class LongEncodingTest extends TestCase
                 '-1000000',
                 '-1000000',
                 '1111111111111111111111111111111111111111111100001011110111000000',
-                '1111111111111111111111111111111111111111111100001011110111000000'
+                '1111111111111111111111111111111111111111111100001011110111000000',
             ],
             [
                 '-1000000',
@@ -481,7 +503,7 @@ class LongEncodingTest extends TestCase
                 '-2000000',
                 '-500000',
                 '1111111111111111111111111111111111111111111000010111101110000000',
-                '1111111111111111111111111111111111111111111110000101111011100000'
+                '1111111111111111111111111111111111111111111110000101111011100000',
             ],
             [
                 '-1000000',
@@ -489,7 +511,7 @@ class LongEncodingTest extends TestCase
                 '-128000000',
                 '-7813',
                 '1111111111111111111111111111111111111000010111101110000000000000',
-                '1111111111111111111111111111111111111111111111111110000101111011'
+                '1111111111111111111111111111111111111111111111111110000101111011',
             ],
             [
                 '-1000000',
@@ -497,7 +519,7 @@ class LongEncodingTest extends TestCase
                 '0',
                 '-1',
                 '0',
-                '1111111111111111111111111111111111111111111111111111111111111111'
+                '1111111111111111111111111111111111111111111111111111111111111111',
             ],
             [
                 '-2147483648',
@@ -505,7 +527,7 @@ class LongEncodingTest extends TestCase
                 '-2147483648',
                 '-2147483648',
                 '1111111111111111111111111111111110000000000000000000000000000000',
-                '1111111111111111111111111111111110000000000000000000000000000000'
+                '1111111111111111111111111111111110000000000000000000000000000000',
             ],
             [
                 '-2147483648',
@@ -513,7 +535,7 @@ class LongEncodingTest extends TestCase
                 '-4294967296',
                 '-1073741824',
                 '1111111111111111111111111111111100000000000000000000000000000000',
-                '1111111111111111111111111111111111000000000000000000000000000000'
+                '1111111111111111111111111111111111000000000000000000000000000000',
             ],
             [
                 '-2147483648',
@@ -521,7 +543,7 @@ class LongEncodingTest extends TestCase
                 '-274877906944',
                 '-16777216',
                 '1111111111111111111111111100000000000000000000000000000000000000',
-                '1111111111111111111111111111111111111111000000000000000000000000'
+                '1111111111111111111111111111111111111111000000000000000000000000',
             ],
             [
                 '-2147483648',
@@ -529,7 +551,7 @@ class LongEncodingTest extends TestCase
                 '0',
                 '-1',
                 '0',
-                '1111111111111111111111111111111111111111111111111111111111111111'
+                '1111111111111111111111111111111111111111111111111111111111111111',
             ],
             [
                 '-10000000000',
@@ -537,7 +559,7 @@ class LongEncodingTest extends TestCase
                 '-10000000000',
                 '-10000000000',
                 '1111111111111111111111111111110110101011111101000001110000000000',
-                '1111111111111111111111111111110110101011111101000001110000000000'
+                '1111111111111111111111111111110110101011111101000001110000000000',
             ],
             [
                 '-10000000000',
@@ -545,7 +567,7 @@ class LongEncodingTest extends TestCase
                 '-20000000000',
                 '-5000000000',
                 '1111111111111111111111111111101101010111111010000011100000000000',
-                '1111111111111111111111111111111011010101111110100000111000000000'
+                '1111111111111111111111111111111011010101111110100000111000000000',
             ],
             [
                 '-10000000000',
@@ -553,7 +575,7 @@ class LongEncodingTest extends TestCase
                 '-1280000000000',
                 '-78125000',
                 '1111111111111111111111101101010111111010000011100000000000000000',
-                '1111111111111111111111111111111111111011010101111110100000111000'
+                '1111111111111111111111111111111111111011010101111110100000111000',
             ],
             [
                 '-10000000000',
@@ -561,7 +583,7 @@ class LongEncodingTest extends TestCase
                 '0',
                 '-1',
                 '0',
-                '1111111111111111111111111111111111111111111111111111111111111111'
+                '1111111111111111111111111111111111111111111111111111111111111111',
             ],
             [
                 '-9223372036854775808',
@@ -569,7 +591,7 @@ class LongEncodingTest extends TestCase
                 '-9223372036854775808',
                 '-9223372036854775808',
                 '1000000000000000000000000000000000000000000000000000000000000000',
-                '1000000000000000000000000000000000000000000000000000000000000000'
+                '1000000000000000000000000000000000000000000000000000000000000000',
             ],
             [
                 '-9223372036854775808',
@@ -577,7 +599,7 @@ class LongEncodingTest extends TestCase
                 '0',
                 '-4611686018427387904',
                 '0',
-                '1100000000000000000000000000000000000000000000000000000000000000'
+                '1100000000000000000000000000000000000000000000000000000000000000',
             ],
             [
                 '-9223372036854775808',
@@ -585,7 +607,7 @@ class LongEncodingTest extends TestCase
                 '0',
                 '-72057594037927936',
                 '0',
-                '1111111100000000000000000000000000000000000000000000000000000000'
+                '1111111100000000000000000000000000000000000000000000000000000000',
             ],
             [
                 '-9223372036854775808',
@@ -593,7 +615,7 @@ class LongEncodingTest extends TestCase
                 '0',
                 '-1',
                 '0',
-                '1111111111111111111111111111111111111111111111111111111111111111'
+                '1111111111111111111111111111111111111111111111111111111111111111',
             ],
         ];
     }

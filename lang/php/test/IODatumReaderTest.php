@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -30,41 +31,42 @@ use PHPUnit\Framework\TestCase;
 
 class IODatumReaderTest extends TestCase
 {
-    public function testSchemaMatching(): void
+    public function test_schema_matching(): void
     {
         $writers_schema = <<<JSON
-        {
-          "type": "map",
-          "values": "bytes"
-        }
-        JSON;
+            {
+              "type": "map",
+              "values": "bytes"
+            }
+            JSON;
         $readers_schema = $writers_schema;
         $this->assertTrue(AvroIODatumReader::schemasMatch(
-                AvroSchema::parse($writers_schema),
-            AvroSchema::parse($readers_schema)));
+            AvroSchema::parse($writers_schema),
+            AvroSchema::parse($readers_schema)
+        ));
     }
 
     public function test_aliased(): void
     {
         $writers_schema = AvroSchema::parse(
             <<<JSON
-            {
-              "type": "record",
-              "name": "Rec1",
-              "fields": [
                 {
-                  "name": "field1",
-                  "type": "int"
+                  "type": "record",
+                  "name": "Rec1",
+                  "fields": [
+                    {
+                      "name": "field1",
+                      "type": "int"
+                    }
+                  ]
                 }
-              ]
-            }
-            JSON
+                JSON
         );
-    $readers_schema = AvroSchema::parse(<<<SCHEMA
-      {"type":"record", "name":"Rec2", "aliases":["Rec1"], "fields":[
-        {"name":"field2", "aliases":["field1"], "type":"int"}
-      ]}
-    SCHEMA);
+        $readers_schema = AvroSchema::parse(<<<SCHEMA
+              {"type":"record", "name":"Rec2", "aliases":["Rec1"], "fields":[
+                {"name":"field2", "aliases":["field1"], "type":"int"}
+              ]}
+            SCHEMA);
 
         $io = new AvroStringIO();
         $writer = new AvroIODatumWriter();
@@ -81,7 +83,7 @@ class IODatumReaderTest extends TestCase
         $this->assertEquals(['field2' => 1], $record);
     }
 
-    public function testRecordNullField(): void
+    public function test_record_null_field(): void
     {
         $schema_json = <<<JSON
             {
@@ -95,7 +97,7 @@ class IODatumReaderTest extends TestCase
             JSON;
 
         $schema = AvroSchema::parse($schema_json);
-        $datum = array("one" => 1);
+        $datum = ["one" => 1];
 
         $io = new AvroStringIO();
         $writer = new AvroIODatumWriter($schema);
@@ -103,25 +105,25 @@ class IODatumReaderTest extends TestCase
         $writer->write($datum, $encoder);
         $bin = $io->string();
 
-        $this->assertSame('0200', bin2hex($bin));
+        $this->assertSame('0200', bin2hex((string) $bin));
     }
 
-    public function testRecordFieldWithDefault(): void
+    public function test_record_field_with_default(): void
     {
         $schema = AvroSchema::parse(
             <<<JSON
-            {
-              "name": "RecordWithDefaultValue",
-              "type": "record",
-              "fields": [
                 {
-                  "name": "field1",
-                  "type": "string",
-                  "default": "default"
+                  "name": "RecordWithDefaultValue",
+                  "type": "record",
+                  "fields": [
+                    {
+                      "name": "field1",
+                      "type": "string",
+                      "default": "default"
+                    }
+                  ]
                 }
-              ]
-            }
-            JSON
+                JSON
         );
 
         $io = new AvroStringIO();
@@ -139,98 +141,98 @@ class IODatumReaderTest extends TestCase
         $this->assertEquals(['field1' => "foobar"], $record);
     }
 
-    public function testRecordWithLogicalTypes(): void
+    public function test_record_with_logical_types(): void
     {
         $schema = AvroSchema::parse(
             <<<JSON
-            {
-              "name": "RecordWithLogicalTypes",
-              "type": "record",
-              "fields": [
                 {
-                  "name": "decimal_field",
-                  "type": "bytes",
-                  "logicalType": "decimal",
-                  "precision": 4,
-                  "scale": 2
-                },
-                {
-                  "name": "uuid_field",
-                  "type": "string",
-                  "logicalType": "uuid"
-                },
-                {
-                  "name": "date_field",
-                  "type": {
-                    "type": "int",
-                    "logicalType": "date"
-                  }
-                },
-                {
-                  "name": "time_millis_field",
-                  "type": {
-                    "type": "int",
-                    "logicalType": "time-millis"
-                  }
-                },
-                {
-                  "name": "time_micros_field",
-                  "type": {
-                    "type": "long",
-                    "logicalType": "time-micros"
-                  }
-                },
-                {
-                  "name": "timestamp_millis_field",
-                  "type": {
-                    "type": "long",
-                    "logicalType": "timestamp-millis"
-                  }
-                },
-                {
-                  "name": "timestamp_micros_field",
-                  "type": {
-                    "type": "long",
-                    "logicalType": "timestamp-micros"
-                  }
-                },
-                {
-                  "name": "local_timestamp_millis_field",
-                  "type": {
-                    "type": "long",
-                    "logicalType": "local-timestamp-millis"
-                 }
-                },
-                {
-                  "name": "local_timestamp_micros_field",
-                  "type": {
-                    "type": "long",
-                    "logicalType": "local-timestamp-micros"
-                 }
-                },
-                {
-                  "name": "duration_field",
-                  "type": {
-                    "name": "duration_field",
-                    "type": "fixed",
-                    "size": 12,
-                    "logicalType": "duration"
-                  }
-                },
-                {
-                  "name": "decimal_fixed_field",
-                  "type": {
-                    "name": "decimal_fixed_field",
-                    "type": "fixed",
-                    "logicalType": "decimal",
-                    "size": 3,
-                    "precision": 4,
-                    "scale": 2
-                  }
+                  "name": "RecordWithLogicalTypes",
+                  "type": "record",
+                  "fields": [
+                    {
+                      "name": "decimal_field",
+                      "type": "bytes",
+                      "logicalType": "decimal",
+                      "precision": 4,
+                      "scale": 2
+                    },
+                    {
+                      "name": "uuid_field",
+                      "type": "string",
+                      "logicalType": "uuid"
+                    },
+                    {
+                      "name": "date_field",
+                      "type": {
+                        "type": "int",
+                        "logicalType": "date"
+                      }
+                    },
+                    {
+                      "name": "time_millis_field",
+                      "type": {
+                        "type": "int",
+                        "logicalType": "time-millis"
+                      }
+                    },
+                    {
+                      "name": "time_micros_field",
+                      "type": {
+                        "type": "long",
+                        "logicalType": "time-micros"
+                      }
+                    },
+                    {
+                      "name": "timestamp_millis_field",
+                      "type": {
+                        "type": "long",
+                        "logicalType": "timestamp-millis"
+                      }
+                    },
+                    {
+                      "name": "timestamp_micros_field",
+                      "type": {
+                        "type": "long",
+                        "logicalType": "timestamp-micros"
+                      }
+                    },
+                    {
+                      "name": "local_timestamp_millis_field",
+                      "type": {
+                        "type": "long",
+                        "logicalType": "local-timestamp-millis"
+                     }
+                    },
+                    {
+                      "name": "local_timestamp_micros_field",
+                      "type": {
+                        "type": "long",
+                        "logicalType": "local-timestamp-micros"
+                     }
+                    },
+                    {
+                      "name": "duration_field",
+                      "type": {
+                        "name": "duration_field",
+                        "type": "fixed",
+                        "size": 12,
+                        "logicalType": "duration"
+                      }
+                    },
+                    {
+                      "name": "decimal_fixed_field",
+                      "type": {
+                        "name": "decimal_fixed_field",
+                        "type": "fixed",
+                        "logicalType": "decimal",
+                        "size": 3,
+                        "precision": 4,
+                        "scale": 2
+                      }
+                    }
+                  ]
                 }
-              ]
-            }
-            JSON
+                JSON
         );
 
         $io = new AvroStringIO();
