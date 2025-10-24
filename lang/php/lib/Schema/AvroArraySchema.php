@@ -70,15 +70,12 @@ class AvroArraySchema extends AvroSchema
      * @returns AvroName|AvroSchema named schema name or AvroSchema
      *          of this array schema's elements.
      */
-    public function items()
+    public function items(): AvroName|AvroSchema
     {
         return $this->items;
     }
 
-    /**
-     * @returns mixed
-     */
-    public function toAvro()
+    public function toAvro(): string|array
     {
         $avro = parent::toAvro();
         $avro[AvroSchema::ITEMS_ATTR] = $this->is_items_schema_from_schemata

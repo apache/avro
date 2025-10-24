@@ -29,29 +29,20 @@ class AvroRecordSchema extends AvroNamedSchema
      * @var AvroNamedSchema[] array of AvroNamedSchema field definitions of
      *                   this AvroRecordSchema
      */
-    private $fields;
+    private array $fields;
     /**
      * @var array map of field names to field objects.
      * @internal Not called directly. Memoization of AvroRecordSchema->fieldsHash()
      */
-    private $fieldsHash;
+    private ?array $fieldsHash = null;
 
-    /**
-     * @param AvroName $name
-     * @param string $namespace
-     * @param string $doc
-     * @param array $fields
-     * @param AvroNamedSchemata &$schemata
-     * @param string $schema_type schema type name
-     * @throws AvroSchemaParseException
-     */
     public function __construct(
-        $name,
-        $doc,
-        $fields,
-        &$schemata = null,
-        $schema_type = AvroSchema::RECORD_SCHEMA,
-        $aliases = null
+        AvroName $name,
+        ?string $doc,
+        ?array $fields,
+        ?AvroNamedSchemata &$schemata = null,
+        string $schema_type = AvroSchema::RECORD_SCHEMA,
+        ?array $aliases = null
     ) {
         if (is_null($fields)) {
             throw new AvroSchemaParseException(
@@ -59,7 +50,7 @@ class AvroRecordSchema extends AvroNamedSchema
             );
         }
 
-        if (AvroSchema::REQUEST_SCHEMA == $schema_type) {
+        if (AvroSchema::REQUEST_SCHEMA === $schema_type) {
             parent::__construct($schema_type, $name);
         } else {
             parent::__construct($schema_type, $name, $doc, $schemata, $aliases);
@@ -71,12 +62,12 @@ class AvroRecordSchema extends AvroNamedSchema
 
     /**
      * @param mixed $field_data
-     * @param string $default_namespace namespace of enclosing schema
+     * @param null|string $default_namespace namespace of enclosing schema
      * @param AvroNamedSchemata &$schemata
      * @returns AvroField[]
      * @throws AvroSchemaParseException
      */
-    public static function parseFields($field_data, $default_namespace, &$schemata)
+    public static function parseFields(array $field_data, ?string $default_namespace, &$schemata): array
     {
         $fields = [];
         $field_names = [];
@@ -109,12 +100,10 @@ class AvroRecordSchema extends AvroNamedSchema
                 )
             ) {
                 $is_schema_from_schemata = true;
+            } else if (is_string($type) && self::isPrimitiveType($type)) {
+                $field_schema = self::subparse($field, $default_namespace, $schemata);
             } else {
-                if (self::isPrimitiveType($type)) {
-                    $field_schema = self::subparse($field, $default_namespace, $schemata);
-                } else {
-                    $field_schema = self::subparse($type, $default_namespace, $schemata);
-                }
+                $field_schema = self::subparse($type, $default_namespace, $schemata);
             }
 
             $new_field = new AvroField(
@@ -138,10 +127,7 @@ class AvroRecordSchema extends AvroNamedSchema
         return $fields;
     }
 
-    /**
-     * @returns mixed
-     */
-    public function toAvro()
+    public function toAvro(): string|array
     {
         $avro = parent::toAvro();
 
@@ -162,16 +148,16 @@ class AvroRecordSchema extends AvroNamedSchema
     /**
      * @returns array the schema definitions of the fields of this AvroRecordSchema
      */
-    public function fields()
+    public function fields(): array
     {
         return $this->fields;
     }
 
     /**
-     * @returns array a hash table of the fields of this AvroRecordSchema fields
+     * @return array a hash table of the fields of this AvroRecordSchema fields
      *          keyed by each field's name
      */
-    public function fieldsHash()
+    public function fieldsHash(): array
     {
         if (is_null($this->fieldsHash)) {
             $hash = [];
@@ -183,7 +169,7 @@ class AvroRecordSchema extends AvroNamedSchema
         return $this->fieldsHash;
     }
 
-    public function fieldsByAlias()
+    public function fieldsByAlias(): array
     {
         $hash = [];
         foreach ($this->fields as $field) {

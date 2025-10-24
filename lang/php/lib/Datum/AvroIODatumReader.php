@@ -22,9 +22,11 @@ namespace Apache\Avro\Datum;
 
 use Apache\Avro\AvroException;
 use Apache\Avro\Datum\Type\AvroDuration;
+use Apache\Avro\Schema\AvroFixedSchema;
 use Apache\Avro\Schema\AvroLogicalType;
 use Apache\Avro\Schema\AvroName;
 use Apache\Avro\Schema\AvroSchema;
+use Apache\Avro\Schema\AvroUnionSchema;
 
 /**
  * Handles schema-specifc reading of data from the decoder.
@@ -61,14 +63,15 @@ class AvroIODatumReader
         );
     }
 
-    /**
-     * @returns mixed
-     */
-    public function readData(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
-    {
+    public function readData(
+        AvroSchema $writers_schema,
+        AvroSchema $readers_schema,
+        AvroIOBinaryDecoder $decoder
+    ): mixed {
         // Schema resolution: reader's schema is a union, writer's schema is not
         if (
-            AvroSchema::UNION_SCHEMA === $readers_schema->type()
+            $readers_schema instanceof AvroUnionSchema
+            && AvroSchema::UNION_SCHEMA === $readers_schema->type()
             && AvroSchema::UNION_SCHEMA !== $writers_schema->type()
         ) {
             foreach ($readers_schema->schemas() as $schema) {
@@ -79,44 +82,28 @@ class AvroIODatumReader
             throw new AvroIOSchemaMatchException($writers_schema, $readers_schema);
         }
 
-        switch ($writers_schema->type()) {
-            case AvroSchema::NULL_TYPE:
-                return $decoder->readNull();
-            case AvroSchema::BOOLEAN_TYPE:
-                return $decoder->readBoolean();
-            case AvroSchema::INT_TYPE:
-                return $decoder->readInt();
-            case AvroSchema::LONG_TYPE:
-                return $decoder->readLong();
-            case AvroSchema::FLOAT_TYPE:
-                return $decoder->readFloat();
-            case AvroSchema::DOUBLE_TYPE:
-                return $decoder->readDouble();
-            case AvroSchema::STRING_TYPE:
-                return $decoder->readString();
-            case AvroSchema::BYTES_TYPE:
-                $bytes = $decoder->readBytes();
-                return $this->readBytes($writers_schema, $readers_schema, $bytes);
-            case AvroSchema::ARRAY_SCHEMA:
-                return $this->readArray($writers_schema, $readers_schema, $decoder);
-            case AvroSchema::MAP_SCHEMA:
-                return $this->readMap($writers_schema, $readers_schema, $decoder);
-            case AvroSchema::UNION_SCHEMA:
-                return $this->readUnion($writers_schema, $readers_schema, $decoder);
-            case AvroSchema::ENUM_SCHEMA:
-                return $this->readEnum($writers_schema, $readers_schema, $decoder);
-            case AvroSchema::FIXED_SCHEMA:
-                return $this->readFixed($writers_schema, $readers_schema, $decoder);
-            case AvroSchema::RECORD_SCHEMA:
-            case AvroSchema::ERROR_SCHEMA:
-            case AvroSchema::REQUEST_SCHEMA:
-                return $this->readRecord($writers_schema, $readers_schema, $decoder);
-            default:
-                throw new AvroException(sprintf(
-                    "Cannot read unknown schema type: %s",
-                    $writers_schema->type()
-                ));
-        }
+        return match ($writers_schema->type()) {
+            AvroSchema::NULL_TYPE => $decoder->readNull(),
+            AvroSchema::BOOLEAN_TYPE => $decoder->readBoolean(),
+            AvroSchema::INT_TYPE => $decoder->readInt(),
+            AvroSchema::LONG_TYPE => $decoder->readLong(),
+            AvroSchema::FLOAT_TYPE => $decoder->readFloat(),
+            AvroSchema::DOUBLE_TYPE => $decoder->readDouble(),
+            AvroSchema::STRING_TYPE => $decoder->readString(),
+            AvroSchema::BYTES_TYPE => $this->readBytes($writers_schema, $readers_schema, $decoder->readBytes()),
+            AvroSchema::ARRAY_SCHEMA => $this->readArray($writers_schema, $readers_schema, $decoder),
+            AvroSchema::MAP_SCHEMA => $this->readMap($writers_schema, $readers_schema, $decoder),
+            AvroSchema::UNION_SCHEMA => $this->readUnion($writers_schema, $readers_schema, $decoder),
+            AvroSchema::ENUM_SCHEMA => $this->readEnum($writers_schema, $readers_schema, $decoder),
+            AvroSchema::FIXED_SCHEMA => $this->readFixed($writers_schema, $readers_schema, $decoder),
+            AvroSchema::RECORD_SCHEMA,
+            AvroSchema::ERROR_SCHEMA,
+            AvroSchema::REQUEST_SCHEMA => $this->readRecord($writers_schema, $readers_schema, $decoder),
+            default => throw new AvroException(sprintf(
+                "Cannot read unknown schema type: %s",
+                $writers_schema->type()
+            )),
+        };
     }
 
     /**
@@ -389,13 +376,11 @@ class AvroIODatumReader
         return $record;
     }
 
-    /**
-     * @param AvroSchema $writers_schema
-     * @param AvroIOBinaryDecoder $decoder
-     */
-    public static function skipData($writers_schema, $decoder)
-    {
-        return match ($writers_schema->type()) {
+    public static function skipData(
+        AvroSchema $writers_schema,
+        AvroIOBinaryDecoder $decoder
+    ): void {
+        match ($writers_schema->type()) {
             AvroSchema::NULL_TYPE => $decoder->skipNull(),
             AvroSchema::BOOLEAN_TYPE => $decoder->skipBoolean(),
             AvroSchema::INT_TYPE => $decoder->skipInt(),

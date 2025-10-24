@@ -107,10 +107,7 @@ class AvroEnumSchema extends AvroNamedSchema
         throw new AvroException(sprintf("Invalid symbol value '%s'", $symbol));
     }
 
-    /**
-     * @returns mixed
-     */
-    public function toAvro()
+    public function toAvro(): string|array
     {
         $avro = parent::toAvro();
         $avro[AvroSchema::SYMBOLS_ATTR] = $this->symbols;

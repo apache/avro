@@ -27,21 +27,21 @@ use Apache\Avro\Schema\AvroSchema;
 
 class AvroProtocolMessage
 {
-    /**
-     * @var AvroRecordSchema $request
-     */
-    public $request;
+    public AvroRecordSchema $request;
 
     public $response;
 
-    public function __construct(public $name, $avro, $protocol)
-    {
+    public function __construct(
+        public string $name,
+        $avro,
+        $protocol
+    ) {
         $this->request = new AvroRecordSchema(
-            new AvroName($this->name, null, $protocol->namespace),
-            null,
-            $avro['request'],
-            $protocol->schemata,
-            AvroSchema::REQUEST_SCHEMA
+            name: new AvroName($this->name, null, $protocol->namespace),
+            doc: null,
+            fields: $avro['request'],
+            schemata: $protocol->schemata,
+            schema_type: AvroSchema::REQUEST_SCHEMA
         );
 
         if (array_key_exists('response', $avro)) {
@@ -50,7 +50,7 @@ class AvroProtocolMessage
                 $protocol->namespace,
                 $protocol->namespace
             ));
-            if ($this->response == null) {
+            if (is_null($this->response)) {
                 $this->response = new AvroPrimitiveSchema($avro['response']);
             }
         }

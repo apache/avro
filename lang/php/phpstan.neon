@@ -1,0 +1,7 @@
+parameters:
+	level: 1
+	paths:
+		- lib
+		- test
+	bootstrapFiles:
+	    - test/test_helper.php

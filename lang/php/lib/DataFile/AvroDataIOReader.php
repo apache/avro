@@ -25,6 +25,7 @@ use Apache\Avro\AvroIO;
 use Apache\Avro\AvroUtil;
 use Apache\Avro\Datum\AvroIOBinaryDecoder;
 use Apache\Avro\Datum\AvroIODatumReader;
+use Apache\Avro\IO\AvroIOException;
 use Apache\Avro\IO\AvroStringIO;
 use Apache\Avro\Schema\AvroSchema;
 
@@ -35,31 +36,24 @@ use Apache\Avro\Schema\AvroSchema;
  */
 class AvroDataIOReader
 {
-    /**
-     * @var string
-     */
-    public $sync_marker;
+    public string $sync_marker;
     /**
      * @var array object container metadata
      */
-    public $metadata;
-    /**
-     * @var AvroIO
-     */
-    private $io;
-    /**
-     * @var AvroIOBinaryDecoder
-     */
-    private $decoder;
+    public array $metadata;
+
+    private AvroIO $io;
+
+    private AvroIOBinaryDecoder $decoder;
     /**
      * @var int count of items in block
      */
-    private $block_count;
+    private int $block_count;
 
     /**
-     * @var compression codec
+     * @var string compression codec
      */
-    private $codec;
+    private string $codec;
 
     /**
      * @param AvroIO $io source from which to read
@@ -70,13 +64,10 @@ class AvroDataIOReader
      *                             is not supported
      * @uses readHeader()
      */
-    public function __construct($io, private $datum_reader)
-    {
-
-        if (!($io instanceof AvroIO)) {
-            throw new AvroDataIOException('io must be instance of AvroIO');
-        }
-
+    public function __construct(
+        AvroIO $io,
+        private AvroIODatumReader $datum_reader
+    ) {
         $this->io = $io;
         $this->decoder = new AvroIOBinaryDecoder($this->io);
         $this->readHeader();
@@ -99,7 +90,7 @@ class AvroDataIOReader
      * Reads header of object container
      * @throws AvroDataIOException if the file is not an Avro data file.
      */
-    private function readHeader()
+    private function readHeader(): void
     {
         $this->seek(0, AvroIO::SEEK_SET);
 
@@ -132,7 +123,7 @@ class AvroDataIOReader
     /**
      * @uses AvroIO::seek()
      */
-    private function seek($offset, $whence)
+    private function seek($offset, $whence): bool
     {
         return $this->io->seek($offset, $whence);
     }
@@ -140,16 +131,18 @@ class AvroDataIOReader
     /**
      * @uses AvroIO::read()
      */
-    private function read($len)
+    private function read($len): string
     {
         return $this->io->read($len);
     }
 
     /**
+     * @return array of data from object container.
+     * @throws AvroException
+     * @throws AvroIOException
      * @internal Would be nice to implement data() as an iterator, I think
-     * @returns array of data from object container.
      */
-    public function data()
+    public function data(): array
     {
         $data = [];
         $decoder = $this->decoder;
@@ -207,12 +200,12 @@ class AvroDataIOReader
     /**
      * @uses AvroIO::isEof()
      */
-    private function isEof()
+    private function isEof(): bool
     {
         return $this->io->isEof();
     }
 
-    private function skipSync()
+    private function skipSync(): bool
     {
         $proposed_sync_marker = $this->read(AvroDataIO::SYNC_SIZE);
         if ($proposed_sync_marker != $this->sync_marker) {
@@ -227,7 +220,7 @@ class AvroDataIOReader
      * and the length in bytes of the block)
      * @returns int length in bytes of the block.
      */
-    private function readBlockHeader()
+    private function readBlockHeader(): string|int
     {
         $this->block_count = $this->decoder->readLong();
         return $this->decoder->readLong();
@@ -237,7 +230,7 @@ class AvroDataIOReader
      * Closes this writer (and its AvroIO object.)
      * @uses AvroIO::close()
      */
-    public function close()
+    public function close(): bool
     {
         return $this->io->close();
     }

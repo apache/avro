@@ -144,10 +144,7 @@ class AvroField extends AvroSchema
         return in_array($order, self::$validFieldSortOrders);
     }
 
-    /**
-     * @returns mixed
-     */
-    public function toAvro()
+    public function toAvro(): string|array
     {
         $avro = [AvroField::FIELD_NAME_ATTR => $this->name];
 

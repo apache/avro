@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+declare(strict_types=1);
+
 namespace Apache\Avro\Tests;
 
 use Apache\Avro\DataFile\AvroDataIO;
@@ -26,7 +28,7 @@ use PHPUnit\Framework\TestCase;
 class DataFileTest extends TestCase
 {
     public const REMOVE_DATA_FILES = true;
-    private $data_files;
+    private array $dataFiles = [];
 
     protected function setUp(): void
     {
@@ -34,6 +36,7 @@ class DataFileTest extends TestCase
             mkdir(TEST_TEMP_DIR);
         }
         $this->remove_data_files();
+        $this->dataFiles = [];
     }
 
     protected function tearDown(): void
@@ -62,9 +65,9 @@ class DataFileTest extends TestCase
         }
     }
 
-    public static function current_timestamp()
+    public static function current_timestamp(): string
     {
-        return date_format(new \DateTime(), 'Y-m-d H:i:s');
+        return (new \DateTime())->format('Y-m-d H:i:s');
     }
 
     public function test_write_read_null_round_trip(): void
@@ -383,22 +386,19 @@ class DataFileTest extends TestCase
         }
     }
 
-    protected function add_data_file($data_file)
+    protected function add_data_file(string $data_file): string
     {
-        if (is_null($this->data_files)) {
-            $this->data_files = [];
-        }
         $data_file = "$data_file.".self::current_timestamp();
         $full = implode(DIRECTORY_SEPARATOR, [TEST_TEMP_DIR, $data_file]);
-        $this->data_files[] = $full;
+        $this->dataFiles[] = $full;
 
         return $full;
     }
 
     protected function remove_data_files(): void
     {
-        if (self::REMOVE_DATA_FILES && $this->data_files) {
-            foreach ($this->data_files as $data_file) {
+        if (self::REMOVE_DATA_FILES && $this->dataFiles) {
+            foreach ($this->dataFiles as $data_file) {
                 self::remove_data_file($data_file);
             }
         }
