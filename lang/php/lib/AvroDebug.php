@@ -92,7 +92,7 @@ class AvroDebug
      */
     public static function bytesArray($str, $format = 'x%02x')
     {
-        $x = array();
+        $x = [];
         foreach (str_split($str) as $b) {
             $x[] = sprintf($format, ord($b));
         }
@@ -151,7 +151,7 @@ class AvroDebug
             throw new AvroException('Unrecognized format specifier');
         }
 
-        $ctrl_chars = array(
+        $ctrl_chars = [
             'NUL',
             'SOH',
             'STX',
@@ -184,8 +184,8 @@ class AvroDebug
             'GS',
             'RS',
             'US'
-        );
-        $x = array();
+        ];
+        $x = [];
         foreach (str_split($str) as $b) {
             $db = ord($b);
             if ($db < 32) {

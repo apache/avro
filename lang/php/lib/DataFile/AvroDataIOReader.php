@@ -52,10 +52,6 @@ class AvroDataIOReader
      */
     private $decoder;
     /**
-     * @var AvroIODatumReader
-     */
-    private $datum_reader;
-    /**
      * @var int count of items in block
      */
     private $block_count;
@@ -74,7 +70,7 @@ class AvroDataIOReader
      *                             is not supported
      * @uses readHeader()
      */
-    public function __construct($io, $datum_reader)
+    public function __construct($io, private $datum_reader)
     {
 
         if (!($io instanceof AvroIO)) {
@@ -83,7 +79,6 @@ class AvroDataIOReader
 
         $this->io = $io;
         $this->decoder = new AvroIOBinaryDecoder($this->io);
-        $this->datum_reader = $datum_reader;
         $this->readHeader();
 
         $codec = $this->metadata[AvroDataIO::METADATA_CODEC_ATTR] ?? null;
@@ -110,7 +105,7 @@ class AvroDataIOReader
 
         $magic = $this->read(AvroDataIO::magicSize());
 
-        if (strlen($magic) < AvroDataIO::magicSize()) {
+        if (strlen((string) $magic) < AvroDataIO::magicSize()) {
             throw new AvroDataIOException(
                 'Not an Avro data file: shorter than the Avro magic block'
             );
@@ -187,8 +182,8 @@ class AvroDataIOReader
                         throw new AvroException('Please install ext-snappy to use snappy compression.');
                     }
                     $compressed = $decoder->read($length);
-                    $crc32 = unpack('N', substr($compressed, -4))[1];
-                    $datum = snappy_uncompress(substr($compressed, 0, -4));
+                    $crc32 = unpack('N', substr((string) $compressed, -4))[1];
+                    $datum = snappy_uncompress(substr((string) $compressed, 0, -4));
                     if ($crc32 === crc32($datum)) {
                         $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
                     } else {

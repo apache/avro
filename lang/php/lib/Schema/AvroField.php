@@ -59,19 +59,15 @@ class AvroField extends AvroSchema
     /**
      * @var array list of valid field sort order values
      */
-    private static $validFieldSortOrders = array(
+    private static $validFieldSortOrders = [
         self::ASC_SORT_ORDER,
         self::DESC_SORT_ORDER,
         self::IGNORE_SORT_ORDER
-    );
+    ];
     /**
      * @var string
      */
     private $name;
-    /**
-     * @var boolean whether or no there is a default value
-     */
-    private $hasDefault;
     /**
      * @var string field default value
      */
@@ -81,11 +77,6 @@ class AvroField extends AvroSchema
      */
     private $order;
     /**
-     * @var boolean whether or not the AvroNamedSchema of this field is
-     *              defined in the AvroNamedSchemata instance
-     */
-    private $isTypeFromSchemata;
-    /**
      * @var array|null
      */
     private $aliases;
@@ -93,7 +84,7 @@ class AvroField extends AvroSchema
     /**
      * @param string $name
      * @param AvroSchema $schema
-     * @param boolean $is_type_from_schemata
+     * @param boolean $isTypeFromSchemata
      * @param $has_default
      * @param string $default
      * @param string $order
@@ -101,12 +92,16 @@ class AvroField extends AvroSchema
      * @throws AvroSchemaParseException
      * @todo Check validity of $default value
      * @todo Check validity of $order value
+     * @param bool $has_default
      */
     public function __construct(
         $name,
         $schema,
-        $is_type_from_schemata,
-        $has_default,
+        private $isTypeFromSchemata,
+        /**
+         * @var boolean whether or no there is a default value
+         */
+        private $hasDefault,
         $default,
         $order = null,
         $aliases = null
@@ -116,9 +111,7 @@ class AvroField extends AvroSchema
         }
 
         parent::__construct($schema);
-        $this->isTypeFromSchemata = $is_type_from_schemata;
         $this->name = $name;
-        $this->hasDefault = $has_default;
         if ($this->hasDefault) {
             $this->default = $default;
         }
@@ -156,7 +149,7 @@ class AvroField extends AvroSchema
      */
     public function toAvro()
     {
-        $avro = array(AvroField::FIELD_NAME_ATTR => $this->name);
+        $avro = [AvroField::FIELD_NAME_ATTR => $this->name];
 
         $avro[AvroSchema::TYPE_ATTR] = ($this->isTypeFromSchemata)
             ? $this->type->qualifiedName() : $this->type->toAvro();

@@ -29,11 +29,6 @@ namespace Apache\Avro\Schema;
 class AvroNamedSchema extends AvroSchema
 {
     /**
-     * @var AvroName $name
-     */
-    private $name;
-
-    /**
      * @var string documentation string
      */
     private $doc;
@@ -50,10 +45,9 @@ class AvroNamedSchema extends AvroSchema
      * @param array $aliases
      * @throws AvroSchemaParseException
      */
-    public function __construct($type, $name, $doc = null, &$schemata = null, $aliases = null)
+    public function __construct($type, private $name, $doc = null, &$schemata = null, $aliases = null)
     {
         parent::__construct($type);
-        $this->name = $name;
 
         if ($doc && !is_string($doc)) {
             throw new AvroSchemaParseException('Schema doc attribute must be a string');

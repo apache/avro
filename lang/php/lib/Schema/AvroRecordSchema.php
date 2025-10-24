@@ -78,10 +78,10 @@ class AvroRecordSchema extends AvroNamedSchema
      */
     public static function parseFields($field_data, $default_namespace, &$schemata)
     {
-        $fields = array();
-        $field_names = array();
+        $fields = [];
+        $field_names = [];
         $alias_names = [];
-        foreach ($field_data as $index => $field) {
+        foreach ($field_data as $field) {
             $name = $field[AvroField::FIELD_NAME_ATTR] ?? null;
             $type = $field[AvroSchema::TYPE_ATTR] ?? null;
             $order = $field[AvroField::ORDER_ATTR] ?? null;
@@ -145,7 +145,7 @@ class AvroRecordSchema extends AvroNamedSchema
     {
         $avro = parent::toAvro();
 
-        $fields_avro = array();
+        $fields_avro = [];
         foreach ($this->fields as $field) {
             $fields_avro[] = $field->toAvro();
         }
@@ -174,7 +174,7 @@ class AvroRecordSchema extends AvroNamedSchema
     public function fieldsHash()
     {
         if (is_null($this->fieldsHash)) {
-            $hash = array();
+            $hash = [];
             foreach ($this->fields as $field) {
                 $hash[$field->name()] = $field;
             }

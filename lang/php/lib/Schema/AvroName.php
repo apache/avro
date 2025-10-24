@@ -23,7 +23,7 @@ namespace Apache\Avro\Schema;
 /**
  * @package Avro
  */
-class AvroName
+class AvroName implements \Stringable
 {
     /**
      * @var string character used to separate names comprising the fullname
@@ -116,7 +116,7 @@ class AvroName
      */
     public static function extractNamespace($name, $namespace = null)
     {
-        $parts = explode(self::NAME_SEPARATOR, $name);
+        $parts = explode(self::NAME_SEPARATOR, (string) $name);
         if (count($parts) > 1) {
             $name = array_pop($parts);
             $namespace = implode(self::NAME_SEPARATOR, $parts);
@@ -145,9 +145,9 @@ class AvroName
      * @returns string fullname
      * @uses $this->fullname()
      */
-    public function __toString()
+    public function __toString(): string
     {
-        return $this->fullname();
+        return (string) $this->fullname();
     }
 
     /**

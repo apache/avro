@@ -46,8 +46,8 @@ class AvroUnionSchema extends AvroSchema
     {
         parent::__construct(AvroSchema::UNION_SCHEMA);
 
-        $this->schemaFromSchemataIndices = array();
-        $schema_types = array();
+        $this->schemaFromSchemataIndices = [];
+        $schema_types = [];
         foreach ($schemas as $index => $schema) {
             $is_schema_from_schemata = false;
             $new_schema = null;
@@ -110,7 +110,7 @@ class AvroUnionSchema extends AvroSchema
      */
     public function toAvro()
     {
-        $avro = array();
+        $avro = [];
 
         foreach ($this->schemas as $index => $schema) {
             $avro[] = in_array($index, $this->schemaFromSchemataIndices)

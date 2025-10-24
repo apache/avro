@@ -27,8 +27,6 @@ use Apache\Avro\Schema\AvroSchema;
 
 class AvroProtocolMessage
 {
-    public $name;
-
     /**
      * @var AvroRecordSchema $request
      */
@@ -36,11 +34,10 @@ class AvroProtocolMessage
 
     public $response;
 
-    public function __construct($name, $avro, $protocol)
+    public function __construct(public $name, $avro, $protocol)
     {
-        $this->name = $name;
         $this->request = new AvroRecordSchema(
-            new AvroName($name, null, $protocol->namespace),
+            new AvroName($this->name, null, $protocol->namespace),
             null,
             $avro['request'],
             $protocol->schemata,
