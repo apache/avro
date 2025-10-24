@@ -32,12 +32,6 @@ use Apache\Avro\Schema\AvroSchema;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \AvroIOBinaryDecoder
- * @covers \AvroIOBinaryEncoder
- * @covers \AvroIODatumReader
- * @covers \AvroIODatumWriter
- */
 class DatumIOTest extends TestCase
 {
     #[DataProvider('data_provider')]
