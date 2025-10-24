@@ -43,10 +43,6 @@ class AvroDataIOWriter
      */
     private $encoder;
     /**
-     * @var AvroIODatumWriter
-     */
-    private $datum_writer;
-    /**
      * @var AvroStringIO buffer for writing
      */
     private $buffer;
@@ -77,7 +73,7 @@ class AvroDataIOWriter
      * @param AvroSchema $writers_schema
      * @param string $codec
      */
-    public function __construct($io, $datum_writer, $writers_schema = null, $codec = AvroDataIO::NULL_CODEC)
+    public function __construct($io, private $datum_writer, $writers_schema = null, $codec = AvroDataIO::NULL_CODEC)
     {
         if (!($io instanceof AvroIO)) {
             throw new AvroDataIOException('io must be instance of AvroIO');
@@ -85,11 +81,10 @@ class AvroDataIOWriter
 
         $this->io = $io;
         $this->encoder = new AvroIOBinaryEncoder($this->io);
-        $this->datum_writer = $datum_writer;
         $this->buffer = new AvroStringIO();
         $this->buffer_encoder = new AvroIOBinaryEncoder($this->buffer);
         $this->block_count = 0;
-        $this->metadata = array();
+        $this->metadata = [];
 
         if ($writers_schema) {
             if (!AvroDataIO::isValidCodec($codec)) {

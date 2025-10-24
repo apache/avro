@@ -36,19 +36,8 @@ use Apache\Avro\Schema\AvroSchema;
  */
 class AvroIODatumReader
 {
-    /**
-     * @var AvroSchema
-     */
-    private $writers_schema;
-    /**
-     * @var AvroSchema
-     */
-    private $readers_schema;
-
-    public function __construct(?AvroSchema $writers_schema = null, ?AvroSchema $readers_schema = null)
+    public function __construct(private ?AvroSchema $writers_schema = null, private ?AvroSchema $readers_schema = null)
     {
-        $this->writers_schema = $writers_schema;
-        $this->readers_schema = $readers_schema;
     }
 
     public function setWritersSchema(AvroSchema $readers_schema): void
@@ -267,7 +256,7 @@ class AvroIODatumReader
      */
     public function readArray(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
     {
-        $items = array();
+        $items = [];
         $block_count = $decoder->readLong();
         while (0 !== $block_count) {
             if ($block_count < 0) {
@@ -291,7 +280,7 @@ class AvroIODatumReader
      */
     public function readMap(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
     {
-        $items = array();
+        $items = [];
         $pair_count = $decoder->readLong();
         while (0 != $pair_count) {
             if ($pair_count < 0) {
@@ -353,8 +342,8 @@ class AvroIODatumReader
                     return $this->readDecimal($decoder->readBytes(), $scale);
                 case AvroSchema::DURATION_LOGICAL_TYPE:
                     $encodedDuration = $decoder->read($writers_schema->size());
-                    if (strlen($encodedDuration) !== 12) {
-                        throw new AvroException('Invalid duration fixed size: ' . strlen($encodedDuration));
+                    if (strlen((string) $encodedDuration) !== 12) {
+                        throw new AvroException('Invalid duration fixed size: ' . strlen((string) $encodedDuration));
                     }
 
                     return AvroDuration::fromBytes($encodedDuration);
@@ -406,43 +395,26 @@ class AvroIODatumReader
      */
     public static function skipData($writers_schema, $decoder)
     {
-        switch ($writers_schema->type()) {
-            case AvroSchema::NULL_TYPE:
-                return $decoder->skipNull();
-            case AvroSchema::BOOLEAN_TYPE:
-                return $decoder->skipBoolean();
-            case AvroSchema::INT_TYPE:
-                return $decoder->skipInt();
-            case AvroSchema::LONG_TYPE:
-                return $decoder->skipLong();
-            case AvroSchema::FLOAT_TYPE:
-                return $decoder->skipFloat();
-            case AvroSchema::DOUBLE_TYPE:
-                return $decoder->skipDouble();
-            case AvroSchema::STRING_TYPE:
-                return $decoder->skipString();
-            case AvroSchema::BYTES_TYPE:
-                return $decoder->skipBytes();
-            case AvroSchema::ARRAY_SCHEMA:
-                return $decoder->skipArray($writers_schema, $decoder);
-            case AvroSchema::MAP_SCHEMA:
-                return $decoder->skipMap($writers_schema, $decoder);
-            case AvroSchema::UNION_SCHEMA:
-                return $decoder->skipUnion($writers_schema, $decoder);
-            case AvroSchema::ENUM_SCHEMA:
-                return $decoder->skipEnum($writers_schema, $decoder);
-            case AvroSchema::FIXED_SCHEMA:
-                return $decoder->skipFixed($writers_schema, $decoder);
-            case AvroSchema::RECORD_SCHEMA:
-            case AvroSchema::ERROR_SCHEMA:
-            case AvroSchema::REQUEST_SCHEMA:
-                return $decoder->skipRecord($writers_schema, $decoder);
-            default:
-                throw new AvroException(sprintf(
-                    'Unknown schema type: %s',
-                    $writers_schema->type()
-                ));
-        }
+        return match ($writers_schema->type()) {
+            AvroSchema::NULL_TYPE => $decoder->skipNull(),
+            AvroSchema::BOOLEAN_TYPE => $decoder->skipBoolean(),
+            AvroSchema::INT_TYPE => $decoder->skipInt(),
+            AvroSchema::LONG_TYPE => $decoder->skipLong(),
+            AvroSchema::FLOAT_TYPE => $decoder->skipFloat(),
+            AvroSchema::DOUBLE_TYPE => $decoder->skipDouble(),
+            AvroSchema::STRING_TYPE => $decoder->skipString(),
+            AvroSchema::BYTES_TYPE => $decoder->skipBytes(),
+            AvroSchema::ARRAY_SCHEMA => $decoder->skipArray($writers_schema, $decoder),
+            AvroSchema::MAP_SCHEMA => $decoder->skipMap($writers_schema, $decoder),
+            AvroSchema::UNION_SCHEMA => $decoder->skipUnion($writers_schema, $decoder),
+            AvroSchema::ENUM_SCHEMA => $decoder->skipEnum($writers_schema, $decoder),
+            AvroSchema::FIXED_SCHEMA => $decoder->skipFixed($writers_schema, $decoder),
+            AvroSchema::RECORD_SCHEMA, AvroSchema::ERROR_SCHEMA, AvroSchema::REQUEST_SCHEMA => $decoder->skipRecord($writers_schema, $decoder),
+            default => throw new AvroException(sprintf(
+                'Unknown schema type: %s',
+                $writers_schema->type()
+            )),
+        };
     }
 
     /**
@@ -468,14 +440,14 @@ class AvroIODatumReader
             case AvroSchema::BYTES_TYPE:
                 return $this->readBytes($field_schema, $field_schema, $default_value);
             case AvroSchema::ARRAY_SCHEMA:
-                $array = array();
+                $array = [];
                 foreach ($default_value as $json_val) {
                     $val = $this->readDefaultValue($field_schema->items(), $json_val);
                     $array [] = $val;
                 }
                 return $array;
             case AvroSchema::MAP_SCHEMA:
-                $map = array();
+                $map = [];
                 foreach ($default_value as $key => $json_val) {
                     $map[$key] = $this->readDefaultValue(
                         $field_schema->values(),
@@ -492,7 +464,7 @@ class AvroIODatumReader
             case AvroSchema::FIXED_SCHEMA:
                 return $default_value;
             case AvroSchema::RECORD_SCHEMA:
-                $record = array();
+                $record = [];
                 foreach ($field_schema->fields() as $field) {
                     $field_name = $field->name();
                     if (!$json_val = $default_value[$field_name]) {

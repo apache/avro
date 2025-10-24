@@ -35,17 +35,12 @@ use Apache\Avro\AvroIO;
 class AvroIOBinaryDecoder
 {
     /**
-     * @var AvroIO
-     */
-    private $io;
-
-    /**
      * @param AvroIO $io object from which to read.
      */
-    public function __construct($io)
-    {
+    public function __construct(
+        private AvroIO $io
+    ) {
         Avro::checkPlatform();
-        $this->io = $io;
     }
 
     /**
@@ -59,9 +54,9 @@ class AvroIOBinaryDecoder
     /**
      * @returns boolean
      */
-    public function readBoolean()
+    public function readBoolean(): bool
     {
-        return (bool) (1 == ord($this->nextByte()));
+        return (bool) (1 === ord($this->nextByte()));
     }
 
     /**
@@ -96,7 +91,7 @@ class AvroIOBinaryDecoder
     public function readLong()
     {
         $byte = ord($this->nextByte());
-        $bytes = array($byte);
+        $bytes = [$byte];
         while (0 != ($byte & 0x80)) {
             $byte = ord($this->nextByte());
             $bytes [] = $byte;

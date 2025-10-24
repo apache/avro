@@ -27,16 +27,8 @@ class AvroLogicalType
     public const ATTRIBUTE_DECIMAL_PRECISION = 'precision';
     public const ATTRIBUTE_DECIMAL_SCALE = 'scale';
 
-    /** @var string */
-    private $name;
-
-    /** @var array */
-    private $attributes;
-
-    public function __construct(string $name, array $attributes = [])
+    public function __construct(private readonly string $name, private readonly array $attributes = [])
     {
-        $this->name = $name;
-        $this->attributes = $attributes;
     }
 
     public function name(): string

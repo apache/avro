@@ -29,16 +29,16 @@ namespace Apache\Avro\Schema;
 class AvroNamedSchemata
 {
     /**
-     * @var AvroNamedSchema[]
-     */
-    private $schemata;
-
-    /**
      * @param AvroNamedSchemata[]
+     * @param \Apache\Avro\Schema\AvroNamedSchema[] $schemata
      */
-    public function __construct($schemata = array())
+    public function __construct(
+        /**
+         * @var AvroNamedSchema[]
+         */
+        private $schemata = []
+    )
     {
-        $this->schemata = $schemata;
     }
 
     public function listSchemas()
@@ -65,10 +65,7 @@ class AvroNamedSchemata
      */
     public function schema($fullname)
     {
-        if (isset($this->schemata[$fullname])) {
-            return $this->schemata[$fullname];
-        }
-        return null;
+        return $this->schemata[$fullname] ?? null;
     }
 
     /**

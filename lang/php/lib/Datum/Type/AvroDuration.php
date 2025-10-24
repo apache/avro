@@ -25,16 +25,13 @@ namespace Apache\Avro\Datum\Type;
 use Apache\Avro\AvroException;
 use Apache\Avro\Schema\AvroSchema;
 
-class AvroDuration
+class AvroDuration implements \Stringable
 {
-    /** @var int */
-    private $months;
+    private readonly int $months;
 
-    /** @var int */
-    private $days;
+    private readonly int $days;
 
-    /** @var int */
-    private $milliseconds;
+    private readonly int $milliseconds;
 
     /**
      * @throws AvroException
