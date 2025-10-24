@@ -23,6 +23,7 @@ use Apache\Avro\Datum\AvroIOBinaryDecoder;
 use Apache\Avro\Datum\AvroIOBinaryEncoder;
 use Apache\Avro\Datum\AvroIODatumReader;
 use Apache\Avro\Datum\AvroIODatumWriter;
+use Apache\Avro\Datum\Type\AvroDuration;
 use Apache\Avro\IO\AvroStringIO;
 use Apache\Avro\Schema\AvroSchema;
 use PHPUnit\Framework\TestCase;
@@ -215,6 +216,17 @@ class IODatumReaderTest extends TestCase
                     "size": 12,
                     "logicalType": "duration"
                   }
+                },
+                {
+                  "name": "decimal_fixed_field",
+                  "type": {
+                    "name": "decimal_fixed_field",
+                    "type": "fixed",
+                    "logicalType": "decimal",
+                    "size": 3,
+                    "precision": 4,
+                    "scale": 2
+                  }
                 }
               ]
             }
@@ -226,8 +238,8 @@ class IODatumReaderTest extends TestCase
         $writer->writeData(
             $schema,
             [
-                'decimal_field' => "10.91",
-                'uuid_field' => "9fb9ea49-2f7e-4df3-b02b-96d881e27a6b",
+                'decimal_field' => '10.91',
+                'uuid_field' => '9fb9ea49-2f7e-4df3-b02b-96d881e27a6b',
                 'date_field' => 20251023,
                 'time_millis_field' => 86400000,
                 'time_micros_field' => 86400000000,
@@ -235,7 +247,8 @@ class IODatumReaderTest extends TestCase
                 'timestamp_micros_field' => 1761224729109000,
                 'local_timestamp_millis_field' => 1751224729109,
                 'local_timestamp_micros_field' => 1751224729109000,
-                'duration_field' => '123456789012',
+                'duration_field' => new AvroDuration(5, 3600, 1234),
+                'decimal_fixed_field' => '10.91',
             ],
             new AvroIOBinaryEncoder($io)
         );
@@ -250,8 +263,8 @@ class IODatumReaderTest extends TestCase
 
         $this->assertEquals(
             [
-                'decimal_field' => "10.91",
-                'uuid_field' => "9fb9ea49-2f7e-4df3-b02b-96d881e27a6b",
+                'decimal_field' => '10.91',
+                'uuid_field' => '9fb9ea49-2f7e-4df3-b02b-96d881e27a6b',
                 'date_field' => 20251023,
                 'time_millis_field' => 86400000,
                 'time_micros_field' => 86400000000,
@@ -259,7 +272,8 @@ class IODatumReaderTest extends TestCase
                 'timestamp_micros_field' => 1761224729109000,
                 'local_timestamp_millis_field' => 1751224729109,
                 'local_timestamp_micros_field' => 1751224729109000,
-                'duration_field' => '123456789012',
+                'duration_field' => new AvroDuration(5, 3600, 1234),
+                'decimal_fixed_field' => '10.91',
             ],
             $record
         );

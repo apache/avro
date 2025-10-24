@@ -21,6 +21,7 @@
 namespace Apache\Avro\Datum;
 
 use Apache\Avro\AvroException;
+use Apache\Avro\Datum\Type\AvroDuration;
 use Apache\Avro\Schema\AvroLogicalType;
 use Apache\Avro\Schema\AvroName;
 use Apache\Avro\Schema\AvroSchema;
@@ -44,20 +45,13 @@ class AvroIODatumReader
      */
     private $readers_schema;
 
-    /**
-     * @param AvroSchema $writers_schema
-     * @param AvroSchema $readers_schema
-     */
-    public function __construct($writers_schema = null, $readers_schema = null)
+    public function __construct(?AvroSchema $writers_schema = null, ?AvroSchema $readers_schema = null)
     {
         $this->writers_schema = $writers_schema;
         $this->readers_schema = $readers_schema;
     }
 
-    /**
-     * @param AvroSchema $readers_schema
-     */
-    public function setWritersSchema($readers_schema)
+    public function setWritersSchema(AvroSchema $readers_schema): void
     {
         $this->writers_schema = $readers_schema;
     }
@@ -138,12 +132,10 @@ class AvroIODatumReader
 
     /**
      *
-     * @param AvroSchema $writers_schema
-     * @param AvroSchema $readers_schema
      * @returns boolean true if the schemas are consistent with
      *                  each other and false otherwise.
      */
-    public static function schemasMatch($writers_schema, $readers_schema)
+    public static function schemasMatch(AvroSchema $writers_schema, AvroSchema $readers_schema)
     {
         $writers_schema_type = $writers_schema->type;
         $readers_schema_type = $readers_schema->type;
@@ -169,12 +161,6 @@ class AvroIODatumReader
                     $readers_schema->items(),
                     [AvroSchema::TYPE_ATTR]
                 );
-            case AvroSchema::ENUM_SCHEMA:
-                return self::attributesMatch(
-                    $writers_schema,
-                    $readers_schema,
-                    [AvroSchema::FULLNAME_ATTR]
-                );
             case AvroSchema::FIXED_SCHEMA:
                 return self::attributesMatch(
                     $writers_schema,
@@ -184,6 +170,7 @@ class AvroIODatumReader
                         AvroSchema::SIZE_ATTR
                     ]
                 );
+            case AvroSchema::ENUM_SCHEMA:
             case AvroSchema::RECORD_SCHEMA:
             case AvroSchema::ERROR_SCHEMA:
                 return self::attributesMatch(
@@ -269,10 +256,7 @@ class AvroIODatumReader
             }
 
             $scale = $logicalTypeWriters->attributes()['scale'] ?? 0;
-            $mostSignificantBit = ord($bytes[0]) & 0x80;
-            $padded = str_pad($bytes, 8, $mostSignificantBit ? "\xff" : "\x00", STR_PAD_LEFT);
-            $int = unpack('J', $padded)[1];
-            $bytes = (string) ($scale > 0 ? ($int / (10 ** $scale)) : $int);
+            $bytes = $this->readDecimal($bytes, $scale);
         }
 
         return $bytes;
@@ -281,7 +265,7 @@ class AvroIODatumReader
     /**
      * @return array
      */
-    public function readArray($writers_schema, $readers_schema, $decoder)
+    public function readArray(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
     {
         $items = array();
         $block_count = $decoder->readLong();
@@ -305,7 +289,7 @@ class AvroIODatumReader
     /**
      * @returns array
      */
-    public function readMap($writers_schema, $readers_schema, $decoder)
+    public function readMap(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
     {
         $items = array();
         $pair_count = $decoder->readLong();
@@ -332,7 +316,7 @@ class AvroIODatumReader
     /**
      * @returns mixed
      */
-    public function readUnion($writers_schema, $readers_schema, $decoder)
+    public function readUnion(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
     {
         $schema_index = $decoder->readLong();
         $selected_writers_schema = $writers_schema->schemaByIndex($schema_index);
@@ -342,7 +326,7 @@ class AvroIODatumReader
     /**
      * @returns string
      */
-    public function readEnum($writers_schema, $readers_schema, $decoder)
+    public function readEnum(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
     {
         $symbol_index = $decoder->readInt();
         $symbol = $writers_schema->symbolByIndex($symbol_index);
@@ -353,17 +337,37 @@ class AvroIODatumReader
     }
 
     /**
-     * @returns string
+     * @returns string|AvroDuration
      */
-    public function readFixed($writers_schema, $readers_schema, $decoder)
+    public function readFixed(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
     {
+        $logicalTypeWriters = $writers_schema->logicalType();
+        if ($logicalTypeWriters instanceof AvroLogicalType) {
+            if ($logicalTypeWriters !== $readers_schema->logicalType()) {
+                throw new AvroIOSchemaMatchException($writers_schema, $readers_schema);
+            }
+
+            switch ($logicalTypeWriters->name()) {
+                case AvroSchema::DECIMAL_LOGICAL_TYPE:
+                    $scale = $logicalTypeWriters->attributes()['scale'] ?? 0;
+                    return $this->readDecimal($decoder->readBytes(), $scale);
+                case AvroSchema::DURATION_LOGICAL_TYPE:
+                    $encodedDuration = $decoder->read($writers_schema->size());
+                    if (strlen($encodedDuration) !== 12) {
+                        throw new AvroException('Invalid duration fixed size: ' . strlen($encodedDuration));
+                    }
+
+                    return AvroDuration::fromBytes($encodedDuration);
+            }
+        }
+
         return $decoder->read($writers_schema->size());
     }
 
     /**
      * @returns array
      */
-    public function readRecord($writers_schema, $readers_schema, $decoder)
+    public function readRecord(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
     {
         $readers_fields = $readers_schema->fieldsHash();
         $record = [];
@@ -504,5 +508,13 @@ class AvroIODatumReader
             default:
                 throw new AvroException(sprintf('Unknown type: %s', $field_schema->type()));
         }
+    }
+
+    private function readDecimal(string $bytes, int $scale): string
+    {
+        $mostSignificantBit = ord($bytes[0]) & 0x80;
+        $padded = str_pad($bytes, 8, $mostSignificantBit ? "\xff" : "\x00", STR_PAD_LEFT);
+        $int = unpack('J', $padded)[1];
+        return (string) ($scale > 0 ? ($int / (10 ** $scale)) : $int);
     }
 }

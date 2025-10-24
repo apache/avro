@@ -21,6 +21,7 @@
 namespace Apache\Avro\Schema;
 
 use Apache\Avro\AvroUtil;
+use Apache\Avro\Datum\Type\AvroDuration;
 
 /** TODO
  * - ARRAY have only type and item attributes (what about metadata?)
@@ -62,6 +63,11 @@ class AvroSchema
      * @var int upper bound of integer values: (1 << 31) - 1
      */
     public const INT_MAX_VALUE = 2147483647;
+
+    /**
+     * @var int upper bound of integer values: (1 << 31) - 1
+     */
+    public const INT_RANGE = 4294967296;
 
     /**
      * @var int lower bound of long values: -(1 << 63)
@@ -344,19 +350,8 @@ class AvroSchema
             if (self::isPrimitiveType($type)) {
                 switch ($avro[self::LOGICAL_TYPE_ATTR] ?? null) {
                     case self::DECIMAL_LOGICAL_TYPE:
-                        $precision = $avro[AvroLogicalType::ATTRIBUTE_DECIMAL_PRECISION] ?? null;
-                        if (!is_int($precision)) {
-                            throw new AvroSchemaParseException(
-                                "Invalid value '{$precision}' for 'precision' attribute of decimal logical type."
-                            );
-                        }
-                        $scale = $avro[AvroLogicalType::ATTRIBUTE_DECIMAL_SCALE] ?? 0;
-                        if (!is_int($scale)) {
-                            throw new AvroSchemaParseException(
-                                "Invalid value '{$scale}' for 'scale' attribute of decimal logical type."
-                            );
-                        }
-                        return AvroPrimitiveSchema::decimal((int) $precision, (int) $scale);
+                        [$precision, $scale] = self::extractPrecisionAndScaleForDecimal($avro);
+                        return AvroPrimitiveSchema::decimal($precision, $scale);
                     case self::UUID_LOGICAL_TYPE:
                         return AvroPrimitiveSchema::uuid();
                     case self::DATE_LOGICAL_TYPE:
@@ -387,16 +382,27 @@ class AvroSchema
                 switch ($type) {
                     case self::FIXED_SCHEMA:
                         $size = $avro[self::SIZE_ATTR] ?? null;
-                        if (
-                            array_key_exists(self::LOGICAL_TYPE_ATTR, $avro)
-                            && $avro[self::LOGICAL_TYPE_ATTR] === self::DURATION_LOGICAL_TYPE
-                        ) {
-                            return AvroFixedSchema::duration(
-                                $new_name,
-                                $doc,
-                                $schemata,
-                                $aliases
-                            );
+                        if (array_key_exists(self::LOGICAL_TYPE_ATTR, $avro)) {
+                            switch ($avro[self::LOGICAL_TYPE_ATTR]) {
+                                case self::DURATION_LOGICAL_TYPE:
+                                    return AvroFixedSchema::duration(
+                                        $new_name,
+                                        $doc,
+                                        $schemata,
+                                        $aliases
+                                    );
+                                case self::DECIMAL_LOGICAL_TYPE:
+                                    [$precision, $scale] = self::extractPrecisionAndScaleForDecimal($avro);
+                                    return AvroFixedSchema::decimal(
+                                        $new_name,
+                                        $doc,
+                                        $size,
+                                        $precision,
+                                        $scale,
+                                        $schemata,
+                                        $aliases
+                                    );
+                            }
                         }
 
                         return new AvroFixedSchema(
@@ -533,7 +539,7 @@ class AvroSchema
      *                  and false otherwise.
      * @throws AvroSchemaParseException
      */
-    public static function isValidDatum($expected_schema, $datum): bool
+    public static function isValidDatum(AvroSchema $expected_schema, $datum): bool
     {
         switch ($expected_schema->type) {
             case self::NULL_TYPE:
@@ -587,8 +593,28 @@ class AvroSchema
             case self::ENUM_SCHEMA:
                 return in_array($datum, $expected_schema->symbols());
             case self::FIXED_SCHEMA:
+                if (
+                    $expected_schema->logicalType() instanceof AvroLogicalType
+                ) {
+                    switch ($expected_schema->logicalType->name()) {
+                        case self::DECIMAL_LOGICAL_TYPE:
+                            $value = abs((float) $datum);
+                            $maxMagnitude = AvroFixedSchema::maxDecimalMagnitude((int) $expected_schema->size());
+                            return $value <= $maxMagnitude;
+                        case self::DURATION_LOGICAL_TYPE:
+                            return $datum instanceof AvroDuration;
+                        default:
+                            throw new AvroSchemaParseException(
+                                sprintf(
+                                    'Logical type %s not supported for fixed schema validation.',
+                                    $expected_schema->logicalType->name()
+                                )
+                            );
+                    }
+                }
+
                 return (is_string($datum)
-                    && (strlen($datum) == $expected_schema->size()));
+                    && (strlen($datum) === $expected_schema->size()));
             case self::RECORD_SCHEMA:
             case self::ERROR_SCHEMA:
             case self::REQUEST_SCHEMA:
@@ -668,5 +694,27 @@ class AvroSchema
     public function attribute($attribute)
     {
         return $this->$attribute();
+    }
+
+    /**
+     * @return array{0: int, 1: int} [precision, scale]
+     * @throws AvroSchemaParseException
+     */
+    private static function extractPrecisionAndScaleForDecimal(array $avro): array
+    {
+        $precision = $avro[AvroLogicalType::ATTRIBUTE_DECIMAL_PRECISION] ?? null;
+        if (!is_int($precision)) {
+            throw new AvroSchemaParseException(
+                "Invalid value '{$precision}' for 'precision' attribute of decimal logical type."
+            );
+        }
+        $scale = $avro[AvroLogicalType::ATTRIBUTE_DECIMAL_SCALE] ?? 0;
+        if (!is_int($scale)) {
+            throw new AvroSchemaParseException(
+                "Invalid value '{$scale}' for 'scale' attribute of decimal logical type."
+            );
+        }
+
+        return [$precision, $scale];
     }
 }

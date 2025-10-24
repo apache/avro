@@ -21,6 +21,7 @@
 namespace Apache\Avro\Datum;
 
 use Apache\Avro\AvroException;
+use Apache\Avro\Datum\Type\AvroDuration;
 use Apache\Avro\Schema\AvroLogicalType;
 use Apache\Avro\Schema\AvroSchema;
 use Apache\Avro\Schema\AvroSchemaParseException;
@@ -40,10 +41,7 @@ class AvroIODatumWriter
      */
     public $writersSchema;
 
-    /**
-     * @param AvroSchema $writers_schema
-     */
-    public function __construct($writers_schema = null)
+    public function __construct(?AvroSchema $writers_schema = null)
     {
         $this->writersSchema = $writers_schema;
     }
@@ -147,9 +145,6 @@ class AvroIODatumWriter
         ) {
             $scale = $logicalType->attributes()['scale'] ?? 0;
             $precision = $logicalType->attributes()['precision'] ?? null;
-            if ($precision === null) {
-                throw new AvroException('Decimal precision is required');
-            }
 
             $encoder->writeDecimal($datum, $scale, $precision);
             return;
@@ -194,10 +189,36 @@ class AvroIODatumWriter
 
     private function writeFixed(AvroSchema $writers_schema, $datum, AvroIOBinaryEncoder $encoder): void
     {
-        /**
-         * NOTE Unused $writers_schema parameter included for consistency
-         * with other write_* methods.
-         */
+        $logicalType = $writers_schema->logicalType();
+        if (
+            $logicalType instanceof AvroLogicalType
+        ) {
+            switch ($logicalType->name()) {
+                case AvroSchema::DECIMAL_LOGICAL_TYPE:
+                    $scale = $logicalType->attributes()['scale'] ?? 0;
+                    $precision = $logicalType->attributes()['precision'] ?? null;
+
+                    $encoder->writeDecimal($datum, $scale, $precision);
+                    return;
+                case AvroSchema::DURATION_LOGICAL_TYPE:
+                    if (!$datum instanceof AvroDuration) {
+                        throw new AvroException(
+                            "Duration datum must be an instance of AvroDuration"
+                        );
+                    }
+                    $duration = (string) $datum;
+
+                    if (strlen($duration) !== 12) {
+                        throw new AvroException(
+                            "Fixed duration size mismatch. Expected 12 bytes, got " . strlen($duration)
+                        );
+                    }
+
+                    $encoder->write($duration);
+                    return;
+            }
+        }
+
         $encoder->write($datum);
     }
 

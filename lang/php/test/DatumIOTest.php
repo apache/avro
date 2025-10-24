@@ -25,6 +25,7 @@ use Apache\Avro\Datum\AvroIOBinaryDecoder;
 use Apache\Avro\Datum\AvroIOBinaryEncoder;
 use Apache\Avro\Datum\AvroIODatumReader;
 use Apache\Avro\Datum\AvroIODatumWriter;
+use Apache\Avro\Datum\Type\AvroDuration;
 use Apache\Avro\IO\AvroStringIO;
 use Apache\Avro\Schema\AvroSchema;
 use PHPUnit\Framework\TestCase;
@@ -40,25 +41,9 @@ class DatumIOTest extends TestCase
     /**
      * @dataProvider data_provider
      */
-    public function test_datum_round_trip($schema_json, $datum, $binary): void
+    public function test_datum_round_trip(string $schema_json, $datum, string $binary): void
     {
-        $schema = AvroSchema::parse($schema_json);
-        $written = new AvroStringIO();
-        $encoder = new AvroIOBinaryEncoder($written);
-        $writer = new AvroIODatumWriter($schema);
-
-        $writer->write($datum, $encoder);
-        $output = (string) $written;
-        $this->assertEquals($binary, $output,
-            sprintf("expected: %s\n  actual: %s",
-                AvroDebug::asciiString($binary, 'hex'),
-                AvroDebug::asciiString($output, 'hex')));
-
-        $read = new AvroStringIO($binary);
-        $decoder = new AvroIOBinaryDecoder($read);
-        $reader = new AvroIODatumReader($schema);
-        $read_datum = $reader->read($decoder);
-        $this->assertEquals($datum, $read_datum);
+        $this->assertIsValidDatumForSchema($schema_json, $datum, $binary);
     }
 
     public static function data_provider(): array
@@ -212,7 +197,7 @@ class DatumIOTest extends TestCase
      */
     public function testValidBytesDecimalLogicalType(string $datum, int $precision, int $scale, string $expected): void
     {
-        $schemaJson = <<<JSON
+        $bytesSchemaJson = <<<JSON
         {
           "name": "number",
           "type": "bytes",
@@ -222,23 +207,20 @@ class DatumIOTest extends TestCase
         }
         JSON;
 
-        $schema = AvroSchema::parse($schemaJson);
-        $written = new AvroStringIO();
-        $encoder = new AvroIOBinaryEncoder($written);
-        $writer = new AvroIODatumWriter($schema);
+        $this->assertIsValidDatumForSchema($bytesSchemaJson, $datum, $expected);
 
-        $writer->write($datum, $encoder);
-        $output = (string) $written;
-        $this->assertEquals($expected, $output,
-            sprintf("expected: %s\n  actual: %s",
-                AvroDebug::asciiString($expected, 'hex'),
-                AvroDebug::asciiString($output, 'hex')));
+        $bytesSchemaJson = <<<JSON
+        {
+          "name": "number",
+          "type": "fixed",
+          "size": 8,
+          "logicalType": "decimal",
+          "precision": {$precision},
+          "scale": {$scale}
+        }
+        JSON;
 
-        $read = new AvroStringIO($expected);
-        $decoder = new AvroIOBinaryDecoder($read);
-        $reader = new AvroIODatumReader($schema);
-        $read_datum = $reader->read($decoder);
-        $this->assertEquals($datum, $read_datum);
+        $this->assertIsValidDatumForSchema($bytesSchemaJson, $datum, $expected);
     }
 
     public function testInvalidBytesLogicalTypeOutOfRange(): void
@@ -261,6 +243,57 @@ class DatumIOTest extends TestCase
         $this->expectException(AvroException::class);
         $this->expectExceptionMessage("Decimal value '10000' is out of range for precision=4, scale=0");
         $writer->write("10000", $encoder);
+    }
+
+    public static function validDurationLogicalTypes(): array
+    {
+        return [
+            [new AvroDuration(1, 2, 3)],
+            [new AvroDuration(-1, -2, -3)],
+            [new AvroDuration(AvroSchema::INT_MAX_VALUE, AvroSchema::INT_MAX_VALUE, AvroSchema::INT_MIN_VALUE)],
+        ];
+    }
+
+    /**
+     * @dataProvider validDurationLogicalTypes
+     */
+    public function testDurationLogicalType(AvroDuration $avroDuration): void
+    {
+        $bytesSchemaJson = <<<JSON
+        {
+          "name": "number",
+          "type": "fixed",
+          "size": 12,
+          "logicalType": "duration"
+        }
+        JSON;
+
+        $this->assertIsValidDatumForSchema(
+            $bytesSchemaJson,
+            $avroDuration,
+            $avroDuration
+        );
+    }
+
+    public static function durationLogicalTypeOutOfBounds(): array
+    {
+        return [
+            [AvroSchema::INT_MIN_VALUE - 1, 0, 0],
+            [0, AvroSchema::INT_MIN_VALUE - 1, 0],
+            [0, 0, AvroSchema::INT_MIN_VALUE - 1],
+            [AvroSchema::INT_MAX_VALUE + 1, 0, 0],
+            [0, AvroSchema::INT_MAX_VALUE + 1, 0],
+            [0, 0, AvroSchema::INT_MAX_VALUE + 1],
+        ];
+    }
+
+    /**
+     * @dataProvider durationLogicalTypeOutOfBounds
+     */
+    public function testDurationLogicalTypeOutOfBounds(int $months, int $days, int $milliseconds): void
+    {
+        $this->expectException(AvroException::class);
+        new AvroDuration($months, $days, $milliseconds);
     }
 
     public static function default_provider(): array
@@ -374,5 +407,33 @@ class DatumIOTest extends TestCase
             $this->assertTrue(false, sprintf('expected field record[f]: %s',
                 print_r($record, true)));
         }
+    }
+
+    /**
+     * @param string $schemaJson
+     * @param string $datum
+     * @param string $expected
+     * @return void
+     * @throws \Apache\Avro\IO\AvroIOException
+     */
+    private function assertIsValidDatumForSchema(string $schemaJson, $datum, $expected): void
+    {
+        $schema = AvroSchema::parse($schemaJson);
+        $written = new AvroStringIO();
+        $encoder = new AvroIOBinaryEncoder($written);
+        $writer = new AvroIODatumWriter($schema);
+
+        $writer->write($datum, $encoder);
+        $output = (string)$written;
+        $this->assertEquals($expected, $output,
+            sprintf("expected: %s\n  actual: %s",
+                AvroDebug::asciiString($expected, 'hex'),
+                AvroDebug::asciiString($output, 'hex')));
+
+        $read = new AvroStringIO((string) $expected);
+        $decoder = new AvroIOBinaryDecoder($read);
+        $reader = new AvroIODatumReader($schema);
+        $read_datum = $reader->read($decoder);
+        $this->assertEquals($datum, $read_datum);
     }
 }
