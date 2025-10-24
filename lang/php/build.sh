@@ -62,9 +62,14 @@ do
       ../../vendor/bin/php-cs-fixer fix --dry-run --show-progress=dots --verbose --diff --no-interaction
       ;;
 
-    lint-apply)
+    lint-fix)
       composer install -d "../.."
       ../../vendor/bin/php-cs-fixer fix --show-progress=dots --verbose --diff
+      ;;
+
+    phpstan)
+      composer install -d "../.."
+      ../../vendor/bin/phpstan
       ;;
 
     test)

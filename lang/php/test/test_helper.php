@@ -23,7 +23,7 @@ if (file_exists(__DIR__.'/../../../vendor/autoload.php')) {
     include __DIR__.'/../lib/autoload.php';
 }
 
-define('AVRO_TEST_HELPER_DIR', __DIR__);
+const AVRO_TEST_HELPER_DIR = __DIR__;
 
 define('TEST_TEMP_DIR', implode(DIRECTORY_SEPARATOR, [AVRO_TEST_HELPER_DIR, 'tmp']));
 

@@ -39,7 +39,7 @@ class NameExample implements \Stringable
 
 class NameTest extends TestCase
 {
-    public static function fullname_provider()
+    public static function fullname_provider(): array
     {
         $examples = [
             new NameExample('foo', null, null, true, 'foo'),

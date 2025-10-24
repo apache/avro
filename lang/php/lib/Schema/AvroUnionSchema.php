@@ -105,10 +105,7 @@ class AvroUnionSchema extends AvroSchema
         throw new AvroSchemaParseException('Invalid union schema index');
     }
 
-    /**
-     * @returns mixed
-     */
-    public function toAvro()
+    public function toAvro(): string|array
     {
         $avro = [];
 

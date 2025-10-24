@@ -41,7 +41,7 @@ class AvroLogicalType
         return $this->attributes;
     }
 
-    public function toAvro(): array
+    public function toAvro(): string|array
     {
         $avro[AvroSchema::LOGICAL_TYPE_ATTR] = $this->name;
         return array_merge($avro, $this->attributes);

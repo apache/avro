@@ -29,33 +29,19 @@ namespace Apache\Avro\Schema;
 class AvroNamedSchema extends AvroSchema
 {
     /**
-     * @var string documentation string
-     */
-    private $doc;
-    /**
-     * @var array
-     */
-    private $aliases;
-
-    /**
-     * @param string $type
-     * @param AvroName $name
-     * @param string $doc documentation string
-     * @param AvroNamedSchemata &$schemata
-     * @param array $aliases
      * @throws AvroSchemaParseException
      */
-    public function __construct($type, private $name, $doc = null, &$schemata = null, $aliases = null)
-    {
+    public function __construct(
+        string $type,
+        private AvroName $name,
+        private ?string $doc = null,
+        ?AvroNamedSchemata &$schemata = null,
+        private ?array $aliases = null
+    ) {
         parent::__construct($type);
 
-        if ($doc && !is_string($doc)) {
-            throw new AvroSchemaParseException('Schema doc attribute must be a string');
-        }
-        $this->doc = $doc;
-        if ($aliases) {
-            self::hasValidAliases($aliases);
-            $this->aliases = $aliases;
+        if ($this->aliases) {
+            self::hasValidAliases($this->aliases);
         }
 
         if (!is_null($schemata)) {
@@ -63,15 +49,12 @@ class AvroNamedSchema extends AvroSchema
         }
     }
 
-    public function getAliases()
+    public function getAliases(): ?array
     {
         return $this->aliases;
     }
 
-    /**
-     * @returns mixed
-     */
-    public function toAvro()
+    public function toAvro(): string|array
     {
         $avro = parent::toAvro();
         [$name, $namespace] = AvroName::extractNamespace($this->qualifiedName());

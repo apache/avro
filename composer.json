@@ -38,7 +38,8 @@
     "ext-curl": "*",
     "ext-pcntl": "*",
     "rector/rector": "^2.2",
-    "friendsofphp/php-cs-fixer": "^3.89"
+    "friendsofphp/php-cs-fixer": "^3.89",
+    "phpstan/phpstan": "^2.1"
   },
   "autoload": {
     "psr-4": {
