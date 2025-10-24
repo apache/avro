@@ -68,7 +68,7 @@ jobs:
             ${{ runner.os }}-composer-
 
       - name: Lint
-        if: matrix.php.version == '8.1
+        if: matrix.php.version == '8.1'
         run: ./build.sh lint
 
       - name: Test
