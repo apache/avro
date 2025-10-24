@@ -140,7 +140,7 @@ RUN mkdir tmp && cd tmp \
  && php -m \
  && apt-get -qqy clean
 
-RUN curl -sS https://getcomposer.org/installer | php -- --version=2.2.5 --install-dir=/usr/local/bin --filename=composer
+RUN curl -sS https://getcomposer.org/installer | php -- --version=2.8.12 --install-dir=/usr/local/bin --filename=composer
 
 # Install Perl modules
 RUN apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
