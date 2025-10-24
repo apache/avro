@@ -37,59 +37,52 @@ class AvroDataIOWriter
     /**
      * @var AvroIO object container where data is written
      */
-    private $io;
+    private AvroIO $io;
     /**
      * @var AvroIOBinaryEncoder encoder for object container
      */
-    private $encoder;
-    /**
-     * @var AvroIODatumWriter
-     */
-    private $datum_writer;
+    private AvroIOBinaryEncoder $encoder;
     /**
      * @var AvroStringIO buffer for writing
      */
-    private $buffer;
+    private AvroStringIO $buffer;
+
+    private AvroIODatumWriter $datum_writer;
+
     /**
      * @var AvroIOBinaryEncoder encoder for buffer
      */
-    private $buffer_encoder;
+    private AvroIOBinaryEncoder $buffer_encoder;
     /**
      * @var int count of items written to block
      */
-    private $block_count; // AvroIOBinaryEncoder
+    private int $block_count;
     /**
      * @var array map of object container metadata
      */
-    private $metadata;
+    private array $metadata;
     /**
      * @var string compression codec
      */
-    private $codec;
+    private string $codec;
     /**
      * @var string sync marker
      */
-    private $sync_marker;
+    private string $sync_marker;
 
-    /**
-     * @param AvroIO $io
-     * @param AvroIODatumWriter $datum_writer
-     * @param AvroSchema $writers_schema
-     * @param string $codec
-     */
-    public function __construct($io, $datum_writer, $writers_schema = null, $codec = AvroDataIO::NULL_CODEC)
-    {
-        if (!($io instanceof AvroIO)) {
-            throw new AvroDataIOException('io must be instance of AvroIO');
-        }
-
+    public function __construct(
+        AvroIO $io,
+        AvroIODatumWriter $datum_writer,
+        null|string|AvroSchema $writers_schema = null,
+        string $codec = AvroDataIO::NULL_CODEC
+    ) {
         $this->io = $io;
-        $this->encoder = new AvroIOBinaryEncoder($this->io);
         $this->datum_writer = $datum_writer;
+        $this->encoder = new AvroIOBinaryEncoder($this->io);
         $this->buffer = new AvroStringIO();
         $this->buffer_encoder = new AvroIOBinaryEncoder($this->buffer);
         $this->block_count = 0;
-        $this->metadata = array();
+        $this->metadata = [];
 
         if ($writers_schema) {
             if (!AvroDataIO::isValidCodec($codec)) {

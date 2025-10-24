@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -21,31 +22,16 @@ namespace Apache\Avro\Tests;
 
 use Apache\Avro\Schema\AvroName;
 use Apache\Avro\Schema\AvroSchemaParseException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class NameExample
+class NameExample implements \Stringable
 {
-    var $is_valid;
-    var $name;
-    var $namespace;
-    var $default_namespace;
-    var $expected_fullname;
-
-    function __construct(
-        $name,
-        $namespace,
-        $default_namespace,
-        $is_valid,
-        $expected_fullname = null
-    ) {
-        $this->name = $name;
-        $this->namespace = $namespace;
-        $this->default_namespace = $default_namespace;
-        $this->is_valid = $is_valid;
-        $this->expected_fullname = $expected_fullname;
+    public function __construct(public $name, public $namespace, public $default_namespace, public $is_valid, public $expected_fullname = null)
+    {
     }
 
-    function __toString()
+    public function __toString(): string
     {
         return var_export($this, true);
     }
@@ -53,10 +39,9 @@ class NameExample
 
 class NameTest extends TestCase
 {
-
-    function fullname_provider()
+    public static function fullname_provider(): array
     {
-        $examples = array(
+        $examples = [
             new NameExample('foo', null, null, true, 'foo'),
             new NameExample('foo', 'bar', null, true, 'bar.foo'),
             new NameExample('bar.foo', 'baz', null, true, 'bar.foo'),
@@ -68,32 +53,33 @@ class NameTest extends TestCase
             new NameExample('bar.f0o', 'baz', null, true, 'bar.f0o'),
             new NameExample(' .foo', 'baz', null, false),
             new NameExample('bar. foo', 'baz', null, false),
-            new NameExample('bar. ', 'baz', null, false)
-        );
-        $exes = array();
+            new NameExample('bar. ', 'baz', null, false),
+        ];
+        $exes = [];
         foreach ($examples as $ex) {
-            $exes [] = array($ex);
+            $exes[] = [$ex];
         }
+
         return $exes;
     }
 
-    /**
-     * @dataProvider fullname_provider
-     */
-    function test_fullname($ex)
+    #[DataProvider('fullname_provider')]
+    public function test_fullname($ex): void
     {
         try {
             $name = new AvroName($ex->name, $ex->namespace, $ex->default_namespace);
             $this->assertTrue($ex->is_valid);
             $this->assertEquals($ex->expected_fullname, $name->fullname());
         } catch (AvroSchemaParseException $e) {
-            $this->assertFalse($ex->is_valid, sprintf("%s:\n%s",
+            $this->assertFalse($ex->is_valid, sprintf(
+                "%s:\n%s",
                 $ex,
-                $e->getMessage()));
+                $e->getMessage()
+            ));
         }
     }
 
-    function name_provider()
+    public static function name_provider(): array
     {
         return [
             ['a', true],
@@ -102,14 +88,12 @@ class NameTest extends TestCase
             ['', false],
             [null, false],
             [' ', false],
-            ['Cons', true]
+            ['Cons', true],
         ];
     }
 
-    /**
-     * @dataProvider name_provider
-     */
-    function test_name($name, $is_well_formed)
+    #[DataProvider('name_provider')]
+    public function test_name($name, $is_well_formed): void
     {
         $this->assertEquals(AvroName::isWellFormedName($name), $is_well_formed);
     }

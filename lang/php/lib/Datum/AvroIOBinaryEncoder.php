@@ -34,18 +34,12 @@ use Apache\Avro\AvroIO;
 class AvroIOBinaryEncoder
 {
     /**
-     * @var AvroIO
-     */
-    private $io;
-
-    /**
      * @param AvroIO $io object to which data is to be written.
      *
      */
-    public function __construct(AvroIO $io)
+    public function __construct(private readonly AvroIO $io)
     {
         Avro::checkPlatform();
-        $this->io = $io;
     }
 
     /**

@@ -57,7 +57,7 @@ class AvroGMP
     private static $gmp_0xfs;
 
     /**
-     * @param int|str $n integer (or string representation of integer) to encode
+     * @param int|string $n integer (or string representation of integer) to encode
      * @return string $bytes of the long $n encoded per the Avro spec
      */
     public static function encodeLong($n)
@@ -104,8 +104,8 @@ class AvroGMP
     }
 
     /**
-     * @param GMP resource
-     * @returns GMP resource 64-bit two's complement of input.
+     * @param \GMP $g resource
+     * @return \GMP resource 64-bit two's complement of input.
      */
     public static function gmpTwosComplement($g)
     {

@@ -26,20 +26,20 @@ use Apache\Avro\AvroIO;
  * AvroIO wrapper for string access
  * @package Avro
  */
-class AvroStringIO extends AvroIO
+class AvroStringIO implements AvroIO, \Stringable
 {
     /**
      * @var string
      */
-    private $string_buffer;
+    private string $string_buffer;
     /**
      * @var int  current position in string
      */
-    private $current_index;
+    private int $current_index;
     /**
      * @var boolean whether or not the string is closed.
      */
-    private $is_closed;
+    private bool $is_closed;
 
     /**
      * @param string $str initial value of AvroStringIO buffer. Regardless
@@ -47,7 +47,7 @@ class AvroStringIO extends AvroIO
      *                    beginning of the buffer.
      * @throws AvroIOException if a non-string value is passed as $str
      */
-    public function __construct($str = '')
+    public function __construct(string $str = '')
     {
         $this->is_closed = false;
         $this->string_buffer = '';
@@ -69,7 +69,7 @@ class AvroStringIO extends AvroIO
      * @returns int count of bytes written.
      * @throws AvroIOException if $args is not a string value.
      */
-    public function write($arg)
+    public function write(string $arg): int
     {
         $this->checkClosed();
         if (is_string($arg)) {
@@ -87,7 +87,7 @@ class AvroStringIO extends AvroIO
     /**
      * @throws AvroIOException if the buffer is closed.
      */
-    private function checkClosed()
+    private function checkClosed(): void
     {
         if ($this->isClosed()) {
             throw new AvroIOException('Buffer is closed');
@@ -95,8 +95,7 @@ class AvroStringIO extends AvroIO
     }
 
     /**
-     * @returns boolean true if this buffer is closed and false
-     *                       otherwise.
+     * @return bool true if this buffer is closed and false otherwise.
      */
     public function isClosed()
     {
@@ -106,9 +105,10 @@ class AvroStringIO extends AvroIO
     /**
      * Appends bytes to this buffer.
      * @param string $str
-     * @returns integer count of bytes written.
+     * @return int count of bytes written.
+     * @throws AvroIOException
      */
-    private function appendStr($str)
+    private function appendStr(string $str): int
     {
         $this->checkClosed();
         $this->string_buffer .= $str;
@@ -121,7 +121,7 @@ class AvroStringIO extends AvroIO
      * @returns string bytes read from buffer
      * @todo test for fencepost errors wrt updating current_index
      */
-    public function read($len)
+    public function read($len): string
     {
         $this->checkClosed();
         $read = '';
@@ -141,7 +141,7 @@ class AvroStringIO extends AvroIO
      * @internal Could probably memoize length for performance, but
      *           no need do this yet.
      */
-    public function length()
+    public function length(): int
     {
         return strlen($this->string_buffer);
     }
@@ -183,37 +183,34 @@ class AvroStringIO extends AvroIO
     }
 
     /**
-     * @returns int
      * @see AvroIO::tell()
      */
-    public function tell()
+    public function tell(): int
     {
         return $this->current_index;
     }
 
     /**
-     * @returns boolean
      * @see AvroIO::isEof()
      */
-    public function isEof()
+    public function isEof(): bool
     {
         return ($this->current_index >= $this->length());
     }
 
     /**
      * No-op provided for compatibility with AvroIO interface.
-     * @returns boolean true
+     * @returns bool true
      */
-    public function flush()
+    public function flush(): bool
     {
         return true;
     }
 
     /**
      * Marks this buffer as closed.
-     * @returns boolean true
      */
-    public function close()
+    public function close(): bool
     {
         $this->checkClosed();
         $this->is_closed = true;
@@ -225,7 +222,7 @@ class AvroStringIO extends AvroIO
      * to the beginning of the buffer.
      * @returns boolean true
      */
-    public function truncate()
+    public function truncate(): bool
     {
         $this->checkClosed();
         $this->string_buffer = '';
@@ -237,7 +234,7 @@ class AvroStringIO extends AvroIO
      * @returns string
      * @uses self::__toString()
      */
-    public function string()
+    public function string(): string
     {
         return (string) $this;
     }
@@ -245,7 +242,7 @@ class AvroStringIO extends AvroIO
     /**
      * @returns string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->string_buffer;
     }

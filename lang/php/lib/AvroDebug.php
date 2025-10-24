@@ -55,12 +55,11 @@ class AvroDebug
     }
 
     /**
-     * @var int $debug_level
-     * @returns boolean true if the given $debug_level is equivalent
+     * @return boolean true if the given $debug_level is equivalent
      *                  or more verbose than than the current debug level
      *                  and false otherwise.
      */
-    public static function isDebug($debug_level = self::DEBUG1)
+    public static function isDebug(int $debug_level = self::DEBUG1): bool
     {
         return (self::DEBUG_LEVEL >= $debug_level);
     }
@@ -92,7 +91,7 @@ class AvroDebug
      */
     public static function bytesArray($str, $format = 'x%02x')
     {
-        $x = array();
+        $x = [];
         foreach (str_split($str) as $b) {
             $x[] = sprintf($format, ord($b));
         }
@@ -151,7 +150,7 @@ class AvroDebug
             throw new AvroException('Unrecognized format specifier');
         }
 
-        $ctrl_chars = array(
+        $ctrl_chars = [
             'NUL',
             'SOH',
             'STX',
@@ -184,8 +183,8 @@ class AvroDebug
             'GS',
             'RS',
             'US'
-        );
-        $x = array();
+        ];
+        $x = [];
         foreach (str_split($str) as $b) {
             $db = ord($b);
             if ($db < 32) {

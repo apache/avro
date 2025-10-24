@@ -77,10 +77,7 @@ class AvroMapSchema extends AvroSchema
         return $this->values;
     }
 
-    /**
-     * @returns mixed
-     */
-    public function toAvro()
+    public function toAvro(): string|array
     {
         $avro = parent::toAvro();
         $avro[AvroSchema::VALUES_ATTR] = $this->isValuesSchemaFromSchemata

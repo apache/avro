@@ -23,7 +23,7 @@ namespace Apache\Avro\Schema;
 /**
  * @package Avro
  */
-class AvroName
+class AvroName implements \Stringable
 {
     /**
      * @var string character used to separate names comprising the fullname
@@ -56,7 +56,7 @@ class AvroName
      * @param string $namespace
      * @param string $default_namespace
      */
-    public function __construct($name, $namespace, $default_namespace)
+    public function __construct($name, $namespace, ?string $default_namespace)
     {
         if (!is_string($name) || empty($name)) {
             throw new AvroSchemaParseException('Name must be a non-empty string.');
@@ -102,7 +102,7 @@ class AvroName
      * @returns string
      * @throws AvroSchemaParseException if any of the names are not valid.
      */
-    private static function parseFullname($name, $namespace)
+    private static function parseFullname($name, $namespace): string
     {
         if (!is_string($namespace) || empty($namespace)) {
             throw new AvroSchemaParseException('Namespace must be a non-empty string.');
@@ -112,11 +112,11 @@ class AvroName
     }
 
     /**
-     * @returns string[] array($name, $namespace)
+     * @return array{0: string, 1: string}
      */
-    public static function extractNamespace($name, $namespace = null)
+    public static function extractNamespace($name, $namespace = null): array
     {
-        $parts = explode(self::NAME_SEPARATOR, $name);
+        $parts = explode(self::NAME_SEPARATOR, (string) $name);
         if (count($parts) > 1) {
             $name = array_pop($parts);
             $namespace = implode(self::NAME_SEPARATOR, $parts);
@@ -128,26 +128,26 @@ class AvroName
      * @returns boolean true if the given name is well-formed
      *          (is a non-null, non-empty string) and false otherwise
      */
-    public static function isWellFormedName($name)
+    public static function isWellFormedName($name): bool
     {
         return (is_string($name) && !empty($name) && preg_match(self::NAME_REGEXP, $name));
     }
 
     /**
-     * @returns array array($name, $namespace)
+     * @return array{0: string, 1: string}
      */
-    public function nameAndNamespace()
+    public function nameAndNamespace(): array
     {
         return [$this->name, $this->namespace];
     }
 
     /**
-     * @returns string fullname
+     * @return string fullname
      * @uses $this->fullname()
      */
-    public function __toString()
+    public function __toString(): string
     {
-        return $this->fullname();
+        return (string) $this->fullname();
     }
 
     /**

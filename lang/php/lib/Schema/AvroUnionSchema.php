@@ -46,8 +46,8 @@ class AvroUnionSchema extends AvroSchema
     {
         parent::__construct(AvroSchema::UNION_SCHEMA);
 
-        $this->schemaFromSchemataIndices = array();
-        $schema_types = array();
+        $this->schemaFromSchemataIndices = [];
+        $schema_types = [];
         foreach ($schemas as $index => $schema) {
             $is_schema_from_schemata = false;
             $new_schema = null;
@@ -105,12 +105,9 @@ class AvroUnionSchema extends AvroSchema
         throw new AvroSchemaParseException('Invalid union schema index');
     }
 
-    /**
-     * @returns mixed
-     */
-    public function toAvro()
+    public function toAvro(): string|array
     {
-        $avro = array();
+        $avro = [];
 
         foreach ($this->schemas as $index => $schema) {
             $avro[] = in_array($index, $this->schemaFromSchemataIndices)
