@@ -20,6 +20,7 @@
 
 namespace Apache\Avro\Schema;
 
+use Apache\Avro\AvroException;
 use Apache\Avro\AvroUtil;
 use Apache\Avro\Datum\Type\AvroDuration;
 
@@ -322,20 +323,24 @@ class AvroSchema implements \Stringable
     {
         $schemata = new AvroNamedSchemata();
         return self::realParse(
-            avro: json_decode($json, true),
+            avro: json_decode($json, true, JSON_THROW_ON_ERROR),
             schemata: $schemata
         );
     }
 
     /**
-     * @param mixed $avro JSON-decoded schema
-     * @param string $default_namespace namespace of enclosing schema
-     * @param AvroNamedSchemata &$schemata reference to named schemas
-     * @returns AvroSchema
+     * @param null|array|string $avro JSON-decoded schema
+     * @param string|null $default_namespace namespace of enclosing schema
+     * @param AvroNamedSchemata|null $schemata reference to named schemas
+     * @return AvroSchema
      * @throws AvroSchemaParseException
+     * @throws AvroException
      */
-    public static function realParse($avro, $default_namespace = null, &$schemata = null)
-    {
+    public static function realParse(
+        null|array|string $avro,
+        ?string $default_namespace = null,
+        ?AvroNamedSchemata &$schemata = null
+    ): AvroSchema {
         if (is_null($schemata)) {
             $schemata = new AvroNamedSchemata();
         }
@@ -566,7 +571,7 @@ class AvroSchema implements \Stringable
                 }
                 return false;
             case self::MAP_SCHEMA:
-                if (is_array($datum)) {
+                if (is_array($datum) && $expected_schema instanceof AvroMapSchema) {
                     foreach ($datum as $k => $v) {
                         if (
                             !is_string($k)
@@ -579,6 +584,10 @@ class AvroSchema implements \Stringable
                 }
                 return false;
             case self::UNION_SCHEMA:
+                if (!$expected_schema instanceof AvroUnionSchema) {
+                    return false;
+                }
+
                 foreach ($expected_schema->schemas() as $schema) {
                     if (self::isValidDatum($schema, $datum)) {
                         return true;
@@ -586,8 +595,15 @@ class AvroSchema implements \Stringable
                 }
                 return false;
             case self::ENUM_SCHEMA:
-                return in_array($datum, $expected_schema->symbols());
+                if (!$expected_schema instanceof AvroEnumSchema) {
+                    return false;
+                }
+                return in_array($datum, $expected_schema->symbols(), true);
             case self::FIXED_SCHEMA:
+                if (!$expected_schema instanceof AvroFixedSchema) {
+                    return false;
+                }
+
                 if (
                     $expected_schema->logicalType() instanceof AvroLogicalType
                 ) {
@@ -613,6 +629,10 @@ class AvroSchema implements \Stringable
             case self::RECORD_SCHEMA:
             case self::ERROR_SCHEMA:
             case self::REQUEST_SCHEMA:
+                if (!($expected_schema instanceof AvroRecordSchema)) {
+                    return false;
+                }
+
                 if (is_array($datum)) {
                     foreach ($expected_schema->fields() as $field) {
                         if (!self::isValidDatum($field->type(), $datum[$field->name()] ?? null)) {

@@ -37,26 +37,27 @@ class AvroName implements \Stringable
     /**
      * @var string valid names are matched by self::NAME_REGEXP
      */
-    private $name;
+    private string $name;
+    /**
+     * @var null|string
+     */
+    private ?string $namespace;
     /**
      * @var string
      */
-    private $namespace;
-    /**
-     * @var string
-     */
-    private $fullname;
+    private string $fullname;
     /**
      * @var string Name qualified as necessary given its default namespace.
      */
-    private $qualified_name;
+    private string $qualified_name;
 
     /**
-     * @param string $name
-     * @param string $namespace
-     * @param string $default_namespace
+     * @param mixed $name
+     * @param string|null $namespace
+     * @param string|null $default_namespace
+     * @throws AvroSchemaParseException
      */
-    public function __construct($name, $namespace, ?string $default_namespace)
+    public function __construct(mixed $name, ?string $namespace, ?string $default_namespace)
     {
         if (!is_string($name) || empty($name)) {
             throw new AvroSchemaParseException('Name must be a non-empty string.');
@@ -82,11 +83,11 @@ class AvroName implements \Stringable
 
     /**
      * @param string $namespace
-     * @returns boolean true if namespace is composed of valid names
+     * @return bool true if namespace is composed of valid names
      * @throws AvroSchemaParseException if any of the namespace components
      *                                  are invalid.
      */
-    private static function checkNamespaceNames($namespace)
+    private static function checkNamespaceNames(string $namespace): bool
     {
         foreach (explode(self::NAME_SEPARATOR, $namespace) as $n) {
             if (empty($n) || (0 === preg_match(self::NAME_REGEXP, $n))) {
@@ -112,11 +113,11 @@ class AvroName implements \Stringable
     }
 
     /**
-     * @return array{0: string, 1: string}
+     * @return array{0: string, 1: null|string}
      */
-    public static function extractNamespace($name, $namespace = null): array
+    public static function extractNamespace(string $name, ?string $namespace = null): array
     {
-        $parts = explode(self::NAME_SEPARATOR, (string) $name);
+        $parts = explode(self::NAME_SEPARATOR, $name);
         if (count($parts) > 1) {
             $name = array_pop($parts);
             $namespace = implode(self::NAME_SEPARATOR, $parts);

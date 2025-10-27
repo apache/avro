@@ -25,8 +25,12 @@ use Apache\Avro\Avro;
 use Apache\Avro\AvroException;
 use Apache\Avro\AvroGMP;
 use Apache\Avro\AvroIO;
+use Apache\Avro\Schema\AvroArraySchema;
 use Apache\Avro\Schema\AvroFixedSchema;
+use Apache\Avro\Schema\AvroMapSchema;
+use Apache\Avro\Schema\AvroRecordSchema;
 use Apache\Avro\Schema\AvroSchema;
+use Apache\Avro\Schema\AvroUnionSchema;
 
 /**
  * Decodes and reads Avro data from an AvroIO object encoded using
@@ -247,20 +251,20 @@ class AvroIOBinaryDecoder
         $decoder->skipInt();
     }
 
-    public function skipUnion(AvroSchema $writers_schema, AvroIOBinaryDecoder $decoder): void
+    public function skipUnion(AvroUnionSchema $writers_schema, AvroIOBinaryDecoder $decoder): void
     {
         $index = $decoder->readLong();
         AvroIODatumReader::skipData($writers_schema->schemaByIndex($index), $decoder);
     }
 
-    public function skipRecord(AvroSchema $writers_schema, AvroIOBinaryDecoder $decoder): void
+    public function skipRecord(AvroRecordSchema $writers_schema, AvroIOBinaryDecoder $decoder): void
     {
         foreach ($writers_schema->fields() as $f) {
             AvroIODatumReader::skipData($f->type(), $decoder);
         }
     }
 
-    public function skipArray(AvroSchema $writers_schema, AvroIOBinaryDecoder $decoder): void
+    public function skipArray(AvroArraySchema $writers_schema, AvroIOBinaryDecoder $decoder): void
     {
         $block_count = $decoder->readLong();
         while (0 !== $block_count) {
@@ -274,7 +278,7 @@ class AvroIOBinaryDecoder
         }
     }
 
-    public function skipMap(AvroSchema $writers_schema, AvroIOBinaryDecoder $decoder): void
+    public function skipMap(AvroMapSchema $writers_schema, AvroIOBinaryDecoder $decoder): void
     {
         $block_count = $decoder->readLong();
         while (0 !== $block_count) {

@@ -26,12 +26,12 @@ namespace Apache\Avro\Schema;
 class AvroRecordSchema extends AvroNamedSchema
 {
     /**
-     * @var AvroNamedSchema[] array of AvroNamedSchema field definitions of
+     * @var array<int, AvroField> array of AvroNamedSchema field definitions of
      *                   this AvroRecordSchema
      */
     private array $fields;
     /**
-     * @var array map of field names to field objects.
+     * @var null|array<string, AvroField> map of field names to field objects.
      * @internal Not called directly. Memoization of AvroRecordSchema->fieldsHash()
      */
     private ?array $fieldsHash = null;
@@ -61,14 +61,14 @@ class AvroRecordSchema extends AvroNamedSchema
     }
 
     /**
-     * @param mixed $field_data
      * @param null|string $default_namespace namespace of enclosing schema
-     * @param AvroNamedSchemata &$schemata
-     * @returns AvroField[]
      * @throws AvroSchemaParseException
      */
-    public static function parseFields(array $field_data, ?string $default_namespace, &$schemata): array
-    {
+    public static function parseFields(
+        array $field_data,
+        ?string $default_namespace,
+        ?AvroNamedSchemata $schemata = null
+    ): array {
         $fields = [];
         $field_names = [];
         $alias_names = [];
@@ -76,7 +76,7 @@ class AvroRecordSchema extends AvroNamedSchema
             $name = $field[AvroField::FIELD_NAME_ATTR] ?? null;
             $type = $field[AvroSchema::TYPE_ATTR] ?? null;
             $order = $field[AvroField::ORDER_ATTR] ?? null;
-            $aliases = $field[AvroField::ALIASES_ATTR] ?? null;
+            $aliases = $field[AvroSchema::ALIASES_ATTR] ?? null;
 
             $default = null;
             $has_default = false;
@@ -107,13 +107,13 @@ class AvroRecordSchema extends AvroNamedSchema
             }
 
             $new_field = new AvroField(
-                $name,
-                $field_schema,
-                $is_schema_from_schemata,
-                $has_default,
-                $default,
-                $order,
-                $aliases
+                name: $name,
+                schema: $field_schema,
+                isTypeFromSchemata: $is_schema_from_schemata,
+                hasDefault: $has_default,
+                default: $default,
+                order: $order,
+                aliases: $aliases
             );
             $field_names[] = $name;
             if ($new_field->hasAliases() && array_intersect($alias_names, $new_field->getAliases())) {

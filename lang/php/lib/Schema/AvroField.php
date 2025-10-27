@@ -59,52 +59,46 @@ class AvroField extends AvroSchema
     /**
      * @var array list of valid field sort order values
      */
-    private static $validFieldSortOrders = [
+    private static array $validFieldSortOrders = [
         self::ASC_SORT_ORDER,
         self::DESC_SORT_ORDER,
         self::IGNORE_SORT_ORDER
     ];
+
+    private ?string $name;
+
+    private bool $isTypeFromSchemata;
+
     /**
-     * @var string
+     * @var bool whether or no there is a default value
      */
-    private $name;
+    private bool $hasDefault;
+
     /**
      * @var string field default value
      */
-    private $default;
+    private mixed $default;
     /**
-     * @var string sort order of this field
+     * @var null|string sort order of this field
      */
-    private $order;
+    private ?string $order;
     /**
      * @var array|null
      */
-    private $aliases;
+    private ?array $aliases;
 
     /**
-     * @param string $name
-     * @param AvroSchema $schema
-     * @param boolean $isTypeFromSchemata
-     * @param $has_default
-     * @param string $default
-     * @param string $order
-     * @param array $aliases
      * @throws AvroSchemaParseException
      * @todo Check validity of $default value
-     * @todo Check validity of $order value
-     * @param bool $has_default
      */
     public function __construct(
-        $name,
-        $schema,
-        private $isTypeFromSchemata,
-        /**
-         * @var boolean whether or no there is a default value
-         */
-        private $hasDefault,
-        $default,
-        $order = null,
-        $aliases = null
+        ?string $name,
+        string|AvroSchema $schema,
+        bool $isTypeFromSchemata,
+        bool $hasDefault,
+        mixed $default,
+        ?string $order = null,
+        mixed $aliases = null
     ) {
         if (!AvroName::isWellFormedName($name)) {
             throw new AvroSchemaParseException('Field requires a "name" attribute');
@@ -112,6 +106,8 @@ class AvroField extends AvroSchema
 
         parent::__construct($schema);
         $this->name = $name;
+        $this->isTypeFromSchemata = $isTypeFromSchemata;
+        $this->hasDefault = $hasDefault;
         if ($this->hasDefault) {
             $this->default = $default;
         }
@@ -122,11 +118,10 @@ class AvroField extends AvroSchema
     }
 
     /**
-     * @param string $order
      * @throws AvroSchemaParseException if $order is not a valid
      *                                  field order value.
      */
-    private static function checkOrderValue($order)
+    private static function checkOrderValue(?string $order): void
     {
         if (!is_null($order) && !self::isValidFieldSortOrder($order)) {
             throw new AvroSchemaParseException(
@@ -135,28 +130,27 @@ class AvroField extends AvroSchema
         }
     }
 
-    /**
-     * @param string $order
-     * @returns boolean
-     */
-    private static function isValidFieldSortOrder($order)
+    private static function isValidFieldSortOrder(string $order): bool
     {
-        return in_array($order, self::$validFieldSortOrders);
+        return in_array($order, self::$validFieldSortOrders, true);
     }
 
     public function toAvro(): string|array
     {
-        $avro = [AvroField::FIELD_NAME_ATTR => $this->name];
+        $avro = [self::FIELD_NAME_ATTR => $this->name];
 
-        $avro[AvroSchema::TYPE_ATTR] = ($this->isTypeFromSchemata)
-            ? $this->type->qualifiedName() : $this->type->toAvro();
+        $avro[AvroSchema::TYPE_ATTR] = match (true) {
+            $this->isTypeFromSchemata && $this->type instanceof AvroNamedSchema => $this->type->qualifiedName(),
+            $this->type instanceof AvroSchema => $this->type->toAvro(),
+            is_string($this->type) => $this->type,
+        };
 
         if (isset($this->default)) {
-            $avro[AvroField::DEFAULT_ATTR] = $this->default;
+            $avro[self::DEFAULT_ATTR] = $this->default;
         }
 
         if ($this->order) {
-            $avro[AvroField::ORDER_ATTR] = $this->order;
+            $avro[self::ORDER_ATTR] = $this->order;
         }
 
         return $avro;

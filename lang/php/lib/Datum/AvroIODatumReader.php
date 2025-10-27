@@ -110,9 +110,9 @@ class AvroIODatumReader
     }
 
     /**
-     *
-     * @returns boolean true if the schemas are consistent with
+     * @return bool true if the schemas are consistent with
      *                  each other and false otherwise.
+     * @throws AvroSchemaParseException
      */
     public static function schemasMatch(
         AvroSchema $writers_schema,
@@ -131,12 +131,24 @@ class AvroIODatumReader
 
         switch ($readers_schema_type) {
             case AvroSchema::MAP_SCHEMA:
+                if (
+                    !$writers_schema instanceof AvroMapSchema
+                    || !$readers_schema instanceof AvroMapSchema
+                ) {
+                    return false;
+                }
                 return self::attributesMatch(
                     $writers_schema->values(),
                     $readers_schema->values(),
                     [AvroSchema::TYPE_ATTR]
                 );
             case AvroSchema::ARRAY_SCHEMA:
+                if (
+                    !$writers_schema instanceof AvroArraySchema
+                    || !$readers_schema instanceof AvroArraySchema
+                ) {
+                    return false;
+                }
                 return self::attributesMatch(
                     $writers_schema->items(),
                     $readers_schema->items(),

@@ -22,9 +22,14 @@ namespace Apache\Avro\Datum;
 
 use Apache\Avro\AvroException;
 use Apache\Avro\Datum\Type\AvroDuration;
+use Apache\Avro\Schema\AvroArraySchema;
+use Apache\Avro\Schema\AvroEnumSchema;
 use Apache\Avro\Schema\AvroLogicalType;
+use Apache\Avro\Schema\AvroMapSchema;
+use Apache\Avro\Schema\AvroRecordSchema;
 use Apache\Avro\Schema\AvroSchema;
 use Apache\Avro\Schema\AvroSchemaParseException;
+use Apache\Avro\Schema\AvroUnionSchema;
 
 /**
  * Handles schema-specific writing of data to the encoder.
@@ -59,7 +64,6 @@ class AvroIODatumWriter
      * @param AvroSchema $writers_schema
      * @param $datum
      * @param AvroIOBinaryEncoder $encoder
-     * @return mixed
      *
      * @throws AvroIOTypeException if $datum is invalid for $writers_schema
      * @throws AvroException if the type is invalid
@@ -156,7 +160,7 @@ class AvroIODatumWriter
     /**
      * @throws AvroIOTypeException
      */
-    private function writeArray(AvroSchema $writers_schema, array $datum, AvroIOBinaryEncoder $encoder): void
+    private function writeArray(AvroArraySchema $writers_schema, array $datum, AvroIOBinaryEncoder $encoder): void
     {
         $datum_count = count($datum);
         if (0 < $datum_count) {
@@ -172,7 +176,7 @@ class AvroIODatumWriter
     /**
      * @throws AvroIOTypeException
      */
-    private function writeMap(AvroSchema $writers_schema, array $datum, AvroIOBinaryEncoder $encoder): void
+    private function writeMap(AvroMapSchema $writers_schema, array $datum, AvroIOBinaryEncoder $encoder): void
     {
         $datum_count = count($datum);
         if ($datum_count > 0) {
@@ -223,13 +227,13 @@ class AvroIODatumWriter
         $encoder->write($datum);
     }
 
-    private function writeEnum(AvroSchema $writers_schema, $datum, AvroIOBinaryEncoder $encoder): void
+    private function writeEnum(AvroEnumSchema $writers_schema, $datum, AvroIOBinaryEncoder $encoder): void
     {
         $datum_index = $writers_schema->symbolIndex($datum);
         $encoder->writeInt($datum_index);
     }
 
-    private function writeRecord(AvroSchema $writers_schema, mixed $datum, AvroIOBinaryEncoder $encoder): void
+    private function writeRecord(AvroRecordSchema $writers_schema, mixed $datum, AvroIOBinaryEncoder $encoder): void
     {
         foreach ($writers_schema->fields() as $field) {
             $this->writeValidatedData($field->type(), $datum[$field->name()] ?? null, $encoder);
@@ -240,7 +244,7 @@ class AvroIODatumWriter
      * @throws AvroIOTypeException
      * @throws AvroSchemaParseException
      */
-    private function writeUnion(AvroSchema $writers_schema, mixed $datum, AvroIOBinaryEncoder $encoder): void
+    private function writeUnion(AvroUnionSchema $writers_schema, mixed $datum, AvroIOBinaryEncoder $encoder): void
     {
         $datum_schema_index = -1;
         $datum_schema = null;

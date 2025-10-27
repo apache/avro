@@ -28,10 +28,6 @@ namespace Apache\Avro\Schema;
  */
 class AvroNamedSchemata
 {
-    /**
-     * @param AvroNamedSchemata[]
-     * @param \Apache\Avro\Schema\AvroNamedSchema[] $schemata
-     */
     public function __construct(
         /**
          * @var AvroNamedSchema[]
@@ -51,19 +47,19 @@ class AvroNamedSchemata
 
     /**
      * @param AvroName $name
-     * @returns AvroSchema|null
+     * @return AvroSchema|null
      */
-    public function schemaByName($name)
+    public function schemaByName(AvroName $name): ?AvroSchema
     {
         return $this->schema($name->fullname());
     }
 
     /**
      * @param string $fullname
-     * @returns AvroSchema|null the schema which has the given name,
+     * @return AvroSchema|null the schema which has the given name,
      *          or null if there is no schema with the given name.
      */
-    public function schema($fullname)
+    public function schema(string $fullname): ?AvroSchema
     {
         return $this->schemata[$fullname] ?? null;
     }
@@ -71,10 +67,10 @@ class AvroNamedSchemata
     /**
      * Creates a new AvroNamedSchemata instance of this schemata instance
      * with the given $schema appended.
-     * @param AvroNamedSchema schema to add to this existing schemata
-     * @returns AvroNamedSchemata
+     * @param AvroNamedSchema $schema schema to add to this existing schemata
+     * @throws AvroSchemaParseException
      */
-    public function cloneWithNewSchema($schema)
+    public function cloneWithNewSchema(AvroNamedSchema $schema): AvroNamedSchemata
     {
         $name = $schema->fullname();
         if (AvroSchema::isValidType($name)) {
@@ -89,11 +85,10 @@ class AvroNamedSchemata
     }
 
     /**
-     * @param string $fullname
-     * @returns boolean true if there exists a schema with the given name
+     * @returns bool true if there exists a schema with the given name
      *                  and false otherwise.
      */
-    public function hasName($fullname)
+    public function hasName(string $fullname): bool
     {
         return array_key_exists($fullname, $this->schemata);
     }
