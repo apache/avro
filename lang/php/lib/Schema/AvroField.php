@@ -24,7 +24,7 @@ namespace Apache\Avro\Schema;
  * Field of an {@link AvroRecordSchema}
  * @package Avro
  */
-class AvroField extends AvroSchema
+class AvroField extends AvroSchema implements AvroAliasedSchema
 {
     /**
      * @var string fields name attribute name
@@ -59,66 +59,55 @@ class AvroField extends AvroSchema
     /**
      * @var array list of valid field sort order values
      */
-    private static $validFieldSortOrders = array(
+    private static array $validFieldSortOrders = [
         self::ASC_SORT_ORDER,
         self::DESC_SORT_ORDER,
         self::IGNORE_SORT_ORDER
-    );
+    ];
+
+    private ?string $name;
+
+    private bool $isTypeFromSchemata;
+
     /**
-     * @var string
+     * @var bool whether or no there is a default value
      */
-    private $name;
-    /**
-     * @var boolean whether or no there is a default value
-     */
-    private $hasDefault;
+    private bool $hasDefault;
+
     /**
      * @var string field default value
      */
-    private $default;
+    private mixed $default;
     /**
-     * @var string sort order of this field
+     * @var null|string sort order of this field
      */
-    private $order;
-    /**
-     * @var boolean whether or not the AvroNamedSchema of this field is
-     *              defined in the AvroNamedSchemata instance
-     */
-    private $isTypeFromSchemata;
+    private ?string $order;
     /**
      * @var array|null
      */
-    private $aliases;
+    private ?array $aliases;
 
     /**
-     * @param string $name
-     * @param AvroSchema $schema
-     * @param boolean $is_type_from_schemata
-     * @param $has_default
-     * @param string $default
-     * @param string $order
-     * @param array $aliases
      * @throws AvroSchemaParseException
      * @todo Check validity of $default value
-     * @todo Check validity of $order value
      */
     public function __construct(
-        $name,
-        $schema,
-        $is_type_from_schemata,
-        $has_default,
-        $default,
-        $order = null,
-        $aliases = null
+        ?string $name,
+        string|AvroSchema $schema,
+        bool $isTypeFromSchemata,
+        bool $hasDefault,
+        mixed $default,
+        ?string $order = null,
+        mixed $aliases = null
     ) {
         if (!AvroName::isWellFormedName($name)) {
             throw new AvroSchemaParseException('Field requires a "name" attribute');
         }
 
         parent::__construct($schema);
-        $this->isTypeFromSchemata = $is_type_from_schemata;
         $this->name = $name;
-        $this->hasDefault = $has_default;
+        $this->isTypeFromSchemata = $isTypeFromSchemata;
+        $this->hasDefault = $hasDefault;
         if ($this->hasDefault) {
             $this->default = $default;
         }
@@ -129,11 +118,10 @@ class AvroField extends AvroSchema
     }
 
     /**
-     * @param string $order
      * @throws AvroSchemaParseException if $order is not a valid
      *                                  field order value.
      */
-    private static function checkOrderValue($order)
+    private static function checkOrderValue(?string $order): void
     {
         if (!is_null($order) && !self::isValidFieldSortOrder($order)) {
             throw new AvroSchemaParseException(
@@ -142,31 +130,27 @@ class AvroField extends AvroSchema
         }
     }
 
-    /**
-     * @param string $order
-     * @returns boolean
-     */
-    private static function isValidFieldSortOrder($order)
+    private static function isValidFieldSortOrder(string $order): bool
     {
-        return in_array($order, self::$validFieldSortOrders);
+        return in_array($order, self::$validFieldSortOrders, true);
     }
 
-    /**
-     * @returns mixed
-     */
-    public function toAvro()
+    public function toAvro(): string|array
     {
-        $avro = array(AvroField::FIELD_NAME_ATTR => $this->name);
+        $avro = [self::FIELD_NAME_ATTR => $this->name];
 
-        $avro[AvroSchema::TYPE_ATTR] = ($this->isTypeFromSchemata)
-            ? $this->type->qualifiedName() : $this->type->toAvro();
+        $avro[AvroSchema::TYPE_ATTR] = match (true) {
+            $this->isTypeFromSchemata && $this->type instanceof AvroNamedSchema => $this->type->qualifiedName(),
+            $this->type instanceof AvroSchema => $this->type->toAvro(),
+            is_string($this->type) => $this->type,
+        };
 
         if (isset($this->default)) {
-            $avro[AvroField::DEFAULT_ATTR] = $this->default;
+            $avro[self::DEFAULT_ATTR] = $this->default;
         }
 
         if ($this->order) {
-            $avro[AvroField::ORDER_ATTR] = $this->order;
+            $avro[self::ORDER_ATTR] = $this->order;
         }
 
         return $avro;
@@ -196,7 +180,7 @@ class AvroField extends AvroSchema
         return $this->hasDefault;
     }
 
-    public function getAliases()
+    public function getAliases(): ?array
     {
         return $this->aliases;
     }

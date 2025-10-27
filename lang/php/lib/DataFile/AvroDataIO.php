@@ -99,7 +99,7 @@ class AvroDataIO
      */
     public static function magicSize()
     {
-        return strlen(self::magic());
+        return strlen((string) self::magic());
     }
 
     /**

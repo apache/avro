@@ -42,9 +42,6 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
         php:
-          - '7.3'
-          - '7.4'
-          - '8.0'
           - '8.1'
           - '8.2'
           - '8.3'
@@ -71,7 +68,11 @@ jobs:
             ${{ runner.os }}-composer-
 
       - name: Lint
+        if: matrix.php.version == '8.1'
         run: ./build.sh lint
+
+      - name: Static analysis
+        run: ./build.sh phpstan
 
       - name: Test
         run: ./build.sh test
@@ -84,9 +85,6 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
         php:
-          - '7.3'
-          - '7.4'
-          - '8.0'
           - '8.1'
           - '8.2'
           - '8.3'

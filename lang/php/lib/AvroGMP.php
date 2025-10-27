@@ -32,32 +32,32 @@ namespace Apache\Avro;
 class AvroGMP
 {
     /**
-     * @var resource memoized GMP resource for zero
+     * @var \GMP memoized GMP resource for zero
      */
     private static $gmp_0;
     /**
-     * @var resource memoized GMP resource for one (1)
+     * @var \GMP memoized GMP resource for one (1)
      */
     private static $gmp_1;
     /**
-     * @var resource memoized GMP resource for two (2)
+     * @var \GMP memoized GMP resource for two (2)
      */
     private static $gmp_2;
     /**
-     * @var resource memoized GMP resource for 0x7f
+     * @var \GMP memoized GMP resource for 0x7f
      */
     private static $gmp_0x7f;
     /**
-     * @var resource memoized GMP resource for 64-bit ~0x7f
+     * @var \GMP memoized GMP resource for 64-bit ~0x7f
      */
     private static $gmp_n0x7f;
     /**
-     * @var resource memoized GMP resource for 64-bits of 1
+     * @var \GMP memoized GMP resource for 64-bits of 1
      */
     private static $gmp_0xfs;
 
     /**
-     * @param int|str $n integer (or string representation of integer) to encode
+     * @param int|string $n integer (or string representation of integer) to encode
      * @return string $bytes of the long $n encoded per the Avro spec
      */
     public static function encodeLong($n)
@@ -104,8 +104,8 @@ class AvroGMP
     }
 
     /**
-     * @param GMP resource
-     * @returns GMP resource 64-bit two's complement of input.
+     * @param \GMP $g resource
+     * @return \GMP resource 64-bit two's complement of input.
      */
     public static function gmpTwosComplement($g)
     {
@@ -147,7 +147,7 @@ class AvroGMP
     // phpcs:disable PSR1.Methods.CamelCapsMethodName
 
     /**
-     * @returns resource GMP resource for two (2)
+     * @returns \GMP GMP resource for two (2)
      */
     private static function gmp_2()
     {

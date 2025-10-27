@@ -31,23 +31,24 @@ class AvroUnionSchema extends AvroSchema
      * @var int[] list of indices of named schemas which
      *                are defined in $schemata
      */
-    public $schemaFromSchemataIndices;
+    public array $schemaFromSchemataIndices;
     /**
      * @var AvroSchema[] list of schemas of this union
      */
-    private $schemas;
+    private array $schemas;
 
     /**
      * @param AvroSchema[] $schemas list of schemas in the union
-     * @param string $defaultNamespace namespace of enclosing schema
-     * @param AvroNamedSchemata &$schemata
+     * @param null|string $defaultNamespace namespace of enclosing schema
+     * @param null|AvroNamedSchemata &$schemata
+     * @throws AvroSchemaParseException
      */
-    public function __construct($schemas, $defaultNamespace, &$schemata = null)
+    public function __construct(array $schemas, ?string $defaultNamespace, ?AvroNamedSchemata &$schemata = null)
     {
         parent::__construct(AvroSchema::UNION_SCHEMA);
 
-        $this->schemaFromSchemataIndices = array();
-        $schema_types = array();
+        $this->schemaFromSchemataIndices = [];
+        $schema_types = [];
         foreach ($schemas as $index => $schema) {
             $is_schema_from_schemata = false;
             $new_schema = null;
@@ -86,17 +87,17 @@ class AvroUnionSchema extends AvroSchema
     /**
      * @returns AvroSchema[]
      */
-    public function schemas()
+    public function schemas(): array
     {
         return $this->schemas;
     }
 
     /**
-     * @returns AvroSchema the particular schema from the union for
+     * @return AvroSchema the particular schema from the union for
      * the given (zero-based) index.
      * @throws AvroSchemaParseException if the index is invalid for this schema.
      */
-    public function schemaByIndex($index)
+    public function schemaByIndex($index): AvroSchema
     {
         if (count($this->schemas) > $index) {
             return $this->schemas[$index];
@@ -105,15 +106,12 @@ class AvroUnionSchema extends AvroSchema
         throw new AvroSchemaParseException('Invalid union schema index');
     }
 
-    /**
-     * @returns mixed
-     */
-    public function toAvro()
+    public function toAvro(): string|array
     {
-        $avro = array();
+        $avro = [];
 
         foreach ($this->schemas as $index => $schema) {
-            $avro[] = in_array($index, $this->schemaFromSchemataIndices)
+            $avro[] = in_array($index, $this->schemaFromSchemataIndices) && $schema instanceof AvroNamedSchema
                 ? $schema->qualifiedName()
                 : $schema->toAvro();
         }
