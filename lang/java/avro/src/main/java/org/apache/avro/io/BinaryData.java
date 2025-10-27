@@ -181,10 +181,10 @@ public class BinaryData {
 
   /**
    * Lexicographically compare bytes. If equal, return zero. If greater-than,
-   * return a positive value, if less than return a negative value.
+   * return a positive value, if less than, return a negative value.
    */
   public static int compareBytes(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-    return Arrays.compare(b1, s1, s1 + l1, b2, s2, s2 + l2);
+    return Arrays.compareUnsigned(b1, s1, s1 + l1, b2, s2, s2 + l2);
   }
 
   private static class HashData {
