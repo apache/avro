@@ -247,20 +247,20 @@ class AvroIOBinaryDecoder
         $decoder->skipInt();
     }
 
-    public function skipUnion($writers_schema, AvroIOBinaryDecoder $decoder): void
+    public function skipUnion(AvroSchema $writers_schema, AvroIOBinaryDecoder $decoder): void
     {
         $index = $decoder->readLong();
         AvroIODatumReader::skipData($writers_schema->schemaByIndex($index), $decoder);
     }
 
-    public function skipRecord($writers_schema, AvroIOBinaryDecoder $decoder): void
+    public function skipRecord(AvroSchema $writers_schema, AvroIOBinaryDecoder $decoder): void
     {
         foreach ($writers_schema->fields() as $f) {
             AvroIODatumReader::skipData($f->type(), $decoder);
         }
     }
 
-    public function skipArray($writers_schema, AvroIOBinaryDecoder $decoder): void
+    public function skipArray(AvroSchema $writers_schema, AvroIOBinaryDecoder $decoder): void
     {
         $block_count = $decoder->readLong();
         while (0 !== $block_count) {
@@ -274,7 +274,7 @@ class AvroIOBinaryDecoder
         }
     }
 
-    public function skipMap($writers_schema, AvroIOBinaryDecoder $decoder): void
+    public function skipMap(AvroSchema $writers_schema, AvroIOBinaryDecoder $decoder): void
     {
         $block_count = $decoder->readLong();
         while (0 !== $block_count) {

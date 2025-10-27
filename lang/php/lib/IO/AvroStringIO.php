@@ -39,7 +39,7 @@ class AvroStringIO implements AvroIO, \Stringable
      */
     private int $current_index;
     /**
-     * @var boolean whether or not the string is closed.
+     * @var bool whether or not the string is closed.
      */
     private bool $is_closed;
 

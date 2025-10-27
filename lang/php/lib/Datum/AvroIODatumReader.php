@@ -22,10 +22,14 @@ namespace Apache\Avro\Datum;
 
 use Apache\Avro\AvroException;
 use Apache\Avro\Datum\Type\AvroDuration;
+use Apache\Avro\Schema\AvroArraySchema;
+use Apache\Avro\Schema\AvroEnumSchema;
 use Apache\Avro\Schema\AvroFixedSchema;
 use Apache\Avro\Schema\AvroLogicalType;
+use Apache\Avro\Schema\AvroMapSchema;
 use Apache\Avro\Schema\AvroName;
 use Apache\Avro\Schema\AvroSchema;
+use Apache\Avro\Schema\AvroSchemaParseException;
 use Apache\Avro\Schema\AvroUnionSchema;
 
 /**
@@ -38,8 +42,10 @@ use Apache\Avro\Schema\AvroUnionSchema;
  */
 class AvroIODatumReader
 {
-    public function __construct(private ?AvroSchema $writers_schema = null, private ?AvroSchema $readers_schema = null)
-    {
+    public function __construct(
+        private ?AvroSchema $writers_schema = null,
+        private ?AvroSchema $readers_schema = null
+    ) {
     }
 
     public function setWritersSchema(AvroSchema $readers_schema): void
@@ -47,15 +53,12 @@ class AvroIODatumReader
         $this->writers_schema = $readers_schema;
     }
 
-    /**
-     * @param AvroIOBinaryDecoder $decoder
-     * @returns string
-     */
-    public function read($decoder)
+    public function read(AvroIOBinaryDecoder $decoder): mixed
     {
         if (is_null($this->readers_schema)) {
             $this->readers_schema = $this->writers_schema;
         }
+
         return $this->readData(
             $this->writers_schema,
             $this->readers_schema,
@@ -111,8 +114,10 @@ class AvroIODatumReader
      * @returns boolean true if the schemas are consistent with
      *                  each other and false otherwise.
      */
-    public static function schemasMatch(AvroSchema $writers_schema, AvroSchema $readers_schema)
-    {
+    public static function schemasMatch(
+        AvroSchema $writers_schema,
+        AvroSchema $readers_schema
+    ): bool {
         $writers_schema_type = $writers_schema->type;
         $readers_schema_type = $readers_schema->type;
 
@@ -195,10 +200,14 @@ class AvroIODatumReader
      * @param AvroSchema $schema_two
      * @param string[] $attribute_names array of string attribute names to compare
      *
-     * @return boolean true if the attributes match and false otherwise.
+     * @return bool true if the attributes match and false otherwise.
+     * @throws AvroSchemaParseException
      */
-    public static function attributesMatch($schema_one, $schema_two, $attribute_names)
-    {
+    public static function attributesMatch(
+        AvroSchema $schema_one,
+        AvroSchema $schema_two,
+        array $attribute_names
+    ): bool {
         foreach ($attribute_names as $attribute_name) {
             if ($schema_one->attribute($attribute_name) !== $schema_two->attribute($attribute_name)) {
                 if ($attribute_name === AvroSchema::FULLNAME_ATTR) {
@@ -238,17 +247,17 @@ class AvroIODatumReader
         return $bytes;
     }
 
-    /**
-     * @return array
-     */
-    public function readArray(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
-    {
+    public function readArray(
+        AvroSchema $writers_schema,
+        AvroSchema $readers_schema,
+        AvroIOBinaryDecoder $decoder
+    ): array {
         $items = [];
         $block_count = $decoder->readLong();
         while (0 !== $block_count) {
             if ($block_count < 0) {
                 $block_count = -$block_count;
-                $block_size = $decoder->readLong(); // Read (and ignore) block size
+                $decoder->readLong(); // Read (and ignore) block size
             }
             for ($i = 0; $i < $block_count; $i++) {
                 $items [] = $this->readData(
@@ -259,13 +268,14 @@ class AvroIODatumReader
             }
             $block_count = $decoder->readLong();
         }
+
         return $items;
     }
 
     /**
-     * @returns array
+     * @returns array<int, mixed>
      */
-    public function readMap(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
+    public function readMap(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder): array
     {
         $items = [];
         $pair_count = $decoder->readLong();
@@ -273,7 +283,7 @@ class AvroIODatumReader
             if ($pair_count < 0) {
                 $pair_count = -$pair_count;
                 // Note: we're not doing anything with block_size other than skipping it
-                $block_size = $decoder->readLong();
+                $decoder->readLong();
             }
 
             for ($i = 0; $i < $pair_count; $i++) {
@@ -289,34 +299,33 @@ class AvroIODatumReader
         return $items;
     }
 
-    /**
-     * @returns mixed
-     */
-    public function readUnion(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
+    public function readUnion(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder): mixed
     {
         $schema_index = $decoder->readLong();
         $selected_writers_schema = $writers_schema->schemaByIndex($schema_index);
         return $this->readData($selected_writers_schema, $readers_schema, $decoder);
     }
 
-    /**
-     * @returns string
-     */
-    public function readEnum(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
-    {
+    public function readEnum(
+        AvroSchema $writers_schema,
+        AvroSchema $readers_schema,
+        AvroIOBinaryDecoder $decoder
+    ): ?string {
         $symbol_index = $decoder->readInt();
         $symbol = $writers_schema->symbolByIndex($symbol_index);
+
         if (!$readers_schema->hasSymbol($symbol)) {
-            null;
+            return null;
         } // FIXME: unset wrt schema resolution
+
         return $symbol;
     }
 
-    /**
-     * @returns string|AvroDuration
-     */
-    public function readFixed(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
-    {
+    public function readFixed(
+        AvroSchema $writers_schema,
+        AvroSchema $readers_schema,
+        AvroIOBinaryDecoder $decoder
+    ): string|AvroDuration {
         $logicalTypeWriters = $writers_schema->logicalType();
         if ($logicalTypeWriters instanceof AvroLogicalType) {
             if ($logicalTypeWriters !== $readers_schema->logicalType()) {
@@ -329,11 +338,13 @@ class AvroIODatumReader
                     return $this->readDecimal($decoder->readBytes(), $scale);
                 case AvroSchema::DURATION_LOGICAL_TYPE:
                     $encodedDuration = $decoder->read($writers_schema->size());
-                    if (strlen((string) $encodedDuration) !== 12) {
-                        throw new AvroException('Invalid duration fixed size: ' . strlen((string) $encodedDuration));
+                    if (strlen($encodedDuration) !== 12) {
+                        throw new AvroException('Invalid duration fixed size: ' . strlen($encodedDuration));
                     }
 
                     return AvroDuration::fromBytes($encodedDuration);
+                default:
+                    throw new AvroException('Unknown logical type for fixed: ' . $logicalTypeWriters->name());
             }
         }
 
@@ -377,7 +388,7 @@ class AvroIODatumReader
     }
 
     public static function skipData(
-        AvroSchema $writers_schema,
+        AvroSchema|AvroFixedSchema|AvroEnumSchema|AvroUnionSchema|AvroArraySchema|AvroMapSchema $writers_schema,
         AvroIOBinaryDecoder $decoder
     ): void {
         match ($writers_schema->type()) {
@@ -404,11 +415,11 @@ class AvroIODatumReader
 
     /**
      * @param null|boolean|int|float|string|array $default_value
-     * @returns null|boolean|int|float|string|array
+     * @return null|boolean|int|float|string|array
      *
      * @throws AvroException if $field_schema type is unknown.
      */
-    public function readDefaultValue(AvroSchema $field_schema, $default_value)
+    public function readDefaultValue(AvroSchema $field_schema, mixed $default_value)
     {
         switch ($field_schema->type()) {
             case AvroSchema::NULL_TYPE:
