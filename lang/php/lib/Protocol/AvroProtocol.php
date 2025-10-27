@@ -48,11 +48,16 @@ class AvroProtocol
      */
     public static function parse(string $json): self
     {
-        if (false === json_validate($json)) {
-            throw new AvroProtocolParseException("Protocol can't be null");
+        try {
+            return self::realParse(
+                json_decode($json, associative: true, flags: JSON_THROW_ON_ERROR)
+            );
+        } catch (\JsonException $e) {
+            throw new AvroProtocolParseException(
+                "Protocol json schema is invalid: ".$e->getMessage(),
+                previous: $e
+            );
         }
-
-        return self::realParse(json_decode($json, true, JSON_THROW_ON_ERROR));
     }
 
     /**
