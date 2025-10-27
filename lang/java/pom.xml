@@ -69,7 +69,7 @@
     <file-management.version>3.2.0</file-management.version>
     <javacc-plugin.version>3.0.3</javacc-plugin.version>
     <javacc.version>7.0.13</javacc.version>
-    <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
+    <maven-antrun-plugin.version>3.2.0</maven-antrun-plugin.version>
   </properties>
 
   <modules>
