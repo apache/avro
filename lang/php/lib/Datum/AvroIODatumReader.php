@@ -22,12 +22,14 @@ namespace Apache\Avro\Datum;
 
 use Apache\Avro\AvroException;
 use Apache\Avro\Datum\Type\AvroDuration;
+use Apache\Avro\Schema\AvroAliasedSchema;
 use Apache\Avro\Schema\AvroArraySchema;
 use Apache\Avro\Schema\AvroEnumSchema;
 use Apache\Avro\Schema\AvroFixedSchema;
 use Apache\Avro\Schema\AvroLogicalType;
 use Apache\Avro\Schema\AvroMapSchema;
 use Apache\Avro\Schema\AvroName;
+use Apache\Avro\Schema\AvroRecordSchema;
 use Apache\Avro\Schema\AvroSchema;
 use Apache\Avro\Schema\AvroSchemaParseException;
 use Apache\Avro\Schema\AvroUnionSchema;
@@ -221,23 +223,28 @@ class AvroIODatumReader
         array $attribute_names
     ): bool {
         foreach ($attribute_names as $attribute_name) {
-            if ($schema_one->attribute($attribute_name) !== $schema_two->attribute($attribute_name)) {
-                if ($attribute_name === AvroSchema::FULLNAME_ATTR) {
-                    foreach ($schema_two->getAliases() as $alias) {
-                        if (
-                            $schema_one->attribute($attribute_name) === (new AvroName(
-                                $alias,
-                                $schema_two->attribute(AvroSchema::NAMESPACE_ATTR),
-                                null
-                            ))->fullname()
-                        ) {
-                            return true;
-                        }
+            if ($schema_one->attribute($attribute_name) === $schema_two->attribute($attribute_name)) {
+                continue;
+            }
+
+            if (AvroSchema::FULLNAME_ATTR === $attribute_name) {
+                if (!$schema_two instanceof AvroAliasedSchema) {
+                    return false;
+                }
+                foreach ($schema_two->getAliases() as $alias) {
+                    if (
+                        $schema_one->attribute($attribute_name) !== (new AvroName(
+                            $alias,
+                            $schema_two->attribute(AvroSchema::NAMESPACE_ATTR),
+                            null
+                        ))->fullname()
+                    ) {
+                        return false;
                     }
                 }
-                return false;
             }
         }
+
         return true;
     }
 
@@ -260,8 +267,8 @@ class AvroIODatumReader
     }
 
     public function readArray(
-        AvroSchema $writers_schema,
-        AvroSchema $readers_schema,
+        AvroArraySchema $writers_schema,
+        AvroArraySchema $readers_schema,
         AvroIOBinaryDecoder $decoder
     ): array {
         $items = [];
@@ -287,8 +294,11 @@ class AvroIODatumReader
     /**
      * @returns array<int, mixed>
      */
-    public function readMap(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder): array
-    {
+    public function readMap(
+        AvroMapSchema $writers_schema,
+        AvroMapSchema $readers_schema,
+        AvroIOBinaryDecoder $decoder
+    ): array {
         $items = [];
         $pair_count = $decoder->readLong();
         while (0 != $pair_count) {
@@ -311,16 +321,19 @@ class AvroIODatumReader
         return $items;
     }
 
-    public function readUnion(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder): mixed
-    {
+    public function readUnion(
+        AvroUnionSchema $writers_schema,
+        AvroUnionSchema $readers_schema,
+        AvroIOBinaryDecoder $decoder
+    ): mixed {
         $schema_index = $decoder->readLong();
         $selected_writers_schema = $writers_schema->schemaByIndex($schema_index);
         return $this->readData($selected_writers_schema, $readers_schema, $decoder);
     }
 
     public function readEnum(
-        AvroSchema $writers_schema,
-        AvroSchema $readers_schema,
+        AvroEnumSchema $writers_schema,
+        AvroEnumSchema $readers_schema,
         AvroIOBinaryDecoder $decoder
     ): ?string {
         $symbol_index = $decoder->readInt();
@@ -334,8 +347,8 @@ class AvroIODatumReader
     }
 
     public function readFixed(
-        AvroSchema $writers_schema,
-        AvroSchema $readers_schema,
+        AvroFixedSchema $writers_schema,
+        AvroFixedSchema $readers_schema,
         AvroIOBinaryDecoder $decoder
     ): string|AvroDuration {
         $logicalTypeWriters = $writers_schema->logicalType();
@@ -366,8 +379,11 @@ class AvroIODatumReader
     /**
      * @returns array
      */
-    public function readRecord(AvroSchema $writers_schema, AvroSchema $readers_schema, AvroIOBinaryDecoder $decoder)
-    {
+    public function readRecord(
+        AvroRecordSchema $writers_schema,
+        AvroRecordSchema $readers_schema,
+        AvroIOBinaryDecoder $decoder
+    ) {
         $readers_fields = $readers_schema->fieldsHash();
         $record = [];
         foreach ($writers_schema->fields() as $writers_field) {
@@ -391,8 +407,6 @@ class AvroIODatumReader
             }
             if ($field->hasDefaultValue()) {
                 $record[$field->name()] = $this->readDefaultValue($field->type(), $field->defaultValue());
-            } else {
-                null;
             }
         }
 
@@ -431,7 +445,7 @@ class AvroIODatumReader
      *
      * @throws AvroException if $field_schema type is unknown.
      */
-    public function readDefaultValue(AvroSchema $field_schema, mixed $default_value)
+    public function readDefaultValue(AvroSchema $field_schema, mixed $default_value): mixed
     {
         switch ($field_schema->type()) {
             case AvroSchema::NULL_TYPE:
@@ -450,6 +464,7 @@ class AvroIODatumReader
             case AvroSchema::ARRAY_SCHEMA:
                 $array = [];
                 foreach ($default_value as $json_val) {
+                    /** @phpstan-ignore method.notFound */
                     $val = $this->readDefaultValue($field_schema->items(), $json_val);
                     $array [] = $val;
                 }
@@ -458,6 +473,7 @@ class AvroIODatumReader
                 $map = [];
                 foreach ($default_value as $key => $json_val) {
                     $map[$key] = $this->readDefaultValue(
+                        /** @phpstan-ignore method.notFound */
                         $field_schema->values(),
                         $json_val
                     );
@@ -465,6 +481,7 @@ class AvroIODatumReader
                 return $map;
             case AvroSchema::UNION_SCHEMA:
                 return $this->readDefaultValue(
+                    /** @phpstan-ignore method.notFound */
                     $field_schema->schemaByIndex(0),
                     $default_value
                 );
@@ -473,6 +490,7 @@ class AvroIODatumReader
                 return $default_value;
             case AvroSchema::RECORD_SCHEMA:
                 $record = [];
+                /** @phpstan-ignore method.notFound */
                 foreach ($field_schema->fields() as $field) {
                     $field_name = $field->name();
                     if (!$json_val = $default_value[$field_name]) {

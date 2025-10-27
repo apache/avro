@@ -27,22 +27,69 @@ use Apache\Avro\Datum\AvroIODatumWriter;
 use Apache\Avro\Datum\Type\AvroDuration;
 use Apache\Avro\IO\AvroStringIO;
 use Apache\Avro\Schema\AvroSchema;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class IODatumReaderTest extends TestCase
 {
-    public function test_schema_matching(): void
+    public static function schema_matching_data_provider(): array
     {
-        $writers_schema = <<<JSON
-            {
-              "type": "map",
-              "values": "bytes"
-            }
-            JSON;
-        $readers_schema = $writers_schema;
+        return [
+            [
+                <<<JSON
+                    {
+                        "type": "map",
+                      "values": "bytes"
+                    }
+                    JSON,
+                <<<JSON
+                    {
+                        "type": "map",
+                      "values": "bytes"
+                    }
+                    JSON,
+            ],
+            [
+                <<<JSON
+                    {
+                      "type": "record",
+                      "name": "Rec1",
+                      "fields": [
+                        {
+                          "name": "field1",
+                          "type": "int"
+                        }
+                      ]
+                    }
+                    JSON,
+                <<<JSON
+                    {
+                      "type": "record",
+                      "name": "Rec2",
+                      "aliases": [
+                        "Rec1"
+                      ],
+                      "fields": [
+                        {
+                          "name": "field2",
+                          "aliases": [
+                            "field1"
+                          ],
+                          "type": "int"
+                        }
+                      ]
+                    }
+                    JSON,
+            ],
+        ];
+    }
+
+    #[DataProvider('schema_matching_data_provider')]
+    public function test_schema_matching(string $writersSchema, string $readersSchema): void
+    {
         $this->assertTrue(AvroIODatumReader::schemasMatch(
-            AvroSchema::parse($writers_schema),
-            AvroSchema::parse($readers_schema)
+            AvroSchema::parse($writersSchema),
+            AvroSchema::parse($readersSchema)
         ));
     }
 

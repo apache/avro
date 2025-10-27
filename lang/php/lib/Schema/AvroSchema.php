@@ -649,19 +649,17 @@ class AvroSchema implements \Stringable
 
     /**
      * @param mixed $avro
-     * @param string $default_namespace namespace of enclosing schema
-     * @param AvroNamedSchemata &$schemata
      * @returns AvroSchema
      * @throws AvroSchemaParseException
      * @uses AvroSchema::realParse()
      */
-    protected static function subparse($avro, $default_namespace, &$schemata = null)
+    protected static function subparse($avro, ?string $default_namespace, ?AvroNamedSchemata &$schemata = null): AvroSchema
     {
         try {
             return self::realParse($avro, $default_namespace, $schemata);
         } catch (AvroSchemaParseException $e) {
             throw $e;
-        } catch (\Exception) {
+        } catch (\Throwable) {
             throw new AvroSchemaParseException(
                 sprintf(
                     'Sub-schema is not a valid Avro schema. Bad schema: %s',

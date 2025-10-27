@@ -24,7 +24,7 @@ namespace Apache\Avro\Schema;
  * Field of an {@link AvroRecordSchema}
  * @package Avro
  */
-class AvroField extends AvroSchema
+class AvroField extends AvroSchema implements AvroAliasedSchema
 {
     /**
      * @var string fields name attribute name
@@ -180,7 +180,7 @@ class AvroField extends AvroSchema
         return $this->hasDefault;
     }
 
-    public function getAliases()
+    public function getAliases(): ?array
     {
         return $this->aliases;
     }

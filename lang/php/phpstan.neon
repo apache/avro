@@ -14,7 +14,7 @@
 # limitations under the License.
 
 parameters:
-	level: 1
+	level: 3
 	paths:
 		- lib
 		- test

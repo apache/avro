@@ -24,7 +24,7 @@ namespace Apache\Avro\Schema;
  * Parent class of named Avro schema
  * @package Avro
  */
-class AvroNamedSchema extends AvroSchema
+class AvroNamedSchema extends AvroSchema implements AvroAliasedSchema
 {
     /**
      * @throws AvroSchemaParseException
@@ -77,5 +77,10 @@ class AvroNamedSchema extends AvroSchema
     public function fullname(): string
     {
         return $this->name->fullname();
+    }
+
+    public function namespace(): ?string
+    {
+        return $this->name->namespace();
     }
 }

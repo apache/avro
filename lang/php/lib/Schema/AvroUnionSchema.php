@@ -111,7 +111,7 @@ class AvroUnionSchema extends AvroSchema
         $avro = [];
 
         foreach ($this->schemas as $index => $schema) {
-            $avro[] = in_array($index, $this->schemaFromSchemataIndices)
+            $avro[] = in_array($index, $this->schemaFromSchemataIndices) && $schema instanceof AvroNamedSchema
                 ? $schema->qualifiedName()
                 : $schema->toAvro();
         }

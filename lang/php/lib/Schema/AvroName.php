@@ -166,4 +166,9 @@ class AvroName implements \Stringable
     {
         return $this->qualified_name;
     }
+
+    public function namespace(): ?string
+    {
+        return $this->namespace;
+    }
 }
