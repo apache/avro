@@ -1,0 +1,8 @@
+{
+    "name": "UseEnum",
+    "namespace": "resolver",
+    "type": "record",
+    "fields" : [
+        {"name": "field1", "type": {"type": "SimpleEnum"} }
+    ]
+}
