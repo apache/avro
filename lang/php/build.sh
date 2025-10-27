@@ -86,7 +86,7 @@ do
       ;;
 
     *)
-      echo "Usage: $0 {interop-data-generate|test-interop|lint|lint-apply|test|dist|clean}"
+      echo "Usage: $0 {interop-data-generate|test-interop|lint|lint-fix|test|dist|clean}"
   esac
 done
 
