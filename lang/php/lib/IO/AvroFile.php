@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+declare(strict_types=1);
+
 namespace Apache\Avro\IO;
 
 use Apache\Avro\AvroIO;
@@ -73,12 +75,12 @@ class AvroFile implements AvroIO
     }
 
     /**
-     * @returns int count of bytes written
+     * @return int count of bytes written
      * @throws AvroIOException if write failed.
      */
-    public function write(string $str): int
+    public function write(string $bytes): int
     {
-        $len = fwrite($this->file_handle, $str);
+        $len = fwrite($this->file_handle, $bytes);
         if (false === $len) {
             throw new AvroIOException(sprintf('Could not write to file'));
         }

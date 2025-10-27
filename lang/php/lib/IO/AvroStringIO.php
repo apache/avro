@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+declare(strict_types=1);
+
 namespace Apache\Avro\IO;
 
 use Apache\Avro\AvroIO;
@@ -65,21 +67,21 @@ class AvroStringIO implements AvroIO, \Stringable
     /**
      * Append bytes to this buffer.
      * (Nothing more is needed to support Avro.)
-     * @param string $arg bytes to write
+     * @param string $bytes bytes to write
      * @returns int count of bytes written.
      * @throws AvroIOException if $args is not a string value.
      */
-    public function write(string $arg): int
+    public function write(string $bytes): int
     {
         $this->checkClosed();
-        if (is_string($arg)) {
-            return $this->appendStr($arg);
+        if (is_string($bytes)) {
+            return $this->appendStr($bytes);
         }
         throw new AvroIOException(
             sprintf(
                 'write argument must be a string: (%s) %s',
-                gettype($arg),
-                var_export($arg, true)
+                gettype($bytes),
+                var_export($bytes, true)
             )
         );
     }
@@ -97,7 +99,7 @@ class AvroStringIO implements AvroIO, \Stringable
     /**
      * @return bool true if this buffer is closed and false otherwise.
      */
-    public function isClosed()
+    public function isClosed(): bool
     {
         return $this->is_closed;
     }
@@ -220,7 +222,7 @@ class AvroStringIO implements AvroIO, \Stringable
     /**
      * Truncates the truncate buffer to 0 bytes and returns the pointer
      * to the beginning of the buffer.
-     * @returns boolean true
+     * @returns bool true
      */
     public function truncate(): bool
     {

@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+declare(strict_types=1);
+
 namespace Apache\Avro;
 
 /**
@@ -57,11 +59,11 @@ interface AvroIO
 
     /**
      * Append bytes to this buffer. (Nothing more is needed to support Avro.)
-     * @param string $arg bytes to write
+     * @param string $bytes bytes to write
      * @returns int count of bytes written.
      * @throws IO\AvroIOException if $args is not a string value.
      */
-    public function write(string $arg): int;
+    public function write(string $bytes): int;
 
     /**
      * Return byte offset within AvroIO instance
