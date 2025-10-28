@@ -623,7 +623,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
     int result = 1;
 #foreach ($field in $schema.getFields())
 #if (!${this.ignoredField($field)})
-#set ($n = ${this.mangle($field.name(), $schema.isError())})
+#set ($n = "this.${this.mangle($field.name(), $schema.isError())}")
     result = 31 * result + ${this.hashCodeFor($field.schema(), $n)};
 #end
 #end
