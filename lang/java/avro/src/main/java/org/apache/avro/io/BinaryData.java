@@ -156,8 +156,7 @@ public class BinaryData {
     }
     case FIXED: {
       int size = schema.getFixedSize();
-      int c = Arrays.compare(d.d1.getBuf(), d.d1.getPos(), d.d1.getPos() + size, d.d2.getBuf(), d.d2.getPos(),
-          d.d2.getPos() + size);
+      int c = compareBytes(d.d1.getBuf(), d.d1.getPos(), size, d.d2.getBuf(), d.d2.getPos(), size);
       d.d1.skipFixed(size);
       d.d2.skipFixed(size);
       return c;
@@ -166,8 +165,7 @@ public class BinaryData {
     case BYTES: {
       int l1 = d1.readInt();
       int l2 = d2.readInt();
-      int c = Arrays.compare(d.d1.getBuf(), d.d1.getPos(), d.d1.getPos() + l1, d.d2.getBuf(), d.d2.getPos(),
-          d.d2.getPos() + l2);
+      int c = compareBytes(d.d1.getBuf(), d.d1.getPos(), l1, d.d2.getBuf(), d.d2.getPos(), l2);
       d.d1.skipFixed(l1);
       d.d2.skipFixed(l2);
       return c;
