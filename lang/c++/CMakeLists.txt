@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-cmake_minimum_required (VERSION 3.12)
+cmake_minimum_required (VERSION 3.20)
 
 set (CMAKE_LEGACY_CYGWIN_WIN32 0)
 
@@ -305,4 +305,15 @@ install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config-version.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/avro-cpp
+)
+
+cmake_path(APPEND pc_install_includedir "\${prefix}" "${CMAKE_INSTALL_INCLUDEDIR}")
+cmake_path(APPEND pc_install_libdir "\${exec_prefix}" "${CMAKE_INSTALL_LIBDIR}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/avro-cpp.pc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp.pc"
+    @ONLY
+)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp.pc"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
 )
