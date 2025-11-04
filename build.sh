@@ -304,8 +304,8 @@ do
       {
         cat share/docker/Dockerfile
         echo "ENV HOME=/home/$USER_NAME"
-        echo "RUN getent group $GROUP_ID || groupadd -g $GROUP_ID $USER_NAME"
         echo "RUN getent passwd $USER_ID && userdel \$(getent passwd $USER_ID | cut -d: -f1)"
+        echo "RUN getent group $GROUP_ID || groupadd -g $GROUP_ID $USER_NAME"
         echo "RUN useradd -N -g $GROUP_ID -u $USER_ID -k /root -m $USER_NAME"
         echo "RUN mkdir -p /home/$USER_NAME/.m2/repository"
         echo "RUN chown -R --reference=/home/$USER_NAME /home/$USER_NAME/.m2/"
