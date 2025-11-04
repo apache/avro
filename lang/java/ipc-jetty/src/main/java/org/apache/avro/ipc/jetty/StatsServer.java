@@ -20,8 +20,8 @@ import org.apache.avro.ipc.stats.StatsServlet;
  * limitations under the License.
  */
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.servlet.ServletHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
 
 /* This is a server that displays live information from a StatsPlugin.
  *

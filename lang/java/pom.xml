@@ -46,7 +46,8 @@
     <hadoop.version>3.4.2</hadoop.version>
     <hamcrest.version>3.0</hamcrest.version>
     <jackson-bom.version>2.20.0</jackson-bom.version>
-    <jetty.version>9.4.58.v20250814</jetty.version>
+    <jetty.version>12.1.0</jetty.version>
+    <jetty.ee.version>ee10</jetty.ee.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit5.version>5.14.0</junit5.version>
     <maven-core.version>3.9.6</maven-core.version>
@@ -54,7 +55,7 @@
     <netty.version>4.2.7.Final</netty.version>
     <protobuf.version>4.33.0</protobuf.version>
     <reload4j.version>1.2.26</reload4j.version>
-    <servlet-api.version>4.0.1</servlet-api.version>
+    <servlet-api.version>6.0.0</servlet-api.version>
     <slf4j.version>2.0.17</slf4j.version>
     <snappy.version>1.1.10.8</snappy.version>
     <thrift.version>0.20.0</thrift.version>
@@ -549,8 +550,8 @@
         <version>${jetty.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-servlet</artifactId>
+        <groupId>org.eclipse.jetty.${jetty.ee.version}</groupId>
+        <artifactId>jetty-${jetty.ee.version}-servlet</artifactId>
         <version>${jetty.version}</version>
       </dependency>
       <dependency>
@@ -559,8 +560,8 @@
         <version>${jetty.version}</version>
       </dependency>
       <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
+        <groupId>jakarta.servlet</groupId>
+        <artifactId>jakarta.servlet-api</artifactId>
         <version>${servlet-api.version}</version>
       </dependency>
       <dependency>

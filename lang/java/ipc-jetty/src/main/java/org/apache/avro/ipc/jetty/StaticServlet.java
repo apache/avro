@@ -20,8 +20,9 @@ package org.apache.avro.ipc.jetty;
 
 import java.net.URL;
 
-import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.ee10.servlet.DefaultServlet;
 import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.URLResourceFactory;
 
 /**
  * Very simple servlet class capable of serving static files.
@@ -29,7 +30,6 @@ import org.eclipse.jetty.util.resource.Resource;
 public class StaticServlet extends DefaultServlet {
   private static final long serialVersionUID = 1L;
 
-  @Override
   public Resource getResource(String pathInContext) {
     // Take only last slice of the URL as a filename, so we can adjust path.
     // This also prevents mischief like '../../foo.css'
@@ -40,6 +40,6 @@ public class StaticServlet extends DefaultServlet {
     if (resource == null) {
       return null;
     }
-    return Resource.newResource(resource);
+    return new URLResourceFactory().newResource(resource);
   }
 }

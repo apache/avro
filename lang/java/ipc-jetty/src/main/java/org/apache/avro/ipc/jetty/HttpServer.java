@@ -31,9 +31,9 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
 
 /** An HTTP-based RPC {@link Server}. */
 public class HttpServer implements Server {
@@ -104,7 +104,9 @@ public class HttpServer implements Server {
 
     server.addConnector(connector);
     ServletHandler handler = new ServletHandler();
-    server.setHandler(handler);
+    ServletContextHandler sch = new ServletContextHandler();
+    sch.setServletHandler(handler);
+    server.setHandler(sch);
     handler.addServletWithMapping(new ServletHolder(servlet), "/*");
   }
 
@@ -120,7 +122,9 @@ public class HttpServer implements Server {
       server.addConnector(connector);
     }
     ServletHandler handler = new ServletHandler();
-    server.setHandler(handler);
+    ServletContextHandler sch = new ServletContextHandler();
+    sch.setServletHandler(handler);
+    server.setHandler(sch);
     handler.addServletWithMapping(new ServletHolder(servlet), "/*");
   }
 
@@ -154,7 +158,7 @@ public class HttpServer implements Server {
 
   /**
    * Start the server.
-   * 
+   *
    * @throws AvroRuntimeException if the underlying Jetty server throws any
    *                              exception while starting.
    */
