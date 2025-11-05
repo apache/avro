@@ -23,7 +23,6 @@ namespace Apache\Avro\Schema;
 /**
  * Union of Avro schemas, of which values can be of any of the schema in
  * the union.
- * @package Avro
  */
 class AvroUnionSchema extends AvroSchema
 {
@@ -40,7 +39,6 @@ class AvroUnionSchema extends AvroSchema
     /**
      * @param AvroSchema[] $schemas list of schemas in the union
      * @param null|string $defaultNamespace namespace of enclosing schema
-     * @param null|AvroNamedSchemata &$schemata
      * @throws AvroSchemaParseException
      */
     public function __construct(array $schemas, ?string $defaultNamespace, ?AvroNamedSchemata &$schemata = null)
@@ -79,7 +77,7 @@ class AvroUnionSchema extends AvroSchema
             $schema_types[] = $schemaType;
             $this->schemas[] = $new_schema;
             if ($is_schema_from_schemata) {
-                $this->schemaFromSchemataIndices [] = $index;
+                $this->schemaFromSchemataIndices[] = $index;
             }
         }
     }
@@ -93,9 +91,10 @@ class AvroUnionSchema extends AvroSchema
     }
 
     /**
+     * @param mixed $index
+     * @throws AvroSchemaParseException if the index is invalid for this schema.
      * @return AvroSchema the particular schema from the union for
      * the given (zero-based) index.
-     * @throws AvroSchemaParseException if the index is invalid for this schema.
      */
     public function schemaByIndex($index): AvroSchema
     {

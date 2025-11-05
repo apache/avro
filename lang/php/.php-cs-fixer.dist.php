@@ -35,7 +35,7 @@ use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
  * ```
  */
 $finder = PhpCsFixer\Finder::create()
-    ->in(['test'])
+    ->in(['lib', 'test'])
     ->append(['.php-cs-fixer.dist.php']);
 
 return (new PhpCsFixer\Config())
@@ -95,6 +95,7 @@ return (new PhpCsFixer\Config())
         // —— Additional rules ——————————————————————————————————————————————————
         'no_useless_else' => true,
         'phpdoc_add_missing_param_annotation' => true,
+        'phpdoc_annotation_without_dot' => false,
         'protected_to_private' => true,
         'psr_autoloading' => true,
     ])

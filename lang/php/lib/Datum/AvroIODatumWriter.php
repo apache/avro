@@ -35,8 +35,6 @@ use Apache\Avro\Schema\AvroUnionSchema;
  * Handles schema-specific writing of data to the encoder.
  *
  * Ensures that each datum written is consistent with the writer's schema.
- *
- * @package Avro
  */
 class AvroIODatumWriter
 {
@@ -53,7 +51,6 @@ class AvroIODatumWriter
 
     /**
      * @param mixed $datum
-     * @param AvroIOBinaryEncoder $encoder
      */
     public function write($datum, AvroIOBinaryEncoder $encoder)
     {
@@ -61,10 +58,6 @@ class AvroIODatumWriter
     }
 
     /**
-     * @param AvroSchema $writers_schema
-     * @param $datum
-     * @param AvroIOBinaryEncoder $encoder
-     *
      * @throws AvroIOTypeException if $datum is invalid for $writers_schema
      * @throws AvroException if the type is invalid
      */
@@ -78,59 +71,69 @@ class AvroIODatumWriter
     }
 
     /**
-     * @param AvroSchema $writers_schema
-     * @param $datum
-     * @param AvroIOBinaryEncoder $encoder
-     * @return void
-     *
      * @throws AvroIOTypeException if $datum is invalid for $writers_schema
+     * @return void
      */
     private function writeValidatedData(AvroSchema $writers_schema, $datum, AvroIOBinaryEncoder $encoder)
     {
         switch ($writers_schema->type()) {
             case AvroSchema::NULL_TYPE:
                 $encoder->writeNull($datum);
+
                 return;
             case AvroSchema::BOOLEAN_TYPE:
                 $encoder->writeBoolean($datum);
+
                 return;
             case AvroSchema::INT_TYPE:
                 $encoder->writeInt($datum);
+
                 return;
             case AvroSchema::LONG_TYPE:
                 $encoder->writeLong($datum);
+
                 return;
             case AvroSchema::FLOAT_TYPE:
                 $encoder->writeFloat($datum);
+
                 return;
             case AvroSchema::DOUBLE_TYPE:
                 $encoder->writeDouble($datum);
+
                 return;
             case AvroSchema::STRING_TYPE:
                 $encoder->writeString($datum);
+
                 return;
             case AvroSchema::BYTES_TYPE:
                 $this->writeBytes($writers_schema, $datum, $encoder);
+
                 return;
             case AvroSchema::ARRAY_SCHEMA:
                 $this->writeArray($writers_schema, $datum, $encoder);
+
                 return;
             case AvroSchema::MAP_SCHEMA:
                 $this->writeMap($writers_schema, $datum, $encoder);
+
                 return;
             case AvroSchema::FIXED_SCHEMA:
                 $this->writeFixed($writers_schema, $datum, $encoder);
+
                 return;
             case AvroSchema::ENUM_SCHEMA:
                 $this->writeEnum($writers_schema, $datum, $encoder);
+
                 return;
             case AvroSchema::RECORD_SCHEMA:
             case AvroSchema::ERROR_SCHEMA:
             case AvroSchema::REQUEST_SCHEMA:
                 $this->writeRecord($writers_schema, $datum, $encoder);
+
                 return;
             case AvroSchema::UNION_SCHEMA:
                 $this->writeUnion($writers_schema, $datum, $encoder);
+
                 return;
             default:
                 throw new AvroException(sprintf(
@@ -145,12 +148,13 @@ class AvroIODatumWriter
         $logicalType = $writers_schema->logicalType();
         if (
             $logicalType instanceof AvroLogicalType
-            && $logicalType->name() === AvroSchema::DECIMAL_LOGICAL_TYPE
+            && AvroSchema::DECIMAL_LOGICAL_TYPE === $logicalType->name()
         ) {
             $scale = $logicalType->attributes()['scale'] ?? 0;
             $precision = $logicalType->attributes()['precision'] ?? null;
 
             $encoder->writeDecimal($datum, $scale, $precision);
+
             return;
         }
 
@@ -204,6 +208,7 @@ class AvroIODatumWriter
                     $precision = $logicalType->attributes()['precision'] ?? null;
 
                     $encoder->writeDecimal($datum, $scale, $precision);
+
                     return;
                 case AvroSchema::DURATION_LOGICAL_TYPE:
                     if (!$datum instanceof AvroDuration) {
@@ -213,13 +218,14 @@ class AvroIODatumWriter
                     }
                     $duration = (string) $datum;
 
-                    if (strlen($duration) !== 12) {
+                    if (12 !== strlen($duration)) {
                         throw new AvroException(
-                            "Fixed duration size mismatch. Expected 12 bytes, got " . strlen($duration)
+                            "Fixed duration size mismatch. Expected 12 bytes, got ".strlen($duration)
                         );
                     }
 
                     $encoder->write($duration);
+
                     return;
             }
         }
@@ -252,6 +258,7 @@ class AvroIODatumWriter
             if (AvroSchema::isValidDatum($schema, $datum)) {
                 $datum_schema_index = $index;
                 $datum_schema = $schema;
+
                 break;
             }
         }

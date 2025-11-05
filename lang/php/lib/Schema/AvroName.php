@@ -20,9 +20,6 @@
 
 namespace Apache\Avro\Schema;
 
-/**
- * @package Avro
- */
 class AvroName implements \Stringable
 {
     /**
@@ -38,13 +35,7 @@ class AvroName implements \Stringable
      * @var string valid names are matched by self::NAME_REGEXP
      */
     private string $name;
-    /**
-     * @var null|string
-     */
     private ?string $namespace;
-    /**
-     * @var string
-     */
     private string $fullname;
     /**
      * @var string Name qualified as necessary given its default namespace.
@@ -52,9 +43,6 @@ class AvroName implements \Stringable
     private string $qualified_name;
 
     /**
-     * @param mixed $name
-     * @param string|null $namespace
-     * @param string|null $default_namespace
      * @throws AvroSchemaParseException
      */
     public function __construct(mixed $name, ?string $namespace, ?string $default_namespace)
@@ -82,34 +70,12 @@ class AvroName implements \Stringable
     }
 
     /**
-     * @param string $namespace
-     * @return bool true if namespace is composed of valid names
-     * @throws AvroSchemaParseException if any of the namespace components
-     *                                  are invalid.
+     * @return string fullname
+     * @uses $this->fullname()
      */
-    private static function checkNamespaceNames(string $namespace): bool
+    public function __toString(): string
     {
-        foreach (explode(self::NAME_SEPARATOR, $namespace) as $n) {
-            if (empty($n) || (0 === preg_match(self::NAME_REGEXP, $n))) {
-                throw new AvroSchemaParseException(sprintf('Invalid name "%s"', $n));
-            }
-        }
-        return true;
-    }
-
-    /**
-     * @param string $name
-     * @param string $namespace
-     * @returns string
-     * @throws AvroSchemaParseException if any of the names are not valid.
-     */
-    private static function parseFullname($name, $namespace): string
-    {
-        if (!is_string($namespace) || empty($namespace)) {
-            throw new AvroSchemaParseException('Namespace must be a non-empty string.');
-        }
-        self::checkNamespaceNames($namespace);
-        return $namespace . '.' . $name;
+        return (string) $this->fullname();
     }
 
     /**
@@ -122,16 +88,18 @@ class AvroName implements \Stringable
             $name = array_pop($parts);
             $namespace = implode(self::NAME_SEPARATOR, $parts);
         }
+
         return [$name, $namespace];
     }
 
     /**
      * @returns boolean true if the given name is well-formed
      *          (is a non-null, non-empty string) and false otherwise
+     * @param mixed $name
      */
     public static function isWellFormedName($name): bool
     {
-        return (is_string($name) && !empty($name) && preg_match(self::NAME_REGEXP, $name));
+        return is_string($name) && !empty($name) && preg_match(self::NAME_REGEXP, $name);
     }
 
     /**
@@ -140,15 +108,6 @@ class AvroName implements \Stringable
     public function nameAndNamespace(): array
     {
         return [$this->name, $this->namespace];
-    }
-
-    /**
-     * @return string fullname
-     * @uses $this->fullname()
-     */
-    public function __toString(): string
-    {
-        return (string) $this->fullname();
     }
 
     /**
@@ -170,5 +129,37 @@ class AvroName implements \Stringable
     public function namespace(): ?string
     {
         return $this->namespace;
+    }
+
+    /**
+     * @throws AvroSchemaParseException if any of the namespace components
+     *                                  are invalid.
+     * @return bool true if namespace is composed of valid names
+     */
+    private static function checkNamespaceNames(string $namespace): bool
+    {
+        foreach (explode(self::NAME_SEPARATOR, $namespace) as $n) {
+            if (empty($n) || (0 === preg_match(self::NAME_REGEXP, $n))) {
+                throw new AvroSchemaParseException(sprintf('Invalid name "%s"', $n));
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param string $name
+     * @param string $namespace
+     * @returns string
+     * @throws AvroSchemaParseException if any of the names are not valid.
+     */
+    private static function parseFullname($name, $namespace): string
+    {
+        if (!is_string($namespace) || empty($namespace)) {
+            throw new AvroSchemaParseException('Namespace must be a non-empty string.');
+        }
+        self::checkNamespaceNames($namespace);
+
+        return $namespace.'.'.$name;
     }
 }

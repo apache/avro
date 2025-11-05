@@ -28,14 +28,11 @@ use Apache\Avro\AvroIO;
 /**
  * Encodes and writes Avro data to an AvroIO object using
  * Avro binary encoding.
- *
- * @package Avro
  */
 class AvroIOBinaryEncoder
 {
     /**
      * @param AvroIO $io object to which data is to be written.
-     *
      */
     public function __construct(
         private readonly AvroIO $io
@@ -102,6 +99,7 @@ class AvroIOBinaryEncoder
         }
 
         $buf[] = $n;
+
         return pack("C*", ...$buf);
     }
 
@@ -132,7 +130,6 @@ class AvroIOBinaryEncoder
     }
 
     /**
-     * @param float $datum
      * @uses self::doubleToLongBits()
      */
     public function writeDouble(float $datum): void
@@ -146,12 +143,12 @@ class AvroIOBinaryEncoder
      * XXX: This is <b>not</b> endian-aware! See comments in
      * {@link AvroIOBinaryEncoder::floatToIntBits()} for details.
      *
-     * @param double $double
+     * @param float $double
      * @returns string bytes
      */
     public static function doubleToLongBits($double): string
     {
-        return pack('e', (double) $double);
+        return pack('e', (float) $double);
     }
 
     /**
@@ -189,7 +186,7 @@ class AvroIOBinaryEncoder
         $packed = pack('J', $value);
 
         $significantBit = self::getMostSignificantBitAt($packed, 0);
-        $trimByte = $significantBit ? 0xff : 0x00;
+        $trimByte = $significantBit ? 0xFF : 0x00;
 
         $offset = 0;
         $packedLength = strlen($packed);

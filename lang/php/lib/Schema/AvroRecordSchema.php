@@ -20,9 +20,6 @@
 
 namespace Apache\Avro\Schema;
 
-/**
- * @package Avro
- */
 class AvroRecordSchema extends AvroNamedSchema
 {
     /**
@@ -100,7 +97,7 @@ class AvroRecordSchema extends AvroNamedSchema
                 )
             ) {
                 $is_schema_from_schemata = true;
-            } else if (is_string($type) && self::isPrimitiveType($type)) {
+            } elseif (is_string($type) && self::isPrimitiveType($type)) {
                 $field_schema = self::subparse($field, $default_namespace, $schemata);
             } else {
                 $field_schema = self::subparse($type, $default_namespace, $schemata);
@@ -124,6 +121,7 @@ class AvroRecordSchema extends AvroNamedSchema
             }
             $fields[] = $new_field;
         }
+
         return $fields;
     }
 
@@ -166,6 +164,7 @@ class AvroRecordSchema extends AvroNamedSchema
             }
             $this->fieldsHash = $hash;
         }
+
         return $this->fieldsHash;
     }
 
@@ -179,6 +178,7 @@ class AvroRecordSchema extends AvroNamedSchema
                 }
             }
         }
+
         return $hash;
     }
 }

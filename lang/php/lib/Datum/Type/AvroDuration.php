@@ -50,6 +50,11 @@ class AvroDuration implements \Stringable
         $this->milliseconds = $milliseconds;
     }
 
+    public function __toString(): string
+    {
+        return $this->toBytes();
+    }
+
     public static function fromBytes(string $bytes): self
     {
         $unpackedData = unpack('Vmonths/Vdays/Vmilliseconds', $bytes);
@@ -82,12 +87,7 @@ class AvroDuration implements \Stringable
         $days = pack('V', $this->days);
         $milliseconds = pack('V', $this->milliseconds);
 
-        return $months . $days . $milliseconds;
-    }
-
-    public function __toString(): string
-    {
-        return $this->toBytes();
+        return $months.$days.$milliseconds;
     }
 
     /**

@@ -22,7 +22,6 @@ namespace Apache\Avro\Schema;
 
 /**
  * Avro schema for basic types such as null, int, long, string.
- * @package Avro
  */
 class AvroPrimitiveSchema extends AvroSchema
 {

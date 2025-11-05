@@ -35,8 +35,6 @@ use Apache\Avro\Schema\AvroUnionSchema;
 /**
  * Decodes and reads Avro data from an AvroIO object encoded using
  * Avro binary encoding.
- *
- * @package Avro
  */
 class AvroIOBinaryDecoder
 {
@@ -66,15 +64,6 @@ class AvroIOBinaryDecoder
     }
 
     /**
-     * @returns string the next byte from $this->io.
-     * @throws AvroException if the next byte cannot be read.
-     */
-    private function nextByte(): string
-    {
-        return $this->read(1);
-    }
-
-    /**
      * @param int $len count of bytes to read
      * @returns string
      */
@@ -97,7 +86,7 @@ class AvroIOBinaryDecoder
         $bytes = [$byte];
         while (0 != ($byte & 0x80)) {
             $byte = ord($this->nextByte());
-            $bytes [] = $byte;
+            $bytes[] = $byte;
         }
 
         if (Avro::usesGmp()) {
@@ -115,13 +104,14 @@ class AvroIOBinaryDecoder
     public static function decodeLongFromArray(array $bytes): int
     {
         $b = array_shift($bytes);
-        $n = $b & 0x7f;
+        $n = $b & 0x7F;
         $shift = 7;
         while (0 != ($b & 0x80)) {
             $b = array_shift($bytes);
-            $n |= (($b & 0x7f) << $shift);
+            $n |= (($b & 0x7F) << $shift);
             $shift += 7;
         }
+
         return ($n >> 1) ^ (($n >> 63) << 63) ^ -($n & 1);
     }
 
@@ -139,6 +129,7 @@ class AvroIOBinaryDecoder
     public static function intBitsToFloat(string $bits): float
     {
         $float = unpack('g', $bits);
+
         return (float) $float[1];
     }
 
@@ -155,11 +146,11 @@ class AvroIOBinaryDecoder
      *
      * XXX: This is <b>not</b> endian-aware! See comments in
      * {@link AvroIOBinaryEncoder::floatToIntBits()} for details.
-     *
      */
     public static function longBitsToDouble(string $bits)
     {
         $double = unpack('e', $bits);
+
         return (float) $double[1];
     }
 
@@ -198,14 +189,6 @@ class AvroIOBinaryDecoder
     public function skip(int $len): void
     {
         $this->seek($len, AvroIO::SEEK_CUR);
-    }
-
-    /**
-     * @uses AvroIO::seek()
-     */
-    private function seek(int $offset, int $whence): bool
-    {
-        return $this->io->seek($offset, $whence);
     }
 
     public function skipInt(): void
@@ -291,6 +274,23 @@ class AvroIOBinaryDecoder
             }
             $block_count = $decoder->readLong();
         }
+    }
+
+    /**
+     * @returns string the next byte from $this->io.
+     * @throws AvroException if the next byte cannot be read.
+     */
+    private function nextByte(): string
+    {
+        return $this->read(1);
+    }
+
+    /**
+     * @uses AvroIO::seek()
+     */
+    private function seek(int $offset, int $whence): bool
+    {
+        return $this->io->seek($offset, $whence);
     }
 
     /**

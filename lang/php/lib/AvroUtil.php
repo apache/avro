@@ -22,8 +22,6 @@ namespace Apache\Avro;
 
 /**
  * Class for static utility methods used in Avro.
- *
- * @package Avro
  */
 class AvroUtil
 {
@@ -35,7 +33,6 @@ class AvroUtil
      *
      * @param array $ary array to test
      * @returns true if the array is a list and false otherwise.
-     *
      */
     public static function isList($ary): bool
     {
@@ -47,8 +44,10 @@ class AvroUtil
                 }
                 $i++;
             }
+
             return true;
         }
+
         return false;
     }
 }

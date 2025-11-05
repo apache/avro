@@ -23,7 +23,6 @@ namespace Apache\Avro\Schema;
 /**
  * Avro map schema consisting of named values of defined
  * Avro Schema types.
- * @package Avro
  */
 class AvroMapSchema extends AvroSchema
 {
@@ -74,6 +73,7 @@ class AvroMapSchema extends AvroSchema
             $this->isValuesSchemaFromSchemata && $this->values instanceof AvroNamedSchema => $this->values->qualifiedName(),
             default => $this->values->toAvro(),
         };
+
         return $avro;
     }
 }

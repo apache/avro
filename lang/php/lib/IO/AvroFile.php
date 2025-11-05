@@ -26,7 +26,6 @@ use Apache\Avro\AvroIO;
 
 /**
  * AvroIO wrapper for PHP file access functions
- * @package Avro
  */
 class AvroFile implements AvroIO
 {
@@ -55,12 +54,14 @@ class AvroFile implements AvroIO
                 if (false === $this->file_handle) {
                     throw new AvroIOException('Could not open file for writing');
                 }
+
                 break;
             case self::READ_MODE:
                 $this->file_handle = fopen($this->file_path, self::FOPEN_READ_MODE);
                 if (false === $this->file_handle) {
                     throw new AvroIOException('Could not open file for reading');
                 }
+
                 break;
             default:
                 throw new AvroIOException(
@@ -75,8 +76,8 @@ class AvroFile implements AvroIO
     }
 
     /**
-     * @return int count of bytes written
      * @throws AvroIOException if write failed.
+     * @return int count of bytes written
      */
     public function write(string $bytes): int
     {
@@ -84,6 +85,7 @@ class AvroFile implements AvroIO
         if (false === $len) {
             throw new AvroIOException(sprintf('Could not write to file'));
         }
+
         return $len;
     }
 
@@ -97,6 +99,7 @@ class AvroFile implements AvroIO
         if (false === $position) {
             throw new AvroIOException('Could not execute tell on reader');
         }
+
         return $position;
     }
 
@@ -111,6 +114,7 @@ class AvroFile implements AvroIO
         if (false === $res) {
             throw new AvroIOException('Error closing file.');
         }
+
         return $res;
     }
 
@@ -126,6 +130,7 @@ class AvroFile implements AvroIO
             return true;
         }
         $this->seek(-1, self::SEEK_CUR);
+
         return false;
     }
 
@@ -150,12 +155,11 @@ class AvroFile implements AvroIO
         if (false === $bytes) {
             throw new AvroIOException('Could not read from file');
         }
+
         return $bytes;
     }
 
     /**
-     * @param int $offset
-     * @param int $whence
      * @returns boolean true upon success
      * @throws AvroIOException if seek failed.
      * @see AvroIO::seek()
@@ -173,6 +177,7 @@ class AvroFile implements AvroIO
                 )
             );
         }
+
         return true;
     }
 
@@ -186,6 +191,7 @@ class AvroFile implements AvroIO
         if (false === $res) {
             throw new AvroIOException('Could not flush file.');
         }
+
         return true;
     }
 }

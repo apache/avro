@@ -23,8 +23,6 @@ namespace Apache\Avro\Schema;
 /**
  *  Keeps track of AvroNamedSchema which have been observed so far,
  *  as well as the default namespace.
- *
- * @package Avro
  */
 class AvroNamedSchemata
 {
@@ -33,30 +31,24 @@ class AvroNamedSchemata
          * @var AvroNamedSchema[]
          */
         private array $schemata = []
-    )
-    {
+    ) {
     }
 
     public function listSchemas()
     {
         var_export($this->schemata);
         foreach ($this->schemata as $sch) {
-            print('Schema ' . $sch->__toString() . "\n");
+            echo 'Schema '.$sch->__toString()."\n";
         }
     }
 
-    /**
-     * @param AvroName $name
-     * @return AvroSchema|null
-     */
     public function schemaByName(AvroName $name): ?AvroSchema
     {
         return $this->schema($name->fullname());
     }
 
     /**
-     * @param string $fullname
-     * @return AvroSchema|null the schema which has the given name,
+     * @return null|AvroSchema the schema which has the given name,
      *          or null if there is no schema with the given name.
      */
     public function schema(string $fullname): ?AvroSchema
@@ -81,6 +73,7 @@ class AvroNamedSchemata
         }
         $schemata = new AvroNamedSchemata($this->schemata);
         $schemata->schemata[$name] = $schema;
+
         return $schemata;
     }
 

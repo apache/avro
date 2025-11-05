@@ -22,7 +22,6 @@ namespace Apache\Avro;
 
 /**
  * Avro library code debugging functions
- * @package Avro
  */
 class AvroDebug
 {
@@ -49,19 +48,20 @@ class AvroDebug
     public static function debug($format, $args, $debug_level = self::DEBUG1)
     {
         if (self::isDebug($debug_level)) {
-            vprintf($format . "\n", $args);
+            vprintf($format."\n", $args);
         }
+
         return true;
     }
 
     /**
-     * @return boolean true if the given $debug_level is equivalent
+     * @return bool true if the given $debug_level is equivalent
      *                  or more verbose than than the current debug level
      *                  and false otherwise.
      */
     public static function isDebug(int $debug_level = self::DEBUG1): bool
     {
-        return (self::DEBUG_LEVEL >= $debug_level);
+        return self::DEBUG_LEVEL >= $debug_level;
     }
 
     /**
@@ -95,6 +95,7 @@ class AvroDebug
         foreach (str_split($str) as $b) {
             $x[] = sprintf($format, ord($b));
         }
+
         return $x;
     }
 
@@ -182,7 +183,7 @@ class AvroDebug
             'FS',
             'GS',
             'RS',
-            'US'
+            'US',
         ];
         $x = [];
         foreach (str_split($str) as $b) {
@@ -191,28 +192,34 @@ class AvroDebug
                 switch ($format) {
                     case 'ctrl':
                         $x[] = str_pad($ctrl_chars[$db], 3, ' ', STR_PAD_LEFT);
+
                         break;
                     case 'hex':
                         $x[] = sprintf("x%02X", $db);
+
                         break;
                     case 'dec':
                         $x[] = str_pad($db, 3, '0', STR_PAD_LEFT);
+
                         break;
                 }
             } else {
                 if ($db < 127) {
                     $x[] = "  $b";
                 } else {
-                    if ($db == 127) {
+                    if (127 == $db) {
                         switch ($format) {
                             case 'ctrl':
                                 $x[] = 'DEL';
+
                                 break;
                             case 'hex':
                                 $x[] = sprintf("x%02X", $db);
+
                                 break;
                             case 'dec':
                                 $x[] = str_pad($db, 3, '0', STR_PAD_LEFT);
+
                                 break;
                         }
                     } else {
@@ -225,6 +232,7 @@ class AvroDebug
                 }
             }
         }
+
         return $x;
     }
 }

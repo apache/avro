@@ -28,7 +28,6 @@ use Apache\Avro\Schema\AvroSchemaParseException;
 
 /**
  * Avro library for protocols
- * @package Avro
  */
 class AvroProtocol
 {

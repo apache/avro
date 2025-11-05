@@ -25,8 +25,6 @@ namespace Apache\Avro;
 /**
  * Barebones IO base class to provide common interface for file and string
  * access within the Avro classes.
- *
- * @package Avro
  */
 interface AvroIO
 {
@@ -75,7 +73,6 @@ interface AvroIO
      * from the beginning of the file, is obtained by adding $offset to
      * the position specified by $whence.
      *
-     * @param int $offset
      * @param int $whence one of AvroIO::SEEK_SET, AvroIO::SEEK_CUR,
      *                    or Avro::SEEK_END
      * @returns boolean true

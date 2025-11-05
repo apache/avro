@@ -24,7 +24,6 @@ use Apache\Avro\AvroException;
 
 /**
  * AvroNamedSchema with fixed-length data values
- * @package Avro
  */
 class AvroFixedSchema extends AvroNamedSchema
 {
@@ -55,11 +54,12 @@ class AvroFixedSchema extends AvroNamedSchema
     {
         $avro = parent::toAvro();
         $avro[AvroSchema::SIZE_ATTR] = $this->size;
+
         return $avro;
     }
 
     /**
-     * @param array<int, string>|null $aliases
+     * @param null|array<int, string> $aliases
      * @throws AvroSchemaParseException
      */
     public static function duration(
@@ -75,7 +75,7 @@ class AvroFixedSchema extends AvroNamedSchema
     }
 
     /**
-     * @param array<int, string>|null $aliases
+     * @param null|array<int, string> $aliases
      * @throws AvroSchemaParseException
      * @throws AvroException
      */

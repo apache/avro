@@ -22,7 +22,6 @@ namespace Apache\Avro\Schema;
 
 /**
  * Field of an {@link AvroRecordSchema}
- * @package Avro
  */
 class AvroField extends AvroSchema implements AvroAliasedSchema
 {
@@ -62,7 +61,7 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
     private static array $validFieldSortOrders = [
         self::ASC_SORT_ORDER,
         self::DESC_SORT_ORDER,
-        self::IGNORE_SORT_ORDER
+        self::IGNORE_SORT_ORDER,
     ];
 
     private ?string $name;
@@ -82,9 +81,6 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
      * @var null|string sort order of this field
      */
     private ?string $order;
-    /**
-     * @var array|null
-     */
     private ?array $aliases;
 
     /**
@@ -115,24 +111,6 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
         $this->order = $order;
         self::hasValidAliases($aliases);
         $this->aliases = $aliases;
-    }
-
-    /**
-     * @throws AvroSchemaParseException if $order is not a valid
-     *                                  field order value.
-     */
-    private static function checkOrderValue(?string $order): void
-    {
-        if (!is_null($order) && !self::isValidFieldSortOrder($order)) {
-            throw new AvroSchemaParseException(
-                sprintf('Invalid field sort order %s', $order)
-            );
-        }
-    }
-
-    private static function isValidFieldSortOrder(string $order): bool
-    {
-        return in_array($order, self::$validFieldSortOrders, true);
     }
 
     public function toAvro(): string|array
@@ -187,6 +165,24 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
 
     public function hasAliases()
     {
-        return $this->aliases !== null;
+        return null !== $this->aliases;
+    }
+
+    /**
+     * @throws AvroSchemaParseException if $order is not a valid
+     *                                  field order value.
+     */
+    private static function checkOrderValue(?string $order): void
+    {
+        if (!is_null($order) && !self::isValidFieldSortOrder($order)) {
+            throw new AvroSchemaParseException(
+                sprintf('Invalid field sort order %s', $order)
+            );
+        }
+    }
+
+    private static function isValidFieldSortOrder(string $order): bool
+    {
+        return in_array($order, self::$validFieldSortOrders, true);
     }
 }

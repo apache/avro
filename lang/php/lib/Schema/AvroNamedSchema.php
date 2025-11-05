@@ -22,7 +22,6 @@ namespace Apache\Avro\Schema;
 
 /**
  * Parent class of named Avro schema
- * @package Avro
  */
 class AvroNamedSchema extends AvroSchema implements AvroAliasedSchema
 {
@@ -66,6 +65,7 @@ class AvroNamedSchema extends AvroSchema implements AvroAliasedSchema
         if (!is_null($this->aliases)) {
             $avro[AvroSchema::ALIASES_ATTR] = $this->aliases;
         }
+
         return $avro;
     }
 
