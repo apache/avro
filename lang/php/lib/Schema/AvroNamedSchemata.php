@@ -32,7 +32,7 @@ class AvroNamedSchemata
         /**
          * @var AvroNamedSchema[]
          */
-        private $schemata = []
+        private array $schemata = []
     )
     {
     }

@@ -42,8 +42,6 @@ class AvroDataIOReader
      */
     public array $metadata;
 
-    private AvroIO $io;
-
     private AvroIOBinaryDecoder $decoder;
     /**
      * @var int count of items in block
@@ -65,10 +63,9 @@ class AvroDataIOReader
      * @uses readHeader()
      */
     public function __construct(
-        AvroIO $io,
+        private AvroIO $io,
         private AvroIODatumReader $datum_reader
     ) {
-        $this->io = $io;
         $this->decoder = new AvroIOBinaryDecoder($this->io);
         $this->readHeader();
 

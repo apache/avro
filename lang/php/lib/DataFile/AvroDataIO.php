@@ -89,31 +89,31 @@ class AvroDataIO
     ];
 
     /**
-     * @var AvroSchema cached version of metadata schema object
+     * @var ?AvroSchema cached version of metadata schema object
      */
-    private static $metadataSchema;
+    private static ?AvroSchema $metadataSchema = null;
 
     /**
      * @returns int count of bytes in the initial "magic" segment of the
      *              Avro container file header
      */
-    public static function magicSize()
+    public static function magicSize(): int
     {
-        return strlen((string) self::magic());
+        return strlen(self::magic());
     }
 
     /**
-     * @returns the initial "magic" segment of an Avro container file header.
+     * @return string the initial "magic" segment of an Avro container file header.
      */
-    public static function magic()
+    public static function magic(): string
     {
         return ('Obj' . pack('c', self::VERSION));
     }
 
     /**
-     * @returns AvroSchema object of Avro container file metadata.
+     * @return AvroSchema object of Avro container file metadata.
      */
-    public static function metadataSchema()
+    public static function metadataSchema(): AvroSchema
     {
         if (is_null(self::$metadataSchema)) {
             self::$metadataSchema = AvroSchema::parse(self::METADATA_SCHEMA_JSON);

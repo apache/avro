@@ -223,25 +223,28 @@ class AvroIODatumReader
         array $attribute_names
     ): bool {
         foreach ($attribute_names as $attribute_name) {
-            if ($schema_one->attribute($attribute_name) === $schema_two->attribute($attribute_name)) {
-                continue;
-            }
+            if ($schema_one->attribute($attribute_name) !== $schema_two->attribute($attribute_name)) {
+                if ($attribute_name === AvroSchema::FULLNAME_ATTR) {
 
-            if (AvroSchema::FULLNAME_ATTR === $attribute_name) {
-                if (!$schema_two instanceof AvroAliasedSchema) {
-                    return false;
-                }
-                foreach ($schema_two->getAliases() as $alias) {
                     if (
-                        $schema_one->attribute($attribute_name) !== (new AvroName(
-                            $alias,
-                            $schema_two->attribute(AvroSchema::NAMESPACE_ATTR),
-                            null
-                        ))->fullname()
+                        !($schema_two instanceof AvroAliasedSchema)
                     ) {
                         return false;
                     }
+
+                    foreach ($schema_two->getAliases() as $alias) {
+                        if (
+                            $schema_one->attribute($attribute_name) === (new AvroName(
+                                $alias,
+                                $schema_two->attribute(AvroSchema::NAMESPACE_ATTR),
+                                null
+                            ))->fullname()
+                        ) {
+                            return true;
+                        }
+                    }
                 }
+                return false;
             }
         }
 

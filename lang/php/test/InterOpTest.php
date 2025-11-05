@@ -65,7 +65,7 @@ class InterOpTest extends TestCase
     }
 
     #[DataProvider('file_name_provider')]
-    public function test_read($file_name): void
+    public function test_read(string $file_name): void
     {
         $dr = AvroDataIO::openFile(
             $file_name,

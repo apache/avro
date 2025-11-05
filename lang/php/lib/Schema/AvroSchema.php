@@ -478,11 +478,11 @@ class AvroSchema implements \Stringable
     }
 
     /**
-     * @param string $type a schema type name
-     * @returns boolean true if the given type name is a valid schema type
+     * @param ?string $type a schema type name
+     * @return bool true if the given type name is a valid schema type
      *                  name and false otherwise.
      */
-    public static function isValidType($type)
+    public static function isValidType(?string $type): bool
     {
         return (self::isPrimitiveType($type)
             || self::isNamedType($type)

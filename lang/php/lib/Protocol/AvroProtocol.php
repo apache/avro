@@ -68,12 +68,12 @@ class AvroProtocol
     {
         $schemata = new AvroNamedSchemata();
 
-        if (!is_null($avro["types"])) {
+        if (array_key_exists("types", $avro)) {
             AvroSchema::realParse($avro["types"], $avro["namespace"], $schemata);
         }
 
         $messages = [];
-        if (!is_null($avro["messages"])) {
+        if (is_array($avro["messages"] ?? null)) {
             foreach ($avro["messages"] as $messageName => $messageAvro) {
                 $messages[] = new AvroProtocolMessage(
                     name: $messageName,
