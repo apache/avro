@@ -468,9 +468,9 @@ class SchemaTest extends TestCase
      "size": 314}
     ', false),
             new SchemaExample(
-                '{"type":"fixed","name":"ex","doc":"this should be ignored","size": 314}',
+                '{"type":"fixed","name":"ex","doc":"this shouldn\'t be ignored","size": 314}',
                 true,
-                '{"type":"fixed","name":"ex","size":314}'
+                '{"type":"fixed","name":"ex","doc":"this shouldn\'t be ignored","size":314}'
             ),
             new SchemaExample(
                 '{"name": "bar",

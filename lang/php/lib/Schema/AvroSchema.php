@@ -397,6 +397,7 @@ class AvroSchema implements \Stringable
                                 case self::DURATION_LOGICAL_TYPE:
                                     return AvroFixedSchema::duration(
                                         name: $new_name,
+                                        doc: $doc,
                                         schemata: $schemata,
                                         aliases: $aliases
                                     );
@@ -405,6 +406,7 @@ class AvroSchema implements \Stringable
 
                                     return AvroFixedSchema::decimal(
                                         name: $new_name,
+                                        doc: $doc,
                                         size: $size,
                                         precision: $precision,
                                         scale: $scale,
@@ -416,6 +418,7 @@ class AvroSchema implements \Stringable
 
                         return new AvroFixedSchema(
                             name: $new_name,
+                            doc: $doc,
                             size: $size,
                             schemata: $schemata,
                             aliases: $aliases

@@ -30,15 +30,15 @@ class AvroFixedSchema extends AvroNamedSchema
     /**
      * @var int byte count of this fixed schema data value
      */
-    private $size;
+    private int $size;
 
     /**
      * @param int $size byte count of this fixed schema data value
      * @throws AvroSchemaParseException
      */
-    public function __construct(AvroName $name, int $size, ?AvroNamedSchemata &$schemata = null, ?array $aliases = null)
+    public function __construct(AvroName $name, ?string $doc, int $size, ?AvroNamedSchemata &$schemata = null, ?array $aliases = null)
     {
-        parent::__construct(AvroSchema::FIXED_SCHEMA, $name, null, $schemata, $aliases);
+        parent::__construct(AvroSchema::FIXED_SCHEMA, $name, $doc, $schemata, $aliases);
         $this->size = $size;
     }
 
@@ -64,10 +64,17 @@ class AvroFixedSchema extends AvroNamedSchema
      */
     public static function duration(
         AvroName $name,
+        ?string $doc,
         ?AvroNamedSchemata &$schemata = null,
         ?array $aliases = null
     ): self {
-        $fixedSchema = new self($name, 12, $schemata, $aliases);
+        $fixedSchema = new self(
+            name: $name,
+            doc: $doc,
+            size: 12,
+            schemata: $schemata,
+            aliases: $aliases
+        );
 
         $fixedSchema->logicalType = AvroLogicalType::duration();
 
@@ -81,13 +88,20 @@ class AvroFixedSchema extends AvroNamedSchema
      */
     public static function decimal(
         AvroName $name,
+        ?string $doc,
         int $size,
         int $precision,
         int $scale,
         ?AvroNamedSchemata &$schemata = null,
         ?array $aliases = null
     ): self {
-        $self = new self($name, $size, $schemata, $aliases);
+        $self = new self(
+            name: $name,
+            doc: $doc,
+            size: $size,
+            schemata: $schemata,
+            aliases: $aliases
+        );
 
         $maxPrecision = (int) floor(log10(self::maxDecimalMagnitude($size)));
 
