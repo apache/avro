@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -59,13 +60,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestSchema {
   @Test
@@ -236,6 +231,15 @@ public class TestSchema {
         assertEquals(payload, sp);
       }
     }
+  }
+
+  @Test
+  void byteArrayDefaultField() {
+    byte[] defaultBytes = new byte[] { 1, 2, 3 };
+    Schema.Field field = new Schema.Field("bytesField", Schema.create(Schema.Type.BYTES), "my bytes field", defaultBytes);
+    Schema rSchema = Schema.createRecord("myRecord", "myRecord docs", "me", false, List.of(field));
+    GenericData.Record rec = new GenericRecordBuilder(rSchema).build();
+    assertArrayEquals(((ByteBuffer) rec.get("bytesField")).array(), defaultBytes);
   }
 
   @Test

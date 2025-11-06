@@ -57,13 +57,17 @@ public class JacksonUtils {
   private JacksonUtils() {
   }
 
-  public static JsonNode toJsonNode(Object datum) {
+  public static JsonNode toJsonNode(Object object) {
+    return toJsonNode(object, false);
+  }
+
+  public static JsonNode toJsonNode(Object datum, boolean inSchemaContext) {
     if (datum == null) {
       return null;
     }
     try {
       TokenBuffer generator = new TokenBuffer(MAPPER, false);
-      toJson(datum, generator);
+      toJson(datum, generator, inSchemaContext);
       return MAPPER.readTree(generator.asParser());
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
@@ -71,24 +75,29 @@ public class JacksonUtils {
   }
 
   @SuppressWarnings(value = "unchecked")
-  static void toJson(Object datum, JsonGenerator generator) throws IOException {
+  static void toJson(Object datum, JsonGenerator generator, boolean inSchemaContext) throws IOException {
     if (datum == JsonProperties.NULL_VALUE) { // null
       generator.writeNull();
     } else if (datum instanceof Map) { // record, map
       generator.writeStartObject();
       for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) datum).entrySet()) {
         generator.writeFieldName(entry.getKey().toString());
-        toJson(entry.getValue(), generator);
+        toJson(entry.getValue(), generator, inSchemaContext);
       }
       generator.writeEndObject();
     } else if (datum instanceof Collection) { // array
       generator.writeStartArray();
       for (Object element : (Collection<?>) datum) {
-        toJson(element, generator);
+        toJson(element, generator, inSchemaContext);
       }
       generator.writeEndArray();
     } else if (datum instanceof byte[]) { // bytes, fixed
-      generator.writeBinary((byte[]) datum);// writeString(new String((byte[]) datum, StandardCharsets.ISO_8859_1));
+      if (inSchemaContext) {
+        // when writing schemas, bytes must be encoded to string
+        generator.writeString(new String((byte[]) datum, StandardCharsets.ISO_8859_1));
+      } else {
+        generator.writeBinary((byte[]) datum);
+      }
     } else if (datum instanceof CharSequence || datum instanceof Enum<?>) { // string, enum
       generator.writeString(datum.toString());
     } else if (datum instanceof Double) { // double
