@@ -243,7 +243,8 @@ public class TestSchema {
   @Test
   void byteArrayDefaultField() {
     byte[] defaultBytes = new byte[] { 1, 2, 3 };
-    Schema.Field field = new Schema.Field("bytesField", Schema.create(Schema.Type.BYTES), "my bytes field", defaultBytes);
+    Schema.Field field = new Schema.Field("bytesField", Schema.create(Schema.Type.BYTES), "my bytes field",
+        defaultBytes);
     Schema rSchema = Schema.createRecord("myRecord", "myRecord docs", "me", false, List.of(field));
     GenericData.Record rec = new GenericRecordBuilder(rSchema).build();
     assertArrayEquals(defaultBytes, ((ByteBuffer) rec.get("bytesField")).array());
