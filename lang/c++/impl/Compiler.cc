@@ -94,7 +94,15 @@ static NodePtr makeNode(const string &t, SymbolTable &st, const string &ns) {
 
     auto it = st.find(n);
     if (it != st.end()) {
-        return NodePtr(new NodeSymbolic(asSingleAttribute(n), it->second));
+        // Return the raw NodePtr instead of creating a new "NodeSymbolic"
+        // via "NodePtr(new NodeSymbolic(asSingleAttribute(n), it->second))"
+        // in order to support externally resolved named references.
+        // This is safe because the validator canonicalizes duplicates:
+        // when it sees the same named node again (including self-recursion),
+        // it replaces that leaf with a NodeSymbolic via "setLeafToSymbolic".
+        // So even if the raw NodePtr is returned initially, validation
+        // converts repeats to symbolic links.
+        return it->second;
     }
     throw Exception("Unknown type: {}", n);
 }
@@ -636,6 +644,25 @@ AVRO_DECL bool compileJsonSchema(std::istream &is, ValidSchema &schema, string &
         error = e.what();
         return false;
     }
+}
+
+AVRO_DECL ValidSchema compileJsonSchemaWithNamedReferences(std::istream &is,
+                                                           const std::map<Name, ValidSchema> &namedReferences) {
+    if (!is.good()) {
+        throw Exception("Input stream is not good");
+    }
+
+    std::unique_ptr<InputStream> in = istreamInputStream(is);
+    json::Entity e = json::loadEntity(*in);
+
+    // Convert the map<Name, ValidSchema> to SymbolTable (map<Name, NodePtr>)
+    SymbolTable st;
+    for (const auto &entry : namedReferences) {
+        st[entry.first] = entry.second.root();
+    }
+
+    NodePtr n = makeNode(e, st, "");
+    return ValidSchema(n);
 }
 
 } // namespace avro

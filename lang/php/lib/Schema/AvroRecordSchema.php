@@ -110,7 +110,11 @@ class AvroRecordSchema extends AvroNamedSchema
             ) {
                 $is_schema_from_schemata = true;
             } else {
-                $field_schema = self::subparse($type, $default_namespace, $schemata);
+                if (self::isPrimitiveType($type)) {
+                    $field_schema = self::subparse($field, $default_namespace, $schemata);
+                } else {
+                    $field_schema = self::subparse($type, $default_namespace, $schemata);
+                }
             }
 
             $new_field = new AvroField(

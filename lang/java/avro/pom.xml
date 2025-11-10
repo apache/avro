@@ -90,9 +90,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <parallel>none</parallel>
-          <systemProperties>
-            <org.apache.avro.SERIALIZABLE_CLASSES>java.math.BigDecimal,java.math.BigInteger,java.net.URI,java.net.URL,java.io.File,java.lang.Integer,org.apache.avro.reflect.TestReflect$R10</org.apache.avro.SERIALIZABLE_CLASSES>
-          </systemProperties>
         </configuration>
         <executions>
           <execution>
@@ -163,7 +160,7 @@
             </goals>
             <configuration>
               <filterProperties>
-                <integrationTestingJDK>11</integrationTestingJDK>
+                <integrationTestingJDK>[11,12)</integrationTestingJDK>
               </filterProperties>
               <properties>
                 <maven.compiler.release>11</maven.compiler.release>
@@ -179,7 +176,7 @@
             </goals>
             <configuration>
               <filterProperties>
-                <integrationTestingJDK>17</integrationTestingJDK>
+                <integrationTestingJDK>[17,18)</integrationTestingJDK>
               </filterProperties>
               <properties>
                 <maven.compiler.release>17</maven.compiler.release>
@@ -195,7 +192,7 @@
             </goals>
             <configuration>
               <filterProperties>
-                <integrationTestingJDK>21</integrationTestingJDK>
+                <integrationTestingJDK>[21,22)</integrationTestingJDK>
               </filterProperties>
               <properties>
                 <maven.compiler.release>21</maven.compiler.release>

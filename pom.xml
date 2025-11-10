@@ -49,21 +49,21 @@
     <!-- plugin versions -->
     <apache-rat-plugin.version>0.16.1</apache-rat-plugin.version>
     <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
-    <checkstyle.version>10.26.1</checkstyle.version>
-    <enforcer-plugin.version>3.6.1</enforcer-plugin.version>
-    <extra-enforcer-rules.version>1.10.0</extra-enforcer-rules.version>
-    <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
-    <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+    <checkstyle.version>12.1.1</checkstyle.version>
+    <enforcer-plugin.version>3.6.2</enforcer-plugin.version>
+    <extra-enforcer-rules.version>1.11.0</extra-enforcer-rules.version>
+    <maven-antrun-plugin.version>3.2.0</maven-antrun-plugin.version>
+    <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
     <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
-    <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
-    <maven-plugin-plugin.version>3.15.1</maven-plugin-plugin.version>
+    <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
+    <maven-plugin-plugin.version>3.15.2</maven-plugin-plugin.version>
     <maven-remote-resources-plugin.version>3.3.0</maven-remote-resources-plugin.version>
-    <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
+    <maven-shade-plugin.version>3.6.1</maven-shade-plugin.version>
     <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
     <maven-toolchains-plugin.version>3.2.0</maven-toolchains-plugin.version>
     <plugin-tools-javadoc.version>3.5.2</plugin-tools-javadoc.version>
-    <spotless-maven-plugin.version>2.45.0</spotless-maven-plugin.version>
-    <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
+    <spotless-maven-plugin.version>3.0.0</spotless-maven-plugin.version>
+    <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
 
     <!-- Pin output timestamp to make the Java build reproducible -->
     <project.build.outputTimestamp>1723122283</project.build.outputTimestamp>
@@ -184,41 +184,30 @@
           <execution>
             <id>Ensure ToolChain for JDK 11 is available</id>
             <goals>
-              <goal>toolchain</goal>
+              <goal>select-jdk-toolchain</goal>
             </goals>
             <configuration>
-              <toolchains>
-                <jdk>
-                  <version>11</version>
-                </jdk>
-              </toolchains>
+              <version>[11,12)</version>
             </configuration>
           </execution>
           <execution>
             <id>Ensure ToolChain for JDK 17 is available</id>
             <goals>
-              <goal>toolchain</goal>
+              <goal>select-jdk-toolchain</goal>
             </goals>
             <configuration>
-              <toolchains>
-                <jdk>
-                  <version>17</version>
-                </jdk>
-              </toolchains>
+              <version>[17,18)</version>
             </configuration>
           </execution>
           <execution>
             <!-- The last one in this list is the version used for actually building the software -->
             <id>Build using JDK 21</id>
             <goals>
-              <goal>toolchain</goal>
+              <goal>select-jdk-toolchain</goal>
             </goals>
             <configuration>
-              <toolchains>
-                <jdk>
-                  <version>21</version>
-                </jdk>
-              </toolchains>
+              <useJdk>IfSame</useJdk>
+              <version>[21,22)</version>
             </configuration>
           </execution>
         </executions>
@@ -435,7 +424,6 @@
                 <exclude>**/*.rej</exclude>
                 <exclude>**/*.egg-info/**</exclude>
                 <exclude>build/**</exclude>
-                <exclude>share/docker/m2/build-cache/**</exclude>
                 <exclude>lang/java/archetypes/**</exclude>
                 <exclude>lang/java/**/target/**</exclude>
                 <exclude>lang/js/node_modules/**</exclude>
@@ -586,10 +574,10 @@
 
                 <mkdir dir="${avro.docDir}"/>
                 <copy todir="${avro.docDir}/java">
-                  <fileset dir="lang/java/target/site/apidocs"/>
+                  <fileset dir="lang/java/target/reports/apidocs"/>
                 </copy>
                 <copy todir="build/avro-doc-${project.version}/trevni">
-                  <fileset dir="lang/java/trevni/target/site"/>
+                  <fileset dir="lang/java/trevni/doc/target/site"/>
                 </copy>
               </target>
             </configuration>

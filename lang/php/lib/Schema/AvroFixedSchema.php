@@ -20,6 +20,8 @@
 
 namespace Apache\Avro\Schema;
 
+use Apache\Avro\AvroException;
+
 /**
  * AvroNamedSchema with fixed-length data values
  * @package Avro
@@ -66,5 +68,56 @@ class AvroFixedSchema extends AvroNamedSchema
         $avro = parent::toAvro();
         $avro[AvroSchema::SIZE_ATTR] = $this->size;
         return $avro;
+    }
+
+    /**
+     * @param array<int, string>|null $aliases
+     * @throws AvroSchemaParseException
+     */
+    public static function duration(
+        AvroName $name,
+        ?string $doc,
+        AvroNamedSchemata &$schemata = null,
+        ?array $aliases = null
+    ): self {
+        $fixedSchema = new self($name, $doc, 12, $schemata, $aliases);
+
+        $fixedSchema->logicalType = AvroLogicalType::duration();
+
+        return $fixedSchema;
+    }
+
+    /**
+     * @param array<int, string>|null $aliases
+     * @throws AvroSchemaParseException
+     * @throws AvroException
+     */
+    public static function decimal(
+        AvroName $name,
+        ?string $doc,
+        int $size,
+        int $precision,
+        int $scale,
+        ?AvroNamedSchemata &$schemata = null,
+        ?array $aliases = null
+    ): self {
+        $self = new self($name, $doc, $size, $schemata, $aliases);
+
+        $maxPrecision = (int) floor(log10(self::maxDecimalMagnitude($size)));
+
+        if ($precision > $maxPrecision) {
+            throw new AvroException(
+                "Invalid precision for specified fixed size (size='{$size}', precision='{$precision}')."
+            );
+        }
+
+        $self->logicalType = AvroLogicalType::decimal($precision, $scale);
+
+        return $self;
+    }
+
+    public static function maxDecimalMagnitude(int $size): float
+    {
+        return (float) (2 ** ((8 * $size) - 1)) - 1;
     }
 }

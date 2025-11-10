@@ -19,16 +19,17 @@
 
 ARG BUILDPLATFORM
 
-FROM --platform=$BUILDPLATFORM ubuntu:22.04
+FROM --platform=$BUILDPLATFORM ubuntu:24.04
 WORKDIR /root
 
-ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
-    DEBIAN_FRONTEND=noninteractive
+#ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies from vanilla system packages
 RUN apt-get -qqy update \
  && apt-get -qqy install software-properties-common \
  && add-apt-repository ppa:deadsnakes/ppa \
+ && add-apt-repository ppa:longsleep/golang-backports \
  && apt-get -qqy update \
  && apt-get -qqy install --no-install-recommends ant \
                                                  apt-transport-https \
@@ -46,6 +47,8 @@ RUN apt-get -qqy update \
                                                  gcc \
                                                  git \
                                                  gnupg2 \
+                                                 golang-go \
+                                                 hugo \
                                                  libboost-all-dev \
                                                  libfontconfig1-dev \
                                                  libfreetype6-dev \
@@ -56,27 +59,10 @@ RUN apt-get -qqy update \
                                                  libsnappy1v5 \
                                                  libssl-dev \
                                                  make \
-                                                 mypy \
                                                  openjdk-11-jdk \
                                                  openjdk-17-jdk \
                                                  openjdk-21-jdk \
                                                  perl \
-                                                 python3 \
-                                                 python3-pip \
-                                                 python3-distutils \
-                                                 python3-setuptools \
-                                                 python3-snappy \
-                                                 python3-venv \
-                                                 python3-wheel \
-                                                 python3.10 \
-                                                 python3.11 \
-                                                 python3.11-dev \
-                                                 python3.7 \
-                                                 python3.7-distutils \
-                                                 python3.8 \
-                                                 python3.8-distutils \
-                                                 python3.9 \
-                                                 python3.9-distutils \
                                                  source-highlight \
                                                  subversion \
                                                  valgrind \
@@ -84,26 +70,14 @@ RUN apt-get -qqy update \
                                                  wget \
  && apt-get -qqy clean
 
-# Install PHP
-RUN apt-get -qqy install --no-install-recommends libzstd-dev \
-                                                 libbz2-dev \
-                                                 php \
-                                                 php-bz2 \
-                                                 php-curl \
-                                                 php-gmp \
-                                                 php-xml \
-                                                 php-mbstring \
-                                                 php-dev
-
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/bbb9892e165d40fb35fa19f38929effc5d0c709b/Dockerfile#L30
-ENV MAVEN_VERSION 3.9.6
-ENV APACHE_DIST_URLS \
-  https://www.apache.org/dyn/closer.cgi?action=download&filename= \
-  # if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
+ENV MAVEN_VERSION=3.9.11
+# Ideally we use the 1st URL only, but if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
+ENV APACHE_DIST_URLS="https://www.apache.org/dyn/closer.cgi?action=download&filename= \
   https://www-us.apache.org/dist/ \
   https://www.apache.org/dist/ \
-  https://archive.apache.org/dist/
+  https://archive.apache.org/dist/"
 RUN set -eux; \
   download() { \
     local f="$1"; shift; \
@@ -125,10 +99,7 @@ RUN set -eux; \
 ENV PATH="/opt/maven/bin:${PATH}"
 
 # Install nodejs
-# The node deprecation warnings cause a 20 second sleep.
-# But mom, I'm not even tired!
-RUN curl -sSL https://deb.nodesource.com/setup_14.x \
-  | sed 's/sleep/echo "But mom!"/' \
+RUN curl -sSL https://deb.nodesource.com/setup_24.x \
   | bash \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
@@ -136,8 +107,18 @@ RUN curl -sSL https://deb.nodesource.com/setup_14.x \
  && npm install -g browserify \
  && npm cache clean --force
 
+# Install PHP
+RUN apt-get -qqy install --no-install-recommends libzstd-dev \
+                                                 libbz2-dev \
+                                                 php \
+                                                 php-bz2 \
+                                                 php-curl \
+                                                 php-gmp \
+                                                 php-xml \
+                                                 php-mbstring \
+                                                 php-dev
 # Install PHP-snappy and PHP-zstd
-ENV PHP8_VERSION=8.1
+ENV PHP8_VERSION=8.3
 RUN mkdir -p "/etc/php/${PHP8_VERSION}/cli/conf.d"
 RUN mkdir tmp && cd tmp \
  && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-zstd.git \
@@ -184,7 +165,7 @@ RUN curl -sSL https://cpanmin.us \
  && rm -rf .cpanm
 
 # Install Python3
-ENV PATH="${PATH}:/opt/pypy3.10/bin" \
+ENV PATH="${PATH}:/opt/pypy3.11/bin:/opt/pypy3.10/bin" \
     PIP_NO_CACHE_DIR=off
 
 # https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
@@ -194,13 +175,29 @@ RUN case "${BUILDARCH:?}" in \
       *) pypyarch=linux64;; \
     esac \
  && cd /opt \
- && for url in https://downloads.python.org/pypy/pypy3.10-v7.3.12-"$pypyarch".tar.bz2; \
-    do curl -fsSL "$url" | tar -xvjpf -; \
+ && for url in \
+    https://downloads.python.org/pypy/pypy3.11-v7.3.20-"$pypyarch".tar.bz2 \
+    https://downloads.python.org/pypy/pypy3.10-v7.3.19-"$pypyarch".tar.bz2 \
+    ; do curl -fsSL "$url" | tar -xvjpf -; \
     done \
- && ln -s pypy3.10* pypy3.10
+ && ln -s pypy3.11* pypy3.11 && ln -s pypy3.10* pypy3.10
 
-RUN python3 -m pip install --upgrade pip setuptools wheel \
- && python3 -m pip install tox zstandard
+# Note: python3-distutils was removed with Python 3.12; see here for migration advise: https://peps.python.org/pep-0632/#migration-advice
+RUN apt-get -qqy install --no-install-recommends mypy \
+                                                 python3 \
+                                                 python3.10 \
+                                                 python3.11 \
+                                                 python3.12 \
+                                                 python3.13 \
+                                                 python3.13-dev \
+                                                 python3-pip \
+                                                 python3-setuptools \
+                                                 python3-snappy \
+                                                 python3-venv \
+                                                 python3-wheel \
+                                                 python3-zstandard \
+                                                 tox \
+ && apt-get -qqy clean
 
 # Install Ruby
 RUN apt-get -qqy install ruby-full \
@@ -214,7 +211,7 @@ RUN gem install bundler --no-document && \
 
 # Install Rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.73.0
-ENV PATH $PATH:/root/.cargo/bin/
+ENV PATH=$PATH:/root/.cargo/bin/
 
 # Install .NET SDK
 RUN cd /opt ; \
@@ -223,7 +220,7 @@ RUN cd /opt ; \
     bash ./dotnet-install.sh --channel "7.0" --install-dir "/opt/dotnet" ; \
     bash ./dotnet-install.sh --channel "8.0" --install-dir "/opt/dotnet" ;
     
-ENV PATH $PATH:/opt/dotnet
+ENV PATH=$PATH:/opt/dotnet
 
 # Since we want the JDK21 as a default, we have to re-prepend it to the PATH.
 RUN update-java-alternatives  -s "java-1.21.*"

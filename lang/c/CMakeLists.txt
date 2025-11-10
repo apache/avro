@@ -179,13 +179,13 @@ set(CODEC_LIBRARIES ${ZLIB_LIBRARIES} ${LZMA_LIBRARIES} ${SNAPPY_LIBRARIES})
 set(CODEC_PKG "${ZLIB_PKG} ${LZMA_PKG} ${SNAPPY_PKG}")
 
 # Jansson JSON library
-pkg_check_modules(JANSSON jansson>=2.3)
+pkg_check_modules(JANSSON jansson>=2.7)
 if (JANSSON_FOUND)
     set(JANSSON_PKG libjansson)
     include_directories(${JANSSON_INCLUDE_DIRS})
     link_directories(${JANSSON_LIBRARY_DIRS})
 else (JANSSON_FOUND)
-    message(FATAL_ERROR "libjansson >=2.3 not found")
+    message(FATAL_ERROR "libjansson >=2.7 not found")
 endif (JANSSON_FOUND)
 
 

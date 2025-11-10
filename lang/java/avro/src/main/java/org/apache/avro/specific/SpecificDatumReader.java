@@ -22,14 +22,13 @@ import org.apache.avro.Schema;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.ResolvingDecoder;
+import org.apache.avro.util.ClassSecurityValidator.SystemPropertiesPredicate;
 import org.apache.avro.util.ClassUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.HashSet;
-import java.util.Set;
+import org.apache.avro.util.ClassSecurityValidator;
 
 /**
  * {@link org.apache.avro.io.DatumReader DatumReader} for generated Java
@@ -38,30 +37,20 @@ import java.util.Set;
 public class SpecificDatumReader<T> extends GenericDatumReader<T> {
 
   /**
-   * @deprecated prefer to use SERIALIZABLE_CLASSES instead.
+   * @deprecated Use {@link SystemPropertiesPredicate} instead.
+   * @see ClassSecurityValidator
    */
   @Deprecated
-  public static final String[] SERIALIZABLE_PACKAGES;
+  public static final String[] SERIALIZABLE_PACKAGES = SystemPropertiesPredicate.SERIALIZABLE_PACKAGES
+      .toArray(new String[0]);
 
-  public static final String[] SERIALIZABLE_CLASSES;
-
-  static {
-    // no serializable classes by default
-    String serializableClassesProp = System.getProperty("org.apache.avro.SERIALIZABLE_CLASSES");
-    SERIALIZABLE_CLASSES = (serializableClassesProp == null) ? new String[0] : serializableClassesProp.split(",");
-
-    // no serializable packages by default
-    String serializablePackagesProp = System.getProperty("org.apache.avro.SERIALIZABLE_PACKAGES");
-    SERIALIZABLE_PACKAGES = (serializablePackagesProp == null) ? new String[0] : serializablePackagesProp.split(",");
-  }
-
-  // The primitive "class names" based on Class.isPrimitive()
-  private static final Set<String> PRIMITIVES = new HashSet<>(Arrays.asList(Boolean.TYPE.getName(),
-      Character.TYPE.getName(), Byte.TYPE.getName(), Short.TYPE.getName(), Integer.TYPE.getName(), Long.TYPE.getName(),
-      Float.TYPE.getName(), Double.TYPE.getName(), Void.TYPE.getName()));
-
-  private final List<String> trustedPackages = new ArrayList<>();
-  private final List<String> trustedClasses = new ArrayList<>();
+  /**
+   * @deprecated Use {@link SystemPropertiesPredicate} instead.
+   * @see ClassSecurityValidator
+   */
+  @Deprecated
+  public static final String[] SERIALIZABLE_CLASSES = SystemPropertiesPredicate.SERIALIZABLE_CLASSES
+      .toArray(new String[0]);
 
   public SpecificDatumReader() {
     this(null, null, SpecificData.get());
@@ -88,15 +77,11 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
    */
   public SpecificDatumReader(Schema writer, Schema reader, SpecificData data) {
     super(writer, reader, data);
-    trustedPackages.addAll(Arrays.asList(SERIALIZABLE_PACKAGES));
-    trustedClasses.addAll(Arrays.asList(SERIALIZABLE_CLASSES));
   }
 
   /** Construct given a {@link SpecificData}. */
   public SpecificDatumReader(SpecificData data) {
     super(data);
-    trustedPackages.addAll(Arrays.asList(SERIALIZABLE_PACKAGES));
-    trustedClasses.addAll(Arrays.asList(SERIALIZABLE_CLASSES));
   }
 
   /** Return the contained {@link SpecificData}. */
@@ -138,7 +123,6 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     if (name == null)
       return null;
     try {
-      checkSecurity(name);
       Class clazz = ClassUtils.forName(getData().getClassLoader(), name);
       return clazz;
     } catch (ClassNotFoundException e) {
@@ -146,41 +130,22 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     }
   }
 
-  private boolean trustAllPackages() {
-    return (trustedPackages.size() == 1 && "*".equals(trustedPackages.get(0)));
-  }
-
-  private void checkSecurity(String className) throws ClassNotFoundException {
-    if (trustAllPackages() || PRIMITIVES.contains(className)) {
-      return;
-    }
-
-    for (String trustedClass : getTrustedClasses()) {
-      if (className.equals(trustedClass)) {
-        return;
-      }
-    }
-
-    for (String trustedPackage : getTrustedPackages()) {
-      if (className.startsWith(trustedPackage)) {
-        return;
-      }
-    }
-
-    throw new SecurityException("Forbidden " + className
-        + "! This class is not trusted to be included in Avro schema using java-class. Please set org.apache.avro.SERIALIZABLE_CLASSES system property with the class you trust or org.apache.avro.SERIALIZABLE_PACKAGES system property with the packages you trust.");
-  }
-
   /**
-   * @deprecated Use getTrustedClasses() instead
+   * @deprecated Use {@link SystemPropertiesPredicate} instead.
+   * @see ClassSecurityValidator
    */
   @Deprecated
   public final List<String> getTrustedPackages() {
-    return trustedPackages;
+    return Arrays.asList(SERIALIZABLE_PACKAGES);
   }
 
+  /**
+   * @deprecated Use {@link SystemPropertiesPredicate} instead.
+   * @see ClassSecurityValidator
+   */
+  @Deprecated
   public final List<String> getTrustedClasses() {
-    return trustedClasses;
+    return Arrays.asList(SERIALIZABLE_CLASSES);
   }
 
   @Override

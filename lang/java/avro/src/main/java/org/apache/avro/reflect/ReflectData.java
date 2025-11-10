@@ -702,6 +702,14 @@ public class ReflectData extends SpecificData {
         setElement(result, component);
         return result;
       }
+      AvroEncode enc = ReflectionUtil.getAvroEncode(c);
+      if (enc != null) {
+        try {
+          return enc.using().getDeclaredConstructor().newInstance().getSchema();
+        } catch (Exception e) {
+          throw new AvroRuntimeException("Could not create schema from custom serializer for " + c.getName());
+        }
+      }
       AvroSchema explicit = c.getAnnotation(AvroSchema.class);
       if (explicit != null) // explicit schema
         return new Schema.Parser().parse(explicit.value());
