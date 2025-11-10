@@ -18,7 +18,7 @@
 
 package org.apache.avro.reflect;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,7 +33,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.io.DatumReader;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestPolymorphicEncoding {
 
@@ -46,10 +46,19 @@ public class TestPolymorphicEncoding {
     assertEquals(expected, decoded);
   }
 
+  @Test
+  public void testPolymorphicEncodingMultipleLevels() throws IOException {
+    List<Animal> expected = Arrays.asList(new Cat("Calico"), new Takahe(3.2));
+    byte[] encoded = write(Animal.class, expected);
+    List<Animal> decoded = read(encoded);
+
+    assertEquals(expected, decoded);
+  }
+
   private <T> List<T> read(byte[] toDecode) throws IOException {
     DatumReader<T> datumReader = new ReflectDatumReader<>();
     try (DataFileStream<T> dataFileReader = new DataFileStream<>(new ByteArrayInputStream(toDecode, 0, toDecode.length),
-        datumReader);) {
+        datumReader)) {
       List<T> toReturn = new ArrayList<>();
       while (dataFileReader.hasNext()) {
         toReturn.add(dataFileReader.next());
@@ -74,7 +83,7 @@ public class TestPolymorphicEncoding {
     }
   }
 
-  public static sealed interface Animal permits Cat,Dog {
+  public static sealed interface Animal permits Cat,Dog,Bird {
   }
 
   public static final class Dog implements Animal {
@@ -142,6 +151,75 @@ public class TestPolymorphicEncoding {
         return false;
       Cat other = (Cat) obj;
       return Objects.equals(color, other.color);
+    }
+
+  }
+
+  public static sealed interface Bird extends Animal permits Kea,Takahe {
+  }
+
+  public static final class Kea implements Bird {
+    private int age;
+
+    public Kea() {
+    }
+
+    public Kea(int age) {
+      this.age = age;
+    }
+
+    public int getAge() {
+      return age;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(age);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      Kea other = (Kea) obj;
+      return age == other.age;
+    }
+
+  }
+
+  public static final class Takahe implements Bird {
+    private double weight;
+
+    public Takahe() {
+    }
+
+    public Takahe(double weight) {
+      this.weight = weight;
+    }
+
+    public double getWeight() {
+      return weight;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(weight);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      Takahe other = (Takahe) obj;
+      return Double.doubleToLongBits(weight) == Double.doubleToLongBits(other.weight);
     }
 
   }
