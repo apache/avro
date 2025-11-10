@@ -848,7 +848,24 @@ public class ReflectData extends SpecificData {
       // automatic sealed class polymorphic
       try {
         if (IS_SEALED_METHOD != null && Boolean.TRUE.equals(IS_SEALED_METHOD.invoke(element))) {
-          return (Class<?>[]) GET_PERMITTED_SUBCLASSES_METHOD.invoke(element);
+          var subclasses = (Class<?>[]) GET_PERMITTED_SUBCLASSES_METHOD.invoke(element);
+
+          List<Class> subclassList = new ArrayList<>();
+
+          for (Class<?> subclass : subclasses) {
+            if (Modifier.isAbstract(subclass.getModifiers()) || Modifier.isInterface(subclass.getModifiers())) {
+
+              var subUnion = getUnion(subclass); // recursively process subclasses
+              if (subUnion != null) {
+                subclassList.addAll(List.of(subUnion));
+              }
+              continue;
+            }
+            subclassList.add(subclass);
+          }
+          if (!subclassList.isEmpty()) {
+            return subclassList.toArray(new Class[0]);
+          }
         }
       } catch (ReflectiveOperationException e) {
         throw new AvroRuntimeException(e);
