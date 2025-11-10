@@ -49,7 +49,7 @@ public class TestPolymorphicEncoding {
   private <T> List<T> read(byte[] toDecode) throws IOException {
     DatumReader<T> datumReader = new ReflectDatumReader<>();
     try (DataFileStream<T> dataFileReader = new DataFileStream<>(new ByteArrayInputStream(toDecode, 0, toDecode.length),
-        datumReader);) {
+        datumReader)) {
       List<T> toReturn = new ArrayList<>();
       while (dataFileReader.hasNext()) {
         toReturn.add(dataFileReader.next());

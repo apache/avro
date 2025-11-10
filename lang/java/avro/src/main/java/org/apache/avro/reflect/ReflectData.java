@@ -74,13 +74,13 @@ public class ReflectData extends SpecificData {
   private static final Method GET_PERMITTED_SUBCLASSES_METHOD;
 
   static {
-    Class<? extends Class> classClass = SpecificData.class.getClass();
+    Class<? extends Class> classClass = Class.class;
     Method isSealed;
     Method getPermittedSubclasses;
     try {
       isSealed = classClass.getMethod("isSealed");
       getPermittedSubclasses = classClass.getMethod("getPermittedSubclasses");
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException | SecurityException e) {
       isSealed = null;
       getPermittedSubclasses = null;
     }
