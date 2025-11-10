@@ -1068,8 +1068,8 @@ public class ReflectData extends SpecificData {
     var enc = ReflectionUtil.getAvroEncode(getClass(schema));
     if (enc != null) {
       try {
-        var customEncodingClass = enc.using().getDeclaredConstructor().newInstance();
-        return new CustomEncodingWrapper(customEncodingClass.withSchema(schema));
+        var customEncoding = enc.using().getDeclaredConstructor().newInstance();
+        return new CustomEncodingWrapper(customEncoding.withSchema(schema));
       } catch (Exception e) {
         throw new AvroRuntimeException("Could not instantiate custom Encoding");
       }

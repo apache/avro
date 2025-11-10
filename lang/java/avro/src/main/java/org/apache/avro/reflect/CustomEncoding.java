@@ -53,7 +53,10 @@ public abstract class CustomEncoding<T> {
    * opportunity to detect schema changes and behave accordingly. Useful for
    * maintaining backwards compatibility.
    *
-   * @param schema the schema detected during read.
+   * If the encoder does not specify a schema, will set the schema create via
+   * reflection for write operations.
+   *
+   * @param schema the schema detected.
    * @return custom encoding to be used.
    */
   public CustomEncoding<T> withSchema(Schema schema) {
