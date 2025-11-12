@@ -22,6 +22,7 @@
 #include "array"
 #include <algorithm>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -162,6 +163,44 @@ struct codec_traits<double> {
      */
     static void decode(Decoder &d, double &dbl) {
         dbl = d.decodeDouble();
+    }
+};
+
+/**
+* codec_traits for Avro optional.
+*/
+template<typename T>
+struct codec_traits<std::optional<T>> {
+    /**
+	* Encodes a given value.
+	*/
+    static void encode(Encoder &e, const std::optional<T> &b) {
+        if (b) {
+            e.encodeUnionIndex(1);
+            avro::encode(e, b.value());
+        } else {
+            e.encodeUnionIndex(0);
+            e.encodeNull();
+        }
+    }
+
+    /**
+	* Decodes into a given value.
+	*/
+    static void decode(Decoder &d, std::optional<T> &s) {
+        size_t n = d.decodeUnionIndex();
+        if (n >= 2) { throw avro::Exception("Union index too big"); }
+        switch (n) {
+            case 0: {
+                d.decodeNull();
+                s = std::nullopt;
+            } break;
+            case 1: {
+                T t;
+                avro::decode(d, t);
+                s.emplace(t);
+            } break;
+        }
     }
 };
 
