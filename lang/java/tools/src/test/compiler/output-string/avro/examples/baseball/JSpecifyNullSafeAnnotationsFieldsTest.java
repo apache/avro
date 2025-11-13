@@ -585,10 +585,10 @@ public class JSpecifyNullSafeAnnotationsFieldsTest extends org.apache.avro.speci
   @Override
   public int hashCode() {
     int result = 1;
-    result = 31 * result + (name == null ? 0 : name.hashCode());
-    result = 31 * result + (nullable_name == null ? 0 : nullable_name.hashCode());
-    result = 31 * result + Integer.hashCode(favorite_number);
-    result = 31 * result + (nullable_favorite_number == null ? 0 : nullable_favorite_number.hashCode());
+    result = 31 * result + (this.name == null ? 0 : this.name.hashCode());
+    result = 31 * result + (this.nullable_name == null ? 0 : this.nullable_name.hashCode());
+    result = 31 * result + Integer.hashCode(this.favorite_number);
+    result = 31 * result + (this.nullable_favorite_number == null ? 0 : this.nullable_favorite_number.hashCode());
     return result;
   }
 
