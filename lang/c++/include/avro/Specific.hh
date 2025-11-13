@@ -30,6 +30,7 @@
 #include "Config.hh"
 #include "Decoder.hh"
 #include "Encoder.hh"
+#include "Exception.hh"
 
 /**
  * A bunch of templates and specializations for encoding and decoding
@@ -167,7 +168,7 @@ struct codec_traits<double> {
 };
 
 /**
-* codec_traits for Avro optional.
+* codec_traits for Avro optional assumming that the schema is ["null", T].
 */
 template<typename T>
 struct codec_traits<std::optional<T>> {
@@ -189,16 +190,15 @@ struct codec_traits<std::optional<T>> {
 	*/
     static void decode(Decoder &d, std::optional<T> &s) {
         size_t n = d.decodeUnionIndex();
-        if (n >= 2) { throw avro::Exception("Union index too big"); }
+        if (n >= 2) { throw avro::Exception("Union index too big for optional (expected 0 or 1, got " + std::to_string(n) + ")"); }
         switch (n) {
             case 0: {
                 d.decodeNull();
-                s = std::nullopt;
+                s.reset();
             } break;
             case 1: {
-                T t;
-                avro::decode(d, t);
-                s.emplace(t);
+                s.emplace();
+                avro::decode(d, *s);
             } break;
         }
     }
