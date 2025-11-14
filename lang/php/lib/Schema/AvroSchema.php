@@ -20,6 +20,7 @@
 
 namespace Apache\Avro\Schema;
 
+use Apache\Avro\AvroException;
 use Apache\Avro\AvroUtil;
 use Apache\Avro\Datum\Type\AvroDuration;
 
@@ -48,11 +49,7 @@ use Apache\Avro\Datum\Type\AvroDuration;
  *    enum and record have (though not fixed schemas, which also have names), and
  *    fields also have default and order attributes, shared by no other schema type.
  */
-
-/**
- * @package Avro
- */
-class AvroSchema
+class AvroSchema implements \Stringable
 {
     /**
      * @var int lower bound of integer values: -(1 << 31)
@@ -70,7 +67,7 @@ class AvroSchema
     public const INT_RANGE = 4294967296;
 
     /**
-     * @var int lower bound of long values: -(1 << 63)
+     * @var float lower bound of long values: -(1 << 63)
      */
     public const LONG_MIN_VALUE = -9223372036854775808;
 
@@ -132,7 +129,7 @@ class AvroSchema
     /** @var string */
     public const UUID_LOGICAL_TYPE = 'uuid';
 
-    /** @var string  */
+    /** @var string */
     public const DATE_LOGICAL_TYPE = 'date';
 
     /** @var string */
@@ -207,7 +204,6 @@ class AvroSchema
      */
     public const REQUEST_SCHEMA = 'request';
 
-
     // Schema attribute names
     /**
      * @var string schema type name attribute name
@@ -265,10 +261,12 @@ class AvroSchema
     /** @var string logical type attribute name */
     public const LOGICAL_TYPE_ATTR = 'logicalType';
 
+    protected ?AvroLogicalType $logicalType = null;
+
     /**
      * @var array list of primitive schema type names
      */
-    private static $primitiveTypes = array(
+    private static $primitiveTypes = [
         self::NULL_TYPE,
         self::BOOLEAN_TYPE,
         self::STRING_TYPE,
@@ -276,22 +274,22 @@ class AvroSchema
         self::INT_TYPE,
         self::LONG_TYPE,
         self::FLOAT_TYPE,
-        self::DOUBLE_TYPE
-    );
+        self::DOUBLE_TYPE,
+    ];
 
     /**
      * @var array list of named schema type names
      */
-    private static $namedTypes = array(
+    private static $namedTypes = [
         self::FIXED_SCHEMA,
         self::ENUM_SCHEMA,
         self::RECORD_SCHEMA,
-        self::ERROR_SCHEMA
-    );
+        self::ERROR_SCHEMA,
+    ];
     /**
      * @var array list of names of reserved attributes
      */
-    private static $reservedAttrs = array(
+    private static $reservedAttrs = [
         self::TYPE_ATTR,
         self::NAME_ATTR,
         self::NAMESPACE_ATTR,
@@ -301,45 +299,51 @@ class AvroSchema
         self::SYMBOLS_ATTR,
         self::VALUES_ATTR,
         self::LOGICAL_TYPE_ATTR,
-    );
-    /**
-     * @var string|AvroNamedSchema
-     */
-    public $type;
-
-    /** @var null|AvroLogicalType */
-    protected $logicalType = null;
+    ];
 
     /**
-     * @param string $type a schema type name
+     * @param AvroSchema|string $type a schema type name
      * @internal Should only be called from within the constructor of
      *           a class which extends AvroSchema
      */
-    public function __construct($type)
-    {
-        $this->type = $type;
+    public function __construct(
+        public readonly string|AvroSchema $type
+    ) {
     }
 
     /**
-     * @param string $json JSON-encoded schema
-     * @uses self::realParse()
-     * @returns AvroSchema
+     * @returns string the JSON-encoded representation of this Avro schema.
      */
-    public static function parse($json)
+    public function __toString(): string
+    {
+        return json_encode($this->toAvro(), JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * @uses self::realParse()
+     */
+    public static function parse(string $json): AvroSchema
     {
         $schemata = new AvroNamedSchemata();
-        return self::realParse(json_decode($json, true), null, $schemata);
+
+        return self::realParse(
+            avro: json_decode($json, true, JSON_THROW_ON_ERROR),
+            schemata: $schemata
+        );
     }
 
     /**
-     * @param mixed $avro JSON-decoded schema
-     * @param string $default_namespace namespace of enclosing schema
-     * @param AvroNamedSchemata &$schemata reference to named schemas
-     * @returns AvroSchema
+     * @param null|array|string $avro JSON-decoded schema
+     * @param null|string $default_namespace namespace of enclosing schema
+     * @param null|AvroNamedSchemata $schemata reference to named schemas
      * @throws AvroSchemaParseException
+     * @throws AvroException
      */
-    public static function realParse($avro, $default_namespace = null, &$schemata = null)
-    {
+    public static function realParse(
+        array|string|null $avro,
+        ?string $default_namespace = null,
+        ?AvroNamedSchemata &$schemata = null
+    ): AvroSchema {
         if (is_null($schemata)) {
             $schemata = new AvroNamedSchemata();
         }
@@ -351,6 +355,7 @@ class AvroSchema
                 switch ($avro[self::LOGICAL_TYPE_ATTR] ?? null) {
                     case self::DECIMAL_LOGICAL_TYPE:
                         [$precision, $scale] = self::extractPrecisionAndScaleForDecimal($avro);
+
                         return AvroPrimitiveSchema::decimal($precision, $scale);
                     case self::UUID_LOGICAL_TYPE:
                         return AvroPrimitiveSchema::uuid();
@@ -379,81 +384,86 @@ class AvroSchema
                 $new_name = new AvroName($name, $namespace, $default_namespace);
                 $doc = $avro[self::DOC_ATTR] ?? null;
                 $aliases = $avro[self::ALIASES_ATTR] ?? null;
+                AvroNamedSchema::hasValidAliases($aliases);
                 switch ($type) {
                     case self::FIXED_SCHEMA:
-                        $size = $avro[self::SIZE_ATTR] ?? null;
+                        $size = $avro[self::SIZE_ATTR] ?? throw new AvroSchemaParseException(
+                            "Size is required for fixed schema"
+                        );
+                        $size = (int) $size;
+
                         if (array_key_exists(self::LOGICAL_TYPE_ATTR, $avro)) {
                             switch ($avro[self::LOGICAL_TYPE_ATTR]) {
                                 case self::DURATION_LOGICAL_TYPE:
                                     return AvroFixedSchema::duration(
-                                        $new_name,
-                                        $doc,
-                                        $schemata,
-                                        $aliases
+                                        name: $new_name,
+                                        doc: $doc,
+                                        schemata: $schemata,
+                                        aliases: $aliases
                                     );
                                 case self::DECIMAL_LOGICAL_TYPE:
                                     [$precision, $scale] = self::extractPrecisionAndScaleForDecimal($avro);
+
                                     return AvroFixedSchema::decimal(
-                                        $new_name,
-                                        $doc,
-                                        $size,
-                                        $precision,
-                                        $scale,
-                                        $schemata,
-                                        $aliases
+                                        name: $new_name,
+                                        doc: $doc,
+                                        size: $size,
+                                        precision: $precision,
+                                        scale: $scale,
+                                        schemata: $schemata,
+                                        aliases: $aliases
                                     );
                             }
                         }
 
                         return new AvroFixedSchema(
-                            $new_name,
-                            $doc,
-                            $size,
-                            $schemata,
-                            $aliases
+                            name: $new_name,
+                            doc: $doc,
+                            size: $size,
+                            schemata: $schemata,
+                            aliases: $aliases
                         );
                     case self::ENUM_SCHEMA:
                         $symbols = $avro[self::SYMBOLS_ATTR] ?? null;
+
                         return new AvroEnumSchema(
-                            $new_name,
-                            $doc,
-                            $symbols,
-                            $schemata,
-                            $aliases
+                            name: $new_name,
+                            doc: $doc,
+                            symbols: $symbols,
+                            schemata: $schemata,
+                            aliases: $aliases
                         );
                     case self::RECORD_SCHEMA:
                     case self::ERROR_SCHEMA:
                         $fields = $avro[self::FIELDS_ATTR] ?? null;
+
                         return new AvroRecordSchema(
-                            $new_name,
-                            $doc,
-                            $fields,
-                            $schemata,
-                            $type,
-                            $aliases
+                            name: $new_name,
+                            doc: $doc,
+                            fields: $fields,
+                            schemata: $schemata,
+                            schema_type: $type,
+                            aliases: $aliases
                         );
                     default:
                         throw new AvroSchemaParseException(sprintf('Unknown named type: %s', $type));
                 }
             } elseif (self::isValidType($type)) {
-                switch ($type) {
-                    case self::ARRAY_SCHEMA:
-                        return new AvroArraySchema(
-                            $avro[self::ITEMS_ATTR],
-                            $default_namespace,
-                            $schemata
-                        );
-                    case self::MAP_SCHEMA:
-                        return new AvroMapSchema(
-                            $avro[self::VALUES_ATTR],
-                            $default_namespace,
-                            $schemata
-                        );
-                    default:
-                        throw new AvroSchemaParseException(
-                            sprintf('Unknown valid type: %s', $type)
-                        );
-                }
+                return match ($type) {
+                    self::ARRAY_SCHEMA => new AvroArraySchema(
+                        items: $avro[self::ITEMS_ATTR],
+                        defaultNamespace: $default_namespace,
+                        schemata: $schemata
+                    ),
+                    self::MAP_SCHEMA => new AvroMapSchema(
+                        values: $avro[self::VALUES_ATTR],
+                        defaultNamespace: $default_namespace,
+                        schemata: $schemata
+                    ),
+                    default => throw new AvroSchemaParseException(
+                        sprintf('Unknown valid type: %s', $type)
+                    ),
+                };
             } elseif (
                 !array_key_exists(self::TYPE_ATTR, $avro)
                 && AvroUtil::isList($avro)
@@ -478,47 +488,47 @@ class AvroSchema
     }
 
     /**
-     * @param string $type a schema type name
-     * @returns boolean true if the given type name is a valid schema type
+     * @param ?string $type a schema type name
+     * @return bool true if the given type name is a valid schema type
      *                  name and false otherwise.
      */
-    public static function isValidType($type)
+    public static function isValidType(?string $type): bool
     {
-        return (self::isPrimitiveType($type)
+        return self::isPrimitiveType($type)
             || self::isNamedType($type)
-            || in_array($type, array(
+            || in_array($type, [
                 self::ARRAY_SCHEMA,
                 self::MAP_SCHEMA,
                 self::UNION_SCHEMA,
                 self::REQUEST_SCHEMA,
-                self::ERROR_UNION_SCHEMA
-            )));
+                self::ERROR_UNION_SCHEMA,
+            ]);
     }
 
     /**
-     * @param string $type a schema type name
+     * @param null|string $type a schema type name
      * @returns boolean true if the given type name is a primitive schema type
      *                  name and false otherwise.
      */
-    public static function isPrimitiveType($type)
+    public static function isPrimitiveType(?string $type): bool
     {
-        return in_array($type, self::$primitiveTypes);
+        return in_array($type, self::$primitiveTypes, true);
     }
 
     /**
-     * @param string $type a schema type name
-     * @returns boolean true if the given type name is a named schema type name
+     * @param null|string $type a schema type name
+     * @returns bool true if the given type name is a named schema type name
      *                  and false otherwise.
      */
-    public static function isNamedType($type)
+    public static function isNamedType(?string $type): bool
     {
-        return in_array($type, self::$namedTypes);
+        return in_array($type, self::$namedTypes, true);
     }
 
-    public static function hasValidAliases($aliases)
+    public static function hasValidAliases($aliases): void
     {
-        if ($aliases === null) {
-            return false;
+        if (null === $aliases) {
+            return;
         }
         if (!is_array($aliases)) {
             throw new AvroSchemaParseException(
@@ -537,6 +547,7 @@ class AvroSchema
     /**
      * @returns boolean true if $datum is valid for $expected_schema
      *                  and false otherwise.
+     * @param mixed $datum
      * @throws AvroSchemaParseException
      */
     public static function isValidDatum(AvroSchema $expected_schema, $datum): bool
@@ -550,28 +561,30 @@ class AvroSchema
             case self::BYTES_TYPE:
                 return is_string($datum);
             case self::INT_TYPE:
-                return (is_int($datum)
+                return is_int($datum)
                     && (self::INT_MIN_VALUE <= $datum)
-                    && ($datum <= self::INT_MAX_VALUE));
+                    && ($datum <= self::INT_MAX_VALUE);
             case self::LONG_TYPE:
-                return (is_int($datum)
+                return is_int($datum)
                     && (self::LONG_MIN_VALUE <= $datum)
-                    && ($datum <= self::LONG_MAX_VALUE));
+                    && ($datum <= self::LONG_MAX_VALUE);
             case self::FLOAT_TYPE:
             case self::DOUBLE_TYPE:
-                return (is_float($datum) || is_int($datum));
+                return is_float($datum) || is_int($datum);
             case self::ARRAY_SCHEMA:
-                if (is_array($datum)) {
+                if (is_array($datum) && $expected_schema instanceof AvroArraySchema) {
                     foreach ($datum as $d) {
                         if (!self::isValidDatum($expected_schema->items(), $d)) {
                             return false;
                         }
                     }
+
                     return true;
                 }
+
                 return false;
             case self::MAP_SCHEMA:
-                if (is_array($datum)) {
+                if (is_array($datum) && $expected_schema instanceof AvroMapSchema) {
                     foreach ($datum as $k => $v) {
                         if (
                             !is_string($k)
@@ -580,19 +593,34 @@ class AvroSchema
                             return false;
                         }
                     }
+
                     return true;
                 }
+
                 return false;
             case self::UNION_SCHEMA:
+                if (!$expected_schema instanceof AvroUnionSchema) {
+                    return false;
+                }
+
                 foreach ($expected_schema->schemas() as $schema) {
                     if (self::isValidDatum($schema, $datum)) {
                         return true;
                     }
                 }
+
                 return false;
             case self::ENUM_SCHEMA:
-                return in_array($datum, $expected_schema->symbols());
+                if (!$expected_schema instanceof AvroEnumSchema) {
+                    return false;
+                }
+
+                return in_array($datum, $expected_schema->symbols(), true);
             case self::FIXED_SCHEMA:
+                if (!$expected_schema instanceof AvroFixedSchema) {
+                    return false;
+                }
+
                 if (
                     $expected_schema->logicalType() instanceof AvroLogicalType
                 ) {
@@ -600,6 +628,7 @@ class AvroSchema
                         case self::DECIMAL_LOGICAL_TYPE:
                             $value = abs((float) $datum);
                             $maxMagnitude = AvroFixedSchema::maxDecimalMagnitude((int) $expected_schema->size());
+
                             return $value <= $maxMagnitude;
                         case self::DURATION_LOGICAL_TYPE:
                             return $datum instanceof AvroDuration;
@@ -613,46 +642,28 @@ class AvroSchema
                     }
                 }
 
-                return (is_string($datum)
-                    && (strlen($datum) === $expected_schema->size()));
+                return is_string($datum)
+                    && (strlen($datum) === $expected_schema->size());
             case self::RECORD_SCHEMA:
             case self::ERROR_SCHEMA:
             case self::REQUEST_SCHEMA:
+                if (!($expected_schema instanceof AvroRecordSchema)) {
+                    return false;
+                }
+
                 if (is_array($datum)) {
                     foreach ($expected_schema->fields() as $field) {
                         if (!self::isValidDatum($field->type(), $datum[$field->name()] ?? null)) {
                             return false;
                         }
                     }
+
                     return true;
                 }
+
                 return false;
             default:
                 throw new AvroSchemaParseException(sprintf('%s is not allowed.', $expected_schema));
-        }
-    }
-
-    /**
-     * @param mixed $avro
-     * @param string $default_namespace namespace of enclosing schema
-     * @param AvroNamedSchemata &$schemata
-     * @returns AvroSchema
-     * @throws AvroSchemaParseException
-     * @uses AvroSchema::realParse()
-     */
-    protected static function subparse($avro, $default_namespace, &$schemata = null)
-    {
-        try {
-            return self::realParse($avro, $default_namespace, $schemata);
-        } catch (AvroSchemaParseException $e) {
-            throw $e;
-        } catch (\Exception $e) {
-            throw new AvroSchemaParseException(
-                sprintf(
-                    'Sub-schema is not a valid Avro schema. Bad schema: %s',
-                    print_r($avro, true)
-                )
-            );
         }
     }
 
@@ -669,15 +680,7 @@ class AvroSchema
         return $this->logicalType;
     }
 
-    /**
-     * @returns string the JSON-encoded representation of this Avro schema.
-     */
-    public function __toString()
-    {
-        return (string) json_encode($this->toAvro());
-    }
-
-    public function toAvro()
+    public function toAvro(): string|array
     {
         $avro = [self::TYPE_ATTR => $this->type];
 
@@ -690,6 +693,7 @@ class AvroSchema
 
     /**
      * @returns mixed value of the attribute with the given attribute name
+     * @param mixed $attribute
      */
     public function attribute($attribute)
     {
@@ -697,8 +701,30 @@ class AvroSchema
     }
 
     /**
-     * @return array{0: int, 1: int} [precision, scale]
+     * @param mixed $avro
+     * @returns AvroSchema
      * @throws AvroSchemaParseException
+     * @uses AvroSchema::realParse()
+     */
+    protected static function subparse($avro, ?string $default_namespace, ?AvroNamedSchemata &$schemata = null): AvroSchema
+    {
+        try {
+            return self::realParse($avro, $default_namespace, $schemata);
+        } catch (AvroSchemaParseException $e) {
+            throw $e;
+        } catch (\Throwable) {
+            throw new AvroSchemaParseException(
+                sprintf(
+                    'Sub-schema is not a valid Avro schema. Bad schema: %s',
+                    print_r($avro, true)
+                )
+            );
+        }
+    }
+
+    /**
+     * @throws AvroSchemaParseException
+     * @return array{0: int, 1: int} [precision, scale]
      */
     private static function extractPrecisionAndScaleForDecimal(array $avro): array
     {

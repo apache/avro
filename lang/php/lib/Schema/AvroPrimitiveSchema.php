@@ -22,7 +22,6 @@ namespace Apache\Avro\Schema;
 
 /**
  * Avro schema for basic types such as null, int, long, string.
- * @package Avro
  */
 class AvroPrimitiveSchema extends AvroSchema
 {
@@ -31,7 +30,7 @@ class AvroPrimitiveSchema extends AvroSchema
      * @throws AvroSchemaParseException if the given $type is not a
      *         primitive schema type name
      */
-    public function __construct($type)
+    public function __construct(string $type)
     {
         if (!self::isPrimitiveType($type)) {
             throw new AvroSchemaParseException(sprintf('%s is not a valid primitive type.', $type));
@@ -111,15 +110,13 @@ class AvroPrimitiveSchema extends AvroSchema
         return $self;
     }
 
-    /**
-     * @returns mixed
-     */
-    public function toAvro()
+    public function toAvro(): string|array
     {
         $avro = parent::toAvro();
 
-        // FIXME: Is this if really necessary? When *wouldn't* this be the case?
-        if (1 == count($avro)) {
+        // This check has been added (I guess) to avoid printing something like this for primitive types:
+        // {"name": "something", "type": {"type": "string"}}
+        if (1 === count($avro)) {
             return $this->type;
         }
 

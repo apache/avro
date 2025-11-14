@@ -15,30 +15,33 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.1/phpunit.xsd"
-         bootstrap="test/test_helper.php"
-         executionOrder="depends,defects"
-         forceCoversAnnotation="false"
-         beStrictAboutCoversAnnotation="true"
-         beStrictAboutOutputDuringTests="true"
-         beStrictAboutTodoAnnotatedTests="true"
-         verbose="true">
-
-    <php>
-      <ini name="date.timezone" value="America/New_York" />
-    </php>
-
-    <testsuites>
-        <testsuite name="AvroAllTests">
-            <directory suffix="Test.php">test</directory>
-            <exclude>test/InterOpTest.php</exclude>
-        </testsuite>
-    </testsuites>
-
-    <filter>
-        <whitelist processUncoveredFilesFromWhitelist="true">
-            <directory suffix=".php">lib</directory>
-        </whitelist>
-    </filter>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../vendor/phpunit/phpunit/phpunit.xsd"
+    bootstrap="test/test_helper.php"
+    executionOrder="depends,defects"
+    beStrictAboutOutputDuringTests="true"
+    cacheDirectory=".phpunit.cache"
+    requireCoverageMetadata="false"
+    beStrictAboutCoverageMetadata="true"
+    displayDetailsOnTestsThatTriggerNotices="true"
+    displayDetailsOnTestsThatTriggerDeprecations="true"
+    displayDetailsOnTestsThatTriggerErrors="true"
+    displayDetailsOnTestsThatTriggerWarnings="true"
+    displayDetailsOnPhpunitDeprecations="true"
+>
+  <php>
+    <ini name="date.timezone" value="America/New_York"/>
+  </php>
+  <testsuites>
+    <testsuite name="AvroAllTests">
+      <directory suffix="Test.php">test</directory>
+      <exclude>test/InterOpTest.php</exclude>
+    </testsuite>
+  </testsuites>
+  <source>
+    <include>
+      <directory suffix=".php">lib</directory>
+    </include>
+  </source>
 </phpunit>

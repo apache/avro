@@ -18,28 +18,26 @@
  * limitations under the License.
  */
 
+declare(strict_types=1);
+
 namespace Apache\Avro\IO;
 
 use Apache\Avro\AvroIO;
 
 /**
  * AvroIO wrapper for string access
- * @package Avro
  */
-class AvroStringIO extends AvroIO
+class AvroStringIO implements AvroIO, \Stringable
 {
-    /**
-     * @var string
-     */
-    private $string_buffer;
+    private string $string_buffer;
     /**
      * @var int  current position in string
      */
-    private $current_index;
+    private int $current_index;
     /**
-     * @var boolean whether or not the string is closed.
+     * @var bool whether or not the string is closed.
      */
-    private $is_closed;
+    private bool $is_closed;
 
     /**
      * @param string $str initial value of AvroStringIO buffer. Regardless
@@ -47,7 +45,7 @@ class AvroStringIO extends AvroIO
      *                    beginning of the buffer.
      * @throws AvroIOException if a non-string value is passed as $str
      */
-    public function __construct($str = '')
+    public function __construct(string $str = '')
     {
         $this->is_closed = false;
         $this->string_buffer = '';
@@ -63,65 +61,50 @@ class AvroStringIO extends AvroIO
     }
 
     /**
+     * @returns string
+     */
+    public function __toString(): string
+    {
+        return $this->string_buffer;
+    }
+
+    /**
      * Append bytes to this buffer.
      * (Nothing more is needed to support Avro.)
-     * @param string $arg bytes to write
+     * @param string $bytes bytes to write
      * @returns int count of bytes written.
      * @throws AvroIOException if $args is not a string value.
      */
-    public function write($arg)
+    public function write(string $bytes): int
     {
         $this->checkClosed();
-        if (is_string($arg)) {
-            return $this->appendStr($arg);
+        if (is_string($bytes)) {
+            return $this->appendStr($bytes);
         }
+
         throw new AvroIOException(
             sprintf(
                 'write argument must be a string: (%s) %s',
-                gettype($arg),
-                var_export($arg, true)
+                gettype($bytes),
+                var_export($bytes, true)
             )
         );
     }
 
     /**
-     * @throws AvroIOException if the buffer is closed.
+     * @return bool true if this buffer is closed and false otherwise.
      */
-    private function checkClosed()
-    {
-        if ($this->isClosed()) {
-            throw new AvroIOException('Buffer is closed');
-        }
-    }
-
-    /**
-     * @returns boolean true if this buffer is closed and false
-     *                       otherwise.
-     */
-    public function isClosed()
+    public function isClosed(): bool
     {
         return $this->is_closed;
     }
 
     /**
-     * Appends bytes to this buffer.
-     * @param string $str
-     * @returns integer count of bytes written.
-     */
-    private function appendStr($str)
-    {
-        $this->checkClosed();
-        $this->string_buffer .= $str;
-        $len = strlen($str);
-        $this->current_index += $len;
-        return $len;
-    }
-
-    /**
      * @returns string bytes read from buffer
      * @todo test for fencepost errors wrt updating current_index
+     * @param mixed $len
      */
-    public function read($len)
+    public function read($len): string
     {
         $this->checkClosed();
         $read = '';
@@ -133,6 +116,7 @@ class AvroStringIO extends AvroIO
         } else {
             $this->current_index += $len;
         }
+
         return $read;
     }
 
@@ -141,13 +125,15 @@ class AvroStringIO extends AvroIO
      * @internal Could probably memoize length for performance, but
      *           no need do this yet.
      */
-    public function length()
+    public function length(): int
     {
         return strlen($this->string_buffer);
     }
 
     /**
      * @returns boolean true if successful
+     * @param mixed $offset
+     * @param mixed $whence
      * @throws AvroIOException if the seek failed.
      */
     public function seek($offset, $whence = self::SEEK_SET): bool
@@ -162,18 +148,21 @@ class AvroStringIO extends AvroIO
                     throw new AvroIOException('Cannot seek before beginning of file.');
                 }
                 $this->current_index = $offset;
+
                 break;
             case self::SEEK_CUR:
                 if (0 > $this->current_index + $whence) {
                     throw new AvroIOException('Cannot seek before beginning of file.');
                 }
                 $this->current_index += $offset;
+
                 break;
             case self::SEEK_END:
                 if (0 > $this->length() + $offset) {
                     throw new AvroIOException('Cannot seek before beginning of file.');
                 }
                 $this->current_index = $this->length() + $offset;
+
                 break;
             default:
                 throw new AvroIOException(sprintf('Invalid seek whence %d', $whence));
@@ -183,53 +172,52 @@ class AvroStringIO extends AvroIO
     }
 
     /**
-     * @returns int
      * @see AvroIO::tell()
      */
-    public function tell()
+    public function tell(): int
     {
         return $this->current_index;
     }
 
     /**
-     * @returns boolean
      * @see AvroIO::isEof()
      */
-    public function isEof()
+    public function isEof(): bool
     {
-        return ($this->current_index >= $this->length());
+        return $this->current_index >= $this->length();
     }
 
     /**
      * No-op provided for compatibility with AvroIO interface.
-     * @returns boolean true
+     * @returns bool true
      */
-    public function flush()
+    public function flush(): bool
     {
         return true;
     }
 
     /**
      * Marks this buffer as closed.
-     * @returns boolean true
      */
-    public function close()
+    public function close(): bool
     {
         $this->checkClosed();
         $this->is_closed = true;
+
         return true;
     }
 
     /**
      * Truncates the truncate buffer to 0 bytes and returns the pointer
      * to the beginning of the buffer.
-     * @returns boolean true
+     * @returns bool true
      */
-    public function truncate()
+    public function truncate(): bool
     {
         $this->checkClosed();
         $this->string_buffer = '';
         $this->current_index = 0;
+
         return true;
     }
 
@@ -237,16 +225,33 @@ class AvroStringIO extends AvroIO
      * @returns string
      * @uses self::__toString()
      */
-    public function string()
+    public function string(): string
     {
         return (string) $this;
     }
 
     /**
-     * @returns string
+     * @throws AvroIOException if the buffer is closed.
      */
-    public function __toString()
+    private function checkClosed(): void
     {
-        return $this->string_buffer;
+        if ($this->isClosed()) {
+            throw new AvroIOException('Buffer is closed');
+        }
+    }
+
+    /**
+     * Appends bytes to this buffer.
+     * @throws AvroIOException
+     * @return int count of bytes written.
+     */
+    private function appendStr(string $str): int
+    {
+        $this->checkClosed();
+        $this->string_buffer .= $str;
+        $len = strlen($str);
+        $this->current_index += $len;
+
+        return $len;
     }
 }

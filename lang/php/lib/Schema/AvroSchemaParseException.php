@@ -24,7 +24,6 @@ use Apache\Avro\AvroException;
 
 /**
  * Exceptions associated with parsing JSON schema represenations
- * @package Avro
  */
 class AvroSchemaParseException extends AvroException
 {

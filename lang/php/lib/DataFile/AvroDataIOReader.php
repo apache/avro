@@ -22,48 +22,33 @@ namespace Apache\Avro\DataFile;
 
 use Apache\Avro\AvroException;
 use Apache\Avro\AvroIO;
-use Apache\Avro\AvroUtil;
 use Apache\Avro\Datum\AvroIOBinaryDecoder;
 use Apache\Avro\Datum\AvroIODatumReader;
+use Apache\Avro\IO\AvroIOException;
 use Apache\Avro\IO\AvroStringIO;
 use Apache\Avro\Schema\AvroSchema;
 
 /**
- *
  * Reads Avro data from an AvroIO source using an AvroSchema.
- * @package Avro
  */
 class AvroDataIOReader
 {
-    /**
-     * @var string
-     */
-    public $sync_marker;
+    public string $sync_marker;
     /**
      * @var array object container metadata
      */
-    public $metadata;
-    /**
-     * @var AvroIO
-     */
-    private $io;
-    /**
-     * @var AvroIOBinaryDecoder
-     */
-    private $decoder;
-    /**
-     * @var AvroIODatumReader
-     */
-    private $datum_reader;
+    public array $metadata;
+
+    private AvroIOBinaryDecoder $decoder;
     /**
      * @var int count of items in block
      */
-    private $block_count;
+    private int $block_count;
 
     /**
-     * @var compression codec
+     * @var string compression codec
      */
-    private $codec;
+    private string $codec;
 
     /**
      * @param AvroIO $io source from which to read
@@ -74,16 +59,11 @@ class AvroDataIOReader
      *                             is not supported
      * @uses readHeader()
      */
-    public function __construct($io, $datum_reader)
-    {
-
-        if (!($io instanceof AvroIO)) {
-            throw new AvroDataIOException('io must be instance of AvroIO');
-        }
-
-        $this->io = $io;
+    public function __construct(
+        private AvroIO $io,
+        private AvroIODatumReader $datum_reader
+    ) {
         $this->decoder = new AvroIOBinaryDecoder($this->io);
-        $this->datum_reader = $datum_reader;
         $this->readHeader();
 
         $codec = $this->metadata[AvroDataIO::METADATA_CODEC_ATTR] ?? null;
@@ -101,16 +81,87 @@ class AvroDataIOReader
     }
 
     /**
+     * @throws AvroException
+     * @throws AvroIOException
+     * @return array of data from object container.
+     * @internal Would be nice to implement data() as an iterator, I think
+     */
+    public function data(): array
+    {
+        $data = [];
+        $decoder = $this->decoder;
+        while (true) {
+            if (0 == $this->block_count) {
+                if ($this->isEof()) {
+                    break;
+                }
+
+                if ($this->skipSync()) {
+                    if ($this->isEof()) {
+                        break;
+                    }
+                }
+
+                $length = $this->readBlockHeader();
+                if (AvroDataIO::DEFLATE_CODEC == $this->codec) {
+                    $compressed = $decoder->read($length);
+                    $datum = gzinflate($compressed);
+                    $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
+                } elseif (AvroDataIO::ZSTANDARD_CODEC === $this->codec) {
+                    if (!extension_loaded('zstd')) {
+                        throw new AvroException('Please install ext-zstd to use zstandard compression.');
+                    }
+                    $compressed = $decoder->read($length);
+                    $datum = zstd_uncompress($compressed);
+                    $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
+                } elseif (AvroDataIO::SNAPPY_CODEC === $this->codec) {
+                    if (!extension_loaded('snappy')) {
+                        throw new AvroException('Please install ext-snappy to use snappy compression.');
+                    }
+                    $compressed = $decoder->read($length);
+                    $crc32 = unpack('N', substr((string) $compressed, -4))[1];
+                    $datum = snappy_uncompress(substr((string) $compressed, 0, -4));
+                    if ($crc32 === crc32($datum)) {
+                        $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
+                    } else {
+                        $decoder = new AvroIOBinaryDecoder(new AvroStringIO(snappy_uncompress($datum)));
+                    }
+                } elseif (AvroDataIO::BZIP2_CODEC === $this->codec) {
+                    if (!extension_loaded('bz2')) {
+                        throw new AvroException('Please install ext-bz2 to use bzip2 compression.');
+                    }
+                    $compressed = $decoder->read($length);
+                    $datum = bzdecompress($compressed);
+                    $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
+                }
+            }
+            $data[] = $this->datum_reader->read($decoder);
+            --$this->block_count;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Closes this writer (and its AvroIO object.)
+     * @uses AvroIO::close()
+     */
+    public function close(): bool
+    {
+        return $this->io->close();
+    }
+
+    /**
      * Reads header of object container
      * @throws AvroDataIOException if the file is not an Avro data file.
      */
-    private function readHeader()
+    private function readHeader(): void
     {
         $this->seek(0, AvroIO::SEEK_SET);
 
         $magic = $this->read(AvroDataIO::magicSize());
 
-        if (strlen($magic) < AvroDataIO::magicSize()) {
+        if (strlen((string) $magic) < AvroDataIO::magicSize()) {
             throw new AvroDataIOException(
                 'Not an Avro data file: shorter than the Avro magic block'
             );
@@ -136,94 +187,40 @@ class AvroDataIOReader
 
     /**
      * @uses AvroIO::seek()
+     * @param mixed $offset
+     * @param mixed $whence
      */
-    private function seek($offset, $whence)
+    private function seek($offset, $whence): bool
     {
         return $this->io->seek($offset, $whence);
     }
 
     /**
      * @uses AvroIO::read()
+     * @param mixed $len
      */
-    private function read($len)
+    private function read($len): string
     {
         return $this->io->read($len);
     }
 
     /**
-     * @internal Would be nice to implement data() as an iterator, I think
-     * @returns array of data from object container.
-     */
-    public function data()
-    {
-        $data = [];
-        $decoder = $this->decoder;
-        while (true) {
-            if (0 == $this->block_count) {
-                if ($this->isEof()) {
-                    break;
-                }
-
-                if ($this->skipSync()) {
-                    if ($this->isEof()) {
-                        break;
-                    }
-                }
-
-                $length = $this->readBlockHeader();
-                if ($this->codec == AvroDataIO::DEFLATE_CODEC) {
-                    $compressed = $decoder->read($length);
-                    $datum = gzinflate($compressed);
-                    $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
-                } elseif ($this->codec === AvroDataIO::ZSTANDARD_CODEC) {
-                    if (!extension_loaded('zstd')) {
-                        throw new AvroException('Please install ext-zstd to use zstandard compression.');
-                    }
-                    $compressed = $decoder->read($length);
-                    $datum = zstd_uncompress($compressed);
-                    $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
-                } elseif ($this->codec === AvroDataIO::SNAPPY_CODEC) {
-                    if (!extension_loaded('snappy')) {
-                        throw new AvroException('Please install ext-snappy to use snappy compression.');
-                    }
-                    $compressed = $decoder->read($length);
-                    $crc32 = unpack('N', substr($compressed, -4))[1];
-                    $datum = snappy_uncompress(substr($compressed, 0, -4));
-                    if ($crc32 === crc32($datum)) {
-                        $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
-                    } else {
-                        $decoder = new AvroIOBinaryDecoder(new AvroStringIO(snappy_uncompress($datum)));
-                    }
-                } elseif ($this->codec === AvroDataIO::BZIP2_CODEC) {
-                    if (!extension_loaded('bz2')) {
-                        throw new AvroException('Please install ext-bz2 to use bzip2 compression.');
-                    }
-                    $compressed = $decoder->read($length);
-                    $datum = bzdecompress($compressed);
-                    $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
-                }
-            }
-            $data[] = $this->datum_reader->read($decoder);
-            --$this->block_count;
-        }
-        return $data;
-    }
-
-    /**
      * @uses AvroIO::isEof()
      */
-    private function isEof()
+    private function isEof(): bool
     {
         return $this->io->isEof();
     }
 
-    private function skipSync()
+    private function skipSync(): bool
     {
         $proposed_sync_marker = $this->read(AvroDataIO::SYNC_SIZE);
         if ($proposed_sync_marker != $this->sync_marker) {
             $this->seek(-AvroDataIO::SYNC_SIZE, AvroIO::SEEK_CUR);
+
             return false;
         }
+
         return true;
     }
 
@@ -232,18 +229,10 @@ class AvroDataIOReader
      * and the length in bytes of the block)
      * @returns int length in bytes of the block.
      */
-    private function readBlockHeader()
+    private function readBlockHeader(): string|int
     {
         $this->block_count = $this->decoder->readLong();
-        return $this->decoder->readLong();
-    }
 
-    /**
-     * Closes this writer (and its AvroIO object.)
-     * @uses AvroIO::close()
-     */
-    public function close()
-    {
-        return $this->io->close();
+        return $this->decoder->readLong();
     }
 }
