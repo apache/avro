@@ -613,8 +613,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
      */
     public Field(String name, Schema schema, String doc, Object defaultValue) {
       this(name, schema, doc,
-          defaultValue == NULL_DEFAULT_VALUE ? NullNode.getInstance() : JacksonUtils.toJsonNode(defaultValue), true,
-          Order.ASCENDING);
+          defaultValue == NULL_DEFAULT_VALUE ? NullNode.getInstance() : JacksonUtils.toJsonNode(defaultValue, true),
+          true, Order.ASCENDING);
     }
 
     /**
@@ -623,8 +623,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
      */
     public Field(String name, Schema schema, String doc, Object defaultValue, Order order) {
       this(name, schema, doc,
-          defaultValue == NULL_DEFAULT_VALUE ? NullNode.getInstance() : JacksonUtils.toJsonNode(defaultValue), true,
-          Objects.requireNonNull(order));
+          defaultValue == NULL_DEFAULT_VALUE ? NullNode.getInstance() : JacksonUtils.toJsonNode(defaultValue, true),
+          true, Objects.requireNonNull(order));
     }
 
     public String name() {
