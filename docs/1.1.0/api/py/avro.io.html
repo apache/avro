@@ -1,0 +1,314 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module avro.io</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="avro.html"><font color="#ffffff">avro</font></a>.io</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/cutting/src/avro/test/src/py/avro/io.py">/home/cutting/src/avro/test/src/py/avro/io.py</a></font></td></tr></table>
+    <p><tt>Input/Output&nbsp;utilities.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="cStringIO.html">cStringIO</a><br>
+</td><td width="25%" valign=top><a href="avro.schema.html">avro.schema</a><br>
+</td><td width="25%" valign=top><a href="struct.html">struct</a><br>
+</td><td width="25%" valign=top><a href="uuid.html">uuid</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="avro.io.html#DataFileReader">DataFileReader</a>
+</font></dt><dt><font face="helvetica, arial"><a href="avro.io.html#DataFileWriter">DataFileWriter</a>
+</font></dt><dt><font face="helvetica, arial"><a href="avro.io.html#DatumReaderBase">DatumReaderBase</a>
+</font></dt><dt><font face="helvetica, arial"><a href="avro.io.html#DatumWriterBase">DatumWriterBase</a>
+</font></dt><dt><font face="helvetica, arial"><a href="avro.io.html#Decoder">Decoder</a>
+</font></dt><dt><font face="helvetica, arial"><a href="avro.io.html#Encoder">Encoder</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="avro.schema.html#AvroException">avro.schema.AvroException</a>(<a href="exceptions.html#Exception">exceptions.Exception</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="avro.io.html#AvroTypeException">AvroTypeException</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="AvroTypeException">class <strong>AvroTypeException</strong></a>(<a href="avro.schema.html#AvroException">avro.schema.AvroException</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Raised&nbsp;when&nbsp;illegal&nbsp;type&nbsp;is&nbsp;used.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="avro.io.html#AvroTypeException">AvroTypeException</a></dd>
+<dd><a href="avro.schema.html#AvroException">avro.schema.AvroException</a></dd>
+<dd><a href="exceptions.html#Exception">exceptions.Exception</a></dd>
+<dd><a href="exceptions.html#BaseException">exceptions.BaseException</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="AvroTypeException-__init__"><strong>__init__</strong></a>(self, schm<font color="#909090">=None</font>, datum<font color="#909090">=None</font>, msg<font color="#909090">=None</font>)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="avro.schema.html#AvroException">avro.schema.AvroException</a>:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object at 0x8226dc0&gt;<dd><tt>T.<a href="#AvroTypeException-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+<hr>
+Methods inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><a name="AvroTypeException-__delattr__"><strong>__delattr__</strong></a>(...)</dt><dd><tt>x.<a href="#AvroTypeException-__delattr__">__delattr__</a>('name')&nbsp;&lt;==&gt;&nbsp;del&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="AvroTypeException-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#AvroTypeException-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="AvroTypeException-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#AvroTypeException-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="AvroTypeException-__getslice__"><strong>__getslice__</strong></a>(...)</dt><dd><tt>x.<a href="#AvroTypeException-__getslice__">__getslice__</a>(i,&nbsp;j)&nbsp;&lt;==&gt;&nbsp;x[i:j]<br>
+&nbsp;<br>
+Use&nbsp;of&nbsp;negative&nbsp;indices&nbsp;is&nbsp;not&nbsp;supported.</tt></dd></dl>
+
+<dl><dt><a name="AvroTypeException-__reduce__"><strong>__reduce__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="AvroTypeException-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#AvroTypeException-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="AvroTypeException-__setattr__"><strong>__setattr__</strong></a>(...)</dt><dd><tt>x.<a href="#AvroTypeException-__setattr__">__setattr__</a>('name',&nbsp;value)&nbsp;&lt;==&gt;&nbsp;x.name&nbsp;=&nbsp;value</tt></dd></dl>
+
+<dl><dt><a name="AvroTypeException-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="AvroTypeException-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#AvroTypeException-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="AvroTypeException-__unicode__"><strong>__unicode__</strong></a>(...)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+<dl><dt><strong>message</strong></dt>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DataFileReader">class <strong>DataFileReader</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Read&nbsp;files&nbsp;written&nbsp;by&nbsp;<a href="#DataFileWriter">DataFileWriter</a>.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="DataFileReader-__init__"><strong>__init__</strong></a>(self, reader, dreader)</dt></dl>
+
+<dl><dt><a name="DataFileReader-close"><strong>close</strong></a>(self)</dt><dd><tt>Close&nbsp;this&nbsp;reader.</tt></dd></dl>
+
+<dl><dt><a name="DataFileReader-getmeta"><strong>getmeta</strong></a>(self, key)</dt><dd><tt>Return&nbsp;the&nbsp;value&nbsp;of&nbsp;a&nbsp;metadata&nbsp;property.</tt></dd></dl>
+
+<dl><dt><a name="DataFileReader-next"><strong>next</strong></a>(self)</dt><dd><tt>Return&nbsp;the&nbsp;next&nbsp;datum&nbsp;in&nbsp;the&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="DataFileReader-seek"><strong>seek</strong></a>(self, pos)</dt><dd><tt>Move&nbsp;to&nbsp;the&nbsp;specified&nbsp;synchronization&nbsp;point,&nbsp;as&nbsp;returned&nbsp;by&nbsp;<br>
+<a href="#DataFileWriter">DataFileWriter</a>.<a href="#DataFileReader-sync">sync</a>().</tt></dd></dl>
+
+<dl><dt><a name="DataFileReader-sync"><strong>sync</strong></a>(self, position)</dt><dd><tt>Move&nbsp;to&nbsp;the&nbsp;next&nbsp;synchronization&nbsp;point&nbsp;after&nbsp;a&nbsp;position.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DataFileWriter">class <strong>DataFileWriter</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Stores&nbsp;in&nbsp;a&nbsp;file&nbsp;a&nbsp;sequence&nbsp;of&nbsp;data&nbsp;conforming&nbsp;to&nbsp;a&nbsp;schema.&nbsp;The&nbsp;schema&nbsp;is&nbsp;<br>
+stored&nbsp;in&nbsp;the&nbsp;file&nbsp;with&nbsp;the&nbsp;data.&nbsp;Each&nbsp;datum&nbsp;in&nbsp;a&nbsp;file&nbsp;is&nbsp;of&nbsp;the&nbsp;same<br>
+schema.&nbsp;Data&nbsp;is&nbsp;grouped&nbsp;into&nbsp;blocks.<br>
+A&nbsp;synchronization&nbsp;marker&nbsp;is&nbsp;written&nbsp;between&nbsp;blocks,&nbsp;so&nbsp;that<br>
+files&nbsp;may&nbsp;be&nbsp;split.&nbsp;Blocks&nbsp;may&nbsp;be&nbsp;compressed.&nbsp;Extensible&nbsp;metadata&nbsp;is<br>
+stored&nbsp;at&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;file.&nbsp;Files&nbsp;may&nbsp;be&nbsp;appended&nbsp;to.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="DataFileWriter-__init__"><strong>__init__</strong></a>(self, schm, writer, dwriter)</dt></dl>
+
+<dl><dt><a name="DataFileWriter-append"><strong>append</strong></a>(self, datum)</dt><dd><tt>Append&nbsp;a&nbsp;datum&nbsp;to&nbsp;the&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="DataFileWriter-close"><strong>close</strong></a>(self)</dt><dd><tt>Close&nbsp;the&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="DataFileWriter-flush"><strong>flush</strong></a>(self)</dt><dd><tt>Flush&nbsp;the&nbsp;current&nbsp;state&nbsp;of&nbsp;the&nbsp;file,&nbsp;including&nbsp;metadata.</tt></dd></dl>
+
+<dl><dt><a name="DataFileWriter-setmeta"><strong>setmeta</strong></a>(self, key, val)</dt><dd><tt>Set&nbsp;a&nbsp;meta&nbsp;data&nbsp;property.</tt></dd></dl>
+
+<dl><dt><a name="DataFileWriter-sync"><strong>sync</strong></a>(self)</dt><dd><tt>Return&nbsp;the&nbsp;current&nbsp;position&nbsp;as&nbsp;a&nbsp;value&nbsp;that&nbsp;may&nbsp;be&nbsp;passed&nbsp;to<br>
+<a href="#DataFileReader">DataFileReader</a>.seek(long).&nbsp;Forces&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;current&nbsp;block,<br>
+emitting&nbsp;a&nbsp;synchronization&nbsp;marker.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DatumReaderBase">class <strong>DatumReaderBase</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Base&nbsp;class&nbsp;for&nbsp;reading&nbsp;data&nbsp;of&nbsp;a&nbsp;schema.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="DatumReaderBase-read"><strong>read</strong></a>(self, decoder)</dt><dd><tt>Read&nbsp;a&nbsp;datum.&nbsp;Traverse&nbsp;the&nbsp;schema,&nbsp;depth-first,&nbsp;reading&nbsp;all&nbsp;leaf&nbsp;values<br>
+in&nbsp;the&nbsp;schema&nbsp;into&nbsp;a&nbsp;datum&nbsp;that&nbsp;is&nbsp;returned</tt></dd></dl>
+
+<dl><dt><a name="DatumReaderBase-setschema"><strong>setschema</strong></a>(self, schema)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DatumWriterBase">class <strong>DatumWriterBase</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Base&nbsp;class&nbsp;for&nbsp;writing&nbsp;data&nbsp;of&nbsp;a&nbsp;schema.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="DatumWriterBase-setschema"><strong>setschema</strong></a>(self, schema)</dt></dl>
+
+<dl><dt><a name="DatumWriterBase-write"><strong>write</strong></a>(self, data, encoder)</dt><dd><tt>Write&nbsp;a&nbsp;datum.&nbsp;Traverse&nbsp;the&nbsp;schema,&nbsp;depth&nbsp;first,&nbsp;writing&nbsp;each&nbsp;leaf&nbsp;value<br>
+in&nbsp;the&nbsp;schema&nbsp;from&nbsp;the&nbsp;datum&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Decoder">class <strong>Decoder</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Read&nbsp;leaf&nbsp;values.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Decoder-__init__"><strong>__init__</strong></a>(self, reader)</dt></dl>
+
+<dl><dt><a name="Decoder-read"><strong>read</strong></a>(self, len)</dt></dl>
+
+<dl><dt><a name="Decoder-readboolean"><strong>readboolean</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Decoder-readbytes"><strong>readbytes</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Decoder-readdouble"><strong>readdouble</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Decoder-readfloat"><strong>readfloat</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Decoder-readint"><strong>readint</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Decoder-readlong"><strong>readlong</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Decoder-readutf8"><strong>readutf8</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Decoder-skip"><strong>skip</strong></a>(self, len)</dt></dl>
+
+<dl><dt><a name="Decoder-skipboolean"><strong>skipboolean</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Decoder-skipbytes"><strong>skipbytes</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Decoder-skipdouble"><strong>skipdouble</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Decoder-skipfloat"><strong>skipfloat</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Decoder-skipint"><strong>skipint</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Decoder-skiplong"><strong>skiplong</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Decoder-skiputf8"><strong>skiputf8</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Encoder">class <strong>Encoder</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Write&nbsp;leaf&nbsp;values.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Encoder-__init__"><strong>__init__</strong></a>(self, writer)</dt></dl>
+
+<dl><dt><a name="Encoder-write"><strong>write</strong></a>(self, datum)</dt></dl>
+
+<dl><dt><a name="Encoder-writeboolean"><strong>writeboolean</strong></a>(self, datum)</dt></dl>
+
+<dl><dt><a name="Encoder-writebytes"><strong>writebytes</strong></a>(self, datum)</dt></dl>
+
+<dl><dt><a name="Encoder-writedouble"><strong>writedouble</strong></a>(self, datum)</dt></dl>
+
+<dl><dt><a name="Encoder-writefloat"><strong>writefloat</strong></a>(self, datum)</dt></dl>
+
+<dl><dt><a name="Encoder-writeint"><strong>writeint</strong></a>(self, n)</dt></dl>
+
+<dl><dt><a name="Encoder-writelong"><strong>writelong</strong></a>(self, n)</dt></dl>
+
+<dl><dt><a name="Encoder-writeutf8"><strong>writeutf8</strong></a>(self, datum)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table>
+</body></html>
