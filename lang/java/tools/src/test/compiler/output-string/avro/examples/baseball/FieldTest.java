@@ -665,12 +665,12 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
   @Override
   public int hashCode() {
     int result = 1;
-    result = 31 * result + Integer.hashCode(number);
-    result = 31 * result + (last_name == null ? 0 : last_name.hashCode());
-    result = 31 * result + (timestamp == null ? 0 : timestamp.hashCode());
-    result = 31 * result + (timestampMicros == null ? 0 : timestampMicros.hashCode());
-    result = 31 * result + (timeMillis == null ? 0 : timeMillis.hashCode());
-    result = 31 * result + (timeMicros == null ? 0 : timeMicros.hashCode());
+    result = 31 * result + Integer.hashCode(this.number);
+    result = 31 * result + (this.last_name == null ? 0 : this.last_name.hashCode());
+    result = 31 * result + (this.timestamp == null ? 0 : this.timestamp.hashCode());
+    result = 31 * result + (this.timestampMicros == null ? 0 : this.timestampMicros.hashCode());
+    result = 31 * result + (this.timeMillis == null ? 0 : this.timeMillis.hashCode());
+    result = 31 * result + (this.timeMicros == null ? 0 : this.timeMicros.hashCode());
     return result;
   }
 

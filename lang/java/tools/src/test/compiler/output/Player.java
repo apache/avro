@@ -593,10 +593,10 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   @Override
   public int hashCode() {
     int result = 1;
-    result = 31 * result + Integer.hashCode(number);
-    result = 31 * result + (first_name == null ? 0 : first_name.hashCode());
-    result = 31 * result + (last_name == null ? 0 : last_name.hashCode());
-    result = 31 * result + (position == null ? 0 : position.hashCode());
+    result = 31 * result + Integer.hashCode(this.number);
+    result = 31 * result + (this.first_name == null ? 0 : this.first_name.hashCode());
+    result = 31 * result + (this.last_name == null ? 0 : this.last_name.hashCode());
+    result = 31 * result + (this.position == null ? 0 : this.position.hashCode());
     return result;
   }
 
