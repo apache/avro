@@ -149,6 +149,7 @@ class TestTetherWordCount(unittest.TestCase):
         # Run the job...
         args = (
             "java",
+            "-Dorg.apache.avro.SERIALIZABLE_PACKAGES=org.apache.avro",
             "-jar",
             _JAR_PATH,
             "tether",
