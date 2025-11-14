@@ -18,15 +18,16 @@
  * limitations under the License.
  */
 
+declare(strict_types=1);
+
 namespace Apache\Avro\IO;
 
 use Apache\Avro\AvroIO;
 
 /**
  * AvroIO wrapper for PHP file access functions
- * @package Avro
  */
-class AvroFile extends AvroIO
+class AvroFile implements AvroIO
 {
     /**
      * @var string fopen read mode value. Used internally.
@@ -39,34 +40,28 @@ class AvroFile extends AvroIO
     public const FOPEN_WRITE_MODE = 'wb';
 
     /**
-     * @var string
-     */
-    private $file_path;
-
-    /**
      * @var resource file handle for AvroFile instance
      */
     private $file_handle;
 
-    public function __construct($file_path, $mode = self::READ_MODE)
-    {
-        /**
-         * XXX: should we check for file existence (in case of reading)
-         * or anything else about the provided file_path argument?
-         */
-        $this->file_path = $file_path;
+    public function __construct(
+        private string $file_path,
+        string $mode = self::READ_MODE
+    ) {
         switch ($mode) {
             case self::WRITE_MODE:
                 $this->file_handle = fopen($this->file_path, self::FOPEN_WRITE_MODE);
-                if (false == $this->file_handle) {
+                if (false === $this->file_handle) {
                     throw new AvroIOException('Could not open file for writing');
                 }
+
                 break;
             case self::READ_MODE:
                 $this->file_handle = fopen($this->file_path, self::FOPEN_READ_MODE);
-                if (false == $this->file_handle) {
+                if (false === $this->file_handle) {
                     throw new AvroIOException('Could not open file for reading');
                 }
+
                 break;
             default:
                 throw new AvroIOException(
@@ -81,15 +76,16 @@ class AvroFile extends AvroIO
     }
 
     /**
-     * @returns int count of bytes written
      * @throws AvroIOException if write failed.
+     * @return int count of bytes written
      */
-    public function write($str)
+    public function write(string $bytes): int
     {
-        $len = fwrite($this->file_handle, $str);
+        $len = fwrite($this->file_handle, $bytes);
         if (false === $len) {
             throw new AvroIOException(sprintf('Could not write to file'));
         }
+
         return $len;
     }
 
@@ -97,26 +93,28 @@ class AvroFile extends AvroIO
      * @returns int current position within the file
      * @throws AvroIOException if tell failed.
      */
-    public function tell()
+    public function tell(): int
     {
         $position = ftell($this->file_handle);
         if (false === $position) {
             throw new AvroIOException('Could not execute tell on reader');
         }
+
         return $position;
     }
 
     /**
      * Closes the file.
-     * @returns boolean true if successful.
+     * @returns bool true if successful.
      * @throws AvroIOException if there was an error closing the file.
      */
-    public function close()
+    public function close(): bool
     {
         $res = fclose($this->file_handle);
         if (false === $res) {
             throw new AvroIOException('Error closing file.');
         }
+
         return $res;
     }
 
@@ -125,13 +123,14 @@ class AvroFile extends AvroIO
      *                  and false otherwise.
      * @see AvroIO::isEof() as behavior differs from feof()
      */
-    public function isEof()
+    public function isEof(): bool
     {
         $this->read(1);
         if (feof($this->file_handle)) {
             return true;
         }
         $this->seek(-1, self::SEEK_CUR);
+
         return false;
     }
 
@@ -140,7 +139,7 @@ class AvroFile extends AvroIO
      * @returns string bytes read
      * @throws AvroIOException if length value is negative or if the read failed
      */
-    public function read($len)
+    public function read(int $len): string
     {
         if (0 > $len) {
             throw new AvroIOException(
@@ -148,7 +147,7 @@ class AvroFile extends AvroIO
             );
         }
 
-        if (0 == $len) {
+        if (0 === $len) {
             return '';
         }
 
@@ -156,17 +155,16 @@ class AvroFile extends AvroIO
         if (false === $bytes) {
             throw new AvroIOException('Could not read from file');
         }
+
         return $bytes;
     }
 
     /**
-     * @param int $offset
-     * @param int $whence
      * @returns boolean true upon success
      * @throws AvroIOException if seek failed.
      * @see AvroIO::seek()
      */
-    public function seek($offset, $whence = SEEK_SET): bool
+    public function seek(int $offset, int $whence = SEEK_SET): bool
     {
         $res = fseek($this->file_handle, $offset, $whence);
         // Note: does not catch seeking beyond end of file
@@ -179,6 +177,7 @@ class AvroFile extends AvroIO
                 )
             );
         }
+
         return true;
     }
 
@@ -186,12 +185,13 @@ class AvroFile extends AvroIO
      * @returns boolean true if the flush was successful.
      * @throws AvroIOException if there was an error flushing the file.
      */
-    public function flush()
+    public function flush(): bool
     {
         $res = fflush($this->file_handle);
         if (false === $res) {
             throw new AvroIOException('Could not flush file.');
         }
+
         return true;
     }
 }

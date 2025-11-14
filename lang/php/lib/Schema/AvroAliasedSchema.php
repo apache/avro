@@ -18,26 +18,11 @@
  * limitations under the License.
  */
 
-namespace Apache\Avro\Datum;
+declare(strict_types=1);
 
-use Apache\Avro\AvroException;
-use Apache\Avro\Schema\AvroSchema;
+namespace Apache\Avro\Schema;
 
-/**
- * Exceptions arising from writing or reading Avro data.
- */
-class AvroIOTypeException extends AvroException
+interface AvroAliasedSchema
 {
-    /**
-     * @param AvroSchema $expectedSchema
-     * @param mixed $datum
-     */
-    public function __construct($expectedSchema, $datum)
-    {
-        parent::__construct(sprintf(
-            'The datum %s is not an example of schema %s',
-            var_export($datum, true),
-            $expectedSchema
-        ));
-    }
+    public function getAliases(): ?array;
 }

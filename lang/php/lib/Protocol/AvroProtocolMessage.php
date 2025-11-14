@@ -18,44 +18,54 @@
  * limitations under the License.
  */
 
+declare(strict_types=1);
+
 namespace Apache\Avro\Protocol;
 
 use Apache\Avro\Schema\AvroName;
+use Apache\Avro\Schema\AvroNamedSchemata;
 use Apache\Avro\Schema\AvroPrimitiveSchema;
 use Apache\Avro\Schema\AvroRecordSchema;
 use Apache\Avro\Schema\AvroSchema;
+use Apache\Avro\Schema\AvroSchemaParseException;
 
 class AvroProtocolMessage
 {
-    public $name;
+    public readonly AvroRecordSchema $request;
+
+    public readonly ?AvroSchema $response;
 
     /**
-     * @var AvroRecordSchema $request
+     * @throws AvroSchemaParseException
      */
-    public $request;
-
-    public $response;
-
-    public function __construct($name, $avro, $protocol)
-    {
-        $this->name = $name;
+    public function __construct(
+        public string $name,
+        array $avro,
+        string $namespace,
+        AvroNamedSchemata $schemata,
+    ) {
         $this->request = new AvroRecordSchema(
-            new AvroName($name, null, $protocol->namespace),
-            null,
-            $avro['request'],
-            $protocol->schemata,
-            AvroSchema::REQUEST_SCHEMA
+            name: new AvroName($this->name, null, $namespace),
+            doc: null,
+            fields: $avro['request'],
+            schemata: $schemata,
+            schema_type: AvroSchema::REQUEST_SCHEMA
         );
 
+        $response = null;
         if (array_key_exists('response', $avro)) {
-            $this->response = $protocol->schemata->schemaByName(new AvroName(
-                $avro['response'],
-                $protocol->namespace,
-                $protocol->namespace
-            ));
-            if ($this->response == null) {
-                $this->response = new AvroPrimitiveSchema($avro['response']);
+            $response = $schemata->schemaByName(
+                new AvroName(
+                    name: $avro['response'],
+                    namespace: $namespace,
+                    default_namespace: $namespace
+                )
+            );
+
+            if (is_null($response)) {
+                $response = new AvroPrimitiveSchema($avro['response']);
             }
         }
+        $this->response = $response;
     }
 }

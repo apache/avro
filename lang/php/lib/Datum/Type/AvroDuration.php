@@ -25,16 +25,13 @@ namespace Apache\Avro\Datum\Type;
 use Apache\Avro\AvroException;
 use Apache\Avro\Schema\AvroSchema;
 
-class AvroDuration
+class AvroDuration implements \Stringable
 {
-    /** @var int */
-    private $months;
+    private readonly int $months;
 
-    /** @var int */
-    private $days;
+    private readonly int $days;
 
-    /** @var int */
-    private $milliseconds;
+    private readonly int $milliseconds;
 
     /**
      * @throws AvroException
@@ -51,6 +48,11 @@ class AvroDuration
         $this->months = $months;
         $this->days = $days;
         $this->milliseconds = $milliseconds;
+    }
+
+    public function __toString(): string
+    {
+        return $this->toBytes();
     }
 
     public static function fromBytes(string $bytes): self
@@ -85,12 +87,7 @@ class AvroDuration
         $days = pack('V', $this->days);
         $milliseconds = pack('V', $this->milliseconds);
 
-        return $months . $days . $milliseconds;
-    }
-
-    public function __toString(): string
-    {
-        return $this->toBytes();
+        return $months.$days.$milliseconds;
     }
 
     /**

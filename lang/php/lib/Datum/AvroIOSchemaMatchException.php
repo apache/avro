@@ -26,8 +26,6 @@ use Apache\Avro\Schema\AvroSchema;
 /**
  * Exceptions arising from incompatibility between
  * reader and writer schemas.
- *
- * @package Avro
  */
 class AvroIOSchemaMatchException extends AvroException
 {

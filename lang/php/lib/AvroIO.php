@@ -18,15 +18,15 @@
  * limitations under the License.
  */
 
+declare(strict_types=1);
+
 namespace Apache\Avro;
 
 /**
  * Barebones IO base class to provide common interface for file and string
  * access within the Avro classes.
- *
- * @package Avro
  */
-class AvroIO
+interface AvroIO
 {
     /**
      * @var string general read mode
@@ -52,59 +52,40 @@ class AvroIO
 
     /**
      * Read $len bytes from AvroIO instance
-     * @return string bytes read
-     * @var int $len
      */
-    public function read($len)
-    {
-        throw new AvroNotImplementedException('Not implemented');
-    }
+    public function read(int $len): string;
 
     /**
      * Append bytes to this buffer. (Nothing more is needed to support Avro.)
-     * @param string $arg bytes to write
+     * @param string $bytes bytes to write
      * @returns int count of bytes written.
      * @throws IO\AvroIOException if $args is not a string value.
      */
-    public function write($arg)
-    {
-        throw new AvroNotImplementedException('Not implemented');
-    }
+    public function write(string $bytes): int;
 
     /**
      * Return byte offset within AvroIO instance
-     * @return int
      */
-    public function tell()
-    {
-        throw new AvroNotImplementedException('Not implemented');
-    }
+    public function tell(): int;
 
     /**
      * Set the position indicator. The new position, measured in bytes
      * from the beginning of the file, is obtained by adding $offset to
      * the position specified by $whence.
      *
-     * @param int $offset
      * @param int $whence one of AvroIO::SEEK_SET, AvroIO::SEEK_CUR,
      *                    or Avro::SEEK_END
      * @returns boolean true
      *
      * @throws IO\AvroIOException
      */
-    public function seek($offset, $whence = self::SEEK_SET): bool
-    {
-        throw new AvroNotImplementedException('Not implemented');
-    }
+    public function seek(int $offset, int $whence = self::SEEK_SET): bool;
 
     /**
      * Flushes any buffered data to the AvroIO object.
-     * @returns boolean true upon success.
+     * @returns bool true upon success.
      */
-    public function flush()
-    {
-        throw new AvroNotImplementedException('Not implemented');
-    }
+    public function flush(): bool;
 
     /**
      * Returns whether or not the current position at the end of this AvroIO
@@ -113,18 +94,12 @@ class AvroIO
      * Note isEof() is <b>not</b> like eof in C or feof in PHP:
      * it returns TRUE if the *next* read would be end of file,
      * rather than if the *most recent* read read end of file.
-     * @returns boolean true if at the end of file, and false otherwise
+     * @returns bool true if at the end of file, and false otherwise
      */
-    public function isEof()
-    {
-        throw new AvroNotImplementedException('Not implemented');
-    }
+    public function isEof(): bool;
 
     /**
      * Closes this AvroIO instance.
      */
-    public function close()
-    {
-        throw new AvroNotImplementedException('Not implemented');
-    }
+    public function close(): bool;
 }

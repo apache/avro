@@ -26,9 +26,6 @@ use Apache\Avro\Datum\AvroIODatumWriter;
 use Apache\Avro\IO\AvroFile;
 use Apache\Avro\Schema\AvroSchema;
 
-/**
- * @package Avro
- */
 class AvroDataIO
 {
     /**
@@ -85,39 +82,40 @@ class AvroDataIO
         self::DEFLATE_CODEC,
         self::SNAPPY_CODEC,
         self::ZSTANDARD_CODEC,
-        self::BZIP2_CODEC
+        self::BZIP2_CODEC,
     ];
 
     /**
-     * @var AvroSchema cached version of metadata schema object
+     * @var ?AvroSchema cached version of metadata schema object
      */
-    private static $metadataSchema;
+    private static ?AvroSchema $metadataSchema = null;
 
     /**
      * @returns int count of bytes in the initial "magic" segment of the
      *              Avro container file header
      */
-    public static function magicSize()
+    public static function magicSize(): int
     {
         return strlen(self::magic());
     }
 
     /**
-     * @returns the initial "magic" segment of an Avro container file header.
+     * @return string the initial "magic" segment of an Avro container file header.
      */
-    public static function magic()
+    public static function magic(): string
     {
-        return ('Obj' . pack('c', self::VERSION));
+        return 'Obj'.pack('c', self::VERSION);
     }
 
     /**
-     * @returns AvroSchema object of Avro container file metadata.
+     * @return AvroSchema object of Avro container file metadata.
      */
-    public static function metadataSchema()
+    public static function metadataSchema(): AvroSchema
     {
         if (is_null(self::$metadataSchema)) {
             self::$metadataSchema = AvroSchema::parse(self::METADATA_SCHEMA_JSON);
         }
+
         return self::$metadataSchema;
     }
 
@@ -148,10 +146,12 @@ class AvroDataIO
                 }
                 $file = new AvroFile($file_path, AvroFile::WRITE_MODE);
                 $io = self::openWriter($file, $schema, $codec);
+
                 break;
             case AvroFile::READ_MODE:
                 $file = new AvroFile($file_path, AvroFile::READ_MODE);
                 $io = self::openReader($file, $schema);
+
                 break;
             default:
                 throw new AvroDataIOException(
@@ -163,30 +163,8 @@ class AvroDataIO
                     )
                 );
         }
+
         return $io;
-    }
-
-    /**
-     * @param AvroIO $io
-     * @param AvroSchema $schema
-     * @param string $codec
-     * @returns AvroDataIOWriter
-     */
-    protected static function openWriter($io, $schema, $codec = self::NULL_CODEC)
-    {
-        $writer = new AvroIODatumWriter($schema);
-        return new AvroDataIOWriter($io, $writer, $schema, $codec);
-    }
-
-    /**
-     * @param AvroIO $io
-     * @param AvroSchema $schema
-     * @returns AvroDataIOReader
-     */
-    protected static function openReader($io, $schema)
-    {
-        $reader = new AvroIODatumReader(null, $schema);
-        return new AvroDataIOReader($io, $reader);
     }
 
     /**
@@ -204,5 +182,30 @@ class AvroDataIO
     public static function validCodecs()
     {
         return self::$validCodecs;
+    }
+
+    /**
+     * @param AvroIO $io
+     * @param AvroSchema $schema
+     * @param string $codec
+     * @returns AvroDataIOWriter
+     */
+    protected static function openWriter($io, $schema, $codec = self::NULL_CODEC)
+    {
+        $writer = new AvroIODatumWriter($schema);
+
+        return new AvroDataIOWriter($io, $writer, $schema, $codec);
+    }
+
+    /**
+     * @param AvroIO $io
+     * @param AvroSchema $schema
+     * @returns AvroDataIOReader
+     */
+    protected static function openReader($io, $schema)
+    {
+        $reader = new AvroIODatumReader(null, $schema);
+
+        return new AvroDataIOReader($io, $reader);
     }
 }

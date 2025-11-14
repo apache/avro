@@ -23,9 +23,6 @@ namespace Apache\Avro\Schema;
 use Apache\Avro\AvroException;
 use Apache\Avro\AvroUtil;
 
-/**
- * @package Avro
- */
 class AvroEnumSchema extends AvroNamedSchema
 {
     /**
@@ -38,6 +35,7 @@ class AvroEnumSchema extends AvroNamedSchema
      * @param string $doc
      * @param string[] $symbols
      * @param AvroNamedSchemata &$schemata
+     * @param null|mixed $aliases
      * @throws AvroSchemaParseException
      */
     public function __construct($name, $doc, $symbols, &$schemata = null, $aliases = null)
@@ -91,6 +89,7 @@ class AvroEnumSchema extends AvroNamedSchema
         if (array_key_exists($index, $this->symbols)) {
             return $this->symbols[$index];
         }
+
         throw new AvroException(sprintf('Invalid symbol index %d', $index));
     }
 
@@ -104,16 +103,15 @@ class AvroEnumSchema extends AvroNamedSchema
         if (false !== $idx) {
             return $idx;
         }
+
         throw new AvroException(sprintf("Invalid symbol value '%s'", $symbol));
     }
 
-    /**
-     * @returns mixed
-     */
-    public function toAvro()
+    public function toAvro(): string|array
     {
         $avro = parent::toAvro();
         $avro[AvroSchema::SYMBOLS_ATTR] = $this->symbols;
+
         return $avro;
     }
 }
