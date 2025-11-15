@@ -89,7 +89,17 @@ import datetime
 import decimal
 import struct
 import warnings
-from typing import IO, Generator, Iterable, List, Mapping, Optional, Sequence, Union
+from typing import (
+    IO,
+    Generator,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Union,
+    cast,
+)
 
 import avro.constants
 import avro.errors
@@ -684,11 +694,12 @@ class DatumReader:
             return decoder.read_double()
         if writers_schema.type == "bytes":
             if logical_type == "decimal":
-                precision = writers_schema.get_prop("precision")
+                writers_schema = cast(avro.schema.BytesDecimalSchema, writers_schema)
+                precision = writers_schema.precision
                 if not (isinstance(precision, int) and precision > 0):
                     warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal precision {precision}. Must be a positive integer."))
                     return decoder.read_bytes()
-                scale = writers_schema.get_prop("scale")
+                scale = writers_schema.scale
                 if not (isinstance(scale, int) and scale >= 0):
                     warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a non-negative integer."))
                     return decoder.read_bytes()
@@ -696,11 +707,12 @@ class DatumReader:
             return decoder.read_bytes()
         if isinstance(writers_schema, avro.schema.FixedSchema) and isinstance(readers_schema, avro.schema.FixedSchema):
             if logical_type == "decimal":
-                precision = writers_schema.get_prop("precision")
+                writers_schema = cast(avro.schema.FixedDecimalSchema, writers_schema)
+                precision = writers_schema.precision
                 if not (isinstance(precision, int) and precision > 0):
                     warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal precision {precision}. Must be a positive integer."))
                     return self.read_fixed(writers_schema, readers_schema, decoder)
-                scale = writers_schema.get_prop("scale")
+                scale = writers_schema.scale
                 if not (isinstance(scale, int) and scale >= 0):
                     warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a non-negative integer."))
                     return self.read_fixed(writers_schema, readers_schema, decoder)
@@ -1056,7 +1068,8 @@ class DatumWriter:
             raise avro.errors.AvroTypeException(writers_schema, datum)
         if writers_schema.type == "bytes":
             if logical_type == "decimal":
-                scale = writers_schema.get_prop("scale")
+                writers_schema = cast(avro.schema.BytesDecimalSchema, writers_schema)
+                scale = writers_schema.scale
                 if not (isinstance(scale, int) and scale >= 0):
                     warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a non-negative integer."))
                 elif not isinstance(datum, decimal.Decimal):
@@ -1068,7 +1081,8 @@ class DatumWriter:
             raise avro.errors.AvroTypeException(writers_schema, datum)
         if isinstance(writers_schema, avro.schema.FixedSchema):
             if logical_type == "decimal":
-                scale = writers_schema.get_prop("scale")
+                writers_schema = cast(avro.schema.FixedDecimalSchema, writers_schema)
+                scale = writers_schema.scale
                 size = writers_schema.size
                 if not (isinstance(scale, int) and scale >= 0):
                     warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a non-negative integer."))
