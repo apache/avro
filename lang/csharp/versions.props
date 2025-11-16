@@ -47,7 +47,8 @@
     See https://github.com/apache/avro/pull/1126 & https://github.com/apache/avro/pull/981 for more details
   -->
   <PropertyGroup Label="Minimum Package Versions">
-    <NewtonsoftJsonMinimumVersion>10.0.3</NewtonsoftJsonMinimumVersion>
+    <!-- Newtonsoft.Json prior to version 13.0.1 is vulnerable. See https://github.com/advisories/GHSA-5crp-9r3c-p9vr -->
+    <NewtonsoftJsonMinimumVersion>13.0.1</NewtonsoftJsonMinimumVersion>
   </PropertyGroup>
 
   <!--
