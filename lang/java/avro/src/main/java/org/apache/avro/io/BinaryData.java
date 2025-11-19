@@ -156,8 +156,7 @@ public class BinaryData {
     }
     case FIXED: {
       int size = schema.getFixedSize();
-      int c = Arrays.compare(d.d1.getBuf(), d.d1.getPos(), d.d1.getPos() + size, d.d2.getBuf(), d.d2.getPos(),
-          d.d2.getPos() + size);
+      int c = compareBytes(d.d1.getBuf(), d.d1.getPos(), size, d.d2.getBuf(), d.d2.getPos(), size);
       d.d1.skipFixed(size);
       d.d2.skipFixed(size);
       return c;
@@ -166,8 +165,7 @@ public class BinaryData {
     case BYTES: {
       int l1 = d1.readInt();
       int l2 = d2.readInt();
-      int c = Arrays.compare(d.d1.getBuf(), d.d1.getPos(), d.d1.getPos() + l1, d.d2.getBuf(), d.d2.getPos(),
-          d.d2.getPos() + l2);
+      int c = compareBytes(d.d1.getBuf(), d.d1.getPos(), l1, d.d2.getBuf(), d.d2.getPos(), l2);
       d.d1.skipFixed(l1);
       d.d2.skipFixed(l2);
       return c;
@@ -181,10 +179,10 @@ public class BinaryData {
 
   /**
    * Lexicographically compare bytes. If equal, return zero. If greater-than,
-   * return a positive value, if less than return a negative value.
+   * return a positive value, if less than, return a negative value.
    */
   public static int compareBytes(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-    return Arrays.compare(b1, s1, s1 + l1, b2, s2, s2 + l2);
+    return Arrays.compareUnsigned(b1, s1, s1 + l1, b2, s2, s2 + l2);
   }
 
   private static class HashData {

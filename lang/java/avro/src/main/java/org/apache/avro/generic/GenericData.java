@@ -546,7 +546,7 @@ public class GenericData {
 
     @Override
     public int compareTo(Fixed that) {
-      return Arrays.compare(this.bytes, 0, this.bytes.length, that.bytes, 0, that.bytes.length);
+      return BinaryData.compareBytes(this.bytes, 0, this.bytes.length, that.bytes, 0, that.bytes.length);
     }
   }
 
