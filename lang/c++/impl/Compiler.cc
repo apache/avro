@@ -392,6 +392,8 @@ static LogicalType makeLogicalType(const Entity &e, const Object &m) {
         t = LogicalType::TIME_MILLIS;
     else if (typeField == "time-micros")
         t = LogicalType::TIME_MICROS;
+    else if (typeField == "time-nanos")
+        t = LogicalType::TIME_NANOS;
     else if (typeField == "timestamp-millis")
         t = LogicalType::TIMESTAMP_MILLIS;
     else if (typeField == "timestamp-micros")
