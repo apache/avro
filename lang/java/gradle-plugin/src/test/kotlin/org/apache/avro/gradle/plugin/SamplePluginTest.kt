@@ -68,7 +68,7 @@ class SamplePluginTest {
         // Run Gradle using TestKit
         val result = GradleRunner.create()
             .withProjectDir(projectDir.toFile())  // still needs File for GradleRunner
-            .withArguments("compile")
+            .withArguments("avroGenerateJavaClasses")
             .withPluginClasspath()
             .build()
 
