@@ -315,6 +315,23 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     fs.setDirectory(absPath);
     fs.setFollowSymlinks(false);
 
+    // exclude imports directory since it has already been compiled.
+    if (imports != null) {
+      String importExclude = null;
+
+      for (String importFile : this.imports) {
+        File file = new File(importFile);
+
+        if (file.isDirectory()) {
+          importExclude = file.getName() + "/**";
+        } else if (file.isFile()) {
+          importExclude = "**/" + file.getName();
+        }
+
+        fs.addExclude(importExclude);
+      }
+    }
+
     for (String include : includes) {
       fs.addInclude(include);
     }
