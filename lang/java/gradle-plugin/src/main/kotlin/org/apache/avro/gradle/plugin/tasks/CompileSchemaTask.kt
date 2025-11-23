@@ -27,8 +27,7 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
 
     @TaskAction
     fun compileSchema() {
-
-        println("Compiling schema...")
+        println("Compiling schemas...")
 
         val sourceDirectoryFullPath =
             project.layout.projectDirectory.dir(srcDirectory.get()).asFile
@@ -36,17 +35,13 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         val outputDirectoryFullPath = project.layout.buildDirectory
             .dir(outputDirectory).get().asFile
 
-
-        //val includes = arrayOf("**/*.avsc")
         val excludes = emptyArray<String>()
-
 
         val res = project.getIncludedFiles2(
             sourcePath = srcDirectory.get(),
             excludes = excludes,
             includes = includes.get().toTypedArray()
         )
-
 
         //println("Included files: ${res.joinToString(",") }}")
         //println("sourceDir: ${sourceDirectoryFullPath.path}")
@@ -55,8 +50,7 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         doCompile(res, sourceDirectoryFullPath, outputDirectoryFullPath)
 
         val files = File(outputDirectoryFullPath, "test").list().joinToString(",")
-        //val files2 = project.fileTree(File(outputDirectoryFullPath, "test"))
-        //
+
         println("here are all files: ${files}")
 
     }
@@ -89,11 +83,6 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         val schemas: MutableList<Schema?>?
 
         try {
-            // This is necessary to maintain backward-compatibility. If there are
-            // no imported files then isolate the schemas from each other, otherwise
-            // allow them to share a single schema so reuse and sharing of schema
-            // is possible.
-//            val parser = if (imports == null) SchemaParser() else schemaParser
             val parser = SchemaParser()
             for (sourceFile in sourceFiles) {
                 parser.parse(sourceFile)
@@ -115,6 +104,7 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         outputDirectory: File
     ) {
         setCompilerProperties(compiler)
+        // TODO: don't forget to re-add
 //        try {
 //            for (customConversion in customConversions) {
 //                compiler.addCustomConversion(Thread.currentThread().getContextClassLoader().loadClass(customConversion))
