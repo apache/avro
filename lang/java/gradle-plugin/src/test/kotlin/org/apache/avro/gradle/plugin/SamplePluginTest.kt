@@ -52,7 +52,7 @@ class SamplePluginTest {
         buildFile.writeText(
             """
             plugins {
-                id("org.apache.avro.gradle.plugin")
+                id("org.apache.avro.avro-gradle-plugin")
             }
             
             avro {

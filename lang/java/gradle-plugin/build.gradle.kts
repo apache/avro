@@ -19,6 +19,7 @@
 plugins {
     kotlin("jvm") version "2.2.10"
     `java-gradle-plugin`
+    `maven-publish`
 }
 
 group = "org.apache.avro"
@@ -46,7 +47,7 @@ kotlin {
 gradlePlugin {
     plugins {
         create("gradlePlugin") {
-            id = "org.apache.avro.gradle.plugin"
+            id = "org.apache.avro.avro-gradle-plugin"
             implementationClass = "org.apache.avro.gradle.plugin.GradlePlugin"
         }
     }
