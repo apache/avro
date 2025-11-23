@@ -26,36 +26,32 @@ class SamplePluginTest {
     }
 
     @Test
-    fun `plugin executes greet task successfully2`() {
-        // Create a temporary project directory using NIO
+    fun `plugin executes avro generate task successfully`() {
+        // given
         val projectDir: Path = Files.createTempDirectory("gradle-plugin-test-")
 
-        // Write minimal settings and build files
         val settingsFile = projectDir.resolve("settings.gradle.kts")
         val buildFile = projectDir.resolve("build.gradle.kts")
 
-
-        // 1. Find test/avro dir inside THIS project
         val localAvroDir = File("src/test/avro")
         require(localAvroDir.exists()) { "src/test/avro not found" }
 
-        // ---- 2. Create test project structure ----
         val testResourcesDir = File(projectDir.toFile(), "src/test/avro")
         testResourcesDir.mkdirs()
 
-        // ---- 3. Copy resource files to test project ----
         localAvroDir.copyRecursively(testResourcesDir, overwrite = true)
-
-
 
         settingsFile.writeText("")
         buildFile.writeText(
             """
+            import org.apache.avro.gradle.plugin.SchemaType
+            
             plugins {
                 id("org.apache.avro.avro-gradle-plugin")
             }
             
             avro {
+                schemaType = "schema"
                 srcDirectory = "src/test/avro"
                 outputDirectory = "generated-sources/avro"
                 includes = listOf("**/*.avsc")
@@ -65,14 +61,12 @@ class SamplePluginTest {
 
         val outputDirectory = File(projectDir.toFile(), "build/generated-sources/avro/test")
 
-        // Run Gradle using TestKit
+        // when
         val result = GradleRunner.create()
-            .withProjectDir(projectDir.toFile())  // still needs File for GradleRunner
+            .withProjectDir(projectDir.toFile())
             .withArguments("avroGenerateJavaClasses")
             .withPluginClasspath()
             .build()
-
-        println("result.output: ${result.output}")
 
         val expectedFiles = setOf(
             "SchemaPrivacy.java",
@@ -82,13 +76,12 @@ class SamplePluginTest {
             "PrivacyDirectImport.java"
         )
 
-        // Verify output
+        // then
         assertFilesExist(outputDirectory, expectedFiles)
 
         //assertTrue(result.output.contains("Hello from project"))
         //assertTrue(result.output.contains("BUILD SUCCESSFUL"))
 
-        // Optional: clean up directory
         projectDir.toFile().deleteRecursively()
     }
 

@@ -10,11 +10,26 @@ abstract class GradlePlugin : Plugin<Project> {
         val extension = project.extensions.create("avro", GradlePluginExtension::class.java)
 
         project.tasks.register("avroGenerateJavaClasses", CompileSchemaTask::class.java) {
-            it.srcDirectory.set(extension.srcDirectory)
-            it.outputDirectory.set(extension.outputDirectory)
-            it.includes.set(extension.includes)
-            it.doFirst { println("Starting compilation for project name: '${project.name}'") }
-            it.doLast { println("Finished compilation for project name: '${project.name}'") }
+
+            val schemaType: SchemaType = SchemaType.valueOf(extension.schemaType.get())
+
+            when (schemaType) {
+                SchemaType.schema -> {
+                    it.srcDirectory.set(extension.srcDirectory)
+                    it.outputDirectory.set(extension.outputDirectory)
+                    it.includes.set(extension.includes)
+                    it.doFirst { println("Starting compilation for project name: '${project.name}'") }
+                    it.doLast { println("Finished compilation for project name: '${project.name}'") }
+                }
+
+                SchemaType.idl -> TODO()
+            }
+
         }
     }
+}
+
+enum class SchemaType {
+    schema,
+    idl
 }

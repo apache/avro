@@ -18,13 +18,6 @@ import java.util.stream.Collectors
 
 abstract class CompileSchemaTask : AbstractCompileTask() {
 
-    @get:Input
-    abstract val srcDirectory: Property<String>
-
-    @get:Input
-    abstract val outputDirectory: Property<String>
-
-
     @TaskAction
     fun compileSchema() {
         println("Compiling schemas...")

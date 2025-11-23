@@ -2,6 +2,7 @@ package org.apache.avro.gradle.plugin.tasks
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 
 abstract class AbstractCompileTask : DefaultTask() {
@@ -15,5 +16,11 @@ abstract class AbstractCompileTask : DefaultTask() {
      */
     @get:Input
     abstract val includes: ListProperty<String>
+
+    @get:Input
+    abstract val srcDirectory: Property<String>
+
+    @get:Input
+    abstract val outputDirectory: Property<String>
 
 }

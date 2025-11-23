@@ -7,6 +7,7 @@ import javax.inject.Inject
 
 abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory) {
 
+    val schemaType = objects.property(String::class.java)
 
     val srcDirectory: Property<String> = objects.property(String::class.java)
 
