@@ -331,7 +331,6 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
         fs.addExclude(importExclude);
       }
     }
-
     for (String include : includes) {
       fs.addInclude(include);
     }
