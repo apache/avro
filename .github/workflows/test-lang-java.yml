@@ -44,7 +44,7 @@ jobs:
           - ubuntu-24.04-arm
     steps:
       - name: 'Checkout sourcecode'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 'Cache Local Maven Repository'
         uses: actions/cache@v4
@@ -96,7 +96,7 @@ jobs:
           - ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: 'Cache Local Maven Repository'
         uses: actions/cache@v4
