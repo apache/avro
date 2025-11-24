@@ -21,8 +21,8 @@ class SamplePluginTest {
     @Test
     fun `plugin is applied correctly to the project`() {
         val project = ProjectBuilder.builder().build()
-        project.pluginManager.apply("org.apache.avro.gradle.plugin")
-        assert(project.tasks.getByName("compile") is CompileSchemaTask)
+        project.pluginManager.apply("org.apache.avro.avro-gradle-plugin")
+        assert(project.tasks.getByName("avroGenerateJavaClasses") is CompileSchemaTask)
     }
 
     @Test
@@ -43,9 +43,7 @@ class SamplePluginTest {
 
         settingsFile.writeText("")
         buildFile.writeText(
-            """
-            import org.apache.avro.gradle.plugin.SchemaType
-            
+            """            
             plugins {
                 id("org.apache.avro.avro-gradle-plugin")
             }
