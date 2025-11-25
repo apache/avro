@@ -542,7 +542,7 @@
                 <exclude>lang/c++/m4/*.m4</exclude>
                 <exclude>lang/java/ipc/src/main/velocity/org/apache/avro/ipc/stats/static/protovis-r3.2.js</exclude>
                 <exclude>lang/java/ipc/src/main/velocity/org/apache/avro/ipc/stats/static/g.bar.js</exclude>
-                <exclude>lang/java/ipc/src/main/velocity/org/apache/avro/ipc/stats/static/jquery-1.6.3.min.js</exclude>
+                <exclude>lang/java/ipc/src/main/velocity/org/apache/avro/ipc/stats/static/jquery-3.7.1.min.js</exclude>
                 <!-- License files -->
                 <exclude>lang/java/tools/src/main/resources/META-INF/cddl-1.0.text</exclude>
                 <exclude>lang/java/tools/src/main/resources/META-INF/cddl-1.1.text</exclude>
