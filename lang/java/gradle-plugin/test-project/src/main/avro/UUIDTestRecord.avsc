@@ -1,0 +1,13 @@
+{
+  "name": "UUIDTestRecord",
+  "type": "record",
+  "fields": [
+    {
+      "name": "id",
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
+    }
+  ]
+}

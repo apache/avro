@@ -410,6 +410,8 @@
                 <exclude>**/.gitattributes</exclude>
                 <exclude>**/.gitignore</exclude>
                 <exclude>**/.gitmodules</exclude>
+                <!--TODO: do we need to put a license in every file from the Gradle plugin??-->
+                <exclude>lang/java/gradle-plugin/**</exclude>
                 <!-- Hugo / Docsy -->
                 <exclude>doc/build/**</exclude>
                 <exclude>doc/content/**</exclude>
