@@ -37,7 +37,7 @@ public class TestProtocolHttps extends TestProtocolSpecific {
     System.setProperty("javax.net.ssl.trustStore", "src/test/truststore");
     System.setProperty("javax.net.ssl.trustStorePassword", "avrotest");
     SslConnectionFactory connectionFactory = new SslConnectionFactory("HTTP/1.1");
-    SslContextFactory sslContextFactory = connectionFactory.getSslContextFactory();
+    SslContextFactory.Server sslContextFactory = connectionFactory.getSslContextFactory();
 
     sslContextFactory.setKeyStorePath(System.getProperty("javax.net.ssl.keyStore"));
     sslContextFactory.setKeyManagerPassword(System.getProperty("javax.net.ssl.password"));
