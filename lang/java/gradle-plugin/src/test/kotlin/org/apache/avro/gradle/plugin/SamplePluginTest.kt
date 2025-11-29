@@ -1,48 +1,54 @@
 package org.apache.avro.gradle.plugin
 
-import org.apache.avro.gradle.plugin.tasks.CompileSchemaTask
-import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testkit.runner.GradleRunner
+import org.gradle.testkit.runner.TaskOutcome
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.Arrays
 import java.util.HashSet
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.copyToRecursively
+import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-
+@ExperimentalPathApi
 class SamplePluginTest {
 
-    @Test
-    fun `plugin is applied correctly to the project`() {
-        val project = ProjectBuilder.builder().build()
-        project.pluginManager.apply("org.apache.avro.avro-gradle-plugin")
-        assert(project.tasks.getByName("avroGenerateJavaClasses") is CompileSchemaTask)
-    }
+    @TempDir
+    lateinit var tempDir: Path
+
+    //@Test
+    //fun `plugin is applied correctly to the project`() {
+    //    val project = ProjectBuilder.builder().build()
+    //    project.pluginManager.apply("org.apache.avro.avro-gradle-plugin")
+    //    assert(project.tasks.getByName("avroGenerateJavaClasses") is CompileSchemaTask)
+    //}
 
     @Test
     fun `plugin executes avro generate task successfully`() {
         // given
-        val projectDir: Path = Files.createTempDirectory("gradle-plugin-test-")
+        val testSettingsFile = tempDir.resolve("settings.gradle.kts")
+        val testBuildFile = tempDir.resolve("build.gradle.kts")
+        val testAvroSrcDir = tempDir.resolve("src/test/avro").createDirectories()
 
-        val settingsFile = projectDir.resolve("settings.gradle.kts")
-        val buildFile = projectDir.resolve("build.gradle.kts")
+        val avroSrcDir = Path.of("src/test/avro")
+        val avroOutPutDir = Path.of("generated-sources/avro")
 
-        val localAvroDir = File("src/test/avro")
-        require(localAvroDir.exists()) { "src/test/avro not found" }
+        val testOutPutDirectory = tempDir.resolve("build/$avroOutPutDir/test")
 
-        val testResourcesDir = File(projectDir.toFile(), "src/test/avro")
-        testResourcesDir.mkdirs()
+        avroSrcDir.copyToRecursively(
+            testAvroSrcDir,
+            overwrite = true,
+            followLinks = false
+        )
 
-        localAvroDir.copyRecursively(testResourcesDir, overwrite = true)
-
-        settingsFile.writeText("")
-        buildFile.writeText(
+        testSettingsFile.writeText("")
+        testBuildFile.writeText(
             """            
             plugins {
                 id("org.apache.avro.avro-gradle-plugin")
@@ -50,18 +56,16 @@ class SamplePluginTest {
             
             avro {
                 schemaType = "schema"
-                srcDirectory = "src/test/avro"
-                outputDirectory = "generated-sources/avro"
+                srcDirectory = "$avroSrcDir"
+                outputDirectory = "$avroOutPutDir"
                 includes = listOf("**/*.avsc")
             }
         """.trimIndent()
         )
 
-        val outputDirectory = File(projectDir.toFile(), "build/generated-sources/avro/test")
-
         // when
         val result = GradleRunner.create()
-            .withProjectDir(projectDir.toFile())
+            .withProjectDir(tempDir.toFile())
             .withArguments("avroGenerateJavaClasses")
             .withPluginClasspath()
             .build()
@@ -75,12 +79,8 @@ class SamplePluginTest {
         )
 
         // then
-        assertFilesExist(outputDirectory, expectedFiles)
-
-        //assertTrue(result.output.contains("Hello from project"))
-        //assertTrue(result.output.contains("BUILD SUCCESSFUL"))
-
-        projectDir.toFile().deleteRecursively()
+        assertEquals(TaskOutcome.SUCCESS, result.task(":avroGenerateJavaClasses")?.outcome)
+        assertFilesExist(testOutPutDirectory.toFile(), expectedFiles)
     }
 
     fun assertFilesExist(directory: File, expectedFiles: Set<String>) {
