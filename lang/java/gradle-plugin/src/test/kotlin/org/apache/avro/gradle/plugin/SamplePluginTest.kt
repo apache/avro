@@ -3,17 +3,15 @@ package org.apache.avro.gradle.plugin
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.io.TempDir
-import java.io.File
 import java.nio.file.Path
-import java.util.Arrays
-import java.util.HashSet
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.copyToRecursively
 import kotlin.io.path.createDirectories
+import kotlin.io.path.exists
+import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.writeText
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @ExperimentalPathApi
@@ -80,16 +78,16 @@ class SamplePluginTest {
 
         // then
         assertEquals(TaskOutcome.SUCCESS, result.task(":avroGenerateJavaClasses")?.outcome)
-        assertFilesExist(testOutPutDirectory.toFile(), expectedFiles)
+        assertFilesExist(testOutPutDirectory, expectedFiles)
     }
 
-    fun assertFilesExist(directory: File, expectedFiles: Set<String>) {
-        assertNotNull(directory)
-        assertTrue(directory.exists(), "Directory " + directory.toString() + " does not exists")
-        assertNotNull(expectedFiles)
-        assertTrue(expectedFiles.size > 0)
+    fun assertFilesExist(directory: Path, expectedFiles: Set<String>) {
+        assertTrue(directory.exists(), "Directory $directory does not exist")
+        assertTrue(expectedFiles.isNotEmpty())
 
-        val filesInDirectory: Set<String> = HashSet(Arrays.asList(*directory.list()))
+        val filesInDirectory: Set<String> = directory
+            .listDirectoryEntries()
+            .map { it.fileName.toString() }.toSet()
 
         assertEquals(expectedFiles, filesInDirectory)
     }
