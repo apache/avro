@@ -9,6 +9,7 @@ import kotlin.io.path.copyToRecursively
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.readText
 import kotlin.io.path.writeText
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,7 +29,7 @@ class SamplePluginTest {
     //}
 
     @Test
-    fun `plugin executes avro generate task successfully`() {
+    fun `plugin executes avroGenerateJavaClasses task successfully`() {
         // given
         val testSettingsFile = tempDir.resolve("settings.gradle.kts")
         val testBuildFile = tempDir.resolve("build.gradle.kts")
@@ -79,6 +80,9 @@ class SamplePluginTest {
         // then
         assertEquals(TaskOutcome.SUCCESS, result.task(":avroGenerateJavaClasses")?.outcome)
         assertFilesExist(testOutPutDirectory, expectedFiles)
+
+        val schemaUserContent = testOutPutDirectory.resolve("SchemaUser.java").readText()
+        assertTrue(schemaUserContent.contains("java.time.Instant"))
     }
 
     fun assertFilesExist(directory: Path, expectedFiles: Set<String>) {
