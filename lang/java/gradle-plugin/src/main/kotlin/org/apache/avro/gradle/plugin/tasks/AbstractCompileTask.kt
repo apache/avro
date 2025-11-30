@@ -24,6 +24,12 @@ abstract class AbstractCompileTask : DefaultTask() {
     abstract val fieldVisibility: Property<String>
 
     @get:Input
+    abstract val excludes: ListProperty<String>
+
+    @get:Input
+    abstract val testExcludes: ListProperty<String>
+
+    @get:Input
     abstract val customConversions: ListProperty<String>
 
     @get:Input

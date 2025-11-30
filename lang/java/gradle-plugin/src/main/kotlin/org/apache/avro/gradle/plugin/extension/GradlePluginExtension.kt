@@ -52,6 +52,23 @@ abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory)
      */
     val fieldVisibility: Property<String> = objects.property(String::class.java).convention("PRIVATE")
 
+
+    /**
+     * A set of Ant-like exclusion patterns used to prevent certain files from being
+     * processed. By default, this set is empty such that no files are excluded.
+     *
+     * @parameter
+     */
+    val excludes: ListProperty<String> = objects.listProperty(String::class.java).convention(emptyList())
+
+    /**
+     * A set of Ant-like exclusion patterns used to prevent certain files from being
+     * processed. By default, this set is empty such that no files are excluded.
+     *
+     * @parameter
+     */
+    val testExcludes: ListProperty<String> = objects.listProperty(String::class.java).convention(emptyList())
+
     /**
      * A set of fully qualified class names of custom
      * {@link org.apache.avro.Conversion} implementations to add to the compiler.

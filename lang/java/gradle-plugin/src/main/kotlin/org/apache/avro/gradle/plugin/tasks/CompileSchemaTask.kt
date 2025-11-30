@@ -38,17 +38,15 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         val testSourceDirectoryFullPath = getSourceDirectoryFullPath(testSourceDirectory)
         val testOutputDirectoryFullPath = getBuildDirectoryFullPath(testOutputDirectory)
 
-        val excludes = emptyArray<String>()
-
         val avroFiles = project.getIncludedFiles(
             sourcePath = sourceDirectory.get(),
-            excludes = excludes,
+            excludes = excludes.get().toTypedArray(),
             includes = includes.toTypedArray()
         )
 
         val avroTestFiles = project.getIncludedFiles(
-            sourcePath = sourceDirectory.get(),
-            excludes = excludes,
+            sourcePath = testSourceDirectory.get(),
+            excludes = testExcludes.get().toTypedArray(),
             includes = includes.toTypedArray()
         )
 
