@@ -32,16 +32,11 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         project.logger.info("Compile schema")
         println("Compiling schemas...")
 
-        val sourceDirectoryFullPath =
-            project.layout.projectDirectory.dir(sourceDirectory.get()).asFile
+        val sourceDirectoryFullPath = getSourceDirectoryFullPath(sourceDirectory)
+        val outputDirectoryFullPath = getBuildDirectoryFullPath(outputDirectory)
 
-        val outputDirectoryFullPath = project.layout.buildDirectory
-            .dir(outputDirectory).get().asFile
-
-        //val sourceDirectoryFullPath = getSourceDirectoryFullPath(sourceDirectory)
-        //val outputDirectoryFullPath = getSourceDirectoryFullPath(outputDirectory)
-        //val testSourceDirectoryFullPath = getSourceDirectoryFullPath(testSourceDirectory)
-        //val testOutputDirectoryFullPath = getSourceDirectoryFullPath(testOutputDirectory)
+        val testSourceDirectoryFullPath = getSourceDirectoryFullPath(testSourceDirectory)
+        val testOutputDirectoryFullPath = getBuildDirectoryFullPath(testOutputDirectory)
 
         val excludes = emptyArray<String>()
 
@@ -51,19 +46,19 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
             includes = includes.toTypedArray()
         )
 
-        //val avroTestFiles = project.getIncludedFiles(
-        //    sourcePath = sourceDirectory.get(),
-        //    excludes = excludes,
-        //    includes = includes.toTypedArray()
-        //)
+        val avroTestFiles = project.getIncludedFiles(
+            sourcePath = sourceDirectory.get(),
+            excludes = excludes,
+            includes = includes.toTypedArray()
+        )
 
-        println("Included files: ${avroFiles.joinToString(",") }}")
-        println("sourceDir: ${sourceDirectoryFullPath.path}")
-        println("outputDir: ${outputDirectoryFullPath.path}")
+        //println("Included files: ${avroFiles.joinToString(",")}}")
+        //println("sourceDir: ${sourceDirectoryFullPath.path}")
+        //println("outputDir: ${outputDirectoryFullPath.path}")
 
         doCompile(avroFiles, sourceDirectoryFullPath, outputDirectoryFullPath)
 
-        //doCompile(avroTestFiles, testSourceDirectoryFullPath, testOutputDirectoryFullPath)
+        doCompile(avroTestFiles, testSourceDirectoryFullPath, testOutputDirectoryFullPath)
 
         //val files = File(outputDirectoryFullPath, "test").list().joinToString(",")
 
@@ -73,6 +68,9 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
 
     private fun getSourceDirectoryFullPath(directoryProperty: Property<String>): File =
         project.layout.projectDirectory.dir(directoryProperty.get()).asFile
+
+    private fun getBuildDirectoryFullPath(directoryProperty: Property<String>): File =
+        project.layout.buildDirectory.dir(directoryProperty).get().asFile
 
     fun Project.getIncludedFiles(
         sourcePath: String,
