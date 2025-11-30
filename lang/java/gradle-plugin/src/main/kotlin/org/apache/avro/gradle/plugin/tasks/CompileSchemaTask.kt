@@ -1,6 +1,5 @@
 package org.apache.avro.gradle.plugin.tasks
 
-import org.apache.avro.Schema
 import org.apache.avro.SchemaParseException
 import org.apache.avro.SchemaParser
 import org.apache.avro.compiler.specific.SpecificCompiler
@@ -13,7 +12,6 @@ import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.IOException
 import java.util.*
-import java.util.function.Function
 import java.util.stream.Collectors
 
 abstract class CompileSchemaTask : AbstractCompileTask() {
@@ -30,7 +28,7 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
 
     @TaskAction
     fun compileSchema() {
-        project.logger.info("Compile schema")
+        project.logger.info("Generating Java files from Avro schemas...")
         println("Compiling schemas...")
 
         val sourceDirectoryFullPath = getSourceDirectoryFullPath(sourceDirectory)
@@ -39,31 +37,28 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         val testSourceDirectoryFullPath = getSourceDirectoryFullPath(testSourceDirectory)
         val testOutputDirectoryFullPath = getBuildDirectoryFullPath(testOutputDirectory)
 
-        val avroFiles = project.getIncludedFiles(
-            sourcePath = sourceDirectory.get(),
-            excludes = excludes.get().toTypedArray(),
-            includes = includes.toTypedArray()
-        )
+        if (sourceDirectoryFullPath.exists()) {
+            val avroFiles = project.getIncludedFiles(
+                sourcePath = sourceDirectory.get(),
+                excludes = excludes.get().toTypedArray(),
+                includes = includes.toTypedArray()
+            )
+            doCompile(avroFiles, sourceDirectoryFullPath, outputDirectoryFullPath)
+        }
 
-        val avroTestFiles = project.getIncludedFiles(
-            sourcePath = testSourceDirectory.get(),
-            excludes = testExcludes.get().toTypedArray(),
-            includes = includes.toTypedArray()
-        )
+        if (testSourceDirectoryFullPath.exists()) {
+            val avroTestFiles = project.getIncludedFiles(
+                sourcePath = testSourceDirectory.get(),
+                excludes = testExcludes.get().toTypedArray(),
+                includes = includes.toTypedArray()
+            )
+            doCompile(avroTestFiles, testSourceDirectoryFullPath, testOutputDirectoryFullPath)
+        }
 
-        //println("Included files: ${avroFiles.joinToString(",")}}")
-        //println("sourceDir: ${sourceDirectoryFullPath.path}")
-        //println("outputDir: ${outputDirectoryFullPath.path}")
-
-        doCompile(avroFiles, sourceDirectoryFullPath, outputDirectoryFullPath)
-
-        doCompile(avroTestFiles, testSourceDirectoryFullPath, testOutputDirectoryFullPath)
-
-        //val files = File(outputDirectoryFullPath, "test").list().joinToString(",")
-
-        //println("here are all files: ${files}")
-
+        project.logger.info("Done generating Java files from Avro schemas...")
     }
+
+    private fun hasSourceDirectory() = sourceDirectory.get()
 
     private fun getSourceDirectoryFullPath(directoryProperty: Property<String>): File =
         project.layout.projectDirectory.dir(directoryProperty.get()).asFile
@@ -93,17 +88,20 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
     protected fun doCompile(fileNames: Array<String>, sourceDirectory: File, outputDirectory: File) {
         val sourceFiles: List<File> = Arrays.stream(fileNames)
             .map { filename: String -> File(sourceDirectory, filename) }.collect(Collectors.toList())
+
+        // TODO: source files are not overwritten when older?
         val sourceFileForModificationDetection =
-            sourceFiles.stream().filter { file: File? -> file!!.lastModified() > 0 }
-                .max(Comparator.comparing(Function { obj: File? -> obj!!.lastModified() })).orElse(null)
-        val schemas: MutableList<Schema?>?
+            sourceFiles
+                .stream()
+                .filter { file: File -> file.lastModified() > 0 }
+                .max(Comparator.comparing({ obj: File -> obj.lastModified() })).orElse(null)
 
         try {
             val parser = SchemaParser()
             for (sourceFile in sourceFiles) {
                 parser.parse(sourceFile)
             }
-            schemas = parser.parsedNamedSchemas
+            val schemas = parser.parsedNamedSchemas
 
             doCompile(sourceFileForModificationDetection, SpecificCompiler(schemas), outputDirectory)
         } catch (ex: IOException) {
