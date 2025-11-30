@@ -5,6 +5,7 @@ import org.apache.avro.SchemaParseException
 import org.apache.avro.SchemaParser
 import org.apache.avro.compiler.specific.SpecificCompiler
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
+import org.apache.avro.generic.GenericData
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -137,8 +138,8 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
 
 
     private fun setCompilerProperties(compiler: SpecificCompiler) {
-//        compiler.setTemplateDir(templateDirectory)
-//        compiler.setStringType(GenericData.StringType.valueOf(stringType))
+        compiler.setTemplateDir(templateDirectory.get())
+        compiler.setStringType(GenericData.StringType.valueOf(stringType.get()))
         compiler.setFieldVisibility(getFv())
 //        compiler.setCreateOptionalGetters(createOptionalGetters)
 //        compiler.setGettersReturnOptional(gettersReturnOptional)

@@ -70,6 +70,15 @@ abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory)
     val testExcludes: ListProperty<String> = objects.listProperty(String::class.java).convention(emptyList())
 
     /**
+     * The Java type to use for Avro strings. May be one of CharSequence, String or
+     * Utf8. String by default.
+     *
+     * @parameter property="stringType"
+     */
+    val stringType: Property<String> = objects.property(String::class.java).convention("String")
+
+
+    /**
      * A set of fully qualified class names of custom
      * {@link org.apache.avro.Conversion} implementations to add to the compiler.
      * The classes must be on the classpath at compile time and whenever the Java
@@ -78,6 +87,17 @@ abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory)
      * @parameter property="customConversions"
      */
     val customConversions: ListProperty<String> = objects.listProperty(String::class.java).convention(emptyList())
+
+
+    /**
+     * The directory (within the java classpath) that contains the velocity
+     * templates to use for code generation. The default value points to the
+     * templates included with the avro-maven-plugin.
+     *
+     * @parameter property="templateDirectory"
+     */
+    val templateDirectory: Property<String> =
+        objects.property(String::class.java).convention("/org/apache/avro/compiler/specific/templates/java/classic/")
 
 
     /**

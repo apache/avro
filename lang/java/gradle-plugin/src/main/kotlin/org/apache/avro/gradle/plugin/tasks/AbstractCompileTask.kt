@@ -30,6 +30,12 @@ abstract class AbstractCompileTask : DefaultTask() {
     abstract val testExcludes: ListProperty<String>
 
     @get:Input
+    abstract val stringType: Property<String>
+
+    @get:Input
+    abstract val templateDirectory: Property<String>
+
+    @get:Input
     abstract val customConversions: ListProperty<String>
 
     @get:Input

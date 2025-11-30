@@ -24,6 +24,8 @@ abstract class GradlePlugin : Plugin<Project> {
                     it.fieldVisibility.set(extension.fieldVisibility)
                     it.excludes.set(extension.excludes)
                     it.testExcludes.set(extension.testExcludes)
+                    it.stringType.set(extension.stringType)
+                    it.templateDirectory.set(extension.templateDirectory)
                     it.customConversions.set(extension.customConversions)
                     it.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
 
