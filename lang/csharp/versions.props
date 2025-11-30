@@ -58,7 +58,7 @@
 	Please sort the packages alphabetically
   -->
   <PropertyGroup Label="Build, Test, Code Analysis, Benchmark Package Versions">
-    <BenchmarkDotNetVersion>0.13.10</BenchmarkDotNetVersion>
+    <BenchmarkDotNetVersion>0.15.8</BenchmarkDotNetVersion>
     <CoverletCollectorVersion>6.0.0</CoverletCollectorVersion>
     <CoverletMSBuildVersion>6.0.0</CoverletMSBuildVersion>
     <MicrosoftBuildFrameworkVersion>17.8.43</MicrosoftBuildFrameworkVersion>
