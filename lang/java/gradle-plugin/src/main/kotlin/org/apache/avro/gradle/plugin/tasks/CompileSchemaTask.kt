@@ -4,16 +4,16 @@ import org.apache.avro.Schema
 import org.apache.avro.SchemaParseException
 import org.apache.avro.SchemaParser
 import org.apache.avro.compiler.specific.SpecificCompiler
+import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
 import org.gradle.api.Project
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.IOException
-import java.util.Arrays
-import java.util.Comparator
+import java.util.*
 import java.util.function.Function
 import java.util.stream.Collectors
-import org.gradle.api.provider.Property
 
 abstract class CompileSchemaTask : AbstractCompileTask() {
 
@@ -138,10 +138,10 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
     }
 
 
-    protected fun setCompilerProperties(compiler: SpecificCompiler) {
+    private fun setCompilerProperties(compiler: SpecificCompiler) {
 //        compiler.setTemplateDir(templateDirectory)
 //        compiler.setStringType(GenericData.StringType.valueOf(stringType))
-//        compiler.setFieldVisibility(getFieldVisibility())
+        compiler.setFieldVisibility(getFv())
 //        compiler.setCreateOptionalGetters(createOptionalGetters)
 //        compiler.setGettersReturnOptional(gettersReturnOptional)
 //        compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly)
@@ -154,5 +154,15 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
 //        compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools())
 //        compiler.setRecordSpecificClass(this.recordSpecificClass)
 //        compiler.setErrorSpecificClass(this.errorSpecificClass)
+    }
+
+    private fun getFv(): FieldVisibility {
+        try {
+            val upperCaseFieldVisibility = fieldVisibility.get().trim().uppercase(Locale.getDefault())
+            return FieldVisibility.valueOf(upperCaseFieldVisibility)
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Could not parse field visibility, using PRIVATE")
+            return FieldVisibility.PRIVATE
+        }
     }
 }

@@ -3,7 +3,6 @@ package org.apache.avro.gradle.plugin.extension
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import java.io.File
 import javax.inject.Inject
 
 abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory) {
@@ -34,13 +33,24 @@ abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory)
      * @parameter property="sourceDirectory"
      * default-value="${project.layout.buildDirectory}/src/test/avro"
      */
-    val testSourceDirectory:  Property<String> = objects.property(String::class.java).convention("src/test/avro")
+    val testSourceDirectory: Property<String> = objects.property(String::class.java).convention("src/test/avro")
 
     /**
      * @parameter property="outputDirectory"
      * default-value="${project.layout.buildDirectory}/generated-test-sources/avro"
      */
-    val testOutputDirectory:  Property<String> = objects.property(String::class.java).convention("generated-test-sources/avro")
+    val testOutputDirectory: Property<String> =
+        objects.property(String::class.java).convention("generated-test-sources/avro")
+
+
+    /**
+     * The field visibility indicator for the fields of the generated class, as
+     * string values of SpecificCompiler.FieldVisibility. The text is case
+     * insensitive.
+     *
+     * @parameter default-value="PRIVATE"
+     */
+    val fieldVisibility: Property<String> = objects.property(String::class.java).convention("PRIVATE")
 
     /**
      * A set of fully qualified class names of custom
@@ -62,6 +72,7 @@ abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory)
      * @parameter property="customLogicalTypeFactories"
      */
 
-    val customLogicalTypeFactories: ListProperty<String> = objects.listProperty(String::class.java).convention(emptyList())
+    val customLogicalTypeFactories: ListProperty<String> =
+        objects.listProperty(String::class.java).convention(emptyList())
 
 }

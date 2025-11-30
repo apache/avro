@@ -21,6 +21,9 @@ abstract class AbstractCompileTask : DefaultTask() {
     abstract val testOutputDirectory: Property<String>
 
     @get:Input
+    abstract val fieldVisibility: Property<String>
+
+    @get:Input
     abstract val customConversions: ListProperty<String>
 
     @get:Input

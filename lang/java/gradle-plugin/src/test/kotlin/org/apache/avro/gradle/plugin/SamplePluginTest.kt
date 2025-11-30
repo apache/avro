@@ -61,7 +61,7 @@ class SamplePluginTest {
             .withProjectDir(tempDir.toFile())
             .withArguments("avroGenerateJavaClasses")
             .withPluginClasspath()
-            .forwardOutput()
+            .forwardOutput() // to see printLn in code
             .build()
 
         val expectedFiles = setOf(
