@@ -4,15 +4,15 @@ import org.apache.avro.gradle.plugin.extension.GradlePluginExtension
 import org.apache.avro.gradle.plugin.tasks.CompileSchemaTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.internal.cc.base.logger
 
 abstract class GradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        println("Applying avro Gradle plugin")
+        logger.info("Start running avro Gradle plugin...")
 
         val extension = project.extensions.create("avro", GradlePluginExtension::class.java)
 
         project.tasks.register("avroGenerateJavaClasses", CompileSchemaTask::class.java) {
-
             val schemaType: SchemaType = SchemaType.valueOf(extension.schemaType.get())
 
             when (schemaType) {
@@ -36,7 +36,6 @@ abstract class GradlePlugin : Plugin<Project> {
                     it.customConversions.set(extension.customConversions)
                     it.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
 
-                    //it.includes.set(extension.includes)
                     it.doFirst { println("Starting compilation for project name: '${project.name}'") }
                     it.doLast { println("Finished compilation for project name: '${project.name}'") }
                 }

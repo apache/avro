@@ -73,7 +73,7 @@ class SamplePluginTest {
     }
 
 
-    fun assertFilesExist(directory: Path, expectedFiles: Set<String>) {
+    private fun assertFilesExist(directory: Path, expectedFiles: Set<String>) {
         assertTrue(directory.exists(), "Directory $directory does not exist")
         assertTrue(expectedFiles.isNotEmpty())
 
