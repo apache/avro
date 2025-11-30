@@ -5,8 +5,6 @@ import org.apache.avro.SchemaParseException
 import org.apache.avro.SchemaParser
 import org.apache.avro.compiler.specific.SpecificCompiler
 import org.gradle.api.Project
-import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import java.io.File
@@ -15,40 +13,68 @@ import java.util.Arrays
 import java.util.Comparator
 import java.util.function.Function
 import java.util.stream.Collectors
+import org.gradle.api.provider.Property
 
 abstract class CompileSchemaTask : AbstractCompileTask() {
 
+    /**
+     * A set of Ant-like inclusion patterns used to select files from the source
+     * directory for processing. By default, the pattern `**&#47;*.avdl`
+     * is used to select IDL files.
+     *
+     * @parameter
+     */
+    @get:Input
+    val includes: List<String> = listOf("**/*.avsc")
+
     @TaskAction
     fun compileSchema() {
+        project.logger.info("Compile schema")
         println("Compiling schemas...")
 
         val sourceDirectoryFullPath =
-            project.layout.projectDirectory.dir(srcDirectory.get()).asFile
+            project.layout.projectDirectory.dir(sourceDirectory.get()).asFile
 
         val outputDirectoryFullPath = project.layout.buildDirectory
             .dir(outputDirectory).get().asFile
 
+        //val sourceDirectoryFullPath = getSourceDirectoryFullPath(sourceDirectory)
+        //val outputDirectoryFullPath = getSourceDirectoryFullPath(outputDirectory)
+        //val testSourceDirectoryFullPath = getSourceDirectoryFullPath(testSourceDirectory)
+        //val testOutputDirectoryFullPath = getSourceDirectoryFullPath(testOutputDirectory)
+
         val excludes = emptyArray<String>()
 
-        val res = project.getIncludedFiles2(
-            sourcePath = srcDirectory.get(),
+        val avroFiles = project.getIncludedFiles(
+            sourcePath = sourceDirectory.get(),
             excludes = excludes,
-            includes = includes.get().toTypedArray()
+            includes = includes.toTypedArray()
         )
 
-        //println("Included files: ${res.joinToString(",") }}")
-        //println("sourceDir: ${sourceDirectoryFullPath.path}")
-        //println("outputDir: ${outputDirectoryFullPath.path}")
+        //val avroTestFiles = project.getIncludedFiles(
+        //    sourcePath = sourceDirectory.get(),
+        //    excludes = excludes,
+        //    includes = includes.toTypedArray()
+        //)
 
-        doCompile(res, sourceDirectoryFullPath, outputDirectoryFullPath)
+        println("Included files: ${avroFiles.joinToString(",") }}")
+        println("sourceDir: ${sourceDirectoryFullPath.path}")
+        println("outputDir: ${outputDirectoryFullPath.path}")
 
-        val files = File(outputDirectoryFullPath, "test").list().joinToString(",")
+        doCompile(avroFiles, sourceDirectoryFullPath, outputDirectoryFullPath)
 
-        println("here are all files: ${files}")
+        //doCompile(avroTestFiles, testSourceDirectoryFullPath, testOutputDirectoryFullPath)
+
+        //val files = File(outputDirectoryFullPath, "test").list().joinToString(",")
+
+        //println("here are all files: ${files}")
 
     }
 
-    fun Project.getIncludedFiles2(
+    private fun getSourceDirectoryFullPath(directoryProperty: Property<String>): File =
+        project.layout.projectDirectory.dir(directoryProperty.get()).asFile
+
+    fun Project.getIncludedFiles(
         sourcePath: String,
         excludes: Array<String>,
         includes: Array<String>
@@ -86,27 +112,33 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         } catch (ex: IOException) {
             throw RuntimeException("IO ex: Error compiling a file in " + sourceDirectory + " to " + outputDirectory, ex)
         } catch (ex: SchemaParseException) {
-            throw RuntimeException("SchemaParse ex Error compiling a file in " + sourceDirectory + " to " + outputDirectory, ex)
+            throw RuntimeException(
+                "SchemaParse ex Error compiling a file in " + sourceDirectory + " to " + outputDirectory,
+                ex
+            )
         }
     }
 
-    //    @Throws(IOException::class)
+
     private fun doCompile(
         sourceFileForModificationDetection: File,
         compiler: SpecificCompiler,
         outputDirectory: File
     ) {
         setCompilerProperties(compiler)
-        // TODO: don't forget to re-add
-//        try {
-//            for (customConversion in customConversions) {
-//                compiler.addCustomConversion(Thread.currentThread().getContextClassLoader().loadClass(customConversion))
-//            }
-//        } catch (e: ClassNotFoundException) {
-//            throw IOException(e)
-//        }
+        // TODO:
+        //  * customLogicalTypeFactories
+
+        try {
+            for (customConversion in customConversions.get()) {
+                compiler.addCustomConversion(Thread.currentThread().getContextClassLoader().loadClass(customConversion))
+            }
+        } catch (e: ClassNotFoundException) {
+            throw IOException(e)
+        }
         compiler.compileToDestination(sourceFileForModificationDetection, outputDirectory)
     }
+
 
     protected fun setCompilerProperties(compiler: SpecificCompiler) {
 //        compiler.setTemplateDir(templateDirectory)

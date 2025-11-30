@@ -7,6 +7,8 @@ import org.gradle.api.Project
 
 abstract class GradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
+        println("Applying avro Gradle plugin")
+
         val extension = project.extensions.create("avro", GradlePluginExtension::class.java)
 
         project.tasks.register("avroGenerateJavaClasses", CompileSchemaTask::class.java) {
@@ -15,9 +17,14 @@ abstract class GradlePlugin : Plugin<Project> {
 
             when (schemaType) {
                 SchemaType.schema -> {
-                    it.srcDirectory.set(extension.srcDirectory)
+                    it.sourceDirectory.set(extension.sourceDirectory)
                     it.outputDirectory.set(extension.outputDirectory)
-                    it.includes.set(extension.includes)
+                    it.testSourceDirectory.set(extension.testSourceDirectory)
+                    it.testOutputDirectory.set(extension.testOutputDirectory)
+                    it.customConversions.set(extension.customConversions)
+                    it.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
+
+                    //it.includes.set(extension.includes)
                     it.doFirst { println("Starting compilation for project name: '${project.name}'") }
                     it.doLast { println("Finished compilation for project name: '${project.name}'") }
                 }
