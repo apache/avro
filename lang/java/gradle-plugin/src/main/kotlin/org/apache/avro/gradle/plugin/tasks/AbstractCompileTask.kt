@@ -36,6 +36,21 @@ abstract class AbstractCompileTask : DefaultTask() {
     abstract val templateDirectory: Property<String>
 
     @get:Input
+    abstract val recordSpecificClass: Property<String>
+
+    @get:Input
+    abstract val errorSpecificClass: Property<String>
+
+    @get:Input
+    abstract val createOptionalGetters: Property<Boolean>
+
+    @get:Input
+    abstract val gettersReturnOptional: Property<Boolean>
+
+    @get:Input
+    abstract val optionalGettersForNullableFieldsOnly: Property<Boolean>
+
+    @get:Input
     abstract val customConversions: ListProperty<String>
 
     @get:Input

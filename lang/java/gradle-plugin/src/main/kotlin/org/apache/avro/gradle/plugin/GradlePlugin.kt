@@ -26,6 +26,11 @@ abstract class GradlePlugin : Plugin<Project> {
                     it.testExcludes.set(extension.testExcludes)
                     it.stringType.set(extension.stringType)
                     it.templateDirectory.set(extension.templateDirectory)
+                    it.recordSpecificClass.set(extension.recordSpecificClass)
+                    it.errorSpecificClass.set(extension.errorSpecificClass)
+                    it.createOptionalGetters.set(extension.createOptionalGetters)
+                    it.gettersReturnOptional.set(extension.gettersReturnOptional)
+                    it.optionalGettersForNullableFieldsOnly.set(extension.optionalGettersForNullableFieldsOnly)
                     it.customConversions.set(extension.customConversions)
                     it.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
 

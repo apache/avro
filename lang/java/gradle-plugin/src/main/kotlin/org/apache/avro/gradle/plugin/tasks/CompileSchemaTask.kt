@@ -141,9 +141,9 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         compiler.setTemplateDir(templateDirectory.get())
         compiler.setStringType(GenericData.StringType.valueOf(stringType.get()))
         compiler.setFieldVisibility(getFv())
-//        compiler.setCreateOptionalGetters(createOptionalGetters)
-//        compiler.setGettersReturnOptional(gettersReturnOptional)
-//        compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly)
+        compiler.setCreateOptionalGetters(createOptionalGetters.get())
+        compiler.setGettersReturnOptional(gettersReturnOptional.get())
+        compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly.get())
 //        compiler.setCreateSetters(createSetters)
 //        compiler.setCreateNullSafeAnnotations(createNullSafeAnnotations)
 //        compiler.setNullSafeAnnotationNullable(nullSafeAnnotationNullable)
@@ -151,8 +151,8 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
 //        compiler.setEnableDecimalLogicalType(enableDecimalLogicalType)
 //        compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"))
 //        compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools())
-//        compiler.setRecordSpecificClass(this.recordSpecificClass)
-//        compiler.setErrorSpecificClass(this.errorSpecificClass)
+        compiler.setRecordSpecificClass(recordSpecificClass.get())
+        compiler.setErrorSpecificClass(errorSpecificClass.get())
     }
 
     private fun getFv(): FieldVisibility {

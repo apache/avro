@@ -79,14 +79,14 @@ abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory)
 
 
     /**
-     * A set of fully qualified class names of custom
-     * {@link org.apache.avro.Conversion} implementations to add to the compiler.
-     * The classes must be on the classpath at compile time and whenever the Java
-     * objects are serialized.
+     * The qualified names of classes which the plugin will look up, instantiate
+     * (through an empty constructor that must exist) and set up to be injected into
+     * Velocity templates by Avro compiler.
      *
-     * @parameter property="customConversions"
+     * @parameter property="velocityToolsClassesNames"
      */
-    val customConversions: ListProperty<String> = objects.listProperty(String::class.java).convention(emptyList())
+    // TODO: not sure if we need this
+    //protected var velocityToolsClassesNames: Array<String?> = arrayOfNulls<String>(0)
 
 
     /**
@@ -101,6 +101,61 @@ abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory)
 
 
     /**
+     * Generated record schema classes will extend this class.
+     *
+     * @parameter property="recordSpecificClass"
+     */
+    val recordSpecificClass: Property<String> =
+        objects.property(String::class.java).convention("org.apache.avro.specific.SpecificRecordBase")
+
+
+    /**
+     * Generated error schema classes will extend this class.
+     *
+     * @parameter property="errorSpecificClass"
+     */
+    val errorSpecificClass: Property<String> =
+        objects.property(String::class.java).convention("org.apache.avro.specific.SpecificExceptionBase")
+
+
+    /**
+     * The createOptionalGetters parameter enables generating the getOptional...
+     * methods that return an Optional of the requested type. This works ONLY on
+     * Java 8+
+     *
+     * @parameter property="createOptionalGetters"
+     */
+    val createOptionalGetters: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
+
+    /**
+     * The gettersReturnOptional parameter enables generating get... methods that
+     * return an Optional of the requested type. This works ONLY on Java 8+
+     *
+     * @parameter property="gettersReturnOptional"
+     */
+    val gettersReturnOptional: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
+
+    /**
+     * The optionalGettersForNullableFieldsOnly parameter works in conjunction with
+     * gettersReturnOptional option. If it is set, Optional getters will be
+     * generated only for fields that are nullable. If the field is mandatory,
+     * regular getter will be generated. This works ONLY on Java 8+.
+     *
+     * @parameter property="optionalGettersForNullableFieldsOnly"
+     */
+    val optionalGettersForNullableFieldsOnly: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
+
+    /**
+     * A set of fully qualified class names of custom
+     * {@link org.apache.avro.Conversion} implementations to add to the compiler.
+     * The classes must be on the classpath at compile time and whenever the Java
+     * objects are serialized.
+     *
+     * @parameter property="customConversions"
+     */
+    val customConversions: ListProperty<String> = objects.listProperty(String::class.java).convention(emptyList())
+
+    /**
      * A set of fully qualified class names of custom
      * [org.apache.avro.LogicalTypes.LogicalTypeFactory] implementations to
      * add to the compiler. The classes must be on the classpath at compile time and
@@ -108,7 +163,6 @@ abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory)
      *
      * @parameter property="customLogicalTypeFactories"
      */
-
     val customLogicalTypeFactories: ListProperty<String> =
         objects.listProperty(String::class.java).convention(emptyList())
 
