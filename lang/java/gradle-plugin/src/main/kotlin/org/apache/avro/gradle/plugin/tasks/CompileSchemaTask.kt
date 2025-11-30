@@ -29,7 +29,6 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
     @TaskAction
     fun compileSchema() {
         project.logger.info("Generating Java files from Avro schemas...")
-        println("Compiling schemas...")
 
         val sourceDirectoryFullPath = getSourceDirectoryFullPath(sourceDirectory)
         val outputDirectoryFullPath = getBuildDirectoryFullPath(outputDirectory)
@@ -58,7 +57,6 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         project.logger.info("Done generating Java files from Avro schemas...")
     }
 
-    private fun hasSourceDirectory() = sourceDirectory.get()
 
     private fun getSourceDirectoryFullPath(directoryProperty: Property<String>): File =
         project.layout.projectDirectory.dir(directoryProperty.get()).asFile
