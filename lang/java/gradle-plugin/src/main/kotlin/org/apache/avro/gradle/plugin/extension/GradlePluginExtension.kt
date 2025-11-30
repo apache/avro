@@ -143,7 +143,30 @@ abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory)
      *
      * @parameter property="optionalGettersForNullableFieldsOnly"
      */
-    val optionalGettersForNullableFieldsOnly: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
+    val optionalGettersForNullableFieldsOnly: Property<Boolean> =
+        objects.property(Boolean::class.java).convention(false)
+
+
+    /**
+     * Determines whether or not to create setters for the fields of the record. The
+     * default is to create setters.
+     *
+     * @parameter default-value="true"
+     */
+    val createSetters: Property<Boolean> = objects.property(Boolean::class.java).convention(true)
+
+    /**
+     * If set to true, @Nullable and @NotNull annotations are
+     * added to fields of the record. The default is false. If enabled, JetBrains
+     * annotations are used by default but other annotations can be specified via
+     * the nullSafeAnnotationNullable and nullSafeAnnotationNotNull parameters.
+     *
+     * @parameter property="createNullSafeAnnotations"
+     *
+     * @see [
+     * JetBrains nullability annotations](https://www.jetbrains.com/help/idea/annotating-source-code.html.nullability-annotations)
+     */
+    val createNullSafeAnnotations: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
 
     /**
      * A set of fully qualified class names of custom

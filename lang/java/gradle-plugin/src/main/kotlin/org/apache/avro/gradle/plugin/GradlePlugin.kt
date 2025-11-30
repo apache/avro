@@ -30,6 +30,8 @@ abstract class GradlePlugin : Plugin<Project> {
                     it.errorSpecificClass.set(extension.errorSpecificClass)
                     it.createOptionalGetters.set(extension.createOptionalGetters)
                     it.gettersReturnOptional.set(extension.gettersReturnOptional)
+                    it.createSetters.set(extension.createSetters)
+                    it.createNullSafeAnnotations.set(extension.createNullSafeAnnotations)
                     it.optionalGettersForNullableFieldsOnly.set(extension.optionalGettersForNullableFieldsOnly)
                     it.customConversions.set(extension.customConversions)
                     it.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)

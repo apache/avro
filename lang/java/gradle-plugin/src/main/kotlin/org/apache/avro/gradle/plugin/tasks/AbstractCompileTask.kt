@@ -7,7 +7,6 @@ import org.gradle.api.tasks.Input
 
 abstract class AbstractCompileTask : DefaultTask() {
 
-
     @get:Input
     abstract val sourceDirectory: Property<String>
 
@@ -49,6 +48,12 @@ abstract class AbstractCompileTask : DefaultTask() {
 
     @get:Input
     abstract val optionalGettersForNullableFieldsOnly: Property<Boolean>
+
+    @get:Input
+    abstract val createSetters: Property<Boolean>
+
+    @get:Input
+    abstract val createNullSafeAnnotations: Property<Boolean>
 
     @get:Input
     abstract val customConversions: ListProperty<String>
