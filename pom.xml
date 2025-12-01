@@ -27,7 +27,7 @@
 
   <groupId>org.apache.avro</groupId>
   <artifactId>avro-toplevel</artifactId>
-  <version>1.12.1</version>
+  <version>1.12.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Avro Toplevel</name>
@@ -66,7 +66,7 @@
     <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
 
     <!-- Pin output timestamp to make the Java build reproducible -->
-    <project.build.outputTimestamp>1755771877</project.build.outputTimestamp>
+    <project.build.outputTimestamp>1764595416</project.build.outputTimestamp>
   </properties>
 
   <modules>
