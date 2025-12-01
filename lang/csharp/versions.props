@@ -50,7 +50,7 @@
   -->
   <PropertyGroup Label="Minimum Package Versions">
     <!-- Newtonsoft.Json prior to version 13.0.1 is vulnerable. See https://github.com/advisories/GHSA-5crp-9r3c-p9vr -->
-    <NewtonsoftJsonMinimumVersion>13.0.1</NewtonsoftJsonMinimumVersion>
+    <NewtonsoftJsonMinimumVersion>13.0.4</NewtonsoftJsonMinimumVersion>
   </PropertyGroup>
 
   <!--
