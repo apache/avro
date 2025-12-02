@@ -23,7 +23,6 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -112,14 +111,14 @@ public class TestSchemaBuilder {
     assertTrue(s.getObjectProp("intProp") instanceof Integer);
     assertTrue(s.getObjectProp("longProp") instanceof Long);
     assertEquals(Long.MAX_VALUE, s.getObjectProp("longProp"));
-    assertTrue(s.getObjectProp("floatProp") instanceof Float);
+    assertTrue(s.getObjectProp("floatProp") instanceof Double);
     // float converts to double
-    assertEquals(1.0f, s.getObjectProp("floatProp"));
+    assertEquals(1.0d, s.getObjectProp("floatProp"));
     assertTrue(s.getObjectProp("doubleProp") instanceof Double);
     assertEquals(Double.MAX_VALUE, s.getObjectProp("doubleProp"));
     // byte[] converts to string
-    assertTrue(s.getObjectProp("byteProp") instanceof byte[]);
-    assertArrayEquals(new byte[] { 0x41, 0x42, 0x43 }, (byte[]) s.getObjectProp("byteProp"));
+    assertTrue(s.getObjectProp("byteProp") instanceof String);
+    assertEquals("ABC", s.getObjectProp("byteProp"));
     assertTrue(s.getObjectProp("stringProp") instanceof String);
     assertEquals("abc", s.getObjectProp("stringProp"));
   }
@@ -142,14 +141,14 @@ public class TestSchemaBuilder {
     assertTrue(f.getObjectProp("intProp") instanceof Integer);
     assertTrue(f.getObjectProp("longProp") instanceof Long);
     assertEquals(Long.MAX_VALUE, f.getObjectProp("longProp"));
-    assertTrue(f.getObjectProp("floatProp") instanceof Float);
+    assertTrue(f.getObjectProp("floatProp") instanceof Double);
     // float converts to double
-    assertEquals(1.0f, f.getObjectProp("floatProp"));
+    assertEquals(1.0d, f.getObjectProp("floatProp"));
     assertTrue(f.getObjectProp("doubleProp") instanceof Double);
     assertEquals(Double.MAX_VALUE, f.getObjectProp("doubleProp"));
     // byte[] converts to string
-    assertTrue(f.getObjectProp("byteProp") instanceof byte[]);
-    assertArrayEquals(new byte[] { 0x41, 0x42, 0x43 }, (byte[]) f.getObjectProp("byteProp"));
+    assertTrue(f.getObjectProp("byteProp") instanceof String);
+    assertEquals("ABC", f.getObjectProp("byteProp"));
     assertTrue(f.getObjectProp("stringProp") instanceof String);
     assertEquals("abc", f.getObjectProp("stringProp"));
 
@@ -181,11 +180,11 @@ public class TestSchemaBuilder {
     assertEquals(true, iter.next());
     assertEquals(Integer.MAX_VALUE, iter.next());
     assertEquals(Long.MAX_VALUE, iter.next());
-
-    assertEquals(1.0f, iter.next());
+    // float converts to double
+    assertEquals(1.0d, iter.next());
     assertEquals(Double.MAX_VALUE, iter.next());
-
-    assertArrayEquals(new byte[] { 0x41, 0x42, 0x43 }, (byte[]) iter.next());
+    // byte[] converts to string
+    assertEquals("ABC", iter.next());
     assertEquals("abc", iter.next());
   }
 
@@ -216,11 +215,11 @@ public class TestSchemaBuilder {
     assertEquals(true, iter.next());
     assertEquals(Integer.MAX_VALUE, iter.next());
     assertEquals(Long.MAX_VALUE, iter.next());
-
-    assertEquals(1.0f, iter.next());
+    // float converts to double
+    assertEquals(1.0d, iter.next());
     assertEquals(Double.MAX_VALUE, iter.next());
-
-    assertArrayEquals(new byte[] { 0x41, 0x42, 0x43 }, (byte[]) iter.next());
+    // byte[] converts to string
+    assertEquals("ABC", iter.next());
     assertEquals("abc", iter.next());
   }
 
@@ -249,14 +248,14 @@ public class TestSchemaBuilder {
     assertEquals(Integer.MAX_VALUE, valueMap.get("intKey"));
     assertTrue(valueMap.get("longKey") instanceof Long);
     assertEquals(Long.MAX_VALUE, valueMap.get("longKey"));
-
-    assertTrue(valueMap.get("floatKey") instanceof Float);
-    assertEquals(1.0f, valueMap.get("floatKey"));
+    // float converts to double
+    assertTrue(valueMap.get("floatKey") instanceof Double);
+    assertEquals(1.0d, valueMap.get("floatKey"));
     assertTrue(valueMap.get("doubleKey") instanceof Double);
     assertEquals(Double.MAX_VALUE, valueMap.get("doubleKey"));
-
-    assertTrue(valueMap.get("byteKey") instanceof byte[]);
-    assertArrayEquals("ABC".getBytes(StandardCharsets.UTF_8), (byte[]) valueMap.get("byteKey"));
+    // byte[] converts to string
+    assertTrue(valueMap.get("byteKey") instanceof String);
+    assertEquals("ABC", valueMap.get("byteKey"));
     assertTrue(valueMap.get("stringKey") instanceof String);
     assertEquals("abc", valueMap.get("stringKey"));
   }
@@ -289,14 +288,14 @@ public class TestSchemaBuilder {
     assertEquals(Integer.MAX_VALUE, valueMap.get("intKey"));
     assertTrue(valueMap.get("longKey") instanceof Long);
     assertEquals(Long.MAX_VALUE, valueMap.get("longKey"));
-
-    assertTrue(valueMap.get("floatKey") instanceof Float);
-    assertEquals(1.0f, valueMap.get("floatKey"));
+    // float converts to double
+    assertTrue(valueMap.get("floatKey") instanceof Double);
+    assertEquals(1.0d, valueMap.get("floatKey"));
     assertTrue(valueMap.get("doubleKey") instanceof Double);
     assertEquals(Double.MAX_VALUE, valueMap.get("doubleKey"));
-
-    assertTrue(valueMap.get("byteKey") instanceof byte[]);
-    assertEquals("ABC", new String((byte[]) valueMap.get("byteKey")));
+    // byte[] converts to string
+    assertTrue(valueMap.get("byteKey") instanceof String);
+    assertEquals("ABC", valueMap.get("byteKey"));
     assertTrue(valueMap.get("stringKey") instanceof String);
     assertEquals("abc", valueMap.get("stringKey"));
   }
