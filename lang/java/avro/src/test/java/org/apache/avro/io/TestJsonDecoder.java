@@ -23,6 +23,8 @@ import org.apache.avro.generic.GenericRecord;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
+
 public class TestJsonDecoder {
 
   @Test
@@ -74,5 +76,27 @@ public class TestJsonDecoder {
     in.skipArray();
     Assert.assertEquals(200, in.readLong());
     in.skipArray();
+  }
+
+  @Test
+  public void testIeee754SpecialCases() throws IOException {
+    String def = "{\"type\":\"record\",\"name\":\"X\",\"fields\": [" + "{\"type\":\"float\",\"name\":\"nanFloat\"},"
+        + "{\"type\":\"float\",\"name\":\"infinityFloat\"},"
+        + "{\"type\":\"float\",\"name\":\"negativeInfinityFloat\"}," + "{\"type\":\"double\",\"name\":\"nanDouble\"},"
+        + "{\"type\":\"double\",\"name\":\"infinityDouble\"},"
+        + "{\"type\":\"double\",\"name\":\"negativeInfinityDouble\"}" + "]}";
+    Schema schema = new Schema.Parser().parse(def);
+    DatumReader<GenericRecord> reader = new GenericDatumReader<>(schema);
+
+    String record = "{\"nanFloat\":\"NaN\", \"infinityFloat\":\"Infinity\", \"negativeInfinityFloat\":\"-Infinity\", "
+        + "\"nanDouble\":\"NaN\", \"infinityDouble\":\"Infinity\", \"negativeInfinityDouble\":\"-Infinity\"}";
+    Decoder decoder = DecoderFactory.get().jsonDecoder(schema, record);
+    GenericRecord r = reader.read(null, decoder);
+    Assert.assertEquals(Float.NaN, r.get("nanFloat"));
+    Assert.assertEquals(Float.POSITIVE_INFINITY, r.get("infinityFloat"));
+    Assert.assertEquals(Float.NEGATIVE_INFINITY, r.get("negativeInfinityFloat"));
+    Assert.assertEquals(Double.NaN, r.get("nanDouble"));
+    Assert.assertEquals(Double.POSITIVE_INFINITY, r.get("infinityDouble"));
+    Assert.assertEquals(Double.NEGATIVE_INFINITY, r.get("negativeInfinityDouble"));
   }
 }
