@@ -206,7 +206,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   @Override
   public void writeFloat(float f) throws IOException {
     parser.advance(Symbol.FLOAT);
-    out.writeNumber(f + 0d);
+    out.writeNumber(f);
   }
 
   @Override
