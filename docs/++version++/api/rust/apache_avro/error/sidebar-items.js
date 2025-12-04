@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CompatibilityError","Details"],"struct":["Error"]};
