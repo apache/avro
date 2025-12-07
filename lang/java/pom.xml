@@ -382,21 +382,6 @@
   </reporting>
 
   <profiles>
-
-    <profile>
-      <id>skipQuality</id>
-      <properties>
-        <skipTests>true</skipTests>
-        <rat.skip>true</rat.skip>
-        <checkstyle.skip>true</checkstyle.skip>
-        <spotless.skip>true</spotless.skip>
-        <invoker.skip>true</invoker.skip>
-        <cyclonedx.skip>true</cyclonedx.skip>
-        <gpg.skip>true</gpg.skip>
-        <maven.build.cache.skipCache>true</maven.build.cache.skipCache>
-      </properties>
-    </profile>
-
     <profile>
       <id>m2e</id>
       <activation>
