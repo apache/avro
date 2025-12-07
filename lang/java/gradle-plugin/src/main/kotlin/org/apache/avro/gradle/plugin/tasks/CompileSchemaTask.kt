@@ -6,52 +6,45 @@ import org.apache.avro.compiler.specific.SpecificCompiler
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
 import org.apache.avro.generic.GenericData
 import org.gradle.api.Project
+import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.IOException
 import java.util.*
-import java.util.stream.Collectors
 
 abstract class CompileSchemaTask : AbstractCompileTask() {
 
     /**
-     * A set of Ant-like inclusion patterns used to select files from the source
-     * directory for processing. By default, the pattern `**&#47;*.avdl`
-     * is used to select IDL files.
+     * A set of Glob patterns used to select files from the source
+     * directory for processing. By default, the pattern "**&#47;*.avsc"
+     * is used to select avsc files.
      *
      * @parameter
      */
-    @get:Input
-    val includes: List<String> = listOf("**/*.avsc")
+    //@get:Input
+    //val includes: Set<String> = setOf("**/*.avsc")
 
     @TaskAction
     fun compileSchema() {
         project.logger.info("Generating Java files from Avro schemas...")
 
-        val sourceDirectoryFullPath = getSourceDirectoryFullPath(sourceDirectory)
-        val outputDirectoryFullPath = getBuildDirectoryFullPath(outputDirectory)
-
-        val testSourceDirectoryFullPath = getSourceDirectoryFullPath(testSourceDirectory)
-        val testOutputDirectoryFullPath = getBuildDirectoryFullPath(testOutputDirectory)
-
-        if (sourceDirectoryFullPath.exists()) {
-            val avroFiles = project.getIncludedFiles(
-                sourcePath = sourceDirectory.get(),
-                excludes = excludes.get().toTypedArray(),
-                includes = includes.toTypedArray()
-            )
-            doCompile(avroFiles, sourceDirectoryFullPath, outputDirectoryFullPath)
+        if (!source.isEmpty) {
+            val sourceDirectoryFullPath = getSourceDirectoryFullPath(sourceDirectory)
+            val outputDirectoryFullPath = getBuildDirectoryFullPath(outputDirectory)
+            compileSchemas(source, sourceDirectoryFullPath, outputDirectoryFullPath)
         }
 
+        val testSourceDirectoryFullPath = getSourceDirectoryFullPath(testSourceDirectory)
+
         if (testSourceDirectoryFullPath.exists()) {
+            val testOutputDirectoryFullPath = getBuildDirectoryFullPath(testOutputDirectory)
             val avroTestFiles = project.getIncludedFiles(
                 sourcePath = testSourceDirectory.get(),
                 excludes = testExcludes.get().toTypedArray(),
                 includes = includes.toTypedArray()
             )
-            doCompile(avroTestFiles, testSourceDirectoryFullPath, testOutputDirectoryFullPath)
+            compileSchemas(avroTestFiles, testSourceDirectoryFullPath, testOutputDirectoryFullPath)
         }
 
         project.logger.info("Done generating Java files from Avro schemas...")
@@ -64,45 +57,38 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
     private fun getBuildDirectoryFullPath(directoryProperty: Property<String>): File =
         project.layout.buildDirectory.dir(directoryProperty).get().asFile
 
+
     fun Project.getIncludedFiles(
         sourcePath: String,
         excludes: Array<String>,
         includes: Array<String>
-    ): Array<String> {
+    ): FileTree {
         println("Including files from path: $sourcePath")
-
         val fullPath = project.layout.projectDirectory.dir(sourcePath)
-
         val files = fileTree(fullPath) {
             it.include(*includes)
             it.exclude(*excludes)
         }
-
-        return files.files
-            .map { it.relativeTo(fullPath.asFile).path }
-            .toTypedArray()
+        return files
     }
 
-    protected fun doCompile(fileNames: Array<String>, sourceDirectory: File, outputDirectory: File) {
-        val sourceFiles: List<File> = Arrays.stream(fileNames)
-            .map { filename: String -> File(sourceDirectory, filename) }.collect(Collectors.toList())
-
-        // TODO: source files are not overwritten when older?
-        val sourceFileForModificationDetection =
-            sourceFiles
-                .stream()
+    private fun compileSchemas(fileTree: FileTree, sourceDirectory: File, outputDirectory: File) {
+        val sourceFileForModificationDetection: File? =
+            fileTree
+                .files
                 .filter { file: File -> file.lastModified() > 0 }
-                .max(Comparator.comparing({ obj: File -> obj.lastModified() })).orElse(null)
+                .maxBy { it.lastModified() }
 
         try {
             val parser = SchemaParser()
-            for (sourceFile in sourceFiles) {
+            for (sourceFile in fileTree.files) {
                 parser.parse(sourceFile)
             }
             val schemas = parser.parsedNamedSchemas
 
             doCompile(sourceFileForModificationDetection, SpecificCompiler(schemas), outputDirectory)
         } catch (ex: IOException) {
+            // TODO: more concrete exceptions
             throw RuntimeException("IO ex: Error compiling a file in " + sourceDirectory + " to " + outputDirectory, ex)
         } catch (ex: SchemaParseException) {
             throw RuntimeException(
@@ -112,9 +98,8 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         }
     }
 
-
     private fun doCompile(
-        sourceFileForModificationDetection: File,
+        sourceFileForModificationDetection: File?,
         compiler: SpecificCompiler,
         outputDirectory: File
     ) {
@@ -144,7 +129,7 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         compiler.setCreateNullSafeAnnotations(createNullSafeAnnotations.get())
 //        compiler.setNullSafeAnnotationNullable(nullSafeAnnotationNullable)
 //        compiler.setNullSafeAnnotationNotNull(nullSafeAnnotationNotNull)
-//        compiler.setEnableDecimalLogicalType(enableDecimalLogicalType)
+        compiler.setEnableDecimalLogicalType(enableDecimalLogicalType.get())
 //        compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"))
 //        compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools())
         compiler.setRecordSpecificClass(recordSpecificClass.get())

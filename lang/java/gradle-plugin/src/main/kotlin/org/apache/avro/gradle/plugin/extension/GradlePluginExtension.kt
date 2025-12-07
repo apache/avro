@@ -189,4 +189,12 @@ abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory)
     val customLogicalTypeFactories: ListProperty<String> =
         objects.listProperty(String::class.java).convention(emptyList())
 
+
+    /**
+     * Determines whether or not to use Java classes for decimal types
+     *
+     * @parameter default-value="false"
+     */
+    val enableDecimalLogicalType: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
+
 }

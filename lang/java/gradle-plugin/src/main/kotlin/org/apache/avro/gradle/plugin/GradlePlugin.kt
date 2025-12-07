@@ -4,25 +4,30 @@ import org.apache.avro.gradle.plugin.extension.GradlePluginExtension
 import org.apache.avro.gradle.plugin.tasks.CompileSchemaTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.internal.cc.base.logger
 
 abstract class GradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        logger.info("Start running avro Gradle plugin...")
+        logger.info("Running Avro Gradle plugin for project: ${project.name}")
 
-        val extension = project.extensions.create("avro", GradlePluginExtension::class.java)
+        val extension: GradlePluginExtension = project.extensions.create("avro", GradlePluginExtension::class.java)
+
+        project.pluginManager.apply("java")
 
         project.tasks.register("avroGenerateJavaClasses", CompileSchemaTask::class.java) {
             val schemaType: SchemaType = SchemaType.valueOf(extension.schemaType.get())
 
             when (schemaType) {
                 SchemaType.schema -> {
+                    it.source(extension.sourceDirectory)
                     it.sourceDirectory.set(extension.sourceDirectory)
                     it.outputDirectory.set(extension.outputDirectory)
                     it.testSourceDirectory.set(extension.testSourceDirectory)
                     it.testOutputDirectory.set(extension.testOutputDirectory)
                     it.fieldVisibility.set(extension.fieldVisibility)
-                    it.excludes.set(extension.excludes)
+                    it.setExcludes(extension.excludes.get().toSet())
+                    it.setIncludes(setOf("**/*.avsc"))
                     it.testExcludes.set(extension.testExcludes)
                     it.stringType.set(extension.stringType)
                     it.templateDirectory.set(extension.templateDirectory)
@@ -35,15 +40,24 @@ abstract class GradlePlugin : Plugin<Project> {
                     it.optionalGettersForNullableFieldsOnly.set(extension.optionalGettersForNullableFieldsOnly)
                     it.customConversions.set(extension.customConversions)
                     it.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
+                    it.enableDecimalLogicalType.set(extension.enableDecimalLogicalType)
 
-                    it.doFirst { println("Starting compilation for project name: '${project.name}'") }
-                    it.doLast { println("Finished compilation for project name: '${project.name}'") }
+                    addGeneratedSourcesToProject(project)
                 }
 
                 SchemaType.idl -> TODO()
             }
 
         }
+    }
+
+    private fun addGeneratedSourcesToProject(project: Project) {
+        val sourceSets = project.extensions.getByType(JavaPluginExtension::class.java).sourceSets
+        val generatedSourcesDir = project.layout.buildDirectory.dir("generated-sources-avro")
+        project.logger.debug("Generated sources directory: ${generatedSourcesDir.get()}")
+
+        // Add directory that contains the generated Java files to source set
+        sourceSets.getByName("main").java.srcDir(generatedSourcesDir)
     }
 }
 

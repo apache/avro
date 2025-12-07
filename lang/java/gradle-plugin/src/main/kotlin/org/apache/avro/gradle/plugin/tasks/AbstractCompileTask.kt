@@ -4,8 +4,9 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.SourceTask
 
-abstract class AbstractCompileTask : DefaultTask() {
+abstract class AbstractCompileTask : SourceTask() {
 
     @get:Input
     abstract val sourceDirectory: Property<String>
@@ -22,8 +23,8 @@ abstract class AbstractCompileTask : DefaultTask() {
     @get:Input
     abstract val fieldVisibility: Property<String>
 
-    @get:Input
-    abstract val excludes: ListProperty<String>
+    //@get:Input
+    //abstract val excludes: ListProperty<String>
 
     @get:Input
     abstract val testExcludes: ListProperty<String>
@@ -60,5 +61,10 @@ abstract class AbstractCompileTask : DefaultTask() {
 
     @get:Input
     abstract val customLogicalTypeFactories: ListProperty<String>
+
+    @get:Input
+    abstract val enableDecimalLogicalType: Property<Boolean>
+
+
 
 }
