@@ -121,7 +121,7 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
     private fun setCompilerProperties(compiler: SpecificCompiler) {
         compiler.setTemplateDir(templateDirectory.get())
         compiler.setStringType(GenericData.StringType.valueOf(stringType.get()))
-        compiler.setFieldVisibility(getFv())
+        compiler.setFieldVisibility(getFieldV())
         compiler.setCreateOptionalGetters(createOptionalGetters.get())
         compiler.setGettersReturnOptional(gettersReturnOptional.get())
         compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly.get())
@@ -136,7 +136,7 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         compiler.setErrorSpecificClass(errorSpecificClass.get())
     }
 
-    private fun getFv(): FieldVisibility {
+    private fun getFieldV(): FieldVisibility {
         try {
             val upperCaseFieldVisibility = fieldVisibility.get().trim().uppercase(Locale.getDefault())
             return FieldVisibility.valueOf(upperCaseFieldVisibility)

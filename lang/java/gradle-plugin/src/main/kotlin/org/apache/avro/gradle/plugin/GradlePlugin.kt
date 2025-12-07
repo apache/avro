@@ -58,6 +58,7 @@ abstract class GradlePlugin : Plugin<Project> {
 
         // Add directory that contains the generated Java files to source set
         sourceSets.getByName("main").java.srcDir(generatedSourcesDir)
+        project.dependencies.add("implementation", "org.apache.avro:avro:1.13.0-SNAPSHOT")
     }
 }
 
