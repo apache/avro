@@ -2,12 +2,25 @@
 
 This plugin generated Java code from Avro schemas
 
-### Installation instructions
+## Installation
+### Checkout
 
-* Checkout https://github.com/frevib/avro/tree/feat/gradle-plugin
-* install to local Maven repo with `./gradlew publishToMavenLocal` from inside `avro/lang/java/gradle-plugin`
+`git clone https://github.com/frevib/avro/tree/feat/gradle-plugin`
+
+### Install to local Maven repo
+
+* inside `avro/lang/java/gradle-plugin`
+
+* run `./gradlew publishToMavenLocal` 
 
 Gradle plugin is now available under:
+
+`org.apache.avro.avro-gradle-plugin:1.13.0-SNAPSHOT`
+
+## Usage
+
+### Add avro extension
+In `build.gradle.kts`:
 
 ```kotlin
 plugins {
@@ -15,15 +28,11 @@ plugins {
 }
 ```
 
-## Usage:
-
-### Add avro extension
-In `build.gradle.kts`:
+and
 
 ```kotlin
 avro {
     sourceDirectory = "src/main/avro"
-    outputDirectory = "generated-sources/avro"
 } 
 ```
 
@@ -41,7 +50,7 @@ tasks.named("compileKotlin") { dependsOn(tasks.named("avroGenerateJavaClasses"))
 `./gradlew avroGenerateJavaClasses`
 
 
-## Example project that uses gradle plugin
+## Example project that uses avro-gradle-plugin
 https://codeberg.org/frevib/use-gradle-plugin-test
 
 

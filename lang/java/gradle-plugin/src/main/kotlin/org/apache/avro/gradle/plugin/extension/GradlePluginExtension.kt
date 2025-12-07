@@ -26,7 +26,7 @@ abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory)
      * @parameter property="outputDirectory"
      *            default-value="${buildDirectory}/generated-sources/avro"
      */
-    val outputDirectory: Property<String> = objects.property(String::class.java).convention("generated-sources/avro")
+    val outputDirectory: Property<String> = objects.property(String::class.java).convention("generated-sources-avro")
 
 
     /**
@@ -40,7 +40,7 @@ abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory)
      * default-value="${project.layout.buildDirectory}/generated-test-sources/avro"
      */
     val testOutputDirectory: Property<String> =
-        objects.property(String::class.java).convention("generated-test-sources/avro")
+        objects.property(String::class.java).convention("generated-test-sources-avro")
 
 
     /**

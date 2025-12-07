@@ -42,7 +42,7 @@ abstract class GradlePlugin : Plugin<Project> {
                     it.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
                     it.enableDecimalLogicalType.set(extension.enableDecimalLogicalType)
 
-                    addGeneratedSourcesToProject(project)
+                    addGeneratedSourcesToProject(project, it.outputDirectory.get())
                 }
 
                 SchemaType.idl -> TODO()
@@ -51,9 +51,9 @@ abstract class GradlePlugin : Plugin<Project> {
         }
     }
 
-    private fun addGeneratedSourcesToProject(project: Project) {
+    private fun addGeneratedSourcesToProject(project: Project, outputDirectory: String) {
         val sourceSets = project.extensions.getByType(JavaPluginExtension::class.java).sourceSets
-        val generatedSourcesDir = project.layout.buildDirectory.dir("generated-sources-avro")
+        val generatedSourcesDir = project.layout.buildDirectory.dir(outputDirectory)
         project.logger.debug("Generated sources directory: ${generatedSourcesDir.get()}")
 
         // Add directory that contains the generated Java files to source set
