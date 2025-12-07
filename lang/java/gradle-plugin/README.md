@@ -1,6 +1,6 @@
 # Avro Gradle plugin (in development)
 
-This plugin generated Java code from Avro schemas
+Gradle plugin that generates Java code from Avro schemas
 
 ## Installation
 ### Checkout
