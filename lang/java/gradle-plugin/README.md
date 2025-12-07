@@ -1,4 +1,4 @@
-# Avro Gradle plugin
+# Avro Gradle plugin (in development)
 
 This plugin generated Java code from Avro schemas
 
@@ -17,7 +17,9 @@ plugins {
 
 ## Usage:
 
-### Add avro extension in `build.gradle.kts`
+### Add avro extension
+In `build.gradle.kts`:
+
 ```kotlin
 avro {
     sourceDirectory = "src/main/avro"
@@ -27,13 +29,19 @@ avro {
 
 All properties are available in `GradlePluginExtension.kt`
 
+### Add a task hook
+For Intellij to recognize the newly generated Java files add this to `build.gradle.kts`:
+
+```kotlin
+tasks.named("compileKotlin") { dependsOn(tasks.named("avroGenerateJavaClasses")) }
+```
 
 ### Generate Java classes
 
 `./gradlew avroGenerateJavaClasses`
 
 
-### Example project that uses gradle plugin
+## Example project that uses gradle plugin
 https://codeberg.org/frevib/use-gradle-plugin-test
 
 
