@@ -38,10 +38,23 @@ Configure Avro Gradle plugin
 ```kotlin
 avro {
     sourceDirectory = "src/main/avro"
+    // All properties are available in `GradlePluginExtension.kt`
 } 
 ```
 
-All properties are available in `GradlePluginExtension.kt`
+In `settings.gradle.kts`:
+
+Needed for local Maven dependencies to work
+```kotlin
+pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+    }
+}
+```
+
+
 
 ### Add a task hook
 For Intellij to recognize the newly generated Java files add this to `build.gradle.kts`:
