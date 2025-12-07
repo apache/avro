@@ -22,14 +22,19 @@ Gradle plugin is now available under:
 ### Add avro extension
 In `build.gradle.kts`:
 
+Add plugin
+
 ```kotlin
 plugins {
     id("org.apache.avro.avro-gradle-plugin") version "1.13.0-SNAPSHOT"
 }
 ```
+Add Avro dependency
 
-and
-
+```kotlin
+implementation("org.apache.avro:avro:1.13.0-SNAPSHOT")
+```
+Configure Avro Gradle plugin
 ```kotlin
 avro {
     sourceDirectory = "src/main/avro"
