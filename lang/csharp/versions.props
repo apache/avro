@@ -68,7 +68,7 @@
     <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.7.0</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
     <MicrosoftCodeAnalysisNetAnalyzersVersion>10.0.100</MicrosoftCodeAnalysisNetAnalyzersVersion>
     <MicrosoftNETTestSdkVersion>17.13.0</MicrosoftNETTestSdkVersion>
-    <NUnitVersion>3.14.0</NUnitVersion>
+    <NUnitVersion>4.4.0</NUnitVersion>
     <NUnitConsoleRunnerVersion>3.20.2</NUnitConsoleRunnerVersion>
     <NUnit3TestAdapterVersion>5.2.0</NUnit3TestAdapterVersion>
     <StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
