@@ -39,6 +39,7 @@ import org.apache.avro.util.ClassUtils;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
@@ -69,6 +70,24 @@ import java.util.concurrent.ConcurrentMap;
 public class ReflectData extends SpecificData {
 
   private static final String STRING_OUTER_PARENT_REFERENCE = "this$0";
+
+  private static final Method IS_SEALED_METHOD;
+  private static final Method GET_PERMITTED_SUBCLASSES_METHOD;
+
+  static {
+    Class<? extends Class> classClass = Class.class;
+    Method isSealed;
+    Method getPermittedSubclasses;
+    try {
+      isSealed = classClass.getMethod("isSealed");
+      getPermittedSubclasses = classClass.getMethod("getPermittedSubclasses");
+    } catch (NoSuchMethodException | SecurityException e) {
+      isSealed = null;
+      getPermittedSubclasses = null;
+    }
+    IS_SEALED_METHOD = isSealed;
+    GET_PERMITTED_SUBCLASSES_METHOD = getPermittedSubclasses;
+  }
 
   // holds a wrapper so null entries will have a cached value
   private final ConcurrentMap<Schema, CustomEncodingWrapper> encoderCache = new ConcurrentHashMap<>();
@@ -714,7 +733,7 @@ public class ReflectData extends SpecificData {
         String space = c.getPackage() == null ? "" : c.getPackage().getName();
         if (c.getEnclosingClass() != null) // nested class
           space = c.getEnclosingClass().getName().replace('$', '.');
-        Union union = c.getAnnotation(Union.class);
+        Class[] union = getUnion(c);
         if (union != null) { // union annotated
           return getAnnotatedUnion(union, names);
         } else if (isStringable(c)) { // Stringable
@@ -820,10 +839,46 @@ public class ReflectData extends SpecificData {
       schema.addProp(ELEMENT_PROP, c.getName());
   }
 
+  private Class[] getUnion(AnnotatedElement element) {
+    Union union = element.getAnnotation(Union.class);
+    if (union != null) {
+      return union.value();
+    }
+
+    if (element instanceof Class) {
+      // automatic sealed class polymorphic
+      try {
+        if (IS_SEALED_METHOD != null && Boolean.TRUE.equals(IS_SEALED_METHOD.invoke(element))) {
+          var subclasses = (Class<?>[]) GET_PERMITTED_SUBCLASSES_METHOD.invoke(element);
+
+          List<Class> subclassList = new ArrayList<>();
+
+          for (Class<?> subclass : subclasses) {
+            if (Modifier.isAbstract(subclass.getModifiers()) || Modifier.isInterface(subclass.getModifiers())) {
+
+              var subUnion = getUnion(subclass); // recursively process subclasses
+              if (subUnion != null) {
+                subclassList.addAll(List.of(subUnion));
+              }
+              continue;
+            }
+            subclassList.add(subclass);
+          }
+          if (!subclassList.isEmpty()) {
+            return subclassList.toArray(new Class[0]);
+          }
+        }
+      } catch (ReflectiveOperationException e) {
+        throw new AvroRuntimeException(e);
+      }
+    }
+    return null;
+  }
+
   // construct a schema from a union annotation
-  private Schema getAnnotatedUnion(Union union, Map<String, Schema> names) {
+  private Schema getAnnotatedUnion(Class[] union, Map<String, Schema> names) {
     List<Schema> branches = new ArrayList<>();
-    for (Class branch : union.value())
+    for (Class branch : union)
       branches.add(createSchema(branch, names));
     return Schema.createUnion(branches);
   }
@@ -890,7 +945,7 @@ public class ReflectData extends SpecificData {
 
     Union union = field.getAnnotation(Union.class);
     if (union != null)
-      return getAnnotatedUnion(union, names);
+      return getAnnotatedUnion(union.value(), names);
 
     Schema schema = createSchema(field.getGenericType(), names);
     if (field.isAnnotationPresent(Stringable.class)) { // Stringable
@@ -937,7 +992,7 @@ public class ReflectData extends SpecificData {
         if (annotation instanceof AvroSchema) // explicit schema
           paramSchema = new Schema.Parser().parse(((AvroSchema) annotation).value());
         else if (annotation instanceof Union) // union
-          paramSchema = getAnnotatedUnion(((Union) annotation), names);
+          paramSchema = getAnnotatedUnion(((Union) annotation).value(), names);
         else if (annotation instanceof Nullable) // nullable
           paramSchema = makeNullable(paramSchema);
       }
@@ -949,7 +1004,7 @@ public class ReflectData extends SpecificData {
     Type genericReturnType = method.getGenericReturnType();
     Type returnType = genericTypeMap.getOrDefault(genericReturnType, genericReturnType);
     Union union = method.getAnnotation(Union.class);
-    Schema response = union == null ? getSchema(returnType, names) : getAnnotatedUnion(union, names);
+    Schema response = union == null ? getSchema(returnType, names) : getAnnotatedUnion(union.value(), names);
     if (method.isAnnotationPresent(Nullable.class)) // nullable
       response = makeNullable(response);
 
