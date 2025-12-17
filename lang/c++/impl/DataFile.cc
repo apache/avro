@@ -489,7 +489,7 @@ void DataFileReaderBase::readDataBlock() {
         }
 
         // Get the decompressed size
-        size_t decompressed_size = ZSTD_getFrameContentSize(
+        unsigned long long decompressed_size = ZSTD_getFrameContentSize(
             reinterpret_cast<const char *>(compressed_.data()), compressed_.size());
         if (decompressed_size == ZSTD_CONTENTSIZE_ERROR) {
             throw Exception("ZSTD: Not a valid compressed frame");
