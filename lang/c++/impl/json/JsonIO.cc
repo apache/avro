@@ -293,13 +293,11 @@ JsonParser::Token JsonParser::tryString() {
                     break;
                 case 'u':
                 case 'U': {
-                    uint32_t n = 0;
                     char e[4];
                     in_.readBytes(reinterpret_cast<uint8_t *>(e), 4);
                     sv.push_back('\\');
                     sv.push_back(ch);
                     for (char c : e) {
-                        n *= 16;
                         if (isdigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
                             sv.push_back(c);
                         } else {
