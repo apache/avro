@@ -31,7 +31,7 @@
 
 namespace avro {
 
-class AVRO_DECL InputStream;
+class InputStream;
 
 namespace json {
 class Entity;
@@ -59,7 +59,7 @@ enum class EntityType {
     Obj
 };
 
-const char *typeToString(EntityType t);
+AVRO_DECL const char *typeToString(EntityType t);
 
 inline std::ostream &operator<<(std::ostream &os, EntityType et) {
     return os << typeToString(et);
