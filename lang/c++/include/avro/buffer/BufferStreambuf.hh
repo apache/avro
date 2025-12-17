@@ -41,7 +41,7 @@ namespace avro {
  * but we have no need since all writes are immediately stored in the buffer.
  **/
 
-class AVRO_DECL ostreambuf : public std::streambuf {
+class ostreambuf : public std::streambuf {
 
 public:
     /// Default constructor creates a new OutputBuffer.
@@ -86,7 +86,7 @@ private:
  *
  **/
 
-class AVRO_DECL istreambuf : public std::streambuf {
+class istreambuf : public std::streambuf {
 
 public:
     /// Default constructor requires an InputBuffer to read from.
