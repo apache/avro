@@ -54,6 +54,12 @@ abstract class AbstractCompileTask : SourceTask() {
     abstract val createNullSafeAnnotations: Property<Boolean>
 
     @get:Input
+    abstract val nullSafeAnnotationNullable: Property<String>
+
+    @get:Input
+    abstract val nullSafeAnnotationNotNull: Property<String>
+
+    @get:Input
     abstract val customConversions: ListProperty<String>
 
     @get:Input
@@ -61,7 +67,6 @@ abstract class AbstractCompileTask : SourceTask() {
 
     @get:Input
     abstract val enableDecimalLogicalType: Property<Boolean>
-
 
 
 }

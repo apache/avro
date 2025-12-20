@@ -102,9 +102,10 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly.get())
         compiler.setCreateSetters(createSetters.get())
         compiler.setCreateNullSafeAnnotations(createNullSafeAnnotations.get())
-//        compiler.setNullSafeAnnotationNullable(nullSafeAnnotationNullable)
-//        compiler.setNullSafeAnnotationNotNull(nullSafeAnnotationNotNull)
+        compiler.setNullSafeAnnotationNullable(nullSafeAnnotationNullable.get())
+        compiler.setNullSafeAnnotationNotNull(nullSafeAnnotationNotNull.get())
         compiler.setEnableDecimalLogicalType(enableDecimalLogicalType.get())
+        // TODO: likely not needed
 //        compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"))
         compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools(velocityToolsClassesNames.get()))
         compiler.setRecordSpecificClass(recordSpecificClass.get())

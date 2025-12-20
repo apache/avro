@@ -85,7 +85,8 @@ abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory)
      *
      * @parameter property="velocityToolsClassesNames"
      */
-    val velocityToolsClassesNames: ListProperty<String> = objects.listProperty(String::class.java).convention(emptyList())
+    val velocityToolsClassesNames: ListProperty<String> =
+        objects.listProperty(String::class.java).convention(emptyList())
 
 
     /**
@@ -166,6 +167,32 @@ abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory)
      * JetBrains nullability annotations](https://www.jetbrains.com/help/idea/annotating-source-code.html.nullability-annotations)
      */
     val createNullSafeAnnotations: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
+
+    /**
+     * Controls which annotation should be added to nullable fields if
+     * createNullSafeAnnotations is enabled. The default is
+     * org.jetbrains.annotations.Nullable.
+     *
+     * @parameter property="nullSafeAnnotationNullable"
+     *
+     * @see [
+     * JetBrains nullability annotations](https://www.jetbrains.com/help/idea/annotating-source-code.html.nullability-annotations)
+     */
+    val nullSafeAnnotationNullable: Property<String> =
+        objects.property(String::class.java).convention("org.jetbrains.annotations.Nullable")
+
+    /**
+     * Controls which annotation should be added to non-nullable fields if
+     * createNullSafeAnnotations is enabled. The default is
+     * org.jetbrains.annotations.NotNull.
+     *
+     * @parameter property="nullSafeAnnotationNotNull"
+     *
+     * @see [
+     * JetBrains nullability annotations](https://www.jetbrains.com/help/idea/annotating-source-code.html.nullability-annotations)
+     */
+    val nullSafeAnnotationNotNull: Property<String> =
+        objects.property(String::class.java).convention("org.jetbrains.annotations.NotNull")
 
     /**
      * A set of fully qualified class names of custom

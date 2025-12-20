@@ -14,22 +14,20 @@ abstract class GradlePlugin : Plugin<Project> {
 
         val extension: GradlePluginExtension = project.extensions.create("avro", GradlePluginExtension::class.java)
 
-        // Needed for Gradle support
+        // Needed for Android support
         project.pluginManager.apply("java")
 
-        project.tasks.register("avroGenerateJavaClasses", CompileSchemaTask::class.java) {
+        project.tasks.register("avroGenerateJavaClasses", CompileSchemaTask::class.java) { compileSchemaTask ->
             val sourceDirectory = extension.sourceDirectory.get()
             val outputDirectory = extension.outputDirectory.get()
-            runPlugin(it, extension, project, sourceDirectory, outputDirectory)
-
+            runPlugin(compileSchemaTask, extension, project, sourceDirectory, outputDirectory)
         }
 
-        project.tasks.register("avroGenerateTestJavaClasses", CompileSchemaTask::class.java) {
+        project.tasks.register("avroGenerateTestJavaClasses", CompileSchemaTask::class.java) {compileSchemaTask ->
             val sourceDirectory = extension.testSourceDirectory.get()
             val outputDirectory = extension.testOutputDirectory.get()
-            runPlugin(it, extension, project, sourceDirectory, outputDirectory)
+            runPlugin(compileSchemaTask, extension, project, sourceDirectory, outputDirectory)
         }
-
     }
 
     private fun runPlugin(
@@ -59,6 +57,8 @@ abstract class GradlePlugin : Plugin<Project> {
                 compileTask.gettersReturnOptional.set(extension.gettersReturnOptional)
                 compileTask.createSetters.set(extension.createSetters)
                 compileTask.createNullSafeAnnotations.set(extension.createNullSafeAnnotations)
+                compileTask.nullSafeAnnotationNullable.set(extension.nullSafeAnnotationNullable)
+                compileTask.nullSafeAnnotationNotNull.set(extension.nullSafeAnnotationNotNull)
                 compileTask.optionalGettersForNullableFieldsOnly.set(extension.optionalGettersForNullableFieldsOnly)
                 compileTask.customConversions.set(extension.customConversions)
                 compileTask.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
