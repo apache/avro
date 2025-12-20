@@ -10,7 +10,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @ExperimentalPathApi
-class SamplePluginTest {
+class SchemaCompileTaskTest {
 
     @TempDir
     lateinit var tempDir: Path
