@@ -35,18 +35,6 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
             compileSchemas(source, sourceDirectoryFullPath, outputDirectoryFullPath)
         }
 
-        val testSourceDirectoryFullPath = getSourceDirectoryFullPath(testSourceDirectory)
-
-        if (testSourceDirectoryFullPath.exists()) {
-            val testOutputDirectoryFullPath = getBuildDirectoryFullPath(testOutputDirectory)
-            val avroTestFiles = project.getIncludedFiles(
-                sourcePath = testSourceDirectory.get(),
-                excludes = testExcludes.get().toTypedArray(),
-                includes = includes.toTypedArray()
-            )
-            compileSchemas(avroTestFiles, testSourceDirectoryFullPath, testOutputDirectoryFullPath)
-        }
-
         project.logger.info("Done generating Java files from Avro schemas...")
     }
 

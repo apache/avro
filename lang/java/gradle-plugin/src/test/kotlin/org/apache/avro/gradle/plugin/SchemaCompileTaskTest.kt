@@ -18,23 +18,23 @@ class SchemaCompileTaskTest {
     @Test
     fun `plugin executes avroGenerateJavaClasses task successfully`() {
         // given
-        val testSettingsFile = tempDir.resolve("settings.gradle.kts")
-        val testBuildFile = tempDir.resolve("build.gradle.kts")
-        val testAvroSrcDir = tempDir.resolve("src/test/avro").createDirectories()
+        val tempSettingsFile = tempDir.resolve("settings.gradle.kts")
+        val tempBuildFile = tempDir.resolve("build.gradle.kts")
+        val tempAvroSrcDir = tempDir.resolve("src/test/avro").createDirectories()
 
-        val avroSrcDir = Path.of("src/test/avro")
-        val avroOutPutDir = Path.of("generated-sources/avro")
+        val testAvroFiles = Path.of("src/test/avro")
+        val testAvroOutPutDir = Path.of("generated-sources/avro")
 
-        val testOutPutDirectory = tempDir.resolve("build/$avroOutPutDir/test")
+        val testOutPutDirectory = tempDir.resolve("build/$testAvroOutPutDir/test")
 
-        avroSrcDir.copyToRecursively(
-            testAvroSrcDir,
+        testAvroFiles.copyToRecursively(
+            tempAvroSrcDir,
             overwrite = true,
             followLinks = false
         )
 
-        testSettingsFile.writeText("")
-        testBuildFile.writeText(
+        tempSettingsFile.writeText("")
+        tempBuildFile.writeText(
             """            
             plugins {
                 id("org.apache.avro.avro-gradle-plugin")
@@ -42,8 +42,8 @@ class SchemaCompileTaskTest {
             
             avro {
                 schemaType = "schema"
-                sourceDirectory = "$avroSrcDir"
-                outputDirectory = "$avroOutPutDir"
+                sourceDirectory = "$testAvroFiles"
+                outputDirectory = "$testAvroOutPutDir"
             }
         """.trimIndent()
         )
@@ -66,6 +66,64 @@ class SchemaCompileTaskTest {
 
         // then
         assertEquals(TaskOutcome.SUCCESS, result.task(":avroGenerateJavaClasses")?.outcome)
+        assertFilesExist(testOutPutDirectory, expectedFiles)
+
+        val schemaUserContent = testOutPutDirectory.resolve("SchemaUser.java").readText()
+        assertTrue(schemaUserContent.contains("java.time.Instant"))
+    }
+
+
+    @Test
+    fun `plugin executes avroGenerateJavaClasses task successfully - for files in test directory`() {
+        // given
+        val tempSettingsFile = tempDir.resolve("settings.gradle.kts")
+        val tempBuildFile = tempDir.resolve("build.gradle.kts")
+        val tempAvroSrcDir = tempDir.resolve("src/test/avro").createDirectories()
+
+        val testAvroFiles = Path.of("src/test/avro")
+        val testAvroOutPutDir = Path.of("generated-test-sources-avro")
+
+        val testOutPutDirectory = tempDir.resolve("build/$testAvroOutPutDir/test")
+
+        testAvroFiles.copyToRecursively(
+            tempAvroSrcDir,
+            overwrite = true,
+            followLinks = false
+        )
+
+        tempSettingsFile.writeText("")
+        tempBuildFile.writeText(
+            """            
+            plugins {
+                id("org.apache.avro.avro-gradle-plugin")
+            }
+            
+            avro {
+                schemaType = "schema"
+                testSourceDirectory = "$testAvroFiles"
+                testOutputDirectory = "$testAvroOutPutDir"
+            }
+        """.trimIndent()
+        )
+
+        // when
+        val result = GradleRunner.create()
+            .withProjectDir(tempDir.toFile())
+            .withArguments("avroGenerateTestJavaClasses")
+            .withPluginClasspath()
+            .forwardOutput() // to see printLn in code
+            .build()
+
+        val expectedFiles = setOf(
+            "SchemaPrivacy.java",
+            "SchemaUser.java",
+            "PrivacyImport.java",
+            "SchemaCustom.java",
+            "PrivacyDirectImport.java"
+        )
+
+        // then
+        assertEquals(TaskOutcome.SUCCESS, result.task(":avroGenerateTestJavaClasses")?.outcome)
         assertFilesExist(testOutPutDirectory, expectedFiles)
 
         val schemaUserContent = testOutPutDirectory.resolve("SchemaUser.java").readText()

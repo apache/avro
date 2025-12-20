@@ -6,6 +6,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.internal.cc.base.logger
+import kotlin.collections.toSet
 
 abstract class GradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -16,38 +17,57 @@ abstract class GradlePlugin : Plugin<Project> {
         project.pluginManager.apply("java")
 
         project.tasks.register("avroGenerateJavaClasses", CompileSchemaTask::class.java) {
-            val schemaType: SchemaType = SchemaType.valueOf(extension.schemaType.get())
+            val sourceDirectory = extension.sourceDirectory.get()
+            val outputDirectory = extension.outputDirectory.get()
+            runPlugin(it, extension, project, sourceDirectory, outputDirectory)
 
-            when (schemaType) {
-                SchemaType.schema -> {
-                    it.source(extension.sourceDirectory)
-                    it.sourceDirectory.set(extension.sourceDirectory)
-                    it.outputDirectory.set(extension.outputDirectory)
-                    it.testSourceDirectory.set(extension.testSourceDirectory)
-                    it.testOutputDirectory.set(extension.testOutputDirectory)
-                    it.fieldVisibility.set(extension.fieldVisibility)
-                    it.setExcludes(extension.excludes.get().toSet())
-                    it.setIncludes(setOf("**/*.avsc"))
-                    it.testExcludes.set(extension.testExcludes)
-                    it.stringType.set(extension.stringType)
-                    it.templateDirectory.set(extension.templateDirectory)
-                    it.recordSpecificClass.set(extension.recordSpecificClass)
-                    it.errorSpecificClass.set(extension.errorSpecificClass)
-                    it.createOptionalGetters.set(extension.createOptionalGetters)
-                    it.gettersReturnOptional.set(extension.gettersReturnOptional)
-                    it.createSetters.set(extension.createSetters)
-                    it.createNullSafeAnnotations.set(extension.createNullSafeAnnotations)
-                    it.optionalGettersForNullableFieldsOnly.set(extension.optionalGettersForNullableFieldsOnly)
-                    it.customConversions.set(extension.customConversions)
-                    it.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
-                    it.enableDecimalLogicalType.set(extension.enableDecimalLogicalType)
+        }
 
-                    addGeneratedSourcesToProject(project, it.outputDirectory.get())
-                }
+        project.tasks.register("avroGenerateTestJavaClasses", CompileSchemaTask::class.java) {
+            val sourceDirectory = extension.testSourceDirectory.get()
+            val outputDirectory = extension.testOutputDirectory.get()
+            runPlugin(it, extension, project, sourceDirectory, outputDirectory)
+        }
 
-                SchemaType.idl -> TODO()
+    }
+
+    private fun runPlugin(
+        compileTask: CompileSchemaTask,
+        extension: GradlePluginExtension,
+        project: Project,
+        sourceDirectory: String,
+        outputDirectory: String
+    ) {
+        val schemaType: SchemaType = SchemaType.valueOf(extension.schemaType.get())
+
+        when (schemaType) {
+            SchemaType.schema -> {
+                compileTask.source(project.fileTree(sourceDirectory))
+                compileTask.sourceDirectory.set(sourceDirectory)
+                compileTask.outputDirectory.set(outputDirectory)
+                //compileTask.testSourceDirectory.set(extension.testSourceDirectory)
+                //compileTask.testOutputDirectory.set(extension.testOutputDirectory)
+                compileTask.fieldVisibility.set(extension.fieldVisibility)
+                compileTask.setExcludes(extension.excludes.get().toSet())
+                compileTask.setIncludes(setOf("**/*.avsc"))
+                compileTask.testExcludes.set(extension.testExcludes)
+                compileTask.stringType.set(extension.stringType)
+                compileTask.templateDirectory.set(extension.templateDirectory)
+                compileTask.recordSpecificClass.set(extension.recordSpecificClass)
+                compileTask.errorSpecificClass.set(extension.errorSpecificClass)
+                compileTask.createOptionalGetters.set(extension.createOptionalGetters)
+                compileTask.gettersReturnOptional.set(extension.gettersReturnOptional)
+                compileTask.createSetters.set(extension.createSetters)
+                compileTask.createNullSafeAnnotations.set(extension.createNullSafeAnnotations)
+                compileTask.optionalGettersForNullableFieldsOnly.set(extension.optionalGettersForNullableFieldsOnly)
+                compileTask.customConversions.set(extension.customConversions)
+                compileTask.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
+                compileTask.enableDecimalLogicalType.set(extension.enableDecimalLogicalType)
+
+                addGeneratedSourcesToProject(project, compileTask.outputDirectory.get())
             }
 
+            SchemaType.idl -> TODO()
         }
     }
 

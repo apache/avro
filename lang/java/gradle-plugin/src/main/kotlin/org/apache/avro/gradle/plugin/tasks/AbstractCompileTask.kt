@@ -15,12 +15,6 @@ abstract class AbstractCompileTask : SourceTask() {
     abstract val outputDirectory: Property<String>
 
     @get:Input
-    abstract val testSourceDirectory: Property<String>
-
-    @get:Input
-    abstract val testOutputDirectory: Property<String>
-
-    @get:Input
     abstract val fieldVisibility: Property<String>
 
     //@get:Input
