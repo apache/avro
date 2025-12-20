@@ -27,7 +27,7 @@
   -->
   <PropertyGroup Label="Latest Package Versions">
     <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
-    <SystemCodeDomVersion>8.0.0</SystemCodeDomVersion>
+    <SystemCodeDomVersion>10.0.0</SystemCodeDomVersion>
     <SystemReflectionVersion>4.3.0</SystemReflectionVersion>
     <SystemReflectionEmitILGenerationVersion>4.7.0</SystemReflectionEmitILGenerationVersion>
     <SystemReflectionEmitLightweightVersion>4.7.0</SystemReflectionEmitLightweightVersion>
@@ -50,7 +50,7 @@
   -->
   <PropertyGroup Label="Minimum Package Versions">
     <!-- Newtonsoft.Json prior to version 13.0.1 is vulnerable. See https://github.com/advisories/GHSA-5crp-9r3c-p9vr -->
-    <NewtonsoftJsonMinimumVersion>13.0.1</NewtonsoftJsonMinimumVersion>
+    <NewtonsoftJsonMinimumVersion>13.0.4</NewtonsoftJsonMinimumVersion>
   </PropertyGroup>
 
   <!--
@@ -58,19 +58,19 @@
 	Please sort the packages alphabetically
   -->
   <PropertyGroup Label="Build, Test, Code Analysis, Benchmark Package Versions">
-    <BenchmarkDotNetVersion>0.13.10</BenchmarkDotNetVersion>
-    <CoverletCollectorVersion>6.0.0</CoverletCollectorVersion>
-    <CoverletMSBuildVersion>6.0.0</CoverletMSBuildVersion>
-    <MicrosoftBuildFrameworkVersion>17.8.43</MicrosoftBuildFrameworkVersion>
-    <MicrosoftBuildUtilitiesCoreVersion>17.8.43</MicrosoftBuildUtilitiesCoreVersion>
+    <BenchmarkDotNetVersion>0.15.8</BenchmarkDotNetVersion>
+    <CoverletCollectorVersion>6.0.4</CoverletCollectorVersion>
+    <CoverletMSBuildVersion>6.0.4</CoverletMSBuildVersion>
+    <MicrosoftBuildFrameworkVersion>18.0.2</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>18.0.2</MicrosoftBuildUtilitiesCoreVersion>
     <MicrosoftCodeAnalysisVersion>4.7.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisCSharpVersion>4.7.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.7.0</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
-    <MicrosoftCodeAnalysisNetAnalyzersVersion>8.0.0</MicrosoftCodeAnalysisNetAnalyzersVersion>
-    <MicrosoftNETTestSdkVersion>17.8.0</MicrosoftNETTestSdkVersion>
+    <MicrosoftCodeAnalysisNetAnalyzersVersion>10.0.100</MicrosoftCodeAnalysisNetAnalyzersVersion>
+    <MicrosoftNETTestSdkVersion>17.13.0</MicrosoftNETTestSdkVersion>
     <NUnitVersion>3.14.0</NUnitVersion>
-    <NUnitConsoleRunnerVersion>3.16.3</NUnitConsoleRunnerVersion>
-    <NUnit3TestAdapterVersion>4.5.0</NUnit3TestAdapterVersion>
+    <NUnitConsoleRunnerVersion>3.21.0</NUnitConsoleRunnerVersion>
+    <NUnit3TestAdapterVersion>5.2.0</NUnit3TestAdapterVersion>
     <StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
   </PropertyGroup>
 </Project>

@@ -30,6 +30,7 @@ import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
+import org.apache.avro.io.BinaryData;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.FixedSize;
@@ -995,7 +996,7 @@ public class ReflectData extends SpecificData {
         break;
       byte[] b1 = (byte[]) o1;
       byte[] b2 = (byte[]) o2;
-      return Arrays.compare(b1, 0, b1.length, b2, 0, b2.length);
+      return BinaryData.compareBytes(b1, 0, b1.length, b2, 0, b2.length);
     }
     return super.compare(o1, o2, s, equals);
   }
