@@ -33,6 +33,8 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
             val sourceDirectoryFullPath = getSourceDirectoryFullPath(sourceDirectory)
             val outputDirectoryFullPath = getBuildDirectoryFullPath(outputDirectory)
             compileSchemas(source, sourceDirectoryFullPath, outputDirectoryFullPath)
+        } else {
+            logger.warn("No Avro files found in $sourceDirectory. Nothing to compile")
         }
 
         project.logger.info("Done generating Java files from Avro schemas...")
@@ -44,21 +46,6 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
 
     private fun getBuildDirectoryFullPath(directoryProperty: Property<String>): File =
         project.layout.buildDirectory.dir(directoryProperty).get().asFile
-
-
-    fun Project.getIncludedFiles(
-        sourcePath: String,
-        excludes: Array<String>,
-        includes: Array<String>
-    ): FileTree {
-        println("Including files from path: $sourcePath")
-        val fullPath = project.layout.projectDirectory.dir(sourcePath)
-        val files = fileTree(fullPath) {
-            it.include(*includes)
-            it.exclude(*excludes)
-        }
-        return files
-    }
 
     private fun compileSchemas(fileTree: FileTree, sourceDirectory: File, outputDirectory: File) {
         val sourceFileForModificationDetection: File? =
@@ -107,7 +94,7 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
 
 
     private fun setCompilerProperties(compiler: SpecificCompiler) {
-        compiler.setTemplateDir(templateDirectory.get())
+        compiler.setTemplateDir(project.layout.projectDirectory.dir(templateDirectory.get()).asFile.absolutePath + "/")
         compiler.setStringType(GenericData.StringType.valueOf(stringType.get()))
         compiler.setFieldVisibility(getFieldV())
         compiler.setCreateOptionalGetters(createOptionalGetters.get())
@@ -119,7 +106,7 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
 //        compiler.setNullSafeAnnotationNotNull(nullSafeAnnotationNotNull)
         compiler.setEnableDecimalLogicalType(enableDecimalLogicalType.get())
 //        compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"))
-//        compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools())
+        compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools(velocityToolsClassesNames.get()))
         compiler.setRecordSpecificClass(recordSpecificClass.get())
         compiler.setErrorSpecificClass(errorSpecificClass.get())
     }
@@ -131,6 +118,18 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         } catch (e: IllegalArgumentException) {
             logger.warn("Could not parse field visibility, using PRIVATE")
             return FieldVisibility.PRIVATE
+        }
+    }
+
+    protected fun instantiateAdditionalVelocityTools(velocityToolsClassesNames: List<String>): List<Any> {
+        return velocityToolsClassesNames.map { velocityToolClassName ->
+            try {
+                Class.forName(velocityToolClassName)
+                    .getDeclaredConstructor()
+                    .newInstance()
+            } catch (e: Exception) {
+                throw RuntimeException(e)
+            }
         }
     }
 }

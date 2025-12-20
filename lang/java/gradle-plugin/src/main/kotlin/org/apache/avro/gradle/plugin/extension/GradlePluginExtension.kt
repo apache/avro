@@ -85,8 +85,7 @@ abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory)
      *
      * @parameter property="velocityToolsClassesNames"
      */
-    // TODO: not sure if we need this
-    //protected var velocityToolsClassesNames: Array<String?> = arrayOfNulls<String>(0)
+    val velocityToolsClassesNames: ListProperty<String> = objects.listProperty(String::class.java).convention(emptyList())
 
 
     /**

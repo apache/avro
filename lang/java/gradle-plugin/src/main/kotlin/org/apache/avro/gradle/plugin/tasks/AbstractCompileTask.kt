@@ -27,6 +27,9 @@ abstract class AbstractCompileTask : SourceTask() {
     abstract val stringType: Property<String>
 
     @get:Input
+    abstract val velocityToolsClassesNames: ListProperty<String>
+
+    @get:Input
     abstract val templateDirectory: Property<String>
 
     @get:Input

@@ -130,6 +130,74 @@ class SchemaCompileTaskTest {
         assertTrue(schemaUserContent.contains("java.time.Instant"))
     }
 
+    @Test
+    fun `plugin executes avroGenerateJavaClasses task successfully - with Velocity class names`() {
+        // given
+        val tempSettingsFile = tempDir.resolve("settings.gradle.kts")
+        val tempBuildFile = tempDir.resolve("build.gradle.kts")
+        val tempAvroSrcDir = tempDir.resolve("src/test/avro").createDirectories()
+        //val bla = tempDir.resolve("src/aap").createDirectories()
+        val tempVelocityToolClassesDir = tempDir.resolve("src/test/resources/templates").createDirectories()
+
+        val testAvroFilesDir = Path.of("src/test/avro")
+        val testAvroOutPutDir = Path.of("generated-sources-avro")
+        val testVelocityToolClassesDir = Path.of("src/test/resources/templates")
+
+        val testOutPutDirectory = tempDir.resolve("build/$testAvroOutPutDir/test")
+
+        testAvroFilesDir.copyToRecursively(
+            tempAvroSrcDir,
+            overwrite = true,
+            followLinks = false
+        )
+
+        testVelocityToolClassesDir.copyToRecursively(
+            tempVelocityToolClassesDir,
+            overwrite = true,
+            followLinks = false
+        )
+
+        tempSettingsFile.writeText("")
+        tempBuildFile.writeText(
+            """            
+            plugins {
+                id("org.apache.avro.avro-gradle-plugin")
+            }
+            
+            avro {
+                schemaType = "schema"
+                sourceDirectory = "$testAvroFilesDir"
+                outputDirectory = "$testAvroOutPutDir"
+                templateDirectory = "$testVelocityToolClassesDir"
+                velocityToolsClassesNames = listOf("java.lang.String")
+            }
+        """.trimIndent()
+        )
+
+        // when
+        val result = GradleRunner.create()
+            .withProjectDir(tempDir.toFile())
+            .withArguments("avroGenerateJavaClasses")
+            .withPluginClasspath()
+            .forwardOutput() // to see printLn in code
+            .build()
+
+        val expectedFiles = setOf(
+            "SchemaPrivacy.java",
+            "SchemaUser.java",
+            "PrivacyImport.java",
+            "SchemaCustom.java",
+            "PrivacyDirectImport.java"
+        )
+
+        // then
+        assertEquals(TaskOutcome.SUCCESS, result.task(":avroGenerateJavaClasses")?.outcome)
+        assertFilesExist(testOutPutDirectory, expectedFiles)
+
+        val schemaUserContent = testOutPutDirectory.resolve("SchemaUser.java").readText()
+        assertTrue(schemaUserContent.contains("It works!"))
+    }
+
 
     private fun assertFilesExist(directory: Path, expectedFiles: Set<String>) {
         assertTrue(directory.exists(), "Directory $directory does not exist")

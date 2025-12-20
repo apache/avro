@@ -14,6 +14,7 @@ abstract class GradlePlugin : Plugin<Project> {
 
         val extension: GradlePluginExtension = project.extensions.create("avro", GradlePluginExtension::class.java)
 
+        // Needed for Gradle support
         project.pluginManager.apply("java")
 
         project.tasks.register("avroGenerateJavaClasses", CompileSchemaTask::class.java) {
@@ -45,13 +46,12 @@ abstract class GradlePlugin : Plugin<Project> {
                 compileTask.source(project.fileTree(sourceDirectory))
                 compileTask.sourceDirectory.set(sourceDirectory)
                 compileTask.outputDirectory.set(outputDirectory)
-                //compileTask.testSourceDirectory.set(extension.testSourceDirectory)
-                //compileTask.testOutputDirectory.set(extension.testOutputDirectory)
                 compileTask.fieldVisibility.set(extension.fieldVisibility)
                 compileTask.setExcludes(extension.excludes.get().toSet())
                 compileTask.setIncludes(setOf("**/*.avsc"))
                 compileTask.testExcludes.set(extension.testExcludes)
                 compileTask.stringType.set(extension.stringType)
+                compileTask.velocityToolsClassesNames.set(extension.velocityToolsClassesNames.get())
                 compileTask.templateDirectory.set(extension.templateDirectory)
                 compileTask.recordSpecificClass.set(extension.recordSpecificClass)
                 compileTask.errorSpecificClass.set(extension.errorSpecificClass)
