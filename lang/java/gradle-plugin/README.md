@@ -2,21 +2,6 @@
 
 Gradle plugin that generates Java code from Avro schemas
 
-## Installation
-### Checkout
-
-`git clone https://github.com/frevib/avro/tree/feat/gradle-plugin`
-
-### Install to local Maven repo
-
-* inside `avro/lang/java/gradle-plugin`
-
-* run `./gradlew publishToMavenLocal` 
-
-Gradle plugin is now available under:
-
-`org.apache.avro.avro-gradle-plugin:1.13.0-SNAPSHOT`
-
 ## Usage
 
 ### Add avro extension
@@ -26,13 +11,13 @@ Add plugin
 
 ```kotlin
 plugins {
-    id("org.apache.avro.avro-gradle-plugin") version "1.13.0-SNAPSHOT"
+    id("eu.eventloopsoftware.avro-gradle-plugin") version "0.0.2"
 }
 ```
 Add Avro dependency
 
 ```kotlin
-implementation("org.apache.avro:avro:1.13.0-SNAPSHOT")
+implementation("org.apache.avro:avro:1.12.1")
 ```
 Configure Avro Gradle plugin
 ```kotlin
@@ -44,11 +29,11 @@ avro {
 
 In `settings.gradle.kts`:
 
-Needed for local Maven dependencies to work
+Plugin is published on Maven Central:
 ```kotlin
 pluginManagement {
     repositories {
-        mavenLocal()
+        mavenCentral()
         gradlePluginPortal()
     }
 }
