@@ -49,7 +49,7 @@
     <!-- plugin versions -->
     <apache-rat-plugin.version>0.17</apache-rat-plugin.version>
     <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
-    <checkstyle.version>12.2.0</checkstyle.version>
+    <checkstyle.version>12.3.0</checkstyle.version>
     <enforcer-plugin.version>3.6.2</enforcer-plugin.version>
     <extra-enforcer-rules.version>1.11.0</extra-enforcer-rules.version>
     <maven-antrun-plugin.version>3.2.0</maven-antrun-plugin.version>
