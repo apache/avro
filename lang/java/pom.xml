@@ -40,7 +40,7 @@
     <ant.version>1.10.15</ant.version>
     <commons-cli.version>1.11.0</commons-cli.version>
     <commons-compress.version>1.28.0</commons-compress.version>
-    <commons-text.version>1.14.0</commons-text.version>
+    <commons-text.version>1.15.0</commons-text.version>
     <commons-lang3.version>3.20.0</commons-lang3.version>
     <grpc.version>1.77.0</grpc.version>
     <hadoop.version>3.4.2</hadoop.version>
