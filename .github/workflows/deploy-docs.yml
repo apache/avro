@@ -234,43 +234,43 @@ jobs:
           sudo apt-get install -q -y subversion  
 
       - name: Download website
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: website
           path: ${{ runner.temp }}/website
 
       - name: Download api-c
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: api-c
           path: api-c
 
       - name: Download api-c++
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: api-c++
           path: api-c++
 
       - name: Download api-csharp
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: api-csharp
           path: api-csharp
 
       - name: Download api-java
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: api-java
           path: api-java
 
       - name: Download api-python
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: api-python
           path: api-python
 
       - name: Download api-rust
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: api-rust
           path: api-rust
