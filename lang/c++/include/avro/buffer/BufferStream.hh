@@ -35,7 +35,7 @@ namespace avro {
  *
  **/
 
-class AVRO_DECL ostream : public std::ostream {
+class ostream : public std::ostream {
 
 public:
     /// Default constructor, creates a new OutputBuffer.
@@ -65,7 +65,7 @@ protected:
  *
  **/
 
-class AVRO_DECL istream : public std::istream {
+class istream : public std::istream {
 
 public:
     /// Constructor, requires an InputBuffer to read from.
