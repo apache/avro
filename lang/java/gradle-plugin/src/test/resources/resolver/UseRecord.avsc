@@ -1,0 +1,8 @@
+{
+    "name": "UseRecord",
+    "namespace": "resolver",
+    "type": "record",
+    "fields" : [
+        {"name": "field1", "type": "SimpleRecord"}
+    ]
+}
