@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Verbosity"],"fn":["debug_install","install"],"struct":["Settings"]};
