@@ -225,7 +225,7 @@
             <configuration>
               <rules>
                 <enforceBytecodeVersion>
-                  <maxJdkVersion>11</maxJdkVersion>
+                  <maxJdkVersion>17</maxJdkVersion>
                   <ignoredScopes>
                     <ignoredScope>test</ignoredScope>
                     <ignoredScope>provided</ignoredScope>

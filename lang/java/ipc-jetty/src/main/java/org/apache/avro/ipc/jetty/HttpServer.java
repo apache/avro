@@ -31,9 +31,8 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee9.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee9.servlet.ServletHolder;
 
 /** An HTTP-based RPC {@link Server}. */
 public class HttpServer implements Server {
@@ -71,10 +70,8 @@ public class HttpServer implements Server {
     connector.setPort(port);
     server.addConnector(connector);
 
-    ServletHandler handler = new ServletHandler();
-    handler.addServletWithMapping(new ServletHolder(servlet), "/*");
     ServletContextHandler sch = new ServletContextHandler();
-    sch.setServletHandler(handler);
+    sch.getServletHandler().addServletWithMapping(new ServletHolder(servlet), "/*");
     server.setHandler(sch);
   }
 
@@ -103,9 +100,9 @@ public class HttpServer implements Server {
     connector.setPort(port);
 
     server.addConnector(connector);
-    ServletHandler handler = new ServletHandler();
-    server.setHandler(handler);
-    handler.addServletWithMapping(new ServletHolder(servlet), "/*");
+    ServletContextHandler sch = new ServletContextHandler();
+    server.setHandler(sch);
+    sch.getServletHandler().addServletWithMapping(new ServletHolder(servlet), "/*");
   }
 
   /**
@@ -119,9 +116,9 @@ public class HttpServer implements Server {
     if (server.getConnectors().length == 0 || Arrays.asList(server.getConnectors()).contains(connector)) {
       server.addConnector(connector);
     }
-    ServletHandler handler = new ServletHandler();
-    server.setHandler(handler);
-    handler.addServletWithMapping(new ServletHolder(servlet), "/*");
+    ServletContextHandler sch = new ServletContextHandler();
+    server.setHandler(sch);
+    sch.getServletHandler().addServletWithMapping(new ServletHolder(servlet), "/*");
   }
 
   /**
@@ -154,7 +151,7 @@ public class HttpServer implements Server {
 
   /**
    * Start the server.
-   * 
+   *
    * @throws AvroRuntimeException if the underlying Jetty server throws any
    *                              exception while starting.
    */
