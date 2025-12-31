@@ -28,6 +28,7 @@
 
 #include <array>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -37,16 +38,14 @@ namespace avro {
 enum Codec {
     NULL_CODEC = 0,
     DEFLATE_CODEC = 1,
-
-#ifdef SNAPPY_CODEC_AVAILABLE
     SNAPPY_CODEC = 2,
-#endif
-
-#ifdef ZSTD_CODEC_AVAILABLE
-    ZSTD_CODEC = 3,
-#endif
-
+    ZSTD_CODEC = 3
 };
+
+/**
+ * Returns true if the specified codec is available at runtime.
+ */
+AVRO_DECL bool isCodecAvailable(Codec codec);
 
 const int SyncSize = 16;
 /**
@@ -81,6 +80,7 @@ class AVRO_DECL DataFileWriterBase {
     const EncoderPtr encoderPtr_;
     const size_t syncInterval_;
     Codec codec_;
+    std::optional<int> compressionLevel_;
 
     std::unique_ptr<OutputStream> stream_;
     std::unique_ptr<OutputStream> buffer_;
@@ -134,10 +134,10 @@ public:
      */
     DataFileWriterBase(const char *filename, const ValidSchema &schema,
                        size_t syncInterval, Codec codec = NULL_CODEC,
-                       const Metadata &metadata = {});
+                       const Metadata &metadata = {}, std::optional<int> compressionLevel = std::nullopt);
     DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
                        const ValidSchema &schema, size_t syncInterval, Codec codec,
-                       const Metadata &metadata = {});
+                       const Metadata &metadata = {}, std::optional<int> compressionLevel = std::nullopt);
 
     DataFileWriterBase(const DataFileWriterBase &) = delete;
     DataFileWriterBase &operator=(const DataFileWriterBase &) = delete;
@@ -173,11 +173,13 @@ public:
      */
     DataFileWriter(const char *filename, const ValidSchema &schema,
                    size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC,
-                   const Metadata &metadata = {}) : base_(std::make_unique<DataFileWriterBase>(filename, schema, syncInterval, codec, metadata)) {}
+                   const Metadata &metadata = {}, std::optional<int> compressionLevel = std::nullopt)
+        : base_(std::make_unique<DataFileWriterBase>(filename, schema, syncInterval, codec, metadata, compressionLevel)) {}
 
     DataFileWriter(std::unique_ptr<OutputStream> outputStream, const ValidSchema &schema,
                    size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC,
-                   const Metadata &metadata = {}) : base_(std::make_unique<DataFileWriterBase>(std::move(outputStream), schema, syncInterval, codec, metadata)) {}
+                   const Metadata &metadata = {}, std::optional<int> compressionLevel = std::nullopt)
+        : base_(std::make_unique<DataFileWriterBase>(std::move(outputStream), schema, syncInterval, codec, metadata, compressionLevel)) {}
 
     DataFileWriter(const DataFileWriter &) = delete;
     DataFileWriter &operator=(const DataFileWriter &) = delete;

@@ -64,36 +64,105 @@ const size_t maxSyncInterval = 1u << 30;
 // Recommended by https://www.zlib.net/zlib_how.html
 const size_t zlibBufGrowSize = 128 * 1024;
 
+std::string codecToString(Codec codec) {
+    switch (codec) {
+        case NULL_CODEC: return "null";
+        case DEFLATE_CODEC: return "deflate";
+        case SNAPPY_CODEC: return "snappy";
+        case ZSTD_CODEC: return "zstandard";
+        default: return "unknown";
+    }
+}
+
+void validateCodec(Codec codec, std::optional<int> level) {
+    if (!isCodecAvailable(codec)) {
+        throw Exception("Codec {} is not available.", codecToString(codec));
+    }
+
+    if (!level.has_value()) {
+        return;
+    }
+
+    int levelValue = level.value();
+    switch (codec) {
+        case NULL_CODEC:
+        case SNAPPY_CODEC:
+            // These codecs don't support compression levels, ignore
+            break;
+        case DEFLATE_CODEC:
+            if (levelValue < 0 || levelValue > 9) {
+                throw Exception("Invalid compression level {} for deflate codec. "
+                                "Valid range is 0-9.",
+                                levelValue);
+            }
+            break;
+        case ZSTD_CODEC:
+            if (levelValue < 1 || levelValue > 22) {
+                throw Exception("Invalid compression level {} for zstandard codec. "
+                                "Valid range is 1-22.",
+                                levelValue);
+            }
+            break;
+        default:
+            throw Exception("Unknown codec: {}", static_cast<int>(codec));
+    }
+}
+
 } // namespace
 
+bool isCodecAvailable(Codec codec) {
+    switch (codec) {
+        case NULL_CODEC:
+        case DEFLATE_CODEC:
+            return true;
+        case SNAPPY_CODEC:
+#ifdef SNAPPY_CODEC_AVAILABLE
+            return true;
+#else
+            return false;
+#endif
+        case ZSTD_CODEC:
+#ifdef ZSTD_CODEC_AVAILABLE
+            return true;
+#else
+            return false;
+#endif
+        default:
+            return false;
+    }
+}
+
 DataFileWriterBase::DataFileWriterBase(const char *filename, const ValidSchema &schema, size_t syncInterval,
-                                       Codec codec, const Metadata &metadata) : filename_(filename),
-                                                                                schema_(schema),
-                                                                                encoderPtr_(binaryEncoder()),
-                                                                                syncInterval_(syncInterval),
-                                                                                codec_(codec),
-                                                                                stream_(fileOutputStream(filename)),
-                                                                                buffer_(memoryOutputStream()),
-                                                                                sync_(makeSync()),
-                                                                                objectCount_(0),
-                                                                                metadata_(metadata),
-                                                                                lastSync_(0) {
+                                       Codec codec, const Metadata &metadata,
+                                       std::optional<int> compressionLevel) : filename_(filename),
+                                                                              schema_(schema),
+                                                                              encoderPtr_(binaryEncoder()),
+                                                                              syncInterval_(syncInterval),
+                                                                              codec_(codec),
+                                                                              compressionLevel_(compressionLevel),
+                                                                              stream_(fileOutputStream(filename)),
+                                                                              buffer_(memoryOutputStream()),
+                                                                              sync_(makeSync()),
+                                                                              objectCount_(0),
+                                                                              metadata_(metadata),
+                                                                              lastSync_(0) {
     init(schema, syncInterval, codec);
 }
 
-DataFileWriterBase::DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
-                                       const ValidSchema &schema, size_t syncInterval,
-                                       Codec codec, const Metadata &metadata) : filename_(),
-                                                                                schema_(schema),
-                                                                                encoderPtr_(binaryEncoder()),
-                                                                                syncInterval_(syncInterval),
-                                                                                codec_(codec),
-                                                                                stream_(std::move(outputStream)),
-                                                                                buffer_(memoryOutputStream()),
-                                                                                sync_(makeSync()),
-                                                                                objectCount_(0),
-                                                                                metadata_(metadata),
-                                                                                lastSync_(0) {
+DataFileWriterBase::DataFileWriterBase(std::unique_ptr<OutputStream> outputStream, const ValidSchema &schema,
+                                       size_t syncInterval, Codec codec, const Metadata &metadata,
+                                       std::optional<int> compressionLevel) : filename_(),
+                                                                              schema_(schema),
+                                                                              encoderPtr_(binaryEncoder()),
+                                                                              syncInterval_(syncInterval),
+                                                                              codec_(codec),
+                                                                              compressionLevel_(compressionLevel),
+                                                                              stream_(std::move(outputStream)),
+                                                                              buffer_(memoryOutputStream()),
+                                                                              sync_(makeSync()),
+                                                                              objectCount_(0),
+                                                                              metadata_(metadata),
+                                                                              lastSync_(0) {
     init(schema, syncInterval, codec);
 }
 
@@ -103,20 +172,17 @@ void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, co
             "Invalid sync interval: {}. Should be between {} and {}",
             syncInterval, minSyncInterval, maxSyncInterval);
     }
-    setMetadata(AVRO_CODEC_KEY, AVRO_NULL_CODEC);
 
+    validateCodec(codec_, compressionLevel_);
+    setMetadata(AVRO_CODEC_KEY, AVRO_NULL_CODEC);
     if (codec_ == NULL_CODEC) {
         setMetadata(AVRO_CODEC_KEY, AVRO_NULL_CODEC);
     } else if (codec_ == DEFLATE_CODEC) {
         setMetadata(AVRO_CODEC_KEY, AVRO_DEFLATE_CODEC);
-#ifdef SNAPPY_CODEC_AVAILABLE
     } else if (codec_ == SNAPPY_CODEC) {
         setMetadata(AVRO_CODEC_KEY, AVRO_SNAPPY_CODEC);
-#endif
-#ifdef ZSTD_CODEC_AVAILABLE
     } else if (codec_ == ZSTD_CODEC) {
         setMetadata(AVRO_CODEC_KEY, AVRO_ZSTD_CODEC);
-#endif
     } else {
         throw Exception("Unknown codec: {}", int(codec));
     }
@@ -160,7 +226,10 @@ void DataFileWriterBase::sync() {
             zs.zfree = Z_NULL;
             zs.opaque = Z_NULL;
 
-            int ret = deflateInit2(&zs, Z_DEFAULT_COMPRESSION, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY);
+            // Use Z_DEFAULT_COMPRESSION if no level specified
+            int effectiveLevel = compressionLevel_.value_or(Z_DEFAULT_COMPRESSION);
+
+            int ret = deflateInit2(&zs, effectiveLevel, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY);
             if (ret != Z_OK) {
                 throw Exception("Failed to initialize deflate, error: {}", ret);
             }
@@ -246,7 +315,7 @@ void DataFileWriterBase::sync() {
         }
 
         ZstdCompressWrapper zstdCompressWrapper;
-        std::vector<char> compressed = zstdCompressWrapper.compress(uncompressed);
+        std::vector<char> compressed = zstdCompressWrapper.compress(uncompressed, compressionLevel_);
 
         std::unique_ptr<InputStream> in = memoryInputStream(
             reinterpret_cast<const uint8_t *>(compressed.data()), compressed.size());

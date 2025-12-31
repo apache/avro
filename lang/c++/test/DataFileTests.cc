@@ -1284,6 +1284,219 @@ void testMetadataWithZstdCodec() {
 }
 #endif
 
+void testDeflateCompressionLevelValidation() {
+    BOOST_TEST_CHECKPOINT(__func__);
+
+    avro::ValidSchema schema = avro::compileJsonSchemaFromString(sch);
+    const char *filename = "test_deflate_level.df";
+
+    boost::mt19937 rng(static_cast<uint32_t>(time(nullptr)));
+    boost::random::uniform_int_distribution<> dist(-100, 100);
+
+    for (int i = 0; i < 100; ++i) {
+        int level = dist(rng);
+        bool isValidLevel = (level >= 0 && level <= 9);
+
+        if (isValidLevel) {
+            // Valid levels should succeed
+            BOOST_CHECK_NO_THROW({
+                avro::DataFileWriter<ComplexInteger> writer(
+                    filename, schema, 16 * 1024, avro::DEFLATE_CODEC, {}, level);
+                writer.close();
+            });
+        } else {
+            // Invalid levels should throw
+            BOOST_CHECK_THROW({ avro::DataFileWriter<ComplexInteger> writer(
+                                    filename, schema, 16 * 1024, avro::DEFLATE_CODEC, {}, level); }, avro::Exception);
+        }
+    }
+
+    BOOST_CHECK_NO_THROW({
+        avro::DataFileWriter<ComplexInteger> writer(
+            filename, schema, 16 * 1024, avro::DEFLATE_CODEC, {}, std::nullopt);
+        writer.close();
+    });
+
+    std::filesystem::remove(filename);
+}
+
+#ifdef ZSTD_CODEC_AVAILABLE
+void testZstdCompressionLevelValidation() {
+    BOOST_TEST_CHECKPOINT(__func__);
+
+    avro::ValidSchema schema = avro::compileJsonSchemaFromString(sch);
+    const char *filename = "test_zstd_level.df";
+
+    boost::mt19937 rng(static_cast<uint32_t>(time(nullptr)));
+    boost::random::uniform_int_distribution<> dist(-100, 100);
+
+    for (int i = 0; i < 100; ++i) {
+        int level = dist(rng);
+        bool isValidLevel = (level >= 1 && level <= 22);
+
+        if (isValidLevel) {
+            // Valid levels should succeed
+            BOOST_CHECK_NO_THROW({
+                avro::DataFileWriter<ComplexInteger> writer(
+                    filename, schema, 16 * 1024, avro::ZSTD_CODEC, {}, level);
+                writer.close();
+            });
+        } else {
+            // Invalid levels should throw
+            BOOST_CHECK_THROW({ avro::DataFileWriter<ComplexInteger> writer(
+                                    filename, schema, 16 * 1024, avro::ZSTD_CODEC, {}, level); }, avro::Exception);
+        }
+    }
+
+    BOOST_CHECK_NO_THROW({
+        avro::DataFileWriter<ComplexInteger> writer(
+            filename, schema, 16 * 1024, avro::ZSTD_CODEC, {}, std::nullopt);
+        writer.close();
+    });
+
+    std::filesystem::remove(filename);
+}
+#endif
+
+void testDeflateCompressionRoundTrip() {
+    BOOST_TEST_CHECKPOINT(__func__);
+
+    avro::ValidSchema schema = avro::compileJsonSchemaFromString(sch);
+    const char *filename = "test_deflate_roundtrip.df";
+
+    boost::mt19937 rng(static_cast<uint32_t>(time(nullptr)));
+    boost::random::uniform_int_distribution<> levelDist(0, 10); // 0-9 valid, 10 = nullopt
+    boost::random::uniform_int_distribution<> dataDist(1, 1000);
+
+    for (int i = 0; i < 100; ++i) {
+        int rawLevel = levelDist(rng);
+        std::optional<int> level = (rawLevel == 10) ? std::nullopt : std::optional<int>(rawLevel);
+        int numRecords = dataDist(rng) % 100 + 1;
+
+        std::vector<ComplexInteger> originalData;
+        int64_t re = rng();
+        int64_t im = rng();
+        for (int j = 0; j < numRecords; ++j) {
+            originalData.emplace_back(re, im);
+            re = re * 31 + im;
+            im = im * 17 + re;
+        }
+
+        // Write with compression level
+        {
+            avro::DataFileWriter<ComplexInteger> writer(
+                filename, schema, 16 * 1024, avro::DEFLATE_CODEC, {}, level);
+            for (const auto &record : originalData) {
+                writer.write(record);
+            }
+            writer.close();
+        }
+
+        // Read back and verify
+        {
+            avro::DataFileReader<ComplexInteger> reader(filename, schema);
+            std::vector<ComplexInteger> readData;
+            ComplexInteger record;
+            while (reader.read(record)) {
+                readData.push_back(record);
+            }
+
+            BOOST_CHECK_EQUAL(readData.size(), originalData.size());
+            for (size_t j = 0; j < originalData.size() && j < readData.size(); ++j) {
+                BOOST_CHECK_EQUAL(readData[j].re, originalData[j].re);
+                BOOST_CHECK_EQUAL(readData[j].im, originalData[j].im);
+            }
+        }
+    }
+
+    std::filesystem::remove(filename);
+}
+
+#ifdef ZSTD_CODEC_AVAILABLE
+void testZstdCompressionRoundTrip() {
+    BOOST_TEST_CHECKPOINT(__func__);
+
+    avro::ValidSchema schema = avro::compileJsonSchemaFromString(sch);
+    const char *filename = "test_zstd_roundtrip.df";
+
+    boost::mt19937 rng(static_cast<uint32_t>(time(nullptr)));
+    // Valid ZSTD levels: 1-22
+    boost::random::uniform_int_distribution<> levelDist(0, 22); // 0 = nullopt, 1-22 = valid levels
+    boost::random::uniform_int_distribution<> dataDist(1, 1000);
+
+    for (int i = 0; i < 100; ++i) {
+        int rawLevel = levelDist(rng);
+        std::optional<int> level = (rawLevel == 0) ? std::nullopt : std::optional<int>(rawLevel);
+        int numRecords = dataDist(rng) % 100 + 1;
+
+        std::vector<ComplexInteger> originalData;
+        int64_t re = rng();
+        int64_t im = rng();
+        for (int j = 0; j < numRecords; ++j) {
+            originalData.emplace_back(re, im);
+            re = re * 31 + im;
+            im = im * 17 + re;
+        }
+
+        // Write with compression level
+        {
+            avro::DataFileWriter<ComplexInteger> writer(
+                filename, schema, 16 * 1024, avro::ZSTD_CODEC, {}, level);
+            for (const auto &record : originalData) {
+                writer.write(record);
+            }
+            writer.close();
+        }
+
+        // Read back and verify
+        {
+            avro::DataFileReader<ComplexInteger> reader(filename, schema);
+            std::vector<ComplexInteger> readData;
+            ComplexInteger record;
+            while (reader.read(record)) {
+                readData.push_back(record);
+            }
+
+            BOOST_CHECK_EQUAL(readData.size(), originalData.size());
+            for (size_t j = 0; j < originalData.size() && j < readData.size(); ++j) {
+                BOOST_CHECK_EQUAL(readData[j].re, originalData[j].re);
+                BOOST_CHECK_EQUAL(readData[j].im, originalData[j].im);
+            }
+        }
+    }
+
+    std::filesystem::remove(filename);
+}
+#endif
+
+void testCodecEnumValues() {
+    BOOST_TEST_CHECKPOINT(__func__);
+
+    BOOST_CHECK_EQUAL(static_cast<int>(avro::NULL_CODEC), 0);
+    BOOST_CHECK_EQUAL(static_cast<int>(avro::DEFLATE_CODEC), 1);
+    BOOST_CHECK_EQUAL(static_cast<int>(avro::SNAPPY_CODEC), 2);
+    BOOST_CHECK_EQUAL(static_cast<int>(avro::ZSTD_CODEC), 3);
+}
+
+void testIsCodecAvailable() {
+    BOOST_TEST_CHECKPOINT(__func__);
+
+    BOOST_CHECK_EQUAL(avro::isCodecAvailable(avro::NULL_CODEC), true);
+    BOOST_CHECK_EQUAL(avro::isCodecAvailable(avro::DEFLATE_CODEC), true);
+
+#ifdef SNAPPY_CODEC_AVAILABLE
+    BOOST_CHECK_EQUAL(avro::isCodecAvailable(avro::SNAPPY_CODEC), true);
+#else
+    BOOST_CHECK_EQUAL(avro::isCodecAvailable(avro::SNAPPY_CODEC), false);
+#endif
+
+#ifdef ZSTD_CODEC_AVAILABLE
+    BOOST_CHECK_EQUAL(avro::isCodecAvailable(avro::ZSTD_CODEC), true);
+#else
+    BOOST_CHECK_EQUAL(avro::isCodecAvailable(avro::ZSTD_CODEC), false);
+#endif
+}
+
 test_suite *
 init_unit_test_suite(int, char *[]) {
     {
@@ -1485,6 +1698,22 @@ init_unit_test_suite(int, char *[]) {
 #endif
 #ifdef ZSTD_CODEC_AVAILABLE
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testMetadataWithZstdCodec));
+#endif
+
+    // Codec enum and isCodecAvailable tests
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testCodecEnumValues));
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testIsCodecAvailable));
+
+    // Compression level validation property tests
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testDeflateCompressionLevelValidation));
+#ifdef ZSTD_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testZstdCompressionLevelValidation));
+#endif
+
+    // Compression round-trip property tests
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testDeflateCompressionRoundTrip));
+#ifdef ZSTD_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testZstdCompressionRoundTrip));
 #endif
 
     return nullptr;
