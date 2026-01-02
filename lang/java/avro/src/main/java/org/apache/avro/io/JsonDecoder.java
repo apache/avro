@@ -549,9 +549,6 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
       }
 
       if (top == Symbol.RECORD_END) {
-        if (currentReorderBuffer != null && !currentReorderBuffer.savedFields.isEmpty()) {
-          throw error("Unknown fields: " + currentReorderBuffer.savedFields.keySet());
-        }
         currentReorderBuffer = reorderBuffers.pop();
       }
 
