@@ -21,6 +21,7 @@
 
 #ifdef ZSTD_CODEC_AVAILABLE
 
+#include <optional>
 #include <vector>
 
 #include <zstd.h>
@@ -32,7 +33,7 @@ public:
     ZstdCompressWrapper();
     ~ZstdCompressWrapper();
 
-    std::vector<char> compress(const std::vector<char> &uncompressed);
+    std::vector<char> compress(const std::vector<char> &uncompressed, std::optional<int> compressionLevel = std::nullopt);
 
 private:
     ZSTD_CCtx *cctx_ = nullptr;

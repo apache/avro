@@ -25,7 +25,7 @@
 
 namespace avro {
 
-std::vector<char> ZstdCompressWrapper::compress(const std::vector<char> &uncompressed) {
+std::vector<char> ZstdCompressWrapper::compress(const std::vector<char> &uncompressed, std::optional<int> compressionLevel) {
     // Pre-allocate buffer for compressed data
     size_t max_compressed_size = ZSTD_compressBound(uncompressed.size());
     if (ZSTD_isError(max_compressed_size)) {
@@ -37,7 +37,7 @@ std::vector<char> ZstdCompressWrapper::compress(const std::vector<char> &uncompr
     size_t compressed_size = ZSTD_compress(
         compressed.data(), max_compressed_size,
         uncompressed.data(), uncompressed.size(),
-        ZSTD_CLEVEL_DEFAULT);
+        compressionLevel.value_or(ZSTD_CLEVEL_DEFAULT));
 
     if (ZSTD_isError(compressed_size)) {
         throw Exception("ZSTD compression error: {}", ZSTD_getErrorName(compressed_size));
