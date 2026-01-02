@@ -16,11 +16,15 @@
  */
 
 #include <errno.h>
-#include <getopt.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#include "getopt/getopt.h"
+#else
+#include <getopt.h>
+#endif
 
 #include "avro.h"
 #include "avro_private.h"
@@ -130,6 +134,15 @@ int main(int argc, char **argv)
 	char  *in_filename;
 	char  *out_filename;
 
+#ifdef _MSC_VER
+	{
+		const char *cp = argv[0] + strlen(argv[0]);
+		while (cp > argv[0] && *(cp-1) != '/' && *(cp-1) != '\\' && *(cp-1) != ':')
+			--cp;
+		opt_progname = cp;
+	}
+#endif
+
 	int  ch;
 	while ((ch = getopt_long(argc, argv, "b:c:", longopts, NULL)) != -1) {
 		switch (ch) {
@@ -157,7 +170,8 @@ int main(int argc, char **argv)
 		in_filename = NULL;
 		out_filename = argv[0];
 	} else {
-		fprintf(stderr, "Can't read from multiple input files.\n");
+		if (argc > 2)
+			fprintf(stderr, "Can't read from multiple input files.\n");
 		usage();
 		exit(1);
 	}
