@@ -47,16 +47,6 @@ using std::array;
 namespace {
 const string AVRO_SCHEMA_KEY("avro.schema");
 const string AVRO_CODEC_KEY("avro.codec");
-const string AVRO_NULL_CODEC("null");
-const string AVRO_DEFLATE_CODEC("deflate");
-
-#ifdef SNAPPY_CODEC_AVAILABLE
-const string AVRO_SNAPPY_CODEC = "snappy";
-#endif
-
-#ifdef ZSTD_CODEC_AVAILABLE
-const string AVRO_ZSTD_CODEC = "zstandard";
-#endif
 
 const size_t minSyncInterval = 32;
 const size_t maxSyncInterval = 1u << 30;
@@ -64,73 +54,144 @@ const size_t maxSyncInterval = 1u << 30;
 // Recommended by https://www.zlib.net/zlib_how.html
 const size_t zlibBufGrowSize = 128 * 1024;
 
-std::string codecToString(Codec codec) {
-    switch (codec) {
-        case NULL_CODEC: return "null";
-        case DEFLATE_CODEC: return "deflate";
-        case SNAPPY_CODEC: return "snappy";
-        case ZSTD_CODEC: return "zstandard";
-        default: return "unknown";
+template<Codec codec>
+struct codec_trait {
+    static std::string name() {
+        throw Exception("Unsupported codec: {}", static_cast<int>(codec));
     }
+    static void validate(std::optional<int> level) {
+        throw Exception("Unsupported codec: {}", static_cast<int>(codec));
+    }
+    static bool available() {
+        throw Exception("Unsupported codec: {}", static_cast<int>(codec));
+    }
+};
+
+template<>
+struct codec_trait<NULL_CODEC> {
+    static std::string name() {
+        return "null";
+    }
+    static void validate(std::optional<int> /*level*/) {}
+    static bool available() {
+        return true;
+    }
+};
+
+template<>
+struct codec_trait<DEFLATE_CODEC> {
+    static std::string name() {
+        return "deflate";
+    }
+
+    static void validate(std::optional<int> level) {
+        if (!level.has_value()) {
+            return;
+        }
+        int levelValue = level.value();
+        if (levelValue < 0 || levelValue > 9) {
+            throw Exception("Invalid compression level {} for deflate codec. "
+                            "Valid range is 0-9.",
+                            levelValue);
+        }
+    }
+
+    static bool available() {
+        return true;
+    }
+};
+
+template<>
+struct codec_trait<SNAPPY_CODEC> {
+    static std::string name() {
+        return "snappy";
+    }
+
+    static void validate(std::optional<int> /*level*/) {
+    }
+
+    static bool available() {
+#ifdef SNAPPY_CODEC_AVAILABLE
+        return true;
+#else
+        return false;
+#endif
+    }
+};
+
+template<>
+struct codec_trait<ZSTD_CODEC> {
+    static std::string name() {
+        return "zstandard";
+    }
+
+    static void validate(std::optional<int> level) {
+        if (!level.has_value()) {
+            return;
+        }
+        int levelValue = level.value();
+        if (levelValue < 1 || levelValue > 22) {
+            throw Exception("Invalid compression level {} for zstandard codec. "
+                            "Valid range is 1-22.",
+                            levelValue);
+        }
+    }
+
+    static bool available() {
+#ifdef ZSTD_CODEC_AVAILABLE
+        return true;
+#else
+        return false;
+#endif
+    }
+};
+
+#define DISPATCH_CODEC_FUNC(codec, func, ...)                              \
+    switch (codec) {                                                       \
+        case NULL_CODEC:                                                   \
+            return codec_trait<NULL_CODEC>::func(__VA_ARGS__);             \
+        case DEFLATE_CODEC:                                                \
+            return codec_trait<DEFLATE_CODEC>::func(__VA_ARGS__);          \
+        case SNAPPY_CODEC:                                                 \
+            return codec_trait<SNAPPY_CODEC>::func(__VA_ARGS__);           \
+        case ZSTD_CODEC:                                                   \
+            return codec_trait<ZSTD_CODEC>::func(__VA_ARGS__);             \
+        default:                                                           \
+            throw Exception("Unknown codec: {}", static_cast<int>(codec)); \
+    }
+
+std::string getCodecName(Codec codec) {
+    DISPATCH_CODEC_FUNC(codec, name);
 }
 
 void validateCodec(Codec codec, std::optional<int> level) {
     if (!isCodecAvailable(codec)) {
-        throw Exception("Codec {} is not available.", codecToString(codec));
+        throw Exception("Codec {} is not available.", getCodecName(codec));
     }
+    DISPATCH_CODEC_FUNC(codec, validate, level);
+}
 
-    if (!level.has_value()) {
-        return;
-    }
-
-    int levelValue = level.value();
-    switch (codec) {
-        case NULL_CODEC:
-        case SNAPPY_CODEC:
-            // These codecs don't support compression levels, ignore
-            break;
-        case DEFLATE_CODEC:
-            if (levelValue < 0 || levelValue > 9) {
-                throw Exception("Invalid compression level {} for deflate codec. "
-                                "Valid range is 0-9.",
-                                levelValue);
-            }
-            break;
-        case ZSTD_CODEC:
-            if (levelValue < 1 || levelValue > 22) {
-                throw Exception("Invalid compression level {} for zstandard codec. "
-                                "Valid range is 1-22.",
-                                levelValue);
-            }
-            break;
-        default:
-            throw Exception("Unknown codec: {}", static_cast<int>(codec));
+Codec getCodec(const std::string &name) {
+    if (name == codec_trait<NULL_CODEC>::name()) {
+        return NULL_CODEC;
+    } else if (name == codec_trait<DEFLATE_CODEC>::name()) {
+        return DEFLATE_CODEC;
+    } else if (name == codec_trait<SNAPPY_CODEC>::name()) {
+        return SNAPPY_CODEC;
+    } else if (name == codec_trait<ZSTD_CODEC>::name()) {
+        return ZSTD_CODEC;
+    } else {
+        throw Exception("Unknown codec name: {}", name);
     }
 }
 
 } // namespace
 
 bool isCodecAvailable(Codec codec) {
-    switch (codec) {
-        case NULL_CODEC:
-        case DEFLATE_CODEC:
-            return true;
-        case SNAPPY_CODEC:
-#ifdef SNAPPY_CODEC_AVAILABLE
-            return true;
-#else
-            return false;
-#endif
-        case ZSTD_CODEC:
-#ifdef ZSTD_CODEC_AVAILABLE
-            return true;
-#else
-            return false;
-#endif
-        default:
-            return false;
-    }
+    DISPATCH_CODEC_FUNC(codec, available);
 }
+
+#undef DISPATCH_CODEC_FUNC
 
 DataFileWriterBase::DataFileWriterBase(const char *filename, const ValidSchema &schema, size_t syncInterval,
                                        Codec codec, const Metadata &metadata,
@@ -173,19 +234,8 @@ void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, co
             syncInterval, minSyncInterval, maxSyncInterval);
     }
 
-    validateCodec(codec_, compressionLevel_);
-    setMetadata(AVRO_CODEC_KEY, AVRO_NULL_CODEC);
-    if (codec_ == NULL_CODEC) {
-        setMetadata(AVRO_CODEC_KEY, AVRO_NULL_CODEC);
-    } else if (codec_ == DEFLATE_CODEC) {
-        setMetadata(AVRO_CODEC_KEY, AVRO_DEFLATE_CODEC);
-    } else if (codec_ == SNAPPY_CODEC) {
-        setMetadata(AVRO_CODEC_KEY, AVRO_SNAPPY_CODEC);
-    } else if (codec_ == ZSTD_CODEC) {
-        setMetadata(AVRO_CODEC_KEY, AVRO_ZSTD_CODEC);
-    } else {
-        throw Exception("Unknown codec: {}", int(codec));
-    }
+    validateCodec(codec, compressionLevel_);
+    setMetadata(AVRO_CODEC_KEY, getCodecName(codec));
     setMetadata(AVRO_SCHEMA_KEY, schema.toJson(false));
 
     writeHeader();
@@ -649,23 +699,16 @@ void DataFileReaderBase::readHeader() {
         readerSchema_ = dataSchema();
     }
 
+    // Parse codec from metadata using codec_trait
     it = metadata_.find(AVRO_CODEC_KEY);
-    if (it != metadata_.end() && toString(it->second) == AVRO_DEFLATE_CODEC) {
-        codec_ = DEFLATE_CODEC;
-#ifdef SNAPPY_CODEC_AVAILABLE
-    } else if (it != metadata_.end()
-               && toString(it->second) == AVRO_SNAPPY_CODEC) {
-        codec_ = SNAPPY_CODEC;
-#endif
-#ifdef ZSTD_CODEC_AVAILABLE
-    } else if (it != metadata_.end() && toString(it->second) == AVRO_ZSTD_CODEC) {
-        codec_ = ZSTD_CODEC;
-#endif
+    if (it != metadata_.end()) {
+        const auto codecName = toString(it->second);
+        codec_ = getCodec(codecName);
+        if (!isCodecAvailable(codec_)) {
+            throw Exception("Codec {} is not available.", codecName);
+        }
     } else {
         codec_ = NULL_CODEC;
-        if (it != metadata_.end() && toString(it->second) != AVRO_NULL_CODEC) {
-            throw Exception("Unknown codec in data file: " + toString(it->second));
-        }
     }
 
     avro::decode(*decoder_, sync_);
