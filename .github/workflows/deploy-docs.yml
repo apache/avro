@@ -65,7 +65,7 @@ jobs:
             --minify \
             --destination ${{ runner.temp }}/website \
             --baseURL "/"
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: website
           path: ${{ runner.temp }}/website
@@ -84,7 +84,7 @@ jobs:
           sudo apt-get install -q -y cmake liblzma-dev libsnappy-dev libjansson-dev zlib1g-dev pkg-config asciidoc source-highlight libsource-highlight-dev
           cd lang/c
           ./build.sh clean docs
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: api-c
           path: build/c/docs
@@ -103,7 +103,7 @@ jobs:
           sudo apt-get install -q -y gcc g++ libboost-all-dev cmake doxygen
           cd lang/c++
           ./build.sh clean doc
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: api-c++
           path: lang/c++/doc/html
@@ -125,7 +125,7 @@ jobs:
           cd lang/csharp
           mkdir -p build/doc
           doxygen Avro.dox
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: api-csharp
           path: lang/csharp/build/doc/html
@@ -138,7 +138,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -164,7 +164,7 @@ jobs:
           set -x
           cd lang/java
           ./build.sh dist
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: api-java
           path: lang/java/target/reports/apidocs
@@ -188,7 +188,7 @@ jobs:
         working-directory: lang/py
         run: ./build.sh doc
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: api-python
           path: lang/py/docs/build/
@@ -211,7 +211,7 @@ jobs:
         run: |
           set -x
           cargo doc --all-features
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: api-rust
           path: target/doc
@@ -234,43 +234,43 @@ jobs:
           sudo apt-get install -q -y subversion  
 
       - name: Download website
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: website
           path: ${{ runner.temp }}/website
 
       - name: Download api-c
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: api-c
           path: api-c
 
       - name: Download api-c++
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: api-c++
           path: api-c++
 
       - name: Download api-csharp
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: api-csharp
           path: api-csharp
 
       - name: Download api-java
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: api-java
           path: api-java
 
       - name: Download api-python
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: api-python
           path: api-python
 
       - name: Download api-rust
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: api-rust
           path: api-rust

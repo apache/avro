@@ -27,7 +27,7 @@
   -->
   <PropertyGroup Label="Latest Package Versions">
     <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
-    <SystemCodeDomVersion>10.0.0</SystemCodeDomVersion>
+    <SystemCodeDomVersion>10.0.1</SystemCodeDomVersion>
     <SystemReflectionVersion>4.3.0</SystemReflectionVersion>
     <SystemReflectionEmitILGenerationVersion>4.7.0</SystemReflectionEmitILGenerationVersion>
     <SystemReflectionEmitLightweightVersion>4.7.0</SystemReflectionEmitLightweightVersion>
@@ -66,10 +66,10 @@
     <MicrosoftCodeAnalysisVersion>4.7.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisCSharpVersion>4.7.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.7.0</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
-    <MicrosoftCodeAnalysisNetAnalyzersVersion>10.0.100</MicrosoftCodeAnalysisNetAnalyzersVersion>
+    <MicrosoftCodeAnalysisNetAnalyzersVersion>10.0.101</MicrosoftCodeAnalysisNetAnalyzersVersion>
     <MicrosoftNETTestSdkVersion>17.13.0</MicrosoftNETTestSdkVersion>
     <NUnitVersion>3.14.0</NUnitVersion>
-    <NUnitConsoleRunnerVersion>3.21.0</NUnitConsoleRunnerVersion>
+    <NUnitConsoleRunnerVersion>3.22.0</NUnitConsoleRunnerVersion>
     <NUnit3TestAdapterVersion>5.2.0</NUnit3TestAdapterVersion>
     <StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
   </PropertyGroup>

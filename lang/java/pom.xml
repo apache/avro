@@ -40,9 +40,9 @@
     <ant.version>1.10.15</ant.version>
     <commons-cli.version>1.11.0</commons-cli.version>
     <commons-compress.version>1.28.0</commons-compress.version>
-    <commons-text.version>1.14.0</commons-text.version>
+    <commons-text.version>1.15.0</commons-text.version>
     <commons-lang3.version>3.20.0</commons-lang3.version>
-    <grpc.version>1.77.0</grpc.version>
+    <grpc.version>1.78.0</grpc.version>
     <hadoop.version>3.4.2</hadoop.version>
     <hamcrest.version>3.0</hamcrest.version>
     <jackson-bom.version>2.20.1</jackson-bom.version>
@@ -50,8 +50,8 @@
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit5.version>5.14.1</junit5.version>
     <maven-core.version>3.9.6</maven-core.version>
-    <mockito.version>5.20.0</mockito.version>
-    <netty.version>4.2.7.Final</netty.version>
+    <mockito.version>5.21.0</mockito.version>
+    <netty.version>4.2.9.Final</netty.version>
     <protobuf.version>4.33.2</protobuf.version>
     <reload4j.version>1.2.26</reload4j.version>
     <servlet-api.version>4.0.1</servlet-api.version>
@@ -65,7 +65,7 @@
     <archetype-plugin.version>3.4.1</archetype-plugin.version>
     <bundle-plugin-version>6.0.0</bundle-plugin-version>
     <cyclonedx-maven-plugin.version>2.9.1</cyclonedx-maven-plugin.version>
-    <exec-plugin.version>3.6.2</exec-plugin.version>
+    <exec-plugin.version>3.6.3</exec-plugin.version>
     <file-management.version>3.2.0</file-management.version>
     <javacc-plugin.version>3.0.3</javacc-plugin.version>
     <javacc.version>7.0.13</javacc.version>
