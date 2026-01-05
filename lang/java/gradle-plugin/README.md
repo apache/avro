@@ -7,19 +7,21 @@ Gradle plugin that generates Java code from Avro schemas
 ### Add avro extension
 In `build.gradle.kts`:
 
-Add plugin
+### Add plugin
 
 ```kotlin
 plugins {
     id("eu.eventloopsoftware.avro-gradle-plugin") version "0.0.2"
 }
 ```
-Add Avro dependency
+### Add Avro dependency
 
 ```kotlin
 implementation("org.apache.avro:avro:1.12.1")
 ```
-Configure Avro Gradle plugin
+
+### Configure Avro Gradle plugin
+
 ```kotlin
 avro {
     sourceDirectory = "src/main/avro"
@@ -27,6 +29,7 @@ avro {
 } 
 ```
 
+### Configure Maven dependency repository
 In `settings.gradle.kts`:
 
 Plugin is published on Maven Central:
@@ -38,8 +41,6 @@ pluginManagement {
     }
 }
 ```
-
-
 
 ### Add a task hook
 For Intellij to recognize the newly generated Java files add this to `build.gradle.kts`:
