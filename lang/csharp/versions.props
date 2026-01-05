@@ -69,7 +69,7 @@
     <MicrosoftCodeAnalysisNetAnalyzersVersion>10.0.101</MicrosoftCodeAnalysisNetAnalyzersVersion>
     <MicrosoftNETTestSdkVersion>17.13.0</MicrosoftNETTestSdkVersion>
     <NUnitVersion>3.14.0</NUnitVersion>
-    <NUnitConsoleRunnerVersion>3.21.1</NUnitConsoleRunnerVersion>
+    <NUnitConsoleRunnerVersion>3.22.0</NUnitConsoleRunnerVersion>
     <NUnit3TestAdapterVersion>5.2.0</NUnit3TestAdapterVersion>
     <StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
   </PropertyGroup>
