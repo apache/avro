@@ -54,7 +54,7 @@ tasks.named("compileKotlin") { dependsOn(tasks.named("avroGenerateJavaClasses"))
 `./gradlew avroGenerateJavaClasses`
 
 
-## Example project that uses avro-gradle-plugin
+## Example project that uses the Apache Avro gradle-plugin
 https://codeberg.org/frevib/use-gradle-plugin-test
 
 ## FAQ

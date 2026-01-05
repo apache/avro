@@ -27,7 +27,7 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>avro-gradle-plugin</artifactId>
+  <artifactId>gradle-plugin</artifactId>
   <packaging>pom</packaging>
 
   <name>Apache Avro Gradle Plugin</name>
