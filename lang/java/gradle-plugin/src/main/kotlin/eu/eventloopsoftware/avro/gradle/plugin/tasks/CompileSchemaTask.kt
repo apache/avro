@@ -14,16 +14,6 @@ import java.util.*
 
 abstract class CompileSchemaTask : AbstractCompileTask() {
 
-    /**
-     * A set of Glob patterns used to select files from the source
-     * directory for processing. By default, the pattern "**&#47;*.avsc"
-     * is used to select avsc files.
-     *
-     * @parameter
-     */
-    //@get:Input
-    //val includes: Set<String> = setOf("**/*.avsc")
-
     @TaskAction
     fun compileSchema() {
         project.logger.info("Generating Java files from Avro schemas...")
@@ -116,7 +106,7 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
             val upperCaseFieldVisibility = fieldVisibility.get().trim().uppercase()
             return FieldVisibility.valueOf(upperCaseFieldVisibility)
         } catch (_: IllegalArgumentException) {
-            logger.warn("Could not parse field visibility, using PRIVATE")
+            project.logger.warn("Could not parse field visibility, using PRIVATE")
             return FieldVisibility.PRIVATE
         }
     }
