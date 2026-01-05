@@ -1,4 +1,4 @@
-package org.apache.avro.gradle.plugin
+package eu.eventloopsoftware.avro.gradle.plugin
 
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
@@ -38,7 +38,7 @@ class SchemaCompileTaskTest {
         tempBuildFile.writeText(
             """            
             plugins {
-                id("org.apache.avro.avro-gradle-plugin")
+                id("eu.eventloopsoftware.avro-gradle-plugin")
             }
             
             avro {
@@ -96,7 +96,7 @@ class SchemaCompileTaskTest {
         tempBuildFile.writeText(
             """            
             plugins {
-                id("org.apache.avro.avro-gradle-plugin")
+                id("eu.eventloopsoftware.avro-gradle-plugin")
             }
             
             avro {
@@ -162,7 +162,7 @@ class SchemaCompileTaskTest {
         tempBuildFile.writeText(
             """            
             plugins {
-                id("org.apache.avro.avro-gradle-plugin")
+                id("eu.eventloopsoftware.avro-gradle-plugin")
             }
             
             avro {
@@ -221,7 +221,7 @@ class SchemaCompileTaskTest {
         tempBuildFile.writeText(
             """            
             plugins {
-                id("org.apache.avro.avro-gradle-plugin")
+                id("eu.eventloopsoftware.avro-gradle-plugin")
             }
             
             avro {

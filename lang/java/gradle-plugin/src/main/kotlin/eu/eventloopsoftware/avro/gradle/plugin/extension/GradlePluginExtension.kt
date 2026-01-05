@@ -1,4 +1,4 @@
-package org.apache.avro.gradle.plugin.extension
+package eu.eventloopsoftware.avro.gradle.plugin.extension
 
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty

@@ -1,11 +1,10 @@
-package org.apache.avro.gradle.plugin.tasks
+package eu.eventloopsoftware.avro.gradle.plugin.tasks
 
 import org.apache.avro.SchemaParseException
 import org.apache.avro.SchemaParser
 import org.apache.avro.compiler.specific.SpecificCompiler
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
 import org.apache.avro.generic.GenericData
-import org.gradle.api.Project
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskAction
@@ -114,9 +113,9 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
 
     private fun getFieldV(): FieldVisibility {
         try {
-            val upperCaseFieldVisibility = fieldVisibility.get().trim().uppercase(Locale.getDefault())
+            val upperCaseFieldVisibility = fieldVisibility.get().trim().uppercase()
             return FieldVisibility.valueOf(upperCaseFieldVisibility)
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             logger.warn("Could not parse field visibility, using PRIVATE")
             return FieldVisibility.PRIVATE
         }

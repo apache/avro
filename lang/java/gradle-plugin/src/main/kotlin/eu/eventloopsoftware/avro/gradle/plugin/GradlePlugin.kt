@@ -1,7 +1,7 @@
-package org.apache.avro.gradle.plugin
+package eu.eventloopsoftware.avro.gradle.plugin
 
-import org.apache.avro.gradle.plugin.extension.GradlePluginExtension
-import org.apache.avro.gradle.plugin.tasks.CompileSchemaTask
+import eu.eventloopsoftware.avro.gradle.plugin.extension.GradlePluginExtension
+import eu.eventloopsoftware.avro.gradle.plugin.tasks.CompileSchemaTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
@@ -23,7 +23,7 @@ abstract class GradlePlugin : Plugin<Project> {
             runPlugin(compileSchemaTask, extension, project, sourceDirectory, outputDirectory)
         }
 
-        project.tasks.register("avroGenerateTestJavaClasses", CompileSchemaTask::class.java) {compileSchemaTask ->
+        project.tasks.register("avroGenerateTestJavaClasses", CompileSchemaTask::class.java) { compileSchemaTask ->
             val sourceDirectory = extension.testSourceDirectory.get()
             val outputDirectory = extension.testOutputDirectory.get()
             runPlugin(compileSchemaTask, extension, project, sourceDirectory, outputDirectory)
@@ -67,7 +67,7 @@ abstract class GradlePlugin : Plugin<Project> {
                 addGeneratedSourcesToProject(project, compileTask.outputDirectory.get())
             }
 
-            SchemaType.idl -> TODO()
+            SchemaType.protocol -> TODO()
         }
     }
 
@@ -83,5 +83,5 @@ abstract class GradlePlugin : Plugin<Project> {
 
 enum class SchemaType {
     schema,
-    idl
+    protocol
 }

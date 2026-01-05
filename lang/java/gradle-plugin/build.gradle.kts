@@ -19,11 +19,12 @@
 plugins {
     kotlin("jvm") version "2.2.10"
     `java-gradle-plugin`
-    `maven-publish`
+    id("com.gradle.plugin-publish") version "2.0.0"
+    id("com.vanniktech.maven.publish") version "0.35.0"
 }
 
-group = "org.apache.avro"
-version = "1.13.0-SNAPSHOT"
+group = "eu.eventloopsoftware"
+version = "0.0.4-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -31,8 +32,8 @@ repositories {
 }
 
 dependencies {
-    //implementation("org.gradle:gradle-tooling-api:7.1.1")
-    implementation("org.apache.avro:avro-compiler:${version}")
+    // for release use ${version}
+    implementation("org.apache.avro:avro-compiler:1.12.1")
     testImplementation(kotlin("test"))
 }
 
@@ -43,16 +44,49 @@ kotlin {
     jvmToolchain(17)
 }
 
-java {
-    withSourcesJar()
-}
-
 
 gradlePlugin {
     plugins {
-        create("gradlePlugin") {
-            id = "org.apache.avro.avro-gradle-plugin"
-            implementationClass = "org.apache.avro.gradle.plugin.GradlePlugin"
+        website = "https://avro.apache.org/"
+        vcsUrl = "https://github.com/apache/avro.git"
+        register("gradlePlugin") {
+            id = "eu.eventloopsoftware.avro-gradle-plugin"
+            displayName = "Avro Gradle Plugin"
+            description = "Avro Gradle plugin for generating Java code"
+            tags = listOf("avro", "kotlin", "java", "apache")
+            implementationClass = "eu.eventloopsoftware.avro.gradle.plugin.GradlePlugin"
+        }
+    }
+}
+
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
+
+    coordinates(group.toString(), "avro-gradle-plugin", version.toString())
+    pom {
+        name = "Avro Gradle Plugin"
+        description = "Generate Java code from Avro files"
+        inceptionYear = "2025"
+        url = "https://github.com/frevib/avro/"
+        licenses {
+            license {
+                name = "The Apache License, Version 2.0"
+                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                distribution = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            }
+        }
+        developers {
+            developer {
+                id = "frevib"
+                name = "H. de Vries"
+                url = "https://github.com/frevib/"
+            }
+        }
+        scm {
+            url = "https://github.com/frevib/avro/"
+            connection = "scm:git:git://github.com/frevib/avro.git"
+            developerConnection = "scm:git:ssh://git@github.com/frevib/avro.git"
         }
     }
 }

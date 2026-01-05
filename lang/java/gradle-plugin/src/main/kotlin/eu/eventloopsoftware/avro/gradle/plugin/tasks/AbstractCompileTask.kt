@@ -1,6 +1,5 @@
-package org.apache.avro.gradle.plugin.tasks
+package eu.eventloopsoftware.avro.gradle.plugin.tasks
 
-import org.gradle.api.DefaultTask
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input

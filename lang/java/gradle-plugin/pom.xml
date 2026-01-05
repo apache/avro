@@ -38,6 +38,8 @@
     <pluginTestingVersion>3.3.0</pluginTestingVersion>
   </properties>
 
+  <!-- Relocation https://maven.apache.org/guides/mini/guide-relocation.html -->
+
   <build>
     <plugins>
       <plugin>
