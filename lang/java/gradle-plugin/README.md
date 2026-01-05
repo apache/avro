@@ -56,4 +56,16 @@ tasks.named("compileKotlin") { dependsOn(tasks.named("avroGenerateJavaClasses"))
 ## Example project that uses avro-gradle-plugin
 https://codeberg.org/frevib/use-gradle-plugin-test
 
+## FAQ
+
+#### How can I benefit from Kotlin's null safety?
+Use `createNullSafeAnnotations = true` and Java getters will be annotated with 
+`@org.jetbrains.annotations.NotNull`/ `@org.jetbrains.annotations.Nullable`. This way
+Kotlin will recognize which value is nullable.
+
+#### When I update my schemas and generate code, the Java classes stay the same
+Yes, for now you have to `./gradlew clean` every time you update your Avro schemas.
+
+
+
 
