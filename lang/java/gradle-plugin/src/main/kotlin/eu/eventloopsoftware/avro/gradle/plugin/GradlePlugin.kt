@@ -11,7 +11,7 @@ import kotlin.collections.toSet
 
 abstract class GradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        logger.info("Running Avro Gradle plugin for project: ${project.name}")
+        project.logger.info("Running Avro Gradle plugin for project: ${project.name}")
 
         val extension: AvroGradlePluginExtension = project.extensions.create("avro", AvroGradlePluginExtension::class.java)
 
@@ -65,16 +65,16 @@ abstract class GradlePlugin : Plugin<Project> {
                 compileTask.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
                 compileTask.enableDecimalLogicalType.set(extension.enableDecimalLogicalType)
 
-                addGeneratedSourcesToProject(project, compileTask.outputDirectory.get())
+                addGeneratedSourcesToProject(project, compileTask)
             }
 
             SchemaType.protocol -> TODO()
         }
     }
 
-    private fun addGeneratedSourcesToProject(project: Project, generatedSourcesDir: Directory) {
+    private fun addGeneratedSourcesToProject(project: Project, compileTask: CompileAvroSchemaTask) {
         val sourceSets = project.extensions.getByType(JavaPluginExtension::class.java).sourceSets
-        sourceSets.getByName("main").java.srcDir(generatedSourcesDir)
+        sourceSets.getByName("main").java.srcDir(compileTask.outputDirectory)
     }
 }
 

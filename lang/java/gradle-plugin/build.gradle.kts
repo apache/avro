@@ -32,7 +32,7 @@ repositories {
 }
 
 dependencies {
-    // for release use ${version}
+    // TODO: for release use ${version}
     implementation("org.apache.avro:avro-compiler:1.12.1")
     testImplementation(kotlin("test"))
 }
