@@ -14,7 +14,7 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
 
     @TaskAction
     fun compileSchema() {
-        project.logger.info("Generating Java files from Avro schemas...")
+        logger.info("Generating Java files from Avro schemas...")
 
         if (!source.isEmpty) {
             val sourceDirectoryFullPath = sourceDirectory.get().asFile
@@ -24,7 +24,7 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
             logger.warn("No Avro files found in $sourceDirectory. Nothing to compile")
         }
 
-        project.logger.info("Done generating Java files from Avro schemas...")
+        logger.info("Done generating Java files from Avro schemas...")
     }
 
     private fun compileSchemas(fileTree: FileTree, sourceDirectory: File, outputDirectory: File) {
@@ -97,7 +97,7 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
             val upperCaseFieldVisibility = fieldVisibility.get().trim().uppercase()
             return FieldVisibility.valueOf(upperCaseFieldVisibility)
         } catch (_: IllegalArgumentException) {
-            project.logger.warn("Could not parse field visibility, using PRIVATE")
+            logger.warn("Could not parse field visibility, using PRIVATE")
             return FieldVisibility.PRIVATE
         }
     }
