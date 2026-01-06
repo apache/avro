@@ -5,12 +5,12 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import javax.inject.Inject
 
-abstract class GradlePluginExtension @Inject constructor(objects: ObjectFactory) {
+abstract class AvroGradlePluginExtension @Inject constructor(objects: ObjectFactory) {
 
     /**
      * Schema type: "schema", "idl", "protocol" are valid. Default is "schema"
      */
-    val schemaType = objects.property(String::class.java).convention("schema")
+    val schemaType: Property<String> = objects.property(String::class.java).convention("schema")
 
     /**
      * The source directory of avro files. This directory is added to the classpath

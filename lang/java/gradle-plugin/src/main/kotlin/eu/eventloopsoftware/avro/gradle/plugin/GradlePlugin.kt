@@ -1,7 +1,7 @@
 package eu.eventloopsoftware.avro.gradle.plugin
 
-import eu.eventloopsoftware.avro.gradle.plugin.extension.GradlePluginExtension
-import eu.eventloopsoftware.avro.gradle.plugin.tasks.CompileSchemaTask
+import eu.eventloopsoftware.avro.gradle.plugin.extension.AvroGradlePluginExtension
+import eu.eventloopsoftware.avro.gradle.plugin.tasks.CompileAvroSchemaTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
@@ -13,18 +13,18 @@ abstract class GradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
         logger.info("Running Avro Gradle plugin for project: ${project.name}")
 
-        val extension: GradlePluginExtension = project.extensions.create("avro", GradlePluginExtension::class.java)
+        val extension: AvroGradlePluginExtension = project.extensions.create("avro", AvroGradlePluginExtension::class.java)
 
         // Needed for Android support
         project.pluginManager.apply("java")
 
-        project.tasks.register("avroGenerateJavaClasses", CompileSchemaTask::class.java) { compileSchemaTask ->
+        project.tasks.register("avroGenerateJavaClasses", CompileAvroSchemaTask::class.java) { compileSchemaTask ->
             val sourceDirectory = extension.sourceDirectory.get()
             val outputDirectory = extension.outputDirectory.get()
             runPlugin(compileSchemaTask, extension, project, sourceDirectory, outputDirectory)
         }
 
-        project.tasks.register("avroGenerateTestJavaClasses", CompileSchemaTask::class.java) { compileSchemaTask ->
+        project.tasks.register("avroGenerateTestJavaClasses", CompileAvroSchemaTask::class.java) { compileSchemaTask ->
             val sourceDirectory = extension.testSourceDirectory.get()
             val outputDirectory = extension.testOutputDirectory.get()
             runPlugin(compileSchemaTask, extension, project, sourceDirectory, outputDirectory)
@@ -32,8 +32,8 @@ abstract class GradlePlugin : Plugin<Project> {
     }
 
     private fun runPlugin(
-        compileTask: CompileSchemaTask,
-        extension: GradlePluginExtension,
+        compileTask: CompileAvroSchemaTask,
+        extension: AvroGradlePluginExtension,
         project: Project,
         sourceDirectory: String,
         outputDirectory: String

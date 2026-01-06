@@ -10,7 +10,7 @@ import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.IOException
 
-abstract class CompileSchemaTask : AbstractCompileTask() {
+abstract class CompileAvroSchemaTask : AbstractCompileTask() {
 
     @TaskAction
     fun compileSchema() {
