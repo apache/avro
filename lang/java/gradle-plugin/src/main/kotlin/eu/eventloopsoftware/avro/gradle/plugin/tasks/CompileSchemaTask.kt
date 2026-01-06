@@ -6,11 +6,9 @@ import org.apache.avro.compiler.specific.SpecificCompiler
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
 import org.apache.avro.generic.GenericData
 import org.gradle.api.file.FileTree
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.IOException
-import java.util.*
 
 abstract class CompileSchemaTask : AbstractCompileTask() {
 
@@ -19,8 +17,8 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
         project.logger.info("Generating Java files from Avro schemas...")
 
         if (!source.isEmpty) {
-            val sourceDirectoryFullPath = getSourceDirectoryFullPath(sourceDirectory)
-            val outputDirectoryFullPath = getBuildDirectoryFullPath(outputDirectory)
+            val sourceDirectoryFullPath = sourceDirectory.get().asFile
+            val outputDirectoryFullPath = outputDirectory.get().asFile
             compileSchemas(source, sourceDirectoryFullPath, outputDirectoryFullPath)
         } else {
             logger.warn("No Avro files found in $sourceDirectory. Nothing to compile")
@@ -28,13 +26,6 @@ abstract class CompileSchemaTask : AbstractCompileTask() {
 
         project.logger.info("Done generating Java files from Avro schemas...")
     }
-
-
-    private fun getSourceDirectoryFullPath(directoryProperty: Property<String>): File =
-        project.layout.projectDirectory.dir(directoryProperty.get()).asFile
-
-    private fun getBuildDirectoryFullPath(directoryProperty: Property<String>): File =
-        project.layout.buildDirectory.dir(directoryProperty).get().asFile
 
     private fun compileSchemas(fileTree: FileTree, sourceDirectory: File, outputDirectory: File) {
         val sourceFileForModificationDetection: File? =

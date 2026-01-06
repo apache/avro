@@ -1,17 +1,20 @@
 package eu.eventloopsoftware.avro.gradle.plugin.tasks
 
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceTask
 
 abstract class AbstractCompileTask : SourceTask() {
 
-    @get:Input
-    abstract val sourceDirectory: Property<String>
+    @get:InputDirectory
+    abstract val sourceDirectory: DirectoryProperty
 
-    @get:Input
-    abstract val outputDirectory: Property<String>
+    @get:OutputDirectory
+    abstract val outputDirectory: DirectoryProperty
 
     @get:Input
     abstract val fieldVisibility: Property<String>

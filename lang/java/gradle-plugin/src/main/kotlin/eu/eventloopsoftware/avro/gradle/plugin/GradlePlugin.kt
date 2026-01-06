@@ -4,6 +4,7 @@ import eu.eventloopsoftware.avro.gradle.plugin.extension.GradlePluginExtension
 import eu.eventloopsoftware.avro.gradle.plugin.tasks.CompileSchemaTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.internal.cc.base.logger
 import kotlin.collections.toSet
@@ -41,9 +42,9 @@ abstract class GradlePlugin : Plugin<Project> {
 
         when (schemaType) {
             SchemaType.schema -> {
-                compileTask.source(project.fileTree(sourceDirectory))
-                compileTask.sourceDirectory.set(sourceDirectory)
-                compileTask.outputDirectory.set(outputDirectory)
+                compileTask.source(sourceDirectory)
+                compileTask.sourceDirectory.set(project.layout.projectDirectory.dir(sourceDirectory))
+                compileTask.outputDirectory.set(project.layout.buildDirectory.dir(outputDirectory))
                 compileTask.fieldVisibility.set(extension.fieldVisibility)
                 compileTask.setExcludes(extension.excludes.get().toSet())
                 compileTask.setIncludes(setOf("**/*.avsc"))
@@ -71,12 +72,8 @@ abstract class GradlePlugin : Plugin<Project> {
         }
     }
 
-    private fun addGeneratedSourcesToProject(project: Project, outputDirectory: String) {
+    private fun addGeneratedSourcesToProject(project: Project, generatedSourcesDir: Directory) {
         val sourceSets = project.extensions.getByType(JavaPluginExtension::class.java).sourceSets
-        val generatedSourcesDir = project.layout.buildDirectory.dir(outputDirectory)
-        project.logger.debug("Generated sources directory: ${generatedSourcesDir.get()}")
-
-        // Add directory that contains the generated Java files to source set
         sourceSets.getByName("main").java.srcDir(generatedSourcesDir)
     }
 }

@@ -24,7 +24,7 @@ plugins {
 }
 
 group = "eu.eventloopsoftware"
-version = "0.0.4-SNAPSHOT"
+version = "0.0.6-SNAPSHOT"
 
 repositories {
     mavenCentral()
