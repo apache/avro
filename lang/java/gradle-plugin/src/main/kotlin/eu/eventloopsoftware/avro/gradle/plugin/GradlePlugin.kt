@@ -15,7 +15,7 @@ abstract class GradlePlugin : Plugin<Project> {
 
         val extension: AvroGradlePluginExtension = project.extensions.create("avro", AvroGradlePluginExtension::class.java)
 
-        // Needed for Android support
+        // Required so that we can get the sourceSets from the java extension below.
         project.pluginManager.apply("java")
 
         project.tasks.register("avroGenerateJavaClasses", CompileAvroSchemaTask::class.java) { compileSchemaTask ->
