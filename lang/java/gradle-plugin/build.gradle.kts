@@ -20,11 +20,10 @@ plugins {
     kotlin("jvm") version "2.2.10"
     `java-gradle-plugin`
     id("com.gradle.plugin-publish") version "2.0.0"
-    id("com.vanniktech.maven.publish") version "0.35.0"
 }
 
 group = "eu.eventloopsoftware"
-version = "0.0.5"
+version = "0.0.7-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -34,6 +33,7 @@ repositories {
 dependencies {
     // TODO: for release use ${version}
     implementation("org.apache.avro:avro-compiler:1.12.1")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.3.0")
     testImplementation(kotlin("test"))
 }
 

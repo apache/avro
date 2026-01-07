@@ -4,29 +4,45 @@ import eu.eventloopsoftware.avro.gradle.plugin.extension.AvroGradlePluginExtensi
 import eu.eventloopsoftware.avro.gradle.plugin.tasks.CompileAvroSchemaTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.tasks.TaskProvider
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmExtension
+
 
 abstract class AvroGradlePlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         project.logger.info("Running Avro Gradle plugin for project: ${project.name}")
 
-        val extension: AvroGradlePluginExtension =
-            project.extensions.create("avro", AvroGradlePluginExtension::class.java)
+        val extension = project.extensions.create("avro", AvroGradlePluginExtension::class.java)
 
         // Required so that we can get the sourceSets from the java extension below.
         project.pluginManager.apply("java")
 
-        project.tasks.register("avroGenerateJavaClasses", CompileAvroSchemaTask::class.java) { compileSchemaTask ->
-            val sourceDirectory = extension.sourceDirectory.get()
-            val outputDirectory = extension.outputDirectory.get()
-            configurePlugin(compileSchemaTask, extension, project, sourceDirectory, outputDirectory)
-        }
+        val compileAvroSchemaTask =
+            project.tasks.register("avroGenerateJavaClasses", CompileAvroSchemaTask::class.java) { compileSchemaTask ->
+                val sourceDirectory = extension.sourceDirectory.get()
+                val outputDirectory = extension.outputDirectory.get()
+                configurePlugin(compileSchemaTask, extension, project, sourceDirectory, outputDirectory)
+            }
 
-        project.tasks.register("avroGenerateTestJavaClasses", CompileAvroSchemaTask::class.java) { compileSchemaTask ->
+        val compileTestAvroSchemaTask = project.tasks.register(
+            "avroGenerateTestJavaClasses",
+            CompileAvroSchemaTask::class.java
+        ) { compileSchemaTask ->
             val sourceDirectory = extension.testSourceDirectory.get()
             val outputDirectory = extension.testOutputDirectory.get()
             configurePlugin(compileSchemaTask, extension, project, sourceDirectory, outputDirectory)
+        }
+
+        // Add generated code before compilation
+        project.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+            addGeneratedSourcesToKotlinProject(project, compileAvroSchemaTask, compileTestAvroSchemaTask)
+        }
+
+        project.plugins.withType(JavaPlugin::class.java) {
+            addGeneratedSourcesToJavaProject(project, compileAvroSchemaTask, compileTestAvroSchemaTask)
         }
     }
 
@@ -64,16 +80,30 @@ abstract class AvroGradlePlugin : Plugin<Project> {
                 compileTask.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
                 compileTask.enableDecimalLogicalType.set(extension.enableDecimalLogicalType)
 
-                addGeneratedSourcesToProject(project, compileTask)
             }
 
             SchemaType.protocol -> TODO()
         }
     }
 
-    private fun addGeneratedSourcesToProject(project: Project, compileTask: CompileAvroSchemaTask) {
+    private fun addGeneratedSourcesToJavaProject(
+        project: Project,
+        compileTask: TaskProvider<CompileAvroSchemaTask>,
+        compileTestTask: TaskProvider<CompileAvroSchemaTask>
+    ) {
         val sourceSets = project.extensions.getByType(JavaPluginExtension::class.java).sourceSets
-        sourceSets.getByName("main").java.srcDir(compileTask.outputDirectory)
+        sourceSets.getByName("main").java.srcDir(compileTask.flatMap { it.outputDirectory })
+        sourceSets.getByName("test").java.srcDir(compileTestTask.flatMap { it.outputDirectory })
+    }
+
+    private fun addGeneratedSourcesToKotlinProject(
+        project: Project,
+        compileTask: TaskProvider<CompileAvroSchemaTask>,
+        compileTestTask: TaskProvider<CompileAvroSchemaTask>,
+    ) {
+        val sourceSets = project.extensions.getByType(KotlinJvmExtension::class.java).sourceSets
+        sourceSets.getByName("main").kotlin.srcDir(compileTask.flatMap { it.outputDirectory })
+        sourceSets.getByName("test").kotlin.srcDir(compileTestTask.flatMap { it.outputDirectory })
     }
 }
 

@@ -42,26 +42,6 @@ avro {
 } 
 ```
 
-### Configure Maven dependency repository
-In `settings.gradle.kts`:
-
-Plugin is published on Maven Central:
-```kotlin
-pluginManagement {
-    repositories {
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
-```
-
-### Add a task hook
-For Intellij to recognize the newly generated Java files add this to `build.gradle.kts`:
-
-```kotlin
-tasks.named("compileKotlin") { dependsOn(tasks.named("avroGenerateJavaClasses")) }
-```
-
 ### Generate Java classes
 
 `./gradlew avroGenerateJavaClasses`
