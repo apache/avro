@@ -6,7 +6,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 
-abstract class GradlePlugin : Plugin<Project> {
+abstract class AvroGradlePlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         project.logger.info("Running Avro Gradle plugin for project: ${project.name}")
@@ -20,17 +20,17 @@ abstract class GradlePlugin : Plugin<Project> {
         project.tasks.register("avroGenerateJavaClasses", CompileAvroSchemaTask::class.java) { compileSchemaTask ->
             val sourceDirectory = extension.sourceDirectory.get()
             val outputDirectory = extension.outputDirectory.get()
-            runPlugin(compileSchemaTask, extension, project, sourceDirectory, outputDirectory)
+            configurePlugin(compileSchemaTask, extension, project, sourceDirectory, outputDirectory)
         }
 
         project.tasks.register("avroGenerateTestJavaClasses", CompileAvroSchemaTask::class.java) { compileSchemaTask ->
             val sourceDirectory = extension.testSourceDirectory.get()
             val outputDirectory = extension.testOutputDirectory.get()
-            runPlugin(compileSchemaTask, extension, project, sourceDirectory, outputDirectory)
+            configurePlugin(compileSchemaTask, extension, project, sourceDirectory, outputDirectory)
         }
     }
 
-    private fun runPlugin(
+    private fun configurePlugin(
         compileTask: CompileAvroSchemaTask,
         extension: AvroGradlePluginExtension,
         project: Project,
