@@ -15,6 +15,10 @@ Add logical type factories
 
 Now released on Gradle plugin portal: https://plugins.gradle.org/plugin/eu.eventloopsoftware.avro-gradle-plugin
 
+`0.0.7`
+
+It is not needed to add `tasks.named("compileKotlin") { dependsOn(tasks.named("avroGenerateJavaClasses")) }` any more
+
 ## Usage
 
 ### Add avro extension
