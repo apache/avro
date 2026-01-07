@@ -1,20 +1,25 @@
 package eu.eventloopsoftware.avro.gradle.plugin.tasks
 
+import org.apache.avro.LogicalTypes
 import org.apache.avro.SchemaParseException
 import org.apache.avro.SchemaParser
 import org.apache.avro.compiler.specific.SpecificCompiler
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
 import org.apache.avro.generic.GenericData
+import org.gradle.api.GradleException
 import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.IOException
+import java.net.URL
+import java.net.URLClassLoader
 
 abstract class CompileAvroSchemaTask : AbstractCompileTask() {
 
     @TaskAction
     fun compileSchema() {
         logger.info("Generating Java files from Avro schemas...")
+
 
         if (!source.isEmpty) {
             val sourceDirectoryFullPath = sourceDirectory.get().asFile
@@ -33,6 +38,14 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
                 .files
                 .filter { file: File -> file.lastModified() > 0 }
                 .maxBy { it.lastModified() }
+
+
+        // Need to register custom logical type factories before schema compilation.
+        try {
+            loadLogicalTypesFactories()
+        } catch (e: IOException) {
+            throw RuntimeException("Error while loading logical types factories ", e)
+        }
 
         try {
             val parser = SchemaParser()
@@ -59,9 +72,6 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
         outputDirectory: File
     ) {
         setCompilerProperties(compiler)
-        // TODO:
-        //  * customLogicalTypeFactories
-
         try {
             for (customConversion in customConversions.get()) {
                 compiler.addCustomConversion(Thread.currentThread().getContextClassLoader().loadClass(customConversion))
@@ -113,4 +123,39 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
             }
         }
     }
+
+    private fun loadLogicalTypesFactories() =
+        createClassLoader().use { classLoader ->
+            customLogicalTypeFactories.get().forEach { factory ->
+                try {
+                    @Suppress("UNCHECKED_CAST")
+                    val logicalTypeFactoryClass =
+                        classLoader.loadClass(factory) as Class<LogicalTypes.LogicalTypeFactory>
+                    val factoryInstance = logicalTypeFactoryClass.getDeclaredConstructor().newInstance()
+                    LogicalTypes.register(factoryInstance)
+                } catch (e: ClassNotFoundException) {
+                    throw IOException(e)
+                } catch (e: ReflectiveOperationException) {
+                    throw GradleException("Failed to instantiate logical type factory class: $factory", e)
+                }
+            }
+        }
+
+    private fun createClassLoader(): URLClassLoader {
+        val urls = findClasspath()
+        return URLClassLoader(urls.toTypedArray(), Thread.currentThread().contextClassLoader)
+    }
+
+    private fun findClasspath(): List<URL> {
+        val runtimeClasspathElements = getRuntimeClasspathElements().map { it.toURI().toURL() }
+        val testRuntimeClasspathElements = getTestRuntimeClasspathElements().map { it.toURI().toURL() }
+        return runtimeClasspathElements + testRuntimeClasspathElements
+    }
+
+    private fun getRuntimeClasspathElements(): Set<File> =
+        project.configurations.getByName("runtimeClasspath").files
+
+    private fun getTestRuntimeClasspathElements(): Set<File> =
+        project.configurations.getByName("testRuntimeClasspath").files
+
 }

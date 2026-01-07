@@ -4,16 +4,15 @@ import eu.eventloopsoftware.avro.gradle.plugin.extension.AvroGradlePluginExtensi
 import eu.eventloopsoftware.avro.gradle.plugin.tasks.CompileAvroSchemaTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.file.Directory
 import org.gradle.api.plugins.JavaPluginExtension
-import org.gradle.internal.cc.base.logger
-import kotlin.collections.toSet
 
 abstract class GradlePlugin : Plugin<Project> {
+
     override fun apply(project: Project) {
         project.logger.info("Running Avro Gradle plugin for project: ${project.name}")
 
-        val extension: AvroGradlePluginExtension = project.extensions.create("avro", AvroGradlePluginExtension::class.java)
+        val extension: AvroGradlePluginExtension =
+            project.extensions.create("avro", AvroGradlePluginExtension::class.java)
 
         // Required so that we can get the sourceSets from the java extension below.
         project.pluginManager.apply("java")
