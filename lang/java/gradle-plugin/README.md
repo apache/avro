@@ -2,6 +2,19 @@
 
 Gradle plugin that generates Java code from Avro schemas
 
+## Version
+`0.0.2`
+
+first beta
+
+`0.0.5`
+
+Possible breaking change: rename `CompileSchemaTask` to `CompileAvroSchemaTask`
+
+Add logical type factories
+
+Now released on Gradle plugin portal: https://plugins.gradle.org/plugin/eu.eventloopsoftware.avro-gradle-plugin
+
 ## Usage
 
 ### Add avro extension
