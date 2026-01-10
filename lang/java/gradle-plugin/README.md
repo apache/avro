@@ -33,7 +33,7 @@ In `build.gradle.kts`:
 
 ```kotlin
 plugins {
-    id("eu.eventloopsoftware.avro-gradle-plugin") version "0.0.2"
+    id("eu.eventloopsoftware.avro-gradle-plugin") version "0.0.8"
 }
 ```
 ### Add Avro dependency
