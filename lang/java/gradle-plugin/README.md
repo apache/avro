@@ -19,6 +19,11 @@ Now released on Gradle plugin portal: https://plugins.gradle.org/plugin/eu.event
 
 It is not needed to add `tasks.named("compileKotlin") { dependsOn(tasks.named("avroGenerateJavaClasses")) }` any more
 
+`0.0.8`
+
+Add `sourceZipFiles` property to add zip files with schemas in them
+pu
+
 ## Usage
 
 ### Add avro extension
