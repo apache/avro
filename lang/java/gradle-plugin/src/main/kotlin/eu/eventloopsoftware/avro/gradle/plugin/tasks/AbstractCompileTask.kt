@@ -1,26 +1,22 @@
 package eu.eventloopsoftware.avro.gradle.plugin.tasks
 
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.SourceTask
+import org.gradle.api.tasks.*
 
-abstract class AbstractCompileTask : SourceTask() {
+abstract class AbstractCompileTask : DefaultTask() {
 
-    @get:InputDirectory
-    abstract val sourceDirectory: DirectoryProperty
+    @get:InputFiles
+    abstract val sourceZipFiles: ConfigurableFileCollection
 
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
     @get:Input
     abstract val fieldVisibility: Property<String>
-
-    //@get:Input
-    //abstract val excludes: ListProperty<String>
 
     @get:Input
     abstract val testExcludes: ListProperty<String>
@@ -31,8 +27,9 @@ abstract class AbstractCompileTask : SourceTask() {
     @get:Input
     abstract val velocityToolsClassesNames: ListProperty<String>
 
-    @get:Input
-    abstract val templateDirectory: Property<String>
+    @get:InputDirectory
+    @get:Internal
+    abstract val templateDirectory: DirectoryProperty
 
     @get:Input
     abstract val recordSpecificClass: Property<String>

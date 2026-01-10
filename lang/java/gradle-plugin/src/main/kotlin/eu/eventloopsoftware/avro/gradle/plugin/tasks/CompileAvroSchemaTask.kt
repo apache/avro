@@ -7,7 +7,11 @@ import org.apache.avro.compiler.specific.SpecificCompiler
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
 import org.apache.avro.generic.GenericData
 import org.gradle.api.GradleException
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileTree
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.IOException
@@ -16,23 +20,24 @@ import java.net.URLClassLoader
 
 abstract class CompileAvroSchemaTask : AbstractCompileTask() {
 
+    @get:InputFiles
+    @get:SkipWhenEmpty
+    abstract val schemaFiles: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:Classpath
+    abstract val classpath: ConfigurableFileCollection
+
     @TaskAction
     fun compileSchema() {
-        logger.info("Generating Java files from Avro schemas...")
+        logger.info("Generating Java files from ${schemaFiles.files.size} Avro schemas...")
 
-
-        if (!source.isEmpty) {
-            val sourceDirectoryFullPath = sourceDirectory.get().asFile
-            val outputDirectoryFullPath = outputDirectory.get().asFile
-            compileSchemas(source, sourceDirectoryFullPath, outputDirectoryFullPath)
-        } else {
-            logger.warn("No Avro files found in $sourceDirectory. Nothing to compile")
-        }
+        compileSchemas(schemaFiles.asFileTree, schemaFiles.asPath, outputDirectory.get().asFile)
 
         logger.info("Done generating Java files from Avro schemas...")
     }
 
-    private fun compileSchemas(fileTree: FileTree, sourceDirectory: File, outputDirectory: File) {
+    private fun compileSchemas(fileTree: FileTree, sourceDirectory: String, outputDirectory: File) {
         val sourceFileForModificationDetection: File? =
             fileTree
                 .files
@@ -84,7 +89,7 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
 
 
     private fun setCompilerProperties(compiler: SpecificCompiler) {
-        compiler.setTemplateDir(project.layout.projectDirectory.dir(templateDirectory.get()).asFile.absolutePath + "/")
+        compiler.setTemplateDir(templateDirectory.get().asFile.absolutePath + "/")
         compiler.setStringType(GenericData.StringType.valueOf(stringType.get()))
         compiler.setFieldVisibility(getFieldV())
         compiler.setCreateOptionalGetters(createOptionalGetters.get())
@@ -148,14 +153,9 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
 
     private fun findClasspath(): List<URL> {
         val runtimeClasspathElements = getRuntimeClasspathElements().map { it.toURI().toURL() }
-        val testRuntimeClasspathElements = getTestRuntimeClasspathElements().map { it.toURI().toURL() }
-        return runtimeClasspathElements + testRuntimeClasspathElements
+        return runtimeClasspathElements
     }
 
     private fun getRuntimeClasspathElements(): Set<File> =
-        project.configurations.getByName("runtimeClasspath").files
-
-    private fun getTestRuntimeClasspathElements(): Set<File> =
-        project.configurations.getByName("testRuntimeClasspath").files
-
+        classpath.files
 }

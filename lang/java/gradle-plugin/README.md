@@ -61,9 +61,12 @@ Use `createNullSafeAnnotations = true` and Java getters will be annotated with
 `@org.jetbrains.annotations.NotNull`/ `@org.jetbrains.annotations.Nullable`. This way
 Kotlin will recognize which value is nullable.
 
-#### When I update my schemas and generate code, the Java classes stay the same
-Yes, for now you have to `./gradlew clean` every time you update your Avro schemas.
+#### I get my Avro schemas from a Maven dependency, how can I add JAR files that contain schemas?
+Use `sourceZipFiles = listOf("file_path")`, e.g.
 
-
-
+```kotlin
+avro {
+    sourceZipFiles = listOf("/home/user/.gradle/caches/modules-2/files-2.1/eu.eventloopsoftware.group-id/artifact-id/1.0.0/92ac3d0533de9dd79ac35373c892ebaa01763d4d/jar_with_schemas-1.0.0.jar")
+} 
+```
 

@@ -1,5 +1,6 @@
 package eu.eventloopsoftware.avro.gradle.plugin.extension
 
+import org.gradle.api.file.RegularFile
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -21,6 +22,8 @@ abstract class AvroGradlePluginExtension @Inject constructor(objects: ObjectFact
      *            default-value="${buildDirectory}/src/main/avro"
      */
     val sourceDirectory: Property<String> = objects.property(String::class.java).convention("src/main/avro")
+
+    val sourceZipFiles: ListProperty<String> = objects.listProperty(String::class.java).convention(emptyList())
 
     /**
      * @parameter property="outputDirectory"
@@ -52,6 +55,15 @@ abstract class AvroGradlePluginExtension @Inject constructor(objects: ObjectFact
      */
     val fieldVisibility: Property<String> = objects.property(String::class.java).convention("PRIVATE")
 
+
+    /**
+     * A set of Ant-like inclusion patterns used to select files from the source
+     * directory for processing. The default pattern is different for Schema,
+     * Protocol and IDL files.
+     *
+     * @parameter
+     */
+    val includes: ListProperty<String> = objects.listProperty(String::class.java).convention(emptyList())
 
     /**
      * A set of Ant-like exclusion patterns used to prevent certain files from being

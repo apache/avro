@@ -6,9 +6,9 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmExtension
-
 
 abstract class AvroGradlePlugin : Plugin<Project> {
 
@@ -22,18 +22,26 @@ abstract class AvroGradlePlugin : Plugin<Project> {
 
         val compileAvroSchemaTask =
             project.tasks.register("avroGenerateJavaClasses", CompileAvroSchemaTask::class.java) { compileSchemaTask ->
-                val sourceDirectory = extension.sourceDirectory.get()
-                val outputDirectory = extension.outputDirectory.get()
-                configurePlugin(compileSchemaTask, extension, project, sourceDirectory, outputDirectory)
+                configurePlugin(
+                    compileSchemaTask,
+                    extension,
+                    project,
+                    extension.sourceDirectory,
+                    extension.outputDirectory
+                )
             }
 
         val compileTestAvroSchemaTask = project.tasks.register(
             "avroGenerateTestJavaClasses",
-            CompileAvroSchemaTask::class.java
+            CompileAvroSchemaTask::class.java,
         ) { compileSchemaTask ->
-            val sourceDirectory = extension.testSourceDirectory.get()
-            val outputDirectory = extension.testOutputDirectory.get()
-            configurePlugin(compileSchemaTask, extension, project, sourceDirectory, outputDirectory)
+            configurePlugin(
+                compileSchemaTask,
+                extension,
+                project,
+                extension.testSourceDirectory,
+                extension.testOutputDirectory
+            )
         }
 
         // Add generated code before compilation
@@ -50,23 +58,29 @@ abstract class AvroGradlePlugin : Plugin<Project> {
         compileTask: CompileAvroSchemaTask,
         extension: AvroGradlePluginExtension,
         project: Project,
-        sourceDirectory: String,
-        outputDirectory: String
+        sourceDirectory: Property<String>,
+        outputDirectory: Property<String>
     ) {
         val schemaType: SchemaType = SchemaType.valueOf(extension.schemaType.get())
 
         when (schemaType) {
             SchemaType.schema -> {
-                compileTask.source(sourceDirectory)
-                compileTask.sourceDirectory.set(project.layout.projectDirectory.dir(sourceDirectory))
+                compileTask.schemaFiles.from(project.fileTree(sourceDirectory).apply {
+                    setIncludes(listOf("**/*.avsc"))
+                    setExcludes(extension.excludes.get())
+                })
+                extension.sourceZipFiles.get().forEach { zipPath ->
+                    compileTask.schemaFiles.from(
+                        project.zipTree(zipPath).matching { it.include(setOf("**/*.avsc")) }
+                    )
+                }
+
                 compileTask.outputDirectory.set(project.layout.buildDirectory.dir(outputDirectory))
                 compileTask.fieldVisibility.set(extension.fieldVisibility)
-                compileTask.setExcludes(extension.excludes.get().toSet())
-                compileTask.setIncludes(setOf("**/*.avsc"))
                 compileTask.testExcludes.set(extension.testExcludes)
                 compileTask.stringType.set(extension.stringType)
                 compileTask.velocityToolsClassesNames.set(extension.velocityToolsClassesNames.get())
-                compileTask.templateDirectory.set(extension.templateDirectory)
+                compileTask.templateDirectory.set(project.layout.projectDirectory.dir(extension.templateDirectory))
                 compileTask.recordSpecificClass.set(extension.recordSpecificClass)
                 compileTask.errorSpecificClass.set(extension.errorSpecificClass)
                 compileTask.createOptionalGetters.set(extension.createOptionalGetters)
@@ -79,7 +93,6 @@ abstract class AvroGradlePlugin : Plugin<Project> {
                 compileTask.customConversions.set(extension.customConversions)
                 compileTask.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
                 compileTask.enableDecimalLogicalType.set(extension.enableDecimalLogicalType)
-
             }
 
             SchemaType.protocol -> TODO()
