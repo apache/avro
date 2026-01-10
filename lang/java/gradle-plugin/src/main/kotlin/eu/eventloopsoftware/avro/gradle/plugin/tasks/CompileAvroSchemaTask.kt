@@ -8,7 +8,6 @@ import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
 import org.apache.avro.generic.GenericData
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.SkipWhenEmpty
@@ -32,14 +31,14 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
     fun compileSchema() {
         logger.info("Generating Java files from ${schemaFiles.files.size} Avro schemas...")
 
-        compileSchemas(schemaFiles.asFileTree, schemaFiles.asPath, outputDirectory.get().asFile)
+        compileSchemas(schemaFiles, outputDirectory.get().asFile)
 
         logger.info("Done generating Java files from Avro schemas...")
     }
 
-    private fun compileSchemas(fileTree: FileTree, sourceDirectory: String, outputDirectory: File) {
+    private fun compileSchemas(schemaFileTree: ConfigurableFileCollection, outputDirectory: File) {
         val sourceFileForModificationDetection: File? =
-            fileTree
+            schemaFileTree.asFileTree
                 .files
                 .filter { file: File -> file.lastModified() > 0 }
                 .maxBy { it.lastModified() }
@@ -54,7 +53,7 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
 
         try {
             val parser = SchemaParser()
-            for (sourceFile in fileTree.files) {
+            for (sourceFile in schemaFileTree.files) {
                 parser.parse(sourceFile)
             }
             val schemas = parser.parsedNamedSchemas
@@ -62,10 +61,13 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
             doCompile(sourceFileForModificationDetection, SpecificCompiler(schemas), outputDirectory)
         } catch (ex: IOException) {
             // TODO: more concrete exceptions
-            throw RuntimeException("IO ex: Error compiling a file in " + sourceDirectory + " to " + outputDirectory, ex)
+            throw RuntimeException(
+                "IO ex: Error compiling a file in " + schemaFileTree.asPath + " to " + outputDirectory,
+                ex
+            )
         } catch (ex: SchemaParseException) {
             throw RuntimeException(
-                "SchemaParse ex Error compiling a file in " + sourceDirectory + " to " + outputDirectory,
+                "SchemaParse ex Error compiling a file in " + schemaFileTree.asPath + " to " + outputDirectory,
                 ex
             )
         }
