@@ -147,15 +147,11 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
         }
 
     private fun createClassLoader(): URLClassLoader {
-        val urls = findClasspath()
+        val urls = getClasspath()
         return URLClassLoader(urls.toTypedArray(), Thread.currentThread().contextClassLoader)
     }
 
-    private fun findClasspath(): List<URL> {
-        val runtimeClasspathElements = getRuntimeClasspathElements().map { it.toURI().toURL() }
-        return runtimeClasspathElements
-    }
+    private fun getClasspath(): List<URL> = classpath.files.map { it.toURI().toURL() }
 
-    private fun getRuntimeClasspathElements(): Set<File> =
-        classpath.files
+
 }
