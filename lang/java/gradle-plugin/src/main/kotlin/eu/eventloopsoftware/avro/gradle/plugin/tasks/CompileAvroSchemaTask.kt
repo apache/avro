@@ -114,7 +114,7 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
             val upperCaseFieldVisibility = fieldVisibility.get().trim().uppercase()
             return FieldVisibility.valueOf(upperCaseFieldVisibility)
         } catch (_: IllegalArgumentException) {
-            logger.warn("Could not parse field visibility, using PRIVATE")
+            logger.warn("Could not parse field visibility: ${fieldVisibility.get()}, using PRIVATE")
             return FieldVisibility.PRIVATE
         }
     }

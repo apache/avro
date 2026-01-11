@@ -14,27 +14,28 @@ abstract class AvroGradlePluginExtension @Inject constructor(objects: ObjectFact
     val schemaType: Property<String> = objects.property(String::class.java).convention("schema")
 
     /**
-     * The source directory of avro files. This directory is added to the classpath
-     * at schema compiling time. All files can therefore be referenced as classpath
-     * resources following the directory structure under the source directory.
-     *
-     * @parameter property="sourceDirectory"
-     *            default-value="${buildDirectory}/src/main/avro"
+     * The source directory containing Avro schema files.
+     * <p>
+     * Defaults to {@code src/main/avro}.
      */
     val sourceDirectory: Property<String> = objects.property(String::class.java).convention("src/main/avro")
 
+    /**
+     * A list of zip files that contain Avro schema files. All generated
+     *  Java classes are added to the classpath.
+     * <p>
+     * Defaults to {@code emptyList()}.
+     */
     val sourceZipFiles: ListProperty<String> = objects.listProperty(String::class.java).convention(emptyList())
 
     /**
-     * @parameter property="outputDirectory"
-     *            default-value="${buildDirectory}/generated-sources/avro"
+     * The output directory for the generated Java code.
      */
     val outputDirectory: Property<String> = objects.property(String::class.java).convention("generated-sources-avro")
 
 
     /**
-     * @parameter property="sourceDirectory"
-     * default-value="${project.layout.buildDirectory}/src/test/avro"
+     * The output directory for the generated test Java code.
      */
     val testSourceDirectory: Property<String> = objects.property(String::class.java).convention("src/test/avro")
 
