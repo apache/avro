@@ -25,7 +25,7 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
 
     @get:InputFiles
     @get:Classpath
-    abstract val classPathFileCollection: ConfigurableFileCollection
+    abstract val runtimeClassPathFileCollection: ConfigurableFileCollection
 
     @TaskAction
     fun compileSchema() {
@@ -91,6 +91,7 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
 
 
     private fun setCompilerProperties(compiler: SpecificCompiler) {
+        println("templateDirectory: ${templateDirectory.get().asFile.absolutePath}")
         compiler.setTemplateDir(templateDirectory.get().asFile.absolutePath + File.separator)
         compiler.setStringType(GenericData.StringType.valueOf(stringType.get()))
         compiler.setFieldVisibility(getFieldV())
@@ -154,6 +155,6 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
     }
 
     private fun classPathFileCollection(): List<URL> =
-        classPathFileCollection.files.map { it.toURI().toURL() }
+        runtimeClassPathFileCollection.files.map { it.toURI().toURL() }
 
 }

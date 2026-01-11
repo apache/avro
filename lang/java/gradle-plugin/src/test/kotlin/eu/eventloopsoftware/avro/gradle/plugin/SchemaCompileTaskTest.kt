@@ -44,7 +44,7 @@ class SchemaCompileTaskTest {
             avro {
                 schemaType = "schema"
                 sourceDirectory = "$testAvroFiles"
-                outputDirectory = "$testAvroOutPutDir"
+                outputDirectory = "$testAvroOutPutDir"           
             }
         """.trimIndent()
         )

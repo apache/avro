@@ -9,9 +9,6 @@ import org.gradle.api.tasks.*
 
 abstract class AbstractCompileTask : DefaultTask() {
 
-    @get:InputFiles
-    abstract val sourceZipFiles: ConfigurableFileCollection
-
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 

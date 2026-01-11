@@ -78,7 +78,6 @@ abstract class AvroGradlePlugin : Plugin<Project> {
                         project.zipTree(zipPath).matching { it.include(setOf("**/*.avsc")) }
                     )
                 }
-
                 compileTask.outputDirectory.set(project.layout.buildDirectory.dir(outputDirectory))
                 compileTask.fieldVisibility.set(extension.fieldVisibility)
                 compileTask.testExcludes.set(extension.testExcludes)
@@ -98,7 +97,7 @@ abstract class AvroGradlePlugin : Plugin<Project> {
                 compileTask.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
                 compileTask.enableDecimalLogicalType.set(extension.enableDecimalLogicalType)
 
-                compileTask.classPathFileCollection.from(classPathFiles)
+                compileTask.runtimeClassPathFileCollection.from(classPathFiles)
             }
 
             SchemaType.protocol -> TODO()
