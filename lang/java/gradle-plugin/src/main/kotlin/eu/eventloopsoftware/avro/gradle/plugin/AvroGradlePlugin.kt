@@ -1,6 +1,7 @@
 package eu.eventloopsoftware.avro.gradle.plugin
 
 import eu.eventloopsoftware.avro.gradle.plugin.extension.AvroGradlePluginExtension
+import eu.eventloopsoftware.avro.gradle.plugin.tasks.AbstractCompileTask
 import eu.eventloopsoftware.avro.gradle.plugin.tasks.CompileAvroSchemaTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -58,17 +59,35 @@ abstract class AvroGradlePlugin : Plugin<Project> {
     }
 
     private fun configurePlugin(
-        compileTask: CompileAvroSchemaTask,
+        compileTask: AbstractCompileTask,
         extension: AvroGradlePluginExtension,
         project: Project,
         sourceDirectory: Property<String>,
         outputDirectory: Property<String>,
         classPathFiles: Set<File>
     ) {
-        val schemaType: SchemaType = SchemaType.valueOf(extension.schemaType.get())
+        compileTask.outputDirectory.set(project.layout.buildDirectory.dir(outputDirectory))
+        compileTask.fieldVisibility.set(extension.fieldVisibility)
+        compileTask.testExcludes.set(extension.testExcludes)
+        compileTask.stringType.set(extension.stringType)
+        compileTask.velocityToolsClassesNames.set(extension.velocityToolsClassesNames.get())
+        compileTask.templateDirectory.set(extension.templateDirectory)
+        compileTask.recordSpecificClass.set(extension.recordSpecificClass)
+        compileTask.errorSpecificClass.set(extension.errorSpecificClass)
+        compileTask.createOptionalGetters.set(extension.createOptionalGetters)
+        compileTask.gettersReturnOptional.set(extension.gettersReturnOptional)
+        compileTask.createSetters.set(extension.createSetters)
+        compileTask.createNullSafeAnnotations.set(extension.createNullSafeAnnotations)
+        compileTask.nullSafeAnnotationNullable.set(extension.nullSafeAnnotationNullable)
+        compileTask.nullSafeAnnotationNotNull.set(extension.nullSafeAnnotationNotNull)
+        compileTask.optionalGettersForNullableFieldsOnly.set(extension.optionalGettersForNullableFieldsOnly)
+        compileTask.customConversions.set(extension.customConversions)
+        compileTask.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
+        compileTask.enableDecimalLogicalType.set(extension.enableDecimalLogicalType)
 
-        when (schemaType) {
-            SchemaType.schema -> {
+
+        when (compileTask) {
+            is CompileAvroSchemaTask -> {
                 compileTask.schemaFiles.from(project.fileTree(sourceDirectory).apply {
                     setIncludes(listOf("**/*.avsc"))
                     setExcludes(extension.excludes.get())
@@ -78,54 +97,32 @@ abstract class AvroGradlePlugin : Plugin<Project> {
                         project.zipTree(zipPath).matching { it.include(setOf("**/*.avsc")) }
                     )
                 }
-                compileTask.outputDirectory.set(project.layout.buildDirectory.dir(outputDirectory))
-                compileTask.fieldVisibility.set(extension.fieldVisibility)
-                compileTask.testExcludes.set(extension.testExcludes)
-                compileTask.stringType.set(extension.stringType)
-                compileTask.velocityToolsClassesNames.set(extension.velocityToolsClassesNames.get())
-                compileTask.templateDirectory.set(extension.templateDirectory)
-                compileTask.recordSpecificClass.set(extension.recordSpecificClass)
-                compileTask.errorSpecificClass.set(extension.errorSpecificClass)
-                compileTask.createOptionalGetters.set(extension.createOptionalGetters)
-                compileTask.gettersReturnOptional.set(extension.gettersReturnOptional)
-                compileTask.createSetters.set(extension.createSetters)
-                compileTask.createNullSafeAnnotations.set(extension.createNullSafeAnnotations)
-                compileTask.nullSafeAnnotationNullable.set(extension.nullSafeAnnotationNullable)
-                compileTask.nullSafeAnnotationNotNull.set(extension.nullSafeAnnotationNotNull)
-                compileTask.optionalGettersForNullableFieldsOnly.set(extension.optionalGettersForNullableFieldsOnly)
-                compileTask.customConversions.set(extension.customConversions)
-                compileTask.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
-                compileTask.enableDecimalLogicalType.set(extension.enableDecimalLogicalType)
-
                 compileTask.runtimeClassPathFileCollection.from(classPathFiles)
+
             }
 
-            SchemaType.protocol -> TODO()
+            else -> TODO()
         }
-    }
 
-    private fun addGeneratedSourcesToJavaProject(
-        project: Project,
-        compileTask: TaskProvider<CompileAvroSchemaTask>,
-        compileTestTask: TaskProvider<CompileAvroSchemaTask>
-    ) {
-        val sourceSets = project.extensions.getByType(JavaPluginExtension::class.java).sourceSets
-        sourceSets.getByName("main").java.srcDir(compileTask.flatMap { it.outputDirectory })
-        sourceSets.getByName("test").java.srcDir(compileTestTask.flatMap { it.outputDirectory })
-    }
-
-    private fun addGeneratedSourcesToKotlinProject(
-        project: Project,
-        compileTask: TaskProvider<CompileAvroSchemaTask>,
-        compileTestTask: TaskProvider<CompileAvroSchemaTask>,
-    ) {
-        val sourceSets = project.extensions.getByType(KotlinJvmExtension::class.java).sourceSets
-        sourceSets.getByName("main").kotlin.srcDir(compileTask.flatMap { it.outputDirectory })
-        sourceSets.getByName("test").kotlin.srcDir(compileTestTask.flatMap { it.outputDirectory })
     }
 }
 
-enum class SchemaType {
-    schema,
-    protocol
+private fun addGeneratedSourcesToJavaProject(
+    project: Project,
+    compileTask: TaskProvider<CompileAvroSchemaTask>,
+    compileTestTask: TaskProvider<CompileAvroSchemaTask>
+) {
+    val sourceSets = project.extensions.getByType(JavaPluginExtension::class.java).sourceSets
+    sourceSets.getByName("main").java.srcDir(compileTask.flatMap { it.outputDirectory })
+    sourceSets.getByName("test").java.srcDir(compileTestTask.flatMap { it.outputDirectory })
+}
+
+private fun addGeneratedSourcesToKotlinProject(
+    project: Project,
+    compileTask: TaskProvider<CompileAvroSchemaTask>,
+    compileTestTask: TaskProvider<CompileAvroSchemaTask>,
+) {
+    val sourceSets = project.extensions.getByType(KotlinJvmExtension::class.java).sourceSets
+    sourceSets.getByName("main").kotlin.srcDir(compileTask.flatMap { it.outputDirectory })
+    sourceSets.getByName("test").kotlin.srcDir(compileTestTask.flatMap { it.outputDirectory })
 }
