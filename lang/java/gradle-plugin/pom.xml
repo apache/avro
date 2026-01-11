@@ -50,6 +50,34 @@
         <executions>
           <execution>
             <id>run-gradle-task</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>./gradlew</executable>
+              <arguments>
+                <argument>assemble</argument>
+                <argument>-i</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>run-gradle-task</id>
+            <phase>test</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>./gradlew</executable>
+              <arguments>
+                <argument>test</argument>
+                <argument>-i</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>run-gradle-task</id>
             <phase>package</phase>
             <goals>
               <goal>exec</goal>
@@ -58,6 +86,20 @@
               <executable>./gradlew</executable>
               <arguments>
                 <argument>build</argument>
+                <argument>-i</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>run-gradle-task</id>
+            <phase>deploy</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>./gradlew</executable>
+              <arguments>
+                <argument>publishPlugins</argument>
                 <argument>-i</argument>
               </arguments>
             </configuration>
