@@ -2,6 +2,7 @@ package eu.eventloopsoftware.avro.gradle.plugin.tasks
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -24,9 +25,8 @@ abstract class AbstractCompileTask : DefaultTask() {
     @get:Input
     abstract val velocityToolsClassesNames: ListProperty<String>
 
-    @get:InputDirectory
-    @get:Internal
-    abstract val templateDirectory: DirectoryProperty
+    @get:Input
+    abstract val templateDirectory: Property<String>
 
     @get:Input
     abstract val recordSpecificClass: Property<String>

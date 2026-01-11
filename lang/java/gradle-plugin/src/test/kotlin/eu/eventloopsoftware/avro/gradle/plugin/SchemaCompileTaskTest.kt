@@ -137,7 +137,6 @@ class SchemaCompileTaskTest {
         val tempSettingsFile = tempDir.resolve("settings.gradle.kts")
         val tempBuildFile = tempDir.resolve("build.gradle.kts")
         val tempAvroSrcDir = tempDir.resolve("src/test/avro").createDirectories()
-        //val bla = tempDir.resolve("src/aap").createDirectories()
         val tempVelocityToolClassesDir = tempDir.resolve("src/test/resources/templates").createDirectories()
 
         val testAvroFilesDir = Path.of("src/test/avro")
@@ -169,7 +168,7 @@ class SchemaCompileTaskTest {
                 schemaType = "schema"
                 sourceDirectory = "$testAvroFilesDir"
                 outputDirectory = "$testAvroOutPutDir"
-                templateDirectory = "$testVelocityToolClassesDir"
+                templateDirectory = "${tempDir.resolve(testVelocityToolClassesDir).toString() + "/"}"
                 velocityToolsClassesNames = listOf("java.lang.String")
             }
         """.trimIndent()

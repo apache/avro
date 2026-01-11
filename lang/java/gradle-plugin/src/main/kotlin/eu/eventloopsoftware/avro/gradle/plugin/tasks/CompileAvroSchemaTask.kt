@@ -91,8 +91,7 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
 
 
     private fun setCompilerProperties(compiler: SpecificCompiler) {
-        println("templateDirectory: ${templateDirectory.get().asFile.absolutePath}")
-        compiler.setTemplateDir(templateDirectory.get().asFile.absolutePath + File.separator)
+        compiler.setTemplateDir(templateDirectory.get())
         compiler.setStringType(GenericData.StringType.valueOf(stringType.get()))
         compiler.setFieldVisibility(getFieldV())
         compiler.setCreateOptionalGetters(createOptionalGetters.get())

@@ -83,7 +83,7 @@ abstract class AvroGradlePlugin : Plugin<Project> {
                 compileTask.testExcludes.set(extension.testExcludes)
                 compileTask.stringType.set(extension.stringType)
                 compileTask.velocityToolsClassesNames.set(extension.velocityToolsClassesNames.get())
-                compileTask.templateDirectory.set(project.layout.projectDirectory.dir(extension.templateDirectory))
+                compileTask.templateDirectory.set(extension.templateDirectory)
                 compileTask.recordSpecificClass.set(extension.recordSpecificClass)
                 compileTask.errorSpecificClass.set(extension.errorSpecificClass)
                 compileTask.createOptionalGetters.set(extension.createOptionalGetters)

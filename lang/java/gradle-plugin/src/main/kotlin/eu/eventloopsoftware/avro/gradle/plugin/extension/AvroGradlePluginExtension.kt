@@ -21,7 +21,7 @@ abstract class AvroGradlePluginExtension @Inject constructor(objects: ObjectFact
 
     /**
      * A list of zip files that contain Avro schema files. All generated
-     *  Java classes are added to the classpath.
+     * Java classes are added to the classpath.
      * <p>
      * Defaults to {@code emptyList()}.
      */
