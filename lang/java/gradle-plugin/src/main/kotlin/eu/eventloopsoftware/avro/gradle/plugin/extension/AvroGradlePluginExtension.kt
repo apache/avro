@@ -1,6 +1,5 @@
 package eu.eventloopsoftware.avro.gradle.plugin.extension
 
-import org.gradle.api.file.RegularFile
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
