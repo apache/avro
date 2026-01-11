@@ -9,6 +9,7 @@ import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmExtension
+import java.io.File
 
 abstract class AvroGradlePlugin : Plugin<Project> {
 
@@ -27,7 +28,8 @@ abstract class AvroGradlePlugin : Plugin<Project> {
                     extension,
                     project,
                     extension.sourceDirectory,
-                    extension.outputDirectory
+                    extension.outputDirectory,
+                    project.configurations.getByName("runtimeClasspath").files
                 )
             }
 
@@ -40,7 +42,8 @@ abstract class AvroGradlePlugin : Plugin<Project> {
                 extension,
                 project,
                 extension.testSourceDirectory,
-                extension.testOutputDirectory
+                extension.testOutputDirectory,
+                project.configurations.getByName("testRuntimeClasspath").files
             )
         }
 
@@ -59,7 +62,8 @@ abstract class AvroGradlePlugin : Plugin<Project> {
         extension: AvroGradlePluginExtension,
         project: Project,
         sourceDirectory: Property<String>,
-        outputDirectory: Property<String>
+        outputDirectory: Property<String>,
+        classPathFiles: Set<File>
     ) {
         val schemaType: SchemaType = SchemaType.valueOf(extension.schemaType.get())
 
@@ -93,6 +97,8 @@ abstract class AvroGradlePlugin : Plugin<Project> {
                 compileTask.customConversions.set(extension.customConversions)
                 compileTask.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
                 compileTask.enableDecimalLogicalType.set(extension.enableDecimalLogicalType)
+
+                compileTask.classPathFileCollection.from(classPathFiles)
             }
 
             SchemaType.protocol -> TODO()
