@@ -82,6 +82,7 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
      */
     private ?string $order;
     private ?array $aliases;
+    private ?string $doc;
 
     /**
      * @throws AvroSchemaParseException
@@ -94,7 +95,8 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
         bool $hasDefault,
         mixed $default,
         ?string $order = null,
-        mixed $aliases = null
+        mixed $aliases = null,
+        ?string $doc = null
     ) {
         if (!AvroName::isWellFormedName($name)) {
             throw new AvroSchemaParseException('Field requires a "name" attribute');
@@ -111,6 +113,8 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
         $this->order = $order;
         self::hasValidAliases($aliases);
         $this->aliases = $aliases;
+
+        $this->doc = $doc;
     }
 
     public function toAvro(): string|array
@@ -131,13 +135,17 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
             $avro[self::ORDER_ATTR] = $this->order;
         }
 
+        if (!is_null($this->doc)) {
+            $avro[AvroSchema::DOC_ATTR] = $this->doc;
+        }
+
         return $avro;
     }
 
     /**
      * @returns string the name of this field
      */
-    public function name()
+    public function name(): ?string
     {
         return $this->name;
     }
@@ -153,7 +161,7 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
     /**
      * @returns boolean true if the field has a default and false otherwise
      */
-    public function hasDefaultValue()
+    public function hasDefaultValue(): bool
     {
         return $this->hasDefault;
     }
@@ -163,7 +171,7 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
         return $this->aliases;
     }
 
-    public function hasAliases()
+    public function hasAliases(): bool
     {
         return null !== $this->aliases;
     }

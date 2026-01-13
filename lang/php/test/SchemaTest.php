@@ -28,15 +28,15 @@ use PHPUnit\Framework\TestCase;
 
 class SchemaExample
 {
-    public $name;
-    public $normalized_schema_string;
+    public string $name;
+    public string $normalized_schema_string;
 
     public function __construct(
-        public $schema_string,
-        public $is_valid,
-        $normalized_schema_string = null,
-        $name = null,
-        public $comment = null
+        public string $schema_string,
+        public bool $is_valid,
+        ?string $normalized_schema_string = null,
+        ?string $name = null,
+        public ?string $comment = null
     ) {
         $this->name = $name ?: $this->schema_string;
         $this->normalized_schema_string = $normalized_schema_string ?: json_encode(json_decode((string) $this->schema_string, true));
@@ -45,8 +45,8 @@ class SchemaExample
 
 class SchemaTest extends TestCase
 {
-    private static $examples = [];
-    private static $valid_examples = [];
+    private static array $examples = [];
+    private static array $valid_examples = [];
 
     public function test_json_decode(): void
     {
@@ -232,6 +232,27 @@ class SchemaTest extends TestCase
         );
     }
 
+    public function test_doc_attribute_on_primitive_fields(): void
+    {
+        $schemaJson = <<<JSON
+            {
+                "type": "record",
+                "name": "fruits",
+                "fields": [
+                    {
+                        "name": "banana",
+                        "type": "string",
+                        "doc": "This is a banana"
+                    }
+                ]
+            }
+            JSON;
+
+        $schema = AvroSchema::parse($schemaJson);
+
+        self::assertEquals($schemaJson, json_encode($schema->toAvro(), flags: JSON_PRETTY_PRINT));
+    }
+
     public function test_logical_types_in_record(): void
     {
         $avro = <<<JSON
@@ -380,7 +401,7 @@ class SchemaTest extends TestCase
                 new SchemaExample('{"no_type": "test"}', false),
                 new SchemaExample('{"type": "panther"}', false),
             ],
-            self::make_primitive_examples()
+            self::makePrimitiveExamples()
         );
 
         $array_examples = [
@@ -783,7 +804,7 @@ class SchemaTest extends TestCase
         }
     }
 
-    protected static function make_primitive_examples()
+    protected static function makePrimitiveExamples(): array
     {
         $examples = [];
         foreach ([

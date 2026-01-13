@@ -74,6 +74,7 @@ class AvroRecordSchema extends AvroNamedSchema
             $type = $field[AvroSchema::TYPE_ATTR] ?? null;
             $order = $field[AvroField::ORDER_ATTR] ?? null;
             $aliases = $field[AvroSchema::ALIASES_ATTR] ?? null;
+            $doc = $field[AvroSchema::DOC_ATTR] ?? null;
 
             $default = null;
             $has_default = false;
@@ -110,7 +111,8 @@ class AvroRecordSchema extends AvroNamedSchema
                 hasDefault: $has_default,
                 default: $default,
                 order: $order,
-                aliases: $aliases
+                aliases: $aliases,
+                doc: $doc
             );
             $field_names[] = $name;
             if ($new_field->hasAliases() && array_intersect($alias_names, $new_field->getAliases())) {
