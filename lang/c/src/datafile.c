@@ -451,6 +451,10 @@ static int file_read_block_count(avro_file_reader_t r)
 		     "Cannot read file block count: ");
 	check_prefix(rval, enc->read_long(r->reader, &len),
 		     "Cannot read file block size: ");
+	if (len < 0) {
+		avro_set_error("Invalid block size: %" PRId64, len);
+		return EINVAL;
+	}
 
 	if (r->current_blockdata && len > r->current_blocklen) {
 		r->current_blockdata = (char *) avro_realloc(r->current_blockdata, r->current_blocklen, len);
