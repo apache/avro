@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+declare(strict_types=1);
+
 namespace Apache\Avro\Tests;
 
 use Apache\Avro\AvroException;
@@ -250,7 +252,27 @@ class SchemaTest extends TestCase
 
         $schema = AvroSchema::parse($schemaJson);
 
-        self::assertEquals($schemaJson, json_encode($schema->toAvro(), flags: JSON_PRETTY_PRINT));
+        self::assertEquals(json_decode($schemaJson, associative: true), $schema->toAvro());
+    }
+
+    public function test_invalid_doc_attribute_on_field_throws_an_exception(): void
+    {
+        $schemaJson = <<<JSON
+            {
+                "type": "record",
+                "name": "fruits",
+                "fields": [
+                    {
+                        "name": "banana",
+                        "type": "string",
+                        "doc": 1
+                    }
+                ]
+            }
+            JSON;
+
+        $this->expectException(AvroSchemaParseException::class);
+        AvroSchema::parse($schemaJson);
     }
 
     public function test_logical_types_in_record(): void

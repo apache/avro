@@ -62,7 +62,7 @@ class AvroNamedSchemata
      * @param AvroNamedSchema $schema schema to add to this existing schemata
      * @throws AvroSchemaParseException
      */
-    public function cloneWithNewSchema(AvroNamedSchema $schema): AvroNamedSchemata
+    public function registerNamedSchema(AvroNamedSchema $schema): self
     {
         $name = $schema->fullname();
         if (AvroSchema::isValidType($name)) {
@@ -71,10 +71,10 @@ class AvroNamedSchemata
         if ($this->hasName($name)) {
             throw new AvroSchemaParseException(sprintf('Name "%s" is already in use', $name));
         }
-        $schemata = new AvroNamedSchemata($this->schemata);
-        $schemata->schemata[$name] = $schema;
 
-        return $schemata;
+        $this->schemata[$name] = $schema;
+
+        return $this;
     }
 
     /**

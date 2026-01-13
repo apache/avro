@@ -384,7 +384,10 @@ class AvroSchema implements \Stringable
                 $new_name = new AvroName($name, $namespace, $default_namespace);
                 $doc = $avro[self::DOC_ATTR] ?? null;
                 $aliases = $avro[self::ALIASES_ATTR] ?? null;
-                AvroNamedSchema::hasValidAliases($aliases);
+
+                self::hasValidAliases($aliases);
+                self::hasValidDoc($doc);
+
                 switch ($type) {
                     case self::FIXED_SCHEMA:
                         $size = $avro[self::SIZE_ATTR] ?? throw new AvroSchemaParseException(
@@ -542,6 +545,17 @@ class AvroSchema implements \Stringable
                 );
             }
         }
+    }
+
+    public static function hasValidDoc(mixed $doc): void
+    {
+        if (is_string($doc) || is_null($doc)) {
+            return;
+        }
+
+        throw new AvroSchemaParseException(
+            'Invalid doc value. Must be a string or empty.'
+        );
     }
 
     /**

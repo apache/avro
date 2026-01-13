@@ -32,7 +32,7 @@ class AvroNamedSchema extends AvroSchema implements AvroAliasedSchema
         string $type,
         private readonly AvroName $name,
         private readonly ?string $doc = null,
-        ?AvroNamedSchemata &$schemata = null,
+        ?AvroNamedSchemata $schemata = null,
         private ?array $aliases = null
     ) {
         parent::__construct($type);
@@ -42,7 +42,7 @@ class AvroNamedSchema extends AvroSchema implements AvroAliasedSchema
         }
 
         if (!is_null($schemata)) {
-            $schemata = $schemata->cloneWithNewSchema($this);
+            $schemata->registerNamedSchema($this);
         }
     }
 

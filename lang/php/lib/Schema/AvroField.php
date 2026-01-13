@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+declare(strict_types=1);
+
 namespace Apache\Avro\Schema;
 
 /**
@@ -85,23 +87,19 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
     private ?string $doc;
 
     /**
-     * @throws AvroSchemaParseException
+     * @param array<string> $aliases
      * @todo Check validity of $default value
      */
-    public function __construct(
-        ?string $name,
+    private function __construct(
+        string $name,
         string|AvroSchema $schema,
         bool $isTypeFromSchemata,
         bool $hasDefault,
         mixed $default,
         ?string $order = null,
-        mixed $aliases = null,
+        ?array $aliases = null,
         ?string $doc = null
     ) {
-        if (!AvroName::isWellFormedName($name)) {
-            throw new AvroSchemaParseException('Field requires a "name" attribute');
-        }
-
         parent::__construct($schema);
         $this->name = $name;
         $this->isTypeFromSchemata = $isTypeFromSchemata;
@@ -109,12 +107,63 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
         if ($this->hasDefault) {
             $this->default = $default;
         }
-        self::checkOrderValue($order);
         $this->order = $order;
-        self::hasValidAliases($aliases);
         $this->aliases = $aliases;
 
         $this->doc = $doc;
+    }
+
+    /**
+     * @throws AvroSchemaParseException
+     */
+    public static function fromFieldDefinition(array $avro, ?string $defaultNamespace, AvroNamedSchemata $schemata): self
+    {
+        $name = $avro[self::FIELD_NAME_ATTR] ?? null;
+        $type = $avro[AvroSchema::TYPE_ATTR] ?? null;
+        $order = $avro[self::ORDER_ATTR] ?? null;
+        $aliases = $avro[AvroSchema::ALIASES_ATTR] ?? null;
+        $doc = $avro[AvroSchema::DOC_ATTR] ?? null;
+
+        if (!AvroName::isWellFormedName($name)) {
+            throw new AvroSchemaParseException('Field requires a "name" attribute');
+        }
+
+        self::checkOrderValue($order);
+        self::hasValidAliases($aliases);
+        self::hasValidDoc($doc);
+
+        $default = null;
+        $hasDefault = false;
+        if (array_key_exists(self::DEFAULT_ATTR, $avro)) {
+            $default = $avro[self::DEFAULT_ATTR];
+            $hasDefault = true;
+        }
+
+        $isSchemaFromSchemata = false;
+        $fieldAvroSchema = null;
+        if (
+            is_string($type)
+            && $fieldAvroSchema = $schemata->schemaByName(
+                new AvroName($type, null, $defaultNamespace)
+            )
+        ) {
+            $isSchemaFromSchemata = true;
+        } elseif (is_string($type) && self::isPrimitiveType($type)) {
+            $fieldAvroSchema = self::subparse($avro, $defaultNamespace, $schemata);
+        } else {
+            $fieldAvroSchema = self::subparse($type, $defaultNamespace, $schemata);
+        }
+
+        return new self(
+            name: $name,
+            schema: $fieldAvroSchema,
+            isTypeFromSchemata: $isSchemaFromSchemata,
+            hasDefault: $hasDefault,
+            default: $default,
+            order: $order,
+            aliases: $aliases,
+            doc: $doc
+        );
     }
 
     public function toAvro(): string|array
@@ -133,6 +182,10 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
 
         if ($this->order) {
             $avro[self::ORDER_ATTR] = $this->order;
+        }
+
+        if (!is_null($this->aliases)) {
+            $avro[AvroSchema::ALIASES_ATTR] = $this->aliases;
         }
 
         if (!is_null($this->doc)) {
@@ -174,6 +227,16 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
     public function hasAliases(): bool
     {
         return null !== $this->aliases;
+    }
+
+    public function getDoc(): ?string
+    {
+        return $this->doc;
+    }
+
+    public function hasDoc(): bool
+    {
+        return null !== $this->doc;
     }
 
     /**
