@@ -147,10 +147,10 @@ static int skip_bytes(avro_reader_t reader)
 	int rval;
 	check_prefix(rval, read_long(reader, &len),
 		     "Cannot read bytes length: ");
-		if (len < 0) {
-    		avro_set_error("Invalid bytes length: %" PRId64, len);
-	    	return EINVAL;
-	    }
+	if (len < 0) {
+		avro_set_error("Invalid bytes length: %" PRId64, len);
+		return EINVAL;
+	}
 	AVRO_SKIP(reader, len);
 	return 0;
 }
