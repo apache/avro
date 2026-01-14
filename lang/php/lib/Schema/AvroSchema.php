@@ -550,7 +550,7 @@ class AvroSchema implements \Stringable
         }
 
         throw new AvroSchemaParseException(
-            'Invalid doc value. Must be a string or empty.'
+            'Invalid doc value. Must be a string or null.'
         );
     }
 

@@ -69,8 +69,8 @@ class AvroRecordSchema extends AvroNamedSchema
         $fields = [];
         $fieldNames = [];
         $aliasNames = [];
-        foreach ($fieldsDefinitions as $fieldsDefinition) {
-            $name = $fieldsDefinition[AvroField::FIELD_NAME_ATTR] ?? null;
+        foreach ($fieldsDefinitions as $fieldDefinition) {
+            $name = $fieldDefinition[AvroField::FIELD_NAME_ATTR] ?? null;
 
             if (in_array($name, $fieldNames)) {
                 throw new AvroSchemaParseException(
@@ -78,16 +78,16 @@ class AvroRecordSchema extends AvroNamedSchema
                 );
             }
 
-            $new_field = AvroField::fromFieldDefinition($fieldsDefinition, $default_namespace, $schemata);
+            $newField = AvroField::fromFieldDefinition($fieldDefinition, $default_namespace, $schemata);
 
             $fieldNames[] = $name;
-            if ($new_field->hasAliases() && array_intersect($aliasNames, $new_field->getAliases())) {
+            if ($newField->hasAliases() && array_intersect($aliasNames, $newField->getAliases())) {
                 throw new AvroSchemaParseException("Alias already in use");
             }
-            if ($new_field->hasAliases()) {
-                array_push($aliasNames, ...$new_field->getAliases());
+            if ($newField->hasAliases()) {
+                array_push($aliasNames, ...$newField->getAliases());
             }
-            $fields[] = $new_field;
+            $fields[] = $newField;
         }
 
         return $fields;

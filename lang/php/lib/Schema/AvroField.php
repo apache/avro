@@ -66,7 +66,7 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
         self::IGNORE_SORT_ORDER,
     ];
 
-    private ?string $name;
+    private string $name;
 
     private bool $isTypeFromSchemata;
 
@@ -198,7 +198,7 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
     /**
      * @returns string the name of this field
      */
-    public function name(): ?string
+    public function name(): string
     {
         return $this->name;
     }
