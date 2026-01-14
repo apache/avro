@@ -111,7 +111,7 @@ public class DeflateCodec extends Codec {
         if (totalBytes > maxLength) {
           throw new AvroRuntimeException(
               "Decompressed size " + totalBytes + " (bytes) exceeds maximum allowed size " + maxLength
-                  + ". This can be configured by setting the system property " + MAX_DECOMPRESS_LENGTH_PROPERTY);
+                  + ". This can be configured by setting the system property '" + MAX_DECOMPRESS_LENGTH_PROPERTY + "'");
         }
         baos.write(buffer, 0, len);
       }
