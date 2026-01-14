@@ -335,19 +335,15 @@ class AvroSchema implements \Stringable
     /**
      * @param null|array|string $avro JSON-decoded schema
      * @param null|string $default_namespace namespace of enclosing schema
-     * @param null|AvroNamedSchemata $schemata reference to named schemas
+     * @param AvroNamedSchemata $schemata reference to named schemas
      * @throws AvroSchemaParseException
      * @throws AvroException
      */
     public static function realParse(
         array|string|null $avro,
         ?string $default_namespace = null,
-        ?AvroNamedSchemata &$schemata = null
+        AvroNamedSchemata $schemata = new AvroNamedSchemata()
     ): AvroSchema {
-        if (is_null($schemata)) {
-            $schemata = new AvroNamedSchemata();
-        }
-
         if (is_array($avro)) {
             $type = $avro[self::TYPE_ATTR] ?? null;
 
@@ -715,12 +711,10 @@ class AvroSchema implements \Stringable
     }
 
     /**
-     * @param mixed $avro
-     * @returns AvroSchema
      * @throws AvroSchemaParseException
      * @uses AvroSchema::realParse()
      */
-    protected static function subparse($avro, ?string $default_namespace, ?AvroNamedSchemata &$schemata = null): AvroSchema
+    protected static function subparse(array|string|null $avro, ?string $default_namespace, AvroNamedSchemata $schemata): self
     {
         try {
             return self::realParse($avro, $default_namespace, $schemata);
