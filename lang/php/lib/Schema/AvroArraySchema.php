@@ -27,7 +27,7 @@ namespace Apache\Avro\Schema;
 class AvroArraySchema extends AvroSchema
 {
     /**
-     * @var AvroSchema AvroSchema of array element
+     * @var AvroSchema The schema of the array elements
      */
     private AvroSchema $items;
 
