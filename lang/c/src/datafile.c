@@ -458,9 +458,17 @@ static int file_read_block_count(avro_file_reader_t r)
 
 	if (r->current_blockdata && len > r->current_blocklen) {
 		r->current_blockdata = (char *) avro_realloc(r->current_blockdata, r->current_blocklen, len);
+		if (!r->current_blockdata) {
+			avro_set_error("Cannot allocate block buffer");
+			return ENOMEM;
+		}
 		r->current_blocklen = len;
 	} else if (!r->current_blockdata) {
 		r->current_blockdata = (char *) avro_malloc(len);
+		if (!r->current_blockdata && len > 0) {
+			avro_set_error("Cannot allocate block buffer");
+			return ENOMEM;
+		}
 		r->current_blocklen = len;
 	}
 
