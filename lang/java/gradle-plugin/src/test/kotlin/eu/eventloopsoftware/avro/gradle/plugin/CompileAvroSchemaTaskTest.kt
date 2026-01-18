@@ -11,7 +11,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @ExperimentalPathApi
-class SchemaCompileTaskTest {
+class CompileAvroSchemaTaskTest {
 
     @TempDir
     lateinit var tempDir: Path

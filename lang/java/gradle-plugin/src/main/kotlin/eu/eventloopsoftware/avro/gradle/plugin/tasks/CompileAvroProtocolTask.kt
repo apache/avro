@@ -3,7 +3,6 @@ package eu.eventloopsoftware.avro.gradle.plugin.tasks
 import org.apache.avro.Protocol
 import org.apache.avro.SchemaParseException
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
@@ -14,13 +13,13 @@ abstract class CompileAvroProtocolTask : AbstractCompileTask() {
 
     @get:InputFiles
     @get:SkipWhenEmpty
-    abstract val schemaFiles: ConfigurableFileCollection
+    abstract val protocolFiles: ConfigurableFileCollection
 
     @TaskAction
     fun compileProtocol() {
-        logger.info("Generating Java files from ${schemaFiles.files.size} Avro Protocol files...")
+        logger.info("Generating Java files from ${protocolFiles.files.size} Avro Protocol files...")
 
-        compileAvroFiles(schemaFiles, outputDirectory.get().asFile)
+        compileAvroFiles(protocolFiles, outputDirectory.get().asFile)
 
         logger.info("Done generating Java files from Avro Protocol files...")
     }

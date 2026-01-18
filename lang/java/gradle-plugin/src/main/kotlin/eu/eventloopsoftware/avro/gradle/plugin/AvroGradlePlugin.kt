@@ -118,12 +118,12 @@ abstract class AvroGradlePlugin : Plugin<Project> {
                 extension.outputDirectory
             )
 
-            compileSchemaTask.schemaFiles.from(project.fileTree(extension.sourceDirectory).apply {
+            compileSchemaTask.protocolFiles.from(project.fileTree(extension.sourceDirectory).apply {
                 setIncludes(listOf("**/*.avpr"))
                 setExcludes(extension.excludes.get())
             })
             extension.sourceZipFiles.get().forEach { zipPath ->
-                compileSchemaTask.schemaFiles.from(
+                compileSchemaTask.protocolFiles.from(
                     project.zipTree(zipPath).matching { it.include(setOf("**/*.avpr")) }
                 )
             }
