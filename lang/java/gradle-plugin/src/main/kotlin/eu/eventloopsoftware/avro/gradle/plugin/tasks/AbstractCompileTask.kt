@@ -1,6 +1,7 @@
 package eu.eventloopsoftware.avro.gradle.plugin.tasks
 
 import org.apache.avro.LogicalTypes
+import org.apache.avro.Protocol
 import org.apache.avro.compiler.specific.SpecificCompiler
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
 import org.apache.avro.generic.GenericData
@@ -78,6 +79,11 @@ abstract class AbstractCompileTask : DefaultTask() {
     @get:InputFiles
     @get:Classpath
     abstract val runtimeClassPathFileCollection: ConfigurableFileCollection
+
+
+    protected fun doCompile(sourceFileForModificationDetection: File?, protocol: Protocol, outputDirectory: File?) {
+        doCompile(sourceFileForModificationDetection, SpecificCompiler(protocol), outputDirectory!!)
+    }
 
     protected fun doCompile(
         sourceFileForModificationDetection: File?,
