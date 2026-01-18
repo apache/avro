@@ -38,8 +38,8 @@ abstract class AvroGradlePlugin : Plugin<Project> {
 
         when (SchemaType.valueOf(schemaType)) {
             SchemaType.schema -> {
-                val compileAvroSchemaTask = addSchemaTask(extension, project)
-                val compileTestAvroSchemaTask = addSchemaTestTask(extension, project)
+                val compileAvroSchemaTask = registerSchemaTask(extension, project)
+                val compileTestAvroSchemaTask = registerSchemaTestTask(extension, project)
                 registerPluginHook(project, compileAvroSchemaTask, compileTestAvroSchemaTask)
             }
 
@@ -64,7 +64,7 @@ abstract class AvroGradlePlugin : Plugin<Project> {
         }
     }
 
-    private fun addSchemaTask(extension: AvroGradlePluginExtension, project: Project) =
+    private fun registerSchemaTask(extension: AvroGradlePluginExtension, project: Project) =
         project.tasks.register("avroGenerateJavaClasses", CompileAvroSchemaTask::class.java) { compileSchemaTask ->
             addProperties(
                 compileSchemaTask,
@@ -85,7 +85,7 @@ abstract class AvroGradlePlugin : Plugin<Project> {
             compileSchemaTask.runtimeClassPathFileCollection.from(project.configurations.getByName("runtimeClasspath").files)
         }
 
-    private fun addSchemaTestTask(extension: AvroGradlePluginExtension, project: Project) =
+    private fun registerSchemaTestTask(extension: AvroGradlePluginExtension, project: Project) =
         project.tasks.register(
             "avroGenerateTestJavaClasses",
             CompileAvroSchemaTask::class.java,

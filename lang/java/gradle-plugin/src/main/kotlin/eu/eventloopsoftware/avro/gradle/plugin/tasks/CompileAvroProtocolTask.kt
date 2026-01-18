@@ -16,9 +16,6 @@ abstract class CompileAvroProtocolTask : AbstractCompileTask() {
     @get:SkipWhenEmpty
     abstract val schemaFiles: ConfigurableFileCollection
 
-    @get:Input
-    abstract val other: String
-
     @TaskAction
     fun compileProtocol() {
         logger.info("Generating Java files from ${schemaFiles.files.size} Avro Protocol files...")
