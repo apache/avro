@@ -335,19 +335,15 @@ class AvroSchema implements \Stringable
     /**
      * @param null|array|string $avro JSON-decoded schema
      * @param null|string $default_namespace namespace of enclosing schema
-     * @param null|AvroNamedSchemata $schemata reference to named schemas
+     * @param AvroNamedSchemata $schemata reference to named schemas
      * @throws AvroSchemaParseException
      * @throws AvroException
      */
     public static function realParse(
         array|string|null $avro,
         ?string $default_namespace = null,
-        ?AvroNamedSchemata &$schemata = null
+        AvroNamedSchemata $schemata = new AvroNamedSchemata()
     ): AvroSchema {
-        if (is_null($schemata)) {
-            $schemata = new AvroNamedSchemata();
-        }
-
         if (is_array($avro)) {
             $type = $avro[self::TYPE_ATTR] ?? null;
 
@@ -384,7 +380,10 @@ class AvroSchema implements \Stringable
                 $new_name = new AvroName($name, $namespace, $default_namespace);
                 $doc = $avro[self::DOC_ATTR] ?? null;
                 $aliases = $avro[self::ALIASES_ATTR] ?? null;
-                AvroNamedSchema::hasValidAliases($aliases);
+
+                self::hasValidAliases($aliases);
+                self::hasValidDoc($doc);
+
                 switch ($type) {
                     case self::FIXED_SCHEMA:
                         $size = $avro[self::SIZE_ATTR] ?? throw new AvroSchemaParseException(
@@ -544,6 +543,17 @@ class AvroSchema implements \Stringable
         }
     }
 
+    public static function hasValidDoc(mixed $doc): void
+    {
+        if (is_string($doc) || is_null($doc)) {
+            return;
+        }
+
+        throw new AvroSchemaParseException(
+            'Invalid doc value. Must be a string or null.'
+        );
+    }
+
     /**
      * @returns boolean true if $datum is valid for $expected_schema
      *                  and false otherwise.
@@ -701,12 +711,10 @@ class AvroSchema implements \Stringable
     }
 
     /**
-     * @param mixed $avro
-     * @returns AvroSchema
      * @throws AvroSchemaParseException
      * @uses AvroSchema::realParse()
      */
-    protected static function subparse($avro, ?string $default_namespace, ?AvroNamedSchemata &$schemata = null): AvroSchema
+    protected static function subparse(array|string|null $avro, ?string $default_namespace, AvroNamedSchemata $schemata): self
     {
         try {
             return self::realParse($avro, $default_namespace, $schemata);

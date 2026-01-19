@@ -37,7 +37,7 @@ class AvroRecordSchema extends AvroNamedSchema
         AvroName $name,
         ?string $doc,
         ?array $fields,
-        ?AvroNamedSchemata &$schemata = null,
+        AvroNamedSchemata $schemata,
         string $schema_type = AvroSchema::RECORD_SCHEMA,
         ?array $aliases = null
     ) {
@@ -62,64 +62,32 @@ class AvroRecordSchema extends AvroNamedSchema
      * @throws AvroSchemaParseException
      */
     public static function parseFields(
-        array $field_data,
+        array $fieldsDefinitions,
         ?string $default_namespace,
-        ?AvroNamedSchemata $schemata = null
+        AvroNamedSchemata $schemata
     ): array {
         $fields = [];
-        $field_names = [];
-        $alias_names = [];
-        foreach ($field_data as $field) {
-            $name = $field[AvroField::FIELD_NAME_ATTR] ?? null;
-            $type = $field[AvroSchema::TYPE_ATTR] ?? null;
-            $order = $field[AvroField::ORDER_ATTR] ?? null;
-            $aliases = $field[AvroSchema::ALIASES_ATTR] ?? null;
+        $fieldNames = [];
+        $aliasNames = [];
+        foreach ($fieldsDefinitions as $fieldDefinition) {
+            $name = $fieldDefinition[AvroField::FIELD_NAME_ATTR] ?? null;
 
-            $default = null;
-            $has_default = false;
-            if (array_key_exists(AvroField::DEFAULT_ATTR, $field)) {
-                $default = $field[AvroField::DEFAULT_ATTR];
-                $has_default = true;
-            }
-
-            if (in_array($name, $field_names)) {
+            if (in_array($name, $fieldNames)) {
                 throw new AvroSchemaParseException(
                     sprintf("Field name %s is already in use", $name)
                 );
             }
 
-            $is_schema_from_schemata = false;
-            $field_schema = null;
-            if (
-                is_string($type)
-                && $field_schema = $schemata->schemaByName(
-                    new AvroName($type, null, $default_namespace)
-                )
-            ) {
-                $is_schema_from_schemata = true;
-            } elseif (is_string($type) && self::isPrimitiveType($type)) {
-                $field_schema = self::subparse($field, $default_namespace, $schemata);
-            } else {
-                $field_schema = self::subparse($type, $default_namespace, $schemata);
-            }
+            $newField = AvroField::fromFieldDefinition($fieldDefinition, $default_namespace, $schemata);
 
-            $new_field = new AvroField(
-                name: $name,
-                schema: $field_schema,
-                isTypeFromSchemata: $is_schema_from_schemata,
-                hasDefault: $has_default,
-                default: $default,
-                order: $order,
-                aliases: $aliases
-            );
-            $field_names[] = $name;
-            if ($new_field->hasAliases() && array_intersect($alias_names, $new_field->getAliases())) {
+            $fieldNames[] = $name;
+            if ($newField->hasAliases() && array_intersect($aliasNames, $newField->getAliases())) {
                 throw new AvroSchemaParseException("Alias already in use");
             }
-            if ($new_field->hasAliases()) {
-                array_push($alias_names, ...$new_field->getAliases());
+            if ($newField->hasAliases()) {
+                array_push($aliasNames, ...$newField->getAliases());
             }
-            $fields[] = $new_field;
+            $fields[] = $newField;
         }
 
         return $fields;

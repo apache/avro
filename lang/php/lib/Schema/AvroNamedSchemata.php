@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+declare(strict_types=1);
+
 namespace Apache\Avro\Schema;
 
 /**
@@ -34,7 +36,7 @@ class AvroNamedSchemata
     ) {
     }
 
-    public function listSchemas()
+    public function listSchemas(): void
     {
         var_export($this->schemata);
         foreach ($this->schemata as $sch) {
@@ -59,22 +61,35 @@ class AvroNamedSchemata
     /**
      * Creates a new AvroNamedSchemata instance of this schemata instance
      * with the given $schema appended.
+     *
      * @param AvroNamedSchema $schema schema to add to this existing schemata
      * @throws AvroSchemaParseException
      */
-    public function cloneWithNewSchema(AvroNamedSchema $schema): AvroNamedSchemata
+    public function cloneWithNewSchema(AvroNamedSchema $schema): self
     {
         $name = $schema->fullname();
-        if (AvroSchema::isValidType($name)) {
-            throw new AvroSchemaParseException(sprintf('Name "%s" is a reserved type name', $name));
-        }
-        if ($this->hasName($name)) {
-            throw new AvroSchemaParseException(sprintf('Name "%s" is already in use', $name));
-        }
-        $schemata = new AvroNamedSchemata($this->schemata);
+        $this->validateNamedSchema($name);
+
+        $schemata = new self($this->schemata);
         $schemata->schemata[$name] = $schema;
 
         return $schemata;
+    }
+
+    /**
+     * Append the given AvroNamedSchema to this schemata instance.
+     *
+     * @param AvroNamedSchema $schema schema to add to this existing schemata
+     * @throws AvroSchemaParseException
+     */
+    public function registerNamedSchema(AvroNamedSchema $schema): self
+    {
+        $name = $schema->fullname();
+        $this->validateNamedSchema($name);
+
+        $this->schemata[$name] = $schema;
+
+        return $this;
     }
 
     /**
@@ -84,5 +99,19 @@ class AvroNamedSchemata
     public function hasName(string $fullname): bool
     {
         return array_key_exists($fullname, $this->schemata);
+    }
+
+    /**
+     * @throws AvroSchemaParseException
+     */
+    private function validateNamedSchema(string $name): void
+    {
+        if (AvroSchema::isValidType($name)) {
+            throw new AvroSchemaParseException(sprintf('Name "%s" is a reserved type name', $name));
+        }
+
+        if ($this->hasName($name)) {
+            throw new AvroSchemaParseException(sprintf('Name "%s" is already in use', $name));
+        }
     }
 }
