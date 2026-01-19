@@ -95,9 +95,8 @@ class AvroName implements \Stringable
     /**
      * @returns boolean true if the given name is well-formed
      *          (is a non-null, non-empty string) and false otherwise
-     * @param mixed $name
      */
-    public static function isWellFormedName($name): bool
+    public static function isWellFormedName(mixed $name): bool
     {
         return is_string($name) && !empty($name) && preg_match(self::NAME_REGEXP, $name);
     }

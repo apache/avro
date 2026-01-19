@@ -41,7 +41,7 @@ class AvroUnionSchema extends AvroSchema
      * @param null|string $defaultNamespace namespace of enclosing schema
      * @throws AvroSchemaParseException
      */
-    public function __construct(array $schemas, ?string $defaultNamespace, ?AvroNamedSchemata &$schemata = null)
+    public function __construct(array $schemas, ?string $defaultNamespace, AvroNamedSchemata $schemata)
     {
         parent::__construct(AvroSchema::UNION_SCHEMA);
 

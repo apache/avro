@@ -28,17 +28,14 @@ class AvroEnumSchema extends AvroNamedSchema
     /**
      * @var string[] array of symbols
      */
-    private $symbols;
+    private array $symbols;
 
     /**
-     * @param AvroName $name
-     * @param string $doc
      * @param string[] $symbols
-     * @param AvroNamedSchemata &$schemata
-     * @param null|mixed $aliases
+     * @param null|array<string> $aliases
      * @throws AvroSchemaParseException
      */
-    public function __construct($name, $doc, $symbols, &$schemata = null, $aliases = null)
+    public function __construct(AvroName $name, ?string $doc, mixed $symbols, AvroNamedSchemata $schemata, ?array $aliases = null)
     {
         if (!AvroUtil::isList($symbols)) {
             throw new AvroSchemaParseException('Enum Schema symbols are not a list');

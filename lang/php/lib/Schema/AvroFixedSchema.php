@@ -36,7 +36,7 @@ class AvroFixedSchema extends AvroNamedSchema
      * @param int $size byte count of this fixed schema data value
      * @throws AvroSchemaParseException
      */
-    public function __construct(AvroName $name, ?string $doc, int $size, ?AvroNamedSchemata &$schemata = null, ?array $aliases = null)
+    public function __construct(AvroName $name, ?string $doc, int $size, AvroNamedSchemata $schemata, ?array $aliases = null)
     {
         parent::__construct(AvroSchema::FIXED_SCHEMA, $name, $doc, $schemata, $aliases);
         $this->size = $size;
@@ -65,7 +65,7 @@ class AvroFixedSchema extends AvroNamedSchema
     public static function duration(
         AvroName $name,
         ?string $doc,
-        ?AvroNamedSchemata &$schemata = null,
+        AvroNamedSchemata $schemata,
         ?array $aliases = null
     ): self {
         $fixedSchema = new self(
@@ -92,7 +92,7 @@ class AvroFixedSchema extends AvroNamedSchema
         int $size,
         int $precision,
         int $scale,
-        ?AvroNamedSchemata &$schemata = null,
+        AvroNamedSchemata $schemata,
         ?array $aliases = null
     ): self {
         $self = new self(

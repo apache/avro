@@ -37,7 +37,7 @@ class AvroMapSchema extends AvroSchema
      */
     private bool $isValuesSchemaFromSchemata;
 
-    public function __construct(string|array $values, ?string $defaultNamespace, ?AvroNamedSchemata &$schemata = null)
+    public function __construct(string|array $values, ?string $defaultNamespace, AvroNamedSchemata $schemata)
     {
         parent::__construct(AvroSchema::MAP_SCHEMA);
 
