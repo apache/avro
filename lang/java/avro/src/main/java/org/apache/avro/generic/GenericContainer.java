@@ -19,8 +19,10 @@ package org.apache.avro.generic;
 
 import org.apache.avro.Schema;
 
+import java.io.Serializable;
+
 /** Contains data of other types. */
-public interface GenericContainer {
+public interface GenericContainer extends Serializable {
   /** The schema of this instance. */
   Schema getSchema();
 }
