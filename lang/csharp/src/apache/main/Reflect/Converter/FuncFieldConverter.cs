@@ -18,7 +18,7 @@
 
 using System;
 
-namespace Avro.Reflect
+namespace Avro.Reflect.Converter
 {
     /// <summary>
     /// Field converter using a Func
@@ -38,9 +38,9 @@ namespace Avro.Reflect
             _to = to;
         }
 
-        private Func<TAvro, Schema, TProperty> _from;
+        private readonly Func<TAvro, Schema, TProperty> _from;
 
-        private Func<TProperty, Schema, TAvro> _to;
+        private readonly Func<TProperty, Schema, TAvro> _to;
 
         /// <summary>
         /// Inherited conversion method - call the Func.

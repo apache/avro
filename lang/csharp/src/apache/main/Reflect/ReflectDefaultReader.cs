@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using Avro.IO;
+using Avro.Reflect.Array;
 using Avro.Specific;
 using Newtonsoft.Json.Linq;
 
