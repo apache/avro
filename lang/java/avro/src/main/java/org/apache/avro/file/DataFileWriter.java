@@ -20,6 +20,7 @@ package org.apache.avro.file;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileStream.DataBlock;
+import org.apache.avro.file.DataFileStream.Header;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
@@ -243,6 +244,28 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
     init(out);
 
+    return this;
+  }
+
+  /**
+   * Open a writer appending to an existing stream.
+   *
+   * @param header  the header from the existing data to append.
+   * @param out positioned at the end of the existing file.
+   */
+  public DataFileWriter<D> appendTo(Header header, OutputStream out) throws IOException {
+    assertNotOpen();
+    this.schema = header.schema;
+    this.sync = header.sync;
+    this.meta.putAll(header.meta);
+    byte[] codecBytes = this.meta.get(DataFileConstants.CODEC);
+    if (codecBytes != null) {
+      String strCodec = new String(codecBytes, StandardCharsets.UTF_8);
+      this.codec = CodecFactory.fromString(strCodec).createInstance();
+    } else {
+      this.codec = CodecFactory.nullCodec().createInstance();
+    }
+    init(out);
     return this;
   }
 
