@@ -383,11 +383,6 @@ process_file(const char *filename)
 
 
 /*-- MAIN PROGRAM --*/
-static struct option longopts[] = {
-	{ "separator", required_argument, NULL, 's' },
-	{ NULL, 0, NULL, 0 }
-};
-
 static void usage(void)
 {
 	fprintf(stderr,
@@ -400,33 +395,51 @@ int main(int argc, char **argv)
 {
 	char  *data_filename;
 
-	int  ch;
-	while ((ch = getopt_long(argc, argv, "s:", longopts, NULL) ) != -1) {
-		switch (ch) {
-			case 's':
-				separator = optarg;
-				break;
+        int  i = 1;
+        int  ind_point = 0;
+        int  ind = 0;
+        char  *p_str;
+        while (i < argc) {
+            if (argv[i][0] == '-') {
+                if (argv[i][1] == '-') {
+                    if (strncmp("separator", argv[i]+2, strlen("separator")) == 0) {
+                        p_str = strchr(argv[i], '=');
+                        if (p_str != NULL) {
+                            separator = p_str;
+                        } else {
+                            goto opt_error;
+                        }
+                    } else {
+                        goto opt_error;
+                    }
+                } else {
+                    goto opt_error;
+                }
+            } else {
+                if (ind_point < 1) {
+                    ind_point++;
+                    ind = i;
+                } else {
+                    fprintf(stderr, "Can't read from multiple input files.\n");
+                    goto opt_error;
+                }
+            }
+        }
 
-			default:
-				usage();
-				exit(1);
-		}
-	}
-
-	argc -= optind;
-	argv += optind;
-
-	if (argc == 1) {
-		data_filename = argv[0];
-	} else if (argc == 0) {
-		data_filename = NULL;
-	} else {
-		fprintf(stderr, "Can't read from multiple input files.\n");
-		usage();
-		exit(1);
+        if (ind_point == 1) {
+                data_filename = argv[ind];
+        } else if (ind_point == 0) {
+                data_filename = NULL;
+        } else {
+                fprintf(stderr, "Can't read from multiple input files.\n");
+                goto opt_error;
 	}
 
 	/* Process the data file */
 	process_file(data_filename);
 	return 0;
+
+opt_error:
+        usage();
+        exit(1);
 }
