@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Linq;
 using Newtonsoft.Json;
@@ -140,15 +141,19 @@ namespace Avro
         /// <returns>true two schemas are equal, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (this == obj) return true;
-
-            if (obj != null && obj is PrimitiveSchema)
+            if (this == obj)
             {
-                var that = obj as PrimitiveSchema;
-                if (this.Tag == that.Tag)
-                    return areEqual(that.Props, this.Props);
+                return true;
             }
-            return false;
+
+            if (obj == null || obj.GetType() != typeof(PrimitiveSchema))
+            {
+                return false;
+            }
+
+            PrimitiveSchema that = (PrimitiveSchema)obj;
+            return Tag == that.Tag
+                && areEqual(that.Props, this.Props);
         }
 
         /// <summary>

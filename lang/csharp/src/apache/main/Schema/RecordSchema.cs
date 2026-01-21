@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -391,21 +392,25 @@ namespace Avro
         /// <returns>true if the two schemas are equal, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (obj == this) return true;
-            if (obj != null && obj is RecordSchema)
+            if (obj == this)
             {
-                RecordSchema that = obj as RecordSchema;
+                return true;
+            }
+
+            if (obj == null || obj.GetType() != typeof(RecordSchema))
+            {
+                return false;
+            }
+
+                RecordSchema that = (RecordSchema)obj;
                 return protect(() => true, () =>
                 {
-                    if (this.SchemaName.Equals(that.SchemaName) && this.Count == that.Count)
-                    {
-                        for (int i = 0; i < Fields.Count; i++) if (!Fields[i].Equals(that.Fields[i])) return false;
-                        return areEqual(that.Props, this.Props);
-                    }
-                    return false;
+                    return SchemaName.Equals(that.SchemaName)
+                    && Count == that.Count
+                    && Fields.SequenceEqual(that.Fields)
+                    && areEqual(that.Props, this.Props);
+
                 }, that);
-            }
-            return false;
         }
 
         /// <summary>

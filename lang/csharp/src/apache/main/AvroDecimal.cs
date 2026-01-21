@@ -883,7 +883,9 @@ namespace Avro
         /// </returns>
         public override bool Equals(object obj)
         {
-            return (obj is AvroDecimal @decimal) && Equals(@decimal);
+            return obj != null
+                && obj.GetType() == typeof(AvroDecimal)
+                && Equals((AvroDecimal)obj);
         }
 
         /// <summary>
