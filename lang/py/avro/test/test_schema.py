@@ -745,8 +745,7 @@ class TestMisc(unittest.TestCase):
 
     def test_correct_recursive_extraction(self):
         """A recursive reference within a schema should be the same type every time."""
-        s = avro.schema.parse(
-            """{
+        s = avro.schema.parse("""{
             "type": "record",
             "name": "X",
             "fields": [{
@@ -756,8 +755,7 @@ class TestMisc(unittest.TestCase):
                     "name": "Y",
                     "fields": [{"name": "Z", "type": "X"}]}
             }]
-        }"""
-        )
+        }""")
         t = avro.schema.parse(str(s.fields[0].type))
         # If we've made it this far, the subschema was reasonably stringified; it ccould be reparsed.
         self.assertEqual("X", t.fields[0].type.name)
@@ -1186,12 +1184,10 @@ class CanonicalFormTestCase(unittest.TestCase):
         """
         Eliminate all whitespace in JSON outside of string literals.
         """
-        s = avro.schema.parse(
-            """{"type": "fixed",
+        s = avro.schema.parse("""{"type": "fixed",
             "size": 16,
             "name": "md5"}
-                """
-        )
+                """)
         self.assertEqual(
             s.canonical_form,
             self.compact_json_string({"name": "md5", "type": "fixed", "size": 16}),
@@ -1270,8 +1266,7 @@ class CanonicalFormTestCase(unittest.TestCase):
         self.assertEqual(s.canonical_form, '["string","null","long"]')
 
     def test_large_record_handshake_request(self):
-        s = avro.schema.parse(
-            """
+        s = avro.schema.parse("""
             {
             "type": "record",
             "name": "HandshakeRequest",
@@ -1289,8 +1284,7 @@ class CanonicalFormTestCase(unittest.TestCase):
                 }
             ]
             }
-            """
-        )
+            """)
         self.assertEqual(
             s.canonical_form,
             (
@@ -1303,8 +1297,7 @@ class CanonicalFormTestCase(unittest.TestCase):
         )
 
     def test_large_record_handshake_response(self):
-        s = avro.schema.parse(
-            """
+        s = avro.schema.parse("""
             {
             "type": "record",
             "name": "HandshakeResponse",
@@ -1327,8 +1320,7 @@ class CanonicalFormTestCase(unittest.TestCase):
                 "name": "meta",
                 "type": ["null", {"type": "map", "values": "bytes"}]}]
                 }
-            """
-        )
+            """)
         self.assertEqual(
             s.canonical_form,
             (
@@ -1343,8 +1335,7 @@ class CanonicalFormTestCase(unittest.TestCase):
         )
 
     def test_large_record_interop(self):
-        s = avro.schema.parse(
-            """
+        s = avro.schema.parse("""
             {
             "type": "record",
             "name": "Interop",
@@ -1391,8 +1382,7 @@ class CanonicalFormTestCase(unittest.TestCase):
                 }
             ]
             }
-            """
-        )
+            """)
         self.assertEqual(
             s.canonical_form,
             (
