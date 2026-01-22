@@ -22,6 +22,7 @@ Read/Write Avro File Object Containers.
 
 https://avro.apache.org/docs/current/spec.html#Object+Container+Files
 """
+
 import io
 import json
 import warnings
