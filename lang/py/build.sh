@@ -75,7 +75,10 @@ main() {
   for target; do
     case "$target" in
       clean) clean;;
-      dist) dist;;
+      dist)
+        dist
+        doc
+        ;;
       doc) doc;;
       interop-data-generate) interop-data-generate;;
       interop-data-test) interop-data-test;;
