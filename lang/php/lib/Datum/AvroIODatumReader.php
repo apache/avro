@@ -43,50 +43,50 @@ use Apache\Avro\Schema\AvroUnionSchema;
 class AvroIODatumReader
 {
     public function __construct(
-        private ?AvroSchema $writers_schema = null,
-        private ?AvroSchema $readers_schema = null
+        private ?AvroSchema $writersSchema = null,
+        private ?AvroSchema $readersSchema = null
     ) {
     }
 
-    public function setWritersSchema(AvroSchema $readers_schema): void
+    public function setWritersSchema(AvroSchema $schema): void
     {
-        $this->writers_schema = $readers_schema;
+        $this->writersSchema = $schema;
     }
 
     public function read(AvroIOBinaryDecoder $decoder): mixed
     {
-        if (is_null($this->readers_schema)) {
-            $this->readers_schema = $this->writers_schema;
+        if (is_null($this->readersSchema)) {
+            $this->readersSchema = $this->writersSchema;
         }
 
         return $this->readData(
-            $this->writers_schema,
-            $this->readers_schema,
+            $this->writersSchema,
+            $this->readersSchema,
             $decoder
         );
     }
 
     public function readData(
-        AvroSchema $writers_schema,
-        AvroSchema $readers_schema,
+        AvroSchema $writersSchema,
+        AvroSchema $readersSchema,
         AvroIOBinaryDecoder $decoder
     ): mixed {
         // Schema resolution: reader's schema is a union, writer's schema is not
         if (
-            $readers_schema instanceof AvroUnionSchema
-            && AvroSchema::UNION_SCHEMA === $readers_schema->type()
-            && AvroSchema::UNION_SCHEMA !== $writers_schema->type()
+            $readersSchema instanceof AvroUnionSchema
+            && AvroSchema::UNION_SCHEMA === $readersSchema->type()
+            && AvroSchema::UNION_SCHEMA !== $writersSchema->type()
         ) {
-            foreach ($readers_schema->schemas() as $schema) {
-                if (self::schemasMatch($writers_schema, $schema)) {
-                    return $this->readData($writers_schema, $schema, $decoder);
+            foreach ($readersSchema->schemas() as $schema) {
+                if (self::schemasMatch($writersSchema, $schema)) {
+                    return $this->readData($writersSchema, $schema, $decoder);
                 }
             }
 
-            throw new AvroIOSchemaMatchException($writers_schema, $readers_schema);
+            throw new AvroIOSchemaMatchException($writersSchema, $readersSchema);
         }
 
-        return match ($writers_schema->type()) {
+        return match ($writersSchema->type()) {
             AvroSchema::NULL_TYPE => $decoder->readNull(),
             AvroSchema::BOOLEAN_TYPE => $decoder->readBoolean(),
             AvroSchema::INT_TYPE => $decoder->readInt(),
@@ -94,73 +94,75 @@ class AvroIODatumReader
             AvroSchema::FLOAT_TYPE => $decoder->readFloat(),
             AvroSchema::DOUBLE_TYPE => $decoder->readDouble(),
             AvroSchema::STRING_TYPE => $decoder->readString(),
-            AvroSchema::BYTES_TYPE => $this->readBytes($writers_schema, $readers_schema, $decoder->readBytes()),
-            AvroSchema::ARRAY_SCHEMA => $this->readArray($writers_schema, $readers_schema, $decoder),
-            AvroSchema::MAP_SCHEMA => $this->readMap($writers_schema, $readers_schema, $decoder),
-            AvroSchema::UNION_SCHEMA => $this->readUnion($writers_schema, $readers_schema, $decoder),
-            AvroSchema::ENUM_SCHEMA => $this->readEnum($writers_schema, $readers_schema, $decoder),
-            AvroSchema::FIXED_SCHEMA => $this->readFixed($writers_schema, $readers_schema, $decoder),
+            AvroSchema::BYTES_TYPE => $this->readBytes($writersSchema, $readersSchema, $decoder->readBytes()),
+            AvroSchema::ARRAY_SCHEMA => $this->readArray($writersSchema, $readersSchema, $decoder),
+            AvroSchema::MAP_SCHEMA => $this->readMap($writersSchema, $readersSchema, $decoder),
+            AvroSchema::UNION_SCHEMA => $this->readUnion($writersSchema, $readersSchema, $decoder),
+            AvroSchema::ENUM_SCHEMA => $this->readEnum($writersSchema, $readersSchema, $decoder),
+            AvroSchema::FIXED_SCHEMA => $this->readFixed($writersSchema, $readersSchema, $decoder),
             AvroSchema::RECORD_SCHEMA,
             AvroSchema::ERROR_SCHEMA,
-            AvroSchema::REQUEST_SCHEMA => $this->readRecord($writers_schema, $readers_schema, $decoder),
+            AvroSchema::REQUEST_SCHEMA => $this->readRecord($writersSchema, $readersSchema, $decoder),
             default => throw new AvroException(sprintf(
                 "Cannot read unknown schema type: %s",
-                $writers_schema->type()
+                $writersSchema->type()
             )),
         };
     }
 
     /**
      * @throws AvroSchemaParseException
-     * @return bool true if the schemas are consistent with
-     *                  each other and false otherwise.
+     * @return bool true if the schemas are consistent with each other and false otherwise.
      */
     public static function schemasMatch(
-        AvroSchema $writers_schema,
-        AvroSchema $readers_schema
+        AvroSchema $writersSchema,
+        AvroSchema $readersSchema
     ): bool {
-        $writers_schema_type = $writers_schema->type;
-        $readers_schema_type = $readers_schema->type;
+        $writersSchemaType = $writersSchema->type;
+        $readersSchemaType = $readersSchema->type;
 
-        if (AvroSchema::UNION_SCHEMA === $writers_schema_type || AvroSchema::UNION_SCHEMA === $readers_schema_type) {
+        if (AvroSchema::UNION_SCHEMA === $writersSchemaType || AvroSchema::UNION_SCHEMA === $readersSchemaType) {
             return true;
         }
 
-        if (AvroSchema::isPrimitiveType($writers_schema_type)) {
-            return true;
+        if (
+            AvroSchema::isPrimitiveType($writersSchemaType)
+            && AvroSchema::isPrimitiveType($readersSchemaType)
+        ) {
+            return $writersSchemaType === $readersSchemaType;
         }
 
-        switch ($readers_schema_type) {
+        switch ($readersSchemaType) {
             case AvroSchema::MAP_SCHEMA:
                 if (
-                    !$writers_schema instanceof AvroMapSchema
-                    || !$readers_schema instanceof AvroMapSchema
+                    !$writersSchema instanceof AvroMapSchema
+                    || !$readersSchema instanceof AvroMapSchema
                 ) {
                     return false;
                 }
 
                 return self::attributesMatch(
-                    $writers_schema->values(),
-                    $readers_schema->values(),
+                    $writersSchema->values(),
+                    $readersSchema->values(),
                     [AvroSchema::TYPE_ATTR]
                 );
             case AvroSchema::ARRAY_SCHEMA:
                 if (
-                    !$writers_schema instanceof AvroArraySchema
-                    || !$readers_schema instanceof AvroArraySchema
+                    !$writersSchema instanceof AvroArraySchema
+                    || !$readersSchema instanceof AvroArraySchema
                 ) {
                     return false;
                 }
 
                 return self::attributesMatch(
-                    $writers_schema->items(),
-                    $readers_schema->items(),
+                    $writersSchema->items(),
+                    $readersSchema->items(),
                     [AvroSchema::TYPE_ATTR]
                 );
             case AvroSchema::FIXED_SCHEMA:
                 return self::attributesMatch(
-                    $writers_schema,
-                    $readers_schema,
+                    $writersSchema,
+                    $readersSchema,
                     [
                         AvroSchema::FULLNAME_ATTR,
                         AvroSchema::SIZE_ATTR,
@@ -170,8 +172,8 @@ class AvroIODatumReader
             case AvroSchema::RECORD_SCHEMA:
             case AvroSchema::ERROR_SCHEMA:
                 return self::attributesMatch(
-                    $writers_schema,
-                    $readers_schema,
+                    $writersSchema,
+                    $readersSchema,
                     [AvroSchema::FULLNAME_ATTR]
                 );
             case AvroSchema::REQUEST_SCHEMA:
@@ -181,8 +183,8 @@ class AvroIODatumReader
         }
 
         if (
-            AvroSchema::INT_TYPE === $writers_schema_type
-            && in_array($readers_schema_type, [
+            AvroSchema::INT_TYPE === $writersSchemaType
+            && in_array($readersSchemaType, [
                 AvroSchema::LONG_TYPE,
                 AvroSchema::FLOAT_TYPE,
                 AvroSchema::DOUBLE_TYPE,
@@ -192,8 +194,8 @@ class AvroIODatumReader
         }
 
         if (
-            AvroSchema::LONG_TYPE === $writers_schema_type
-            && in_array($readers_schema_type, [
+            AvroSchema::LONG_TYPE === $writersSchemaType
+            && in_array($readersSchemaType, [
                 AvroSchema::FLOAT_TYPE,
                 AvroSchema::DOUBLE_TYPE,
             ])
@@ -201,7 +203,7 @@ class AvroIODatumReader
             return true;
         }
 
-        if (AvroSchema::FLOAT_TYPE === $writers_schema_type && AvroSchema::DOUBLE_TYPE === $readers_schema_type) {
+        if (AvroSchema::FLOAT_TYPE === $writersSchemaType && AvroSchema::DOUBLE_TYPE === $readersSchemaType) {
             return true;
         }
 
@@ -226,7 +228,7 @@ class AvroIODatumReader
                 if (AvroSchema::FULLNAME_ATTR === $attribute_name) {
 
                     if (
-                        !($schema_two instanceof AvroAliasedSchema)
+                        !$schema_two instanceof AvroAliasedSchema
                     ) {
                         return false;
                     }
@@ -269,37 +271,42 @@ class AvroIODatumReader
         return $bytes;
     }
 
+    /**
+     * @throws AvroException
+     * @throws AvroIOSchemaMatchException
+     * @return list<mixed>
+     */
     public function readArray(
-        AvroArraySchema $writers_schema,
-        AvroArraySchema $readers_schema,
+        AvroArraySchema $writersSchema,
+        AvroArraySchema $readersSchema,
         AvroIOBinaryDecoder $decoder
     ): array {
         $items = [];
-        $block_count = $decoder->readLong();
-        while (0 !== $block_count) {
-            if ($block_count < 0) {
-                $block_count = -$block_count;
+        $blockCount = $decoder->readLong();
+        while (0 !== $blockCount) {
+            if ($blockCount < 0) {
+                $blockCount = -$blockCount;
                 $decoder->readLong(); // Read (and ignore) block size
             }
-            for ($i = 0; $i < $block_count; $i++) {
+            for ($i = 0; $i < $blockCount; $i++) {
                 $items[] = $this->readData(
-                    $writers_schema->items(),
-                    $readers_schema->items(),
+                    $writersSchema->items(),
+                    $readersSchema->items(),
                     $decoder
                 );
             }
-            $block_count = $decoder->readLong();
+            $blockCount = $decoder->readLong();
         }
 
         return $items;
     }
 
     /**
-     * @returns array<int, mixed>
+     * @return array<string, mixed>
      */
     public function readMap(
-        AvroMapSchema $writers_schema,
-        AvroMapSchema $readers_schema,
+        AvroMapSchema $writersSchema,
+        AvroMapSchema $readersSchema,
         AvroIOBinaryDecoder $decoder
     ): array {
         $items = [];
@@ -314,8 +321,8 @@ class AvroIODatumReader
             for ($i = 0; $i < $pair_count; $i++) {
                 $key = $decoder->readString();
                 $items[$key] = $this->readData(
-                    $writers_schema->values(),
-                    $readers_schema->values(),
+                    $writersSchema->values(),
+                    $readersSchema->values(),
                     $decoder
                 );
             }
@@ -383,31 +390,31 @@ class AvroIODatumReader
     }
 
     /**
-     * @returns array
+     * @return array<string, mixed>
      */
     public function readRecord(
-        AvroRecordSchema $writers_schema,
-        AvroRecordSchema $readers_schema,
+        AvroRecordSchema $writersSchema,
+        AvroRecordSchema $readersSchema,
         AvroIOBinaryDecoder $decoder
-    ) {
-        $readers_fields = $readers_schema->fieldsHash();
+    ): array {
+        $readerFields = $readersSchema->fieldsHash();
         $record = [];
-        foreach ($writers_schema->fields() as $writers_field) {
-            $type = $writers_field->type();
-            $readers_field = $readers_fields[$writers_field->name()] ?? null;
-            if ($readers_field) {
-                $record[$writers_field->name()] = $this->readData($type, $readers_field->type(), $decoder);
-            } elseif (isset($readers_schema->fieldsByAlias()[$writers_field->name()])) {
-                $readers_field = $readers_schema->fieldsByAlias()[$writers_field->name()];
-                $field_val = $this->readData($writers_field->type(), $readers_field->type(), $decoder);
-                $record[$readers_field->name()] = $field_val;
+        foreach ($writersSchema->fields() as $writersField) {
+            $type = $writersField->type();
+            $readersField = $readerFields[$writersField->name()] ?? null;
+            if ($readersField) {
+                $record[$writersField->name()] = $this->readData($type, $readersField->type(), $decoder);
+            } elseif (isset($readersSchema->fieldsByAlias()[$writersField->name()])) {
+                $readersField = $readersSchema->fieldsByAlias()[$writersField->name()];
+                $field_val = $this->readData($writersField->type(), $readersField->type(), $decoder);
+                $record[$readersField->name()] = $field_val;
             } else {
                 self::skipData($type, $decoder);
             }
         }
         // Fill in default values
-        $writers_fields = $writers_schema->fieldsHash();
-        foreach ($readers_fields as $field_name => $field) {
+        $writers_fields = $writersSchema->fieldsHash();
+        foreach ($readerFields as $field_name => $field) {
             if (isset($writers_fields[$field_name])) {
                 continue;
             }
@@ -420,10 +427,10 @@ class AvroIODatumReader
     }
 
     public static function skipData(
-        AvroSchema|AvroFixedSchema|AvroEnumSchema|AvroUnionSchema|AvroArraySchema|AvroMapSchema $writers_schema,
+        AvroSchema|AvroFixedSchema|AvroEnumSchema|AvroUnionSchema|AvroArraySchema|AvroMapSchema $writersSchema,
         AvroIOBinaryDecoder $decoder
     ): void {
-        match ($writers_schema->type()) {
+        match ($writersSchema->type()) {
             AvroSchema::NULL_TYPE => $decoder->skipNull(),
             AvroSchema::BOOLEAN_TYPE => $decoder->skipBoolean(),
             AvroSchema::INT_TYPE => $decoder->skipInt(),
@@ -432,56 +439,58 @@ class AvroIODatumReader
             AvroSchema::DOUBLE_TYPE => $decoder->skipDouble(),
             AvroSchema::STRING_TYPE => $decoder->skipString(),
             AvroSchema::BYTES_TYPE => $decoder->skipBytes(),
-            AvroSchema::ARRAY_SCHEMA => $decoder->skipArray($writers_schema, $decoder),
-            AvroSchema::MAP_SCHEMA => $decoder->skipMap($writers_schema, $decoder),
-            AvroSchema::UNION_SCHEMA => $decoder->skipUnion($writers_schema, $decoder),
-            AvroSchema::ENUM_SCHEMA => $decoder->skipEnum($writers_schema, $decoder),
-            AvroSchema::FIXED_SCHEMA => $decoder->skipFixed($writers_schema, $decoder),
-            AvroSchema::RECORD_SCHEMA, AvroSchema::ERROR_SCHEMA, AvroSchema::REQUEST_SCHEMA => $decoder->skipRecord($writers_schema, $decoder),
+            AvroSchema::ARRAY_SCHEMA => $decoder->skipArray($writersSchema, $decoder),
+            AvroSchema::MAP_SCHEMA => $decoder->skipMap($writersSchema, $decoder),
+            AvroSchema::UNION_SCHEMA => $decoder->skipUnion($writersSchema, $decoder),
+            AvroSchema::ENUM_SCHEMA => $decoder->skipEnum($writersSchema, $decoder),
+            AvroSchema::FIXED_SCHEMA => $decoder->skipFixed($writersSchema, $decoder),
+            AvroSchema::RECORD_SCHEMA,
+            AvroSchema::ERROR_SCHEMA,
+            AvroSchema::REQUEST_SCHEMA => $decoder->skipRecord($writersSchema, $decoder),
             default => throw new AvroException(sprintf(
                 'Unknown schema type: %s',
-                $writers_schema->type()
+                $writersSchema->type()
             )),
         };
     }
 
     /**
-     * @param null|array|bool|float|int|string $default_value
+     * @param null|array<string, mixed>|bool|float|int|list<mixed>|string $defaultValue
      *
      * @throws AvroException if $field_schema type is unknown.
-     * @return null|array|bool|float|int|string
+     * @return null|array<string, mixed>|bool|float|int|list<mixed>|string
      */
-    public function readDefaultValue(AvroSchema $field_schema, mixed $default_value): mixed
+    public function readDefaultValue(AvroSchema $fieldSchema, mixed $defaultValue): mixed
     {
-        switch ($field_schema->type()) {
+        switch ($fieldSchema->type()) {
             case AvroSchema::NULL_TYPE:
                 return null;
             case AvroSchema::BOOLEAN_TYPE:
-                return $default_value;
+                return $defaultValue;
             case AvroSchema::INT_TYPE:
             case AvroSchema::LONG_TYPE:
-                return (int) $default_value;
+                return (int) $defaultValue;
             case AvroSchema::FLOAT_TYPE:
             case AvroSchema::DOUBLE_TYPE:
-                return (float) $default_value;
+                return (float) $defaultValue;
             case AvroSchema::STRING_TYPE:
             case AvroSchema::BYTES_TYPE:
-                return $this->readBytes($field_schema, $field_schema, $default_value);
+                return $this->readBytes($fieldSchema, $fieldSchema, $defaultValue);
             case AvroSchema::ARRAY_SCHEMA:
                 $array = [];
-                foreach ($default_value as $json_val) {
+                foreach ($defaultValue as $json_val) {
                     /** @phpstan-ignore method.notFound */
-                    $val = $this->readDefaultValue($field_schema->items(), $json_val);
+                    $val = $this->readDefaultValue($fieldSchema->items(), $json_val);
                     $array[] = $val;
                 }
 
                 return $array;
             case AvroSchema::MAP_SCHEMA:
                 $map = [];
-                foreach ($default_value as $key => $json_val) {
+                foreach ($defaultValue as $key => $json_val) {
                     $map[$key] = $this->readDefaultValue(
                         /** @phpstan-ignore method.notFound */
-                        $field_schema->values(),
+                        $fieldSchema->values(),
                         $json_val
                     );
                 }
@@ -490,18 +499,18 @@ class AvroIODatumReader
             case AvroSchema::UNION_SCHEMA:
                 return $this->readDefaultValue(
                     /** @phpstan-ignore method.notFound */
-                    $field_schema->schemaByIndex(0),
-                    $default_value
+                    $fieldSchema->schemaByIndex(0),
+                    $defaultValue
                 );
             case AvroSchema::ENUM_SCHEMA:
             case AvroSchema::FIXED_SCHEMA:
-                return $default_value;
+                return $defaultValue;
             case AvroSchema::RECORD_SCHEMA:
                 $record = [];
                 /** @phpstan-ignore method.notFound */
-                foreach ($field_schema->fields() as $field) {
+                foreach ($fieldSchema->fields() as $field) {
                     $field_name = $field->name();
-                    if (!$json_val = $default_value[$field_name]) {
+                    if (!$json_val = $defaultValue[$field_name]) {
                         $json_val = $field->default_value();
                     }
 
@@ -513,7 +522,7 @@ class AvroIODatumReader
 
                 return $record;
             default:
-                throw new AvroException(sprintf('Unknown type: %s', $field_schema->type()));
+                throw new AvroException(sprintf('Unknown type: %s', $fieldSchema->type()));
         }
     }
 

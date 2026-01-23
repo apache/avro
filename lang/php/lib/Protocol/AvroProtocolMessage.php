@@ -29,6 +29,10 @@ use Apache\Avro\Schema\AvroRecordSchema;
 use Apache\Avro\Schema\AvroSchema;
 use Apache\Avro\Schema\AvroSchemaParseException;
 
+/**
+ * @phpstan-import-type AvroSchemaDefinitionArray from AvroSchema
+ * @phpstan-type AvroProtocolMessageDefinitionArray array{request: AvroSchemaDefinitionArray, response: string}
+ */
 class AvroProtocolMessage
 {
     public readonly AvroRecordSchema $request;
@@ -36,6 +40,7 @@ class AvroProtocolMessage
     public readonly ?AvroSchema $response;
 
     /**
+     * @param AvroProtocolMessageDefinitionArray $avro
      * @throws AvroSchemaParseException
      */
     public function __construct(
@@ -49,7 +54,7 @@ class AvroProtocolMessage
             doc: null,
             fields: $avro['request'],
             schemata: $schemata,
-            schema_type: AvroSchema::REQUEST_SCHEMA
+            schemaType: AvroSchema::REQUEST_SCHEMA
         );
 
         $response = null;
@@ -58,7 +63,7 @@ class AvroProtocolMessage
                 new AvroName(
                     name: $avro['response'],
                     namespace: $namespace,
-                    default_namespace: $namespace
+                    defaultNamespace: $namespace
                 )
             );
 

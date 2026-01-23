@@ -24,6 +24,7 @@ use Apache\Avro\AvroIO;
 use Apache\Avro\Datum\AvroIODatumReader;
 use Apache\Avro\Datum\AvroIODatumWriter;
 use Apache\Avro\IO\AvroFile;
+use Apache\Avro\IO\AvroIOException;
 use Apache\Avro\Schema\AvroSchema;
 
 class AvroDataIO
@@ -75,9 +76,9 @@ class AvroDataIO
     public const BZIP2_CODEC = 'bzip2';
 
     /**
-     * @var array array of valid codec names
+     * @var array<string> array of valid codec names
      */
-    private static $validCodecs = [
+    private static array $validCodecs = [
         self::NULL_CODEC,
         self::DEFLATE_CODEC,
         self::SNAPPY_CODEC,
@@ -91,7 +92,7 @@ class AvroDataIO
     private static ?AvroSchema $metadataSchema = null;
 
     /**
-     * @returns int count of bytes in the initial "magic" segment of the
+     * @return int count of bytes in the initial "magic" segment of the
      *              Avro container file header
      */
     public static function magicSize(): int
@@ -122,90 +123,84 @@ class AvroDataIO
     /**
      * @param string $file_path file_path of file to open
      * @param string $mode one of AvroFile::READ_MODE or AvroFile::WRITE_MODE
-     * @param string $schemaJson JSON of writer's schema
+     * @param null|string $schemaJson JSON of writer's schema
      * @param string $codec compression codec
-     * @returns AvroDataIOWriter instance of AvroDataIOWriter
      *
-     * @throws AvroDataIOException if $writers_schema is not provided
-     *         or if an invalid $mode is given.
+     * @throws AvroDataIOException if $writers_schema is not provided or if an invalid $mode is given.
+     * @throws AvroIOException
      */
     public static function openFile(
-        $file_path,
-        $mode = AvroFile::READ_MODE,
-        $schemaJson = null,
-        $codec = self::NULL_CODEC
-    ) {
+        string $file_path,
+        string $mode = AvroIO::READ_MODE,
+        ?string $schemaJson = null,
+        string $codec = self::NULL_CODEC
+    ): AvroDataIOReader|AvroDataIOWriter {
         $schema = !is_null($schemaJson)
             ? AvroSchema::parse($schemaJson) : null;
 
-        $io = false;
         switch ($mode) {
-            case AvroFile::WRITE_MODE:
+            case AvroIO::WRITE_MODE:
                 if (is_null($schema)) {
                     throw new AvroDataIOException('Writing an Avro file requires a schema.');
                 }
-                $file = new AvroFile($file_path, AvroFile::WRITE_MODE);
-                $io = self::openWriter($file, $schema, $codec);
+                $file = new AvroFile($file_path, AvroIO::WRITE_MODE);
 
-                break;
-            case AvroFile::READ_MODE:
-                $file = new AvroFile($file_path, AvroFile::READ_MODE);
-                $io = self::openReader($file, $schema);
+                return self::openWriter($file, $schema, $codec);
 
-                break;
+            case AvroIO::READ_MODE:
+                $file = new AvroFile($file_path, AvroIO::READ_MODE);
+
+                return self::openReader($file, $schema);
+
             default:
                 throw new AvroDataIOException(
                     sprintf(
                         "Only modes '%s' and '%s' allowed. You gave '%s'.",
-                        AvroFile::READ_MODE,
-                        AvroFile::WRITE_MODE,
+                        AvroIO::READ_MODE,
+                        AvroIO::WRITE_MODE,
                         $mode
                     )
                 );
         }
-
-        return $io;
     }
 
     /**
-     * @param string $codec
-     * @returns boolean true if $codec is a valid codec value and false otherwise
+     * @return bool true if $codec is a valid codec value and false otherwise
      */
-    public static function isValidCodec($codec)
+    public static function isValidCodec(?string $codec): bool
     {
-        return in_array($codec, self::validCodecs());
+        return is_string($codec) && in_array($codec, self::validCodecs());
     }
 
     /**
-     * @returns array array of valid codecs
+     * @return array<string> array of valid codecs
      */
-    public static function validCodecs()
+    public static function validCodecs(): array
     {
         return self::$validCodecs;
     }
 
     /**
-     * @param AvroIO $io
-     * @param AvroSchema $schema
-     * @param string $codec
-     * @returns AvroDataIOWriter
+     * @throws AvroDataIOException
      */
-    protected static function openWriter($io, $schema, $codec = self::NULL_CODEC)
+    protected static function openWriter(AvroIO $io, ?AvroSchema $schema, string $codec = self::NULL_CODEC): AvroDataIOWriter
     {
-        $writer = new AvroIODatumWriter($schema);
-
-        return new AvroDataIOWriter($io, $writer, $schema, $codec);
+        return new AvroDataIOWriter(
+            io: $io,
+            datumWriter: new AvroIODatumWriter($schema),
+            writersSchema: $schema,
+            codec: $codec
+        );
     }
 
     /**
-     * @param AvroIO $io
-     * @param AvroSchema $schema
-     * @returns AvroDataIOReader
+     * @throws AvroDataIOException
      */
-    protected static function openReader($io, $schema)
+    protected static function openReader(AvroIO $io, ?AvroSchema $schema): AvroDataIOReader
     {
-        $reader = new AvroIODatumReader(null, $schema);
-
-        return new AvroDataIOReader($io, $reader);
+        return new AvroDataIOReader(
+            io: $io,
+            datumReader: new AvroIODatumReader(null, $schema)
+        );
     }
 }

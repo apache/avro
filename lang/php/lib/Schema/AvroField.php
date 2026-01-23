@@ -24,6 +24,9 @@ namespace Apache\Avro\Schema;
 
 /**
  * Field of an {@link AvroRecordSchema}
+ *
+ * @phpstan-import-type AvroSchemaDefinitionArray from AvroSchema
+ * @phpstan-import-type AvroAliases from AvroAliasedSchema
  */
 class AvroField extends AvroSchema implements AvroAliasedSchema
 {
@@ -58,7 +61,7 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
     public const IGNORE_SORT_ORDER = 'ignore';
 
     /**
-     * @var array list of valid field sort order values
+     * @var list<string> list of valid field sort order values
      */
     private static array $validFieldSortOrders = [
         self::ASC_SORT_ORDER,
@@ -83,6 +86,8 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
      * @var null|string sort order of this field
      */
     private ?string $order;
+
+    /** @var null|AvroAliases */
     private ?array $aliases;
     private ?string $doc;
 
@@ -114,6 +119,7 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
     }
 
     /**
+     * @param AvroSchemaDefinitionArray $avro
      * @throws AvroSchemaParseException
      */
     public static function fromFieldDefinition(array $avro, ?string $defaultNamespace, AvroNamedSchemata $schemata): self
@@ -166,6 +172,9 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
         );
     }
 
+    /**
+     * @return AvroSchemaDefinitionArray|string the Avro representation of this field
+     */
     public function toAvro(): string|array
     {
         $avro = [self::FIELD_NAME_ATTR => $this->name];
@@ -196,7 +205,7 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
     }
 
     /**
-     * @returns string the name of this field
+     * @return string the name of this field
      */
     public function name(): string
     {
@@ -204,7 +213,7 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
     }
 
     /**
-     * @returns mixed the default value of this field
+     * @return mixed the default value of this field
      */
     public function defaultValue()
     {
@@ -212,13 +221,16 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
     }
 
     /**
-     * @returns boolean true if the field has a default and false otherwise
+     * @return bool true if the field has a default and false otherwise
      */
     public function hasDefaultValue(): bool
     {
         return $this->hasDefault;
     }
 
+    /**
+     * @return null|AvroAliases
+     */
     public function getAliases(): ?array
     {
         return $this->aliases;

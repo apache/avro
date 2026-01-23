@@ -35,7 +35,7 @@ class AvroDataIOReader
 {
     public string $sync_marker;
     /**
-     * @var array object container metadata
+     * @var array<string, mixed> object container metadata
      */
     public array $metadata;
 
@@ -43,7 +43,7 @@ class AvroDataIOReader
     /**
      * @var int count of items in block
      */
-    private int $block_count;
+    private int $blockCount;
 
     /**
      * @var string compression codec
@@ -52,7 +52,7 @@ class AvroDataIOReader
 
     /**
      * @param AvroIO $io source from which to read
-     * @param AvroIODatumReader $datum_reader reader that understands
+     * @param AvroIODatumReader $datumReader reader that understands
      *                                        the data schema
      * @throws AvroDataIOException if $io is not an instance of AvroIO
      *                             or the codec specified in the header
@@ -61,7 +61,7 @@ class AvroDataIOReader
      */
     public function __construct(
         private AvroIO $io,
-        private AvroIODatumReader $datum_reader
+        private AvroIODatumReader $datumReader
     ) {
         $this->decoder = new AvroIOBinaryDecoder($this->io);
         $this->readHeader();
@@ -72,10 +72,10 @@ class AvroDataIOReader
         }
         $this->codec = $codec;
 
-        $this->block_count = 0;
+        $this->blockCount = 0;
         // FIXME: Seems unsanitary to set writers_schema here.
         // Can't constructor take it as an argument?
-        $this->datum_reader->setWritersSchema(
+        $this->datumReader->setWritersSchema(
             AvroSchema::parse($this->metadata[AvroDataIO::METADATA_SCHEMA_ATTR])
         );
     }
@@ -83,7 +83,7 @@ class AvroDataIOReader
     /**
      * @throws AvroException
      * @throws AvroIOException
-     * @return array of data from object container.
+     * @return list<mixed> of data from object container.
      * @internal Would be nice to implement data() as an iterator, I think
      */
     public function data(): array
@@ -91,52 +91,39 @@ class AvroDataIOReader
         $data = [];
         $decoder = $this->decoder;
         while (true) {
-            if (0 == $this->block_count) {
+            if (0 == $this->blockCount) {
                 if ($this->isEof()) {
                     break;
                 }
 
                 if ($this->skipSync()) {
+                    /** @phpstan-ignore if.alwaysFalse */
                     if ($this->isEof()) {
                         break;
                     }
                 }
 
                 $length = $this->readBlockHeader();
-                if (AvroDataIO::DEFLATE_CODEC == $this->codec) {
+                if (AvroDataIO::DEFLATE_CODEC === $this->codec) {
                     $compressed = $decoder->read($length);
-                    $datum = gzinflate($compressed);
+                    $datum = $this->gzUncompress($compressed);
                     $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
                 } elseif (AvroDataIO::ZSTANDARD_CODEC === $this->codec) {
-                    if (!extension_loaded('zstd')) {
-                        throw new AvroException('Please install ext-zstd to use zstandard compression.');
-                    }
                     $compressed = $decoder->read($length);
-                    $datum = zstd_uncompress($compressed);
+                    $datum = $this->zstdUncompress($compressed);
                     $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
                 } elseif (AvroDataIO::SNAPPY_CODEC === $this->codec) {
-                    if (!extension_loaded('snappy')) {
-                        throw new AvroException('Please install ext-snappy to use snappy compression.');
-                    }
                     $compressed = $decoder->read($length);
-                    $crc32 = unpack('N', substr((string) $compressed, -4))[1];
-                    $datum = snappy_uncompress(substr((string) $compressed, 0, -4));
-                    if ($crc32 === crc32($datum)) {
-                        $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
-                    } else {
-                        $decoder = new AvroIOBinaryDecoder(new AvroStringIO(snappy_uncompress($datum)));
-                    }
+                    $datum = $this->snappyUncompress($compressed);
+                    $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
                 } elseif (AvroDataIO::BZIP2_CODEC === $this->codec) {
-                    if (!extension_loaded('bz2')) {
-                        throw new AvroException('Please install ext-bz2 to use bzip2 compression.');
-                    }
                     $compressed = $decoder->read($length);
-                    $datum = bzdecompress($compressed);
+                    $datum = $this->bzUncompress($compressed);
                     $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
                 }
             }
-            $data[] = $this->datum_reader->read($decoder);
-            --$this->block_count;
+            $data[] = $this->datumReader->read($decoder);
+            --$this->blockCount;
         }
 
         return $data;
@@ -177,7 +164,7 @@ class AvroDataIOReader
             );
         }
 
-        $this->metadata = $this->datum_reader->readData(
+        $this->metadata = $this->datumReader->readData(
             AvroDataIO::metadataSchema(),
             AvroDataIO::metadataSchema(),
             $this->decoder
@@ -187,19 +174,16 @@ class AvroDataIOReader
 
     /**
      * @uses AvroIO::seek()
-     * @param mixed $offset
-     * @param mixed $whence
      */
-    private function seek($offset, $whence): bool
+    private function seek(int $offset, int $whence): bool
     {
         return $this->io->seek($offset, $whence);
     }
 
     /**
      * @uses AvroIO::read()
-     * @param mixed $len
      */
-    private function read($len): string
+    private function read(int $len): string
     {
         return $this->io->read($len);
     }
@@ -214,8 +198,8 @@ class AvroDataIOReader
 
     private function skipSync(): bool
     {
-        $proposed_sync_marker = $this->read(AvroDataIO::SYNC_SIZE);
-        if ($proposed_sync_marker != $this->sync_marker) {
+        $proposedSyncMarker = $this->read(AvroDataIO::SYNC_SIZE);
+        if ($proposedSyncMarker !== $this->sync_marker) {
             $this->seek(-AvroDataIO::SYNC_SIZE, AvroIO::SEEK_CUR);
 
             return false;
@@ -227,12 +211,82 @@ class AvroDataIOReader
     /**
      * Reads the block header (which includes the count of items in the block
      * and the length in bytes of the block)
-     * @returns int length in bytes of the block.
+     * @return int length in bytes of the block.
      */
     private function readBlockHeader(): string|int
     {
-        $this->block_count = $this->decoder->readLong();
+        $this->blockCount = $this->decoder->readLong();
 
         return $this->decoder->readLong();
+    }
+
+    /**
+     * @throws AvroException
+     */
+    private function gzUncompress(string $compressed): string
+    {
+        $datum = gzinflate($compressed);
+
+        if (false === $datum) {
+            throw new AvroException('gzip/deflate uncompression failed.');
+        }
+
+        return $datum;
+    }
+
+    /**
+     * @throws AvroException
+     */
+    private function zstdUncompress(string $compressed): string
+    {
+        if (!extension_loaded('zstd')) {
+            throw new AvroException('Please install ext-zstd to use zstandard compression.');
+        }
+        $datum = zstd_uncompress($compressed);
+
+        if (false === $datum) {
+            throw new AvroException('zstd uncompression failed.');
+        }
+
+        return $datum;
+    }
+
+    /**
+     * @throws AvroException
+     */
+    private function bzUncompress(string $compressed): string
+    {
+        if (!extension_loaded('bz2')) {
+            throw new AvroException('Please install ext-bz2 to use bzip2 compression.');
+        }
+        $datum = bzdecompress($compressed);
+
+        if (false === $datum) {
+            throw new AvroException('bz uncompression failed.');
+        }
+
+        return $datum;
+    }
+
+    /**
+     * @throws AvroException
+     */
+    private function snappyUncompress(string $compressed): string
+    {
+        if (!extension_loaded('snappy')) {
+            throw new AvroException('Please install ext-snappy to use snappy compression.');
+        }
+        $crc32 = unpack('N', substr((string) $compressed, -4))[1];
+        $datum = snappy_uncompress(substr((string) $compressed, 0, -4));
+
+        if (false === $datum) {
+            throw new AvroException('snappy uncompression failed.');
+        }
+
+        if ($crc32 !== crc32($datum)) {
+            throw new AvroException('snappy uncompression failed - crc32 mismatch.');
+        }
+
+        return $datum;
     }
 }

@@ -93,7 +93,7 @@ class AvroNamedSchemata
     }
 
     /**
-     * @returns bool true if there exists a schema with the given name
+     * @return bool true if there exists a schema with the given name
      *                  and false otherwise.
      */
     public function hasName(string $fullname): bool
