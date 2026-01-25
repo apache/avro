@@ -753,7 +753,11 @@ public class ReflectData extends SpecificData {
               if (STRING_OUTER_PARENT_REFERENCE.equals(fieldName)) {
                 throw new AvroTypeException("Class " + fullName + " must be a static inner class");
               }
-              Schema.Field recordField = new Schema.Field(fieldName, fieldSchema, doc, defaultValue);
+
+              AvroOrder fieldOrder = field.getAnnotation(AvroOrder.class);
+              Schema.Field recordField = (null == fieldOrder)
+                  ? new Schema.Field(fieldName, fieldSchema, doc, defaultValue)
+                  : new Schema.Field(fieldName, fieldSchema, doc, defaultValue, fieldOrder.value());
 
               AvroMeta[] metadata = field.getAnnotationsByType(AvroMeta.class); // add metadata
               for (AvroMeta meta : metadata) {
