@@ -23,11 +23,11 @@ abstract class AvroGradlePlugin : Plugin<Project> {
 
         val compileAvroSchemaTask = registerSchemaTask(extension, project)
         val compileTestAvroSchemaTask = registerSchemaTestTask(extension, project)
-        registerPluginHook(project, compileAvroSchemaTask, compileTestAvroSchemaTask)
+        addGeneratedSourcesHook(project, compileAvroSchemaTask, compileTestAvroSchemaTask)
 
     }
 
-    private fun registerPluginHook(
+    private fun addGeneratedSourcesHook(
         project: Project,
         compileAvroSchemaTask: TaskProvider<CompileAvroSchemaTask>,
         compileTestAvroSchemaTask: TaskProvider<CompileAvroSchemaTask>
@@ -39,7 +39,6 @@ abstract class AvroGradlePlugin : Plugin<Project> {
         project.plugins.withType(JavaPlugin::class.java) {
             addGeneratedSourcesToJavaProject(project, compileAvroSchemaTask, compileTestAvroSchemaTask)
         }
-
     }
 
     private fun registerSchemaTask(extension: AvroGradlePluginExtension, project: Project) =
