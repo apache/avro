@@ -105,7 +105,6 @@ class CompileAvroSchemaTaskTest {
             }
             
             avro {
-                schemaType = "schema"
                 testSourceDirectory = "$testAvroFiles"
                 testOutputDirectory = "$testAvroOutPutDir"
             }
@@ -176,7 +175,6 @@ class CompileAvroSchemaTaskTest {
             }
             
             avro {
-                schemaType = "schema"
                 sourceDirectory = "$testAvroFilesDir"
                 outputDirectory = "$testAvroOutPutDir"
                 templateDirectory = "${tempDir.resolve(testVelocityToolClassesDir).toString() + "/"}"
@@ -238,7 +236,6 @@ class CompileAvroSchemaTaskTest {
             }
             
             avro {
-                schemaType = "schema"
                 sourceDirectory = "$testAvroFiles"
                 outputDirectory = "$testAvroOutPutDir"
                 recordSpecificClass = "org.apache.avro.custom.CustomRecordBase"
@@ -265,7 +262,7 @@ class CompileAvroSchemaTaskTest {
         assertEquals(1, extendsLines.size)
 
         val extendLine = extendsLines[0]
-        assertTrue(extendLine.contains(" org.apache.avro.custom.CustomRecordBase "))
+        assertTrue(extendLine.contains("org.apache.avro.custom.CustomRecordBase"))
         assertFalse(extendLine.contains("org.apache.avro.specific.SpecificRecordBase"))
     }
 

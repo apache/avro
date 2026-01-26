@@ -8,11 +8,6 @@ import javax.inject.Inject
 abstract class AvroGradlePluginExtension @Inject constructor(objects: ObjectFactory) {
 
     /**
-     * Schema type: "schema", "idl", "protocol" are valid. Default is "schema"
-     */
-    val schemaType: Property<String> = objects.property(String::class.java).convention("schema")
-
-    /**
      * The source directory containing Avro schema files.
      * <p>
      * Defaults to {@code src/main/avro}.
