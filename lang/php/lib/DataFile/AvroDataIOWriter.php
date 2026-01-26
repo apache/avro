@@ -219,7 +219,7 @@ class AvroDataIOWriter
     {
         $data = gzdeflate($data);
         if (false === $data) {
-            throw new AvroException('Deflate compression failed.');
+            throw new AvroException('gzip compression failed.');
         }
 
         return $data;
@@ -270,7 +270,7 @@ class AvroDataIOWriter
         $toWrite = bzcompress($toWrite);
 
         if (is_int($toWrite)) {
-            throw new AvroException("bz compression failed (error: {$toWrite}).");
+            throw new AvroException("bz2 compression failed (error: {$toWrite}).");
         }
 
         return $toWrite;

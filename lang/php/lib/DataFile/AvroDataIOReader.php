@@ -228,7 +228,7 @@ class AvroDataIOReader
         $datum = gzinflate($compressed);
 
         if (false === $datum) {
-            throw new AvroException('gzip/deflate uncompression failed.');
+            throw new AvroException('gzip uncompression failed.');
         }
 
         return $datum;
@@ -261,8 +261,8 @@ class AvroDataIOReader
         }
         $datum = bzdecompress($compressed);
 
-        if (false === $datum) {
-            throw new AvroException('bz uncompression failed.');
+        if (!is_string($datum)) {
+            throw new AvroException('bz2 uncompression failed.');
         }
 
         return $datum;
