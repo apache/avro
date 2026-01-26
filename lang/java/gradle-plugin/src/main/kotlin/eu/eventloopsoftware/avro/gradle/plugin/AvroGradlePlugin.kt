@@ -45,8 +45,8 @@ abstract class AvroGradlePlugin : Plugin<Project> {
     private fun registerSchemaTask(extension: AvroGradlePluginExtension, project: Project) =
         project.tasks.register("avroGenerateJavaClasses", CompileAvroSchemaTask::class.java) { compileSchemaTask ->
 
-            val includesAvsc = setOf("**/*.avsc")
-            val includesProtocol = setOf("**/*.avpr")
+            val includesAvsc: Set<String> = extension.includedSchemaFiles.get()
+            val includesProtocol: Set<String> = extension.includedProtocolFiles.get()
 
             addProperties(
                 compileSchemaTask,
@@ -55,25 +55,9 @@ abstract class AvroGradlePlugin : Plugin<Project> {
                 extension.outputDirectory
             )
 
-            compileSchemaTask.schemaFiles.from(project.fileTree(extension.sourceDirectory).apply {
-                setIncludes(includesAvsc)
-                setExcludes(extension.excludes.get())
-            })
-            extension.sourceZipFiles.get().forEach { zipPath ->
-                compileSchemaTask.schemaFiles.from(
-                    project.zipTree(zipPath).matching { it.include(includesAvsc) }
-                )
-            }
+            addSchemaFiles(compileSchemaTask, project, extension, includesAvsc, extension.sourceDirectory)
+            addProtocolFiles(compileSchemaTask, project, extension, includesProtocol, extension.testSourceDirectory)
 
-            compileSchemaTask.protocolFiles.from(project.fileTree(extension.sourceDirectory).apply {
-                setIncludes(includesProtocol)
-                setExcludes(extension.excludes.get())
-            })
-            extension.sourceZipFiles.get().forEach { zipPath ->
-                compileSchemaTask.protocolFiles.from(
-                    project.zipTree(zipPath).matching { it.include(includesProtocol) }
-                )
-            }
             compileSchemaTask.runtimeClassPathFileCollection.from(project.configurations.getByName("runtimeClasspath").files)
         }
 
@@ -83,8 +67,8 @@ abstract class AvroGradlePlugin : Plugin<Project> {
             CompileAvroSchemaTask::class.java,
         ) { compileSchemaTask ->
 
-            val includesAvsc = setOf("**/*.avsc")
-            val includesProtocol = setOf("**/*.avpr")
+            val includesAvsc: Set<String> = extension.includedSchemaFiles.get()
+            val includesProtocol: Set<String> = extension.includedProtocolFiles.get()
 
             addProperties(
                 compileSchemaTask,
@@ -93,29 +77,12 @@ abstract class AvroGradlePlugin : Plugin<Project> {
                 extension.testOutputDirectory
             )
 
-            compileSchemaTask.schemaFiles.from(project.fileTree(extension.testSourceDirectory).apply {
-                setIncludes(includesAvsc)
-                setExcludes(extension.excludes.get())
-            })
-
-            extension.sourceZipFiles.get().forEach { zipPath ->
-                compileSchemaTask.schemaFiles.from(
-                    project.zipTree(zipPath).matching { it.include(includesAvsc) }
-                )
-            }
-
-            compileSchemaTask.protocolFiles.from(project.fileTree(extension.testSourceDirectory).apply {
-                setIncludes(includesProtocol)
-                setExcludes(extension.excludes.get())
-            })
-            extension.sourceZipFiles.get().forEach { zipPath ->
-                compileSchemaTask.protocolFiles.from(
-                    project.zipTree(zipPath).matching { it.include(includesProtocol) }
-                )
-            }
+            addSchemaFiles(compileSchemaTask, project, extension, includesAvsc, extension.testSourceDirectory)
+            addProtocolFiles(compileSchemaTask, project, extension, includesProtocol, extension.testSourceDirectory)
 
             compileSchemaTask.runtimeClassPathFileCollection.from(project.configurations.getByName("testRuntimeClasspath").files)
         }
+
 
     private fun addProperties(
         compileTask: AbstractCompileTask,
@@ -141,6 +108,42 @@ abstract class AvroGradlePlugin : Plugin<Project> {
         compileTask.customConversions.set(extension.customConversions)
         compileTask.customLogicalTypeFactories.set(extension.customLogicalTypeFactories)
         compileTask.enableDecimalLogicalType.set(extension.enableDecimalLogicalType)
+    }
+
+    private fun addSchemaFiles(
+        compileSchemaTask: CompileAvroSchemaTask,
+        project: Project,
+        extension: AvroGradlePluginExtension,
+        includes: Set<String>,
+        sourceDirectory: Property<String>
+    ) {
+        compileSchemaTask.schemaFiles.from(project.fileTree(sourceDirectory).apply {
+            setIncludes(includes)
+            setExcludes(extension.excludes.get())
+        })
+        extension.sourceZipFiles.get().forEach { zipPath ->
+            compileSchemaTask.schemaFiles.from(
+                project.zipTree(zipPath).matching { it.include(includes) }
+            )
+        }
+    }
+
+    private fun addProtocolFiles(
+        compileSchemaTask: CompileAvroSchemaTask,
+        project: Project,
+        extension: AvroGradlePluginExtension,
+        includesProtocol: Set<String>,
+        sourceDirectory: Property<String>
+    ) {
+        compileSchemaTask.protocolFiles.from(project.fileTree(sourceDirectory).apply {
+            setIncludes(includesProtocol)
+            setExcludes(extension.excludes.get())
+        })
+        extension.sourceZipFiles.get().forEach { zipPath ->
+            compileSchemaTask.protocolFiles.from(
+                project.zipTree(zipPath).matching { it.include(includesProtocol) }
+            )
+        }
     }
 
     private fun addGeneratedSourcesToJavaProject(

@@ -3,6 +3,7 @@ package eu.eventloopsoftware.avro.gradle.plugin.extension
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import javax.inject.Inject
 
 abstract class AvroGradlePluginExtension @Inject constructor(objects: ObjectFactory) {
@@ -58,7 +59,17 @@ abstract class AvroGradlePluginExtension @Inject constructor(objects: ObjectFact
      *
      * @parameter
      */
-    val includes: ListProperty<String> = objects.listProperty(String::class.java).convention(emptyList())
+    val includedSchemaFiles: SetProperty<String> = objects.setProperty(String::class.java).convention(setOf("**/*.avsc"))
+
+    /**
+     * A set of Ant-like inclusion patterns used to select files from the source
+     * directory for processing. The default pattern is different for Schema,
+     * Protocol and IDL files.
+     *
+     * @parameter
+     */
+    val includedProtocolFiles: SetProperty<String> = objects.setProperty(String::class.java).convention(setOf("**/*.avpr"))
+
 
     /**
      * A set of Ant-like exclusion patterns used to prevent certain files from being
