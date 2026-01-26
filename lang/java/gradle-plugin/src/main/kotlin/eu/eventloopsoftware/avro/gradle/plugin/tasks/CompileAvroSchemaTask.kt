@@ -1,5 +1,6 @@
 package eu.eventloopsoftware.avro.gradle.plugin.tasks
 
+import org.apache.avro.Protocol
 import org.apache.avro.SchemaParseException
 import org.apache.avro.SchemaParser
 import org.apache.avro.compiler.specific.SpecificCompiler
@@ -16,6 +17,9 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
     @get:SkipWhenEmpty
     abstract val schemaFiles: ConfigurableFileCollection
 
+    @get:InputFiles
+    @get:SkipWhenEmpty
+    abstract val protocolFiles: ConfigurableFileCollection
 
     @TaskAction
     fun compileSchema() {
@@ -47,10 +51,13 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
                 parser.parse(sourceFile)
             }
             val schemas = parser.parsedNamedSchemas
-
             doCompile(sourceFileForModificationDetection, SpecificCompiler(schemas), outputDirectory)
+
+            for (sourceFile in protocolFiles.files) {
+                val protocol = Protocol.parse(sourceFile)
+                doCompile(sourceFile, protocol, outputDirectory)
+            }
         } catch (ex: IOException) {
-            // TODO: more concrete exceptions
             throw RuntimeException(
                 "IO ex: Error compiling a file in " + schemaFileTree.asPath + " to " + outputDirectory,
                 ex

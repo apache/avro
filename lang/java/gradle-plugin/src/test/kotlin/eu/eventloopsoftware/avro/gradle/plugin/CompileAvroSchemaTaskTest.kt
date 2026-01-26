@@ -42,7 +42,6 @@ class CompileAvroSchemaTaskTest {
             }
             
             avro {
-                schemaType = "schema"
                 sourceDirectory = "$testAvroFiles"
                 outputDirectory = "$testAvroOutPutDir"           
             }
@@ -62,7 +61,10 @@ class CompileAvroSchemaTaskTest {
             "SchemaUser.java",
             "PrivacyImport.java",
             "SchemaCustom.java",
-            "PrivacyDirectImport.java"
+            "PrivacyDirectImport.java",
+            "ProtocolTest.java",
+            "ProtocolPrivacy.java",
+            "ProtocolUser.java"
         )
 
         // then
@@ -71,6 +73,9 @@ class CompileAvroSchemaTaskTest {
 
         val schemaUserContent = testOutPutDirectory.resolve("SchemaUser.java").readText()
         assertTrue(schemaUserContent.contains("java.time.Instant"))
+
+        val protocolUserContent = testOutPutDirectory.resolve("ProtocolUser.java").readText()
+        assertTrue(protocolUserContent.contains("java.time.Instant"))
     }
 
 
@@ -120,7 +125,10 @@ class CompileAvroSchemaTaskTest {
             "SchemaUser.java",
             "PrivacyImport.java",
             "SchemaCustom.java",
-            "PrivacyDirectImport.java"
+            "PrivacyDirectImport.java",
+            "ProtocolTest.java",
+            "ProtocolPrivacy.java",
+            "ProtocolUser.java"
         )
 
         // then
@@ -129,6 +137,9 @@ class CompileAvroSchemaTaskTest {
 
         val schemaUserContent = testOutPutDirectory.resolve("SchemaUser.java").readText()
         assertTrue(schemaUserContent.contains("java.time.Instant"))
+
+        val protocolUserContent = testOutPutDirectory.resolve("ProtocolUser.java").readText()
+        assertTrue(protocolUserContent.contains("java.time.Instant"))
     }
 
     @Test
@@ -187,7 +198,10 @@ class CompileAvroSchemaTaskTest {
             "SchemaUser.java",
             "PrivacyImport.java",
             "SchemaCustom.java",
-            "PrivacyDirectImport.java"
+            "PrivacyDirectImport.java",
+            "ProtocolTest.java",
+            "ProtocolPrivacy.java",
+            "ProtocolUser.java"
         )
 
         // then
