@@ -117,6 +117,7 @@ class AvroDebug
     /**
      * @param string $format one of 'ctrl', 'hex', or 'dec'.
      *                       See {@link self::asciiArray()} for more description
+     * @throws AvroException
      * @return string of bytes joined by $joiner
      * @uses asciiArray()
      */

@@ -99,9 +99,9 @@ class AvroDataIOWriter
             $this->syncMarker = $dfr->sync_marker;
             $this->metadata[AvroDataIO::METADATA_CODEC_ATTR] = $this->codec
                 = $dfr->metadata[AvroDataIO::METADATA_CODEC_ATTR];
-            $schema_from_file = $dfr->metadata[AvroDataIO::METADATA_SCHEMA_ATTR];
-            $this->metadata[AvroDataIO::METADATA_SCHEMA_ATTR] = $schema_from_file;
-            $this->datumWriter->writersSchema = AvroSchema::parse($schema_from_file);
+            $schemaFromFile = $dfr->metadata[AvroDataIO::METADATA_SCHEMA_ATTR];
+            $this->metadata[AvroDataIO::METADATA_SCHEMA_ATTR] = $schemaFromFile;
+            $this->datumWriter->writersSchema = AvroSchema::parse($schemaFromFile);
             $this->seek(0, SEEK_END);
         }
     }
@@ -161,10 +161,9 @@ class AvroDataIOWriter
     }
 
     /**
-     * @param string $bytes
      * @uses AvroIO::write()
      */
-    private function write($bytes): int
+    private function write(string $bytes): int
     {
         return $this->io->write($bytes);
     }

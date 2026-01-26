@@ -31,10 +31,10 @@ use Apache\Avro\Schema\AvroSchemaParseException;
  * @phpstan-import-type AvroSchemaDefinitionArray from AvroSchema
  * @phpstan-import-type AvroProtocolMessageDefinitionArray from AvroProtocolMessage
  * @phpstan-type AvroProtocolDefinitionArray array{
- *     types: AvroSchemaDefinitionArray,
+ *     types?: AvroSchemaDefinitionArray,
  *     protocol: string,
  *     namespace: string,
- *     messages: array<string, AvroProtocolMessageDefinitionArray>
+ *     messages?: array<string, AvroProtocolMessageDefinitionArray>
  * }
  */
 class AvroProtocol

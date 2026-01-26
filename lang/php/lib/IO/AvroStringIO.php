@@ -110,16 +110,11 @@ class AvroStringIO implements AvroIO, \Stringable
     }
 
     /**
-     * @param mixed $offset
-     * @param mixed $whence
      * @throws AvroIOException if the seek failed.
      * @return bool true if successful
      */
-    public function seek($offset, $whence = self::SEEK_SET): bool
+    public function seek(int $offset, int $whence = self::SEEK_SET): bool
     {
-        if (!is_int($offset)) {
-            throw new AvroIOException('Seek offset must be an integer.');
-        }
         // Prevent seeking before BOF
         switch ($whence) {
             case self::SEEK_SET:

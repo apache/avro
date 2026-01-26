@@ -79,7 +79,7 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
     private bool $hasDefault;
 
     /**
-     * @var string field default value
+     * @var mixed field default value
      */
     private mixed $default;
     /**
@@ -215,7 +215,7 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
     /**
      * @return mixed the default value of this field
      */
-    public function defaultValue()
+    public function defaultValue(): mixed
     {
         return $this->default;
     }

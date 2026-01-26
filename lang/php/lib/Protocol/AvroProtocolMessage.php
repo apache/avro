@@ -31,7 +31,7 @@ use Apache\Avro\Schema\AvroSchemaParseException;
 
 /**
  * @phpstan-import-type AvroSchemaDefinitionArray from AvroSchema
- * @phpstan-type AvroProtocolMessageDefinitionArray array{request: AvroSchemaDefinitionArray, response: string}
+ * @phpstan-type AvroProtocolMessageDefinitionArray array{request: AvroSchemaDefinitionArray, response?: string}
  */
 class AvroProtocolMessage
 {

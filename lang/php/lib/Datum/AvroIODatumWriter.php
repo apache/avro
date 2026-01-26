@@ -135,7 +135,7 @@ class AvroIODatumWriter
             default:
                 throw new AvroException(sprintf(
                     'Unknown type: %s',
-                    $writersSchema->type
+                    $writersSchema->type()
                 ));
         }
     }

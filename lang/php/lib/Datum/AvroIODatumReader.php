@@ -127,9 +127,8 @@ class AvroIODatumReader
 
         if (
             AvroSchema::isPrimitiveType($writersSchemaType)
-            && AvroSchema::isPrimitiveType($readersSchemaType)
         ) {
-            return $writersSchemaType === $readersSchemaType;
+            return true;
         }
 
         switch ($readersSchemaType) {
@@ -478,20 +477,20 @@ class AvroIODatumReader
                 return $this->readBytes($fieldSchema, $fieldSchema, $defaultValue);
             case AvroSchema::ARRAY_SCHEMA:
                 $array = [];
-                foreach ($defaultValue as $json_val) {
+                foreach ($defaultValue as $jsonValue) {
                     /** @phpstan-ignore method.notFound */
-                    $val = $this->readDefaultValue($fieldSchema->items(), $json_val);
+                    $val = $this->readDefaultValue($fieldSchema->items(), $jsonValue);
                     $array[] = $val;
                 }
 
                 return $array;
             case AvroSchema::MAP_SCHEMA:
                 $map = [];
-                foreach ($defaultValue as $key => $json_val) {
+                foreach ($defaultValue as $key => $jsonValue) {
                     $map[$key] = $this->readDefaultValue(
                         /** @phpstan-ignore method.notFound */
                         $fieldSchema->values(),
-                        $json_val
+                        $jsonValue
                     );
                 }
 
@@ -506,17 +505,19 @@ class AvroIODatumReader
             case AvroSchema::FIXED_SCHEMA:
                 return $defaultValue;
             case AvroSchema::RECORD_SCHEMA:
+                /** @var AvroRecordSchema $fieldSchema */
                 $record = [];
-                /** @phpstan-ignore method.notFound */
                 foreach ($fieldSchema->fields() as $field) {
-                    $field_name = $field->name();
-                    if (!$json_val = $defaultValue[$field_name]) {
-                        $json_val = $field->default_value();
+                    $fieldName = $field->name();
+                    if (!array_key_exists($fieldName, $defaultValue)) {
+                        $jsonValue = $field->defaultValue();
+                    } else {
+                        $jsonValue = $defaultValue[$fieldName];
                     }
 
-                    $record[$field_name] = $this->readDefaultValue(
+                    $record[$fieldName] = $this->readDefaultValue(
                         $field->type(),
-                        $json_val
+                        $jsonValue
                     );
                 }
 

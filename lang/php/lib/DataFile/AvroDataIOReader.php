@@ -211,7 +211,7 @@ class AvroDataIOReader
     /**
      * Reads the block header (which includes the count of items in the block
      * and the length in bytes of the block)
-     * @return int length in bytes of the block.
+     * @return int|string length in bytes of the block. It returns a string if AvroGMP is enabled.
      */
     private function readBlockHeader(): string|int
     {
