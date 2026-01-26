@@ -2,6 +2,10 @@
 
 Gradle plugin that generates Java code from Avro schemas
 
+## Requirements
+* Java 21 or higher
+* Gradle 9 or higher
+
 ## Version
 `0.0.2`
 
@@ -23,6 +27,10 @@ It is not needed to add `tasks.named("compileKotlin") { dependsOn(tasks.named("a
 
 Add `sourceZipFiles` property to add zip files with schemas in them
 pu
+
+`0.1.0`
+
+Add Avro Protocol support
 
 ## Usage
 
