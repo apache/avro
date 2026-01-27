@@ -32,12 +32,12 @@ class AvroUnionSchema extends AvroSchema
      */
     public array $schemaFromSchemataIndices;
     /**
-     * @var AvroSchema[] list of schemas of this union
+     * @var array<int, AvroSchema> list of schemas of this union
      */
     private array $schemas;
 
     /**
-     * @param AvroSchema[] $schemas list of schemas in the union
+     * @param array<int, AvroSchema|string> $schemas list of schemas in the union
      * @param null|string $defaultNamespace namespace of enclosing schema
      * @throws AvroSchemaParseException
      */
@@ -46,26 +46,26 @@ class AvroUnionSchema extends AvroSchema
         parent::__construct(AvroSchema::UNION_SCHEMA);
 
         $this->schemaFromSchemataIndices = [];
-        $schema_types = [];
+        $schemaTypes = [];
         foreach ($schemas as $index => $schema) {
-            $is_schema_from_schemata = false;
-            $new_schema = null;
+            $isSchemaFromSchemata = false;
+            $newSchema = null;
             if (
                 is_string($schema)
-                && ($new_schema = $schemata->schemaByName(
+                && ($newSchema = $schemata->schemaByName(
                     new AvroName($schema, null, $defaultNamespace)
                 ))
             ) {
-                $is_schema_from_schemata = true;
+                $isSchemaFromSchemata = true;
             } else {
-                $new_schema = self::subparse($schema, $defaultNamespace, $schemata);
+                $newSchema = self::subparse($schema, $defaultNamespace, $schemata);
             }
 
-            $schemaType = $new_schema->type;
+            $schemaType = $newSchema->type;
             if (
                 self::isValidType($schemaType)
                 && !self::isNamedType($schemaType)
-                && in_array($schemaType, $schema_types)
+                && in_array($schemaType, $schemaTypes)
             ) {
                 throw new AvroSchemaParseException(sprintf('"%s" is already in union', $schemaType));
             }
@@ -74,16 +74,16 @@ class AvroUnionSchema extends AvroSchema
                 throw new AvroSchemaParseException('Unions cannot contain other unions');
             }
 
-            $schema_types[] = $schemaType;
-            $this->schemas[] = $new_schema;
-            if ($is_schema_from_schemata) {
+            $schemaTypes[] = $schemaType;
+            $this->schemas[] = $newSchema;
+            if ($isSchemaFromSchemata) {
                 $this->schemaFromSchemataIndices[] = $index;
             }
         }
     }
 
     /**
-     * @returns AvroSchema[]
+     * @return array<int, AvroSchema>
      */
     public function schemas(): array
     {
@@ -105,6 +105,9 @@ class AvroUnionSchema extends AvroSchema
         throw new AvroSchemaParseException('Invalid union schema index');
     }
 
+    /**
+     * @return array<int, mixed>|string Avro representation of this schema
+     */
     public function toAvro(): string|array
     {
         $avro = [];

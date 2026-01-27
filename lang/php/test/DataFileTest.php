@@ -397,7 +397,8 @@ class DataFileTest extends TestCase
 
     protected function remove_data_files(): void
     {
-        if (self::REMOVE_DATA_FILES && $this->dataFiles) {
+        /** @phpstan-ignore booleanAnd.leftAlwaysTrue */
+        if (self::REMOVE_DATA_FILES && [] !== $this->dataFiles) {
             foreach ($this->dataFiles as $data_file) {
                 self::remove_data_file($data_file);
             }

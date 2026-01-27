@@ -416,10 +416,7 @@ class DatumIOTest extends TestCase
         if (array_key_exists('f', $record)) {
             $this->assertEquals($default_value, $record['f']);
         } else {
-            $this->assertTrue(false, sprintf(
-                'expected field record[f]: %s',
-                print_r($record, true)
-            ));
+            $this->fail(sprintf('expected field record[f]: %s', print_r($record, true)));
         }
     }
 

@@ -45,7 +45,7 @@ class AvroIOBinaryEncoder
      */
     public function writeNull($datum): void
     {
-        return;
+
     }
 
     public function writeBoolean(bool $datum): void
@@ -75,7 +75,7 @@ class AvroIOBinaryEncoder
 
     /**
      * @param int|string $n
-     * @returns string long $n encoded as bytes
+     * @return string long $n encoded as bytes
      * @internal This relies on 64-bit PHP.
      */
     public static function encodeLong($n)
@@ -121,7 +121,7 @@ class AvroIOBinaryEncoder
      * encoding required by the Avro spec.
      *
      * @param float $float
-     * @returns string bytes
+     * @return string bytes
      * @see Avro::checkPlatform()
      */
     public static function floatToIntBits($float): string
@@ -144,7 +144,7 @@ class AvroIOBinaryEncoder
      * {@link AvroIOBinaryEncoder::floatToIntBits()} for details.
      *
      * @param float $double
-     * @returns string bytes
+     * @return string bytes
      */
     public static function doubleToLongBits($double): string
     {
@@ -172,9 +172,7 @@ class AvroIOBinaryEncoder
         }
 
         $value = ((float) $decimal) * (10 ** $scale);
-        if (!is_int($value)) {
-            $value = (int) round($value);
-        }
+        $value = (int) round($value);
 
         $maxValue = 10 ** $precision;
         if (abs($value) >= $maxValue) {
@@ -207,7 +205,7 @@ class AvroIOBinaryEncoder
         $this->writeBytes($value);
     }
 
-    private static function getMostSignificantBitAt($bytes, $offset): int
+    private static function getMostSignificantBitAt(string $bytes, int $offset): int
     {
         return ord($bytes[$offset]) & 0x80;
     }

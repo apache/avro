@@ -13,10 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+includes:
+    - phpstan-baseline.neon
+
 parameters:
-	level: 3
+	level: 6
 	paths:
 		- lib
-		- test
 	bootstrapFiles:
 	    - test/test_helper.php
+	treatPhpDocTypesAsCertain: false

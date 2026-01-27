@@ -20,22 +20,22 @@
 
 namespace Apache\Avro\Tests;
 
+use Apache\Avro\AvroIO;
 use Apache\Avro\DataFile\AvroDataIO;
-use Apache\Avro\IO\AvroFile;
 use Apache\Avro\Schema\AvroSchema;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class InterOpTest extends TestCase
 {
-    private string $projection_json;
+    private string $projectionJson;
     private AvroSchema $projection;
 
     public function setUp(): void
     {
         $interop_schema_file_name = AVRO_INTEROP_SCHEMA;
-        $this->projection_json = file_get_contents($interop_schema_file_name);
-        $this->projection = AvroSchema::parse($this->projection_json);
+        $this->projectionJson = file_get_contents($interop_schema_file_name);
+        $this->projection = AvroSchema::parse($this->projectionJson);
     }
 
     public static function file_name_provider(): array
@@ -69,8 +69,8 @@ class InterOpTest extends TestCase
     {
         $dr = AvroDataIO::openFile(
             $file_name,
-            AvroFile::READ_MODE,
-            $this->projection_json
+            AvroIO::READ_MODE,
+            $this->projectionJson
         );
 
         $data = $dr->data();
