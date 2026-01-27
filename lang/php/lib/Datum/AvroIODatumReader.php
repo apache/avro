@@ -29,6 +29,7 @@ use Apache\Avro\Schema\AvroFixedSchema;
 use Apache\Avro\Schema\AvroLogicalType;
 use Apache\Avro\Schema\AvroMapSchema;
 use Apache\Avro\Schema\AvroName;
+use Apache\Avro\Schema\AvroPrimitiveSchema;
 use Apache\Avro\Schema\AvroRecordSchema;
 use Apache\Avro\Schema\AvroSchema;
 use Apache\Avro\Schema\AvroSchemaParseException;
@@ -126,7 +127,9 @@ class AvroIODatumReader
         }
 
         if (
-            AvroSchema::isPrimitiveType($writersSchemaType)
+            $writersSchema instanceof AvroPrimitiveSchema
+            && $readersSchema instanceof AvroPrimitiveSchema
+            && $writersSchemaType === $readersSchemaType
         ) {
             return true;
         }
