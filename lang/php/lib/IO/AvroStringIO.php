@@ -125,7 +125,7 @@ class AvroStringIO implements AvroIO, \Stringable
 
                 break;
             case self::SEEK_CUR:
-                if (0 > $this->currentIndex + $whence) {
+                if (0 > $this->currentIndex + $offset) {
                     throw new AvroIOException('Cannot seek before beginning of file.');
                 }
                 $this->currentIndex += $offset;
