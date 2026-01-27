@@ -136,8 +136,10 @@ static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 		avro_set_error("Cannot allocate buffer for bytes value");
 		return ENOMEM;
 	}
-	AVRO_READ(reader, *bytes, *len);
+	
 	(*bytes)[*len] = '\0';
+	AVRO_SAFE_READ(reader, *bytes, *len,  *len+1);
+
 	return 0;
 }
 
@@ -180,6 +182,7 @@ size_bytes(avro_writer_t writer, const char *bytes, const int64_t len)
 static int read_string(avro_reader_t reader, char **s, int64_t *len)
 {
 	int64_t  str_len = 0;
+	int64_t  max_available = -1;
 	int rval;
 	check_prefix(rval, read_long(reader, &str_len),
 		     "Cannot read string length: ");
@@ -187,6 +190,14 @@ static int read_string(avro_reader_t reader, char **s, int64_t *len)
 		avro_set_error("Invalid string length: %" PRId64, str_len);
 		return EINVAL;
 	}
+    //  max := r.tail - r.head + 1; if max >= 0 && size > max
+	max_available = avro_max_read(reader);
+	if (max_available >= 0 && str_len > max_available) {
+	    avro_set_error("mem io: String length %" PRId64 " is greater than available buffer size %" PRId64,
+				str_len, max_available);
+		return ERANGE;
+	}
+
 	*len = str_len + 1;
 	*s = (char *) avro_malloc(*len);
 	if (!*s) {
@@ -194,7 +205,7 @@ static int read_string(avro_reader_t reader, char **s, int64_t *len)
 		return ENOMEM;
 	}
 	(*s)[str_len] = '\0';
-	AVRO_READ(reader, *s, str_len);
+	AVRO_SAFE_READ(reader, *s, str_len, *len);
 	return 0;
 }
 
