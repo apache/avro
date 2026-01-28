@@ -148,7 +148,7 @@ static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 	}
 	
 	(*bytes)[*len] = '\0';
-	AVRO_SAFE_READ(reader, *bytes, *len, *len+1);
+	AVRO_READ_OR_FREE(reader, *bytes, *len, *len+1);
 
 	return 0;
 }
