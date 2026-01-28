@@ -52,7 +52,15 @@ avro_reader_memory_set_source(avro_reader_t reader, const char *buf, int64_t len
 void
 avro_writer_memory_set_dest(avro_writer_t writer, const char *buf, int64_t len);
 
+
+/*
+ * Returns the number of bytes available to read from the reader.
+ * For memory readers, returns remaining bytes (len - read).
+ * For file readers, returns buffered bytes available.
+ * Returns -1 for unknown reader types.
+ */
 int64_t avro_max_read(avro_reader_t reader);
+
 int avro_read(avro_reader_t reader, void *buf, int64_t len);
 int avro_skip(avro_reader_t reader, int64_t len);
 int avro_write(avro_writer_t writer, void *buf, int64_t len);

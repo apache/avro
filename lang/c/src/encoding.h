@@ -99,7 +99,7 @@ typedef struct avro_encoding_t avro_encoding_t;
 #define AVRO_SKIP(reader, len) \
 { int rval = avro_skip( reader, len); if (rval) return rval; }
 
-#define AVRO_SAFE_READ(reader, buf, len, mem_size)  \
+#define AVRO_READ_OR_FREE(reader, buf, len, mem_size)  \
 { int rval = avro_read( reader, buf, len ); if(rval) { if(buf) avro_free(buf, mem_size); buf = NULL;  return rval; } }
 
 extern const avro_encoding_t avro_binary_encoding;	/* in
