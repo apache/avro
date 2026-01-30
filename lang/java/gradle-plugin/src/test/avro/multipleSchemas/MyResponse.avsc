@@ -1,0 +1,14 @@
+{
+  "namespace": "model",
+  "type": "record",
+  "doc": "",
+  "name": "MyResponse",
+  "fields": [
+    {
+      "name": "isSuccessful",
+      "type": "boolean",
+      "doc": "Indicator for successful or unsuccessful call"
+    }
+  ]
+
+}
