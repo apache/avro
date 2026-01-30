@@ -59,7 +59,7 @@ class AvroArraySchema extends AvroSchema
     }
 
     /**
-     * @returns AvroName|AvroSchema named schema name or AvroSchema
+     * @return AvroName|AvroSchema named schema name or AvroSchema
      *          of this array schema's elements.
      */
     public function items(): AvroName|AvroSchema

@@ -22,7 +22,11 @@ declare(strict_types=1);
 
 namespace Apache\Avro\Schema;
 
+/**
+ * @phpstan-type AvroAliases list<string>
+ */
 interface AvroAliasedSchema
 {
+    /** @return null|AvroAliases */
     public function getAliases(): ?array;
 }

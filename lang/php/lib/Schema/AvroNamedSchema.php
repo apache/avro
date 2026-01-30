@@ -22,10 +22,12 @@ namespace Apache\Avro\Schema;
 
 /**
  * Parent class of named Avro schema
+ * @phpstan-import-type AvroAliases from AvroAliasedSchema
  */
 class AvroNamedSchema extends AvroSchema implements AvroAliasedSchema
 {
     /**
+     * @param null|AvroAliases $aliases
      * @throws AvroSchemaParseException
      */
     public function __construct(
@@ -46,11 +48,17 @@ class AvroNamedSchema extends AvroSchema implements AvroAliasedSchema
         }
     }
 
+    /**
+     * @return null|AvroAliases
+     */
     public function getAliases(): ?array
     {
         return $this->aliases;
     }
 
+    /**
+     * @return array<string, mixed>|string
+     */
     public function toAvro(): string|array
     {
         $avro = parent::toAvro();

@@ -48,6 +48,12 @@ use Apache\Avro\Datum\Type\AvroDuration;
  *    qualified). It also has additional attributes such as doc, which named schemas
  *    enum and record have (though not fixed schemas, which also have names), and
  *    fields also have default and order attributes, shared by no other schema type.
+ *
+ * @phpstan-type AvroPrimitiveType 'null'|'boolean'|'int'|'long'|'float'|'double'|'string'|'bytes'
+ * @phpstan-type AvroComplexType 'array'|'map'|'union'|'enum'|'fixed'|'record'|'error'|'request'
+ * @phpstan-type AvroSchemaType AvroPrimitiveType|AvroComplexType
+ * @phpstan-type AvroSchemaDefinitionArray array<string, mixed>
+ * @phpstan-type AvroSchemaUnionDefinitionArray list<AvroSchemaDefinitionArray>
  */
 class AvroSchema implements \Stringable
 {
@@ -264,9 +270,9 @@ class AvroSchema implements \Stringable
     protected ?AvroLogicalType $logicalType = null;
 
     /**
-     * @var array list of primitive schema type names
+     * @var array<AvroPrimitiveType> list of primitive schema type names
      */
-    private static $primitiveTypes = [
+    private static array $primitiveTypes = [
         self::NULL_TYPE,
         self::BOOLEAN_TYPE,
         self::STRING_TYPE,
@@ -278,18 +284,19 @@ class AvroSchema implements \Stringable
     ];
 
     /**
-     * @var array list of named schema type names
+     * @var array<string> list of named schema type names
      */
-    private static $namedTypes = [
+    private static array $namedTypes = [
         self::FIXED_SCHEMA,
         self::ENUM_SCHEMA,
         self::RECORD_SCHEMA,
         self::ERROR_SCHEMA,
     ];
     /**
-     * @var array list of names of reserved attributes
+     * @var array<string> list of names of reserved attributes
+     * @phpstan-ignore property.onlyWritten
      */
-    private static $reservedAttrs = [
+    private static array $reservedAttrs = [
         self::TYPE_ATTR,
         self::NAME_ATTR,
         self::NAMESPACE_ATTR,
@@ -307,12 +314,13 @@ class AvroSchema implements \Stringable
      *           a class which extends AvroSchema
      */
     public function __construct(
-        public readonly string|AvroSchema $type
+        public readonly string|self $type
     ) {
     }
 
     /**
-     * @returns string the JSON-encoded representation of this Avro schema.
+     * @throws \JsonException
+     * @return string the JSON-encoded representation of this Avro schema.
      */
     public function __toString(): string
     {
@@ -322,7 +330,7 @@ class AvroSchema implements \Stringable
     /**
      * @uses self::realParse()
      */
-    public static function parse(string $json): AvroSchema
+    public static function parse(string $json): self
     {
         $schemata = new AvroNamedSchemata();
 
@@ -333,15 +341,15 @@ class AvroSchema implements \Stringable
     }
 
     /**
-     * @param null|array|string $avro JSON-decoded schema
-     * @param null|string $default_namespace namespace of enclosing schema
+     * @param null|AvroSchemaDefinitionArray|AvroSchemaUnionDefinitionArray|string $avro JSON-decoded schema
+     * @param null|string $defaultNamespace namespace of enclosing schema
      * @param AvroNamedSchemata $schemata reference to named schemas
      * @throws AvroSchemaParseException
      * @throws AvroException
      */
     public static function realParse(
         array|string|null $avro,
-        ?string $default_namespace = null,
+        ?string $defaultNamespace = null,
         AvroNamedSchemata $schemata = new AvroNamedSchemata()
     ): AvroSchema {
         if (is_array($avro)) {
@@ -377,7 +385,7 @@ class AvroSchema implements \Stringable
             if (self::isNamedType($type)) {
                 $name = $avro[self::NAME_ATTR] ?? null;
                 $namespace = $avro[self::NAMESPACE_ATTR] ?? null;
-                $new_name = new AvroName($name, $namespace, $default_namespace);
+                $new_name = new AvroName($name, $namespace, $defaultNamespace);
                 $doc = $avro[self::DOC_ATTR] ?? null;
                 $aliases = $avro[self::ALIASES_ATTR] ?? null;
 
@@ -441,7 +449,7 @@ class AvroSchema implements \Stringable
                             doc: $doc,
                             fields: $fields,
                             schemata: $schemata,
-                            schema_type: $type,
+                            schemaType: $type,
                             aliases: $aliases
                         );
                     default:
@@ -451,12 +459,12 @@ class AvroSchema implements \Stringable
                 return match ($type) {
                     self::ARRAY_SCHEMA => new AvroArraySchema(
                         items: $avro[self::ITEMS_ATTR],
-                        defaultNamespace: $default_namespace,
+                        defaultNamespace: $defaultNamespace,
                         schemata: $schemata
                     ),
                     self::MAP_SCHEMA => new AvroMapSchema(
                         values: $avro[self::VALUES_ATTR],
-                        defaultNamespace: $default_namespace,
+                        defaultNamespace: $defaultNamespace,
                         schemata: $schemata
                     ),
                     default => throw new AvroSchemaParseException(
@@ -467,7 +475,7 @@ class AvroSchema implements \Stringable
                 !array_key_exists(self::TYPE_ATTR, $avro)
                 && AvroUtil::isList($avro)
             ) {
-                return new AvroUnionSchema($avro, $default_namespace, $schemata);
+                return new AvroUnionSchema($avro, $defaultNamespace, $schemata);
             } else {
                 throw new AvroSchemaParseException(sprintf(
                     'Undefined type: %s',
@@ -506,7 +514,7 @@ class AvroSchema implements \Stringable
 
     /**
      * @param null|string $type a schema type name
-     * @returns boolean true if the given type name is a primitive schema type
+     * @return bool true if the given type name is a primitive schema type
      *                  name and false otherwise.
      */
     public static function isPrimitiveType(?string $type): bool
@@ -516,7 +524,7 @@ class AvroSchema implements \Stringable
 
     /**
      * @param null|string $type a schema type name
-     * @returns bool true if the given type name is a named schema type name
+     * @return bool true if the given type name is a named schema type name
      *                  and false otherwise.
      */
     public static function isNamedType(?string $type): bool
@@ -524,7 +532,7 @@ class AvroSchema implements \Stringable
         return in_array($type, self::$namedTypes, true);
     }
 
-    public static function hasValidAliases($aliases): void
+    public static function hasValidAliases(mixed $aliases): void
     {
         if (null === $aliases) {
             return;
@@ -555,10 +563,10 @@ class AvroSchema implements \Stringable
     }
 
     /**
-     * @returns boolean true if $datum is valid for $expected_schema
-     *                  and false otherwise.
      * @param mixed $datum
      * @throws AvroSchemaParseException
+     * @return bool true if $datum is valid for $expected_schema
+     *                  and false otherwise.
      */
     public static function isValidDatum(AvroSchema $expected_schema, $datum): bool
     {
@@ -657,7 +665,7 @@ class AvroSchema implements \Stringable
             case self::RECORD_SCHEMA:
             case self::ERROR_SCHEMA:
             case self::REQUEST_SCHEMA:
-                if (!($expected_schema instanceof AvroRecordSchema)) {
+                if (!$expected_schema instanceof AvroRecordSchema) {
                     return false;
                 }
 
@@ -678,7 +686,7 @@ class AvroSchema implements \Stringable
     }
 
     /**
-     * @returns string|AvroNamedSchema schema type name of this schema
+     * @return AvroNamedSchema|AvroSchemaType schema type name of this schema
      */
     public function type()
     {
@@ -690,6 +698,9 @@ class AvroSchema implements \Stringable
         return $this->logicalType;
     }
 
+    /**
+     * @return AvroSchemaDefinitionArray|string JSON-encodable representation of this Avro schema
+     */
     public function toAvro(): string|array
     {
         $avro = [self::TYPE_ATTR => $this->type];
@@ -702,8 +713,8 @@ class AvroSchema implements \Stringable
     }
 
     /**
-     * @returns mixed value of the attribute with the given attribute name
      * @param mixed $attribute
+     * @return mixed value of the attribute with the given attribute name
      */
     public function attribute($attribute)
     {
@@ -711,13 +722,14 @@ class AvroSchema implements \Stringable
     }
 
     /**
+     * @param null|AvroSchemaDefinitionArray|string $avro JSON-decoded sub-schema
      * @throws AvroSchemaParseException
      * @uses AvroSchema::realParse()
      */
-    protected static function subparse(array|string|null $avro, ?string $default_namespace, AvroNamedSchemata $schemata): self
+    protected static function subparse(array|string|null $avro, ?string $defaultNamespace, AvroNamedSchemata $schemata): self
     {
         try {
-            return self::realParse($avro, $default_namespace, $schemata);
+            return self::realParse($avro, $defaultNamespace, $schemata);
         } catch (AvroSchemaParseException $e) {
             throw $e;
         } catch (\Throwable) {
@@ -731,6 +743,7 @@ class AvroSchema implements \Stringable
     }
 
     /**
+     * @param AvroSchemaDefinitionArray $avro
      * @throws AvroSchemaParseException
      * @return array{0: int, 1: int} [precision, scale]
      */

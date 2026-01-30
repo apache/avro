@@ -22,13 +22,22 @@ namespace Apache\Avro\Schema;
 
 use Apache\Avro\AvroException;
 
+/**
+ * @phpstan-import-type AvroSchemaDefinitionArray from AvroSchema
+ * @phpstan-type AvroLogicalTypeAttributes array<string, int>
+ */
 class AvroLogicalType
 {
     public const ATTRIBUTE_DECIMAL_PRECISION = 'precision';
     public const ATTRIBUTE_DECIMAL_SCALE = 'scale';
 
-    public function __construct(private readonly string $name, private readonly array $attributes = [])
-    {
+    /**
+     * @param AvroLogicalTypeAttributes $attributes
+     */
+    public function __construct(
+        private readonly string $name,
+        private readonly array $attributes = []
+    ) {
     }
 
     public function name(): string
@@ -36,11 +45,17 @@ class AvroLogicalType
         return $this->name;
     }
 
+    /**
+     * @return AvroLogicalTypeAttributes
+     */
     public function attributes(): array
     {
         return $this->attributes;
     }
 
+    /**
+     * @return AvroSchemaDefinitionArray|string
+     */
     public function toAvro(): string|array
     {
         $avro[AvroSchema::LOGICAL_TYPE_ATTR] = $this->name;
