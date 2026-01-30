@@ -32,33 +32,33 @@ class AvroGMP
     /**
      * @var \GMP memoized GMP resource for zero
      */
-    private static $gmp_0;
+    private static \GMP $gmp_0;
     /**
      * @var \GMP memoized GMP resource for one (1)
      */
-    private static $gmp_1;
+    private static \GMP $gmp_1;
     /**
      * @var \GMP memoized GMP resource for two (2)
      */
-    private static $gmp_2;
+    private static \GMP $gmp_2;
     /**
      * @var \GMP memoized GMP resource for 0x7f
      */
-    private static $gmp_0x7f;
+    private static \GMP $gmp_0x7f;
     /**
      * @var \GMP memoized GMP resource for 64-bit ~0x7f
      */
-    private static $gmp_n0x7f;
+    private static \GMP $gmp_n0x7f;
     /**
      * @var \GMP memoized GMP resource for 64-bits of 1
      */
-    private static $gmp_0xfs;
+    private static \GMP $gmp_0xfs;
 
     /**
      * @param int|string $n integer (or string representation of integer) to encode
      * @return string $bytes of the long $n encoded per the Avro spec
      */
-    public static function encodeLong($n)
+    public static function encodeLong(int|string $n): string
     {
         $g = gmp_init($n);
         $g = gmp_xor(
@@ -77,11 +77,10 @@ class AvroGMP
 
     /**
      * @interal Only works up to shift 63 (doesn't wrap bits around).
-     * @param int|resource|string $g
      * @param int $shift number of bits to shift left
-     * @returns resource $g shifted left
+     * @return \GMP $g shifted left
      */
-    public static function shiftLeft($g, $shift)
+    public static function shiftLeft(int|string|\GMP $g, int $shift)
     {
         if (0 == $shift) {
             return $g;
@@ -104,21 +103,19 @@ class AvroGMP
     }
 
     /**
-     * @param \GMP $g resource
      * @return \GMP resource 64-bit two's complement of input.
      */
-    public static function gmpTwosComplement($g)
+    public static function gmpTwosComplement(int|string|\GMP $g)
     {
         return gmp_neg(gmp_sub(gmp_pow(self::gmp_2(), 64), $g));
     }
 
     /**
      * Arithmetic right shift
-     * @param int|resource|string $g
      * @param int $shift number of bits to shift right
-     * @returns resource $g shifted right $shift bits
+     * @return \GMP $g shifted right $shift bits
      */
-    public static function shiftRight($g, $shift)
+    public static function shiftRight(int|string|\GMP $g, int $shift)
     {
         if (0 == $shift) {
             return $g;
@@ -143,13 +140,11 @@ class AvroGMP
         return $m;
     }
 
-    // phpcs:enable
-
     /**
      * @param int[] $bytes array of ascii codes of bytes to decode
      * @return string represenation of decoded long.
      */
-    public static function decodeLongFromArray($bytes)
+    public static function decodeLongFromArray(array $bytes): string
     {
         $b = array_shift($bytes);
         $g = gmp_init($b & 0x7F);
@@ -167,7 +162,7 @@ class AvroGMP
     // phpcs:disable PSR1.Methods.CamelCapsMethodName
 
     /**
-     * @returns \GMP GMP resource for two (2)
+     * @return \GMP GMP resource for two (2)
      */
     private static function gmp_2()
     {
@@ -179,9 +174,9 @@ class AvroGMP
     }
 
     /**
-     * @returns resource GMP resource for 64-bits of 1
+     * @return \GMP GMP resource for 64-bits of 1
      */
-    private static function gmp_0xfs()
+    private static function gmp_0xfs(): \GMP
     {
         if (!isset(self::$gmp_0xfs)) {
             self::$gmp_0xfs = gmp_init('0xffffffffffffffff');
@@ -191,9 +186,9 @@ class AvroGMP
     }
 
     /**
-     * @returns resource GMP resource for one (1)
+     * @return \GMP GMP resource for one (1)
      */
-    private static function gmp_1()
+    private static function gmp_1(): \GMP
     {
         if (!isset(self::$gmp_1)) {
             self::$gmp_1 = gmp_init('1');
@@ -203,9 +198,9 @@ class AvroGMP
     }
 
     /**
-     * @returns resource GMP resource for zero
+     * @return \GMP GMP resource for zero
      */
-    private static function gmp_0()
+    private static function gmp_0(): \GMP
     {
         if (!isset(self::$gmp_0)) {
             self::$gmp_0 = gmp_init('0');
@@ -215,9 +210,9 @@ class AvroGMP
     }
 
     /**
-     * @returns resource GMP resource for 64-bit ~0x7f
+     * @return \GMP GMP resource for 64-bit ~0x7f
      */
-    private static function gmp_n0x7f()
+    private static function gmp_n0x7f(): \GMP
     {
         if (!isset(self::$gmp_n0x7f)) {
             self::$gmp_n0x7f = gmp_init('0xffffffffffffff80');
@@ -227,9 +222,9 @@ class AvroGMP
     }
 
     /**
-     * @returns resource GMP resource for 0x7f
+     * @return \GMP GMP resource for 0x7f
      */
-    private static function gmp_0x7f()
+    private static function gmp_0x7f(): \GMP
     {
         if (!isset(self::$gmp_0x7f)) {
             self::$gmp_0x7f = gmp_init('0x7f');

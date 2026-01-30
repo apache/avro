@@ -1,0 +1,148 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIOBinaryDecoder\:\:skipArray\(\) expects Apache\\Avro\\Schema\\AvroArraySchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIOBinaryDecoder\:\:skipFixed\(\) expects Apache\\Avro\\Schema\\AvroFixedSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIOBinaryDecoder\:\:skipMap\(\) expects Apache\\Avro\\Schema\\AvroMapSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIOBinaryDecoder\:\:skipRecord\(\) expects Apache\\Avro\\Schema\\AvroRecordSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIOBinaryDecoder\:\:skipUnion\(\) expects Apache\\Avro\\Schema\\AvroUnionSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readArray\(\) expects Apache\\Avro\\Schema\\AvroArraySchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#1 \$writers_schema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readEnum\(\) expects Apache\\Avro\\Schema\\AvroEnumSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#1 \$writers_schema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readFixed\(\) expects Apache\\Avro\\Schema\\AvroFixedSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readMap\(\) expects Apache\\Avro\\Schema\\AvroMapSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readRecord\(\) expects Apache\\Avro\\Schema\\AvroRecordSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#1 \$writers_schema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readUnion\(\) expects Apache\\Avro\\Schema\\AvroUnionSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#2 \$readersSchema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readArray\(\) expects Apache\\Avro\\Schema\\AvroArraySchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#2 \$readers_schema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readEnum\(\) expects Apache\\Avro\\Schema\\AvroEnumSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#2 \$readers_schema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readFixed\(\) expects Apache\\Avro\\Schema\\AvroFixedSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#2 \$readersSchema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readMap\(\) expects Apache\\Avro\\Schema\\AvroMapSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#2 \$readersSchema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readRecord\(\) expects Apache\\Avro\\Schema\\AvroRecordSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#2 \$readers_schema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readUnion\(\) expects Apache\\Avro\\Schema\\AvroUnionSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIODatumWriter\:\:writeEnum\(\) expects Apache\\Avro\\Schema\\AvroEnumSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumWriter.php
+
+		-
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIODatumWriter\:\:writeRecord\(\) expects Apache\\Avro\\Schema\\AvroRecordSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumWriter.php
+
+		-
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIODatumWriter\:\:writeUnion\(\) expects Apache\\Avro\\Schema\\AvroUnionSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumWriter.php
+
+		-
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIODatumWriter\:\:writeArray\(\) expects Apache\\Avro\\Schema\\AvroArraySchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumWriter.php
+
+		-
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIODatumWriter\:\:writeMap\(\) expects Apache\\Avro\\Schema\\AvroMapSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumWriter.php

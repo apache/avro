@@ -28,6 +28,14 @@ use Apache\Avro\Schema\AvroSchemaParseException;
 
 /**
  * Avro library for protocols
+ * @phpstan-import-type AvroSchemaDefinitionArray from AvroSchema
+ * @phpstan-import-type AvroProtocolMessageDefinitionArray from AvroProtocolMessage
+ * @phpstan-type AvroProtocolDefinitionArray array{
+ *     types?: AvroSchemaDefinitionArray,
+ *     protocol: string,
+ *     namespace: string,
+ *     messages?: array<string, AvroProtocolMessageDefinitionArray>
+ * }
  */
 class AvroProtocol
 {
@@ -60,7 +68,7 @@ class AvroProtocol
     }
 
     /**
-     * @param array $avro AVRO protocol as associative array
+     * @param AvroProtocolDefinitionArray $avro AVRO protocol as associative array
      * @throws AvroSchemaParseException
      */
     public static function realParse(array $avro): self
