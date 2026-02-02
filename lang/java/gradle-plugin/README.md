@@ -75,11 +75,15 @@ Use `createNullSafeAnnotations = true` and Java getters will be annotated with
 Kotlin will recognize which value is nullable.
 
 #### I get my Avro schemas from a Maven dependency, how can I add JAR files that contain schemas?
-Use `sourceZipFiles = listOf("file_path")`, e.g.
+Use `Configuration` to get a reference to the JAR files and add to `sourceZipFiles`: 
 
 ```kotlin
+val avroSources: Configuration by configurations.creating
+
+avroSources("some.group.id:dependency-containing-avro-sources-artifact-id:1.0.0")
+
 avro {
-    sourceZipFiles = listOf("/home/user/.gradle/caches/modules-2/files-2.1/eu.eventloopsoftware.group-id/artifact-id/1.0.0/92ac3d0533de9dd79ac35373c892ebaa01763d4d/jar_with_schemas-1.0.0.jar")
+    sourceZipFiles = avroSources.files.map { it.path }
 } 
 ```
 
