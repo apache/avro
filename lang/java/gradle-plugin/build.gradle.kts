@@ -44,7 +44,6 @@ kotlin {
     jvmToolchain(21)
 }
 
-
 gradlePlugin {
     plugins {
         website = "https://avro.apache.org/"
