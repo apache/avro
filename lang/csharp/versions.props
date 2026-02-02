@@ -27,7 +27,7 @@
   -->
   <PropertyGroup Label="Latest Package Versions">
     <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
-    <SystemCodeDomVersion>10.0.1</SystemCodeDomVersion>
+    <SystemCodeDomVersion>10.0.2</SystemCodeDomVersion>
     <SystemReflectionVersion>4.3.0</SystemReflectionVersion>
     <SystemReflectionEmitILGenerationVersion>4.7.0</SystemReflectionEmitILGenerationVersion>
     <SystemReflectionEmitLightweightVersion>4.7.0</SystemReflectionEmitLightweightVersion>

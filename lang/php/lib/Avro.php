@@ -49,24 +49,24 @@ class Avro
      * self::GMP_BIGINTEGER_MODE on 32-bit platforms that have GMP available,
      * and to self::PHP_BIGINTEGER_MODE otherwise.
      */
-    private static int $biginteger_mode;
+    private static int $bigIntegerMode;
 
     /**
      * Wrapper method to call each required check.
      */
-    public static function checkPlatform()
+    public static function checkPlatform(): void
     {
         self::check64Bit();
     }
 
     /**
-     * @returns bool true if the PHP GMP extension is used and false otherwise.
+     * @return bool true if the PHP GMP extension is used and false otherwise.
      * @internal Requires Avro::check64Bit() (exposed via Avro::checkPlatform())
-     *           to have been called to set Avro::$biginteger_mode.
+     *           to have been called to set Avro::$bigIntegerMode.
      */
     public static function usesGmp(): bool
     {
-        return self::GMP_BIGINTEGER_MODE === self::$biginteger_mode;
+        return self::GMP_BIGINTEGER_MODE === self::$bigIntegerMode;
     }
 
     /**
@@ -74,17 +74,17 @@ class Avro
      *
      * @throws AvroException if the platform cannot handle long integers.
      */
-    private static function check64Bit()
+    private static function check64Bit(): void
     {
         if (8 !== PHP_INT_SIZE) {
             if (extension_loaded('gmp')) {
-                self::$biginteger_mode = self::GMP_BIGINTEGER_MODE;
+                self::$bigIntegerMode = self::GMP_BIGINTEGER_MODE;
             } else {
                 throw new AvroException('This platform cannot handle a 64-bit operations. '
                     .'Please install the GMP PHP extension.');
             }
         } else {
-            self::$biginteger_mode = self::PHP_BIGINTEGER_MODE;
+            self::$bigIntegerMode = self::PHP_BIGINTEGER_MODE;
         }
     }
 }
