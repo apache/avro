@@ -156,7 +156,7 @@ static avro_datum_t avro_bytes_private(char *bytes, int64_t size,
 avro_datum_t avro_bytes(const char *bytes, int64_t size)
 {
 	char *bytes_copy = (char *) avro_malloc(size);
-	if (!bytes_copy) {
+	if (!bytes_copy && size) {
 		avro_set_error("Cannot copy bytes content");
 		return NULL;
 	}
@@ -197,7 +197,7 @@ int avro_bytes_set(avro_datum_t datum, const char *bytes, const int64_t size)
 {
 	int rval;
 	char *bytes_copy = (char *) avro_malloc(size);
-	if (!bytes_copy) {
+	if (!bytes_copy && size) {
 		avro_set_error("Cannot copy bytes content");
 		return ENOMEM;
 	}
