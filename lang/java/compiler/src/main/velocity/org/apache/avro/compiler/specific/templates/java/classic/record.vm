@@ -21,6 +21,8 @@ package $this.mangle($schema.getNamespace());
 
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.util.Utf8;
+import java.util.Map;
+import java.util.LinkedHashMap;
 #if (!$schema.isError())
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.BinaryMessageDecoder;
@@ -52,6 +54,18 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
+  private final boolean useUnknownProperties = "true".equals(System.getProperty("avro.useUnknownProperties"));
+
+  private Map<Integer, Object> unknownProperties = new LinkedHashMap<>();
+
+  public Map<Integer, Object> getUnknownProperties() {
+    return unknownProperties;
+  }
+
+  public void setUnknownProperties(Map<Integer, Object> unknownProperties) {
+    this.unknownProperties = unknownProperties;
+  }
+
 #set ($usedConversions = $this.getUsedConversionClasses($schema))
 #if (!$usedConversions.isEmpty())
   static {
@@ -191,7 +205,11 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
     case $i: return ${this.mangle($field.name(), $schema.isError())};
 #set ($i = $i + 1)
 #end
-    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
+    default:
+        if(useUnknownProperties){
+            return this.unknownProperties.get(field$);
+        }
+        throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 
@@ -220,7 +238,12 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
     case $i: ${this.mangle($field.name(), $schema.isError())} = #if(${this.javaType($field.schema())} != "java.lang.Object" && ${this.javaType($field.schema())} != "java.lang.String")(${this.javaType($field.schema())})#{end}value$#if(${this.javaType($field.schema())} == "java.lang.String") != null ? value$.toString() : null#{end}; break;
 #set ($i = $i + 1)
 #end
-    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
+    default:
+        if(useUnknownProperties){
+            this.unknownProperties.put(field$, value$);
+        } else{
+            throw new IndexOutOfBoundsException("Invalid index: " + field$);
+        }
     }
   }
 
