@@ -565,7 +565,8 @@ public class TestReflect {
     check(NullableDefaultTest.class,
         "{\"type\":\"record\",\"name\":\"NullableDefaultTest\","
             + "\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":["
-            + "{\"name\":\"foo\",\"type\":[\"null\",\"int\"],\"default\":1}]}");
+            + "{\"name\":\"foo\",\"type\":[\"null\",\"int\"],\"default\":1}]"
+            + ",\"java-class\":\"org.apache.avro.reflect.TestReflect$NullableDefaultTest\"}");
   }
 
   private static class UnionDefaultTest {
@@ -579,7 +580,8 @@ public class TestReflect {
     check(UnionDefaultTest.class,
         "{\"type\":\"record\",\"name\":\"UnionDefaultTest\","
             + "\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":["
-            + "{\"name\":\"foo\",\"type\":[\"int\",\"string\"],\"default\":1}]}");
+            + "{\"name\":\"foo\",\"type\":[\"int\",\"string\"],\"default\":1}]"
+            + ",\"java-class\":\"org.apache.avro.reflect.TestReflect$UnionDefaultTest\"}");
   }
 
   @Test
@@ -640,8 +642,10 @@ public class TestReflect {
 
   @Test
   void testEnum() throws Exception {
-    check(E.class, "{\"type\":\"enum\",\"name\":\"E\",\"namespace\":"
-        + "\"org.apache.avro.reflect.TestReflect\",\"symbols\":[\"A\",\"B\"]}");
+    check(E.class,
+        "{\"type\":\"enum\",\"name\":\"E\",\"namespace\":"
+            + "\"org.apache.avro.reflect.TestReflect\",\"symbols\":[\"A\",\"B\"]"
+            + ",\"java-class\":\"org.apache.avro.reflect.TestReflect$E\"}");
   }
 
   public static class R {
@@ -653,7 +657,8 @@ public class TestReflect {
   void record() throws Exception {
     check(R.class,
         "{\"type\":\"record\",\"name\":\"R\",\"namespace\":" + "\"org.apache.avro.reflect.TestReflect\",\"fields\":["
-            + "{\"name\":\"a\",\"type\":\"int\"}," + "{\"name\":\"b\",\"type\":\"long\"}]}");
+            + "{\"name\":\"a\",\"type\":\"int\"}," + "{\"name\":\"b\",\"type\":\"long\"}]"
+            + ",\"java-class\":\"org.apache.avro.reflect.TestReflect$R\"}");
   }
 
   public static class RAvroIgnore {
@@ -664,7 +669,7 @@ public class TestReflect {
   @Test
   void annotationAvroIgnore() throws Exception {
     check(RAvroIgnore.class, "{\"type\":\"record\",\"name\":\"RAvroIgnore\",\"namespace\":"
-        + "\"org.apache.avro.reflect.TestReflect\",\"fields\":[]}");
+        + "\"org.apache.avro.reflect.TestReflect\",\"fields\":[],\"java-class\":\"org.apache.avro.reflect.TestReflect$RAvroIgnore\"}");
   }
 
   @AvroMeta(key = "X", value = "Y")
@@ -678,7 +683,7 @@ public class TestReflect {
     check(RAvroMeta.class,
         "{\"type\":\"record\",\"name\":\"RAvroMeta\",\"namespace\":"
             + "\"org.apache.avro.reflect.TestReflect\",\"fields\":[" + "{\"name\":\"a\",\"type\":\"int\",\"K\":\"V\"}]"
-            + ",\"X\":\"Y\"}");
+            + ",\"java-class\":\"org.apache.avro.reflect.TestReflect$RAvroMeta\"" + ",\"X\":\"Y\"}");
   }
 
   @AvroMeta(key = "X", value = "Y")
@@ -694,7 +699,8 @@ public class TestReflect {
     check(RAvroMultiMeta.class,
         "{\"type\":\"record\",\"name\":\"RAvroMultiMeta\",\"namespace\":"
             + "\"org.apache.avro.reflect.TestReflect\",\"fields\":["
-            + "{\"name\":\"a\",\"type\":\"int\",\"K\":\"V\",\"L\":\"W\"}]" + ",\"X\":\"Y\",\"A\":\"B\"}");
+            + "{\"name\":\"a\",\"type\":\"int\",\"K\":\"V\",\"L\":\"W\"}]"
+            + ",\"java-class\":\"org.apache.avro.reflect.TestReflect$RAvroMultiMeta\"" + ",\"X\":\"Y\",\"A\":\"B\"}");
   }
 
   public static class RAvroDuplicateFieldMeta {
@@ -730,8 +736,10 @@ public class TestReflect {
 
   @Test
   void annotationAvroName() throws Exception {
-    check(RAvroName.class, "{\"type\":\"record\",\"name\":\"RAvroName\",\"namespace\":"
-        + "\"org.apache.avro.reflect.TestReflect\",\"fields\":[" + "{\"name\":\"b\",\"type\":\"int\"}]}");
+    check(RAvroName.class,
+        "{\"type\":\"record\",\"name\":\"RAvroName\",\"namespace\":"
+            + "\"org.apache.avro.reflect.TestReflect\",\"fields\":[" + "{\"name\":\"b\",\"type\":\"int\"}]"
+            + ",\"java-class\":\"org.apache.avro.reflect.TestReflect$RAvroName\"}");
   }
 
   public static class RAvroNameCollide {
@@ -757,8 +765,10 @@ public class TestReflect {
 
   @Test
   void annotationAvroStringableFields() throws Exception {
-    check(RAvroStringableField.class, "{\"type\":\"record\",\"name\":\"RAvroStringableField\",\"namespace\":"
-        + "\"org.apache.avro.reflect.TestReflect\",\"fields\":[" + "{\"name\":\"a\",\"type\":\"string\"}]}");
+    check(RAvroStringableField.class,
+        "{\"type\":\"record\",\"name\":\"RAvroStringableField\",\"namespace\":"
+            + "\"org.apache.avro.reflect.TestReflect\",\"fields\":[" + "{\"name\":\"a\",\"type\":\"string\"}]"
+            + ",\"java-class\":\"org.apache.avro.reflect.TestReflect$RAvroStringableField\"}");
   }
 
   private void check(Object o, String schemaJson) {
@@ -884,7 +894,8 @@ public class TestReflect {
     assertEquals(schm.toString(),
         "{\"type\":\"record\",\"name\":\"AvroEncRecord\",\"namespace"
             + "\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[{\"name\":\"date\","
-            + "\"type\":{\"type\":\"long\",\"CustomEncoding\":\"DateAsLongEncoding\"}}]}");
+            + "\"type\":{\"type\":\"long\",\"CustomEncoding\":\"DateAsLongEncoding\"}}]"
+            + ",\"java-class\":\"org.apache.avro.reflect.TestReflect$AvroEncRecord\"}");
   }
 
   @Test
@@ -1249,11 +1260,11 @@ public class TestReflect {
   @Test
   void avroAliasOnClass() {
     check(AliasA.class,
-        "{\"type\":\"record\",\"name\":\"AliasA\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[],\"aliases\":[\"b.a\"]}");
+        "{\"type\":\"record\",\"name\":\"AliasA\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[],\"java-class\":\"org.apache.avro.reflect.TestReflect$AliasA\",\"aliases\":[\"b.a\"]}");
     check(AliasB.class,
-        "{\"type\":\"record\",\"name\":\"AliasB\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[],\"aliases\":[\"a\"]}");
+        "{\"type\":\"record\",\"name\":\"AliasB\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[],\"java-class\":\"org.apache.avro.reflect.TestReflect$AliasB\",\"aliases\":[\"a\"]}");
     check(AliasC.class,
-        "{\"type\":\"record\",\"name\":\"AliasC\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[],\"aliases\":[\"a\"]}");
+        "{\"type\":\"record\",\"name\":\"AliasC\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[],\"java-class\":\"org.apache.avro.reflect.TestReflect$AliasC\",\"aliases\":[\"a\"]}");
   }
 
   @AvroAlias(alias = "alias1", space = "space1")
@@ -1265,7 +1276,9 @@ public class TestReflect {
   @Test
   void multipleAliasAnnotationsOnClass() {
     check(MultipleAliasRecord.class,
-        "{\"type\":\"record\",\"name\":\"MultipleAliasRecord\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[],\"aliases\":[\"space1.alias1\",\"space2.alias2\"]}");
+        "{\"type\":\"record\",\"name\":\"MultipleAliasRecord\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[]"
+            + ",\"java-class\":\"org.apache.avro.reflect.TestReflect$MultipleAliasRecord\""
+            + ",\"aliases\":[\"space1.alias1\",\"space2.alias2\"]}");
 
   }
 
@@ -1278,7 +1291,7 @@ public class TestReflect {
     Schema s = new Schema.Parser(NameValidator.NO_VALIDATION).parse(
         "{\"type\":\"record\",\"name\":\"Z\",\"namespace\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":[]}");
     assertEquals(data.getSchema(data.getClass(s)).toString(),
-        "{\"type\":\"record\",\"name\":\"Z\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[]}");
+        "{\"type\":\"record\",\"name\":\"Z\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[],\"java-class\":\"org.apache.avro.reflect.TestReflect$Z\"}");
   }
 
   @Test
@@ -1313,7 +1326,7 @@ public class TestReflect {
     Schema expectedSchema = SchemaBuilder.record(ClassWithAliasOnField.class.getSimpleName())
         .namespace("org.apache.avro.reflect.TestReflect").fields().name("primitiveField").aliases("aliasName")
         .type(Schema.create(org.apache.avro.Schema.Type.INT)).noDefault().endRecord();
-
+    expectedSchema.addProp("java-class", "org.apache.avro.reflect.TestReflect$ClassWithAliasOnField");
     check(ClassWithAliasOnField.class, expectedSchema.toString());
   }
 
@@ -1331,7 +1344,7 @@ public class TestReflect {
     field.addAlias("alias2");
     Schema avroMultiMeta = Schema.createRecord("ClassWithMultipleAliasesOnField", null,
         "org.apache.avro.reflect.TestReflect", false, Arrays.asList(field));
-
+    avroMultiMeta.addProp("java-class", "org.apache.avro.reflect.TestReflect$ClassWithMultipleAliasesOnField");
     Schema schema = ReflectData.get().getSchema(ClassWithMultipleAliasesOnField.class);
     assertEquals(avroMultiMeta, schema);
   }
@@ -1345,7 +1358,8 @@ public class TestReflect {
     check(OptionalTest.class,
         "{\"type\":\"record\",\"name\":\"OptionalTest\","
             + "\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":["
-            + "{\"name\":\"foo\",\"type\":[\"null\",\"int\"],\"default\":null}]}");
+            + "{\"name\":\"foo\",\"type\":[\"null\",\"int\"],\"default\":null}]"
+            + ",\"java-class\":\"org.apache.avro.reflect.TestReflect$OptionalTest\"}");
   }
 
   private static class DefaultTest {
@@ -1358,7 +1372,8 @@ public class TestReflect {
     check(DefaultTest.class,
         "{\"type\":\"record\",\"name\":\"DefaultTest\","
             + "\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":["
-            + "{\"name\":\"foo\",\"type\":\"int\",\"default\":1}]}");
+            + "{\"name\":\"foo\",\"type\":\"int\",\"default\":1}]"
+            + ",\"java-class\":\"org.apache.avro.reflect.TestReflect$DefaultTest\"}");
   }
 
   public static class NullableBytesTest {
@@ -1408,12 +1423,33 @@ public class TestReflect {
   void avroDoc() {
     check(DocTest.class,
         "{\"type\":\"record\",\"name\":\"DocTest\",\"namespace\":\"org.apache.avro.reflect.TestReflect\","
-            + "\"doc\":\"DocTest class docs\"," + "\"fields\":["
-            + "{\"name\":\"defaultTest\",\"type\":{\"type\":\"record\",\"name\":\"DefaultTest\","
-            + "\"fields\":[{\"name\":\"foo\",\"type\":\"int\",\"default\":1}]},\"doc\":\"And again\"},"
-            + "{\"name\":\"enums\",\"type\":{\"type\":\"enum\",\"name\":\"DocTestEnum\","
-            + "\"symbols\":[\"ENUM_1\",\"ENUM_2\"]},\"doc\":\"Some other Documentation\"},"
-            + "{\"name\":\"foo\",\"type\":\"int\",\"doc\":\"Some Documentation\"}" + "]}");
+            + "\"doc\":\"DocTest class docs\",\"fields\":[{\"name\":\"defaultTest\",\"type\":{\"type\":\"record\","
+            + "\"name\":\"DefaultTest\",\"fields\":[{\"name\":\"foo\",\"type\":\"int\",\"default\":1}],"
+            + "\"java-class\":\"org.apache.avro.reflect.TestReflect$DefaultTest\"},\"doc\":\"And again\"},"
+            + "{\"name\":\"enums\",\"type\":{\"type\":\"enum\",\"name\":\"DocTestEnum\",\"symbols\":[\"ENUM_1\",\"ENUM_2\"],"
+            + "\"java-class\":\"org.apache.avro.reflect.TestReflect$DocTestEnum\"},\"doc\":\"Some other Documentation\"},"
+            + "{\"name\":\"foo\",\"type\":\"int\",\"doc\":\"Some Documentation\"}],\"java-class\":\"org.apache.avro.reflect.TestReflect$DocTest\"}");
+  }
+
+  @AvroNamespace("org.apache.avro.reflect.OverrideNamespace")
+  private static class NamespaceTest {
+
+    private static class InnerNamespaceTest {
+    }
+  }
+
+  @Test
+  void avroOverrideNamespaceTest() {
+    check(NamespaceTest.class,
+        "{\"type\":\"record\",\"name\":\"NamespaceTest\",\"namespace\":\"org.apache.avro.reflect.OverrideNamespace\",\"fields\":[]"
+            + ",\"java-class\":\"org.apache.avro.reflect.TestReflect$NamespaceTest\"}");
+  }
+
+  @Test
+  void avroOverrideEnclosingNamespaceTest() {
+    check(NamespaceTest.InnerNamespaceTest.class,
+        "{\"type\":\"record\",\"name\":\"InnerNamespaceTest\",\"namespace\":\"org.apache.avro.reflect.OverrideNamespace\",\"fields\":[]"
+            + ",\"java-class\":\"org.apache.avro.reflect.TestReflect$NamespaceTest$InnerNamespaceTest\"}");
   }
 
 }

@@ -86,6 +86,43 @@ public class TestReflectDatumReader {
   }
 
   @Test
+  void testRead_PojoWithCustomNamespace() throws IOException {
+    PojoWithCustomNamespace pojoWithCustomNamespace = new PojoWithCustomNamespace();
+    pojoWithCustomNamespace.setId(42);
+
+    byte[] serializedBytes = serializeWithReflectDatumWriter(pojoWithCustomNamespace, PojoWithCustomNamespace.class);
+
+    Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
+    ReflectDatumReader<PojoWithCustomNamespace> reflectDatumReader = new ReflectDatumReader<>(
+        PojoWithCustomNamespace.class);
+
+    PojoWithCustomNamespace deserialized = new PojoWithCustomNamespace();
+    reflectDatumReader.read(deserialized, decoder);
+
+    assertEquals(pojoWithCustomNamespace, deserialized);
+
+  }
+
+  @Test
+  void testRead_InnerClassPojoWithCustomNamespace() throws IOException {
+    PojoWithInnerClassAndWithCustomNamespace.InnerPojoClass innerPojoClass = new PojoWithInnerClassAndWithCustomNamespace.InnerPojoClass();
+    innerPojoClass.setId(42);
+
+    byte[] serializedBytes = serializeWithReflectDatumWriter(innerPojoClass,
+        PojoWithInnerClassAndWithCustomNamespace.InnerPojoClass.class);
+
+    Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
+    ReflectDatumReader<PojoWithInnerClassAndWithCustomNamespace.InnerPojoClass> reflectDatumReader = new ReflectDatumReader<>(
+        PojoWithInnerClassAndWithCustomNamespace.InnerPojoClass.class);
+
+    PojoWithInnerClassAndWithCustomNamespace.InnerPojoClass deserialized = new PojoWithInnerClassAndWithCustomNamespace.InnerPojoClass();
+    reflectDatumReader.read(deserialized, decoder);
+
+    assertEquals(innerPojoClass, deserialized);
+
+  }
+
+  @Test
   void read_PojoWithArray() throws IOException {
     PojoWithArray pojoWithArray = new PojoWithArray();
     pojoWithArray.setId(42);
@@ -207,6 +244,75 @@ public class TestReflectDatumReader {
     assertEquals(v2Pojo.charId, FieldAccess.CHAR_DEFAULT_VALUE);
     assertEquals(v2Pojo.longId, FieldAccess.LONG_DEFAULT_VALUE);
     assertEquals(v2Pojo.doubleId, FieldAccess.DOUBLE_DEFAULT_VALUE);
+  }
+
+  @AvroNamespace("com.override.sample")
+  public static class PojoWithCustomNamespace {
+    private int id;
+
+    public int getId() {
+      return id;
+    }
+
+    public void setId(int id) {
+      this.id = id;
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + id;
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      PojoWithCustomNamespace other = (PojoWithCustomNamespace) obj;
+      return id == other.id;
+    }
+  }
+
+  @AvroNamespace("com.override.sample")
+  public static class PojoWithInnerClassAndWithCustomNamespace {
+
+    public static class InnerPojoClass {
+      private int id;
+
+      public int getId() {
+        return id;
+      }
+
+      public void setId(int id) {
+        this.id = id;
+      }
+
+      @Override
+      public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + id;
+        return result;
+      }
+
+      @Override
+      public boolean equals(Object obj) {
+        if (this == obj)
+          return true;
+        if (obj == null)
+          return false;
+        if (getClass() != obj.getClass())
+          return false;
+        InnerPojoClass other = (InnerPojoClass) obj;
+        return id == other.id;
+      }
+    }
   }
 
   public static class PojoWithList {
