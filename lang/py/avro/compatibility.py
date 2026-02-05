@@ -231,8 +231,8 @@ class ReaderWriterCompatibilityChecker:
             raise AvroRuntimeException(f"Unknown schema type: {reader.type}")
         if writer.type == SchemaType.UNION:
             writer = cast(UnionSchema, writer)
-            for s in writer.schemas:
-                result = merge(result, self.get_compatibility(reader, s))
+            for i in range(len(writer.schemas)):
+                result = merge(result, self.get_compatibility(reader, writer.schemas[i], str(i), location))
             return result
         if reader.type in {SchemaType.NULL, SchemaType.BOOLEAN, SchemaType.INT}:
             return merge(result, type_mismatch(reader, writer, location))
