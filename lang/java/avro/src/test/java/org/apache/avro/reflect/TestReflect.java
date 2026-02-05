@@ -1416,4 +1416,22 @@ public class TestReflect {
             + "{\"name\":\"foo\",\"type\":\"int\",\"doc\":\"Some Documentation\"}" + "]}");
   }
 
+  private static class OrderTest {
+    @AvroOrder(Field.Order.IGNORE)
+    int foo;
+    @AvroOrder(Field.Order.DESCENDING)
+    String bar;
+    String fooBar;
+  }
+
+  @Test
+  public void testAvroOrder() {
+    Schema schema = ReflectData.get().getSchema(OrderTest.class);
+
+    assertEquals(schema.getField("foo").order(), Field.Order.IGNORE);
+    assertEquals(schema.getField("bar").order(), Field.Order.DESCENDING);
+    // NOTE: The default field order is ASCENDING
+    assertEquals(schema.getField("fooBar").order(), Field.Order.ASCENDING);
+  }
+
 }
