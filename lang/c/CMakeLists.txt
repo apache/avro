@@ -104,13 +104,22 @@ if(APPLE)
 endif(APPLE)
 
 if(CMAKE_COMPILER_IS_GNUCC)
-    add_definitions(-W -Wall)
+    add_compile_options(-W -Wall)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
-if (WIN32)
-   # Compile win32 in C++ to allow declarations after statements
-   add_definitions(/TP)
-endif(WIN32)
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    if(MSVC_VERSION LESS 1700)
+        # VS2010 and earlier.
+        # Compile as C++ to allow declarations after statements. (C11 feature)
+        add_compile_options(/TP)
+    elseif(MSVC_VERSION LESS 1920)
+        # VS2013|VS2015|VS2017
+    else()
+        # VS2019 and later.
+        add_compile_options(/std:c11)
+    endif(MSVC_VERSION LESS 1700)
+endif(MSVC)
 
 # Uncomment to allow missing fields in the resolved-writer
 # add_definitions(-DAVRO_ALLOW_MISSING_FIELDS_IN_RESOLVED_WRITER)
