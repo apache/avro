@@ -170,7 +170,7 @@ size_t BinaryDecoder::doDecodeItemCount() {
 }
 
 size_t BinaryDecoder::arrayNext() {
-    return static_cast<size_t>(doDecodeLong());
+    return doDecodeItemCount();
 }
 
 size_t BinaryDecoder::skipArray() {
