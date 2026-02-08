@@ -2100,6 +2100,42 @@ static void testJsonCodecReinit() {
     }
 }
 
+static void testArrayNegativeBlockCount() {
+    // Array of ints [10, 20, 30, 40, 50] encoded with a negative block count.
+    // Per the Avro spec, a negative count means: abs(count) items follow,
+    // preceded by a long byte-size of the block.
+    //
+    // Block 1: count=-3, bytesize=3, items: 10, 20, 30
+    // Block 2: count=2, items: 40, 50
+    // Terminal: count=0
+    const uint8_t data[] = {
+        0x05,                    // zigzag(-3) = 5
+        0x06,                    // zigzag(3) = 6  (byte-size of block)
+        0x14, 0x28, 0x3c,       // zigzag ints: 10, 20, 30
+        0x04,                    // zigzag(2) = 4
+        0x50, 0x64,             // zigzag ints: 40, 50
+        0x00                     // terminal
+    };
+
+    InputStreamPtr is = memoryInputStream(data, sizeof(data));
+    DecoderPtr d = binaryDecoder();
+    d->init(*is);
+
+    std::vector<int32_t> result;
+    for (size_t n = d->arrayStart(); n != 0; n = d->arrayNext()) {
+        for (size_t i = 0; i < n; ++i) {
+            result.push_back(d->decodeInt());
+        }
+    }
+
+    BOOST_CHECK_EQUAL(result.size(), 5u);
+    BOOST_CHECK_EQUAL(result[0], 10);
+    BOOST_CHECK_EQUAL(result[1], 20);
+    BOOST_CHECK_EQUAL(result[2], 30);
+    BOOST_CHECK_EQUAL(result[3], 40);
+    BOOST_CHECK_EQUAL(result[4], 50);
+}
+
 static void testByteCount() {
     OutputStreamPtr os1 = memoryOutputStream();
     EncoderPtr e1 = binaryEncoder();
@@ -2125,6 +2161,7 @@ init_unit_test_suite(int, char *[]) {
     ts->add(BOOST_PARAM_TEST_CASE(&avro::testJson, avro::jsonData,
                                   ENDOF(avro::jsonData)));
     ts->add(BOOST_TEST_CASE(avro::testJsonCodecReinit));
+    ts->add(BOOST_TEST_CASE(avro::testArrayNegativeBlockCount));
     ts->add(BOOST_TEST_CASE(avro::testByteCount));
 
     return ts;
