@@ -163,7 +163,7 @@ class DirectBinaryDecoder extends BinaryDecoder {
   protected void doSkipBytes(long length) throws IOException {
     while (length > 0) {
       long n = in.skip(length);
-      if (n <= 0) {
+      if (n == 0) {
         throw new EOFException();
       }
       length -= n;
