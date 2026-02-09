@@ -19,6 +19,7 @@
 require 'date'
 require 'bigdecimal'
 require 'bigdecimal/util'
+require 'uuidtools'
 
 module Avro
   module LogicalTypes
@@ -261,6 +262,16 @@ module Avro
       end
     end
 
+    module UUIDString
+      def self.encode(datum)
+        UUIDTools::UUID.parse(datum) && datum
+      end
+
+      def self.decode(datum)
+        datum
+      end
+    end
+
     module Identity
       def self.encode(datum)
         datum
@@ -277,6 +288,9 @@ module Avro
       },
       "int" => {
         "date" => IntDate
+      },
+      "string" => {
+        "uuid" => UUIDString
       },
       "long" => {
         "timestamp-millis" => TimestampMillis,
