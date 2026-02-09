@@ -254,6 +254,7 @@ struct codec_traits<std::vector<T>> {
     static void decode(Decoder &d, std::vector<T> &s) {
         s.clear();
         for (size_t n = d.arrayStart(); n != 0; n = d.arrayNext()) {
+            s.reserve(s.size() + n);
             for (size_t i = 0; i < n; ++i) {
                 T t;
                 avro::decode(d, t);
