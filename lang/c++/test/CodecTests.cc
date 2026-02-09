@@ -2101,19 +2101,20 @@ static void testJsonCodecReinit() {
 }
 
 static void testArrayNegativeBlockCount() {
-    // Array of ints [10, 20, 30, 40, 50] encoded with a negative block count.
+    // Array of ints [10, 20, 30, 40, 50] encoded with a negative block count
+    // in the second block, which exercises arrayNext().
     // Per the Avro spec, a negative count means: abs(count) items follow,
     // preceded by a long byte-size of the block.
     //
-    // Block 1: count=-3, bytesize=3, items: 10, 20, 30
-    // Block 2: count=2, items: 40, 50
+    // Block 1: count=2, items: 10, 20              (read by arrayStart)
+    // Block 2: count=-3, bytesize=3, items: 30, 40, 50  (read by arrayNext)
     // Terminal: count=0
     const uint8_t data[] = {
-        0x05,                    // zigzag(-3) = 5
-        0x06,                    // zigzag(3) = 6  (byte-size of block)
-        0x14, 0x28, 0x3c,       // zigzag ints: 10, 20, 30
-        0x04,                    // zigzag(2) = 4
-        0x50, 0x64,             // zigzag ints: 40, 50
+        0x04,                    // zigzag(2) = 4: block count = 2
+        0x14, 0x28,             // zigzag ints: 10, 20
+        0x05,                    // zigzag(-3) = 5: block count = -3
+        0x06,                    // zigzag(3) = 6: byte-size of block
+        0x3c, 0x50, 0x64,       // zigzag ints: 30, 40, 50
         0x00                     // terminal
     };
 
@@ -2128,12 +2129,9 @@ static void testArrayNegativeBlockCount() {
         }
     }
 
-    BOOST_CHECK_EQUAL(result.size(), 5u);
-    BOOST_CHECK_EQUAL(result[0], 10);
-    BOOST_CHECK_EQUAL(result[1], 20);
-    BOOST_CHECK_EQUAL(result[2], 30);
-    BOOST_CHECK_EQUAL(result[3], 40);
-    BOOST_CHECK_EQUAL(result[4], 50);
+    const std::vector<int32_t> expected = {10, 20, 30, 40, 50};
+    BOOST_CHECK_EQUAL_COLLECTIONS(result.begin(), result.end(),
+                                  expected.begin(), expected.end());
 }
 
 static void testByteCount() {
