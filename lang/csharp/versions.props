@@ -70,7 +70,7 @@
     <MicrosoftNETTestSdkVersion>17.13.0</MicrosoftNETTestSdkVersion>
     <NUnitVersion>3.14.0</NUnitVersion>
     <NUnitConsoleRunnerVersion>3.22.0</NUnitConsoleRunnerVersion>
-    <NUnit3TestAdapterVersion>5.2.0</NUnit3TestAdapterVersion>
+    <NUnit3TestAdapterVersion>6.1.0</NUnit3TestAdapterVersion>
     <StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
   </PropertyGroup>
 </Project>
