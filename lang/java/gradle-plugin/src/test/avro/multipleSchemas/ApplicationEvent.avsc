@@ -1,0 +1,44 @@
+{
+  "namespace": "model",
+  "type": "record",
+  "doc": "",
+  "name": "ApplicationEvent",
+  "fields": [
+    {
+      "name": "applicationId",
+      "type": "string",
+      "doc": "Application ID"
+    },
+    {
+      "name": "status",
+      "type": "string",
+      "doc": "Application Status"
+    },
+    {
+      "name": "documents",
+      "type": ["null", {
+        "type": "array",
+        "items": "model.DocumentInfo"
+      }],
+      "doc": "",
+      "default": null
+    },
+    {
+      "name": "response",
+      "type": {
+        "namespace": "model",
+        "type": "record",
+        "doc": "",
+        "name": "MyResponse",
+        "fields": [
+          {
+            "name": "isSuccessful",
+            "type": "boolean",
+            "doc": "Indicator for successful or unsuccessful call"
+          }
+        ]
+      }
+    }
+  ]
+
+}
