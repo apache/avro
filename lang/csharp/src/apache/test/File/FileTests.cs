@@ -35,6 +35,34 @@ namespace Avro.Test.File
         const string specificSchema  = "{\"type\":\"record\",\"name\":\"Foo\",\"namespace\":\"Avro.Test.File\",\"fields\":"
                                      + "[{\"name\":\"name\",\"type\":[\"null\",\"string\"]},{\"name\":\"age\",\"type\":\"int\"}]}";
 
+        /// <summary>
+        /// This test case added to confirm standalone serialization / deserialization behavior of new type UnknownLogicalType
+        /// </summary>
+        const string unknowLogicalTypeSchema = @"
+{
+	""type"" : ""record"",
+	""name"" : ""Foo"",
+	""namespace"" : ""Avro.Test.File"",
+	""fields"": [
+		{
+			""name"" :""name"",
+			""type"":  [
+                ""null"",
+                {
+                  ""logicalType"": ""varchar"",
+                  ""maxLength"": 65,
+                  ""type"": ""string""
+                }
+              ]
+		}, 
+		{
+			""name"" : ""age"",
+			""type"" : ""int""
+		}
+	]
+}
+";
+
         private static IEnumerable<TestCaseData> TestSpecificDataSource()
         {
             foreach (Codec.Type codecType in Enum.GetValues(typeof(Codec.Type)))
@@ -100,6 +128,11 @@ namespace Avro.Test.File
                         new object[] { "Bob", 9 },
                         new object[] { null, 48 }
                     }, codecType).SetName("{m}(Case3,{2})");
+
+                yield return new TestCaseData(unknowLogicalTypeSchema, new object[]
+                    {
+                        new object[] { "John", 23 }
+                    }, codecType).SetName("{m}(Case4,{2})");
             }
         }
 
