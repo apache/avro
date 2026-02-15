@@ -1,0 +1,9 @@
+(function() {
+    var implementors = Object.fromEntries([["chacha20",[["impl <a class=\"trait\" href=\"rand_core/trait.TryCryptoRng.html\" title=\"trait rand_core::TryCryptoRng\">TryCryptoRng</a> for <a class=\"struct\" href=\"chacha20/struct.ChaCha12Rng.html\" title=\"struct chacha20::ChaCha12Rng\">ChaCha12Rng</a>"],["impl <a class=\"trait\" href=\"rand_core/trait.TryCryptoRng.html\" title=\"trait rand_core::TryCryptoRng\">TryCryptoRng</a> for <a class=\"struct\" href=\"chacha20/struct.ChaCha20Rng.html\" title=\"struct chacha20::ChaCha20Rng\">ChaCha20Rng</a>"],["impl <a class=\"trait\" href=\"rand_core/trait.TryCryptoRng.html\" title=\"trait rand_core::TryCryptoRng\">TryCryptoRng</a> for <a class=\"struct\" href=\"chacha20/struct.ChaCha8Rng.html\" title=\"struct chacha20::ChaCha8Rng\">ChaCha8Rng</a>"]]],["getrandom",[["impl <a class=\"trait\" href=\"rand_core/trait.TryCryptoRng.html\" title=\"trait rand_core::TryCryptoRng\">TryCryptoRng</a> for <a class=\"struct\" href=\"getrandom/struct.SysRng.html\" title=\"struct getrandom::SysRng\">SysRng</a>"]]],["rand",[["impl <a class=\"trait\" href=\"rand/trait.TryCryptoRng.html\" title=\"trait rand::TryCryptoRng\">TryCryptoRng</a> for <a class=\"struct\" href=\"rand/rngs/struct.StdRng.html\" title=\"struct rand::rngs::StdRng\">StdRng</a>"],["impl <a class=\"trait\" href=\"rand/trait.TryCryptoRng.html\" title=\"trait rand::TryCryptoRng\">TryCryptoRng</a> for <a class=\"struct\" href=\"rand/rngs/struct.ThreadRng.html\" title=\"struct rand::rngs::ThreadRng\">ThreadRng</a>"]]],["rand_core",[]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[758,252,474,17]}

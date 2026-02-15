@@ -1,0 +1,197 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Overview"><title>bon - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="bon" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../static.files/storage-e2aeef58.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-263c88ec.css"></noscript><link rel="icon" href="https://bon-rs.com/bon-logo-medium.png"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Crate bon</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../bon/index.html"><img src="https://bon-rs.com/bon-logo-thumb.png" alt="logo"></a><h2><a href="../bon/index.html">bon</a><span class="version">3.9.0</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#overview" title="Overview">Overview</a><ul><li><a href="#function-builder" title="Function Builder">Function Builder</a></li><li><a href="#struct-builder" title="Struct Builder">Struct Builder</a></li><li><a href="#method-builder" title="Method Builder">Method Builder</a></li><li><a href="#no-panics-possible" title="No Panics Possible">No Panics Possible</a></li><li><a href="#whats-next" title="What’s Next?">What’s Next?</a></li><li><a href="#installation" title="Installation">Installation</a></li><li><a href="#getting-help" title="Getting Help">Getting Help</a></li><li><a href="#socials" title="Socials">Socials</a></li><li><a href="#acknowledgments" title="Acknowledgments">Acknowledgments</a></li><li><a href="#supporters" title="Supporters">Supporters</a></li><li><a href="#past-supporters" title="Past Supporters">Past Supporters</a></li><li><a href="#license" title="License">License</a></li></ul></li></ul><h3><a href="#macros">Crate Items</a></h3><ul class="block"><li><a href="#macros" title="Macros">Macros</a></li><li><a href="#attributes" title="Attribute Macros">Attribute Macros</a></li><li><a href="#derives" title="Derive Macros">Derive Macros</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>bon</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/bon/lib.rs.html#1-28">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><a href="https://bon-rs.com/guide/overview">
+    <img
+        src="https://bon-rs.com/bon-home.png"
+        alt="bon home"
+    />
+</a>
+<div align="center">
+    <a href="https://github.com/elastio/bon"><img
+        alt="github"
+        src="https://img.shields.io/badge/github-elastio/bon-228b22?style=for-the-badge&labelColor=555555&logo=github"
+        height="25"
+    /></a>
+    <a href="https://crates.io/crates/bon"><img
+        alt="crates.io"
+        src="https://img.shields.io/crates/v/bon.svg?style=for-the-badge&color=e37602&logo=rust"
+        height="25"
+    /></a>
+    <a href="https://docs.rs/bon/latest/bon/"><img
+        alt="docs.rs"
+        src="https://img.shields.io/badge/docs.rs-bon-3b74d1?style=for-the-badge&labelColor=555555&logo=docs.rs"
+        height="25"
+    /></a>
+        <a href="https://docs.rs/bon/latest/bon/"><img
+        alt="docs.rs"
+        src="https://img.shields.io/badge/MSRV-1.59.0-b83fbf?style=for-the-badge&labelColor=555555&logo=docs.rs"
+        height="25"
+    /></a>
+</div>
+<br/>
+<div align="center">
+    <table>
+        <tbody>
+            <tr>
+                <td><a href="https://bon-rs.com/guide/overview">📖 Guide Book</a></td>
+                <td>Narrative introduction</td>
+            </tr>
+            <tr>
+                <td><a href="https://bon-rs.com/reference/builder">🔍 API Reference</a></td>
+                <td>Attributes API index</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<!-- #region overview -->
+<h2 id="overview"><a class="doc-anchor" href="#overview">§</a>Overview</h2>
+<p><code>bon</code> is a Rust crate for generating compile-time-checked builders for structs and functions. It also provides idiomatic partial application with optional and named parameters for functions and methods.</p>
+<p>If you wonder “Why would I use builders?”, see the <a href="https://bon-rs.com/blog/how-to-do-named-function-arguments-in-rust">motivational blog post</a>.</p>
+<h3 id="function-builder"><a class="doc-anchor" href="#function-builder">§</a>Function Builder</h3>
+<p>You can turn a function with positional parameters into a function with named parameters with <code>#[builder]</code>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>bon::builder;
+
+<span class="attr">#[builder]
+</span><span class="kw">fn </span>greet(name: <span class="kw-2">&amp;</span>str, level: <span class="prelude-ty">Option</span>&lt;u32&gt;) -&gt; String {
+    <span class="kw">let </span>level = level.unwrap_or(<span class="number">0</span>);
+
+    <span class="macro">format!</span>(<span class="string">"Hello {name}! Your level is {level}"</span>)
+}
+
+<span class="kw">let </span>greeting = greet()
+    .name(<span class="string">"Bon"</span>)
+    .level(<span class="number">24</span>) <span class="comment">// &lt;- setting `level` is optional, we could omit it
+    </span>.call();
+
+<span class="macro">assert_eq!</span>(greeting, <span class="string">"Hello Bon! Your level is 24"</span>);</code></pre></div>
+<p>Any syntax for functions is supported including <code>async</code>, fallible, generic functions, <code>impl Trait</code>, etc.</p>
+<p>Many things are customizable with additional attributes described in the <a href="https://bon-rs.com/reference/builder">API reference</a>, but let’s see what else <code>bon</code> has to offer.</p>
+<h3 id="struct-builder"><a class="doc-anchor" href="#struct-builder">§</a>Struct Builder</h3>
+<p>Use <code>#[derive(Builder)]</code> to generate a builder for a struct.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>bon::Builder;
+
+<span class="attr">#[derive(Builder)]
+</span><span class="kw">struct </span>User {
+    name: String,
+    is_admin: bool,
+    level: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+}
+
+<span class="kw">let </span>user = User::builder()
+    .name(<span class="string">"Bon"</span>.to_owned())
+    <span class="comment">// `level` is optional, we could omit it here
+    </span>.level(<span class="number">24</span>)
+    <span class="comment">// call setters in any order
+    </span>.is_admin(<span class="bool-val">true</span>)
+    .build();
+
+<span class="macro">assert_eq!</span>(user.name, <span class="string">"Bon"</span>);
+<span class="macro">assert_eq!</span>(user.level, <span class="prelude-val">Some</span>(<span class="number">24</span>));
+<span class="macro">assert!</span>(user.is_admin);</code></pre></div><h3 id="method-builder"><a class="doc-anchor" href="#method-builder">§</a>Method Builder</h3>
+<p>Associated methods require <code>#[bon]</code> on top of the impl block additionally.</p>
+<h4 id="method-new"><a class="doc-anchor" href="#method-new">§</a>Method <code>new</code></h4>
+<p>The method named <code>new</code> generates <code>builder()/build()</code> methods.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>bon::bon;
+
+<span class="kw">struct </span>User {
+    id: u32,
+    name: String,
+}
+
+<span class="attr">#[bon]
+</span><span class="kw">impl </span>User {
+    <span class="attr">#[builder]
+    </span><span class="kw">fn </span>new(id: u32, name: String) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ id, name }
+    }
+}
+
+<span class="kw">let </span>user = User::builder()
+    .id(<span class="number">1</span>)
+    .name(<span class="string">"Bon"</span>.to_owned())
+    .build();
+
+<span class="macro">assert_eq!</span>(user.id, <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(user.name, <span class="string">"Bon"</span>);</code></pre></div>
+<p><code>#[derive(Builder)]</code> on a struct generates builder API that is fully compatible with placing <code>#[builder]</code> on the <code>new()</code> method with a signature similar to the struct’s fields (more details on the <a href="https://bon-rs.com/guide/basics/compatibility#switching-between-derive-builder-and-builder-on-the-new-method">Compatibility</a> page).</p>
+<h4 id="other-methods"><a class="doc-anchor" href="#other-methods">§</a>Other Methods</h4>
+<p>All other methods generate <code>{method_name}()/call()</code> methods.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>bon::bon;
+
+<span class="kw">struct </span>Greeter {
+    name: String,
+}
+
+<span class="attr">#[bon]
+</span><span class="kw">impl </span>Greeter {
+    <span class="attr">#[builder]
+    </span><span class="kw">fn </span>greet(<span class="kw-2">&amp;</span><span class="self">self</span>, target: <span class="kw-2">&amp;</span>str, prefix: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; String {
+        <span class="kw">let </span>prefix = prefix.unwrap_or(<span class="string">"INFO"</span>);
+        <span class="kw">let </span>name = <span class="kw-2">&amp;</span><span class="self">self</span>.name;
+
+        <span class="macro">format!</span>(<span class="string">"[{prefix}] {name} says hello to {target}"</span>)
+    }
+}
+
+<span class="kw">let </span>greeter = Greeter { name: <span class="string">"Bon"</span>.to_owned() };
+
+<span class="kw">let </span>greeting = greeter
+    .greet()
+    .target(<span class="string">"the world"</span>)
+    <span class="comment">// `prefix` is optional, omitting it is fine
+    </span>.call();
+
+<span class="macro">assert_eq!</span>(greeting, <span class="string">"[INFO] Bon says hello to the world"</span>);</code></pre></div>
+<p>Methods with or without <code>self</code> are both supported.</p>
+<h3 id="no-panics-possible"><a class="doc-anchor" href="#no-panics-possible">§</a>No Panics Possible</h3>
+<p>Builders generated by <code>bon</code>’s macros use the typestate pattern to ensure all required parameters are filled, and the same setters aren’t called repeatedly to prevent unintentional overwrites. If something is wrong, a compile error will be created.</p>
+<div><table><thead><tr><th>⭐ Don’t forget to give our repo a <a href="https://github.com/elastio/bon">star on Github ⭐</a>!</th></tr></thead><tbody>
+</tbody></table>
+</div><h3 id="whats-next"><a class="doc-anchor" href="#whats-next">§</a>What’s Next?</h3>
+<p>What you’ve seen above is the first page of the 📖 Guide Book. If you want to learn more, jump to the <a href="https://bon-rs.com/guide/basics">Basics</a> section. And remember: knowledge is power 🐱!</p>
+<p>Feel free to jump to code and use the <code>#[builder]</code> and <code>#[derive(Builder)]</code> once you’ve seen enough docs to get started.</p>
+<p>The <a href="https://bon-rs.com/reference/builder">🔍 API Reference</a> will help you navigate the attributes once you feel comfortable with the basics of <code>bon</code>. Both <code>#[derive(Builder)]</code> on structs and <code>#[builder]</code> on functions/methods have almost identical attributes API, so the documentation for them is common.</p>
+<h3 id="installation"><a class="doc-anchor" href="#installation">§</a>Installation</h3>
+<p>Add <code>bon</code> to your <code>Cargo.toml</code>.</p>
+<!-- If you change this, make sure to update `scripts/sync-version.sh` -->
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+bon = &quot;3.9&quot;</code></pre></div>
+<p>You can opt out of <code>std</code> and <code>alloc</code> cargo features with <code>default-features = false</code> for <code>no_std</code> environments.</p>
+<p>See <a href="https://bon-rs.com/guide/alternatives">alternatives</a> for comparison.</p>
+<h3 id="getting-help"><a class="doc-anchor" href="#getting-help">§</a>Getting Help</h3>
+<p>If you can’t figure something out, consult the docs and maybe use the <code>🔍 Search</code> bar on our <a href="https://bon-rs.com">docs website</a>. You may also create an issue or a discussion on the <a href="https://github.com/elastio/bon">Github repository</a> for help or write us a message on <a href="https://bon-rs.com/discord">Discord</a>.</p>
+<h3 id="socials"><a class="doc-anchor" href="#socials">§</a>Socials</h3><table>
+<tbody>
+    <tr>
+        <td><a href="https://bon-rs.com/discord">Discord</a></td>
+        <td>Here you can leave feedback, ask questions, report bugs, etc.</td>
+    </tr>
+</tbody>
+</table>
+<h3 id="acknowledgments"><a class="doc-anchor" href="#acknowledgments">§</a>Acknowledgments</h3>
+<p>This project was heavily inspired by such awesome crates as <a href="https://docs.rs/buildstructor"><code>buildstructor</code></a>, <a href="https://docs.rs/typed-builder"><code>typed-builder</code></a> and <a href="https://docs.rs/derive_builder"><code>derive_builder</code></a>. This crate was designed with many lessons learned from them.</p>
+<h3 id="supporters"><a class="doc-anchor" href="#supporters">§</a>Supporters</h3><div align="center">
+<p>Big thanks to <code>bon</code>’s current financial supporters ❤️</p>
+<p><strong>Julius Lungys</strong><br />
+<sup><code>$1/month</code></sup></p>
+</div>
+<h3 id="past-supporters"><a class="doc-anchor" href="#past-supporters">§</a>Past Supporters</h3><div align="center">
+<p>Big thanks to <code>bon</code>’s past financial supporters ❤️</p>
+<p><a href="https://kindness.ai"><img src="https://github.com/user-attachments/assets/b0acb844-4b91-461c-95ae-90a601296500" alt="" /></a><br />
+<a href="https://kindness.ai"><strong>Kindness</strong></a></p>
+<p><strong>Ethan Skowronski</strong></p>
+</div>
+<h3 id="license"><a class="doc-anchor" href="#license">§</a>License</h3><sup>
+Licensed under either of <a href="https://github.com/elastio/bon/blob/master/LICENSE-APACHE">Apache License, Version
+2.0</a> or <a href="https://github.com/elastio/bon/blob/master/LICENSE-MIT">MIT license</a> at your option.
+</sup>
+<br>
+<sub>
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
+</sub>
+<!-- #endregion overview --></div></details><h2 id="macros" class="section-header">Macros<a href="#macros" class="anchor">§</a></h2><dl class="item-table"><dt><a class="macro" href="macro.arr.html" title="macro bon::arr">arr</a></dt><dd>Creates a fixed-size array literal with each element converted with <a href="https://doc.rust-lang.org/1.93.1/core/convert/trait.Into.html" title="trait core::convert::Into"><code>Into</code></a>.</dd><dt><a class="macro" href="macro.map.html" title="macro bon::map">map</a></dt><dd>Creates any map-like collection that implements <a href="https://doc.rust-lang.org/stable/std/iter/trait.FromIterator.html"><code>FromIterator&lt;(K, V)&gt;</code></a>.</dd><dt><a class="macro" href="macro.set.html" title="macro bon::set">set</a></dt><dd>Creates any set-like collection that implements <a href="https://doc.rust-lang.org/stable/std/iter/trait.FromIterator.html"><code>FromIterator&lt;T&gt;</code></a>.</dd></dl><h2 id="attributes" class="section-header">Attribute Macros<a href="#attributes" class="anchor">§</a></h2><dl class="item-table"><dt><a class="attr" href="attr.bon.html" title="attr bon::bon">bon</a></dt><dd>Companion macro for <a href="attr.builder.html" title="attr bon::builder"><code>builder</code></a>. You should place it on top of the <code>impl</code> block
+where you want to define methods with the <a href="attr.builder.html" title="attr bon::builder"><code>builder</code></a> macro.</dd><dt><a class="attr" href="attr.builder.html" title="attr bon::builder">builder</a></dt><dd>Generates a builder for the function or method it’s placed on.</dd></dl><h2 id="derives" class="section-header">Derive Macros<a href="#derives" class="anchor">§</a></h2><dl class="item-table"><dt><a class="derive" href="derive.Builder.html" title="derive bon::Builder">Builder</a></dt><dd>Derives a builder for the struct it’s placed on.</dd></dl></section></div></main></body></html>

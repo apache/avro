@@ -1,0 +1,26 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Creates a fixed-size array literal with each element converted with `Into`."><title>arr in bon - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="bon" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../static.files/storage-e2aeef58.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-263c88ec.css"></noscript><link rel="icon" href="https://bon-rs.com/bon-logo-medium.png"></head><body class="rustdoc macro"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">arr</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../bon/index.html"><img src="https://bon-rs.com/bon-logo-thumb.png" alt="logo"></a><h2><a href="../bon/index.html">bon</a><span class="version">3.9.0</span></h2></div><div class="sidebar-elems"><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="index.html">bon</a></div><h1>Macro <span class="macro">arr</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/bon/collections.rs.html#69-72">Source</a> </span></div><pre class="rust item-decl"><code>macro_rules! arr {
+    () =&gt; { ... };
+    ($($item:expr),+ $(,)?) =&gt; { ... };
+}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Creates a fixed-size array literal with each element converted with <a href="https://doc.rust-lang.org/1.93.1/core/convert/trait.Into.html" title="trait core::convert::Into"><code>Into</code></a>.</p>
+<p>You’ll probably need a hint for the target type of items in the array if the
+compiler can’t infer it from its usage.</p>
+<p>This is similar in spirit to the <a href="crate::vec"><code>bon::vec!</code></a> macro, but it’s for arrays.
+See <a href="crate::vec"><code>bon::vec!</code></a> docs for details.</p>
+<p>Same example as in <a href="crate::vec"><code>bon::vec!</code></a>, but using this macro. It works with array
+as well because <a href="std::process::Command::args"><code>Command::args</code></a> accepts any value that implements <a href="https://doc.rust-lang.org/1.93.1/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator"><code>IntoIterator</code></a>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">fn </span>convert_media(input_extension: <span class="kw-2">&amp;</span>str, output_extension: <span class="kw-2">&amp;</span>str) -&gt; std::io::Result&lt;()&gt; {
+    <span class="kw">let </span>ffmpeg_args: [String; <span class="number">4</span>] = <span class="macro">bon::arr!</span>[
+        <span class="string">"-i"</span>,
+        <span class="macro">format!</span>(<span class="string">"input.{input_extension}"</span>),
+        <span class="string">"-y"</span>,
+        <span class="macro">format!</span>(<span class="string">"output.{output_extension}"</span>),
+    ];
+
+    std::process::Command::new(<span class="string">"ffmpeg"</span>).args(ffmpeg_args).output()<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(())
+}</code></pre></div>
+<p>This macro doesn’t support <code>[expr; N]</code> syntax, since it’s simpler to
+just write <code>[expr.into(); N]</code> instead.</p>
+</div></details></section></div></main></body></html>

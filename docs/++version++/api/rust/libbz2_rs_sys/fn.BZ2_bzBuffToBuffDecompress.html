@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Decompress the input data into the destination buffer."><title>BZ2_bzBuffToBuffDecompress in libbz2_rs_sys - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="libbz2_rs_sys" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../static.files/storage-e2aeef58.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc fn"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">BZ2_bzBuffToBuffDecompress</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../libbz2_rs_sys/index.html">libbz2_<wbr>rs_<wbr>sys</a><span class="version">0.2.2</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">BZ2_<wbr>bzBuff<wbr>ToBuff<wbr>Decompress</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#returns" title="Returns">Returns</a></li><li><a href="#safety" title="Safety">Safety</a></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="index.html">In crate libbz2_<wbr>rs_<wbr>sys</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="index.html">libbz2_rs_sys</a></div><h1>Function <span class="fn">BZ2_<wbr>bzBuff<wbr>ToBuff<wbr>Decompress</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/libbz2_rs_sys/bzlib.rs.html#2078-2103">Source</a> </span></div><pre class="rust item-decl"><code>pub unsafe extern &quot;C&quot; fn BZ2_bzBuffToBuffDecompress(
+    dest: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/core/primitive.pointer.html">*mut </a><a class="type" href="https://doc.rust-lang.org/1.93.1/core/ffi/primitives/type.c_char.html" title="type core::ffi::primitives::c_char">c_char</a>,
+    destLen: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/core/primitive.pointer.html">*mut </a><a class="type" href="https://doc.rust-lang.org/1.93.1/core/ffi/primitives/type.c_uint.html" title="type core::ffi::primitives::c_uint">c_uint</a>,
+    source: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/core/primitive.pointer.html">*mut </a><a class="type" href="https://doc.rust-lang.org/1.93.1/core/ffi/primitives/type.c_char.html" title="type core::ffi::primitives::c_char">c_char</a>,
+    sourceLen: <a class="type" href="https://doc.rust-lang.org/1.93.1/core/ffi/primitives/type.c_uint.html" title="type core::ffi::primitives::c_uint">c_uint</a>,
+    small: <a class="type" href="https://doc.rust-lang.org/1.93.1/core/ffi/primitives/type.c_int.html" title="type core::ffi::primitives::c_int">c_int</a>,
+    verbosity: <a class="type" href="https://doc.rust-lang.org/1.93.1/core/ffi/primitives/type.c_int.html" title="type core::ffi::primitives::c_int">c_int</a>,
+) -&gt; <a class="type" href="https://doc.rust-lang.org/1.93.1/core/ffi/primitives/type.c_int.html" title="type core::ffi::primitives::c_int">c_int</a></code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Decompress the input data into the destination buffer.</p>
+<p>This function attempts to decompress the data in <code>source[0 .. sourceLen]</code> into <code>dest[0 .. *destLen]</code>.
+If the destination buffer is big enough, <code>*destLen</code> is set to the size of the decompressed data, and <a href="constant.BZ_OK.html" title="constant libbz2_rs_sys::BZ_OK"><code>BZ_OK</code></a> is returned.
+If the decompressed data won’t fit, <code>*destLen</code> is unchanged, and <a href="constant.BZ_OUTBUFF_FULL.html" title="constant libbz2_rs_sys::BZ_OUTBUFF_FULL"><code>BZ_OUTBUFF_FULL</code></a> is returned.</p>
+<p>For the meaning of parameters <code>small</code>, <code>verbosity</code>, see <a href="fn.BZ2_bzDecompressInit.html" title="fn libbz2_rs_sys::BZ2_bzDecompressInit"><code>BZ2_bzDecompressInit</code></a>.</p>
+<p>Because the compression ratio of the compressed data cannot be known in advance,
+there is no easy way to guarantee that the output buffer will be big enough.
+You may of course make arrangements in your code to record the size of the uncompressed data,
+but such a mechanism is beyond the scope of this library.</p>
+<h2 id="returns"><a class="doc-anchor" href="#returns">§</a>Returns</h2>
+<ul>
+<li><a href="constant.BZ_PARAM_ERROR.html" title="constant libbz2_rs_sys::BZ_PARAM_ERROR"><code>BZ_PARAM_ERROR</code></a> if any of
+<ul>
+<li><code>dest.is_null()</code></li>
+<li><code>destLen.is_null()</code></li>
+<li><code>source.is_null()</code></li>
+<li><code>!(0..=1).contains(&amp;small)</code></li>
+<li><code>!(0..=4).contains(&amp;verbosity)</code></li>
+</ul>
+</li>
+<li><a href="constant.BZ_MEM_ERROR.html" title="constant libbz2_rs_sys::BZ_MEM_ERROR"><code>BZ_MEM_ERROR</code></a> if insufficient memory is available</li>
+<li><a href="constant.BZ_OUTBUFF_FULL.html" title="constant libbz2_rs_sys::BZ_OUTBUFF_FULL"><code>BZ_OUTBUFF_FULL</code></a> if the size of the compressed data exceeds <code>*destLen</code></li>
+<li><a href="constant.BZ_DATA_ERROR.html" title="constant libbz2_rs_sys::BZ_DATA_ERROR"><code>BZ_DATA_ERROR</code></a> if a data integrity error is detected in the compressed stream</li>
+<li><a href="constant.BZ_DATA_ERROR_MAGIC.html" title="constant libbz2_rs_sys::BZ_DATA_ERROR_MAGIC"><code>BZ_DATA_ERROR_MAGIC</code></a> if the compressed stream doesn’t begin with the right magic bytes</li>
+<li><a href="constant.BZ_UNEXPECTED_EOF.html" title="constant libbz2_rs_sys::BZ_UNEXPECTED_EOF"><code>BZ_UNEXPECTED_EOF</code></a> if the compressed data ends before the logical end-of-stream was detected</li>
+<li><a href="constant.BZ_OK.html" title="constant libbz2_rs_sys::BZ_OK"><code>BZ_OK</code></a> otherwise</li>
+</ul>
+<h2 id="safety"><a class="doc-anchor" href="#safety">§</a>Safety</h2>
+<p>The caller must guarantee that</p>
+<ul>
+<li><code>destLen</code> satisfies the requirements of <a href="https://doc.rust-lang.org/core/primitive.pointer.html#method.as_mut"><code>pointer::as_mut</code></a></li>
+<li>Either
+<ul>
+<li><code>dest</code> is <code>NULL</code></li>
+<li><code>dest</code> is writable for <code>*destLen</code> bytes</li>
+</ul>
+</li>
+<li>Either
+<ul>
+<li><code>source</code> is <code>NULL</code></li>
+<li><code>source</code> is readable for <code>sourceLen</code></li>
+</ul>
+</li>
+</ul>
+</div></details></section></div></main></body></html>

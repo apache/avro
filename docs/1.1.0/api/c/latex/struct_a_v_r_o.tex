@@ -1,0 +1,104 @@
+\hypertarget{struct_a_v_r_o}{
+\section{AVRO Struct Reference}
+\label{struct_a_v_r_o}\index{AVRO@{AVRO}}
+}
+{\tt \#include $<$avro.h$>$}
+
+\subsection*{Data Structures}
+\begin{CompactItemize}
+\item 
+struct \textbf{avro\_\-ops}
+\end{CompactItemize}
+\subsection*{Data Fields}
+\begin{CompactItemize}
+\item 
+enum \hyperlink{group___handle___routines_gcd8ee9ad4a4882eef8e3d9a0d5faec68}{avro\_\-op} \hyperlink{struct_a_v_r_o_7291c82adfe53e2d895824663e028e8e}{a\_\-op}
+\item 
+\hypertarget{struct_a_v_r_o_8eb2c9c88718b2c7976429af135348e9}{
+struct AVRO::avro\_\-ops $\ast$ \textbf{a\_\-ops}}
+\label{struct_a_v_r_o_8eb2c9c88718b2c7976429af135348e9}
+
+\item 
+apr\_\-pool\_\-t $\ast$ \hyperlink{struct_a_v_r_o_b4cc960de06bd42633124a8a62852928}{pool}
+\item 
+unsigned char $\ast$ \hyperlink{struct_a_v_r_o_e6ff7776029faa4c4d7053f0cb7b71e5}{schema}
+\item 
+apr\_\-file\_\-t $\ast$ \hyperlink{struct_a_v_r_o_adc436b34c7426022b819cdc2d6ced6e}{file}
+\item 
+apr\_\-socket\_\-t $\ast$ \hyperlink{struct_a_v_r_o_33d50daaa50ad7ec3c4e22d4f1eb6143}{socket}
+\item 
+caddr\_\-t \hyperlink{struct_a_v_r_o_b1c64881a5280cceb600f316fbb07952}{addr}
+\item 
+int64\_\-t \hyperlink{struct_a_v_r_o_167d3abd38fca62643a5ceb0c34711bc}{len}
+\item 
+int64\_\-t \hyperlink{struct_a_v_r_o_4ce667da8e13c2b9c464aa76b414ab82}{used}
+\end{CompactItemize}
+
+
+\subsection{Detailed Description}
+Avro handle. Opaque handle for encoding/decoding data to memory, file or network. \begin{Desc}
+\item[Warning:]Never operate on an Avro handle directly. Use the \hyperlink{struct_a_v_r_o}{AVRO} Handle routines instead. \end{Desc}
+
+
+\subsection{Field Documentation}
+\hypertarget{struct_a_v_r_o_7291c82adfe53e2d895824663e028e8e}{
+\index{AVRO@{AVRO}!a\_\-op@{a\_\-op}}
+\index{a\_\-op@{a\_\-op}!AVRO@{AVRO}}
+\subsubsection[{a\_\-op}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf avro\_\-op} {\bf AVRO::a\_\-op}}}
+\label{struct_a_v_r_o_7291c82adfe53e2d895824663e028e8e}
+
+
+Hold the type of operation the handle is performing \hypertarget{struct_a_v_r_o_b1c64881a5280cceb600f316fbb07952}{
+\index{AVRO@{AVRO}!addr@{addr}}
+\index{addr@{addr}!AVRO@{AVRO}}
+\subsubsection[{addr}]{\setlength{\rightskip}{0pt plus 5cm}caddr\_\-t {\bf AVRO::addr}}}
+\label{struct_a_v_r_o_b1c64881a5280cceb600f316fbb07952}
+
+
+Used by the memory-backed handle \hypertarget{struct_a_v_r_o_adc436b34c7426022b819cdc2d6ced6e}{
+\index{AVRO@{AVRO}!file@{file}}
+\index{file@{file}!AVRO@{AVRO}}
+\subsubsection[{file}]{\setlength{\rightskip}{0pt plus 5cm}apr\_\-file\_\-t$\ast$ {\bf AVRO::file}}}
+\label{struct_a_v_r_o_adc436b34c7426022b819cdc2d6ced6e}
+
+
+Used by the file-backed handle \hypertarget{struct_a_v_r_o_167d3abd38fca62643a5ceb0c34711bc}{
+\index{AVRO@{AVRO}!len@{len}}
+\index{len@{len}!AVRO@{AVRO}}
+\subsubsection[{len}]{\setlength{\rightskip}{0pt plus 5cm}int64\_\-t {\bf AVRO::len}}}
+\label{struct_a_v_r_o_167d3abd38fca62643a5ceb0c34711bc}
+
+
+Used by the memory-backed handle \hypertarget{struct_a_v_r_o_b4cc960de06bd42633124a8a62852928}{
+\index{AVRO@{AVRO}!pool@{pool}}
+\index{pool@{pool}!AVRO@{AVRO}}
+\subsubsection[{pool}]{\setlength{\rightskip}{0pt plus 5cm}apr\_\-pool\_\-t$\ast$ {\bf AVRO::pool}}}
+\label{struct_a_v_r_o_b4cc960de06bd42633124a8a62852928}
+
+
+Pool used for allocating memory for dynamic data structures \hypertarget{struct_a_v_r_o_e6ff7776029faa4c4d7053f0cb7b71e5}{
+\index{AVRO@{AVRO}!schema@{schema}}
+\index{schema@{schema}!AVRO@{AVRO}}
+\subsubsection[{schema}]{\setlength{\rightskip}{0pt plus 5cm}unsigned char$\ast$ {\bf AVRO::schema}}}
+\label{struct_a_v_r_o_e6ff7776029faa4c4d7053f0cb7b71e5}
+
+
+Current \hyperlink{struct_a_v_r_o}{AVRO} schema for processing data \hypertarget{struct_a_v_r_o_33d50daaa50ad7ec3c4e22d4f1eb6143}{
+\index{AVRO@{AVRO}!socket@{socket}}
+\index{socket@{socket}!AVRO@{AVRO}}
+\subsubsection[{socket}]{\setlength{\rightskip}{0pt plus 5cm}apr\_\-socket\_\-t$\ast$ {\bf AVRO::socket}}}
+\label{struct_a_v_r_o_33d50daaa50ad7ec3c4e22d4f1eb6143}
+
+
+Used by the socket-backed handle \hypertarget{struct_a_v_r_o_4ce667da8e13c2b9c464aa76b414ab82}{
+\index{AVRO@{AVRO}!used@{used}}
+\index{used@{used}!AVRO@{AVRO}}
+\subsubsection[{used}]{\setlength{\rightskip}{0pt plus 5cm}int64\_\-t {\bf AVRO::used}}}
+\label{struct_a_v_r_o_4ce667da8e13c2b9c464aa76b414ab82}
+
+
+Used by the memory-backed handle 
+
+The documentation for this struct was generated from the following file:\begin{CompactItemize}
+\item 
+\hyperlink{avro_8h}{avro.h}\end{CompactItemize}

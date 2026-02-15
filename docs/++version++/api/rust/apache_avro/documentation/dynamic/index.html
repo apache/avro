@@ -1,0 +1,176 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Using Avro in Rust, the dynamic way."><title>apache_avro::documentation::dynamic - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="apache_avro" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Module dynamic</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../apache_avro/index.html">apache_<wbr>avro</a><span class="version">0.22.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module dynamic</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#using-avro-in-rust-the-dynamic-way" title="Using Avro in Rust, the dynamic way.">Using Avro in Rust, the dynamic way.</a><ul><li><a href="#creating-a-schema" title="Creating a schema">Creating a schema</a></li><li><a href="#writing-data" title="Writing data">Writing data</a></li><li><a href="#reading-data" title="Reading data">Reading data</a></li><li><a href="#putting-everything-together" title="Putting everything together">Putting everything together</a></li></ul></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In apache_<wbr>avro::<wbr>documentation</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">apache_avro</a>::<wbr><a href="../index.html">documentation</a></div><h1>Module <span>dynamic</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/apache_avro/documentation/dynamic.rs.html#18-279">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="using-avro-in-rust-the-dynamic-way"><a class="doc-anchor" href="#using-avro-in-rust-the-dynamic-way">§</a>Using Avro in Rust, the dynamic way.</h2><h3 id="creating-a-schema"><a class="doc-anchor" href="#creating-a-schema">§</a>Creating a schema</h3>
+<p>An Avro data cannot exist without an Avro schema. Schemas <strong>must</strong> be used while writing and
+<strong>can</strong> be used while reading and they carry the information regarding the type of data we are
+handling. Avro schemas are used for both schema validation and resolution of Avro data.</p>
+<p>Avro schemas are defined in <strong>JSON</strong> format and can just be parsed out of a raw string:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>apache_avro::Schema;
+
+<span class="kw">let </span>raw_schema = <span class="string">r#"
+    {
+        "type": "record",
+        "name": "test",
+        "fields": [
+            {"name": "a", "type": "long", "default": 42},
+            {"name": "b", "type": "string"}
+        ]
+    }
+"#</span>;
+
+<span class="comment">// if the schema is not valid, this function will return an error
+</span><span class="kw">let </span>schema = Schema::parse_str(raw_schema).unwrap();
+
+<span class="comment">// schemas can be printed for debugging
+</span><span class="macro">println!</span>(<span class="string">"{:?}"</span>, schema);</code></pre></div>
+<p>Additionally, a list of definitions (which may depend on each other) can be given and all of
+them will be parsed into the corresponding schemas.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>apache_avro::Schema;
+
+<span class="kw">let </span>raw_schema_1 = <span class="string">r#"{
+        "name": "A",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": "float"}
+        ]
+    }"#</span>;
+
+<span class="comment">// This definition depends on the definition of A above
+</span><span class="kw">let </span>raw_schema_2 = <span class="string">r#"{
+        "name": "B",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": "A"}
+        ]
+    }"#</span>;
+
+<span class="comment">// if the schemas are not valid, this function will return an error
+</span><span class="kw">let </span>schemas = Schema::parse_list(<span class="kw-2">&amp;</span>[raw_schema_1, raw_schema_2]).unwrap();
+
+<span class="comment">// schemas can be printed for debugging
+</span><span class="macro">println!</span>(<span class="string">"{:?}"</span>, schemas);</code></pre></div><h3 id="writing-data"><a class="doc-anchor" href="#writing-data">§</a>Writing data</h3>
+<p>Once we have defined a schema, we are ready to serialize data in Avro, validating them against
+the provided schema in the process. As mentioned before, there are two ways of handling Avro
+data in Rust.</p>
+<p>Given that the schema we defined above is that of an Avro <em>Record</em>, we are going to use the
+associated type provided by the library to specify the data we want to serialize:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>apache_avro::types::Record;
+<span class="kw">use </span>apache_avro::Writer;
+<span class="comment">// a writer needs a schema and something to write to
+</span><span class="kw">let </span><span class="kw-2">mut </span>writer = Writer::new(<span class="kw-2">&amp;</span>schema, Vec::new()).unwrap();
+
+<span class="comment">// the Record type models our Record schema
+</span><span class="kw">let </span><span class="kw-2">mut </span>record = Record::new(writer.schema()).unwrap();
+record.put(<span class="string">"a"</span>, <span class="number">27i64</span>);
+record.put(<span class="string">"b"</span>, <span class="string">"foo"</span>);
+
+<span class="comment">// schema validation happens here
+</span>writer.append_value(record).unwrap();
+
+<span class="comment">// this is how to get back the resulting Avro bytecode
+// this performs a flush operation to make sure data has been written, so it can fail
+// you can also call `writer.flush()` yourself without consuming the writer
+</span><span class="kw">let </span>encoded = writer.into_inner().unwrap();</code></pre></div>
+<p>The vast majority of the times, schemas tend to define a record as a top-level container
+encapsulating all the values to convert as fields and providing documentation for them, but in
+case we want to directly define an Avro value, the library offers that capability via the
+<code>Value</code> interface.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>apache_avro::types::Value;
+
+<span class="kw">let </span><span class="kw-2">mut </span>value = Value::String(<span class="string">"foo"</span>.to_string());</code></pre></div><h3 id="reading-data"><a class="doc-anchor" href="#reading-data">§</a>Reading data</h3>
+<p>As far as reading Avro encoded data goes, we can just use the schema encoded with the data to
+read them. The library will do it automatically for us, as it already does for the compression
+codec:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>apache_avro::Reader;
+<span class="comment">// reader creation can fail in case the input to read from is not Avro-compatible or malformed
+</span><span class="kw">let </span>reader = Reader::new(<span class="kw-2">&amp;</span>input[..]).unwrap();
+
+<span class="comment">// value is a Result of an Avro Value in case the read operation fails
+</span><span class="kw">for </span>value <span class="kw">in </span>reader {
+    <span class="macro">println!</span>(<span class="string">"{:?}"</span>, value.unwrap());
+}</code></pre></div>
+<p>In case, instead, we want to specify a different (but compatible) reader schema from the schema
+the data has been written with, we can just do as the following:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>apache_avro::Schema;
+<span class="kw">use </span>apache_avro::Reader;
+
+<span class="kw">let </span>reader_raw_schema = <span class="string">r#"
+    {
+        "type": "record",
+        "name": "test",
+        "fields": [
+            {"name": "a", "type": "long", "default": 42},
+            {"name": "b", "type": "string"},
+            {"name": "c", "type": "long", "default": 43}
+        ]
+    }
+"#</span>;
+
+<span class="kw">let </span>reader_schema = Schema::parse_str(reader_raw_schema).unwrap();
+
+<span class="comment">// reader creation can fail in case the input to read from is not Avro-compatible or malformed
+</span><span class="kw">let </span>reader = Reader::with_schema(<span class="kw-2">&amp;</span>reader_schema, <span class="kw-2">&amp;</span>input[..]).unwrap();
+
+<span class="comment">// value is a Result of an Avro Value in case the read operation fails
+</span><span class="kw">for </span>value <span class="kw">in </span>reader {
+    <span class="macro">println!</span>(<span class="string">"{:?}"</span>, value.unwrap());
+}</code></pre></div>
+<p>The library will also automatically perform schema resolution while reading the data.</p>
+<p>For more information about schema compatibility and resolution, please refer to the
+<a href="https://avro.apache.org/docs/++version++/specification/#schema-declaration">Avro Specification</a>.</p>
+<h3 id="putting-everything-together"><a class="doc-anchor" href="#putting-everything-together">§</a>Putting everything together</h3>
+<p>The following is an example of how to combine everything showed so far and it is meant to be a
+quick reference of the <a href="../../types/enum.Value.html" title="enum apache_avro::types::Value"><code>Value</code></a> interface:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>apache_avro::{Codec, DeflateSettings, Reader, Schema, Writer, from_value, types::Record, Error};
+<span class="kw">use </span>serde::{Deserialize, Serialize};
+
+<span class="attr">#[derive(Debug, Deserialize, Serialize)]
+</span><span class="kw">struct </span>Test {
+    a: i64,
+    b: String,
+}
+
+<span class="kw">fn </span>main() -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+    <span class="kw">let </span>raw_schema = <span class="string">r#"
+        {
+            "type": "record",
+            "name": "test",
+            "fields": [
+                {"name": "a", "type": "long", "default": 42},
+                {"name": "b", "type": "string"}
+            ]
+        }
+    "#</span>;
+
+    <span class="kw">let </span>schema = Schema::parse_str(raw_schema)<span class="question-mark">?</span>;
+
+    <span class="macro">println!</span>(<span class="string">"{:?}"</span>, schema);
+
+    <span class="kw">let </span><span class="kw-2">mut </span>writer = Writer::with_codec(<span class="kw-2">&amp;</span>schema, Vec::new(), Codec::Deflate(DeflateSettings::default())).unwrap();
+
+    <span class="kw">let </span><span class="kw-2">mut </span>record = Record::new(writer.schema()).unwrap();
+    record.put(<span class="string">"a"</span>, <span class="number">27i64</span>);
+    record.put(<span class="string">"b"</span>, <span class="string">"foo"</span>);
+
+    writer.append_value(record)<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>test = Test {
+        a: <span class="number">27</span>,
+        b: <span class="string">"foo"</span>.to_owned(),
+    };
+
+    writer.append_ser(test)<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>input = writer.into_inner()<span class="question-mark">?</span>;
+    <span class="kw">let </span>reader = Reader::with_schema(<span class="kw-2">&amp;</span>schema, <span class="kw-2">&amp;</span>input[..])<span class="question-mark">?</span>;
+
+    <span class="kw">for </span>record <span class="kw">in </span>reader {
+        <span class="macro">println!</span>(<span class="string">"{:?}"</span>, from_value::&lt;Test&gt;(<span class="kw-2">&amp;</span>record<span class="question-mark">?</span>));
+    }
+    <span class="prelude-val">Ok</span>(())
+}</code></pre></div></div></details></section></div></main></body></html>

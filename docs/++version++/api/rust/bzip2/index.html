@@ -1,0 +1,42 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Bzip compression for Rust"><title>bzip2 - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="bzip2" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../static.files/storage-e2aeef58.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Crate bzip2</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../bzip2/index.html">bzip2</a><span class="version">0.6.1</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#example" title="Example">Example</a></li><li><a href="#multistreams-eg-wikipedia-or-pbzip2" title="Multistreams (e.g. Wikipedia or pbzip2)">Multistreams (e.g. Wikipedia or pbzip2)</a></li></ul><h3><a href="#modules">Crate Items</a></h3><ul class="block"><li><a href="#modules" title="Modules">Modules</a></li><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#enums" title="Enums">Enums</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>bzip2</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/bzip2/lib.rs.html#1-160">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Bzip compression for Rust</p>
+<p>This library contains bindings to <a href="https://sourceware.org/bzip2/manual/manual.html"><code>libbz2</code></a> to support bzip compression and
+decompression for Rust. The streams offered in this library are primarily
+found in the <a href="read/index.html" title="mod bzip2::read"><code>read</code></a> and <a href="write/index.html" title="mod bzip2::write"><code>write</code></a> modules. Both compressors and
+decompressors are available in each module depending on what operation you
+need.</p>
+<p>A more low-level interface, much closer to the interface of <a href="https://sourceware.org/bzip2/manual/manual.html"><code>libbz2</code></a>, is
+available via the <a href="struct.Compress.html" title="struct bzip2::Compress"><code>Compress</code></a> and <a href="struct.Decompress.html" title="struct bzip2::Decompress"><code>Decompress</code></a> structs.</p>
+<h2 id="example"><a class="doc-anchor" href="#example">§</a>Example</h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::io::{BufRead, Read, Write};
+<span class="kw">use </span>bzip2::Compression;
+<span class="kw">use </span>bzip2::read::{BzEncoder, BzDecoder};
+
+<span class="comment">// Round trip some bytes from a byte source, into a compressor, into a
+// decompressor, and finally into a vector.
+</span><span class="kw">let </span>data = <span class="string">"Hello, World!"</span>.as_bytes();
+<span class="kw">let </span>compressor = BzEncoder::new(data, Compression::best());
+<span class="kw">let </span><span class="kw-2">mut </span>decompressor = BzDecoder::new(compressor);
+
+<span class="kw">let </span><span class="kw-2">mut </span>contents = String::new();
+decompressor.read_to_string(<span class="kw-2">&amp;mut </span>contents).unwrap();
+<span class="macro">assert_eq!</span>(contents, <span class="string">"Hello, World!"</span>);</code></pre></div><h2 id="multistreams-eg-wikipedia-or-pbzip2"><a class="doc-anchor" href="#multistreams-eg-wikipedia-or-pbzip2">§</a>Multistreams (e.g. Wikipedia or pbzip2)</h2>
+<p>Some tools such as pbzip2 or data from sources such as Wikipedia
+are encoded as so called bzip2 “multistreams,” meaning they
+contain back to back chunks of bzip’d data. <code>BzDecoder</code> does not
+attempt to convert anything after the first bzip chunk in the
+source stream. Thus, if you wish to decode all bzip chunks from
+the input until end of file, use <code>MultiBzDecoder</code>.</p>
+<p><em>Protip</em>: If you use <code>BzDecoder</code> to decode data and the output is
+incomplete and exactly 900K bytes, you probably need a
+<code>MultiBzDecoder</code>.</p>
+<p>All methods are internally capable of working with streams that may return
+<a href="https://doc.rust-lang.org/1.93.1/std/io/error/enum.ErrorKind.html#variant.WouldBlock" title="variant std::io::error::ErrorKind::WouldBlock"><code>ErrorKind::WouldBlock</code></a> when they’re not
+ready to perform the particular operation.</p>
+<p>Note that care needs to be taken when using these objects, however. The
+Tokio runtime, in particular, requires that data is fully flushed before
+dropping streams. For compatibility with blocking streams all streams are
+flushed/written when they are dropped, and this is not always a suitable
+time to perform I/O. If I/O streams are flushed before drop, however, then
+these operations will be a noop.</p>
+</div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="bufread/index.html" title="mod bzip2::bufread">bufread</a></dt><dd>I/O streams for wrapping <code>BufRead</code> types as encoders/decoders</dd><dt><a class="mod" href="read/index.html" title="mod bzip2::read">read</a></dt><dd>Reader-based compression/decompression streams</dd><dt><a class="mod" href="write/index.html" title="mod bzip2::write">write</a></dt><dd>Writer-based compression/decompression streams</dd></dl><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.Compress.html" title="struct bzip2::Compress">Compress</a></dt><dd>Representation of an in-memory compression stream.</dd><dt><a class="struct" href="struct.Compression.html" title="struct bzip2::Compression">Compression</a></dt><dd>When compressing data, the compression level can be specified by a value in
+this enum.</dd><dt><a class="struct" href="struct.Decompress.html" title="struct bzip2::Decompress">Decompress</a></dt><dd>Representation of an in-memory decompression stream.</dd></dl><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><dl class="item-table"><dt><a class="enum" href="enum.Action.html" title="enum bzip2::Action">Action</a></dt><dd>Possible actions to take on compression.</dd><dt><a class="enum" href="enum.Error.html" title="enum bzip2::Error">Error</a></dt><dd>Fatal errors encountered when compressing/decompressing bytes.</dd><dt><a class="enum" href="enum.Status.html" title="enum bzip2::Status">Status</a></dt><dd>Result of compression or decompression</dd></dl></section></div></main></body></html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A primer on Apache Avro"><title>apache_avro::documentation::primer - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="apache_avro" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Module primer</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../apache_avro/index.html">apache_<wbr>avro</a><span class="version">0.22.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module primer</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#a-primer-on-apache-avro" title="A primer on Apache Avro">A primer on Apache Avro</a><ul><li><a href="#schemas" title="Schemas">Schemas</a></li><li><a href="#data-serialization-and-deserialization" title="Data serialization and deserialization">Data serialization and deserialization</a></li><li><a href="#compression" title="Compression">Compression</a></li></ul></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In apache_<wbr>avro::<wbr>documentation</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">apache_avro</a>::<wbr><a href="../index.html">documentation</a></div><h1>Module <span>primer</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/apache_avro/documentation/primer.rs.html#18-105">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="a-primer-on-apache-avro"><a class="doc-anchor" href="#a-primer-on-apache-avro">§</a>A primer on Apache Avro</h2>
+<p>Avro is a schema based encoding system, like Protobuf. This means that if you have raw Avro data
+without a schema, you are unable to decode it. It also means that the format is very space
+efficient.</p>
+<h3 id="schemas"><a class="doc-anchor" href="#schemas">§</a>Schemas</h3>
+<p>Schemas are defined in JSON and look like this:</p>
+<div class="example-wrap"><pre class="language-json"><code>{
+    &quot;type&quot;: &quot;record&quot;,
+    &quot;name&quot;: &quot;example&quot;,
+    &quot;fields&quot;: [
+        {&quot;name&quot;: &quot;a&quot;, &quot;type&quot;: &quot;long&quot;, &quot;default&quot;: 42},
+        {&quot;name&quot;: &quot;b&quot;, &quot;type&quot;: &quot;string&quot;}
+    ]
+}</code></pre></div>
+<p>For all possible types and extra attributes, see <a href="https://avro.apache.org/docs/++version++/specification/#schema-declaration">the schema section of the specification</a>.</p>
+<p>Schemas can depend on each other. For example, the schema defined above can be used again or a
+schema can include itself:</p>
+<div class="example-wrap"><pre class="language-json"><code>{
+    &quot;type&quot;: &quot;record&quot;,
+    &quot;name&quot;: &quot;references&quot;,
+    &quot;fields&quot;: [
+        {&quot;name&quot;: &quot;a&quot;, &quot;type&quot;: &quot;example&quot;},
+        {&quot;name&quot;: &quot;b&quot;, &quot;type&quot;: &quot;bytes&quot;},
+        {&quot;name&quot;: &quot;recursive&quot;, &quot;type&quot;: [&quot;null&quot;, &quot;references&quot;]}
+    ]
+}</code></pre></div>
+<p>Schemas are represented using the <a href="../../schema/enum.Schema.html" title="enum apache_avro::schema::Schema"><code>Schema</code></a> type.</p>
+<h3 id="data-serialization-and-deserialization"><a class="doc-anchor" href="#data-serialization-and-deserialization">§</a>Data serialization and deserialization</h3>
+<p>There are various formats to encode and decode Avro data. Most formats use the Avro binary encoding.</p>
+<h5 id="object-container-file"><a class="doc-anchor" href="#object-container-file">§</a><a href="https://avro.apache.org/docs/++version++/specification/#object-container-files">Object Container File</a></h5>
+<p>This is the most common file format used for Avro, it uses the binary encoding. It includes the
+schema in the file, and can therefore be decoded by a reader who doesn’t have the schema. It includes
+many records in one file.</p>
+<p>This file format can be used via the <a href="../../struct.Reader.html" title="struct apache_avro::Reader"><code>Reader</code></a> and <a href="../../struct.Writer.html" title="struct apache_avro::Writer"><code>Writer</code></a> types.</p>
+<h5 id="single-object-encoding"><a class="doc-anchor" href="#single-object-encoding">§</a><a href="https://avro.apache.org/docs/++version++/specification/#single-object-encoding">Single Object Encoding</a></h5>
+<p>This file format also uses the binary encoding, but the schema is not included directly. It instead
+includes a fingerprint of the schema, which a reader can look up in a schema database or compare
+with the fingerprint that the reader is expecting. This file format always contains one record.</p>
+<p>This file format can be used via the <a href="../../struct.GenericSingleObjectReader.html" title="struct apache_avro::GenericSingleObjectReader"><code>GenericSingleObjectReader</code></a>,
+<a href="../../struct.GenericSingleObjectWriter.html" title="struct apache_avro::GenericSingleObjectWriter"><code>GenericSingleObjectWriter</code></a>, <a href="../../struct.SpecificSingleObjectReader.html" title="struct apache_avro::SpecificSingleObjectReader"><code>SpecificSingleObjectReader</code></a>,
+and <a href="../../struct.SpecificSingleObjectWriter.html" title="struct apache_avro::SpecificSingleObjectWriter"><code>SpecificSingleObjectWriter</code></a> types.</p>
+<h5 id="avro-datums"><a class="doc-anchor" href="#avro-datums">§</a>Avro datums</h5>
+<p>This is not really a file format, as it’s just the raw Avro binary data. It does not include a
+schema and can therefore not be decoded without the reader knowing <strong>exactly</strong> which schema was
+used to write it.</p>
+<p>This file format can be used via the <a href="../../fn.to_avro_datum.html" title="fn apache_avro::to_avro_datum"><code>to_avro_datum</code></a>, <a href="../../fn.from_avro_datum.html" title="fn apache_avro::from_avro_datum"><code>from_avro_datum</code></a>,
+<a href="../../fn.to_avro_datum_schemata.html" title="fn apache_avro::to_avro_datum_schemata"><code>to_avro_datum_schemata</code></a>, <a href="../../fn.from_avro_datum_schemata.html" title="fn apache_avro::from_avro_datum_schemata"><code>from_avro_datum_schemata</code></a>,
+<a href="../../fn.from_avro_datum_reader_schemata.html" title="fn apache_avro::from_avro_datum_reader_schemata"><code>from_avro_datum_reader_schemata</code></a>, and
+<a href="../../fn.write_avro_datum_ref.html" title="fn apache_avro::write_avro_datum_ref"><code>write_avro_datum_ref</code></a> functions.</p>
+<h5 id="avro-json"><a class="doc-anchor" href="#avro-json">§</a><a href="https://avro.apache.org/docs/++version++/specification/#json-encoding">Avro JSON</a></h5>
+<p>Not be confused with the schema definition which is also in JSON. This is the Avro data encoded
+in JSON.</p>
+<p>It can be used via the <a href="../../types/enum.Value.html" title="enum apache_avro::types::Value"><code>From&lt;serde_json::Value&gt; for Value</code></a> and
+<a href="../../types/enum.Value.html" title="enum apache_avro::types::Value"><code>TryFrom&lt;Value&gt; for serde_json::Value</code></a> implementations.</p>
+<h3 id="compression"><a class="doc-anchor" href="#compression">§</a>Compression</h3>
+<p>For records with low entropy it can be useful to compress the encoded data. Using the <a href="#object-container-file">Object Container File format</a>
+this is directly possible in Avro. Avro supports various compression codecs:</p>
+<ul>
+<li>deflate</li>
+<li>bzip2</li>
+<li>Snappy</li>
+<li>XZ</li>
+<li>Zstandard</li>
+</ul>
+<p>All readers are required to implement the <code>deflate</code> codec, but most implementations implement most
+codecs.</p>
+</div></details></section></div></main></body></html>

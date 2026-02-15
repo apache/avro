@@ -1,0 +1,73 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Using Avro in Rust, the Serde way."><title>apache_avro::serde - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="apache_avro" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Module serde</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../apache_avro/index.html">apache_<wbr>avro</a><span class="version">0.22.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module serde</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#using-avro-in-rust-the-serde-way" title="Using Avro in Rust, the Serde way.">Using Avro in Rust, the Serde way.</a><ul><li><a href="#schemas" title="Schemas">Schemas</a></li><li><a href="#serializing-data" title="Serializing data">Serializing data</a></li><li><a href="#deserializing-data" title="Deserializing data">Deserializing data</a></li><li><a href="#putting-it-all-together" title="Putting it all together">Putting it all together</a></li></ul></li></ul><h3><a href="#modules">Module Items</a></h3><ul class="block"><li><a href="#modules" title="Modules">Modules</a></li><li><a href="#traits" title="Traits">Traits</a></li><li><a href="#functions" title="Functions">Functions</a></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="../index.html">In crate apache_<wbr>avro</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../index.html">apache_avro</a></div><h1>Module <span>serde</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../src/apache_avro/serde/mod.rs.html#18-123">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="using-avro-in-rust-the-serde-way"><a class="doc-anchor" href="#using-avro-in-rust-the-serde-way">§</a>Using Avro in Rust, the Serde way.</h2>
+<p>Avro is a schema-based format, this means it requires a few extra steps to use compared to
+a data format like JSON.</p>
+<h3 id="schemas"><a class="doc-anchor" href="#schemas">§</a>Schemas</h3>
+<p>It’s strongly recommended to derive the schemas for your types using the <a href="trait.AvroSchema.html" title="trait apache_avro::serde::AvroSchema"><code>AvroSchema</code></a> derive macro.
+The macro uses the Serde attributes to generate a matching schema and checks that no attributes are
+used that are incompatible with the Serde implementation in this crate. See <a href="trait.AvroSchema.html" title="trait apache_avro::serde::AvroSchema">the trait documentation</a> for
+details on how to change the generated schema.</p>
+<p>Alternatively, you can write your own schema. If you go down this path, it is recommended you start with
+the schema derived by <a href="trait.AvroSchema.html" title="trait apache_avro::serde::AvroSchema"><code>AvroSchema</code></a> and then modify it to fit your needs.</p>
+<h5 id="performance-pitfall"><a class="doc-anchor" href="#performance-pitfall">§</a>Performance pitfall</h5>
+<p>One performance pitfall with Serde is (de)serializing bytes. The implementation of <a href="../../serde_core/ser/trait.Serialize.html" title="trait serde_core::ser::Serialize"><code>Serialize</code></a>
+and <a href="../../serde_core/de/trait.Deserialize.html" title="trait serde_core::de::Deserialize"><code>Deserialize</code></a> for types as <code>Vec&lt;u8&gt;</code>, <code>&amp;[u8]</code> and <code>Cow&lt;[u8]&gt;</code> will
+all use the array of integers representation. This can normally be fixed using the <a href="../../serde_bytes/index.html" title="mod serde_bytes"><code>serde_bytes</code></a>
+crate, however this crate also needs some extra information. Therefore, you need to use the
+<a href="bytes/index.html" title="mod apache_avro::serde::bytes"><code>bytes</code></a>, <a href="bytes_opt/index.html" title="mod apache_avro::serde::bytes_opt"><code>bytes_opt</code></a>, <a href="fixed/index.html" title="mod apache_avro::serde::fixed"><code>fixed</code></a>, <a href="fixed_opt/index.html" title="mod apache_avro::serde::fixed_opt"><code>fixed_opt</code></a>, <a href="slice/index.html" title="mod apache_avro::serde::slice"><code>slice</code></a>, and <a href="slice_opt/index.html" title="mod apache_avro::serde::slice_opt"><code>slice_opt</code></a> modules of
+this crate instead.</p>
+<h5 id="using-existing-schemas"><a class="doc-anchor" href="#using-existing-schemas">§</a>Using existing schemas</h5>
+<p>If you have schemas that are already being used in other parts of your software stack, generating types
+from the schema can be very useful. There is a <strong>third-party</strong> crate <a href="https://docs.rs/rsgen-avro/latest/rsgen_avro/"><code>rsgen-avro</code></a> that implements this.</p>
+<h3 id="serializing-data"><a class="doc-anchor" href="#serializing-data">§</a>Serializing data</h3>
+<p>Writing data is very simple. Use <a href="trait.AvroSchema.html#tymethod.get_schema" title="associated function apache_avro::serde::AvroSchema::get_schema"><code>T::get_schema()</code></a> to get the schema
+for the type you want to serialize. It is recommended to keep this schema around as long as possible
+as generating the schema is quite expensive. Then create a <a href="../struct.Writer.html" title="struct apache_avro::Writer"><code>Writer</code></a> with your schema
+and use the <a href="../struct.Writer.html#method.append_ser" title="method apache_avro::Writer::append_ser"><code>append_ser()</code></a> function to serialize your data.</p>
+<h3 id="deserializing-data"><a class="doc-anchor" href="#deserializing-data">§</a>Deserializing data</h3>
+<p>Reading data is both simpler and more complex than writing. On the one hand, you don’t need to
+generate a schema, as the Avro file has it embedded. But you can’t directly deserialize from a
+<a href="../struct.Reader.html" title="struct apache_avro::Reader"><code>Reader</code></a>. Instead, you have to iterate over the <a href="../types/enum.Value.html" title="enum apache_avro::types::Value"><code>Value</code></a>s
+in the reader and deserialize from those via <a href="fn.from_value.html" title="fn apache_avro::serde::from_value"><code>from_value</code></a>.</p>
+<h3 id="putting-it-all-together"><a class="doc-anchor" href="#putting-it-all-together">§</a>Putting it all together</h3>
+<p>The following is an example of how to combine everything showed so far and it is meant to be a
+quick reference of the Serde interface:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[derive(AvroSchema, Serialize, Deserialize, PartialEq, Debug)]
+</span><span class="kw">struct </span>Foo {
+    a: i64,
+    b: String,
+    <span class="comment">// Otherwise it will be serialized as an array of integers
+    </span><span class="attr">#[avro(with)]
+    #[serde(with = <span class="string">"apache_avro::serde::bytes"</span>)]
+    </span>c: Vec&lt;u8&gt;,
+}
+
+<span class="comment">// Creating this schema is expensive, reuse it as much as possible
+</span><span class="kw">let </span>schema = Foo::get_schema();
+<span class="comment">// A writer needs the schema of the type that is going to be written
+</span><span class="kw">let </span><span class="kw-2">mut </span>writer = Writer::new(<span class="kw-2">&amp;</span>schema, Vec::new())<span class="question-mark">?</span>;
+
+<span class="kw">let </span>foo = Foo {
+    a: <span class="number">42</span>,
+    b: <span class="string">"Hello"</span>.to_string(),
+    c: <span class="string">b"Data"</span>.to_vec()
+};
+
+<span class="comment">// Serialize as many items as you want.
+</span>writer.append_ser(<span class="kw-2">&amp;</span>foo)<span class="question-mark">?</span>;
+writer.append_ser(<span class="kw-2">&amp;</span>foo)<span class="question-mark">?</span>;
+writer.append_ser(<span class="kw-2">&amp;</span>foo)<span class="question-mark">?</span>;
+
+<span class="comment">// Always flush
+</span>writer.flush()<span class="question-mark">?</span>;
+<span class="comment">// Or consume the writer
+</span><span class="kw">let </span>data = writer.into_inner()<span class="question-mark">?</span>;
+
+<span class="comment">// The reader does not need a schema as it's included in the data
+</span><span class="kw">let </span>reader = Reader::new(Cursor::new(data))<span class="question-mark">?</span>;
+<span class="comment">// The reader is an iterator
+</span><span class="kw">for </span>result <span class="kw">in </span>reader {
+    <span class="kw">let </span>value = result<span class="question-mark">?</span>;
+    <span class="kw">let </span>new_foo: Foo = from_value(<span class="kw-2">&amp;</span>value)<span class="question-mark">?</span>;
+    <span class="macro">assert_eq!</span>(new_foo, foo);
+}</code></pre></div></div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="bytes/index.html" title="mod apache_avro::serde::bytes">bytes</a></dt><dd>Efficient (de)serialization of Avro bytes values.</dd><dt><a class="mod" href="bytes_opt/index.html" title="mod apache_avro::serde::bytes_opt">bytes_<wbr>opt</a></dt><dd>Efficient (de)serialization of optional Avro bytes values.</dd><dt><a class="mod" href="fixed/index.html" title="mod apache_avro::serde::fixed">fixed</a></dt><dd>Efficient (de)serialization of Avro fixed values.</dd><dt><a class="mod" href="fixed_opt/index.html" title="mod apache_avro::serde::fixed_opt">fixed_<wbr>opt</a></dt><dd>Efficient (de)serialization of optional Avro fixed values.</dd><dt><a class="mod" href="slice/index.html" title="mod apache_avro::serde::slice">slice</a></dt><dd>Efficient (de)serialization of Avro bytes/fixed borrowed values.</dd><dt><a class="mod" href="slice_opt/index.html" title="mod apache_avro::serde::slice_opt">slice_<wbr>opt</a></dt><dd>Efficient (de)serialization of optional Avro bytes/fixed borrowed values.</dd></dl><h2 id="traits" class="section-header">Traits<a href="#traits" class="anchor">§</a></h2><dl class="item-table"><dt><a class="trait" href="trait.AvroSchema.html" title="trait apache_avro::serde::AvroSchema">Avro<wbr>Schema</a></dt><dd>Trait for types that serve as an Avro data model.</dd><dt><a class="trait" href="trait.AvroSchemaComponent.html" title="trait apache_avro::serde::AvroSchemaComponent">Avro<wbr>Schema<wbr>Component</a></dt><dd>Trait for types that serve as fully defined components inside an Avro data model.</dd></dl><h2 id="functions" class="section-header">Functions<a href="#functions" class="anchor">§</a></h2><dl class="item-table"><dt><a class="fn" href="fn.from_value.html" title="fn apache_avro::serde::from_value">from_<wbr>value</a></dt><dd>Interpret a <code>Value</code> as an instance of type <code>D</code>.</dd><dt><a class="fn" href="fn.to_value.html" title="fn apache_avro::serde::to_value">to_<wbr>value</a></dt><dd>Interpret a serializeable instance as a <code>Value</code>.</dd></dl></section></div></main></body></html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="This macro is used to turn a regular struct into a self-referencing one. An example:"><title>self_referencing in ouroboros - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="ouroboros" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../static.files/storage-e2aeef58.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc attr"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">self_referencing</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../ouroboros/index.html">ouroboros</a><span class="version">0.18.5</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">self_<wbr>referencing</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#definitions" title="Definitions">Definitions</a></li><li><a href="#usage" title="Usage">Usage</a></li><li><a href="#you-must-comply-with-these-limitations" title="You must comply with these limitations">You must comply with these limitations</a></li><li><a href="#flexibility-of-this-crate" title="Flexibility of this crate">Flexibility of this crate</a></li><li><a href="#covariance" title="Covariance">Covariance</a></li><li><a href="#async-usage" title="Async usage">Async usage</a></li><li><a href="#async-send" title="Async Send">Async Send</a></li><li><a href="#what-does-the-macro-generate" title="What does the macro generate?">What does the macro generate?</a><ul><li><a href="#a-quick-note-on-visibility" title="A quick note on visibility">A quick note on visibility</a></li></ul></li><li><a href="#list-of-generated-items" title="List of generated items">List of generated items</a><ul><li><a href="#mystructnewfields---mystruct" title="`MyStruct::new(fields...) -&#62; MyStruct`"><code>MyStruct::new(fields...) -&gt; MyStruct</code></a></li><li><a href="#mystructnew_asyncfields---mystruct" title="`MyStruct::new_async(fields...) -&#62; MyStruct`"><code>MyStruct::new_async(fields...) -&gt; MyStruct</code></a></li><li><a href="#mystructnew_async_sendfields---mystruct" title="`MyStruct::new_async_send(fields...) -&#62; MyStruct`"><code>MyStruct::new_async_send(fields...) -&gt; MyStruct</code></a></li><li><a href="#mystructbuilder" title="`MyStructBuilder`"><code>MyStructBuilder</code></a></li><li><a href="#mystructasyncbuilder" title="`MyStructAsyncBuilder`"><code>MyStructAsyncBuilder</code></a></li><li><a href="#mystructasyncsendbuilder" title="`MyStructAsyncSendBuilder`"><code>MyStructAsyncSendBuilder</code></a></li><li><a href="#mystructtry_newefields---resultmystruct-e" title="`MyStruct::try_new&#60;E&#62;(fields...) -&#62; Result&#60;MyStruct, E&#62;`"><code>MyStruct::try_new&lt;E&gt;(fields...) -&gt; Result&lt;MyStruct, E&gt;</code></a></li><li><a href="#mystructtry_new_asyncefields---resultmystruct-e" title="`MyStruct::try_new_async&#60;E&#62;(fields...) -&#62; Result&#60;MyStruct, E&#62;`"><code>MyStruct::try_new_async&lt;E&gt;(fields...) -&gt; Result&lt;MyStruct, E&gt;</code></a></li><li><a href="#mystructtry_new_async_sendefields---resultmystruct-e" title="`MyStruct::try_new_async_send&#60;E&#62;(fields...) -&#62; Result&#60;MyStruct, E&#62;`"><code>MyStruct::try_new_async_send&lt;E&gt;(fields...) -&gt; Result&lt;MyStruct, E&gt;</code></a></li><li><a href="#mystructtry_new_or_recover_asyncefields---resultmystruct-e-heads" title="`MyStruct::try_new_or_recover_async&#60;E&#62;(fields...) -&#62; Result&#60;MyStruct, (E, Heads)&#62;`"><code>MyStruct::try_new_or_recover_async&lt;E&gt;(fields...) -&gt; Result&lt;MyStruct, (E, Heads)&gt;</code></a></li><li><a href="#mystructtry_new_or_recover_async_sendefields---resultmystruct-e-heads" title="`MyStruct::try_new_or_recover_async_send&#60;E&#62;(fields...) -&#62; Result&#60;MyStruct, (E, Heads)&#62;`"><code>MyStruct::try_new_or_recover_async_send&lt;E&gt;(fields...) -&gt; Result&lt;MyStruct, (E, Heads)&gt;</code></a></li><li><a href="#mystructwith_fieldrself-user-fnoncefield-fieldtype---r---r" title="`MyStruct::with_FIELD&#60;R&#62;(&#38;self, user: FnOnce(field: &#38;FieldType) -&#62; R) -&#62; R`"><code>MyStruct::with_FIELD&lt;R&gt;(&amp;self, user: FnOnce(field: &amp;FieldType) -&gt; R) -&gt; R</code></a></li><li><a href="#mystructborrow_fieldself---fieldtype" title="`MyStruct::borrow_FIELD(&#38;self) -&#62; &#38;FieldType`"><code>MyStruct::borrow_FIELD(&amp;self) -&gt; &amp;FieldType</code></a></li><li><a href="#mystructwith_field_mutrmut-self-user-fnoncefield-mut-fieldtype---r---r" title="`MyStruct::with_FIELD_mut&#60;R&#62;(&#38;mut self, user: FnOnce(field: &#38;mut FieldType) -&#62; R) -&#62; R`"><code>MyStruct::with_FIELD_mut&lt;R&gt;(&amp;mut self, user: FnOnce(field: &amp;mut FieldType) -&gt; R) -&gt; R</code></a></li><li><a href="#mystructwithrself-user-fnoncefields-allfields---r---r" title="`MyStruct::with&#60;R&#62;(&#38;self, user: FnOnce(fields: AllFields) -&#62; R) -&#62; R`"><code>MyStruct::with&lt;R&gt;(&amp;self, user: FnOnce(fields: AllFields) -&gt; R) -&gt; R</code></a></li><li><a href="#mystructwith_mutrself-user-fnoncefields-allfields---r---r" title="`MyStruct::with_mut&#60;R&#62;(&#38;self, user: FnOnce(fields: AllFields) -&#62; R) -&#62; R`"><code>MyStruct::with_mut&lt;R&gt;(&amp;self, user: FnOnce(fields: AllFields) -&gt; R) -&gt; R</code></a></li><li><a href="#mystructinto_headsself---heads" title="`MyStruct::into_heads(self) -&#62; Heads`"><code>MyStruct::into_heads(self) -&gt; Heads</code></a></li></ul></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="index.html">In crate ouroboros</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="index.html">ouroboros</a></div><h1>Attribute Macro <span class="attr">self_<wbr>referencing</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/ouroboros_macro/lib.rs.html#133">Source</a> </span></div><pre class="rust item-decl"><code>#[self_referencing]</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>This macro is used to turn a regular struct into a self-referencing one. An example:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>ouroboros::self_referencing;
+
+<span class="attr">#[self_referencing]
+</span><span class="kw">struct </span>MyStruct {
+    int_data: i32,
+    float_data: f32,
+    <span class="attr">#[borrows(int_data)]
+    </span><span class="comment">// the 'this lifetime is created by the #[self_referencing] macro
+    // and should be used on all references marked by the #[borrows] macro
+    </span>int_reference: <span class="kw-2">&amp;</span><span class="lifetime">'this </span>i32,
+    <span class="attr">#[borrows(<span class="kw-2">mut </span>float_data)]
+    </span>float_reference: <span class="kw-2">&amp;</span><span class="lifetime">'this </span><span class="kw-2">mut </span>f32,
+}
+
+<span class="kw">fn </span>main() {
+    <span class="comment">// The builder is created by the #[self_referencing] macro
+    // and is used to create the struct
+    </span><span class="kw">let </span><span class="kw-2">mut </span>my_value = MyStructBuilder {
+        int_data: <span class="number">42</span>,
+        float_data: <span class="number">3.14</span>,
+
+        <span class="comment">// Note that the name of the field in the builder
+        // is the name of the field in the struct + `_builder`
+        // ie: {field_name}_builder
+        // the closure that assigns the value for the field will be passed
+        // a reference to the field(s) defined in the #[borrows] macro
+
+        </span>int_reference_builder: |int_data: <span class="kw-2">&amp;</span>i32| int_data,
+        float_reference_builder: |float_data: <span class="kw-2">&amp;mut </span>f32| float_data,
+    }.build();
+
+    <span class="comment">// The fields in the original struct can not be accessed directly
+    // The builder creates accessor methods which are called borrow_{field_name}()
+
+    // Prints 42
+    </span><span class="macro">println!</span>(<span class="string">"{:?}"</span>, my_value.borrow_int_data());
+    <span class="comment">// Prints 3.14
+    </span><span class="macro">println!</span>(<span class="string">"{:?}"</span>, my_value.borrow_float_reference());
+    <span class="comment">// Sets the value of float_data to 84.0
+    </span>my_value.with_mut(|fields| {
+        <span class="kw-2">**</span>fields.float_reference = (<span class="kw-2">**</span>fields.int_reference <span class="kw">as </span>f32) * <span class="number">2.0</span>;
+    });
+
+    <span class="comment">// We can hold on to this reference...
+    </span><span class="kw">let </span>int_ref = <span class="kw-2">*</span>my_value.borrow_int_reference();
+    <span class="macro">println!</span>(<span class="string">"{:?}"</span>, <span class="kw-2">*</span>int_ref);
+    <span class="comment">// As long as the struct is still alive.
+    </span>drop(my_value);
+    <span class="comment">// This will cause an error!
+    // println!("{:?}", *int_ref);
+</span>}</code></pre></div>
+<p>To explain the features and limitations of this crate, some definitions are necessary:</p>
+<h2 id="definitions"><a class="doc-anchor" href="#definitions">§</a>Definitions</h2>
+<ul>
+<li><strong>immutably borrowed field</strong>: a field which is immutably borrowed by at least one other field.</li>
+<li><strong>mutably borrowed field</strong>: a field which is mutably borrowed by exactly one other field.</li>
+<li><strong>self-referencing field</strong>: a field which borrows at least one other field.</li>
+<li><strong>head field</strong>: a field which does not borrow any other fields, I.E. not self-referencing.
+This does not include fields with empty borrows annotations (<code>#[borrows()]</code>.)</li>
+<li><strong>tail field</strong>: a field which is not borrowed by any other fields.</li>
+</ul>
+<h2 id="usage"><a class="doc-anchor" href="#usage">§</a>Usage</h2>
+<p>To make a self-referencing struct, you must write a struct definition and place
+<code>#[self_referencing]</code> on top. For every field that borrows other fields, you must place
+<code>#[borrows()]</code> on top and place inside the parenthesis a list of fields that it borrows. Mut can
+be prefixed to indicate that a mutable borrow is required. For example,
+<code>#[borrows(a, b, mut c)]</code> indicates that the first two fields need to be borrowed immutably and
+the third needs to be borrowed mutably. You can also use <code>#[borrows()]</code> without any arguments to
+indicate a field that will eventually borrow from the struct, but does not borrow anything when
+first created. For example, you could use this on a field like <code>error: Option&lt;&amp;'this str&gt;</code>.</p>
+<h2 id="you-must-comply-with-these-limitations"><a class="doc-anchor" href="#you-must-comply-with-these-limitations">§</a>You must comply with these limitations</h2>
+<ul>
+<li>Fields must be declared before the first time they are borrowed.</li>
+<li>Normal borrowing rules apply, E.G. a field cannot be borrowed mutably twice.</li>
+<li>Fields that use the <code>'this</code> lifetime must have a corresponding <code>#[borrows()]</code> annotation.
+The error for this needs some work, currently you will get an error saying that <code>'this</code> is
+undefined at the location it was illegally used in.</li>
+</ul>
+<p>Violating them will result in an error message directly pointing out the violated rule.</p>
+<h2 id="flexibility-of-this-crate"><a class="doc-anchor" href="#flexibility-of-this-crate">§</a>Flexibility of this crate</h2>
+<p>The example above uses plain references as the self-referencing part of the struct, but you can
+use anything that is dependent on lifetimes of objects inside the struct. For example, you could
+do something like this:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>ouroboros::self_referencing;
+
+<span class="kw">pub struct </span>ComplexData&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; {
+    aref: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>i32,
+    bref: <span class="kw-2">&amp;</span><span class="lifetime">'b </span><span class="kw-2">mut </span>i32,
+    number: i32,
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; ComplexData&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; {
+    <span class="kw">fn </span>new(aref: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>i32, bref: <span class="kw-2">&amp;</span><span class="lifetime">'b </span><span class="kw-2">mut </span>i32, number: i32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ aref, bref, number }
+    }
+
+    <span class="doccomment">/// Copies the value aref points to into what bref points to.
+    </span><span class="kw">fn </span>transfer(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw-2">*</span><span class="self">self</span>.bref = <span class="kw-2">*</span><span class="self">self</span>.aref;
+    }
+
+    <span class="doccomment">/// Prints the value bref points to.
+    </span><span class="kw">fn </span>print_bref(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="macro">println!</span>(<span class="string">"{}"</span>, <span class="kw-2">*</span><span class="self">self</span>.bref);
+    }
+}
+
+<span class="kw">fn </span>main() {
+    <span class="attr">#[self_referencing]
+    </span><span class="kw">struct </span>DataStorage {
+        immutable: i32,
+        mutable: i32,
+        <span class="attr">#[borrows(immutable, <span class="kw-2">mut </span>mutable)]
+        #[not_covariant]
+        </span>complex_data: ComplexData&lt;<span class="lifetime">'this</span>, <span class="lifetime">'this</span>&gt;,
+    }
+
+    <span class="kw">let </span><span class="kw-2">mut </span>data_storage = DataStorageBuilder {
+        immutable: <span class="number">10</span>,
+        mutable: <span class="number">20</span>,
+        complex_data_builder: |i: <span class="kw-2">&amp;</span>i32, m: <span class="kw-2">&amp;mut </span>i32| ComplexData::new(i, m, <span class="number">12345</span>),
+    }.build();
+    data_storage.with_complex_data_mut(|data| {
+        <span class="comment">// Copies the value in immutable into mutable.
+        </span>data.transfer();
+        <span class="comment">// Prints 10
+        </span>data.print_bref();
+    });
+}</code></pre></div><h2 id="covariance"><a class="doc-anchor" href="#covariance">§</a>Covariance</h2>
+<p>Many types in Rust have a property called “covariance”. In practical tearms, this means that a
+covariant type like <code>Box&lt;&amp;'this i32&gt;</code> can be used as a <code>Box&lt;&amp;'a i32&gt;</code> as long as <code>'a</code> is
+smaller than <code>'this</code>. Since the lifetime is smaller, it does not violate the lifetime specified
+by the original type. Contrast this to <code>Fn(&amp;'this i32)</code>, which is not covariant. You cannot give
+this function a reference with a lifetime shorter than <code>'this</code> as the function needs something
+that lives at <em>least</em> as long as <code>'this</code>. Unfortunately, there is no easy way to determine
+whether or not a type is covariant from inside the macro. As such, you may
+receive a compiler error letting you know that the macro is uncertain if a particular field
+uses a covariant type. Adding <code>#[covariant]</code> or <code>#[not_covariant]</code> will resolve this issue.</p>
+<p>These annotations control whether or not a <code>borrow_*</code> method is generated for that field.
+Incorrectly using one of these tags will result in a compilation error. It is impossible to
+use them unsoundly.</p>
+<h2 id="async-usage"><a class="doc-anchor" href="#async-usage">§</a>Async usage</h2>
+<p>All self-referencing structs can be initialized asynchronously by using either the
+<code>MyStruct::new_async()</code> function or the <code>MyStructAsyncBuilder</code> builder. Due to limitations of
+the rust compiler you closures must return a Future trait object wrapped in a <code>Pin&lt;Box&lt;_&gt;&gt;</code>.</p>
+<p>Here is the same example as above in its async version:</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">use </span>ouroboros::self_referencing;
+
+<span class="attr">#[self_referencing]
+</span><span class="kw">struct </span>MyStruct {
+    int_data: i32,
+    float_data: f32,
+    <span class="attr">#[borrows(int_data)]
+    </span>int_reference: <span class="kw-2">&amp;</span><span class="lifetime">'this </span>i32,
+    <span class="attr">#[borrows(<span class="kw-2">mut </span>float_data)]
+    </span>float_reference: <span class="kw-2">&amp;</span><span class="lifetime">'this </span><span class="kw-2">mut </span>f32,
+}
+
+<span class="attr">#[tokio::main]
+</span><span class="kw">async fn </span>main() {
+    <span class="kw">let </span><span class="kw-2">mut </span>my_value = MyStructAsyncBuilder {
+        int_data: <span class="number">42</span>,
+        float_data: <span class="number">3.14</span>,
+        int_reference_builder: |int_data: <span class="kw-2">&amp;</span>i32| Box::pin(<span class="kw">async move </span>{ int_data }),
+        float_reference_builder: |float_data: <span class="kw-2">&amp;mut </span>f32| Box::pin(<span class="kw">async move </span>{ float_data }),
+    }.build().<span class="kw">await</span>;
+
+    <span class="comment">// Prints 42
+    </span><span class="macro">println!</span>(<span class="string">"{:?}"</span>, my_value.borrow_int_data());
+    <span class="comment">// Prints 3.14
+    </span><span class="macro">println!</span>(<span class="string">"{:?}"</span>, my_value.borrow_float_reference());
+    <span class="comment">// Sets the value of float_data to 84.0
+    </span>my_value.with_mut(|fields| {
+        <span class="kw-2">**</span>fields.float_reference = (<span class="kw-2">**</span>fields.int_reference <span class="kw">as </span>f32) * <span class="number">2.0</span>;
+    });
+
+    <span class="comment">// We can hold on to this reference...
+    </span><span class="kw">let </span>int_ref = <span class="kw-2">*</span>my_value.borrow_int_reference();
+    <span class="macro">println!</span>(<span class="string">"{:?}"</span>, <span class="kw-2">*</span>int_ref);
+    <span class="comment">// As long as the struct is still alive.
+    </span>drop(my_value);
+    <span class="comment">// This will cause an error!
+    // println!("{:?}", *int_ref);
+</span>}</code></pre></div><h2 id="async-send"><a class="doc-anchor" href="#async-send">§</a>Async Send</h2>
+<p>When Send trait is needed, the Send variant of async methods and builders is available.</p>
+<p>Here is the same example as above in its async send version:</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">use </span>ouroboros::self_referencing;
+
+<span class="attr">#[self_referencing]
+</span><span class="kw">struct </span>MyStruct {
+    int_data: i32,
+    float_data: f32,
+    <span class="attr">#[borrows(int_data)]
+    </span>int_reference: <span class="kw-2">&amp;</span><span class="lifetime">'this </span>i32,
+    <span class="attr">#[borrows(<span class="kw-2">mut </span>float_data)]
+    </span>float_reference: <span class="kw-2">&amp;</span><span class="lifetime">'this </span><span class="kw-2">mut </span>f32,
+}
+
+<span class="attr">#[tokio::main]
+</span><span class="kw">async fn </span>main() {
+    <span class="kw">let </span><span class="kw-2">mut </span>my_value = MyStructAsyncSendBuilder {
+        int_data: <span class="number">42</span>,
+        float_data: <span class="number">3.14</span>,
+        int_reference_builder: |int_data: <span class="kw-2">&amp;</span>i32| Box::pin(<span class="kw">async move </span>{ int_data }),
+        float_reference_builder: |float_data: <span class="kw-2">&amp;mut </span>f32| Box::pin(<span class="kw">async move </span>{ float_data }),
+    }.build().<span class="kw">await</span>;
+
+    <span class="comment">// Prints 42
+    </span><span class="macro">println!</span>(<span class="string">"{:?}"</span>, my_value.borrow_int_data());
+    <span class="comment">// Prints 3.14
+    </span><span class="macro">println!</span>(<span class="string">"{:?}"</span>, my_value.borrow_float_reference());
+    <span class="comment">// Sets the value of float_data to 84.0
+    </span>my_value.with_mut(|fields| {
+        <span class="kw-2">**</span>fields.float_reference = (<span class="kw-2">**</span>fields.int_reference <span class="kw">as </span>f32) * <span class="number">2.0</span>;
+    });
+
+    <span class="comment">// We can hold on to this reference...
+    </span><span class="kw">let </span>int_ref = <span class="kw-2">*</span>my_value.borrow_int_reference();
+    <span class="macro">println!</span>(<span class="string">"{:?}"</span>, <span class="kw-2">*</span>int_ref);
+    <span class="comment">// As long as the struct is still alive.
+    </span>drop(my_value);
+    <span class="comment">// This will cause an error!
+    // println!("{:?}", *int_ref);
+</span>}</code></pre></div><h2 id="what-does-the-macro-generate"><a class="doc-anchor" href="#what-does-the-macro-generate">§</a>What does the macro generate?</h2>
+<p>The <code>#[self_referencing]</code> struct will replace your definition with an unsafe self-referencing
+struct with a safe public interface. Many functions will be generated depending on your original
+struct definition. Documentation is generated for all items, so building documentation for
+your project allows accessing detailed information about available functions. Using
+<code>#[self_referencing(no_doc)]</code> will hide the generated items from documentation if it is becoming
+too cluttered.</p>
+<h4 id="a-quick-note-on-visibility"><a class="doc-anchor" href="#a-quick-note-on-visibility">§</a>A quick note on visibility</h4>
+<p>The visibility of generated items is dependent on one of two things. If the
+generated item is related to a specific field of the struct, it uses the visibility of the
+original field. (The actual field in the struct will be made private since accessing it could cause
+undefined behavior.) If the generated item is not related to any particular field, it will by
+default only be visible to the module the struct is declared in. (This includes things like
+<code>new()</code> and <code>with()</code>.) You can use <code>#[self_referencing(pub_extras)]</code> to make these items have the
+same visibility as the struct itself.</p>
+<h2 id="list-of-generated-items"><a class="doc-anchor" href="#list-of-generated-items">§</a>List of generated items</h2><h4 id="mystructnewfields---mystruct"><a class="doc-anchor" href="#mystructnewfields---mystruct">§</a><code>MyStruct::new(fields...) -&gt; MyStruct</code></h4>
+<p>A basic constructor. It accepts values for each field in the order you declared them in. For
+<strong>head fields</strong>, you only need to pass in what value it should have and it will be moved in
+to the output. For <strong>self-referencing fields</strong>, you must provide a function or closure which creates
+the value based on the values it borrows. A field using the earlier example of
+<code>#[borrow(a, b, mut c)]</code> would require a function typed as
+<code>FnOnce(a: &amp;_, b: &amp;_, c: &amp;mut _) -&gt; _</code>. Fields which have an empty borrows annotation
+(<code>#[borrows()]</code>) should have their value directly passed in. A field using the earlier example
+of <code>Option&lt;&amp;'this str&gt;</code> would require an input of <code>None</code>. Do not pass a function. Do not collect
+200 dollars.</p>
+<h4 id="mystructnew_asyncfields---mystruct"><a class="doc-anchor" href="#mystructnew_asyncfields---mystruct">§</a><code>MyStruct::new_async(fields...) -&gt; MyStruct</code></h4>
+<p>A basic async constructor. It works identically to the sync constructor differing only in the
+type of closures it expects. Whenever a closure is required it is expected to return a Pinned
+and Boxed Future that Outputs the same type as the synchronous version.</p>
+<h4 id="mystructnew_async_sendfields---mystruct"><a class="doc-anchor" href="#mystructnew_async_sendfields---mystruct">§</a><code>MyStruct::new_async_send(fields...) -&gt; MyStruct</code></h4>
+<p>An async send constructor. It works identically to the sync constructor differing only in the
+Send trait being specified in the return type.</p>
+<h4 id="mystructbuilder"><a class="doc-anchor" href="#mystructbuilder">§</a><code>MyStructBuilder</code></h4>
+<p>This is the preferred way to create a new instance of your struct. It is similar to using the
+<code>MyStruct { a, b, c, d }</code> syntax instead of <code>MyStruct::new(a, b, c, d)</code>. It contains one field
+for every argument in the actual constructor. <strong>Head fields</strong> have the same name that you
+originally defined them with. <strong>self-referencing fields</strong> are suffixed with <code>_builder</code> since you need
+to provide a function instead of a value. Fields with an empty borrows annotation are not
+initialized using builders. Calling <code>.build()</code> on an instance of <code>MyStructBuilder</code>
+will convert it to an instance of <code>MyStruct</code> by calling all <code>_builder</code> functions in the order that
+they were declared and storing their results.</p>
+<h4 id="mystructasyncbuilder"><a class="doc-anchor" href="#mystructasyncbuilder">§</a><code>MyStructAsyncBuilder</code></h4>
+<p>This is the preferred way to asynchronously create a new instance of your struct. It works
+identically to the synchronous builder differing only in the type of closures it expects. In
+particular, all builder functions are called serially in the order that they were declared.
+Whenever a closure is required it is expected to return a Pinned and Boxed Future that Outputs
+the same type as the synchronous version.</p>
+<h4 id="mystructasyncsendbuilder"><a class="doc-anchor" href="#mystructasyncsendbuilder">§</a><code>MyStructAsyncSendBuilder</code></h4>
+<p>Same as MyStructAsyncBuilder, but with Send trait specified in the return type.</p>
+<h4 id="mystructtry_newefields---resultmystruct-e"><a class="doc-anchor" href="#mystructtry_newefields---resultmystruct-e">§</a><code>MyStruct::try_new&lt;E&gt;(fields...) -&gt; Result&lt;MyStruct, E&gt;</code></h4>
+<p>Similar to the regular <code>new()</code> function, except the functions which create values for all
+<strong>self-referencing fields</strong> can return <code>Result&lt;&gt;</code>s. If any of those are <code>Err</code>s, that error will be
+returned instead of an instance of <code>MyStruct</code>. The preferred way to use this function is through
+<code>MyStructTryBuilder</code> and its <code>try_build()</code> function.</p>
+<h4 id="mystructtry_new_asyncefields---resultmystruct-e"><a class="doc-anchor" href="#mystructtry_new_asyncefields---resultmystruct-e">§</a><code>MyStruct::try_new_async&lt;E&gt;(fields...) -&gt; Result&lt;MyStruct, E&gt;</code></h4>
+<p>Similar to the regular <code>new_async()</code> function, except the functions which create values for all
+<strong>self-referencing fields</strong> can return <code>Result&lt;&gt;</code>s. If any of those are <code>Err</code>s, that error will be
+returned instead of an instance of <code>MyStruct</code>. The preferred way to use this function is through
+<code>MyStructAsyncTryBuilder</code> and its <code>try_build()</code> function.</p>
+<h4 id="mystructtry_new_async_sendefields---resultmystruct-e"><a class="doc-anchor" href="#mystructtry_new_async_sendefields---resultmystruct-e">§</a><code>MyStruct::try_new_async_send&lt;E&gt;(fields...) -&gt; Result&lt;MyStruct, E&gt;</code></h4>
+<p>Same as <code>new_async()</code> function, but with Send trait specified in the return type.</p>
+<h4 id="mystructtry_new_or_recover_asyncefields---resultmystruct-e-heads"><a class="doc-anchor" href="#mystructtry_new_or_recover_asyncefields---resultmystruct-e-heads">§</a><code>MyStruct::try_new_or_recover_async&lt;E&gt;(fields...) -&gt; Result&lt;MyStruct, (E, Heads)&gt;</code></h4>
+<p>Similar to the <code>try_new_async()</code> function, except that all the <strong>head fields</strong> are returned along side
+the original error in case of an error. The preferred way to use this function is through
+<code>MyStructAsyncTryBuilder</code> and its <code>try_build_or_recover()</code> function.</p>
+<h4 id="mystructtry_new_or_recover_async_sendefields---resultmystruct-e-heads"><a class="doc-anchor" href="#mystructtry_new_or_recover_async_sendefields---resultmystruct-e-heads">§</a><code>MyStruct::try_new_or_recover_async_send&lt;E&gt;(fields...) -&gt; Result&lt;MyStruct, (E, Heads)&gt;</code></h4>
+<p>Same as <code>try_new_or_recover_async()</code> function, but with Send trait specified in the return type.</p>
+<h4 id="mystructwith_fieldrself-user-fnoncefield-fieldtype---r---r"><a class="doc-anchor" href="#mystructwith_fieldrself-user-fnoncefield-fieldtype---r---r">§</a><code>MyStruct::with_FIELD&lt;R&gt;(&amp;self, user: FnOnce(field: &amp;FieldType) -&gt; R) -&gt; R</code></h4>
+<p>This function is generated for every <strong>tail and immutably-borrowed field</strong> in your struct. It
+allows safely accessing
+a reference to that value. The function generates the reference and passes it to <code>user</code>. You
+can do anything you want with the reference, it is constructed to not outlive the struct.</p>
+<h4 id="mystructborrow_fieldself---fieldtype"><a class="doc-anchor" href="#mystructborrow_fieldself---fieldtype">§</a><code>MyStruct::borrow_FIELD(&amp;self) -&gt; &amp;FieldType</code></h4>
+<p>This function is generated for every <strong>tail and immutably-borrowed field</strong> in your struct. It
+is equivalent to calling <code>my_struct.with_FIELD(|field| field)</code>. It is only generated for types
+which are known to be covariant, either through the macro being able to detect it or through the
+programmer adding the <code>#[covariant]</code> annotation to the field.
+There is no <code>borrow_FIELD_mut</code>, unfortunately, as Rust’s
+borrow checker is currently not capable of ensuring that such a method would be used safely.</p>
+<h4 id="mystructwith_field_mutrmut-self-user-fnoncefield-mut-fieldtype---r---r"><a class="doc-anchor" href="#mystructwith_field_mutrmut-self-user-fnoncefield-mut-fieldtype---r---r">§</a><code>MyStruct::with_FIELD_mut&lt;R&gt;(&amp;mut self, user: FnOnce(field: &amp;mut FieldType) -&gt; R) -&gt; R</code></h4>
+<p>This function is generated for every <strong>tail field</strong> in your struct. It is the mutable version
+of <code>with_FIELD</code>.</p>
+<h4 id="mystructwithrself-user-fnoncefields-allfields---r---r"><a class="doc-anchor" href="#mystructwithrself-user-fnoncefields-allfields---r---r">§</a><code>MyStruct::with&lt;R&gt;(&amp;self, user: FnOnce(fields: AllFields) -&gt; R) -&gt; R</code></h4>
+<p>Allows borrowing all <strong>tail and immutably-borrowed fields</strong> at once. Functions similarly to
+<code>with_FIELD</code>.</p>
+<h4 id="mystructwith_mutrself-user-fnoncefields-allfields---r---r"><a class="doc-anchor" href="#mystructwith_mutrself-user-fnoncefields-allfields---r---r">§</a><code>MyStruct::with_mut&lt;R&gt;(&amp;self, user: FnOnce(fields: AllFields) -&gt; R) -&gt; R</code></h4>
+<p>Allows mutably borrowing all <strong>tail fields</strong> and immutably borrowing all <strong>immutably-borrowed</strong>
+fields at once. Functions similarly to <code>with_FIELD_mut</code>, except that you can borrow multiple
+fields as mutable at the same time and also have immutable access to any remaining fields.</p>
+<h4 id="mystructinto_headsself---heads"><a class="doc-anchor" href="#mystructinto_headsself---heads">§</a><code>MyStruct::into_heads(self) -&gt; Heads</code></h4>
+<p>Drops all self-referencing fields and returns a struct containing all <strong>head fields</strong>.</p>
+</div></details></section></div></main></body></html>

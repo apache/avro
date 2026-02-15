@@ -1,0 +1,164 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Trait for types that serve as an Avro data model."><title>AvroSchema in apache_avro::serde - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="apache_avro" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">AvroSchema</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../apache_avro/index.html">apache_<wbr>avro</a><span class="version">0.22.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Avro<wbr>Schema</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#deriving-avroschema" title="Deriving `AvroSchema`">Deriving <code>AvroSchema</code></a></li><li><a href="#changing-the-generated-schema" title="Changing the generated schema">Changing the generated schema</a><ul><li><a href="#container-attributes" title="Container attributes">Container attributes</a></li><li><a href="#variant-attributes" title="Variant attributes">Variant attributes</a></li><li><a href="#field-attributes" title="Field attributes">Field attributes</a></li><li><a href="#incompatible-serde-attributes" title="Incompatible Serde attributes">Incompatible Serde attributes</a></li></ul></li><li><a href="#working-with-foreign-types" title="Working with foreign types">Working with foreign types</a></li></ul><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.get_schema" title="get_schema">get_schema</a></li></ul><h3><a href="#dyn-compatibility">Dyn Compatibility</a></h3><h3><a href="#implementors">Implementors</a></h3></section><div id="rustdoc-modnav"><h2><a href="index.html">In apache_<wbr>avro::<wbr>serde</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../index.html">apache_avro</a>::<wbr><a href="index.html">serde</a></div><h1>Trait <span class="trait">Avro<wbr>Schema</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../src/apache_avro/serde/derive.rs.html#191-197">Source</a> </span></div><pre class="rust item-decl"><code>pub trait AvroSchema {
+    // Required method
+    fn <a href="#tymethod.get_schema" class="fn">get_schema</a>() -&gt; <a class="enum" href="../schema/enum.Schema.html" title="enum apache_avro::schema::Schema">Schema</a>;
+}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Trait for types that serve as an Avro data model.</p>
+<p><strong>Do not implement directly!</strong> Either derive it or implement <a href="trait.AvroSchemaComponent.html" title="trait apache_avro::serde::AvroSchemaComponent"><code>AvroSchemaComponent</code></a> to get this trait
+through a blanket implementation.</p>
+<h3 id="deriving-avroschema"><a class="doc-anchor" href="#deriving-avroschema">§</a>Deriving <code>AvroSchema</code></h3>
+<p>Using the custom derive requires that you enable the <code>"derive"</code> cargo
+feature in your <code>Cargo.toml</code>:</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+apache-avro = { version = &quot;..&quot;, features = [&quot;derive&quot;] }</code></pre></div>
+<p>Then, you add the <code>#[derive(AvroSchema)]</code> annotation to your <code>struct</code> and
+<code>enum</code> type definition:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[derive(AvroSchema, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>Foo {
+    bar: Vec&lt;Bar&gt;,
+}
+
+<span class="attr">#[derive(AvroSchema, Serialize, Deserialize)]
+</span><span class="kw">pub enum </span>Bar {
+    Spam,
+    Maps
+}</code></pre></div>
+<p>This will implement <a href="trait.AvroSchemaComponent.html" title="trait apache_avro::serde::AvroSchemaComponent"><code>AvroSchemaComponent</code></a> for the type, and <code>AvroSchema</code>
+through the blanket implementation for <code>T: AvroSchemaComponent</code>.</p>
+<p>When deriving <code>struct</code>s, every member must also implement <code>AvroSchemaComponent</code>.</p>
+<h3 id="changing-the-generated-schema"><a class="doc-anchor" href="#changing-the-generated-schema">§</a>Changing the generated schema</h3>
+<p>The derive macro will read both the <code>avro</code> and <code>serde</code> attributes to modify the generated schema.
+It will also check for compatibility between the various attributes.</p>
+<h5 id="container-attributes"><a class="doc-anchor" href="#container-attributes">§</a>Container attributes</h5>
+<ul>
+<li>
+<p><code>#[serde(rename = "name")]</code></p>
+<p>Set the <code>name</code> of the schema to the given string. Defaults to the name of the type.</p>
+</li>
+<li>
+<p><code>#[avro(namespace = "some.name.space")]</code></p>
+<p>Set the <code>namespace</code> of the schema. This will be the relative namespace if the schema is included
+in another schema.</p>
+</li>
+<li>
+<p><code>#[avro(doc = "Some documentation")]</code></p>
+<p>Set the <code>doc</code> attribute of the schema. Defaults to the documentation of the type.</p>
+</li>
+<li>
+<p><code>#[avro(alias = "name")]</code></p>
+<p>Set the <code>alias</code> attribute of the schema. Can be specified multiple times.</p>
+</li>
+<li>
+<p><code>#[serde(rename_all = "camelCase")]</code></p>
+<p>Rename all the fields or variants in the schema to follow the given case convention. The possible values
+are <code>"lowercase"</code>, <code>"UPPERCASE"</code>, <code>"PascalCase"</code>, <code>"camelCase"</code>, <code>"snake_case"</code>, <code>"kebab-case"</code>,
+<code>"SCREAMING_SNAKE_CASE"</code>, <code>"SCREAMING-KEBAB-CASE"</code>.</p>
+</li>
+<li>
+<p><code>#[serde(transparent)]</code></p>
+<p>Use the schema of the inner field directly. Is only allowed on structs with only one unskipped field.</p>
+</li>
+</ul>
+<h5 id="variant-attributes"><a class="doc-anchor" href="#variant-attributes">§</a>Variant attributes</h5>
+<ul>
+<li>
+<p><code>#[serde(rename = "name")]</code></p>
+<p>Rename the variant to the given name.</p>
+</li>
+</ul>
+<h5 id="field-attributes"><a class="doc-anchor" href="#field-attributes">§</a>Field attributes</h5>
+<ul>
+<li>
+<p><code>#[serde(rename = "name")]</code></p>
+<p>Rename the field name to the given name.</p>
+</li>
+<li>
+<p><code>#[avro(doc = "Some documentation")]</code></p>
+<p>Set the <code>doc</code> attribute of the field. Defaults to the documentation of the field.</p>
+</li>
+<li>
+<p><code>#[avro(default = "null")]</code></p>
+<p>Set the <code>default</code> attribute of the field.</p>
+<p><em>Note:</em> This is a JSON value not a Rust value, as this is put in the schema itself.</p>
+</li>
+<li>
+<p><code>#[serde(alias = "name")]</code></p>
+<p>Set the <code>alias</code> attribute of the field. Can be specified multiple times.</p>
+</li>
+<li>
+<p><code>#[serde(flatten)]</code></p>
+<p>Flatten the content of this field into the container it is defined in.</p>
+</li>
+<li>
+<p><code>#[serde(skip)]</code></p>
+<p>Do not include this field in the schema.</p>
+</li>
+<li>
+<p><code>#[serde(skip_serializing)]</code></p>
+<p>When combined with <code>#[serde(skip_deserializing)]</code>, don’t include this field in the schema.
+Otherwise, it will be included in the schema and the <code>#[avro(default)]</code> attribute <strong>must</strong> be
+set. That value will be used for serializing.</p>
+</li>
+<li>
+<p><code>#[serde(skip_serializing_if)]</code></p>
+<p>Conditionally use the value of the field or the value provided by <code>#[avro(default)]</code>. The
+<code>#[avro(default)]</code> attribute <strong>must</strong> be set.</p>
+</li>
+<li>
+<p><code>#[avro(with)]</code> and <code>#[serde(with = "module")]</code></p>
+<p>Override the schema used for this field. See <a href="#working-with-foreign-types">Working with foreign types</a>.</p>
+</li>
+</ul>
+<h5 id="incompatible-serde-attributes"><a class="doc-anchor" href="#incompatible-serde-attributes">§</a>Incompatible Serde attributes</h5>
+<p>The derive macro is compatible with most Serde attributes, but it is incompatible with
+the following attributes:</p>
+<ul>
+<li>Container attributes
+<ul>
+<li><code>tag</code></li>
+<li><code>content</code></li>
+<li><code>untagged</code></li>
+<li><code>variant_identifier</code></li>
+<li><code>field_identifier</code></li>
+<li><code>remote</code></li>
+<li><code>rename_all(serialize = "..", deserialize = "..")</code> where <code>serialize</code> != <code>deserialize</code></li>
+</ul>
+</li>
+<li>Variant attributes
+<ul>
+<li><code>other</code></li>
+<li><code>untagged</code></li>
+</ul>
+</li>
+<li>Field attributes
+<ul>
+<li><code>getter</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="working-with-foreign-types"><a class="doc-anchor" href="#working-with-foreign-types">§</a>Working with foreign types</h3>
+<p>Most foreign types won’t have a <a href="trait.AvroSchema.html" title="trait apache_avro::serde::AvroSchema"><code>AvroSchema</code></a> implementation. This crate implements it only
+for built-in types and <a href="../struct.Uuid.html" title="struct apache_avro::Uuid"><code>uuid::Uuid</code></a>.</p>
+<p>To still be able to derive schemas for fields of foreign types, the <code>#[avro(with)</code>]
+attribute can be used to get the schema for those fields. It can be used in two ways:</p>
+<ol>
+<li>
+<p>In combination with <code>#[serde(with = "path::to::module)]</code></p>
+<p>To get the schema, it will call the functions <code>fn get_schema_in_ctxt(&amp;mut Names, &amp;Namespace) -&gt; Schema</code>
+and <code>fn get_record_fields_in_ctxt(usize, &amp;mut Names, &amp;Namespace) -&gt; Option&lt;Vec&lt;RecordField&gt;&gt;</code> in the module provided
+to the Serde attribute. See <a href="trait.AvroSchemaComponent.html" title="trait apache_avro::serde::AvroSchemaComponent"><code>AvroSchemaComponent</code></a> for details on how to implement those
+functions.</p>
+</li>
+<li>
+<p>By providing a function directly, <code>#[avro(with = some_fn)]</code>.</p>
+<p>To get the schema, it will call the function provided. It must have the signature
+<code>fn(&amp;mut Names, &amp;Namespace) -&gt; Schema</code>. When this is used for a <code>transparent</code> struct, the
+default implementation of <a href="trait.AvroSchemaComponent.html#method.get_record_fields_in_ctxt" title="associated function apache_avro::serde::AvroSchemaComponent::get_record_fields_in_ctxt"><code>AvroSchemaComponent::get_record_fields_in_ctxt</code></a> will be used.
+This is only recommended for primitive types, as the default implementation cannot be efficiently
+implemented for complex types.</p>
+</li>
+</ol>
+</div></details><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.get_schema" class="method"><a class="src rightside" href="../../src/apache_avro/serde/derive.rs.html#196">Source</a><h4 class="code-header">fn <a href="#tymethod.get_schema" class="fn">get_schema</a>() -&gt; <a class="enum" href="../schema/enum.Schema.html" title="enum apache_avro::schema::Schema">Schema</a></h4></section></summary><div class="docblock"><p>Construct the full schema that represents this type.</p>
+<p>The returned schema is fully independent and contains only <code>Schema::Ref</code> to named types defined
+earlier in the schema.</p>
+</div></details></div><h2 id="dyn-compatibility" class="section-header">Dyn Compatibility<a href="#dyn-compatibility" class="anchor">§</a></h2><div class="dyn-compatibility-info"><p>This trait is <b>not</b> <a href="https://doc.rust-lang.org/1.93.1/reference/items/traits.html#dyn-compatibility">dyn compatible</a>.</p><p><i>In older versions of Rust, dyn compatibility was called "object safety", so this trait is not object safe.</i></p></div><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><section id="impl-AvroSchema-for-T" class="impl"><a class="src rightside" href="../../src/apache_avro/serde/derive.rs.html#466-473">Source</a><a href="#impl-AvroSchema-for-T" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; <a class="trait" href="trait.AvroSchema.html" title="trait apache_avro::serde::AvroSchema">AvroSchema</a> for T<div class="where">where
+    T: <a class="trait" href="trait.AvroSchemaComponent.html" title="trait apache_avro::serde::AvroSchemaComponent">AvroSchemaComponent</a> + ?<a class="trait" href="https://doc.rust-lang.org/1.93.1/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,</div></h3></section></div><script src="../../trait.impl/apache_avro/serde/derive/trait.AvroSchema.js" async></script></section></div></main></body></html>

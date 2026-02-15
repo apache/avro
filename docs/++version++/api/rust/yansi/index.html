@@ -1,0 +1,246 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A dead simple ANSI terminal color painting library."><title>yansi - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="yansi" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../static.files/storage-e2aeef58.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Crate yansi</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../yansi/index.html"><img src="https://raw.githubusercontent.com/SergioBenitez/yansi/master/.github/yansi-logo.png" alt="logo"></a><h2><a href="../yansi/index.html">yansi</a><span class="version">1.0.1</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#features" title="Features">Features</a></li><li><a href="#usage" title="Usage">Usage</a><ul><li><a href="#uniform-const-builders" title="Uniform `const` Builders">Uniform <code>const</code> Builders</a></li><li><a href="#conditional-styling" title="Conditional Styling">Conditional Styling</a></li></ul></li><li><a href="#quirks" title="Quirks">Quirks</a><ul><li><a href="#masking" title="Masking">Masking</a></li><li><a href="#wrapping" title="Wrapping">Wrapping</a></li><li><a href="#lingering" title="Lingering">Lingering</a></li><li><a href="#brightening" title="Brightening">Brightening</a></li></ul></li><li><a href="#windows" title="Windows">Windows</a></li><li><a href="#crate-features" title="Crate Features">Crate Features</a></li></ul><h3><a href="#structs">Crate Items</a></h3><ul class="block"><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#enums" title="Enums">Enums</a></li><li><a href="#traits" title="Traits">Traits</a></li><li><a href="#functions" title="Functions">Functions</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>yansi</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/yansi/lib.rs.html#1-373">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A dead simple ANSI terminal color painting library.</p>
+<h2 id="features"><a class="doc-anchor" href="#features">§</a>Features</h2>
+<p>Why <em>y</em>et another <em>ANSI</em> terminal coloring library? Here are some reasons:</p>
+<ul>
+<li>This library makes simple things <em>simple</em>: <code>use</code> <a href="trait.Paint.html" title="trait yansi::Paint"><code>Paint</code></a> and go!</li>
+<li>Zero dependencies by default. It really is simple.</li>
+<li>Zero allocations except as needed by opt-in <a href="#wrapping">wrapping</a>.</li>
+<li><a href="#windows">Automatic Windows support</a> for the vast majority (95%+) of Windows
+users.</li>
+<li><a href="#crate-features">Featureful <code>no_std</code></a>, no-<code>alloc</code>, support with <code>default-features = false</code>.</li>
+<li><a href="#uniform-const-builders"><code>Style</code> constructors are <code>const</code></a>: store styles statically, even with
+dynamic conditions!</li>
+<li><em>Any</em> type implementing a formatting trait can be styled, not just
+strings.</li>
+<li>Styling can be <a href="fn.enable.html" title="fn yansi::enable">enabled</a> and <a href="fn.disable.html" title="fn yansi::disable">disabled</a> globally and <a href="fn.whenever.html" title="fn yansi::whenever">dynamically</a>, on
+the fly.</li>
+<li>A <code>Style</code> can be predicated on arbitrary <a href="#per-style">conditions</a>.</li>
+<li>Formatting specifiers like <code>{:x}</code> and <code>{:08b}</code> are supported and
+preserved!</li>
+<li><a href="struct.Condition.html#built-in-conditions" title="struct yansi::Condition">Built-in (optional) conditions</a> for <a href="struct.Condition.html#impl-Condition-1" title="struct yansi::Condition">TTY detection</a> and <a href="struct.Condition.html#impl-Condition-2" title="struct yansi::Condition">common
+environment variables</a>.</li>
+<li>Arbitrary items can be <a href="#masking"><em>masked</em></a> for selective disabling.</li>
+<li>Styling can <a href="#wrapping"><em>wrap</em></a> to preserve styling across resets.</li>
+<li>Styling can <a href="#lingering"><em>linger</em></a> beyond a single value.</li>
+<li>Experimental support for <a href="hyperlink">hyperlinking</a> is included.</li>
+<li>The name <code>yansi</code> is pretty cool 😎.</li>
+</ul>
+<p>All that said, <code>yansi</code> borrows API ideas from older libraries as well as
+implementation details from <a href="https://crates.io/crates/ansi_term"><code>ansi_term</code></a>.</p>
+<h2 id="usage"><a class="doc-anchor" href="#usage">§</a>Usage</h2>
+<p>The <a href="trait.Paint.html" title="trait yansi::Paint"><code>Paint</code></a> trait is implemented for every type. Import it and call
+chainable builder methods:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::Paint;
+
+<span class="macro">println!</span>(<span class="string">"Testing, {}, {}, {}!"</span>,
+    <span class="string">"Ready"</span>.bold(),
+    <span class="string">"Set"</span>.yellow().italic(),
+    <span class="string">"STOP"</span>.white().on_red().bright().underline().bold());</code></pre></div>
+<p><code>&gt;</code> Testing,
+<b>Ready</b>,
+<span style="color: yellow;"><i><b>Set</b></i></span>,
+<span style="color: white; background: red;"><u><b>STOP</b></u></span>!</p>
+<p>The methods return a <a href="struct.Painted.html" title="struct yansi::Painted"><code>Painted</code></a> type which consists of a <a href="struct.Style.html" title="struct yansi::Style"><code>Style</code></a> and a
+reference to the receiver. Displaying a <a href="struct.Painted.html" title="struct yansi::Painted"><code>Painted</code></a> (via <code>print!()</code>,
+<code>format!()</code>, etc) results in emitting ANSI escape codes that effectuate the
+style.</p>
+<h3 id="uniform-const-builders"><a class="doc-anchor" href="#uniform-const-builders">§</a>Uniform <code>const</code> Builders</h3>
+<p>All builder methods are uniformly available for <a href="struct.Style.html" title="struct yansi::Style"><code>Style</code></a>, <a href="enum.Color.html" title="enum yansi::Color"><code>Color</code></a>, and
+<a href="struct.Painted.html" title="struct yansi::Painted"><code>Painted</code></a>, which means you can chain calls across library types. All
+methods are <code>const</code>, allowing creations of <code>const</code> or <code>static</code> <a href="struct.Style.html" title="struct yansi::Style"><code>Style</code></a>s. A
+<code>Style</code> can be directly applied to values with <a href="trait.Paint.html#method.paint" title="method yansi::Paint::paint"><code>.paint()</code></a>,
+from <a href="trait.Paint.html#method.paint" title="method yansi::Paint::paint"><code>Paint::paint()</code></a>, available for every type:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::{Paint, Style, Color::<span class="kw-2">*</span>};
+
+<span class="comment">// `const` constructors allow static `Style`s for easy reuse
+</span><span class="kw">static </span>ALERT: Style = White.bright().underline().italic().on_red();
+
+<span class="macro">println!</span>(<span class="string">"Testing, {}, {}, {}!"</span>,
+    <span class="string">"Ready"</span>.bold(),
+    <span class="string">"Set"</span>.yellow().bold(),
+    <span class="string">"STOP"</span>.paint(ALERT));</code></pre></div>
+<p><code>&gt;</code> Testing,
+<b>Ready</b>,
+<span style="color: yellow;"><b>Set</b></span>,
+<span style="color: white; background: red;"><u><em>STOP</em></u></span>!</p>
+<h3 id="conditional-styling"><a class="doc-anchor" href="#conditional-styling">§</a>Conditional Styling</h3><h4 id="globally"><a class="doc-anchor" href="#globally">§</a>Globally</h4>
+<p>Styling is enabled by default but can be enabled and disabled globally via
+<a href="fn.enable.html" title="fn yansi::enable"><code>enable()</code></a> and <a href="fn.disable.html" title="fn yansi::disable"><code>disable()</code></a>. When styling is disabled, no ANSI escape
+codes are emitted, and <a href="#masking"><em>masked</em></a> values are omitted entirely.</p>
+<p>Global styling can also be dynamically enabled and disabled using
+<a href="fn.whenever.html" title="fn yansi::whenever"><code>whenever()</code></a> with an arbitrary <a href="struct.Condition.html" title="struct yansi::Condition"><code>Condition</code></a>: a function that returns
+<code>true</code> or <code>false</code>. This condition is evaluated each time a <a href="struct.Painted.html" title="struct yansi::Painted"><code>Painted</code></a> item
+is displayed. The associated styling is enabled, and mask values emitted,
+exactly when and only when the condition returns <code>true</code>.</p>
+<h4 id="per-style"><a class="doc-anchor" href="#per-style">§</a>Per-<code>Style</code></h4>
+<p>A specific <code>Style</code> can itself be conditionally applied by using
+<a href="struct.Style.html#method.whenever" title="method yansi::Style::whenever"><code>.whenever()</code></a>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::{Paint, Style, Color::<span class="kw-2">*</span>, Condition};
+
+<span class="kw">static </span>WARNING: Style = Black.bold().on_yellow().whenever(Condition::STDERR_IS_TTY);
+
+<span class="macro">eprintln!</span>(<span class="string">"{}"</span>, <span class="string">"Bees can sting!"</span>.paint(WARNING));</code></pre></div>
+<p>With the above, if <code>stderr</code> is a TTY, then:
+<code>&gt;</code> <span style="background: yellow; color: black;"><b>Bees can sting!</b></span></p>
+<p>If it is not a TTY, styling is not emitted:
+<code>&gt;</code> Bees can sting!</p>
+<p>See <a href="struct.Condition.html" title="struct yansi::Condition"><code>Condition</code></a> for a list of built-in conditions which require enabling
+crate features.</p>
+<h2 id="quirks"><a class="doc-anchor" href="#quirks">§</a>Quirks</h2>
+<p>As a convenience, <code>yansi</code> implements several “quirks”, applicable via
+<a href="enum.Quirk.html" title="enum yansi::Quirk"><code>Quirk</code></a> and the respective methods, that modify if and how styling is
+presented to the terminal. These quirks do not correspond to any ANSI
+styling sequences.</p>
+<h3 id="masking"><a class="doc-anchor" href="#masking">§</a>Masking</h3>
+<p>Items can be arbitrarily <em>masked</em> with the <a href="trait.Paint.html#tymethod.mask" title="method yansi::Paint::mask"><code>mask()</code></a> builder
+method. Masked values are not emitted when styling is disabled, globally or
+for a given style. This allows selective output based on whether styling is
+enabled.</p>
+<p>One use for this feature is to print certain characters only when styling is
+enabled. For instance, you might wish to emit the 🎨 emoji when coloring is
+enabled but not otherwise. This can be accomplished by masking the emoji:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::Paint;
+
+<span class="macro">println!</span>(<span class="string">"I like colors!{}"</span>, <span class="string">" 🎨"</span>.mask());</code></pre></div>
+<p>When styling is enabled, this prints: <code>&gt;</code> I like colors! 🎨</p>
+<p>With styling disabled, this prints: <code>&gt;</code> I like colors!</p>
+<h3 id="wrapping"><a class="doc-anchor" href="#wrapping">§</a>Wrapping</h3>
+<p><strong>Note:</strong> <em>Either the <code>std</code> or <code>alloc</code> feature is required for wrapping.
+<code>std</code> is enabled by default. See <a href="#crate-features">crate features</a>.</em></p>
+<p>Styling can <em>wrap</em> via <a href="enum.Quirk.html#variant.Wrap" title="variant yansi::Quirk::Wrap"><code>Quirk::Wrap</code></a> or the equivalent
+<a href="struct.Painted.html#method.wrap" title="method yansi::Painted::wrap"><code>wrap()</code></a> constructor. A wrapping style modifies any
+styling resets emitted by the internal value so that they correspond to the
+wrapping style. In other words, the “reset” style of the wrapped item is
+modified to be the style being <code>.wrap()</code>d.</p>
+<p>Wrapping is useful in situations where opaque and arbitrary values must be
+styled consistently irrespective of any existing styling. For example, a
+generic logger might want to style messages based on log levels
+consistently, even when those messages may already include styling. Wrapping
+exists to enable such consistent styling:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::Paint;
+
+<span class="comment">// Imagine that `inner` is opaque and we don't know it's styling.
+</span><span class="kw">let </span>inner = <span class="macro">format!</span>(<span class="string">"{} and {}"</span>, <span class="string">"Stop"</span>.red(), <span class="string">"Go"</span>.green());
+
+<span class="comment">// We can use `wrap` to ensure anything in `inner` not styled is blue.
+</span><span class="macro">println!</span>(<span class="string">"Hey! {}"</span>, inner.blue().wrap());</code></pre></div>
+<p>Thanks to wrapping, this prints:
+<code>&gt;</code> Hey! <span style="color: blue">
+<span style="color: red">Stop</span> and
+<span style="color: green">Go</span>
+</span></p>
+<p>Without wrapping, the reset after <code>"Stop".red()</code> would not be overwritten:
+<code>&gt;</code> Hey! <span style="color: red">Stop</span> and <span style="color: green">Go</span></p>
+<p>Wrapping incurs a performance cost due to an extra allocation and
+replacement if the wrapped item has styling applied to it. Otherwise, it
+does not allocate nor incur a meaningful performance cost.</p>
+<h3 id="lingering"><a class="doc-anchor" href="#lingering">§</a>Lingering</h3>
+<p>Styling can <em>linger</em> beyond a single value via <a href="enum.Quirk.html#variant.Linger" title="variant yansi::Quirk::Linger"><code>Quirk::Linger</code></a> or the
+equivalent <a href="struct.Painted.html#method.linger" title="method yansi::Painted::linger"><code>linger()</code></a> constructor. A lingering style
+does not reset itself after being applied. In other words, the style lingers
+on beyond the value it’s applied to, until something else resets the
+respective styling.</p>
+<p>The complement to lingering is force resetting via <a href="enum.Quirk.html#variant.Resetting" title="variant yansi::Quirk::Resetting"><code>Quirk::Resetting</code></a> or
+the equivalent <a href="struct.Painted.html#method.resetting" title="method yansi::Painted::resetting"><code>resetting()</code></a> constructor. Force
+resetting, as the name implies, forces a reset suffix to be emitted after
+the value, irrespective of any lingering applied. It can be used as a way to
+finalize a lingering style.</p>
+<p>Lingering itself is useful in situations where a given style is to be
+repeated across multiple values, or when style is intended to persist even
+across values that are not styled with <code>yansi</code>. It also allows avoiding
+unnecessarily repeated ANSI code sequences. The examples below illustrate
+some scenarios in which lingering is useful:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::Paint;
+
+<span class="macro">println!</span>(<span class="string">"Hello! {} {} things with {} {}?"</span>,
+    <span class="string">"How"</span>.magenta().underline().linger(),
+    <span class="string">"are"</span>.italic().linger(),
+    <span class="string">"you"</span>.on_yellow(), <span class="comment">// doesn't linger, so all styling is reset here
+    </span><span class="string">"today"</span>.blue());</code></pre></div>
+<p><code>&gt;</code> Hello!
+<span style="color: magenta;">
+<u>How <i>are things with <span style="background: yellow;">you</span></i></u>
+</span>
+<span style="color: blue;">today</span>?</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::Paint;
+
+<span class="macro">println!</span>(<span class="string">"Hello! {} {} things with {} {}?"</span>,
+    <span class="string">"How"</span>.magenta().underline().linger(),
+    <span class="string">"are"</span>.italic(), <span class="comment">// doesn't linger, so all styling is reset here
+    </span><span class="string">"you"</span>.on_yellow().linger(),
+    <span class="string">"today"</span>.blue()); <span class="comment">// doesn't linger; styling is reset</span></code></pre></div>
+<p><code>&gt;</code> Hello!
+<span style="color: magenta;">
+<u>How <i>are</i></u>
+</span>
+things with
+<span style="background: yellow;">
+you
+<span style="color: blue;">today</span></span>?</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::Paint;
+
+<span class="macro">println!</span>(<span class="string">"{} B {} {} {} F"</span>,
+    <span class="string">"A"</span>.red().linger(),
+    <span class="string">"C"</span>.underline().linger(),
+    <span class="string">"D"</span>, <span class="comment">// doesn't linger, but no styling applied, thus no reset
+    </span><span class="string">"E"</span>.resetting());  <span class="comment">// explicitly reset</span></code></pre></div>
+<p><code>&gt;</code> <span style="color: red;"> A B <u>C D E</u> </span> F</p>
+<h3 id="brightening"><a class="doc-anchor" href="#brightening">§</a>Brightening</h3>
+<p>Most pimrary colors are available in regular and <em>bright</em> variants, e.g.,
+<a href="enum.Color.html#variant.Red" title="variant yansi::Color::Red"><code>Color::Red</code></a> and <a href="enum.Color.html#variant.BrightRed" title="variant yansi::Color::BrightRed"><code>Color::BrightRed</code></a>. The <a href="enum.Quirk.html#variant.Bright" title="variant yansi::Quirk::Bright"><code>Quirk::Bright</code></a> and
+<a href="enum.Quirk.html#variant.OnBright" title="variant yansi::Quirk::OnBright"><code>Quirk::OnBright</code></a> quirks, typically applied via
+<a href="struct.Painted.html#method.bright" title="method yansi::Painted::bright"><code>.bright()</code></a> and <a href="struct.Painted.html#method.on_bright" title="method yansi::Painted::on_bright"><code>.on_bright()</code></a>,
+provide an alternative, convenient mechanism to select the bright variant of
+the selected foreground or background color, respectively. The quirk
+provides no additional colors and is equivalent to selecting the bright
+variants directly.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::Paint;
+
+<span class="comment">// These are all equivalent.
+</span><span class="macro">print!</span>(<span class="string">"{}"</span>, <span class="string">"Regular"</span>.red());
+<span class="macro">print!</span>(<span class="string">"{}"</span>, <span class="string">"Bright"</span>.bright_red());
+<span class="macro">print!</span>(<span class="string">"{}"</span>, <span class="string">"Bright"</span>.bright().red());
+<span class="macro">print!</span>(<span class="string">"{}"</span>, <span class="string">"Bright"</span>.red().bright());
+
+<span class="comment">// The `bright` quirk lets use choose the bright variants of _any_ color,
+// even when the color or style is unknown at the call site.
+</span><span class="macro">print!</span>(<span class="string">"{}"</span>, <span class="string">"Normal"</span>.paint(STYLE));
+<span class="macro">print!</span>(<span class="string">"{}"</span>, <span class="string">"Bright"</span>.paint(STYLE).bright());</code></pre></div>
+<p><code>&gt;</code> <span style="color: red;">Regular</span>
+<span style="color: hotpink;">Bright</span>
+<span style="color: hotpink;">Bright</span>
+<span style="color: hotpink;">Bright</span>
+<span style="color: green;"><b>Normal</b></span>
+<span style="color: greenyellow;"><b>Bright</b></span></p>
+<p>The <code>bright()</code> quirk can be applied before or after a color is selected
+while having the same effect.</p>
+<h2 id="windows"><a class="doc-anchor" href="#windows">§</a>Windows</h2>
+<p>Styling is supported and enabled automatically on Windows beginning with
+the Windows 10 Anniversary Update, or about <a href="https://gs.statcounter.com/os-version-market-share/windows/desktop/worldwide">96% of all Windows machines
+worldwide</a>,
+and likely closer to 100% of developer machines (e.g., 99% of visitors to
+<a href="https://rocket.rs">rocket.rs</a> on Windows are on Windows 10+).</p>
+<p>Yansi enables styling support on Windows by querying the Windows API on the
+first attempt to color. If support is available, it is enabled. If support
+is not available, styling is disabled and no styling sequences are emitted.</p>
+<h2 id="crate-features"><a class="doc-anchor" href="#crate-features">§</a>Crate Features</h2><div><table><thead><tr><th>Feature</th><th>Default?</th><th>Also Enables</th><th>Notes</th></tr></thead><tbody>
+<tr><td><code>std</code></td><td><strong>Y</strong></td><td><code>alloc</code></td><td>Use <code>std</code> library.</td></tr>
+<tr><td><code>alloc</code></td><td><strong>Y</strong></td><td></td><td>Use <code>alloc</code>. Enables <a href="#wrapping">wrapping</a>.</td></tr>
+<tr><td><code>detect-tty</code></td><td>N</td><td><code>std</code></td><td>See <a href="struct.Condition.html#built-in-conditions" title="struct yansi::Condition">optional conditions</a>.</td></tr>
+<tr><td><code>detect-env</code></td><td>N</td><td><code>std</code></td><td>See <a href="struct.Condition.html#built-in-conditions" title="struct yansi::Condition">optional conditions</a>.</td></tr>
+<tr><td><code>hyperlink</code></td><td>N</td><td><code>std</code></td><td>Enables <a href="hyperlink">hyperlinking</a> support.</td></tr>
+</tbody></table>
+</div>
+<p>With <code>default-features = false</code>, this crate is <code>#[no_std]</code>.</p>
+<p>Without any features enabled, all functionality except <a href="#wrapping">wrapping</a> is
+available. To recover wrapping <em>with</em> <code>#[no_std]</code>, set <code>default-features = false</code> and enable the <code>alloc</code> feature, which requires <code>alloc</code> support.</p>
+</div></details><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.Condition.html" title="struct yansi::Condition">Condition</a></dt><dd>A function that decides whether styling should be applied.</dd><dt><a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a></dt><dd>An arbitrary value with a <a href="struct.Style.html" title="struct yansi::Style"><code>Style</code></a> applied to it.</dd><dt><a class="struct" href="struct.Style.html" title="struct yansi::Style">Style</a></dt><dd>A set of styling options.</dd></dl><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><dl class="item-table"><dt><a class="enum" href="enum.Attribute.html" title="enum yansi::Attribute">Attribute</a></dt><dd>Enum representing text attributes, largely for text formatting.</dd><dt><a class="enum" href="enum.Color.html" title="enum yansi::Color">Color</a></dt><dd>Enum representing a terminal color.</dd><dt><a class="enum" href="enum.Quirk.html" title="enum yansi::Quirk">Quirk</a></dt><dd>Enum representing a <code>yansi</code> quirk.</dd></dl><h2 id="traits" class="section-header">Traits<a href="#traits" class="anchor">§</a></h2><dl class="item-table"><dt><a class="trait" href="trait.Paint.html" title="trait yansi::Paint">Paint</a></dt><dd>A trait to apply styling to any value. Implemented for all types.</dd></dl><h2 id="functions" class="section-header">Functions<a href="#functions" class="anchor">§</a></h2><dl class="item-table"><dt><a class="fn" href="fn.disable.html" title="fn yansi::disable">disable</a></dt><dd>Unconditionally disables styling globally.</dd><dt><a class="fn" href="fn.enable.html" title="fn yansi::enable">enable</a></dt><dd>Unconditionally enables styling globally.</dd><dt><a class="fn" href="fn.is_enabled.html" title="fn yansi::is_enabled">is_<wbr>enabled</a></dt><dd>Returns <code>true</code> if styling is globally enabled and <code>false</code> otherwise.</dd><dt><a class="fn" href="fn.whenever.html" title="fn yansi::whenever">whenever</a></dt><dd>Dynamically enables and disables styling globally based on <code>condition</code>.</dd></dl></section></div></main></body></html>

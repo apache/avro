@@ -1,0 +1,111 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Marks a function or static variable as a library/executable constructor. This uses OS-specific linker sections to call a specific function at load time."><title>ctor in ctor - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="ctor" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../static.files/storage-e2aeef58.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc attr"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">ctor</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../ctor/index.html">ctor</a><span class="version">0.6.3</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">ctor</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#important-notes" title="Important notes">Important notes</a></li><li><a href="#attribute-parameters" title="Attribute parameters">Attribute parameters</a></li><li><a href="#examples" title="Examples">Examples</a></li><li><a href="#details" title="Details">Details</a></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="index.html">In crate ctor</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="index.html">ctor</a></div><h1>Attribute Macro <span class="attr">ctor</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/ctor_proc_macro/lib.rs.html#9">Source</a> </span></div><pre class="rust item-decl"><code>#[ctor]</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Marks a function or static variable as a library/executable constructor.
+This uses OS-specific linker sections to call a specific function at load
+time.</p>
+<h2 id="important-notes"><a class="doc-anchor" href="#important-notes">§</a>Important notes</h2>
+<p>Rust does not make any guarantees about stdlib support for life-before or
+life-after main. This means that the <code>ctor</code> crate may not work as expected
+in some cases, such as when used in an <code>async</code> runtime or making use of
+stdlib services.</p>
+<p>Multiple startup functions/statics are supported, but the invocation order
+is not guaranteed.</p>
+<p>The <code>ctor</code> crate assumes it is available as a direct dependency, with
+<code>extern crate ctor</code>. If you re-export <code>ctor</code> items as part of your crate,
+you can use the <code>crate_path</code> parameter to redirect the macro’s output to the
+correct crate.</p>
+<h2 id="attribute-parameters"><a class="doc-anchor" href="#attribute-parameters">§</a>Attribute parameters</h2>
+<ul>
+<li><code>crate_path = ::path::to::ctor::crate</code>: The path to the <code>ctor</code> crate
+containing the support macros. If you re-export <code>ctor</code> items as part of
+your crate, you can use this to redirect the macro’s output to the
+correct crate.</li>
+<li><code>used(linker)</code>: (Advanced) Mark the function as being used in the link
+phase.</li>
+<li><code>link_section = "section"</code>: The section to place the constructor in.</li>
+<li><code>anonymous</code>: Do not give the constructor a name in the generated code
+(allows for multiple constructors with the same name).</li>
+</ul>
+<h2 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h2>
+<p>Print a startup message (using <code>libc_print</code> for safety):</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>libc_print::std_name::println;
+
+<span class="attr">#[ctor]
+</span><span class="kw">unsafe fn </span>foo() {
+  <span class="comment">// Using libc_print which is safe in `#[ctor]`
+  </span><span class="macro">println!</span>(<span class="string">"Hello, world!"</span>);
+}
+
+<span class="macro">println!</span>(<span class="string">"main()"</span>);</code></pre></div>
+<p>Make changes to <code>static</code> variables:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">static </span>INITED: AtomicBool = AtomicBool::new(<span class="bool-val">false</span>);
+
+<span class="attr">#[ctor]
+</span><span class="kw">unsafe fn </span>set_inited() {
+  INITED.store(<span class="bool-val">true</span>, Ordering::SeqCst);
+}</code></pre></div>
+<p>Initialize a <code>HashMap</code> at startup time:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[ctor]
+</span><span class="kw">pub static </span>STATIC_CTOR: HashMap&lt;u32, String&gt; = <span class="kw">unsafe </span>{
+  <span class="kw">let </span><span class="kw-2">mut </span>m = HashMap::new();
+  <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">100 </span>{
+    m.insert(i, <span class="macro">format!</span>(<span class="string">"x*100={}"</span>, i<span class="kw-2">*</span><span class="number">100</span>));
+  }
+  m
+};</code></pre></div><h2 id="details"><a class="doc-anchor" href="#details">§</a>Details</h2>
+<p>The <code>#[ctor]</code> macro makes use of linker sections to ensure that a function
+is run at startup time.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[ctor]
+
+</span><span class="kw">unsafe fn </span>my_init_fn() {
+  <span class="comment">/* ... */
+</span>}</code></pre></div>
+<p>The above example translates into the following Rust code (approximately):</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[used]
+#[cfg_attr(target_os = <span class="string">"linux"</span>, link_section = <span class="string">".init_array"</span>)]
+#[cfg_attr(target_vendor = <span class="string">"apple"</span>, link_section = <span class="string">"__DATA,__mod_init_func,mod_init_funcs"</span>)]
+#[cfg_attr(target_os = <span class="string">"windows"</span>, link_section = <span class="string">".CRT$XCU"</span>)]
+</span><span class="comment">/* ... other platforms elided ... */
+</span><span class="kw">static </span>INIT_FN: <span class="kw">extern fn</span>() = {
+    <span class="kw">extern fn </span>init_fn() { my_init_fn(); };
+    init_fn
+};</code></pre></div>
+<p>For <code>static</code> items, the macro generates a <code>std::sync::OnceLock</code> that is
+initialized at startup time.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[ctor]
+</span><span class="kw">static </span>FOO: HashMap&lt;u32, String&gt; = <span class="kw">unsafe </span>{
+  <span class="kw">let </span><span class="kw-2">mut </span>m = HashMap::new();
+  <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">100 </span>{
+    m.insert(i, <span class="macro">format!</span>(<span class="string">"x*100={}"</span>, i<span class="kw-2">*</span><span class="number">100</span>));
+  }
+  m
+};</code></pre></div>
+<p>The above example translates into the following Rust code (approximately),
+which eagerly initializes the <code>HashMap</code> inside a <code>OnceLock</code> at startup time:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">static </span>FOO: FooStatic = FooStatic { value: ::std::sync::OnceLock::new() };
+<span class="kw">struct </span>FooStatic {
+  value: ::std::sync::OnceLock&lt;HashMap&lt;u32, String&gt;&gt;,
+}
+
+<span class="kw">impl </span>::std::ops::Deref <span class="kw">for </span>FooStatic {
+  <span class="kw">type </span>Target = HashMap&lt;u32, String&gt;;
+  <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+    <span class="self">self</span>.value.get_or_init(|| <span class="kw">unsafe </span>{
+      <span class="kw">let </span><span class="kw-2">mut </span>m = HashMap::new();
+      <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">100 </span>{
+        m.insert(i, <span class="macro">format!</span>(<span class="string">"x*100={}"</span>, i<span class="kw-2">*</span><span class="number">100</span>));
+      }
+      m
+    })
+  }
+}
+
+<span class="attr">#[ctor]
+</span><span class="kw">unsafe fn </span>init_foo_ctor() {
+  <span class="kw">_ </span>= <span class="kw-2">&amp;*</span>FOO;
+}</code></pre></div></div></details></section></div></main></body></html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A trait to apply styling to any value. Implemented for all types."><title>Paint in yansi - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="yansi" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../static.files/storage-e2aeef58.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Paint</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../yansi/index.html"><img src="https://raw.githubusercontent.com/SergioBenitez/yansi/master/.github/yansi-logo.png" alt="logo"></a><h2><a href="../yansi/index.html">yansi</a><span class="version">1.0.1</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Paint</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#chaining" title="Chaining">Chaining</a></li><li><a href="#borrow-vs-owned-receiver" title="Borrow vs. Owned Receiver">Borrow vs. Owned Receiver</a></li><li><a href="#further-details" title="Further Details">Further Details</a></li></ul><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.attr" title="attr">attr</a></li><li><a href="#tymethod.bg" title="bg">bg</a></li><li><a href="#tymethod.black" title="black">black</a></li><li><a href="#tymethod.blink" title="blink">blink</a></li><li><a href="#tymethod.blue" title="blue">blue</a></li><li><a href="#tymethod.bold" title="bold">bold</a></li><li><a href="#tymethod.bright" title="bright">bright</a></li><li><a href="#tymethod.bright_black" title="bright_black">bright_black</a></li><li><a href="#tymethod.bright_blue" title="bright_blue">bright_blue</a></li><li><a href="#tymethod.bright_cyan" title="bright_cyan">bright_cyan</a></li><li><a href="#tymethod.bright_green" title="bright_green">bright_green</a></li><li><a href="#tymethod.bright_magenta" title="bright_magenta">bright_magenta</a></li><li><a href="#tymethod.bright_red" title="bright_red">bright_red</a></li><li><a href="#tymethod.bright_white" title="bright_white">bright_white</a></li><li><a href="#tymethod.bright_yellow" title="bright_yellow">bright_yellow</a></li><li><a href="#tymethod.clear" title="clear">clear</a></li><li><a href="#tymethod.conceal" title="conceal">conceal</a></li><li><a href="#tymethod.cyan" title="cyan">cyan</a></li><li><a href="#tymethod.dim" title="dim">dim</a></li><li><a href="#tymethod.fg" title="fg">fg</a></li><li><a href="#tymethod.fixed" title="fixed">fixed</a></li><li><a href="#tymethod.green" title="green">green</a></li><li><a href="#tymethod.invert" title="invert">invert</a></li><li><a href="#tymethod.italic" title="italic">italic</a></li><li><a href="#tymethod.linger" title="linger">linger</a></li><li><a href="#tymethod.magenta" title="magenta">magenta</a></li><li><a href="#tymethod.mask" title="mask">mask</a></li><li><a href="#tymethod.on_black" title="on_black">on_black</a></li><li><a href="#tymethod.on_blue" title="on_blue">on_blue</a></li><li><a href="#tymethod.on_bright" title="on_bright">on_bright</a></li><li><a href="#tymethod.on_bright_black" title="on_bright_black">on_bright_black</a></li><li><a href="#tymethod.on_bright_blue" title="on_bright_blue">on_bright_blue</a></li><li><a href="#tymethod.on_bright_cyan" title="on_bright_cyan">on_bright_cyan</a></li><li><a href="#tymethod.on_bright_green" title="on_bright_green">on_bright_green</a></li><li><a href="#tymethod.on_bright_magenta" title="on_bright_magenta">on_bright_magenta</a></li><li><a href="#tymethod.on_bright_red" title="on_bright_red">on_bright_red</a></li><li><a href="#tymethod.on_bright_white" title="on_bright_white">on_bright_white</a></li><li><a href="#tymethod.on_bright_yellow" title="on_bright_yellow">on_bright_yellow</a></li><li><a href="#tymethod.on_cyan" title="on_cyan">on_cyan</a></li><li><a href="#tymethod.on_fixed" title="on_fixed">on_fixed</a></li><li><a href="#tymethod.on_green" title="on_green">on_green</a></li><li><a href="#tymethod.on_magenta" title="on_magenta">on_magenta</a></li><li><a href="#tymethod.on_primary" title="on_primary">on_primary</a></li><li><a href="#tymethod.on_red" title="on_red">on_red</a></li><li><a href="#tymethod.on_rgb" title="on_rgb">on_rgb</a></li><li><a href="#tymethod.on_white" title="on_white">on_white</a></li><li><a href="#tymethod.on_yellow" title="on_yellow">on_yellow</a></li><li><a href="#tymethod.primary" title="primary">primary</a></li><li><a href="#tymethod.quirk" title="quirk">quirk</a></li><li><a href="#tymethod.rapid_blink" title="rapid_blink">rapid_blink</a></li><li><a href="#tymethod.red" title="red">red</a></li><li><a href="#tymethod.resetting" title="resetting">resetting</a></li><li><a href="#tymethod.rgb" title="rgb">rgb</a></li><li><a href="#tymethod.strike" title="strike">strike</a></li><li><a href="#tymethod.underline" title="underline">underline</a></li><li><a href="#tymethod.whenever" title="whenever">whenever</a></li><li><a href="#tymethod.white" title="white">white</a></li><li><a href="#tymethod.wrap" title="wrap">wrap</a></li><li><a href="#tymethod.yellow" title="yellow">yellow</a></li></ul><h3><a href="#provided-methods">Provided Methods</a></h3><ul class="block"><li><a href="#method.new" title="new">new</a></li><li><a href="#method.paint" title="paint">paint</a></li></ul><h3><a href="#dyn-compatibility">Dyn Compatibility</a></h3><h3><a href="#implementors">Implementors</a></h3></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="index.html">In crate yansi</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="index.html">yansi</a></div><h1>Trait <span class="trait">Paint</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/yansi/paint.rs.html#92-131">Source</a> </span></div><pre class="rust item-decl"><code>pub trait Paint {
+<details class="toggle type-contents-toggle"><summary class="hideme"><span>Show 61 methods</span></summary>    // Required methods
+    fn <a href="#tymethod.fg" class="fn">fg</a>(&amp;self, value: <a class="enum" href="enum.Color.html" title="enum yansi::Color">Color</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.primary" class="fn">primary</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.fixed" class="fn">fixed</a>(&amp;self, color: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.rgb" class="fn">rgb</a>(&amp;self, r: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>, g: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>, b: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.black" class="fn">black</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.red" class="fn">red</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.green" class="fn">green</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.yellow" class="fn">yellow</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.blue" class="fn">blue</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.magenta" class="fn">magenta</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.cyan" class="fn">cyan</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.white" class="fn">white</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.bright_black" class="fn">bright_black</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.bright_red" class="fn">bright_red</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.bright_green" class="fn">bright_green</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.bright_yellow" class="fn">bright_yellow</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.bright_blue" class="fn">bright_blue</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.bright_magenta" class="fn">bright_magenta</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.bright_cyan" class="fn">bright_cyan</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.bright_white" class="fn">bright_white</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.bg" class="fn">bg</a>(&amp;self, value: <a class="enum" href="enum.Color.html" title="enum yansi::Color">Color</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_primary" class="fn">on_primary</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_fixed" class="fn">on_fixed</a>(&amp;self, color: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_rgb" class="fn">on_rgb</a>(&amp;self, r: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>, g: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>, b: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_black" class="fn">on_black</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_red" class="fn">on_red</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_green" class="fn">on_green</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_yellow" class="fn">on_yellow</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_blue" class="fn">on_blue</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_magenta" class="fn">on_magenta</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_cyan" class="fn">on_cyan</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_white" class="fn">on_white</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_bright_black" class="fn">on_bright_black</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_bright_red" class="fn">on_bright_red</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_bright_green" class="fn">on_bright_green</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_bright_yellow" class="fn">on_bright_yellow</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_bright_blue" class="fn">on_bright_blue</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_bright_magenta" class="fn">on_bright_magenta</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_bright_cyan" class="fn">on_bright_cyan</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_bright_white" class="fn">on_bright_white</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.attr" class="fn">attr</a>(&amp;self, value: <a class="enum" href="enum.Attribute.html" title="enum yansi::Attribute">Attribute</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.bold" class="fn">bold</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.dim" class="fn">dim</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.italic" class="fn">italic</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.underline" class="fn">underline</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.blink" class="fn">blink</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.rapid_blink" class="fn">rapid_blink</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.invert" class="fn">invert</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.conceal" class="fn">conceal</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.strike" class="fn">strike</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.quirk" class="fn">quirk</a>(&amp;self, value: <a class="enum" href="enum.Quirk.html" title="enum yansi::Quirk">Quirk</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.mask" class="fn">mask</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.wrap" class="fn">wrap</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.linger" class="fn">linger</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.clear" class="fn">clear</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.resetting" class="fn">resetting</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.bright" class="fn">bright</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.on_bright" class="fn">on_bright</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.whenever" class="fn">whenever</a>(&amp;self, value: <a class="struct" href="struct.Condition.html" title="struct yansi::Condition">Condition</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;;
+
+    // Provided methods
+    fn <a href="#method.new" class="fn">new</a>(self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;Self&gt;
+       <span class="where">where Self: <a class="trait" href="https://doc.rust-lang.org/1.93.1/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a></span> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.paint" class="fn">paint</a>&lt;S: <a class="trait" href="https://doc.rust-lang.org/1.93.1/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="struct" href="struct.Style.html" title="struct yansi::Style">Style</a>&gt;&gt;(&amp;self, style: S) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt; { ... }
+</details>}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A trait to apply styling to any value. Implemented for all types.</p>
+<p>Because this trait is implemented for all types, you can use its methods on
+any type. With the exception of one constructor method, <a href="trait.Paint.html#method.new" title="method yansi::Paint::new"><code>Paint::new()</code></a>,
+all methods are called with method syntax:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::Paint;
+
+<span class="string">"hello"</span>.green(); <span class="comment">// calls `Paint::&lt;&amp;'static str&gt;::green()`.
+</span><span class="string">"hello"</span>.strike(); <span class="comment">// calls `Paint::&lt;&amp;'static str&gt;::strike()`.
+</span><span class="number">1</span>.on_red(); <span class="comment">// calls `Paint::&lt;i32&gt;::red()`.
+</span><span class="number">1</span>.blink(); <span class="comment">// calls `Paint::&lt;i32&gt;::blink()`.</span></code></pre></div><h4 id="chaining"><a class="doc-anchor" href="#chaining">§</a>Chaining</h4>
+<p>All methods return a <a href="struct.Painted.html" title="struct yansi::Painted"><code>Painted</code></a> whose methods are exactly those of <code>Paint</code>.
+This means you can chain <code>Paint</code> method calls:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::Paint;
+
+<span class="string">"hello"</span>.green().strike(); <span class="comment">// calls `Paint::green()` then `Painted::strike()`.
+</span><span class="number">1</span>.on_red().blink(); <span class="comment">// calls `Paint::red()` + `Painted::blink()`.</span></code></pre></div><h4 id="borrow-vs-owned-receiver"><a class="doc-anchor" href="#borrow-vs-owned-receiver">§</a>Borrow vs. Owned Receiver</h4>
+<p>The returned <a href="struct.Painted.html" title="struct yansi::Painted"><code>Painted</code></a> type contains a borrow to the receiver:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::{Paint, Painted};
+
+<span class="kw">let </span>v: Painted&lt;<span class="kw-2">&amp;</span>i32&gt; = <span class="number">1</span>.red();</code></pre></div>
+<p>This is nearly always what you want. In the exceedingly rare case that you
+<em>do</em> want <code>Painted</code> to own its value, use <a href="trait.Paint.html#method.new" title="method yansi::Paint::new"><code>Paint::new()</code></a> or the equivalent
+<a href="struct.Painted.html#method.new" title="associated function yansi::Painted::new"><code>Painted::new()</code></a>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::{Paint, Painted};
+
+<span class="kw">let </span>v: Painted&lt;i32&gt; = Paint::new(<span class="number">1</span>);
+<span class="kw">let </span>v: Painted&lt;i32&gt; = Painted::new(<span class="number">1</span>);</code></pre></div><h4 id="further-details"><a class="doc-anchor" href="#further-details">§</a>Further Details</h4>
+<p>See the <a href="index.html#usage" title="mod yansi">crate level docs</a> for more details and examples.</p>
+</div></details><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.fg" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.fg" class="fn">fg</a>(&amp;self, value: <a class="enum" href="enum.Color.html" title="enum yansi::Color">Color</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns a styled value derived from <code>self</code> with the foreground set to
+<code>value</code>.</p>
+<p>This method should be used rarely. Instead, prefer to use color-specific
+builder methods like <a href="trait.Paint.html#tymethod.red"><code>red()</code></a> and
+<a href="trait.Paint.html#tymethod.green"><code>green()</code></a>, which have the same functionality but are
+pithier.</p>
+<h5 id="example"><a class="doc-anchor" href="#example">§</a>Example</h5>
+<p>Set foreground color to white using <code>fg()</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::{Paint, Color};
+
+painted.fg(Color::White);</code></pre></div>
+<p>Set foreground color to white using <a href="trait.Paint.html#tymethod.white"><code>white()</code></a>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::Paint;
+
+painted.white();</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.primary" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.primary" class="fn">primary</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: Primary</code>].</p>
+<h5 id="example-1"><a class="doc-anchor" href="#example-1">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.primary());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.fixed" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.fixed" class="fn">fixed</a>(&amp;self, color: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: Fixed</code>].</p>
+<h5 id="example-2"><a class="doc-anchor" href="#example-2">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.fixed(color));</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.rgb" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.rgb" class="fn">rgb</a>(&amp;self, r: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>, g: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>, b: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: Rgb</code>].</p>
+<h5 id="example-3"><a class="doc-anchor" href="#example-3">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.rgb(r, g, b));</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.black" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.black" class="fn">black</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: Black</code>].</p>
+<h5 id="example-4"><a class="doc-anchor" href="#example-4">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.black());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.red" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.red" class="fn">red</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: Red</code>].</p>
+<h5 id="example-5"><a class="doc-anchor" href="#example-5">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.red());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.green" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.green" class="fn">green</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: Green</code>].</p>
+<h5 id="example-6"><a class="doc-anchor" href="#example-6">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.green());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.yellow" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.yellow" class="fn">yellow</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: Yellow</code>].</p>
+<h5 id="example-7"><a class="doc-anchor" href="#example-7">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.yellow());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.blue" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.blue" class="fn">blue</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: Blue</code>].</p>
+<h5 id="example-8"><a class="doc-anchor" href="#example-8">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.blue());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.magenta" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.magenta" class="fn">magenta</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: Magenta</code>].</p>
+<h5 id="example-9"><a class="doc-anchor" href="#example-9">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.magenta());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.cyan" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.cyan" class="fn">cyan</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: Cyan</code>].</p>
+<h5 id="example-10"><a class="doc-anchor" href="#example-10">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.cyan());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.white" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.white" class="fn">white</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: White</code>].</p>
+<h5 id="example-11"><a class="doc-anchor" href="#example-11">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.white());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.bright_black" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.bright_black" class="fn">bright_black</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: BrightBlack</code>].</p>
+<h5 id="example-12"><a class="doc-anchor" href="#example-12">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.bright_black());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.bright_red" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.bright_red" class="fn">bright_red</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: BrightRed</code>].</p>
+<h5 id="example-13"><a class="doc-anchor" href="#example-13">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.bright_red());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.bright_green" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.bright_green" class="fn">bright_green</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: BrightGreen</code>].</p>
+<h5 id="example-14"><a class="doc-anchor" href="#example-14">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.bright_green());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.bright_yellow" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.bright_yellow" class="fn">bright_yellow</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: BrightYellow</code>].</p>
+<h5 id="example-15"><a class="doc-anchor" href="#example-15">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.bright_yellow());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.bright_blue" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.bright_blue" class="fn">bright_blue</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: BrightBlue</code>].</p>
+<h5 id="example-16"><a class="doc-anchor" href="#example-16">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.bright_blue());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.bright_magenta" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.bright_magenta" class="fn">bright_magenta</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: BrightMagenta</code>].</p>
+<h5 id="example-17"><a class="doc-anchor" href="#example-17">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.bright_magenta());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.bright_cyan" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.bright_cyan" class="fn">bright_cyan</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: BrightCyan</code>].</p>
+<h5 id="example-18"><a class="doc-anchor" href="#example-18">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.bright_cyan());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.bright_white" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.bright_white" class="fn">bright_white</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.fg"><code>fg()</code></a>
+set to
+[<code>Color :: BrightWhite</code>].</p>
+<h5 id="example-19"><a class="doc-anchor" href="#example-19">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.bright_white());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.bg" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.bg" class="fn">bg</a>(&amp;self, value: <a class="enum" href="enum.Color.html" title="enum yansi::Color">Color</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns a styled value derived from <code>self</code> with the background set to
+<code>value</code>.</p>
+<p>This method should be used rarely. Instead, prefer to use color-specific
+builder methods like <a href="trait.Paint.html#tymethod.on_red"><code>on_red()</code></a> and
+<a href="trait.Paint.html#tymethod.on_green"><code>on_green()</code></a>, which have the same functionality but
+are pithier.</p>
+<h5 id="example-20"><a class="doc-anchor" href="#example-20">§</a>Example</h5>
+<p>Set background color to red using <code>fg()</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::{Paint, Color};
+
+painted.bg(Color::Red);</code></pre></div>
+<p>Set background color to red using <a href="trait.Paint.html#tymethod.on_red"><code>on_red()</code></a>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::Paint;
+
+painted.on_red();</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_primary" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_primary" class="fn">on_primary</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: Primary</code>].</p>
+<h5 id="example-21"><a class="doc-anchor" href="#example-21">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_primary());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_fixed" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_fixed" class="fn">on_fixed</a>(&amp;self, color: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: Fixed</code>].</p>
+<h5 id="example-22"><a class="doc-anchor" href="#example-22">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_fixed(color));</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_rgb" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_rgb" class="fn">on_rgb</a>(&amp;self, r: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>, g: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>, b: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.u8.html">u8</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: Rgb</code>].</p>
+<h5 id="example-23"><a class="doc-anchor" href="#example-23">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_rgb(r, g, b));</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_black" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_black" class="fn">on_black</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: Black</code>].</p>
+<h5 id="example-24"><a class="doc-anchor" href="#example-24">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_black());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_red" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_red" class="fn">on_red</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: Red</code>].</p>
+<h5 id="example-25"><a class="doc-anchor" href="#example-25">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_red());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_green" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_green" class="fn">on_green</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: Green</code>].</p>
+<h5 id="example-26"><a class="doc-anchor" href="#example-26">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_green());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_yellow" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_yellow" class="fn">on_yellow</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: Yellow</code>].</p>
+<h5 id="example-27"><a class="doc-anchor" href="#example-27">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_yellow());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_blue" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_blue" class="fn">on_blue</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: Blue</code>].</p>
+<h5 id="example-28"><a class="doc-anchor" href="#example-28">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_blue());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_magenta" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_magenta" class="fn">on_magenta</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: Magenta</code>].</p>
+<h5 id="example-29"><a class="doc-anchor" href="#example-29">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_magenta());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_cyan" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_cyan" class="fn">on_cyan</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: Cyan</code>].</p>
+<h5 id="example-30"><a class="doc-anchor" href="#example-30">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_cyan());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_white" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_white" class="fn">on_white</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: White</code>].</p>
+<h5 id="example-31"><a class="doc-anchor" href="#example-31">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_white());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_bright_black" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_bright_black" class="fn">on_bright_black</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: BrightBlack</code>].</p>
+<h5 id="example-32"><a class="doc-anchor" href="#example-32">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_bright_black());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_bright_red" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_bright_red" class="fn">on_bright_red</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: BrightRed</code>].</p>
+<h5 id="example-33"><a class="doc-anchor" href="#example-33">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_bright_red());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_bright_green" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_bright_green" class="fn">on_bright_green</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: BrightGreen</code>].</p>
+<h5 id="example-34"><a class="doc-anchor" href="#example-34">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_bright_green());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_bright_yellow" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_bright_yellow" class="fn">on_bright_yellow</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: BrightYellow</code>].</p>
+<h5 id="example-35"><a class="doc-anchor" href="#example-35">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_bright_yellow());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_bright_blue" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_bright_blue" class="fn">on_bright_blue</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: BrightBlue</code>].</p>
+<h5 id="example-36"><a class="doc-anchor" href="#example-36">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_bright_blue());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_bright_magenta" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_bright_magenta" class="fn">on_bright_magenta</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: BrightMagenta</code>].</p>
+<h5 id="example-37"><a class="doc-anchor" href="#example-37">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_bright_magenta());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_bright_cyan" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_bright_cyan" class="fn">on_bright_cyan</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: BrightCyan</code>].</p>
+<h5 id="example-38"><a class="doc-anchor" href="#example-38">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_bright_cyan());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_bright_white" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_bright_white" class="fn">on_bright_white</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.bg"><code>bg()</code></a>
+set to
+[<code>Color :: BrightWhite</code>].</p>
+<h5 id="example-39"><a class="doc-anchor" href="#example-39">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_bright_white());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.attr" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.attr" class="fn">attr</a>(&amp;self, value: <a class="enum" href="enum.Attribute.html" title="enum yansi::Attribute">Attribute</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Enables the styling <a href="enum.Attribute.html" title="enum yansi::Attribute"><code>Attribute</code></a> <code>value</code>.</p>
+<p>This method should be used rarely. Instead, prefer to use
+attribute-specific builder methods like <a href="trait.Paint.html#tymethod.bold"><code>bold()</code></a> and
+<a href="trait.Paint.html#tymethod.underline"><code>underline()</code></a>, which have the same functionality
+but are pithier.</p>
+<h5 id="example-40"><a class="doc-anchor" href="#example-40">§</a>Example</h5>
+<p>Make text bold using <code>attr()</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::{Paint, Attribute};
+
+painted.attr(Attribute::Bold);</code></pre></div>
+<p>Make text bold using using <a href="trait.Paint.html#tymethod.bold"><code>bold()</code></a>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::Paint;
+
+painted.bold();</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.bold" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.bold" class="fn">bold</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.attr"><code>attr()</code></a>
+set to
+[<code>Attribute :: Bold</code>].</p>
+<h5 id="example-41"><a class="doc-anchor" href="#example-41">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.bold());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.dim" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.dim" class="fn">dim</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.attr"><code>attr()</code></a>
+set to
+[<code>Attribute :: Dim</code>].</p>
+<h5 id="example-42"><a class="doc-anchor" href="#example-42">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.dim());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.italic" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.italic" class="fn">italic</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.attr"><code>attr()</code></a>
+set to
+[<code>Attribute :: Italic</code>].</p>
+<h5 id="example-43"><a class="doc-anchor" href="#example-43">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.italic());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.underline" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.underline" class="fn">underline</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.attr"><code>attr()</code></a>
+set to
+[<code>Attribute :: Underline</code>].</p>
+<h5 id="example-44"><a class="doc-anchor" href="#example-44">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.underline());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.blink" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.blink" class="fn">blink</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.attr"><code>attr()</code></a>
+set to
+[<code>Attribute :: Blink</code>].</p>
+<h5 id="example-45"><a class="doc-anchor" href="#example-45">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.blink());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.rapid_blink" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.rapid_blink" class="fn">rapid_blink</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.attr"><code>attr()</code></a>
+set to
+[<code>Attribute :: RapidBlink</code>].</p>
+<h5 id="example-46"><a class="doc-anchor" href="#example-46">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.rapid_blink());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.invert" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.invert" class="fn">invert</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.attr"><code>attr()</code></a>
+set to
+[<code>Attribute :: Invert</code>].</p>
+<h5 id="example-47"><a class="doc-anchor" href="#example-47">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.invert());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.conceal" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.conceal" class="fn">conceal</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.attr"><code>attr()</code></a>
+set to
+[<code>Attribute :: Conceal</code>].</p>
+<h5 id="example-48"><a class="doc-anchor" href="#example-48">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.conceal());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.strike" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.strike" class="fn">strike</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.attr"><code>attr()</code></a>
+set to
+[<code>Attribute :: Strike</code>].</p>
+<h5 id="example-49"><a class="doc-anchor" href="#example-49">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.strike());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.quirk" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.quirk" class="fn">quirk</a>(&amp;self, value: <a class="enum" href="enum.Quirk.html" title="enum yansi::Quirk">Quirk</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Enables the <code>yansi</code> <a href="enum.Quirk.html" title="enum yansi::Quirk"><code>Quirk</code></a> <code>value</code>.</p>
+<p>This method should be used rarely. Instead, prefer to use quirk-specific
+builder methods like <a href="trait.Paint.html#tymethod.mask"><code>mask()</code></a> and
+<a href="trait.Paint.html#tymethod.wrap"><code>wrap()</code></a>, which have the same functionality but are
+pithier.</p>
+<h5 id="example-50"><a class="doc-anchor" href="#example-50">§</a>Example</h5>
+<p>Enable wrapping using <code>.quirk()</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::{Paint, Quirk};
+
+painted.quirk(Quirk::Wrap);</code></pre></div>
+<p>Enable wrapping using <a href="trait.Paint.html#tymethod.wrap"><code>wrap()</code></a>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::Paint;
+
+painted.wrap();</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.mask" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.mask" class="fn">mask</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.quirk"><code>quirk()</code></a>
+set to
+[<code>Quirk :: Mask</code>].</p>
+<h5 id="example-51"><a class="doc-anchor" href="#example-51">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.mask());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.wrap" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.wrap" class="fn">wrap</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.quirk"><code>quirk()</code></a>
+set to
+[<code>Quirk :: Wrap</code>].</p>
+<h5 id="example-52"><a class="doc-anchor" href="#example-52">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.wrap());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.linger" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.linger" class="fn">linger</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.quirk"><code>quirk()</code></a>
+set to
+[<code>Quirk :: Linger</code>].</p>
+<h5 id="example-53"><a class="doc-anchor" href="#example-53">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.linger());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.clear" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.clear" class="fn">clear</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section><span class="item-info"><div class="stab deprecated"><span class="emoji">👎</span><span>Deprecated since 1.0.1: renamed to <code>resetting()</code> due to conflicts with <code>Vec::clear()</code>.
+The <code>clear()</code> method will be removed in a future release.</span></div></span></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.quirk"><code>quirk()</code></a>
+set to
+[<code>Quirk :: Clear</code>].</p>
+<h5 id="example-54"><a class="doc-anchor" href="#example-54">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.clear());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.resetting" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.resetting" class="fn">resetting</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.quirk"><code>quirk()</code></a>
+set to
+[<code>Quirk :: Resetting</code>].</p>
+<h5 id="example-55"><a class="doc-anchor" href="#example-55">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.resetting());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.bright" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.bright" class="fn">bright</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.quirk"><code>quirk()</code></a>
+set to
+[<code>Quirk :: Bright</code>].</p>
+<h5 id="example-56"><a class="doc-anchor" href="#example-56">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.bright());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.on_bright" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.on_bright" class="fn">on_bright</a>(&amp;self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Returns <code>self</code> with the
+<a href="trait.Paint.html#tymethod.quirk"><code>quirk()</code></a>
+set to
+[<code>Quirk :: OnBright</code>].</p>
+<h5 id="example-57"><a class="doc-anchor" href="#example-57">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">println!</span>(<span class="string">"{}"</span>, value.on_bright());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="tymethod.whenever" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.whenever" class="fn">whenever</a>(&amp;self, value: <a class="struct" href="struct.Condition.html" title="struct yansi::Condition">Condition</a>) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Conditionally enable styling based on whether the <a href="struct.Condition.html" title="struct yansi::Condition"><code>Condition</code></a> <code>value</code>
+applies. Replaces any previous condition.</p>
+<p>See the <a href="index.html#per-style" title="mod yansi">crate level docs</a> for more details.</p>
+<h5 id="example-58"><a class="doc-anchor" href="#example-58">§</a>Example</h5>
+<p>Enable styling <code>painted</code> only when both <code>stdout</code> and <code>stderr</code> are TTYs:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::{Paint, Condition};
+
+painted.red().on_yellow().whenever(Condition::STDOUTERR_ARE_TTY);</code></pre></div></div></details></div><h2 id="provided-methods" class="section-header">Provided Methods<a href="#provided-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="method.new" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#104-106">Source</a><h4 class="code-header">fn <a href="#method.new" class="fn">new</a>(self) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;Self&gt;<div class="where">where
+    Self: <a class="trait" href="https://doc.rust-lang.org/1.93.1/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,</div></h4></section></summary><div class="docblock"><p>Create a new <a href="struct.Painted.html" title="struct yansi::Painted"><code>Painted</code></a> with a default <a href="struct.Style.html" title="struct yansi::Style"><code>Style</code></a>.</p>
+<h5 id="example-59"><a class="doc-anchor" href="#example-59">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::Paint;
+
+<span class="kw">let </span>painted = Paint::new(<span class="string">"hello"</span>);
+<span class="macro">assert_eq!</span>(painted.style, yansi::Style::new());</code></pre></div></div></details><details class="toggle method-toggle" open><summary><section id="method.paint" class="method"><a class="src rightside" href="../src/yansi/paint.rs.html#126-128">Source</a><h4 class="code-header">fn <a href="#method.paint" class="fn">paint</a>&lt;S: <a class="trait" href="https://doc.rust-lang.org/1.93.1/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="struct" href="struct.Style.html" title="struct yansi::Style">Style</a>&gt;&gt;(&amp;self, style: S) -&gt; <a class="struct" href="struct.Painted.html" title="struct yansi::Painted">Painted</a>&lt;&amp;Self&gt;</h4></section></summary><div class="docblock"><p>Apply a style wholesale to <code>self</code>. Any previous style is replaced.</p>
+<h5 id="example-60"><a class="doc-anchor" href="#example-60">§</a>Example</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::{Paint, Style, Color::<span class="kw-2">*</span>};
+
+<span class="kw">static </span>DEBUG: Style = Black.bold().on_yellow();
+
+<span class="kw">let </span>painted = <span class="string">"hello"</span>.paint(DEBUG);</code></pre></div></div></details></div><h2 id="dyn-compatibility" class="section-header">Dyn Compatibility<a href="#dyn-compatibility" class="anchor">§</a></h2><div class="dyn-compatibility-info"><p>This trait is <b>not</b> <a href="https://doc.rust-lang.org/1.93.1/reference/items/traits.html#dyn-compatibility">dyn compatible</a>.</p><p><i>In older versions of Rust, dyn compatibility was called "object safety", so this trait is not object safe.</i></p></div><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><section id="impl-Paint-for-T" class="impl"><a class="src rightside" href="../src/yansi/paint.rs.html#134-136">Source</a><a href="#impl-Paint-for-T" class="anchor">§</a><h3 class="code-header">impl&lt;T: ?<a class="trait" href="https://doc.rust-lang.org/1.93.1/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>&gt; <a class="trait" href="trait.Paint.html" title="trait yansi::Paint">Paint</a> for T</h3></section></div><script src="../trait.impl/yansi/paint/trait.Paint.js" async></script></section></div></main></body></html>

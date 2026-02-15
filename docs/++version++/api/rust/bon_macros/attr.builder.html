@@ -1,0 +1,69 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Generates a builder for the function or method it’s placed on."><title>builder in bon_macros - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="bon_macros" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../static.files/storage-e2aeef58.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc attr"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">builder</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../bon_macros/index.html">bon_<wbr>macros</a><span class="version">3.9.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">builder</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#quick-examples" title="Quick examples">Quick examples</a></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="index.html">In crate bon_<wbr>macros</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="index.html">bon_macros</a></div><h1>Attribute Macro <span class="attr">builder</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/bon_macros/lib.rs.html#115-120">Source</a> </span></div><pre class="rust item-decl"><code>#[builder]</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Generates a builder for the function or method it’s placed on.</p>
+<h3 id="quick-examples"><a class="doc-anchor" href="#quick-examples">§</a>Quick examples</h3>
+<p>You can turn a function with positional parameters into a function with
+named parameters just by placing the <code>#[builder]</code> attribute on top of it.</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">use </span>bon::builder;
+
+<span class="attr">#[builder]
+</span><span class="kw">fn </span>greet(name: <span class="kw-2">&amp;</span>str, level: <span class="prelude-ty">Option</span>&lt;u32&gt;) -&gt; String {
+    <span class="kw">let </span>level = level.unwrap_or(<span class="number">0</span>);
+
+    <span class="macro">format!</span>(<span class="string">"Hello {name}! Your level is {level}"</span>)
+}
+
+<span class="kw">let </span>greeting = greet()
+    .name(<span class="string">"Bon"</span>)
+    .level(<span class="number">24</span>) <span class="comment">// &lt;- setting `level` is optional, we could omit it
+    </span>.call();
+
+<span class="macro">assert_eq!</span>(greeting, <span class="string">"Hello Bon! Your level is 24"</span>);</code></pre></div>
+<p>You can also use the <code>#[builder]</code> attribute with associated methods:</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">use </span>bon::bon;
+
+<span class="kw">struct </span>User {
+    id: u32,
+    name: String,
+}
+
+<span class="attr">#[bon] </span><span class="comment">// &lt;- this attribute is required on impl blocks that contain `#[builder]`
+</span><span class="kw">impl </span>User {
+    <span class="attr">#[builder]
+    </span><span class="kw">fn </span>new(id: u32, name: String) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ id, name }
+    }
+
+    <span class="attr">#[builder]
+    </span><span class="kw">fn </span>greet(<span class="kw-2">&amp;</span><span class="self">self</span>, target: <span class="kw-2">&amp;</span>str, level: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; String {
+        <span class="kw">let </span>level = level.unwrap_or(<span class="string">"INFO"</span>);
+        <span class="kw">let </span>name = <span class="kw-2">&amp;</span><span class="self">self</span>.name;
+
+        <span class="macro">format!</span>(<span class="string">"[{level}] {name} says hello to {target}"</span>)
+    }
+}
+
+<span class="comment">// The method named `new` generates `builder()/build()` methods
+</span><span class="kw">let </span>user = User::builder()
+    .id(<span class="number">1</span>)
+    .name(<span class="string">"Bon"</span>.to_owned())
+    .build();
+
+<span class="comment">// All other methods generate `method_name()/call()` methods
+</span><span class="kw">let </span>greeting = user
+    .greet()
+    .target(<span class="string">"the world"</span>)
+    <span class="comment">// `level` is optional, we can omit it here
+    </span>.call();
+
+<span class="macro">assert_eq!</span>(user.id, <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(user.name, <span class="string">"Bon"</span>);
+<span class="macro">assert_eq!</span>(greeting, <span class="string">"[INFO] Bon says hello to the world"</span>);</code></pre></div>
+<p>The builder never panics. Any mistakes such as missing required fields
+or setting the same field twice will be reported as compile-time errors.</p>
+<p>See the full documentation for more details:</p>
+<ul>
+<li><a href="https://bon-rs.com/guide/overview">Guide</a></li>
+<li><a href="https://bon-rs.com/reference/builder">Attributes reference</a></li>
+</ul>
+</div></details></section></div></main></body></html>

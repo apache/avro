@@ -1,0 +1,46 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Diagnostic emulation on stable and nightly."><title>proc_macro2_diagnostics - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="proc_macro2_diagnostics" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../static.files/storage-e2aeef58.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Crate proc_macro2_diagnostics</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../proc_macro2_diagnostics/index.html">proc_<wbr>macro2_<wbr>diagnostics</a><span class="version">0.10.1</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#usage" title="Usage">Usage</a></li><li><a href="#caveats" title="Caveats">Caveats</a></li><li><a href="#colors" title="Colors">Colors</a></li></ul><h3><a href="#structs">Crate Items</a></h3><ul class="block"><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#enums" title="Enums">Enums</a></li><li><a href="#traits" title="Traits">Traits</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>proc_<wbr>macro2_<wbr>diagnostics</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/proc_macro2_diagnostics/lib.rs.html#1-138">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Diagnostic emulation on stable and nightly.</p>
+<h2 id="usage"><a class="doc-anchor" href="#usage">§</a>Usage</h2>
+<ol>
+<li>Depend on the library in your proc-macro.</li>
+</ol>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+proc_macro2_diagnostics = &quot;0.10&quot;</code></pre></div>
+<ol start="2">
+<li>Import <a href="trait.SpanDiagnosticExt.html" title="trait proc_macro2_diagnostics::SpanDiagnosticExt"><code>SpanDiagnosticExt</code></a> and use its methods on a
+<a href="../proc_macro2/struct.Span.html" title="struct proc_macro2::Span"><code>proc_macro2::Span</code></a> to create <a href="struct.Diagnostic.html" title="struct proc_macro2_diagnostics::Diagnostic"><code>Diagnostic</code></a>s:</li>
+</ol>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>syn::spanned::Spanned;
+<span class="kw">use </span>proc_macro2::TokenStream;
+<span class="kw">use </span>proc_macro2_diagnostics::{SpanDiagnosticExt, Diagnostic};
+
+<span class="kw">fn </span>my_macro(input: TokenStream) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, Diagnostic&gt; {
+    <span class="prelude-val">Err</span>(input.span().error(<span class="string">"there's a problem here..."</span>))
+}</code></pre></div>
+<ol start="3">
+<li>If there’s an error, emit the diagnostic as tokens:</li>
+</ol>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">extern crate </span>proc_macro;
+
+<span class="attr">#[proc_macro]
+</span><span class="kw">pub fn </span>real_macro(tokens: proc_macro::TokenStream) -&gt; proc_macro::TokenStream {
+    <span class="kw">match </span>my_macro(tokens.into()) {
+        <span class="prelude-val">Ok</span>(tokens) =&gt; tokens.into(),
+        <span class="prelude-val">Err</span>(diag) =&gt; diag.emit_as_expr_tokens().into()
+    }
+}</code></pre></div>
+<p>This does the right thing on nightly <em>or</em> stable.</p>
+<h2 id="caveats"><a class="doc-anchor" href="#caveats">§</a>Caveats</h2>
+<p>On stable, due to limitations, any top-level, non-error diagnostics are
+emitted as errors. This will abort compilation. To avoid this, you may want
+to <code>cfg</code>-gate emitting non-error diagnostics to nightly.</p>
+<h2 id="colors"><a class="doc-anchor" href="#colors">§</a>Colors</h2>
+<p>By default, error messages are colored on stable. To disable, disable
+default features:</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+proc_macro2_diagnostics = { version = &quot;0.10&quot;, default-features = false }</code></pre></div>
+<p>The compiler always colors diagnostics on nightly.</p>
+</div></details><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.Diagnostic.html" title="struct proc_macro2_diagnostics::Diagnostic">Diagnostic</a></dt><dd>A structure representing a diagnostic message and associated children
+messages.</dd></dl><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><dl class="item-table"><dt><a class="enum" href="enum.Level.html" title="enum proc_macro2_diagnostics::Level">Level</a></dt><dd>An enum representing a diagnostic level.</dd></dl><h2 id="traits" class="section-header">Traits<a href="#traits" class="anchor">§</a></h2><dl class="item-table"><dt><a class="trait" href="trait.SpanDiagnosticExt.html" title="trait proc_macro2_diagnostics::SpanDiagnosticExt">Span<wbr>Diagnostic<wbr>Ext</a></dt><dd>Extension trait for <code>proc_macro2::Span</code> emulating the proc-macro diagnostic
+API on stable and nightly.</dd></dl></section></div></main></body></html>

@@ -1,0 +1,9 @@
+(function() {
+    var implementors = Object.fromEntries([["num_bigint",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.93.1/core/ops/bit/trait.Not.html\" title=\"trait core::ops::bit::Not\">Not</a> for &amp;<a class=\"struct\" href=\"num_bigint/struct.BigInt.html\" title=\"struct num_bigint::BigInt\">BigInt</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.93.1/core/ops/bit/trait.Not.html\" title=\"trait core::ops::bit::Not\">Not</a> for <a class=\"struct\" href=\"num_bigint/struct.BigInt.html\" title=\"struct num_bigint::BigInt\">BigInt</a>"]]],["typenum",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.93.1/core/ops/bit/trait.Not.html\" title=\"trait core::ops::bit::Not\">Not</a> for <a class=\"struct\" href=\"typenum/bit/struct.B0.html\" title=\"struct typenum::bit::B0\">B0</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.93.1/core/ops/bit/trait.Not.html\" title=\"trait core::ops::bit::Not\">Not</a> for <a class=\"struct\" href=\"typenum/bit/struct.B1.html\" title=\"struct typenum::bit::B1\">B1</a>"]]],["wasm_bindgen",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.93.1/core/ops/bit/trait.Not.html\" title=\"trait core::ops::bit::Not\">Not</a> for &amp;<a class=\"struct\" href=\"wasm_bindgen/struct.JsValue.html\" title=\"struct wasm_bindgen::JsValue\">JsValue</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.93.1/core/ops/bit/trait.Not.html\" title=\"trait core::ops::bit::Not\">Not</a> for <a class=\"struct\" href=\"wasm_bindgen/struct.JsValue.html\" title=\"struct wasm_bindgen::JsValue\">JsValue</a>"]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[525,500,542]}
