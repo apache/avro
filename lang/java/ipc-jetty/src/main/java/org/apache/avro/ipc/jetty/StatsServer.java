@@ -20,8 +20,12 @@ import org.apache.avro.ipc.stats.StatsServlet;
  * limitations under the License.
  */
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.resource.Resource;
 
 /* This is a server that displays live information from a StatsPlugin.
  *
@@ -42,11 +46,24 @@ public class StatsServer {
     this.httpServer = new Server(port);
     this.plugin = plugin;
 
-    ServletHandler handler = new ServletHandler();
-    httpServer.setHandler(handler);
-    handler.addServletWithMapping(new ServletHolder(new StaticServlet()), "/");
+    ServletContextHandler servletContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
+    servletContext.setContextPath("/");
 
-    handler.addServletWithMapping(new ServletHolder(new StatsServlet(plugin)), "/");
+    ServletHolder servletHolder = new ServletHolder(new StatsServlet(plugin));
+    servletContext.addServlet(servletHolder, "/");
+
+    ResourceHandler resourceHandler = new ResourceHandler();
+    resourceHandler.setBaseResource(Resource.newClassPathResource("/org/apache/avro/ipc/stats/static"));
+    resourceHandler.setDirectoriesListed(false); // Optional: prevent directory listing
+
+    ContextHandler staticContext = new ContextHandler();
+    staticContext.setContextPath("/static");
+    staticContext.setHandler(resourceHandler);
+
+    HandlerList handlers = new HandlerList();
+    handlers.setHandlers(new org.eclipse.jetty.server.Handler[] { staticContext, servletContext });
+
+    httpServer.setHandler(handlers);
 
     httpServer.start();
   }
