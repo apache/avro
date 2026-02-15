@@ -244,7 +244,7 @@ sub encode_map {
     my $class = shift;
     my ($schema, $data, $cb) = @_;
 
-    my @keys = keys %$data;
+    my @keys = sort keys %$data;
     if (@keys) {
         $class->encode_long(undef, scalar @keys, $cb);
         for (@keys) {
