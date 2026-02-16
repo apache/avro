@@ -76,7 +76,7 @@ abstract class AvroGradlePlugin : Plugin<Project> {
             project,
             extension,
             includesProtocol,
-            extension.testSourceDirectory,
+            extension.sourceDirectory,
         )
 
         compileSchemaTask.runtimeClassPathFileCollection.from(
