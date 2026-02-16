@@ -59,7 +59,7 @@
   -->
   <PropertyGroup Label="Build, Test, Code Analysis, Benchmark Package Versions">
     <BenchmarkDotNetVersion>0.15.8</BenchmarkDotNetVersion>
-    <CoverletCollectorVersion>6.0.4</CoverletCollectorVersion>
+    <CoverletCollectorVersion>8.0.0</CoverletCollectorVersion>
     <CoverletMSBuildVersion>6.0.4</CoverletMSBuildVersion>
     <MicrosoftBuildFrameworkVersion>18.3.3</MicrosoftBuildFrameworkVersion>
     <MicrosoftBuildUtilitiesCoreVersion>18.3.3</MicrosoftBuildUtilitiesCoreVersion>
