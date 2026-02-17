@@ -234,4 +234,23 @@ EOJ
     is $warning, 0, "Binary_Encodings.Complex_Types.Unions-record-with-long-field-nowarning";
 }
 
+{
+    # [AVRO-4230] test for encode_map, specifically sorting of hash keys
+    my $w_schema = Avro::Schema->parse(<<EOP);
+{ "type": "map", "values": "int" }
+EOP
+    my $enc = '';
+    my $data = { foo => 1, bar => 2, baz => 3 };
+
+    Avro::BinaryEncoder->encode(
+        schema  => $w_schema,
+        data    => $data,
+        emit_cb => sub { $enc .= ${ $_[0] } },
+    );
+
+    my $packed = unpack('H*', $enc);
+    # should be:     b a r     b a z     f o o
+    is($packed, '0606626172040662617a0606666f6f0200', 'hash keys sorted in encode_map');
+}
+
 done_testing;
