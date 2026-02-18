@@ -38,8 +38,8 @@ dist() (
 )
 
 doc() {
-  local doc_dir
-  local version=$(cat ../../share/VERSION.txt)
+  local doc_dir version
+  version=$(cat ../../share/VERSION.txt)
   doc_dir="../../build/avro-doc-$version/api/py"
   uv run sphinx-build -b html docs/source/ docs/build/html
   mkdir -p "$doc_dir"
