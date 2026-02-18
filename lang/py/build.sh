@@ -18,7 +18,7 @@
 set -eu
 
 usage() {
-  echo "Usage: $0 {clean|dist|doc|interop-data-generate|interop-data-test|lint|test}"
+  echo "Usage: $0 {clean|dist|doc|interop-data-generate|interop-data-test|lint|format|test|coverage|typechecks}"
   exit 1
 }
 
@@ -27,14 +27,14 @@ clean() {
 }
 
 dist() (
-  local destination virtualenv
+  local destination
   destination=$(
     d=../../dist/py
     mkdir -p "$d"
     cd -P "$d"
     pwd
   )
-  uv build --out-dir ${destination}
+  uv build --out-dir "${destination}"
 )
 
 doc() {
@@ -62,7 +62,7 @@ lint() {
 }
 
 format() {
-  uvx ruff format .
+  uvx ruff format --diff .
 }
 
 test_() {
@@ -75,10 +75,10 @@ test_() {
 coverage() {
   SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
   TEST_INTEROP_DIR=$(mktemp -d)
-  mkdir -p ${TEST_INTEROP_DIR} ${SCRIPT_DIR}/../../build/interop/data
-  cp -r ${SCRIPT_DIR}/../../build/interop/data ${TEST_INTEROP_DIR}
-  uv run coverage run -pm avro.test.gen_interop_data avro/interop.avsc ${TEST_INTEROP_DIR}/data/py.avro
-  cp -r ${TEST_INTEROP_DIR}/data ${SCRIPT_DIR}/../../build/interop
+  mkdir -p "${TEST_INTEROP_DIR}" "${SCRIPT_DIR}"/../../build/interop/data
+  cp -r "${SCRIPT_DIR}"/../../build/interop/data "${TEST_INTEROP_DIR}"
+  uv run coverage run -pm avro.test.gen_interop_data avro/interop.avsc "${TEST_INTEROP_DIR}"/data/py.avro
+  cp -r "${TEST_INTEROP_DIR}"/data "${SCRIPT_DIR}"/../../build/interop
   uv run coverage run -pm unittest discover --buffer --failfast
   uv run coverage combine --append
   uv run coverage report
