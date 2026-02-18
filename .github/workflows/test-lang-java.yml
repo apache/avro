@@ -137,6 +137,7 @@ jobs:
                                                             libzstd-dev
 
       - name: "Install Python Dependencies"
+        working-directory: lang/py
         run: uv sync
 
       - name: "Setup C# for Generating Interop Data"
@@ -157,7 +158,7 @@ jobs:
 
       - name: "Generate Interop Data using C#"
         working-directory: lang/csharp
-        run: uv run ./build.sh interop-data-generate
+        run: ./build.sh interop-data-generate
 
       - name: "Install Java Avro for other tests"
         working-directory: .
