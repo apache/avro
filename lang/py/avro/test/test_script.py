@@ -61,7 +61,7 @@ LOONIES = (
 
 
 def looney_records():
-    return ({"first": first, "last": last, "type": type} for first, last, type in LOONIES)
+    return ({"first": first, "last": last, "type": typ} for first, last, typ in LOONIES)
 
 
 _JSON_PRETTY = """{
