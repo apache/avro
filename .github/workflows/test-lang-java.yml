@@ -138,7 +138,7 @@ jobs:
 
       - name: "Install Python Dependencies"
         working-directory: lang/py
-        run: uv sync
+        run: uv sync --frozen
 
       - name: "Setup C# for Generating Interop Data"
         uses: actions/setup-dotnet@v5

@@ -71,7 +71,7 @@ jobs:
                                                             libzstd-dev
 
       - name: Install Dependencies
-        run: uv sync
+        run: uv sync --frozen
 
       - name: Lint
         if: ${{ matrix.python == '3.10' }}
@@ -117,7 +117,7 @@ jobs:
                                                             libzstd-dev
 
       - name: Install Dependencies
-        run: uv sync
+        run: uv sync --frozen
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v5
