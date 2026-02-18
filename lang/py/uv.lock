@@ -21,6 +21,14 @@ name = "avro"
 version = "1.13.0"
 source = { editable = "." }
 
+[package.optional-dependencies]
+snappy = [
+    { name = "python-snappy" },
+]
+zstandard = [
+    { name = "zstandard" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "coverage" },
@@ -35,6 +43,11 @@ dev = [
 ]
 
 [package.metadata]
+requires-dist = [
+    { name = "python-snappy", marker = "extra == 'snappy'" },
+    { name = "zstandard", marker = "extra == 'zstandard'" },
+]
+provides-extras = ["snappy", "zstandard"]
 
 [package.metadata.requires-dev]
 dev = [

@@ -49,6 +49,10 @@ build-backend = "setuptools.build_meta"
 [project.scripts]
 avro = "avro.__main__:main"
 
+[project.optional-dependencies]
+snappy = ["python-snappy"]
+zstandard = ["zstandard"]
+
 [tool.ruff]
 line-length = 150
 
