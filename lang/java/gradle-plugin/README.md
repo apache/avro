@@ -26,11 +26,15 @@ It is not needed to add `tasks.named("compileKotlin") { dependsOn(tasks.named("a
 `0.0.8`
 
 Add `sourceZipFiles` property to add zip files with schemas in them
-pu
 
 `0.1.0`
 
 Add Avro Protocol support
+
+`0.1.1`
+
+Fix issue with Gradle multi project, where sources would not appear on the classpath
+
 
 ## Usage
 
