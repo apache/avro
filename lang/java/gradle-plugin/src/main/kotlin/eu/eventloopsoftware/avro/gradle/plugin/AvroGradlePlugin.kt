@@ -80,7 +80,7 @@ abstract class AvroGradlePlugin : Plugin<Project> {
         )
 
         compileSchemaTask.runtimeClassPathFileCollection.from(
-            project.configurations.getByName("runtimeClasspath").files
+            project.configurations.getByName("runtimeClasspath")
         )
       }
 
@@ -110,7 +110,7 @@ abstract class AvroGradlePlugin : Plugin<Project> {
         )
 
         compileSchemaTask.runtimeClassPathFileCollection.from(
-            project.configurations.getByName("testRuntimeClasspath").files
+            project.configurations.getByName("testRuntimeClasspath")
         )
       }
 
