@@ -37,7 +37,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: 
+        os:
           - ubuntu-latest
           - ubuntu-24.04-arm
         node:
@@ -68,7 +68,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: 
+        os:
           - ubuntu-latest
           - ubuntu-24.04-arm
         node:
@@ -99,10 +99,13 @@ jobs:
                                                             liblzma-dev \
                                                             libsnappy-dev \
                                                             libzstd-dev
-      - name: Install Python Dependencies
-        run: |
-          python3 -m pip install --break-system-packages --upgrade pip setuptools tox 
-          python3 -m pip install --break-system-packages python-snappy zstandard
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867
+
+      - name: Install Dependencies
+        working-directory: lang/py
+        run: uv sync --frozen
 
       - name: Create Interop Data Directory
         working-directory: .
