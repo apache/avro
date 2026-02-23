@@ -75,14 +75,14 @@ jobs:
 
       - name: Lint
         if: ${{ matrix.python == '3.10' }}
-        run: uv run ./build.sh lint
+        run: ./build.sh lint
 
       - name: Typechecks
         if: ${{ matrix.python == '3.10' }}
-        run: uv run ./build.sh typechecks
+        run: ./build.sh typechecks
 
       - name: Test
-        run: uv run ./build.sh test
+        run: ./build.sh test
 
   interop:
     runs-on: ${{ matrix.os }}
@@ -105,7 +105,7 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867        
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867
 
       - name: Apt Install Compression Libs
         run: |
@@ -155,7 +155,7 @@ jobs:
         run: mvn -B -P interop-data-generate generate-resources
 
       - name: Generate Interop Data
-        run: uv run ./build.sh interop-data-generate
+        run: ./build.sh interop-data-generate
 
       - name: Run Interop Tests
-        run: uv run ./build.sh interop-data-test
+        run: ./build.sh interop-data-test

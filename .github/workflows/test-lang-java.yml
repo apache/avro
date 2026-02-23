@@ -126,7 +126,7 @@ jobs:
           python-version: "3.12"
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867        
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867
 
       - name: "Apt Install Compression Libs Required by Python"
         run: |
@@ -154,7 +154,7 @@ jobs:
 
       - name: "Generate Interop Data using Python"
         working-directory: lang/py
-        run: uv run ./build.sh interop-data-generate
+        run: ./build.sh interop-data-generate
 
       - name: "Generate Interop Data using C#"
         working-directory: lang/csharp
