@@ -52,7 +52,7 @@ jobs:
 
       - name: Install Node.js dependencies
         working-directory: doc/
-        run: ls -lah && npm ci
+        run: npm ci
       - name: Build with Hugo
         working-directory: doc/
         env:
@@ -144,7 +144,7 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      
+
       - name: 'Setup Maven'
         uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
         with:
@@ -181,8 +181,8 @@ jobs:
         with:
           python-version: 3.11
 
-      - name: Install tox
-        run: python3 -m pip install tox
+      - name: Setup uv
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867
 
       - name: Build docs
         working-directory: lang/py
@@ -215,7 +215,7 @@ jobs:
         with:
           name: api-rust
           path: target/doc
-        
+
 
   push-website:
     name: Push website
@@ -231,7 +231,7 @@ jobs:
         run: |
           set -x
           sudo apt-get update -q
-          sudo apt-get install -q -y subversion  
+          sudo apt-get install -q -y subversion
 
       - name: Download website
         uses: actions/download-artifact@v7
@@ -288,7 +288,7 @@ jobs:
           mv api-java/* $WEBSITE_API/java/
           mv api-python/* $WEBSITE_API/py/
           mv api-rust/* $WEBSITE_API/rust/
-          rmdir api-c api-c++ api-csharp api-python api-rust api-java 
+          rmdir api-c api-c++ api-csharp api-python api-rust api-java
 
       - name: Checkout old docs versions from Subversion
         run: |
@@ -310,7 +310,7 @@ jobs:
 
           git rm -rf *
 
-          mv ${{ runner.temp }}/website/* . 
+          mv ${{ runner.temp }}/website/* .
           echo "publish:
                   whoami: asf-site
                 " > .asf.yaml
@@ -320,4 +320,3 @@ jobs:
           git switch asf-site
           git reset --hard asf-site-staging
           git push origin asf-site --force
-          
