@@ -77,7 +77,7 @@ warn_unused_ignores = true
 [dependency-groups]
 dev = [
     "coverage>=7.13.4",
-    "mypy<1.19.0",
+    "mypy<1.20.0",
     "python-snappy>=0.7.3",
     "ruff>=0.15.1",
     "setuptools>=82.0.0",
