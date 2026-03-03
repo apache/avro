@@ -101,7 +101,7 @@ jobs:
                                                             libzstd-dev
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # 7.3.1
 
       - name: Install Dependencies
         working-directory: lang/py
