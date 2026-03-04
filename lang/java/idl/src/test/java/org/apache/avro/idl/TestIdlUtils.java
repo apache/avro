@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JacksonException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.Protocol;
@@ -39,7 +39,7 @@ import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class IdlUtilsTest {
+public class TestIdlUtils {
   @Test
   public void idlUtilsUtilitiesThrowRuntimeExceptionsOnProgrammerError() {
     assertThrows(IllegalStateException.class, () -> IdlUtils.getField(Object.class, "noSuchField"), "Programmer error");
@@ -62,7 +62,8 @@ public class IdlUtilsTest {
     StringWriter buffer = new StringWriter();
     IdlUtils.writeIdlProtocol(buffer, protocol);
 
-    assertEquals(getResourceAsString("idl_utils_test_protocol.avdl"), buffer.toString());
+    assertEquals(getResourceAsString("idl_utils_test_protocol.avdl").replace("\r", ""),
+        buffer.toString().replace("\r", ""));
   }
 
   private IdlFile parseIdlResource(String name) throws IOException {
@@ -92,9 +93,10 @@ public class IdlUtilsTest {
     Schema mainSchema = idlFile.getMainSchema();
 
     StringWriter buffer = new StringWriter();
-    IdlUtils.writeIdlSchema(buffer, mainSchema.getTypes().iterator().next());
+    IdlUtils.writeIdlSchema(buffer, mainSchema);
 
-    assertEquals(getResourceAsString("idl_utils_test_schema.avdl"), buffer.toString());
+    assertEquals(getResourceAsString("idl_utils_test_schema.avdl").replace("\r", ""),
+        buffer.toString().replace("\r", ""));
   }
 
   @Test
@@ -126,12 +128,12 @@ public class IdlUtilsTest {
     Map<String, Object> data = new LinkedHashMap<>();
     data.put("key", "name");
     data.put("value", 81763);
-    assertEquals("{\"key\":\"name\",\"value\":81763}", callToJson(data));
+    assertEquals("{\"key\":\"name\", \"value\":81763}", callToJson(data));
   }
 
   @Test
   public void validateCollectionToJson() throws IOException {
-    assertEquals("[123,\"abc\"]", callToJson(Arrays.asList(123, "abc")));
+    assertEquals("[123, \"abc\"]", callToJson(Arrays.asList(123, "abc")));
   }
 
   @Test
@@ -175,16 +177,17 @@ public class IdlUtilsTest {
   }
 
   @Test
+  public void validateByteArrayToJson() throws IOException {
+    assertEquals("\"123.456\"", callToJson("123.456".getBytes(StandardCharsets.ISO_8859_1)));
+  }
+
+  @Test
   public void validateUnknownCannotBeWrittenAsJson() {
-    assertThrows(AvroRuntimeException.class, () -> callToJson(new Object()));
+    assertThrows(JacksonException.class, () -> callToJson(new Object()));
   }
 
   private String callToJson(Object datum) throws IOException {
-    StringWriter buffer = new StringWriter();
-    try (JsonGenerator generator = IdlUtils.MAPPER.createGenerator(buffer)) {
-      IdlUtils.MAPPER.writeValueAsString(datum);
-    }
-    return buffer.toString();
+    return IdlUtils.MAPPER.writeValueAsString(datum);
   }
 
   private enum SingleValue {
