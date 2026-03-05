@@ -205,6 +205,7 @@ module Avro
       def self.encode(date)
         return date.to_i if date.is_a?(Numeric)
 
+        date = Date.parse(date) if date.is_a?(String)
         (date - EPOCH_START).to_i
       end
 
