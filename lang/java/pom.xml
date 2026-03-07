@@ -78,6 +78,7 @@
     <module>idl</module>
     <module>compiler</module>
     <module>maven-plugin</module>
+    <module>gradle-plugin</module>
     <module>ipc</module>
     <module>ipc-jetty</module>
     <module>ipc-netty</module>
