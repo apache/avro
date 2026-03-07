@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Attribute","Color","Quirk"],"fn":["disable","enable","is_enabled","whenever"],"struct":["Condition","Painted","Style"],"trait":["Paint"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["from_avro_datum","from_avro_datum_reader_schemata","from_avro_datum_schemata"],"struct":["GenericDatumReader","GenericDatumReaderBuilder"]};
