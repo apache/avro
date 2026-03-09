@@ -154,22 +154,6 @@
           </execution>
 
           <execution>
-            <id>Run all tests under Java 11</id>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <filterProperties>
-                <integrationTestingJDK>[11,12)</integrationTestingJDK>
-              </filterProperties>
-              <properties>
-                <maven.compiler.release>11</maven.compiler.release>
-              </properties>
-              <cloneProjectsTo>${project.build.directory}/it-jdk-11</cloneProjectsTo>
-            </configuration>
-          </execution>
-
-          <execution>
             <id>Run all tests under Java 17</id>
             <goals>
               <goal>run</goal>
