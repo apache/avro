@@ -200,6 +200,22 @@
               <cloneProjectsTo>${project.build.directory}/it-jdk-21</cloneProjectsTo>
             </configuration>
           </execution>
+          
+          <execution>
+            <id>Run all tests under Java 25</id>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <filterProperties>
+                <integrationTestingJDK>[25,26)</integrationTestingJDK>
+              </filterProperties>
+              <properties>
+                <maven.compiler.release>25</maven.compiler.release>
+              </properties>
+              <cloneProjectsTo>${project.build.directory}/it-jdk-25</cloneProjectsTo>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
 
