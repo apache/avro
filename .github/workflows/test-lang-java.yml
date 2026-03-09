@@ -42,6 +42,11 @@ jobs:
         os:
           - ubuntu-latest
           - ubuntu-24.04-arm
+        jdk:
+          - 11
+          - 17
+          - 21
+          - 25
     steps:
       - name: "Checkout sourcecode"
         uses: actions/checkout@v6
@@ -54,15 +59,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: "Setup Temurin JDK 11, 17, 21 & 25"
+      - name: "Setup Temurin JDK ${{ matrix.jdk }}"
         uses: actions/setup-java@v5
         with:
           distribution: "temurin"
-          java-version: |
-            11
-            17
-            21
-            25
+          java-version: ${{ matrix.jdk }}
 
       - name: "Setup Maven 3.9.11"
         uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
@@ -95,6 +96,11 @@ jobs:
         os:
           - ubuntu-latest
           - ubuntu-24.04-arm
+        jdk:
+          - 11
+          - 17
+          - 21
+          - 25
 
     steps:
       - uses: actions/checkout@v6
@@ -107,15 +113,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: "Setup Temurin JDK 11, 17, 21 & 25"
+      - name: "Setup Temurin JDK ${{ matrix.jdk }}"
         uses: actions/setup-java@v5
         with:
           distribution: "temurin"
-          java-version: |
-            11
-            17
-            21
-            25
+          java-version: ${{ matrix.jdk }}
 
       - name: "Setup Maven 3.9.11"
         uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
