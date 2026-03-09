@@ -43,13 +43,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: 'Setup Temurin JDK 8, 11, 17, 21 & 25'
+      - name: 'Setup Temurin JDK 17, 21 & 25'
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: |
-            8
-            11
             17
             21
 			25
