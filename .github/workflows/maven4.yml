@@ -55,11 +55,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: |
-            8
-            11
             17
             21
-			25
+            25
 
       - name: Setup Maven 4
         uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
