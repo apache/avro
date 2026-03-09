@@ -43,7 +43,6 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
         jdk:
-          - 11
           - 17
           - 21
           - 25
@@ -97,7 +96,6 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
         jdk:
-          - 11
           - 17
           - 21
           - 25
