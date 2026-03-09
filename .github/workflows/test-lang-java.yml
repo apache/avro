@@ -166,10 +166,10 @@ jobs:
         working-directory: .
         run: mvn -B install -PskipQuality
 
-      - name: "Generate Interop Data using Java 11, 17, 21 & 25"
+      - name: "Generate Interop Data using Java 17, 21 & 25"
         working-directory: lang/java/interop-data-test
         run: mvn -B verify -Pgenerate-test-data
 
-      - name: "Run Interop Tests using Java 11, 17, 21 & 25"
+      - name: "Run Interop Tests using Java 17, 21 & 25"
         working-directory: lang/java/interop-data-test
         run: mvn -B verify -Pcheck-test-data
