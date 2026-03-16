@@ -1,0 +1,1645 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta content="Apache Forrest" name="Generator">
+<meta name="Forrest-version" content="0.8">
+<meta name="Forrest-skin-name" content="pelt">
+<title>Apache Avro&#153; 1.5.4 Specification</title>
+<link type="text/css" href="skin/basic.css" rel="stylesheet">
+<link media="screen" type="text/css" href="skin/screen.css" rel="stylesheet">
+<link media="print" type="text/css" href="skin/print.css" rel="stylesheet">
+<link type="text/css" href="skin/profile.css" rel="stylesheet">
+<script src="skin/getBlank.js" language="javascript" type="text/javascript"></script><script src="skin/getMenu.js" language="javascript" type="text/javascript"></script><script src="skin/fontsize.js" language="javascript" type="text/javascript"></script>
+<link rel="shortcut icon" href="images/favicon.ico">
+</head>
+<body onload="init()">
+<script type="text/javascript">ndeSetTextSize();</script>
+<div id="top">
+<!--+
+    |breadtrail
+    +-->
+<div class="breadtrail">
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://avro.apache.org/">Avro</a> &gt; <a href="http://avro.apache.org/">Avro</a><script src="skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script>
+</div>
+<!--+
+    |header
+    +-->
+<div class="header">
+<!--+
+    |start group logo
+    +-->
+<div class="grouplogo">
+<a href="http://www.apache.org/"><img class="logoImage" alt="Apache" src="images/apache_feather.gif" title="The Apache Software Foundation"></a>
+</div>
+<!--+
+    |end group logo
+    +-->
+<!--+
+    |start Project Logo
+    +-->
+<div class="projectlogo">
+<a href="http://avro.apache.org/"><img class="logoImage" alt="Avro" src="images/avro-logo.png" title="Serialization System"></a>
+</div>
+<!--+
+    |end Project Logo
+    +-->
+<!--+
+    |start Search
+    +-->
+<div class="searchbox">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+<input value="hadoop.apache.org" name="sitesearch" type="hidden"><input onFocus="getBlank (this, 'Search the site with google');" size="25" name="q" id="query" type="text" value="Search the site with google">&nbsp; 
+                    <input name="Search" value="Search" type="submit">
+</form>
+</div>
+<!--+
+    |end search
+    +-->
+<!--+
+    |start Tabs
+    +-->
+<ul id="tabs">
+<li>
+<a class="unselected" href="http://hadoop.apache.org/avro/">Project</a>
+</li>
+<li>
+<a class="unselected" href="http://wiki.apache.org/hadoop/Avro/">Wiki</a>
+</li>
+<li class="current">
+<a class="selected" href="index.html">Avro 1.5.4 Documentation</a>
+</li>
+</ul>
+<!--+
+    |end Tabs
+    +-->
+</div>
+</div>
+<div id="main">
+<div id="publishedStrip">
+<!--+
+    |start Subtabs
+    +-->
+<div id="level2tabs"></div>
+<!--+
+    |end Endtabs
+    +-->
+<script type="text/javascript"><!--
+document.write("Last Published: " + document.lastModified);
+//  --></script>
+</div>
+<!--+
+    |breadtrail
+    +-->
+<div class="breadtrail">
+
+             &nbsp;
+           </div>
+<!--+
+    |start Menu, mainarea
+    +-->
+<!--+
+    |start Menu
+    +-->
+<div id="menu">
+<div onclick="SwitchMenu('menu_selected_1.1', 'skin/')" id="menu_selected_1.1Title" class="menutitle" style="background-image: url('skin/images/chapter_open.gif');">Documentation</div>
+<div id="menu_selected_1.1" class="selectedmenuitemgroup" style="display: block;">
+<div class="menuitem">
+<a href="index.html">Overview</a>
+</div>
+<div class="menupage">
+<div class="menupagetitle">Specification</div>
+</div>
+<div class="menuitem">
+<a href="api/java/index.html">Java API</a>
+</div>
+<div class="menuitem">
+<a href="api/c/index.html">C API</a>
+</div>
+<div class="menuitem">
+<a href="api/cpp/html/index.html">C++ API</a>
+</div>
+<div class="menuitem">
+<a href="idl.html">IDL language</a>
+</div>
+<div class="menuitem">
+<a href="sasl.html">SASL profile</a>
+</div>
+<div class="menuitem">
+<a href="http://wiki.apache.org/hadoop/Avro/">Wiki</a>
+</div>
+<div class="menuitem">
+<a href="http://wiki.apache.org/hadoop/Avro/FAQ">FAQ</a>
+</div>
+</div>
+<div id="credit"></div>
+<div id="roundbottom">
+<img style="display: none" class="corner" height="15" width="15" alt="" src="skin/images/rc-b-l-15-1body-2menu-3menu.png"></div>
+<!--+
+  |alternative credits
+  +-->
+<div id="credit2"></div>
+</div>
+<!--+
+    |end Menu
+    +-->
+<!--+
+    |start content
+    +-->
+<div id="content">
+<div title="Portable Document Format" class="pdflink">
+<a class="dida" href="spec.pdf"><img alt="PDF -icon" src="skin/images/pdfdoc.gif" class="skin"><br>
+        PDF</a>
+</div>
+<h1>Apache Avro&#153; 1.5.4 Specification</h1>
+<div id="minitoc-area">
+<ul class="minitoc">
+<li>
+<a href="#preamble">Introduction</a>
+</li>
+<li>
+<a href="#schemas">Schema Declaration</a>
+<ul class="minitoc">
+<li>
+<a href="#schema_primitive">Primitive Types</a>
+</li>
+<li>
+<a href="#schema_complex">Complex Types</a>
+<ul class="minitoc">
+<li>
+<a href="#schema_record">Records</a>
+</li>
+<li>
+<a href="#Enums">Enums</a>
+</li>
+<li>
+<a href="#Arrays">Arrays</a>
+</li>
+<li>
+<a href="#Maps">Maps</a>
+</li>
+<li>
+<a href="#Unions">Unions</a>
+</li>
+<li>
+<a href="#Fixed">Fixed</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#Names">Names</a>
+</li>
+<li>
+<a href="#Aliases">Aliases</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#Data+Serialization">Data Serialization</a>
+<ul class="minitoc">
+<li>
+<a href="#Encodings">Encodings</a>
+</li>
+<li>
+<a href="#binary_encoding">Binary Encoding</a>
+<ul class="minitoc">
+<li>
+<a href="#binary_encode_primitive">Primitive Types</a>
+</li>
+<li>
+<a href="#binary_encode_complex">Complex Types</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#json_encoding">JSON Encoding</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#order">Sort Order</a>
+</li>
+<li>
+<a href="#Object+Container+Files">Object Container Files</a>
+<ul class="minitoc">
+<li>
+<a href="#Required+Codecs">Required Codecs</a>
+<ul class="minitoc">
+<li>
+<a href="#null">null</a>
+</li>
+<li>
+<a href="#deflate">deflate</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#Optional+Codecs">Optional Codecs</a>
+<ul class="minitoc">
+<li>
+<a href="#snappy">snappy</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<a href="#Protocol+Declaration">Protocol Declaration</a>
+<ul class="minitoc">
+<li>
+<a href="#Messages">Messages</a>
+</li>
+<li>
+<a href="#Sample+Protocol">Sample Protocol</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#Protocol+Wire+Format">Protocol Wire Format</a>
+<ul class="minitoc">
+<li>
+<a href="#Message+Transport">Message Transport</a>
+<ul class="minitoc">
+<li>
+<a href="#HTTP+as+Transport">HTTP as Transport</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#Message+Framing">Message Framing</a>
+</li>
+<li>
+<a href="#handshake">Handshake</a>
+</li>
+<li>
+<a href="#Call+Format">Call Format</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#Schema+Resolution">Schema Resolution</a>
+</li>
+</ul>
+</div>
+
+    
+<a name="N1000D"></a><a name="preamble"></a>
+<h2 class="h3">Introduction</h2>
+<div class="section">
+<p>This document defines Apache Avro.  It is intended to be the
+        authoritative specification. Implementations of Avro must
+        adhere to this document.
+      </p>
+</div>
+
+    
+<a name="N10017"></a><a name="schemas"></a>
+<h2 class="h3">Schema Declaration</h2>
+<div class="section">
+<p>A Schema is represented in <a href="http://www.json.org/">JSON</a> by one of:</p>
+<ul>
+        
+<li>A JSON string, naming a defined type.</li>
+        
+        
+<li>A JSON object, of the form:
+          
+          <pre class="code">{"type": "<em>typeName</em>" ...<em>attributes</em>...}</pre>
+
+          where <em>typeName</em> is either a primitive or derived
+          type name, as defined below.  Attributes not defined in this
+          document are permitted as metadata, but must not affect
+          the format of serialized data.
+          </li>
+        
+<li>A JSON array, representing a union of embedded types.</li>
+      
+</ul>
+<a name="N1003D"></a><a name="schema_primitive"></a>
+<h3 class="h4">Primitive Types</h3>
+<p>The set of primitive type names is:</p>
+<ul>
+          
+<li>
+<span class="codefrag">null</span>: no value</li>
+          
+<li>
+<span class="codefrag">boolean</span>: a binary value</li>
+          
+<li>
+<span class="codefrag">int</span>: 32-bit signed integer</li>
+          
+<li>
+<span class="codefrag">long</span>: 64-bit signed integer</li>
+          
+<li>
+<span class="codefrag">float</span>: single precision (32-bit) IEEE 754 floating-point number</li>
+          
+<li>
+<span class="codefrag">double</span>: double precision (64-bit) IEEE 754 floating-point number</li>
+          
+<li>
+<span class="codefrag">bytes</span>: sequence of 8-bit unsigned bytes</li>
+          
+<li>
+<span class="codefrag">string</span>: unicode character sequence</li>
+        
+</ul>
+<p>Primitive types have no specified attributes.</p>
+<p>Primitive type names are also defined type names.  Thus, for
+          example, the schema "string" is equivalent to:</p>
+<pre class="code">{"type": "string"}</pre>
+<a name="N1007C"></a><a name="schema_complex"></a>
+<h3 class="h4">Complex Types</h3>
+<p>Avro supports six kinds of complex types: records, enums,
+        arrays, maps, unions and fixed.</p>
+<a name="N10085"></a><a name="schema_record"></a>
+<h4>Records</h4>
+<p>Records use the type name "record" and support three attributes:</p>
+<ul>
+	    
+<li>
+<span class="codefrag">name</span>: a JSON string providing the name
+	    of the record (required).</li>
+	    
+<li>
+<em>namespace</em>, a JSON string that qualifies the name;</li>
+	    
+<li>
+<span class="codefrag">doc</span>: a JSON string providing documentation to the
+	    user of this schema (optional).</li>
+	    
+<li>
+<span class="codefrag">aliases:</span> a JSON array of strings, providing
+	      alternate names for this record (optional).</li>
+	    
+<li>
+<span class="codefrag">fields</span>: a JSON array, listing fields (required).
+	    Each field is a JSON object with the following attributes:
+	      <ul>
+		
+<li>
+<span class="codefrag">name</span>: a JSON string providing the name
+		  of the field (required), and </li>
+		
+<li>
+<span class="codefrag">doc</span>: a JSON string describing this field
+                  for users (optional).</li>
+		
+<li>
+<span class="codefrag">type:</span> A JSON object defining a schema, or
+		  a JSON string naming a record definition
+		  (required).</li>
+		
+<li>
+<span class="codefrag">default:</span> A default value for this
+		  field, used when reading instances that lack this
+		  field (optional).  Permitted values depend on the
+		  field's schema type, according to the table below.
+		  Default values for union fields correspond to the
+		  first schema in the union. Default values for bytes
+		  and fixed fields are JSON strings, where Unicode
+		  code points 0-255 are mapped to unsigned 8-bit byte
+		  values 0-255.
+		  <table class="right">
+		    
+<caption>field default values</caption>
+		    
+<tr>
+<th colspan="1" rowspan="1">avro type</th><th colspan="1" rowspan="1">json type</th><th colspan="1" rowspan="1">example</th>
+</tr>
+		    
+<tr>
+<td colspan="1" rowspan="1">null</td><td colspan="1" rowspan="1">null</td><td colspan="1" rowspan="1">null</td>
+</tr>
+		    
+<tr>
+<td colspan="1" rowspan="1">boolean</td><td colspan="1" rowspan="1">boolean</td><td colspan="1" rowspan="1">true</td>
+</tr>
+		    
+<tr>
+<td colspan="1" rowspan="1">int,long</td><td colspan="1" rowspan="1">integer</td><td colspan="1" rowspan="1">1</td>
+</tr>
+		    
+<tr>
+<td colspan="1" rowspan="1">float,double</td><td colspan="1" rowspan="1">number</td><td colspan="1" rowspan="1">1.1</td>
+</tr>
+		    
+<tr>
+<td colspan="1" rowspan="1">bytes</td><td colspan="1" rowspan="1">string</td><td colspan="1" rowspan="1">"\u00FF"</td>
+</tr>
+		    
+<tr>
+<td colspan="1" rowspan="1">string</td><td colspan="1" rowspan="1">string</td><td colspan="1" rowspan="1">"foo"</td>
+</tr>
+		    
+<tr>
+<td colspan="1" rowspan="1">record</td><td colspan="1" rowspan="1">object</td><td colspan="1" rowspan="1">{"a": 1}</td>
+</tr>
+		    
+<tr>
+<td colspan="1" rowspan="1">enum</td><td colspan="1" rowspan="1">string</td><td colspan="1" rowspan="1">"FOO"</td>
+</tr>
+		    
+<tr>
+<td colspan="1" rowspan="1">array</td><td colspan="1" rowspan="1">array</td><td colspan="1" rowspan="1">[1]</td>
+</tr>
+		    
+<tr>
+<td colspan="1" rowspan="1">map</td><td colspan="1" rowspan="1">object</td><td colspan="1" rowspan="1">{"a": 1}</td>
+</tr>
+		    
+<tr>
+<td colspan="1" rowspan="1">fixed</td><td colspan="1" rowspan="1">string</td><td colspan="1" rowspan="1">"\u00ff"</td>
+</tr>
+		  
+</table>
+		
+</li>
+		
+<li>
+<span class="codefrag">order:</span> specifies how this field
+		  impacts sort ordering of this record (optional).
+		  Valid values are "ascending" (the default),
+		  "descending", or "ignore".  For more details on how
+		  this is used, see the the <a href="#order">sort
+		  order</a> section below.</li>
+		
+<li>
+<span class="codefrag">aliases:</span> a JSON array of strings, providing
+		  alternate names for this field (optional).</li>
+	      
+</ul>
+	    
+</li>
+	  
+</ul>
+<p>For example, a linked-list of 64-bit values may be defined with:</p>
+<pre class="code">
+{
+  "type": "record", 
+  "name": "LongList",
+  "aliases": ["LinkedLongs"],                      // old name for this
+  "fields" : [
+    {"name": "value", "type": "long"},             // each element has a long
+    {"name": "next", "type": ["LongList", "null"]} // optional next element
+  ]
+}
+	  </pre>
+<a name="N10186"></a><a name="Enums"></a>
+<h4>Enums</h4>
+<p>Enums use the type name "enum" and support the following
+	  attributes:</p>
+<ul>
+	    
+<li>
+<span class="codefrag">name</span>: a JSON string providing the name
+	    of the enum (required).</li>
+	    
+<li>
+<em>namespace</em>, a JSON string that qualifies the name;</li>
+	    
+<li>
+<span class="codefrag">aliases:</span> a JSON array of strings, providing
+	      alternate names for this enum (optional).</li>
+	    
+<li>
+<span class="codefrag">doc</span>: a JSON string providing documentation to the
+	    user of this schema (optional).</li>
+	    
+<li>
+<span class="codefrag">symbols</span>: a JSON array, listing symbols,
+	    as JSON strings (required).  All symbols in an enum must
+	    be unique; duplicates are prohibited.</li>
+	  
+</ul>
+<p>For example, playing card suits might be defined with:</p>
+<pre class="code">
+{ "type": "enum",
+  "name": "Suit",
+  "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
+}
+	  </pre>
+<a name="N101B3"></a><a name="Arrays"></a>
+<h4>Arrays</h4>
+<p>Arrays use the type name <span class="codefrag">"array"</span> and support
+          a single attribute:</p>
+<ul>
+            
+<li>
+<span class="codefrag">items</span>: the schema of the array's items.</li>
+	  
+</ul>
+<p>For example, an array of strings is declared
+	  with:</p>
+<pre class="code">{"type": "array", "items": "string"}</pre>
+<a name="N101CF"></a><a name="Maps"></a>
+<h4>Maps</h4>
+<p>Maps use the type name <span class="codefrag">"map"</span> and support
+          one attribute:</p>
+<ul>
+            
+<li>
+<span class="codefrag">values</span>: the schema of the map's values.</li>
+	  
+</ul>
+<p>Map keys are assumed to be strings.</p>
+<p>For example, a map from string to long is declared
+	  with:</p>
+<pre class="code">{"type": "map", "values": "long"}</pre>
+<a name="N101EE"></a><a name="Unions"></a>
+<h4>Unions</h4>
+<p>Unions, as mentioned above, are represented using JSON
+          arrays.  For example, <span class="codefrag">["string", "null"]</span>
+          declares a schema which may be either a string or null.</p>
+<p>Unions may not contain more than one schema with the same
+	  type, except for the named types record, fixed and enum.  For
+	  example, unions containing two array types or two map types
+	  are not permitted, but two types with different names are
+	  permitted.  (Names permit efficient resolution when reading
+	  and writing unions.)</p>
+<p>Unions may not immediately contain other unions.</p>
+<a name="N10201"></a><a name="Fixed"></a>
+<h4>Fixed</h4>
+<p>Fixed uses the type name <span class="codefrag">"fixed"</span> and supports
+          two attributes:</p>
+<ul>
+	    
+<li>
+<span class="codefrag">name</span>: a string naming this fixed (required).</li>
+	    
+<li>
+<em>namespace</em>, a string that qualifies the name;</li>
+	    
+<li>
+<span class="codefrag">aliases:</span> a JSON array of strings, providing
+	      alternate names for this enum (optional).</li>
+            
+<li>
+<span class="codefrag">size</span>: an integer, specifying the number
+            of bytes per value (required).</li>
+	  
+</ul>
+<p>For example, 16-byte quantity may be declared with:</p>
+<pre class="code">{"type": "fixed", "size": 16, "name": "md5"}</pre>
+<a name="N1022F"></a><a name="Names"></a>
+<h3 class="h4">Names</h3>
+<p>Record, enums and fixed are named types.  Each has
+          a <em>fullname</em> that is composed of two parts;
+          a <em>name</em> and a <em>namespace</em>.  Equality of names
+          is defined on the fullname.</p>
+<p>The name portion of a fullname, and record field names must:</p>
+<ul>
+          
+<li>start with <span class="codefrag">[A-Za-z_]</span>
+</li>
+          
+<li>subsequently contain only <span class="codefrag">[A-Za-z0-9_]</span>
+</li>
+	
+</ul>
+<p>A namespace is a dot-separated sequence of such names.</p>
+<p>In record, enum and fixed definitions, the fullname is
+        determined in one of the following ways:</p>
+<ul>
+	  
+<li>A name and namespace are both specified.  For example,
+	  one might use <span class="codefrag">"name": "X", "namespace":
+	  "org.foo"</span> to indicate the
+	  fullname <span class="codefrag">org.foo.X</span>.</li>
+	  
+<li>A fullname is specified.  If the name specified contains
+	  a dot, then it is assumed to be a fullname, and any
+	  namespace also specified is ignored.  For example,
+	  use <span class="codefrag">"name": "org.foo.X"</span> to indicate the
+	  fullname <span class="codefrag">org.foo.X</span>.</li>
+	  
+<li>A name only is specified, i.e., a name that contains no
+	  dots.  In this case the namespace is taken from the most
+	  tightly enclosing schema or protocol.  For example,
+	  if <span class="codefrag">"name": "X"</span> is specified, and this occurs
+	  within a field of the record definition
+	  of <span class="codefrag">org.foo.Y</span>, then the fullname
+	  is <span class="codefrag">org.foo.X</span>.</li>
+	
+</ul>
+<p>References to previously defined names are as in the latter
+	two cases above: if they contain a dot they are a fullname, if
+	they do not contain a dot, the namespace is the namespace of
+	the enclosing definition.</p>
+<p>Primitive type names have no namespace and their names may
+	not be defined in any namespace.  A schema may only contain
+	multiple definitions of a fullname if the definitions are
+	equivalent.</p>
+<a name="N1027F"></a><a name="Aliases"></a>
+<h3 class="h4">Aliases</h3>
+<p>Named types and fields may have aliases.  An implementation
+        may optionally use aliases to map a writer's schema to the
+        reader's.  This faciliates both schema evolution as well as
+        processing disparate datasets.</p>
+<p>Aliases function by re-writing the writer's schema using
+        aliases from the reader's schema.  For example, if the
+        writer's schema was named "Foo" and the reader's schema is
+        named "Bar" and has an alias of "Foo", then the implementation
+        would act as though "Foo" were named "Bar" when reading.
+        Similarly, if data was written as a record with a field named
+        "x" and is read as a record with a field named "y" with alias
+        "x", then the implementation would act as though "x" were
+        named "y" when reading.</p>
+<p>A type alias may be specified either as a fully
+        namespace-qualified, or relative to the namespace of the name
+        it is an alias for.  For example, if a type named "a.b" has
+        aliases of "c" and "x.y", then the fully qualified names of
+        its aliases are "a.c" and "x.y".</p>
+</div> <!-- end schemas -->
+
+    
+<a name="N10292"></a><a name="Data+Serialization"></a>
+<h2 class="h3">Data Serialization</h2>
+<div class="section">
+<p>Avro data is always serialized with its schema.  Files that
+	store Avro data should always also include the schema for that
+	data in the same file.  Avro-based remote procedure call (RPC)
+	systems must also guarantee that remote recipients of data
+	have a copy of the schema used to write that data.</p>
+<p>Because the schema used to write data is always available
+	when the data is read, Avro data itself is not tagged with
+	type information.  The schema is required to parse data.</p>
+<p>In general, both serialization and deserialization proceed as
+      a depth-first, left-to-right traversal of the schema,
+      serializing primitive types as they are encountered.</p>
+<a name="N102A1"></a><a name="Encodings"></a>
+<h3 class="h4">Encodings</h3>
+<p>Avro specifies two serialization encodings: binary and
+	  JSON.  Most applications will use the binary encoding, as it
+	  is smaller and faster.  But, for debugging and web-based
+	  applications, the JSON encoding may sometimes be
+	  appropriate.</p>
+<a name="N102AB"></a><a name="binary_encoding"></a>
+<h3 class="h4">Binary Encoding</h3>
+<a name="N102B1"></a><a name="binary_encode_primitive"></a>
+<h4>Primitive Types</h4>
+<p>Primitive types are encoded in binary as follows:</p>
+<ul>
+            
+<li>
+<span class="codefrag">null</span> is written as zero bytes.</li>
+            
+<li>a <span class="codefrag">boolean</span> is written as a single byte whose
+              value is either <span class="codefrag">0</span> (false) or <span class="codefrag">1</span>
+              (true).</li>
+            
+<li>
+<span class="codefrag">int</span> and <span class="codefrag">long</span> values are written
+              using <a href="http://lucene.apache.org/java/2_4_0/fileformats.html#VInt">variable-length</a>
+	      <a href="http://code.google.com/apis/protocolbuffers/docs/encoding.html#types">zig-zag</a> coding.  Some examples:
+	      <table class="right">
+		
+<tr>
+<th colspan="1" rowspan="1">value</th><th colspan="1" rowspan="1">hex</th>
+</tr>
+		
+<tr>
+<td colspan="1" rowspan="1"><span class="codefrag"> 0</span></td><td colspan="1" rowspan="1"><span class="codefrag">00</span></td>
+</tr>
+		
+<tr>
+<td colspan="1" rowspan="1"><span class="codefrag">-1</span></td><td colspan="1" rowspan="1"><span class="codefrag">01</span></td>
+</tr>
+		
+<tr>
+<td colspan="1" rowspan="1"><span class="codefrag"> 1</span></td><td colspan="1" rowspan="1"><span class="codefrag">02</span></td>
+</tr>
+		
+<tr>
+<td colspan="1" rowspan="1"><span class="codefrag">-2</span></td><td colspan="1" rowspan="1"><span class="codefrag">03</span></td>
+</tr>
+		
+<tr>
+<td colspan="1" rowspan="1"><span class="codefrag"> 2</span></td><td colspan="1" rowspan="1"><span class="codefrag">04</span></td>
+</tr>
+		
+<tr>
+<td colspan="2" rowspan="1"><span class="codefrag">...</span></td>
+</tr>
+		
+<tr>
+<td colspan="1" rowspan="1"><span class="codefrag">-64</span></td><td colspan="1" rowspan="1"><span class="codefrag">7f</span></td>
+</tr>
+		
+<tr>
+<td colspan="1" rowspan="1"><span class="codefrag"> 64</span></td><td colspan="1" rowspan="1"><span class="codefrag">&nbsp;80 01</span></td>
+</tr>
+		
+<tr>
+<td colspan="2" rowspan="1"><span class="codefrag">...</span></td>
+</tr>
+	      
+</table>
+	    
+</li>
+            
+<li>a <span class="codefrag">float</span> is written as 4 bytes. The float is
+              converted into a 32-bit integer using a method equivalent
+              to <a href="http://java.sun.com/javase/6/docs/api/java/lang/Float.html#floatToIntBits%28float%29">Java's floatToIntBits</a> and then encoded
+              in little-endian format.</li>
+            
+<li>a <span class="codefrag">double</span> is written as 8 bytes. The double
+              is converted into a 64-bit integer using a method equivalent
+              to <a href="http://java.sun.com/javase/6/docs/api/java/lang/Double.html#doubleToLongBits%28double%29">Java's
+		doubleToLongBits</a> and then encoded in little-endian
+              format.</li>
+            
+<li>
+<span class="codefrag">bytes</span> are encoded as
+              a <span class="codefrag">long</span> followed by that many bytes of data.
+            </li>
+            
+<li>a <span class="codefrag">string</span> is encoded as
+              a <span class="codefrag">long</span> followed by that many bytes of UTF-8
+              encoded character data.
+              <p>For example, the three-character string "foo" would
+              be encoded as the long value 3 (encoded as
+              hex <span class="codefrag">06</span>) followed by the UTF-8 encoding of
+              'f', 'o', and 'o' (the hex bytes <span class="codefrag">66 6f
+              6f</span>):
+              </p>
+              
+<pre class="code">06 66 6f 6f</pre>
+            
+</li>
+          
+</ul>
+<a name="N10381"></a><a name="binary_encode_complex"></a>
+<h4>Complex Types</h4>
+<p>Complex types are encoded in binary as follows:</p>
+<a name="N1038A"></a><a name="Records"></a>
+<h5>Records</h5>
+<p>A record is encoded by encoding the values of its
+	      fields in the order that they are declared.  In other
+	      words, a record is encoded as just the concatenation of
+	      the encodings of its fields.  Field values are encoded per
+	      their schema.</p>
+<p>For example, the record schema</p>
+<pre class="code">
+	      {
+	      "type": "record", 
+	      "name": "test",
+	      "fields" : [
+	      {"name": "a", "type": "long"},
+	      {"name": "b", "type": "string"}
+	      ]
+	      }
+	    </pre>
+<p>An instance of this record whose <span class="codefrag">a</span> field has
+	      value 27 (encoded as hex <span class="codefrag">36</span>) and
+	      whose <span class="codefrag">b</span> field has value "foo" (encoded as hex
+	      bytes <span class="codefrag">06 66 6f 6f</span>), would be encoded simply
+	      as the concatenation of these, namely the hex byte
+	      sequence:</p>
+<pre class="code">36 06 66 6f 6f</pre>
+<a name="N103AE"></a><a name="Enums-N103AE"></a>
+<h5>Enums</h5>
+<p>An enum is encoded by a <span class="codefrag">int</span>, representing
+              the zero-based position of the symbol in the schema.</p>
+<p>For example, consider the enum:</p>
+<pre class="code">
+	      {"type": "enum", "name": "Foo", "symbols": ["A", "B", "C", "D"] }
+	    </pre>
+<p>This would be encoded by an <span class="codefrag">int</span> between
+	      zero and three, with zero indicating "A", and 3 indicating
+	      "D".</p>
+<a name="N103C8"></a><a name="Arrays-N103C8"></a>
+<h5>Arrays</h5>
+<p>Arrays are encoded as a series of <em>blocks</em>.
+              Each block consists of a <span class="codefrag">long</span> <em>count</em>
+              value, followed by that many array items.  A block with
+              count zero indicates the end of the array.  Each item is
+              encoded per the array's item schema.</p>
+<p>If a block's count is negative, its absolute value is used,
+              and the count is followed immediately by a <span class="codefrag">long</span>
+              block <em>size</em> indicating the number of bytes in the
+              block.  This block size permits fast skipping through data,
+              e.g., when projecting a record to a subset of its fields.</p>
+<p>For example, the array schema</p>
+<pre class="code">{"type": "array", "items": "long"}</pre>
+<p>an array containing the items 3 and 27 could be encoded
+              as the long value 2 (encoded as hex 04) followed by long
+              values 3 and 27 (encoded as hex <span class="codefrag">06 36</span>)
+              terminated by zero:</p>
+<pre class="code">04 06 36 00</pre>
+<p>The blocked representation permits one to read and write
+              arrays larger than can be buffered in memory, since one can
+              start writing items without knowing the full length of the
+              array.</p>
+<a name="N103F8"></a><a name="Maps-N103F8"></a>
+<h5>Maps</h5>
+<p>Maps are encoded as a series of <em>blocks</em>.  Each
+              block consists of a <span class="codefrag">long</span> <em>count</em>
+              value, followed by that many key/value pairs.  A block
+              with count zero indicates the end of the map.  Each item
+              is encoded per the map's value schema.</p>
+<p>If a block's count is negative, its absolute value is used,
+              and the count is followed immediately by a <span class="codefrag">long</span>
+              block <em>size</em> indicating the number of bytes in the
+              block.  This block size permits fast skipping through data,
+              e.g., when projecting a record to a subset of its fields.</p>
+<p>The blocked representation permits one to read and write
+              maps larger than can be buffered in memory, since one can
+              start writing items without knowing the full length of the
+              map.</p>
+<a name="N10417"></a><a name="Unions-N10417"></a>
+<h5>Unions</h5>
+<p>A union is encoded by first writing a <span class="codefrag">long</span>
+              value indicating the zero-based position within the
+              union of the schema of its value.  The value is then
+              encoded per the indicated schema within the union.</p>
+<p>For example, the union
+              schema <span class="codefrag">["string","null"]</span> would encode:</p>
+<ul>
+              
+<li>
+<span class="codefrag">null</span> as the integer 1 (the index of
+                "null" in the union, encoded as
+                hex <span class="codefrag">02</span>): <pre class="code">02</pre>
+</li>
+              
+<li>the string <span class="codefrag">"a"</span> as zero (the index of
+                "string" in the union), followed by the serialized string:
+                <pre class="code">00 02 61</pre>
+</li>
+            
+</ul>
+<a name="N10441"></a><a name="Fixed-N10441"></a>
+<h5>Fixed</h5>
+<p>Fixed instances are encoded using the number of bytes
+              declared in the schema.</p>
+<a name="N1044F"></a><a name="json_encoding"></a>
+<h3 class="h4">JSON Encoding</h3>
+<p>Except for unions, the JSON encoding is the same as is used
+        to encode <a href="#schema_record">field default
+        values</a>.</p>
+<p>The value of a union is encoded in JSON as follows:</p>
+<ul>
+          
+<li>if its type is <span class="codefrag">null</span>, then it is encoded as
+          a JSON null;</li>
+          
+<li>otherwise it is encoded as a JSON object with one
+          name/value pair whose name is the type's name and whose
+          value is the recursively encoded value.  For Avro's named
+          types (record, fixed or enum) the user-specified name is
+          used, for other types the type name is used.</li>
+        
+</ul>
+<p>For example, the union
+          schema <span class="codefrag">["null","string","Foo"]</span>, where Foo is a
+          record name, would encode:</p>
+<ul>
+          
+<li>
+<span class="codefrag">null</span> as <span class="codefrag">null</span>;</li>
+          
+<li>the string <span class="codefrag">"a"</span> as
+            <span class="codefrag">{"string": "a"}</span>; and</li>
+          
+<li>a Foo instance as <span class="codefrag">{"Foo": {...}}</span>,
+          where <span class="codefrag">{...}</span> indicates the JSON encoding of a
+          Foo instance.</li>
+        
+</ul>
+<p>Note that a schema is still required to correctly process
+        JSON-encoded data.  For example, the JSON encoding does not
+        distinguish between <span class="codefrag">int</span>
+        and <span class="codefrag">long</span>, <span class="codefrag">float</span>
+        and <span class="codefrag">double</span>, records and maps, enums and strings,
+        etc.</p>
+</div>
+
+    
+<a name="N1049F"></a><a name="order"></a>
+<h2 class="h3">Sort Order</h2>
+<div class="section">
+<p>Avro defines a standard sort order for data.  This permits
+        data written by one system to be efficiently sorted by another
+        system.  This can be an important optimization, as sort order
+        comparisons are sometimes the most frequent per-object
+        operation.  Note also that Avro binary-encoded data can be
+        efficiently ordered without deserializing it to objects.</p>
+<p>Data items may only be compared if they have identical
+        schemas.  Pairwise comparisons are implemented recursively
+        with a depth-first, left-to-right traversal of the schema.
+        The first mismatch encountered determines the order of the
+        items.</p>
+<p>Two items with the same schema are compared according to the
+        following rules.</p>
+<ul>
+        
+<li>
+<span class="codefrag">null</span> data is always equal.</li>
+        
+<li>
+<span class="codefrag">boolean</span> data is ordered with false before true.</li>
+        
+<li>
+<span class="codefrag">int</span>, <span class="codefrag">long</span>, <span class="codefrag">float</span>
+          and <span class="codefrag">double</span> data is ordered by ascending numeric
+          value.</li>
+        
+<li>
+<span class="codefrag">bytes</span> and <span class="codefrag">fixed</span> data are
+          compared lexicographically by unsigned 8-bit values.</li>
+        
+<li>
+<span class="codefrag">string</span> data is compared lexicographically by
+          Unicode code point.  Note that since UTF-8 is used as the
+          binary encoding for strings, sorting of bytes and string
+          binary data is identical.</li>
+        
+<li>
+<span class="codefrag">array</span> data is compared lexicographically by
+          element.</li>
+        
+<li>
+<span class="codefrag">enum</span> data is ordered by the symbol's position
+          in the enum schema.  For example, an enum whose symbols are
+          <span class="codefrag">["z", "a"]</span> would sort <span class="codefrag">"z"</span> values
+          before <span class="codefrag">"a"</span> values.</li>
+        
+<li>
+<span class="codefrag">union</span> data is first ordered by the branch
+          within the union, and, within that, by the type of the
+          branch.  For example, an <span class="codefrag">["int", "string"]</span>
+          union would order all int values before all string values,
+          with the ints and strings themselves ordered as defined
+          above.</li>
+        
+<li>
+<span class="codefrag">record</span> data is ordered lexicographically by
+          field.  If a field specifies that its order is:
+          <ul>
+            
+<li>
+<span class="codefrag">"ascending"</span>, then the order of its values
+              is unaltered.</li>
+            
+<li>
+<span class="codefrag">"descending"</span>, then the order of its values
+              is reversed.</li>
+            
+<li>
+<span class="codefrag">"ignore"</span>, then its values are ignored
+              when sorting.</li>
+          
+</ul>
+        
+</li>
+        
+<li>
+<span class="codefrag">map</span> data may not be compared.  It is an error
+          to attempt to compare data containing maps unless those maps
+          are in an <span class="codefrag">"order":"ignore"</span> record field.
+        </li>
+      
+</ul>
+</div>
+
+    
+<a name="N10511"></a><a name="Object+Container+Files"></a>
+<h2 class="h3">Object Container Files</h2>
+<div class="section">
+<p>Avro includes a simple object container file format.  A file
+      has a schema, and all objects stored in the file must be written
+      according to that schema, using binary encoding.  Objects are
+      stored in blocks that may be compressed.  Syncronization markers
+      are used between blocks to permit efficient splitting of files
+      for MapReduce processing.</p>
+<p>Files may include arbitrary user-specified metadata.</p>
+<p>A file consists of:</p>
+<ul>
+        
+<li>A <em>file header</em>, followed by</li>
+        
+<li>one or more <em>file data blocks</em>.</li>
+      
+</ul>
+<p>A file header consists of:</p>
+<ul>
+        
+<li>Four bytes, ASCII 'O', 'b', 'j', followed by 1.</li>
+        
+<li>
+<em>file metadata</em>, including the schema.</li>
+        
+<li>The 16-byte, randomly-generated sync marker for this file.</li>
+      
+</ul>
+<p>File metadata consists of:</p>
+<ul>
+        
+<li>A long indicating the number of metadata key/value pairs.</li>
+        
+<li>For each pair, a string key and bytes value.</li>
+      
+</ul>
+<p>All metadata properties that start with "avro." are reserved.
+      The following file metadata properties are currently used:</p>
+<ul>
+        
+<li>
+<strong>avro.schema</strong> contains the schema of objects
+        stored in the file, as JSON data (required).</li>
+        
+<li>
+<strong>avro.codec</strong> the name of the compression codec
+        used to compress blocks, as a string.  Implementations
+        are required to support the following codecs: "null" and "deflate".  
+        If codec is absent, it is assumed to be "null".  The codecs
+        are described with more detail below.</li>
+      
+</ul>
+<p>A file header is thus described by the following schema:</p>
+<pre class="code">
+{"type": "record", "name": "org.apache.avro.file.Header",
+ "fields" : [
+   {"name": "magic", "type": {"type": "fixed", "name": "Magic", "size": 4}},
+   {"name": "meta", "type": {"type": "map", "values": "bytes"}},
+   {"name": "sync", "type": {"type": "fixed", "name": "Sync", "size": 16}},
+  ]
+}
+      </pre>
+<p>A file data block consists of:</p>
+<ul>
+        
+<li>A long indicating the count of objects in this block.</li>
+        
+<li>A long indicating the size in bytes of the serialized objects
+        in the current block, after any codec is applied</li>
+        
+<li>The serialized objects.  If a codec is specified, this is
+        compressed by that codec.</li>
+        
+<li>The file's 16-byte sync marker.</li>
+      
+</ul>
+<p>Thus, each block's binary data can be efficiently extracted or skipped without
+          deserializing the contents.  The combination of block size, object counts, and 
+          sync markers enable detection of corrupt blocks and help ensure data integrity.</p>
+<a name="N10578"></a><a name="Required+Codecs"></a>
+<h3 class="h4">Required Codecs</h3>
+<a name="N1057E"></a><a name="null"></a>
+<h4>null</h4>
+<p>The "null" codec simply passes through data uncompressed.</p>
+<a name="N10588"></a><a name="deflate"></a>
+<h4>deflate</h4>
+<p>The "deflate" codec writes the data block using the
+        deflate algorithm as specified in 
+        <a href="http://www.isi.edu/in-notes/rfc1951.txt">RFC 1951</a>,
+        and typically implemented using the zlib library.  Note that this
+        format (unlike the "zlib format" in RFC 1950) does not have a
+        checksum.
+        </p>
+<a name="N10597"></a><a name="Optional+Codecs"></a>
+<h3 class="h4">Optional Codecs</h3>
+<a name="N1059D"></a><a name="snappy"></a>
+<h4>snappy</h4>
+<p>The "snappy" codec uses
+            Google's <a href="http://code.google.com/p/snappy/">Snappy</a>
+            compression library.  Each compressed block is followed
+            by its 4-byte, big-endian CRC32 checksum.</p>
+</div>
+
+    
+<a name="N105AD"></a><a name="Protocol+Declaration"></a>
+<h2 class="h3">Protocol Declaration</h2>
+<div class="section">
+<p>Avro protocols describe RPC interfaces.  Like schemas, they are
+      defined with JSON text.</p>
+<p>A protocol is a JSON object with the following attributes:</p>
+<ul>
+        
+<li>
+<em>protocol</em>, a string, the name of the protocol
+        (required);</li>
+        
+<li>
+<em>namespace</em>, an optional string that qualifies the name;</li>
+        
+<li>
+<em>doc</em>, an optional string describing this protocol;</li>
+        
+<li>
+<em>types</em>, an optional list of definitions of named types
+          (records, enums, fixed and errors).  An error definition is
+          just like a record definition except it uses "error" instead
+          of "record".  Note that forward references to named types
+          are not permitted.</li>
+        
+<li>
+<em>messages</em>, an optional JSON object whose keys are
+          message names and whose values are objects whose attributes
+          are described below.  No two messages may have the same
+          name.</li>
+      
+</ul>
+<p>The name and namespace qualification rules defined for schema objects
+	apply to protocols as well.</p>
+<a name="N105D8"></a><a name="Messages"></a>
+<h3 class="h4">Messages</h3>
+<p>A message has attributes:</p>
+<ul>
+          
+<li>a <em>doc</em>, an optional description of the message,</li>
+          
+<li>a <em>request</em>, a list of named,
+            typed <em>parameter</em> schemas (this has the same form
+            as the fields of a record declaration);</li>
+          
+<li>a <em>response</em> schema; </li> 
+          
+<li>an optional union of declared <em>error</em> schemas.
+	    The <em>effective</em> union has <span class="codefrag">"string"</span>
+	    prepended to the declared union, to permit transmission of
+	    undeclared "system" errors.  For example, if the declared
+	    error union is <span class="codefrag">["AccessError"]</span>, then the
+	    effective union is <span class="codefrag">["string", "AccessError"]</span>.
+	    When no errors are declared, the effective error union
+	    is <span class="codefrag">["string"]</span>.  Errors are serialized using
+	    the effective union; however, a protocol's JSON
+	    declaration contains only the declared union.
+	  </li>
+          
+<li>an optional <em>one-way</em> boolean parameter.</li>
+        
+</ul>
+<p>A request parameter list is processed equivalently to an
+          anonymous record.  Since record field lists may vary between
+          reader and writer, request parameters may also differ
+          between the caller and responder, and such differences are
+          resolved in the same manner as record field differences.</p>
+<p>The one-way parameter may only be true when the response type
+	  is <span class="codefrag">"null"</span> and no errors are listed.</p>
+<a name="N1061E"></a><a name="Sample+Protocol"></a>
+<h3 class="h4">Sample Protocol</h3>
+<p>For example, one may define a simple HelloWorld protocol with:</p>
+<pre class="code">
+{
+  "namespace": "com.acme",
+  "protocol": "HelloWorld",
+  "doc": "Protocol Greetings",
+
+  "types": [
+    {"name": "Greeting", "type": "record", "fields": [
+      {"name": "message", "type": "string"}]},
+    {"name": "Curse", "type": "error", "fields": [
+      {"name": "message", "type": "string"}]}
+  ],
+
+  "messages": {
+    "hello": {
+      "doc": "Say hello.",
+      "request": [{"name": "greeting", "type": "Greeting" }],
+      "response": "Greeting",
+      "errors": ["Curse"]
+    }
+  }
+}
+        </pre>
+</div>
+
+    
+<a name="N1062D"></a><a name="Protocol+Wire+Format"></a>
+<h2 class="h3">Protocol Wire Format</h2>
+<div class="section">
+<a name="N10633"></a><a name="Message+Transport"></a>
+<h3 class="h4">Message Transport</h3>
+<p>Messages may be transmitted via
+        different <em>transport</em> mechanisms.</p>
+<p>To the transport, a <em>message</em> is an opaque byte sequence.</p>
+<p>A transport is a system that supports:</p>
+<ul>
+          
+<li>
+<strong>transmission of request messages</strong>
+          
+</li>
+          
+<li>
+<strong>receipt of corresponding response messages</strong>
+            
+<p>Servers may send a response message back to the client
+            corresponding to a request message.  The mechanism of
+            correspondance is transport-specific.  For example, in
+            HTTP it is implicit, since HTTP directly supports requests
+            and responses.  But a transport that multiplexes many
+            client threads over a single socket would need to tag
+            messages with unique identifiers.</p>
+          
+</li>
+        
+</ul>
+<p>Transports may be either <em>stateless</em>
+        or <em>stateful</em>.  In a stateless transport, messaging
+        assumes no established connection state, while stateful
+        transports establish connections that may be used for multiple
+        messages.  This distinction is discussed further in
+        the <a href="#handshake">handshake</a> section below.</p>
+<a name="N10665"></a><a name="HTTP+as+Transport"></a>
+<h4>HTTP as Transport</h4>
+<p>When
+            <a href="http://www.w3.org/Protocols/rfc2616/rfc2616.html">HTTP</a>
+            is used as a transport, each Avro message exchange is an
+            HTTP request/response pair.  All messages of an Avro
+            protocol should share a single URL at an HTTP server.
+            Other protocols may also use that URL.  Both normal and
+            error Avro response messages should use the 200 (OK)
+            response code.  The chunked encoding may be used for
+            requests and responses, but, regardless the Avro request
+            and response are the entire content of an HTTP request and
+            response.  The HTTP Content-Type of requests and responses
+            should be specified as "avro/binary".  Requests should be
+            made using the POST method.</p>
+<p>HTTP is used by Avro as a stateless transport.</p>
+<a name="N10677"></a><a name="Message+Framing"></a>
+<h3 class="h4">Message Framing</h3>
+<p>Avro messages are <em>framed</em> as a list of buffers.</p>
+<p>Framing is a layer between messages and the transport.
+        It exists to optimize certain operations.</p>
+<p>The format of framed message data is:</p>
+<ul>
+          
+<li>a series of <em>buffers</em>, where each buffer consists of:
+            <ul>
+              
+<li>a four-byte, big-endian <em>buffer length</em>, followed by</li>
+              
+<li>that many bytes of <em>buffer data</em>.</li>
+            
+</ul>
+          
+</li>
+          
+<li>A message is always terminated by a zero-lenghted buffer.</li>
+        
+</ul>
+<p>Framing is transparent to request and response message
+        formats (described below).  Any message may be presented as a
+        single or multiple buffers.</p>
+<p>Framing can permit readers to more efficiently get
+        different buffers from different sources and for writers to
+        more efficiently store different buffers to different
+        destinations.  In particular, it can reduce the number of
+        times large binary objects are copied.  For example, if an RPC
+        parameter consists of a megabyte of file data, that data can
+        be copied directly to a socket from a file descriptor, and, on
+        the other end, it could be written directly to a file
+        descriptor, never entering user space.</p>
+<p>A simple, recommended, framing policy is for writers to
+        create a new segment whenever a single binary object is
+        written that is larger than a normal output buffer.  Small
+        objects are then appended in buffers, while larger objects are
+        written as their own buffers.  When a reader then tries to
+        read a large object the runtime can hand it an entire buffer
+        directly, without having to copy it.</p>
+<a name="N106AE"></a><a name="handshake"></a>
+<h3 class="h4">Handshake</h3>
+<p>The purpose of the handshake is to ensure that the client
+        and the server have each other's protocol definition, so that
+        the client can correctly deserialize responses, and the server
+        can correctly deserialize requests.  Both clients and servers
+        should maintain a cache of recently seen protocols, so that,
+        in most cases, a handshake will be completed without extra
+        round-trip network exchanges or the transmission of full
+        protocol text.</p>
+<p>RPC requests and responses may not be processed until a
+        handshake has been completed.  With a stateless transport, all
+        requests and responses are prefixed by handshakes.  With a
+        stateful transport, handshakes are only attached to requests
+        and responses until a successful handshake response has been
+        returned over a connection.  After this, request and response
+        payloads are sent without handshakes for the lifetime of that
+        connection.</p>
+<p>The handshake process uses the following record schemas:</p>
+<pre class="code">
+{
+  "type": "record",
+  "name": "HandshakeRequest", "namespace":"org.apache.avro.ipc",
+  "fields": [
+    {"name": "clientHash",
+     "type": {"type": "fixed", "name": "MD5", "size": 16}},
+    {"name": "clientProtocol", "type": ["null", "string"]},
+    {"name": "serverHash", "type": "MD5"},
+    {"name": "meta", "type": ["null", {"type": "map", "values": "bytes"}]}
+  ]
+}
+{
+  "type": "record",
+  "name": "HandshakeResponse", "namespace": "org.apache.avro.ipc",
+  "fields": [
+    {"name": "match",
+     "type": {"type": "enum", "name": "HandshakeMatch",
+              "symbols": ["BOTH", "CLIENT", "NONE"]}},
+    {"name": "serverProtocol",
+     "type": ["null", "string"]},
+    {"name": "serverHash",
+     "type": ["null", {"type": "fixed", "name": "MD5", "size": 16}]},
+    {"name": "meta",
+     "type": ["null", {"type": "map", "values": "bytes"}]}
+  ]
+}
+        </pre>
+<ul>
+          
+<li>A client first prefixes each request with
+          a <span class="codefrag">HandshakeRequest</span> containing just the hash of
+          its protocol and of the server's protocol
+          (<span class="codefrag">clientHash!=null, clientProtocol=null,
+          serverHash!=null</span>), where the hashes are 128-bit MD5
+          hashes of the JSON protocol text. If a client has never
+          connected to a given server, it sends its hash as a guess of
+          the server's hash, otherwise it sends the hash that it
+          previously obtained from this server.</li>
+
+          
+<li>The server responds with
+          a <span class="codefrag">HandshakeResponse</span> containing one of:
+            <ul>
+              
+<li>
+<span class="codefrag">match=BOTH, serverProtocol=null,
+              serverHash=null</span> if the client sent the valid hash
+              of the server's protocol and the server knows what
+              protocol corresponds to the client's hash. In this case,
+              the request is complete and the response data
+              immediately follows the HandshakeResponse.</li>
+
+              
+<li>
+<span class="codefrag">match=CLIENT, serverProtocol!=null,
+              serverHash!=null</span> if the server has previously
+              seen the client's protocol, but the client sent an
+              incorrect hash of the server's protocol. The request is
+              complete and the response data immediately follows the
+              HandshakeResponse. The client must use the returned
+              protocol to process the response and should also cache
+              that protocol and its hash for future interactions with
+              this server.</li>
+
+              
+<li>
+<span class="codefrag">match=NONE</span> if the server has not
+              previously seen the client's protocol.
+              The <span class="codefrag">serverHash</span>
+              and <span class="codefrag">serverProtocol</span> may also be non-null if
+              the server's protocol hash was incorrect.
+
+              <p>In this case the client must then re-submit its request
+              with its protocol text (<span class="codefrag">clientHash!=null,
+              clientProtocol!=null, serverHash!=null</span>) and the
+              server should respond with a successful match
+              (<span class="codefrag">match=BOTH, serverProtocol=null,
+              serverHash=null</span>) as above.</p>
+              
+</li>
+            
+</ul>
+          
+</li>
+        
+</ul>
+<p>The <span class="codefrag">meta</span> field is reserved for future
+        handshake enhancements.</p>
+<a name="N106FB"></a><a name="Call+Format"></a>
+<h3 class="h4">Call Format</h3>
+<p>A <em>call</em> consists of a request message paired with
+        its resulting response or error message.  Requests and
+        responses contain extensible metadata, and both kinds of
+        messages are framed as described above.</p>
+<p>The format of a call request is:</p>
+<ul>
+          
+<li>
+<em>request metadata</em>, a map with values of
+          type <span class="codefrag">bytes</span>
+</li>
+          
+<li>the <em>message name</em>, an Avro string,
+          followed by</li>
+          
+<li>the message <em>parameters</em>.  Parameters are
+          serialized according to the message's request
+          declaration.</li>
+        
+</ul>
+<p>When a message is declared one-way and a stateful
+        connection has been established by a successful handshake
+        response, no response data is sent.  Otherwise the format of
+        the call response is:</p>
+<ul>
+          
+<li>
+<em>response metadata</em>, a map with values of
+          type <span class="codefrag">bytes</span>
+</li>
+          
+<li>a one-byte <em>error flag</em> boolean, followed by either:
+            <ul>
+              
+<li>if the error flag is false, the message <em>response</em>,
+                serialized per the message's response schema.</li>
+              
+<li>if the error flag is true, the <em>error</em>,
+              serialized per the message's effective error union
+              schema.</li>
+            
+</ul>
+          
+</li>
+        
+</ul>
+</div>
+
+    
+<a name="N10744"></a><a name="Schema+Resolution"></a>
+<h2 class="h3">Schema Resolution</h2>
+<div class="section">
+<p>A reader of Avro data, whether from an RPC or a file, can
+        always parse that data because its schema is provided.  But
+        that schema may not be exactly the schema that was expected.
+        For example, if the data was written with a different version
+        of the software than it is read, then records may have had
+        fields added or removed.  This section specifies how such
+        schema differences should be resolved.</p>
+<p>We call the schema used to write the data as
+        the <em>writer's</em> schema, and the schema that the
+        application expects the <em>reader's</em> schema.  Differences
+        between these should be resolved as follows:</p>
+<ul>
+        
+<li>
+<p>It is an error if the two schemas do not <em>match</em>.</p>
+          
+<p>To match, one of the following must hold:</p>
+          
+<ul>
+            
+<li>both schemas are arrays whose item types match</li>
+            
+<li>both schemas are maps whose value types match</li>
+            
+<li>both schemas are enums whose names match</li>
+            
+<li>both schemas are fixed whose sizes and names match</li>
+            
+<li>both schemas are records with the same name</li>
+            
+<li>either schema is a union</li>
+            
+<li>both schemas have same primitive type</li>
+            
+<li>the writer's schema may be <em>promoted</em> to the
+              reader's as follows:
+              <ul>
+                
+<li>int is promotable to long, float, or double</li>
+                
+<li>long is promotable to float or double</li>
+                
+<li>float is promotable to double</li>
+                
+</ul>
+            
+</li>
+          
+</ul>
+        
+</li>
+
+        
+<li>
+<strong>if both are records:</strong>
+          
+<ul>
+            
+<li>the ordering of fields may be different: fields are
+              matched by name.</li>
+            
+            
+<li>schemas for fields with the same name in both records
+              are resolved recursively.</li>
+            
+            
+<li>if the writer's record contains a field with a name
+              not present in the reader's record, the writer's value
+              for that field is ignored.</li>
+            
+            
+<li>if the reader's record schema has a field that
+              contains a default value, and writer's schema does not
+              have a field with the same name, then the reader should
+              use the default value from its field.</li>
+
+            
+<li>if the reader's record schema has a field with no
+              default value, and writer's schema does not have a field
+              with the same name, an error is signalled.</li>
+          
+</ul>
+        
+</li>
+
+        
+<li>
+<strong>if both are enums:</strong>
+          
+<p>if the writer's symbol is not present in the reader's
+            enum, then an error is signalled.</p>
+        
+</li>
+
+        
+<li>
+<strong>if both are arrays:</strong>
+          
+<p>This resolution algorithm is applied recursively to the reader's and
+            writer's array item schemas.</p>
+        
+</li>
+
+        
+<li>
+<strong>if both are maps:</strong>
+          
+<p>This resolution algorithm is applied recursively to the reader's and
+            writer's value schemas.</p>
+        
+</li>
+
+        
+<li>
+<strong>if both are unions:</strong>
+          
+<p>The first schema in the reader's union that matches the
+            selected writer's union schema is recursively resolved
+            against it.  if none match, an error is signalled.</p>
+        
+</li>
+
+        
+<li>
+<strong>if reader's is a union, but writer's is not</strong>
+          
+<p>The first schema in the reader's union that matches the
+            writer's schema is recursively resolved against it.  If none
+            match, an error is signalled.</p>
+        
+</li>
+          
+        
+<li>
+<strong>if writer's is a union, but reader's is not</strong>
+          
+<p>If the reader's schema matches the selected writer's schema,
+            it is recursively resolved against it.  If they do not
+            match, an error is signalled.</p>
+        
+</li>
+          
+      
+</ul>
+<p>A schema's "doc" fields are ignored for the purposes of schema resolution.  Hence,
+        the "doc" portion of a schema may be dropped at serialization.</p>
+</div>
+
+  
+<p>
+<em>Apache Avro, Avro, Apache, and the Avro and Apache logos are
+   trademarks of The Apache Software Foundation.</em>
+</p>
+
+  
+</div>
+<!--+
+    |end content
+    +-->
+<div class="clearboth">&nbsp;</div>
+</div>
+<div id="footer">
+<!--+
+    |start bottomstrip
+    +-->
+<div class="lastmodified">
+<script type="text/javascript"><!--
+document.write("Last Published: " + document.lastModified);
+//  --></script>
+</div>
+<div class="copyright">
+        Copyright &copy;
+         2009 <a href="http://www.apache.org/licenses/">The Apache Software Foundation.</a>
+</div>
+<!--+
+    |end bottomstrip
+    +-->
+</div>
+</body>
+</html>

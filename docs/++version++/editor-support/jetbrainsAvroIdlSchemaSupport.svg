@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="40" height="40" viewBox="0 0 64 64">
+	<!--<rect fill="#f7f8fa" x="0" y="0" width="64" height="64"/>-->
+	<!-- Pigeon v3.1, 64x64, 4px border -->
+	<path id="body"         fill="#999999" d="M 31.840348,14.449415 25.321254,56.989232 50.422312,37.398761 Z m 0,0" style="stroke-width:1.27326" />
+	<path id="body-outline" fill="none" stroke="#3b3b3b" d="M 31.835904,14.449415 25.316288,56.989232 50.41797,37.398761 Z m 0,0" stroke-width="1.77778" stroke-linecap="square" stroke-linejoin="round" />
+	<path id="tail"         fill="#666666" d="m 27.279529,44.222194 -16.55748,-0.497847 14.597932,13.061162 z m 0,0" style="stroke-width:1.27326" />
+	<path id="tail-outline" fill="none" stroke="#3b3b3b" d="M 27.270173,44.232672 10.72253,43.729145 25.312626,56.939324 Z m 0,0" stroke-width="1.78737" stroke-linecap="square" stroke-linejoin="round" />
+	<path id="wing-light"   fill="#cccccc" d="M 31,15 L 6,8 L 28,34 Z" style="stroke-width:1.27326"/>
+	<path id="wing-dark-3"  fill="none" stroke="#666666" d="M 22.242179,12.34598 20.263138,24.710666" stroke-width="1.77778" stroke-linecap="square" stroke-linejoin="round" />
+	<path id="wing-dark-2"  fill="none" stroke="#666666" d="m 18.57664,11.166935 -1.491904,9.429808" stroke-width="1.77778" stroke-linecap="square" stroke-linejoin="round" />
+	<path id="wing-dark-1a" fill="#666666" d="M 8.9764091,10.555768 C 8.1411502,9.5358815 7.3402693,8.4561519 7.3606415,8.4357797 7.4001126,8.3963084 11.05055,9.3958222 11.130766,9.476038 c 0.04966,0.044564 -0.422723,3.018914 -0.408717,3.113135 0.03947,0.224095 -0.9103811,-1.014793 -1.7456399,-2.033405 z m 0,0" style="stroke-width:1.27326" />
+	<path id="wing-dark-1b" fill="none" stroke="#666666" d="m 12.026492,9.4111014 -0.59269,3.9343916" stroke-width="1.77778" stroke-linecap="square" stroke-linejoin="round" />
+	<path id="wing-outline" fill="none" stroke="#3b3b3b" d="M 28.563383,35.697678 31.825731,14.430316 4.8887463,6.809819 Z m 0,0" stroke-width="1.77778" stroke-linecap="square" stroke-linejoin="round" />
+	<path id="neck-purple"  fill="#8b72b9" d="m 39.430254,22.203605 1.860233,-1.776206 8.683637,10.216686 0.159157,4.630869" style="stroke-width:1.27326" />
+	<path id="neck-green"   fill="#1cac81" d="m 41.64318,20.831024 c -0.0051,-0.02547 2.86993,-2.840656 4.506069,-4.307459 l 3.169146,-2.849569 0.07894,0.770326 c 0.203722,2.024493 0.516944,16.737082 0.516944,16.737082 C 49.63671,30.952216 41.64318,20.831024 41.64318,20.831024 Z m 0,0" style="stroke-width:1.27326" />
+	<path id="neck-outline" fill="none" stroke="#3b3b3b" d="m 38.754891,22.362763 11.264981,-10.489165 0.358665,18.068918 0.138632,7.281808 z m 0,0" stroke-width="1.77778" stroke-linecap="square" stroke-linejoin="round" />
+	<path id="head-green"   fill="#1cac81" d="m 50.74572,18.647373 c 0,-1.129387 -0.06494,-2.894134 -0.03056,-3.540953 l 0.08531,-1.666705 2.084327,1.103922 2.173456,1.473168 -0.369245,1.774933 -0.227914,1.920085 -1.432418,0.516946 -2.277863,0.890013 z m 0,0" style="stroke-width:1.27326" />
+	<path id="beak"         fill="none" stroke="#ffd944" d="m 56.395775,19.080283 -1.278239,-3.024006 0.075,3.511667 2.014642,-1.398046" stroke-width="1.92921" stroke-linecap="square" stroke-linejoin="round" />
+	<path id="head-outline" fill="none" stroke="#3b3b3b" d="m 50.019872,11.868505 0.198412,10.095726 8.892935,-3.759955 z m 0,0" stroke-width="1.77778" stroke-linecap="square" stroke-linejoin="round" />
+</svg>
