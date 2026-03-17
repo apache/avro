@@ -205,8 +205,15 @@ class BufferCopyInInputStream : public SeekableInputStream {
     void seek(int64_t position) final {
         // BufferCopyIn::seek is relative to byteCount_, whereas position is
         // absolute.
-        in_->seek(position - byteCount_ - available_);
-        byteCount_ = position;
+        int64_t offset = position - static_cast<int64_t>(byteCount_) - static_cast<int64_t>(available_);
+        if (offset < 0) {
+            throw Exception("Negative offset in seek");
+        }
+        in_->seek(static_cast<size_t>(offset));
+        if (position < 0) {
+            throw Exception("Negative position not allowed");
+        }
+        byteCount_ = static_cast<size_t>(position);
         available_ = 0;
     }
 
