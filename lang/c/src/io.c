@@ -274,6 +274,20 @@ int avro_read(avro_reader_t reader, void *buf, int64_t len)
 	return EINVAL;
 }
 
+
+int64_t avro_max_read(avro_reader_t reader)
+{
+	if (is_memory_io(reader)) {
+		struct _avro_reader_memory_t *mem_reader = avro_reader_to_memory(reader);
+		return mem_reader->len - mem_reader->read;
+	} else if (is_file_io(reader)) {
+		struct _avro_reader_file_t *file_reader = avro_reader_to_file(reader);
+		return bytes_available(file_reader);
+	}
+	return -1;
+}
+
+
 static int avro_skip_memory(struct _avro_reader_memory_t *reader, int64_t len)
 {
 	if (len > 0) {
