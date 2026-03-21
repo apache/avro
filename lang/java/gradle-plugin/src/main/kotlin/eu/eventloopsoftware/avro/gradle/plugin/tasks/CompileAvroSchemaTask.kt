@@ -46,7 +46,11 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
 
   private fun compileSchemas(schemaFileTree: ConfigurableFileCollection, outputDirectory: File) {
     val sourceFileForModificationDetection: File? =
-        schemaFileTree.asFileTree.files.filter { file: File -> file.lastModified() > 0 }.maxBy { it.lastModified() }
+        schemaFileTree
+            .asFileTree
+            .files
+            .filter { file: File -> file.lastModified() > 0 }
+            .maxByOrNull { it.lastModified() }
 
     // Need to register custom logical type factories before schema compilation.
     try {
