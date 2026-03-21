@@ -43,8 +43,6 @@ abstract class AbstractCompileTask : DefaultTask() {
 
   @get:Input abstract val fieldVisibility: Property<String>
 
-  @get:Input abstract val testExcludes: ListProperty<String>
-
   @get:Input abstract val stringType: Property<String>
 
   @get:Input abstract val velocityToolsClassesNames: ListProperty<String>

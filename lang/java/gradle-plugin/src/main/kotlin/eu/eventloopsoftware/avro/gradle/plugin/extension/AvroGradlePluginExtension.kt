@@ -69,6 +69,14 @@ abstract class AvroGradlePluginExtension @Inject constructor(objects: ObjectFact
    */
   val includedSchemaFiles: SetProperty<String> = objects.setProperty(String::class.java).convention(setOf("**/*.avsc"))
 
+    /**
+     * A set of Ant-like exclusion patterns used to prevent certain AVSC files from being processed. By default, this set is
+     * empty such that no files are excluded.
+     *
+     * @parameter
+     */
+    val excludedSchemaFiles: SetProperty<String> = objects.setProperty(String::class.java).convention(emptySet())
+
   /**
    * A set of Ant-like inclusion patterns used to select files from the source directory for processing. The default
    * pattern is different for Schema, Protocol and IDL files.
@@ -78,21 +86,13 @@ abstract class AvroGradlePluginExtension @Inject constructor(objects: ObjectFact
   val includedProtocolFiles: SetProperty<String> =
       objects.setProperty(String::class.java).convention(setOf("**/*.avpr"))
 
-  /**
-   * A set of Ant-like exclusion patterns used to prevent certain files from being processed. By default, this set is
-   * empty such that no files are excluded.
-   *
-   * @parameter
-   */
-  val excludes: ListProperty<String> = objects.listProperty(String::class.java).convention(emptyList())
-
-  /**
-   * A set of Ant-like exclusion patterns used to prevent certain files from being processed. By default, this set is
-   * empty such that no files are excluded.
-   *
-   * @parameter
-   */
-  val testExcludes: ListProperty<String> = objects.listProperty(String::class.java).convention(emptyList())
+    /**
+     * A set of Ant-like exclusion patterns used to prevent certain files from being processed. By default, this set is
+     * empty such that no files are excluded.
+     *
+     * @parameter
+     */
+    val excludedProtocolFiles: SetProperty<String> = objects.setProperty(String::class.java).convention(emptySet())
 
   /**
    * The Java type to use for Avro strings. May be one of CharSequence, String or Utf8. String by default.

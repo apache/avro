@@ -60,7 +60,9 @@ abstract class AvroGradlePlugin : Plugin<Project> {
   private fun registerSchemaTask(extension: AvroGradlePluginExtension, project: Project) =
       project.tasks.register("avroGenerateJavaClasses", CompileAvroSchemaTask::class.java) { compileSchemaTask ->
         val includesAvsc: Set<String> = extension.includedSchemaFiles.get()
+        val excludesAvsc: Set<String> = extension.excludedSchemaFiles.get()
         val includesProtocol: Set<String> = extension.includedProtocolFiles.get()
+        val excludesProtocol: Set<String> = extension.excludedProtocolFiles.get()
 
         addProperties(compileSchemaTask, extension, project, extension.outputDirectory)
 
@@ -69,6 +71,7 @@ abstract class AvroGradlePlugin : Plugin<Project> {
             project,
             extension,
             includesAvsc,
+            excludesAvsc,
             extension.sourceDirectory,
         )
         addProtocolFiles(
@@ -76,6 +79,7 @@ abstract class AvroGradlePlugin : Plugin<Project> {
             project,
             extension,
             includesProtocol,
+            excludesProtocol,
             extension.sourceDirectory,
         )
 
@@ -89,8 +93,10 @@ abstract class AvroGradlePlugin : Plugin<Project> {
           "avroGenerateTestJavaClasses",
           CompileAvroSchemaTask::class.java,
       ) { compileSchemaTask ->
-        val includesAvsc: Set<String> = extension.includedSchemaFiles.get()
-        val includesProtocol: Set<String> = extension.includedProtocolFiles.get()
+          val includesAvsc: Set<String> = extension.includedSchemaFiles.get()
+          val excludesAvsc: Set<String> = extension.excludedSchemaFiles.get()
+          val includesProtocol: Set<String> = extension.includedProtocolFiles.get()
+          val excludesProtocol: Set<String> = extension.excludedProtocolFiles.get()
 
         addProperties(compileSchemaTask, extension, project, extension.testOutputDirectory)
 
@@ -99,6 +105,7 @@ abstract class AvroGradlePlugin : Plugin<Project> {
             project,
             extension,
             includesAvsc,
+            excludesAvsc,
             extension.testSourceDirectory,
         )
         addProtocolFiles(
@@ -106,6 +113,7 @@ abstract class AvroGradlePlugin : Plugin<Project> {
             project,
             extension,
             includesProtocol,
+            excludesProtocol,
             extension.testSourceDirectory,
         )
 
@@ -122,7 +130,6 @@ abstract class AvroGradlePlugin : Plugin<Project> {
   ) {
     compileTask.outputDirectory.set(project.layout.buildDirectory.dir(outputDirectory))
     compileTask.fieldVisibility.set(extension.fieldVisibility)
-    compileTask.testExcludes.set(extension.testExcludes)
     compileTask.stringType.set(extension.stringType)
     compileTask.velocityToolsClassesNames.set(extension.velocityToolsClassesNames.get())
     compileTask.templateDirectory.set(extension.templateDirectory)
@@ -144,17 +151,18 @@ abstract class AvroGradlePlugin : Plugin<Project> {
       compileSchemaTask: CompileAvroSchemaTask,
       project: Project,
       extension: AvroGradlePluginExtension,
-      includes: Set<String>,
+      includesAvsc: Set<String>,
+      excludesAvsc: Set<String>,
       sourceDirectory: Property<String>,
   ) {
     compileSchemaTask.schemaFiles.from(
         project.fileTree(sourceDirectory).apply {
-          setIncludes(includes)
-          setExcludes(extension.excludes.get())
+          setIncludes(includesAvsc)
+          setExcludes(excludesAvsc)
         }
     )
     extension.sourceZipFiles.get().forEach { zipPath ->
-      compileSchemaTask.schemaFiles.from(project.zipTree(zipPath).matching { it.include(includes) })
+      compileSchemaTask.schemaFiles.from(project.zipTree(zipPath).matching { it.include(includesAvsc) })
     }
   }
 
@@ -163,12 +171,13 @@ abstract class AvroGradlePlugin : Plugin<Project> {
       project: Project,
       extension: AvroGradlePluginExtension,
       includesProtocol: Set<String>,
+      excludesProtocol: Set<String>,
       sourceDirectory: Property<String>,
   ) {
     compileSchemaTask.protocolFiles.from(
         project.fileTree(sourceDirectory).apply {
           setIncludes(includesProtocol)
-          setExcludes(extension.excludes.get())
+          setExcludes(excludesProtocol)
         }
     )
     extension.sourceZipFiles.get().forEach { zipPath ->
