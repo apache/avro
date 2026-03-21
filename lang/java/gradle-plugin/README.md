@@ -25,7 +25,7 @@ It is not needed to add `tasks.named("compileKotlin") { dependsOn(tasks.named("a
 
 `0.0.8`
 
-Add `sourceZipFiles` property to add zip files with schemas in them
+Add `sourceZipFiles` property to add zip files which contain schema files
 
 `0.1.0`
 
