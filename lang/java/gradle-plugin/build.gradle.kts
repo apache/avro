@@ -17,14 +17,14 @@
  */
 
 plugins {
-  kotlin("jvm") version "2.2.10"
+  kotlin("jvm") version "2.3.0"
   `java-gradle-plugin`
   id("com.gradle.plugin-publish") version "2.0.0"
 }
 
 group = "eu.eventloopsoftware"
 
-version = "0.1.1"
+version = "0.1.2-SNAPSHOT"
 
 repositories {
   mavenCentral()
