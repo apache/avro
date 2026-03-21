@@ -111,9 +111,6 @@ abstract class AbstractCompileTask : DefaultTask() {
     compiler.setNullSafeAnnotationNullable(nullSafeAnnotationNullable.get())
     compiler.setNullSafeAnnotationNotNull(nullSafeAnnotationNotNull.get())
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType.get())
-    // TODO: likely not needed
-    //
-    // compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"))
     compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools(velocityToolsClassesNames.get()))
     compiler.setRecordSpecificClass(recordSpecificClass.get())
     compiler.setErrorSpecificClass(errorSpecificClass.get())

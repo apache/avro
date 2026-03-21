@@ -44,11 +44,16 @@ abstract class AvroGradlePluginExtension @Inject constructor(objects: ObjectFact
   /** The output directory for the generated Java code. */
   val outputDirectory: Property<String> = objects.property(String::class.java).convention("generated-sources-avro")
 
-  /** The output directory for the generated test Java code. */
+    /**
+     * The source test directory containing Avro schema files.
+     *
+     * <p>
+     * Defaults to {@code src/main/avro}.
+     */
   val testSourceDirectory: Property<String> = objects.property(String::class.java).convention("src/test/avro")
 
   /**
-   * @parameter property="outputDirectory" default-value="${project.layout.buildDirectory}/generated-test-sources/avro"
+   * The output directory for the generated test Java code.
    */
   val testOutputDirectory: Property<String> =
       objects.property(String::class.java).convention("generated-test-sources-avro")
