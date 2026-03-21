@@ -343,7 +343,7 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 		if (err == Z_BUF_ERROR)
 		{
 			c->block_data = avro_realloc(c->block_data, c->block_size, c->block_size * 2);
-			s->next_out = c->block_data + s->total_out;
+			s->next_out = (Bytef*) c->block_data + s->total_out;
 			s->avail_out += c->block_size;
 			c->block_size = c->block_size * 2;
 		}
