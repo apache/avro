@@ -134,7 +134,7 @@ abstract class AbstractCompileTask : DefaultTask() {
       try {
         Class.forName(velocityToolClassName).getDeclaredConstructor().newInstance()
       } catch (e: Exception) {
-        throw RuntimeException(e)
+        throw GradleException("Could not instantiate velocity tool class: $velocityToolClassName", e)
       }
     }
   }

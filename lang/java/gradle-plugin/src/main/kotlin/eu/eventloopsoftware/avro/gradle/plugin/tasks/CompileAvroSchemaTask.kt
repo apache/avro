@@ -23,6 +23,7 @@ import org.apache.avro.Protocol
 import org.apache.avro.SchemaParseException
 import org.apache.avro.SchemaParser
 import org.apache.avro.compiler.specific.SpecificCompiler
+import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.SkipWhenEmpty
@@ -51,7 +52,7 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
     try {
       loadLogicalTypesFactories()
     } catch (e: IOException) {
-      throw RuntimeException("Error while loading logical types factories ", e)
+      throw GradleException("Error while loading logical types factories ", e)
     }
 
     try {
@@ -67,12 +68,12 @@ abstract class CompileAvroSchemaTask : AbstractCompileTask() {
         doCompile(sourceFile, protocol, outputDirectory)
       }
     } catch (ex: IOException) {
-      throw RuntimeException(
+      throw GradleException(
           "IO ex: Error compiling a file in " + schemaFileTree.asPath + " to " + outputDirectory,
           ex,
       )
     } catch (ex: SchemaParseException) {
-      throw RuntimeException(
+      throw GradleException(
           "SchemaParse ex Error compiling a file in " + schemaFileTree.asPath + " to " + outputDirectory,
           ex,
       )
