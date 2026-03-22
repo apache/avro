@@ -24,7 +24,7 @@ plugins {
 
 group = "eu.eventloopsoftware"
 
-version = "0.1.5-SNAPSHOT"
+version = "0.1.2"
 
 repositories {
   mavenCentral()
@@ -32,7 +32,6 @@ repositories {
 }
 
 dependencies {
-  // TODO: for release use ${version}
   implementation("org.apache.avro:avro-compiler:1.12.1")
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.3.0")
   testImplementation(kotlin("test"))
