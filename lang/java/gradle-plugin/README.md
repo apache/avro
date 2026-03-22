@@ -35,6 +35,10 @@ Add Avro Protocol support
 
 Fix issue with Gradle multi project, where sources would not appear on the classpath
 
+`0.1.2`
+
+Fix minor bugs
+
 
 ## Usage
 
