@@ -52,6 +52,7 @@ import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
 import org.apache.avro.reflect.ReflectionUtil;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.avro.util.ClassUtils;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.util.WeakIdentityHashMap;
 import org.apache.avro.util.internal.Accessor;
@@ -446,8 +447,8 @@ public class FastReaderBuilder {
 
   private Optional<Class<?>> findClass(String clazz) {
     try {
-      return Optional.of(data.getClassLoader().loadClass(clazz));
-    } catch (ReflectiveOperationException e) {
+      return Optional.of(ClassUtils.forName(data.getClassLoader(), clazz));
+    } catch (ClassNotFoundException e) {
       return Optional.empty();
     }
   }

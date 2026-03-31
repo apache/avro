@@ -98,6 +98,29 @@ public class TestClassSecurityValidator {
   }
 
   @Test
+  void testClassUtilsEnforcesValidator() {
+    ClassSecurityValidator.setGlobal(ClassSecurityValidator.builder().add("java.lang.String").build());
+
+    assertThrows(SecurityException.class, () -> ClassUtils.forName("java.net.URI"),
+        "ClassUtils.forName should reject classes not in the trusted set");
+
+    assertDoesNotThrow(() -> ClassUtils.forName("java.lang.String"),
+        "ClassUtils.forName should allow classes in the trusted set");
+  }
+
+  @Test
+  void testDirectLoadClassDoesNotUseValidator() throws ClassNotFoundException {
+    ClassSecurityValidator.setGlobal(ClassSecurityValidator.builder().add("java.lang.String").build());
+
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+    Class<?> loaded = cl.loadClass("java.net.URI");
+    assertNotNull(loaded, "Direct ClassLoader.loadClass() loads any class regardless of the validator");
+
+    assertThrows(SecurityException.class, () -> ClassUtils.forName("java.net.URI"),
+        "ClassUtils.forName correctly applies the validator");
+  }
+
+  @Test
   void testBuildComplexPredicate() {
     ClassSecurityValidator.setGlobal(ClassSecurityValidator.composite(
         ClassSecurityValidator.builder().add(TestInnerClass.class).add(TestClassSecurityValidator.class).build(),
