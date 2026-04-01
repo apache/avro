@@ -26,7 +26,7 @@ import org.xerial.snappy.Snappy;
 
 /** * Implements Snappy compression and decompression. */
 public class SnappyCodec extends Codec {
-  private CRC32 crc32 = new CRC32();
+  private final CRC32 crc32 = new CRC32();
 
   static class Option extends CodecFactory {
     static {
@@ -72,7 +72,7 @@ public class SnappyCodec extends Codec {
 
     crc32.reset();
     crc32.update(out.array(), 0, size);
-    if (in.getInt(((Buffer) in).limit() - 4) != (int) crc32.getValue())
+    if (in.getInt(in.limit() - 4) != (int) crc32.getValue())
       throw new IOException("Checksum failure");
 
     return out;

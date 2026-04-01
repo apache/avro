@@ -140,7 +140,7 @@ public class FastReaderBuilder {
     return recordReader;
   }
 
-  private RecordReader initializeRecordReader(RecordReader recordReader, RecordAdjust action) throws IOException {
+  private void initializeRecordReader(RecordReader recordReader, RecordAdjust action) throws IOException {
     recordReader.startInitialization();
 
     // generate supplier for the new object instances
@@ -171,7 +171,6 @@ public class FastReaderBuilder {
     }
 
     recordReader.finishInitialization(readSteps, action.reader, action.instanceSupplier);
-    return recordReader;
   }
 
   private ExecutionStep createFieldSetter(Field field, FieldReader reader) {
@@ -277,7 +276,7 @@ public class FastReaderBuilder {
         throw new IllegalStateException("Error getting reader for action type " + action.getClass());
       }
     case DO_NOTHING:
-      return getReaderForBaseType(action.reader, action.writer);
+      return getReaderForBaseType(action.reader);
     case RECORD:
       return createRecordReader((RecordAdjust) action);
     case ENUM:
@@ -297,7 +296,7 @@ public class FastReaderBuilder {
     }
   }
 
-  private FieldReader getReaderForBaseType(Schema readerSchema, Schema writerSchema) throws IOException {
+  private FieldReader getReaderForBaseType(Schema readerSchema) {
     switch (readerSchema.getType()) {
     case NULL:
       return (old, decoder) -> {
@@ -307,7 +306,7 @@ public class FastReaderBuilder {
     case BOOLEAN:
       return (old, decoder) -> decoder.readBoolean();
     case STRING:
-      return createStringReader(readerSchema, writerSchema);
+      return createStringReader(readerSchema);
     case INT:
       return (old, decoder) -> decoder.readInt();
     case LONG:
@@ -319,7 +318,7 @@ public class FastReaderBuilder {
     case BYTES:
       return createBytesReader();
     case FIXED:
-      return createFixedReader(readerSchema, writerSchema);
+      return createFixedReader(readerSchema);
     case RECORD: // covered by action type
     case UNION: // covered by action type
     case ENUM: // covered by action type
@@ -330,7 +329,7 @@ public class FastReaderBuilder {
     }
   }
 
-  private FieldReader createPromotingReader(Promote promote) throws IOException {
+  private FieldReader createPromotingReader(Promote promote) {
     switch (promote.reader.getType()) {
     case BYTES:
       return (reuse, decoder) -> ByteBuffer.wrap(decoder.readString(null).getBytes());
@@ -364,7 +363,7 @@ public class FastReaderBuilder {
         "No promotion possible for type " + promote.writer.getType() + " to " + promote.reader.getType());
   }
 
-  private FieldReader createStringReader(Schema readerSchema, Schema writerSchema) {
+  private FieldReader createStringReader(Schema readerSchema) {
     FieldReader stringReader = createSimpleStringReader(readerSchema);
     if (isClassPropEnabled()) {
       return getTransformingStringReader(readerSchema.getProp(SpecificData.CLASS_PROP), stringReader);
@@ -497,7 +496,7 @@ public class FastReaderBuilder {
     });
   }
 
-  private FieldReader createFixedReader(Schema readerSchema, Schema writerSchema) {
+  private FieldReader createFixedReader(Schema readerSchema) {
     return reusingReader((reuse, decoder) -> {
       GenericFixed fixed = (GenericFixed) data.createFixed(reuse, readerSchema);
       decoder.readFixed(fixed.bytes(), 0, readerSchema.getFixedSize());
@@ -516,9 +515,9 @@ public class FastReaderBuilder {
 
   public interface FieldReader extends DatumReader<Object> {
     @Override
-    public Object read(Object reuse, Decoder decoder) throws IOException;
+    Object read(Object reuse, Decoder decoder) throws IOException;
 
-    public default boolean canReuse() {
+    default boolean canReuse() {
       return false;
     }
 
@@ -530,7 +529,7 @@ public class FastReaderBuilder {
 
   public interface ReusingFieldReader extends FieldReader {
     @Override
-    public default boolean canReuse() {
+    default boolean canReuse() {
       return true;
     }
   }
@@ -608,7 +607,7 @@ public class FastReaderBuilder {
   }
 
   public interface ExecutionStep {
-    public void execute(Object record, Decoder decoder) throws IOException;
+    void execute(Object record, Decoder decoder) throws IOException;
   }
 
 }

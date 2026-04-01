@@ -519,7 +519,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
     @Override
     public boolean equals(Object obj) {
-      if (obj == null || !(obj instanceof GenericDatumReader.IdentitySchemaKey)) {
+      if (!(obj instanceof GenericDatumReader.IdentitySchemaKey)) {
         return false;
       }
       IdentitySchemaKey key = (IdentitySchemaKey) obj;

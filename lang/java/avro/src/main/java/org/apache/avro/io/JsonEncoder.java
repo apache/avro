@@ -47,7 +47,7 @@ import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
  * JsonEncoder is not thread-safe.
  */
 public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler {
-  private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+  private static final String LINE_SEPARATOR = System.lineSeparator();
   final Parser parser;
   private JsonGenerator out;
   private boolean includeNamespace = true;
@@ -137,15 +137,13 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
    * @param generator The JsonGenerator to direct output to. Cannot be null.
    * @throws IOException
    * @throws NullPointerException if {@code generator} is {@code null}
-   * @return this JsonEncoder
    */
-  private JsonEncoder configure(JsonGenerator generator) throws IOException {
+  private void configure(JsonGenerator generator) throws IOException {
     Objects.requireNonNull(generator, "JsonGenerator cannot be null");
     if (null != parser) {
       flush();
     }
     this.out = generator;
-    return this;
   }
 
   @Override

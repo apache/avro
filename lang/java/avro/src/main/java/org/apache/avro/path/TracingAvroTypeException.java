@@ -59,8 +59,6 @@ public class TracingAvroTypeException extends AvroTypeException implements PathT
         sb.append(step.toString());
       }
     }
-    AvroTypeException summary = new AvroTypeException(sb.toString());
-    summary.initCause(cause);
-    return summary;
+    return new AvroTypeException(sb.toString(), cause);
   }
 }

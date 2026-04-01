@@ -27,7 +27,6 @@ public class DataFileConstants {
 
   public static final byte VERSION = 1;
   public static final byte[] MAGIC = new byte[] { (byte) 'O', (byte) 'b', (byte) 'j', VERSION };
-  public static final long FOOTER_BLOCK = -1;
   public static final int SYNC_SIZE = 16;
   public static final int DEFAULT_SYNC_INTERVAL = 4000 * SYNC_SIZE;
 
