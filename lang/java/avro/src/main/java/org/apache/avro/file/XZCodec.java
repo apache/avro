@@ -26,7 +26,6 @@ import java.nio.ByteBuffer;
 import org.apache.avro.util.NonCopyingByteArrayOutputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
-import org.apache.commons.compress.utils.IOUtils;
 
 /** * Implements xz compression and decompression. */
 public class XZCodec extends Codec {
@@ -34,7 +33,7 @@ public class XZCodec extends Codec {
   private static final int DEFAULT_BUFFER_SIZE = 8192;
 
   static class Option extends CodecFactory {
-    private int compressionLevel;
+    private final int compressionLevel;
 
     Option(int compressionLevel) {
       this.compressionLevel = compressionLevel;
@@ -46,7 +45,7 @@ public class XZCodec extends Codec {
     }
   }
 
-  private int compressionLevel;
+  private final int compressionLevel;
 
   public XZCodec(int compressionLevel) {
     this.compressionLevel = compressionLevel;
@@ -72,7 +71,7 @@ public class XZCodec extends Codec {
     InputStream bytesIn = new ByteArrayInputStream(data.array(), computeOffset(data), data.remaining());
 
     try (InputStream ios = new XZCompressorInputStream(bytesIn)) {
-      IOUtils.copy(ios, baos);
+      ios.transferTo(baos);
     }
     return baos.asByteBuffer();
   }

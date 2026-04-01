@@ -31,7 +31,7 @@ public interface FileReader<D> extends Iterator<D>, Iterable<D>, Closeable {
 
   /**
    * Read the next datum from the file.
-   * 
+   *
    * @param reuse an instance to reuse.
    * @throws NoSuchElementException if no more remain in the file.
    */
@@ -39,7 +39,7 @@ public interface FileReader<D> extends Iterator<D>, Iterable<D>, Closeable {
 
   /**
    * Move to the next synchronization point after a position. To process a range
-   * of file entires, call this with the starting position, then check
+   * of file entries, call this with the starting position, then check
    * {@link #pastSync(long)} with the end point before each call to
    * {@link #next()}.
    */

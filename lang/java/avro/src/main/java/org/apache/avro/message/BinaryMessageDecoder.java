@@ -122,7 +122,7 @@ public class BinaryMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
   public void addSchema(Schema writeSchema) {
     long fp = SchemaNormalization.parsingFingerprint64(writeSchema);
     final Schema actualReadSchema = this.readSchema != null ? this.readSchema : writeSchema;
-    codecByFingerprint.put(fp, new RawMessageDecoder<D>(model, writeSchema, actualReadSchema));
+    codecByFingerprint.put(fp, new RawMessageDecoder<>(model, writeSchema, actualReadSchema));
   }
 
   private RawMessageDecoder<D> getDecoder(long fp) {

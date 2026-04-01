@@ -140,7 +140,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
 
   /**
    * Consume any more data that has been written by the writer but not needed by
-   * the reader so that the the underlying decoder is in proper shape for the next
+   * the reader so that the underlying decoder is in proper shape for the next
    * record. This situation happens when, for example, the writer writes a record
    * with two fields and the reader needs only the first field.
    *
@@ -187,11 +187,11 @@ public class ResolvingDecoder extends ValidatingDecoder {
   public double readDouble() throws IOException {
     Symbol actual = parser.advance(Symbol.DOUBLE);
     if (actual == Symbol.INT) {
-      return (double) in.readInt();
+      return in.readInt();
     } else if (actual == Symbol.LONG) {
       return (double) in.readLong();
     } else if (actual == Symbol.FLOAT) {
-      return (double) in.readFloat();
+      return in.readFloat();
     } else {
       assert actual == Symbol.DOUBLE;
       return in.readDouble();

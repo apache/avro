@@ -41,7 +41,7 @@ public class ValidatingGrammarGenerator {
    * given schema <tt>sc</tt>. If there is already an entry for the given schema
    * in the given map <tt>seen</tt> then that entry is returned. Otherwise a new
    * symbol is generated and an entry is inserted into the map.
-   * 
+   *
    * @param sc   The schema for which the start symbol is required
    * @param seen A map of schema to symbol mapping done so far.
    * @return The start symbol for the schema

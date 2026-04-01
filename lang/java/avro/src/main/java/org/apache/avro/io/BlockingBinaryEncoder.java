@@ -89,7 +89,7 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
        * this case, {@link BlockedValue#start} is zero. The header for such a block
        * has _already been written_ (we've written out a header indicating that the
        * block has a single item, and we put a "zero" down for the byte-count to
-       * indicate that we don't know the physical length of the buffer. Any blocks
+       * indicate that we don't know the physical length of the buffer). Any blocks
        * _containing_ this block must be in the {@link #OVERFLOW} state.
        */
       OVERFLOW
@@ -130,7 +130,7 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
      * Check invariants of <code>this</code> and also the <code>BlockedValue</code>
      * containing <code>this</code>.
      */
-    public boolean check(BlockedValue prev, int pos) {
+    public void check(BlockedValue prev, int pos) {
       assert state != State.ROOT || type == null;
       assert (state == State.ROOT || type == Schema.Type.ARRAY || type == Schema.Type.MAP);
 
@@ -156,7 +156,6 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
         assert prev.state == State.ROOT || prev.state == State.OVERFLOW;
         break;
       }
-      return false;
     }
   }
 
@@ -179,7 +178,7 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
 
   // buffer large enough for up to two ints for a block header
   // rounded up to a multiple of 4 bytes.
-  private byte[] headerBuffer = new byte[12];
+  private final byte[] headerBuffer = new byte[12];
 
   private boolean check() {
     assert buf != null;
@@ -438,7 +437,7 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
    * Called when we've finished writing the last item in an overflow buffer. When
    * this is finished, the top of the stack will be an empty block in the
    * "regular" state.
-   * 
+   *
    * @throws IOException
    */
   private void finishOverflow() throws IOException {
