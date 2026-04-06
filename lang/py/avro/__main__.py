@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Command line utility for reading and writing Avro files."""
+
 import argparse
 import csv
 import functools
