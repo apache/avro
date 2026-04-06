@@ -18,6 +18,7 @@
 # limitations under the License.
 
 """Contains the Name classes."""
+
 from typing import TYPE_CHECKING, Dict, Optional
 
 from avro.constants import PRIMITIVE_TYPES
