@@ -313,7 +313,7 @@ class TetherTask(abc.ABC):
         self._partitions = npartitions
 
     def input(self, data, count):
-        """Recieve input from the server
+        """Receive input from the server
 
         Parameters
         ------------------------------------------------------

@@ -8,14 +8,14 @@ A library for using [Avro](https://avro.apache.org/) with PHP.
 
 Requirements
 ============
- * PHP 7.3+
+ * PHP 8.1+
  * On 32-bit platforms, the [GMP PHP extension](https://php.net/gmp)
  * For Zstandard compression, [ext-zstd](https://github.com/kjdev/php-ext-zstd)
  * For Snappy compression, [ext-snappy](https://github.com/kjdev/php-ext-snappy)
  * For testing, [PHPUnit](https://www.phpunit.de/)
 
 Both GMP and PHPUnit are often available via package management
-systems as `php7-gmp` and `phpunit`, respectively.
+systems as `php8.1-gmp` and `phpunit`, respectively.
 
 
 Getting started

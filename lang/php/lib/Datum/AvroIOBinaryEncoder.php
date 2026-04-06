@@ -21,69 +21,50 @@
 namespace Apache\Avro\Datum;
 
 use Apache\Avro\Avro;
+use Apache\Avro\AvroException;
 use Apache\Avro\AvroGMP;
 use Apache\Avro\AvroIO;
 
 /**
  * Encodes and writes Avro data to an AvroIO object using
  * Avro binary encoding.
- *
- * @package Avro
  */
 class AvroIOBinaryEncoder
 {
     /**
-     * @var AvroIO
-     */
-    private $io;
-
-    /**
      * @param AvroIO $io object to which data is to be written.
-     *
      */
-    public function __construct($io)
-    {
+    public function __construct(
+        private readonly AvroIO $io
+    ) {
         Avro::checkPlatform();
-        $this->io = $io;
     }
 
     /**
      * @param null $datum actual value is ignored
      */
-    public function writeNull($datum)
+    public function writeNull($datum): void
     {
-        return null;
+
     }
 
-    /**
-     * @param boolean $datum
-     */
-    public function writeBoolean($datum)
+    public function writeBoolean(bool $datum): void
     {
         $byte = $datum ? chr(1) : chr(0);
         $this->write($byte);
     }
 
-    /**
-     * @param string $datum
-     */
-    public function write($datum)
+    public function write(string $datum): void
     {
         $this->io->write($datum);
     }
 
-    /**
-     * @param int $datum
-     */
-    public function writeInt($datum)
+    public function writeInt(int|string $datum): void
     {
         $this->writeLong($datum);
     }
 
-    /**
-     * @param int $n
-     */
-    public function writeLong($n)
+    public function writeLong(int|string $n): void
     {
         if (Avro::usesGmp()) {
             $this->write(AvroGMP::encodeLong($n));
@@ -94,7 +75,7 @@ class AvroIOBinaryEncoder
 
     /**
      * @param int|string $n
-     * @returns string long $n encoded as bytes
+     * @return string long $n encoded as bytes
      * @internal This relies on 64-bit PHP.
      */
     public static function encodeLong($n)
@@ -118,6 +99,7 @@ class AvroIOBinaryEncoder
         }
 
         $buf[] = $n;
+
         return pack("C*", ...$buf);
     }
 
@@ -125,7 +107,7 @@ class AvroIOBinaryEncoder
      * @param float $datum
      * @uses self::floatToIntBits()
      */
-    public function writeFloat($datum)
+    public function writeFloat($datum): void
     {
         $this->write(self::floatToIntBits($datum));
     }
@@ -139,19 +121,18 @@ class AvroIOBinaryEncoder
      * encoding required by the Avro spec.
      *
      * @param float $float
-     * @returns string bytes
+     * @return string bytes
      * @see Avro::checkPlatform()
      */
-    public static function floatToIntBits($float)
+    public static function floatToIntBits($float): string
     {
         return pack('g', (float) $float);
     }
 
     /**
-     * @param float $datum
      * @uses self::doubleToLongBits()
      */
-    public function writeDouble($datum)
+    public function writeDouble(float $datum): void
     {
         $this->write(self::doubleToLongBits($datum));
     }
@@ -162,29 +143,70 @@ class AvroIOBinaryEncoder
      * XXX: This is <b>not</b> endian-aware! See comments in
      * {@link AvroIOBinaryEncoder::floatToIntBits()} for details.
      *
-     * @param double $double
-     * @returns string bytes
+     * @param float $double
+     * @return string bytes
      */
-    public static function doubleToLongBits($double)
+    public static function doubleToLongBits($double): string
     {
-        return pack('e', (double) $double);
+        return pack('e', (float) $double);
     }
 
     /**
-     * @param string $str
      * @uses self::writeBytes()
      */
-    public function writeString($str)
+    public function writeString(string $str): void
     {
         $this->writeBytes($str);
     }
 
-    /**
-     * @param string $bytes
-     */
-    public function writeBytes($bytes)
+    public function writeBytes(string $bytes): void
     {
         $this->writeLong(strlen($bytes));
         $this->write($bytes);
+    }
+
+    public function writeDecimal(string $decimal, int $scale, int $precision): void
+    {
+        if (!is_numeric($decimal)) {
+            throw new AvroException("Decimal value '{$decimal}' must be numeric");
+        }
+
+        $value = ((float) $decimal) * (10 ** $scale);
+        $value = (int) round($value);
+
+        $maxValue = 10 ** $precision;
+        if (abs($value) >= $maxValue) {
+            throw new AvroException(
+                "Decimal value '{$decimal}' is out of range for precision={$precision}, scale={$scale}"
+            );
+        }
+
+        $packed = pack('J', $value);
+
+        $significantBit = self::getMostSignificantBitAt($packed, 0);
+        $trimByte = $significantBit ? 0xFF : 0x00;
+
+        $offset = 0;
+        $packedLength = strlen($packed);
+        while ($offset < $packedLength - 1) {
+            if (ord($packed[$offset]) !== $trimByte) {
+                break;
+            }
+
+            if (self::getMostSignificantBitAt($packed, $offset + 1) !== $significantBit) {
+                break;
+            }
+
+            $offset++;
+        }
+
+        $value = substr($packed, $offset);
+
+        $this->writeBytes($value);
+    }
+
+    private static function getMostSignificantBitAt(string $bytes, int $offset): int
+    {
+        return ord($bytes[$offset]) & 0x80;
     }
 }

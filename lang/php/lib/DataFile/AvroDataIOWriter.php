@@ -30,149 +30,86 @@ use Apache\Avro\Schema\AvroSchema;
 
 /**
  * Writes Avro data to an AvroIO source using an AvroSchema
- * @package Avro
  */
 class AvroDataIOWriter
 {
     /**
      * @var AvroIO object container where data is written
      */
-    private $io;
+    private AvroIO $io;
     /**
      * @var AvroIOBinaryEncoder encoder for object container
      */
-    private $encoder;
-    /**
-     * @var AvroIODatumWriter
-     */
-    private $datum_writer;
+    private AvroIOBinaryEncoder $encoder;
     /**
      * @var AvroStringIO buffer for writing
      */
-    private $buffer;
+    private AvroStringIO $buffer;
+
+    private AvroIODatumWriter $datumWriter;
+
     /**
      * @var AvroIOBinaryEncoder encoder for buffer
      */
-    private $buffer_encoder;
+    private AvroIOBinaryEncoder $bufferEncoder;
     /**
      * @var int count of items written to block
      */
-    private $block_count; // AvroIOBinaryEncoder
+    private int $blockCount;
     /**
-     * @var array map of object container metadata
+     * @var array<string, mixed> map of object container metadata
      */
-    private $metadata;
+    private array $metadata;
     /**
      * @var string compression codec
      */
-    private $codec;
+    private string $codec;
     /**
      * @var string sync marker
      */
-    private $sync_marker;
+    private string $syncMarker;
 
-    /**
-     * @param AvroIO $io
-     * @param AvroIODatumWriter $datum_writer
-     * @param AvroSchema $writers_schema
-     * @param string $codec
-     */
-    public function __construct($io, $datum_writer, $writers_schema = null, $codec = AvroDataIO::NULL_CODEC)
-    {
-        if (!($io instanceof AvroIO)) {
-            throw new AvroDataIOException('io must be instance of AvroIO');
-        }
-
+    public function __construct(
+        AvroIO $io,
+        AvroIODatumWriter $datumWriter,
+        string|AvroSchema|null $writersSchema = null,
+        string $codec = AvroDataIO::NULL_CODEC
+    ) {
         $this->io = $io;
+        $this->datumWriter = $datumWriter;
         $this->encoder = new AvroIOBinaryEncoder($this->io);
-        $this->datum_writer = $datum_writer;
         $this->buffer = new AvroStringIO();
-        $this->buffer_encoder = new AvroIOBinaryEncoder($this->buffer);
-        $this->block_count = 0;
-        $this->metadata = array();
+        $this->bufferEncoder = new AvroIOBinaryEncoder($this->buffer);
+        $this->blockCount = 0;
+        $this->metadata = [];
 
-        if ($writers_schema) {
+        if ($writersSchema) {
             if (!AvroDataIO::isValidCodec($codec)) {
                 throw new AvroDataIOException(
                     sprintf('codec %s is not supported', $codec)
                 );
             }
 
-            $this->sync_marker = self::generateSyncMarker();
+            $this->syncMarker = self::generateSyncMarker();
             $this->metadata[AvroDataIO::METADATA_CODEC_ATTR] = $this->codec = $codec;
-            $this->metadata[AvroDataIO::METADATA_SCHEMA_ATTR] = (string) $writers_schema;
+            $this->metadata[AvroDataIO::METADATA_SCHEMA_ATTR] = (string) $writersSchema;
             $this->writeHeader();
         } else {
             $dfr = new AvroDataIOReader($this->io, new AvroIODatumReader());
-            $this->sync_marker = $dfr->sync_marker;
+            $this->syncMarker = $dfr->sync_marker;
             $this->metadata[AvroDataIO::METADATA_CODEC_ATTR] = $this->codec
                 = $dfr->metadata[AvroDataIO::METADATA_CODEC_ATTR];
-            $schema_from_file = $dfr->metadata[AvroDataIO::METADATA_SCHEMA_ATTR];
-            $this->metadata[AvroDataIO::METADATA_SCHEMA_ATTR] = $schema_from_file;
-            $this->datum_writer->writersSchema = AvroSchema::parse($schema_from_file);
+            $schemaFromFile = $dfr->metadata[AvroDataIO::METADATA_SCHEMA_ATTR];
+            $this->metadata[AvroDataIO::METADATA_SCHEMA_ATTR] = $schemaFromFile;
+            $this->datumWriter->writersSchema = AvroSchema::parse($schemaFromFile);
             $this->seek(0, SEEK_END);
         }
     }
 
-    /**
-     * @returns string a new, unique sync marker.
-     */
-    private static function generateSyncMarker()
+    public function append(mixed $datum): void
     {
-        // From https://php.net/manual/en/function.mt-rand.php comments
-        return pack(
-            'S8',
-            random_int(0, 0xffff),
-            random_int(0, 0xffff),
-            random_int(0, 0xffff),
-            random_int(0, 0xffff) | 0x4000,
-            random_int(0, 0xffff) | 0x8000,
-            random_int(0, 0xffff),
-            random_int(0, 0xffff),
-            random_int(0, 0xffff)
-        );
-    }
-
-    /**
-     * Writes the header of the AvroIO object container
-     */
-    private function writeHeader()
-    {
-        $this->write(AvroDataIO::magic());
-        $this->datum_writer->writeData(
-            AvroDataIO::metadataSchema(),
-            $this->metadata,
-            $this->encoder
-        );
-        $this->write($this->sync_marker);
-    }
-
-    /**
-     * @param string $bytes
-     * @uses AvroIO::write()
-     */
-    private function write($bytes)
-    {
-        return $this->io->write($bytes);
-    }
-
-    /**
-     * @param int $offset
-     * @param int $whence
-     * @uses AvroIO::seek()
-     */
-    private function seek($offset, $whence)
-    {
-        return $this->io->seek($offset, $whence);
-    }
-
-    /**
-     * @param mixed $datum
-     */
-    public function append($datum)
-    {
-        $this->datum_writer->write($datum, $this->buffer_encoder);
-        $this->block_count++;
+        $this->datumWriter->write($datum, $this->bufferEncoder);
+        $this->blockCount++;
 
         if ($this->buffer->length() >= AvroDataIO::SYNC_INTERVAL) {
             $this->writeBlock();
@@ -180,62 +117,161 @@ class AvroDataIOWriter
     }
 
     /**
-     * Writes a block of data to the AvroIO object container.
-     */
-    private function writeBlock()
-    {
-        if ($this->block_count > 0) {
-            $this->encoder->writeLong($this->block_count);
-            $to_write = (string) $this->buffer;
-
-            if ($this->codec === AvroDataIO::DEFLATE_CODEC) {
-                $to_write = gzdeflate($to_write);
-            } elseif ($this->codec === AvroDataIO::ZSTANDARD_CODEC) {
-                if (!extension_loaded('zstd')) {
-                    throw new AvroException('Please install ext-zstd to use zstandard compression.');
-                }
-                $to_write = zstd_compress($to_write);
-            } elseif ($this->codec === AvroDataIO::SNAPPY_CODEC) {
-                if (!extension_loaded('snappy')) {
-                    throw new AvroException('Please install ext-snappy to use snappy compression.');
-                }
-                $crc32 = crc32($to_write);
-                $compressed = snappy_compress($to_write);
-                $to_write = pack('a*N', $compressed, $crc32);
-            } elseif ($this->codec === AvroDataIO::BZIP2_CODEC) {
-                if (!extension_loaded('bz2')) {
-                    throw new AvroException('Please install ext-bz2 to use bzip2 compression.');
-                }
-                $to_write = bzcompress($to_write);
-            }
-
-            $this->encoder->writeLong(strlen($to_write));
-            $this->write($to_write);
-            $this->write($this->sync_marker);
-            $this->buffer->truncate();
-            $this->block_count = 0;
-        }
-    }
-
-    /**
      * Flushes buffer to AvroIO object container and closes it.
-     * @return mixed value of $io->close()
      * @see AvroIO::close()
      */
-    public function close()
+    public function close(): bool
     {
         $this->flush();
+
         return $this->io->close();
     }
 
     /**
+     * @return string a new, unique sync marker.
+     */
+    private static function generateSyncMarker(): string
+    {
+        // From https://php.net/manual/en/function.mt-rand.php comments
+        return pack(
+            'S8',
+            random_int(0, 0xFFFF),
+            random_int(0, 0xFFFF),
+            random_int(0, 0xFFFF),
+            random_int(0, 0xFFFF) | 0x4000,
+            random_int(0, 0xFFFF) | 0x8000,
+            random_int(0, 0xFFFF),
+            random_int(0, 0xFFFF),
+            random_int(0, 0xFFFF)
+        );
+    }
+
+    /**
+     * Writes the header of the AvroIO object container
+     */
+    private function writeHeader(): void
+    {
+        $this->write(AvroDataIO::magic());
+        $this->datumWriter->writeData(
+            AvroDataIO::metadataSchema(),
+            $this->metadata,
+            $this->encoder
+        );
+        $this->write($this->syncMarker);
+    }
+
+    /**
+     * @uses AvroIO::write()
+     */
+    private function write(string $bytes): int
+    {
+        return $this->io->write($bytes);
+    }
+
+    /**
+     * @uses AvroIO::seek()
+     */
+    private function seek(int $offset, int $whence): bool
+    {
+        return $this->io->seek($offset, $whence);
+    }
+
+    /**
+     * Writes a block of data to the AvroIO object container.
+     */
+    private function writeBlock(): void
+    {
+        if ($this->blockCount > 0) {
+            $this->encoder->writeLong($this->blockCount);
+            $toWrite = (string) $this->buffer;
+
+            $toWrite = match ($this->codec) {
+                AvroDataIO::DEFLATE_CODEC => $this->gzCompress($toWrite),
+                AvroDataIO::ZSTANDARD_CODEC => $this->zstdCompress($toWrite),
+                AvroDataIO::SNAPPY_CODEC => $this->snappyCompress($toWrite),
+                AvroDataIO::BZIP2_CODEC => $this->bzCompress($toWrite),
+                default => $toWrite,
+            };
+
+            $this->encoder->writeLong(strlen($toWrite));
+            $this->write($toWrite);
+            $this->write($this->syncMarker);
+            $this->buffer->truncate();
+            $this->blockCount = 0;
+        }
+    }
+
+    /**
      * Flushes biffer to AvroIO object container.
-     * @returns mixed value of $io->flush()
      * @see AvroIO::flush()
      */
-    private function flush()
+    private function flush(): void
     {
         $this->writeBlock();
-        return $this->io->flush();
+        $this->io->flush();
+    }
+
+    /**
+     * @throws AvroException
+     */
+    private function gzCompress(string $data): string
+    {
+        $data = gzdeflate($data);
+        if (false === $data) {
+            throw new AvroException('gzip compression failed.');
+        }
+
+        return $data;
+    }
+
+    /**
+     * @throws AvroException
+     */
+    private function zstdCompress(string $data): string
+    {
+        if (!extension_loaded('zstd')) {
+            throw new AvroException('Please install ext-zstd to use zstandard compression.');
+        }
+        $data = zstd_compress($data);
+
+        if (false === $data) {
+            throw new AvroException('zstd compression failed.');
+        }
+
+        return $data;
+    }
+
+    /**
+     * @throws AvroException
+     */
+    private function snappyCompress(string $data): string
+    {
+        if (!extension_loaded('snappy')) {
+            throw new AvroException('Please install ext-snappy to use snappy compression.');
+        }
+        $crc32 = crc32($data);
+        $compressed = snappy_compress($data);
+        if (false === $compressed) {
+            throw new AvroException('snappy compression failed.');
+        }
+
+        return pack('a*N', $compressed, $crc32);
+    }
+
+    /**
+     * @throws AvroException
+     */
+    private function bzCompress(string $toWrite): string
+    {
+        if (!extension_loaded('bz2')) {
+            throw new AvroException('Please install ext-bz2 to use bzip2 compression.');
+        }
+        $toWrite = bzcompress($toWrite);
+
+        if (is_int($toWrite)) {
+            throw new AvroException("bz2 compression failed (error: {$toWrite}).");
+        }
+
+        return $toWrite;
     }
 }

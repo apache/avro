@@ -27,6 +27,9 @@
 #  elif defined(_WIN32)
 #    include <stdlib.h>
 #    define __bswap_32 _byteswap_ulong
+#  elif defined(__ANDROID__)
+#    include <byteswap.h>
+#    define __bswap_32 bswap_32
 #  else
 #    include <byteswap.h>
 #  endif

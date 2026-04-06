@@ -201,7 +201,7 @@ $ mvn -q exec:java -Dexec.mainClass=example.SpecificMain \
         
 Note that you do not have to recompile your Avro schema to have access to this feature. The feature is compiled and built into your code, and you turn it on and off at runtime using the feature flag. As a result, you can turn it on during testing, for example, and then off in production. Or you can turn it on in production, and quickly turn it off if something breaks.
 
-We encourage the Avro community to exercise this new feature early to help build confidence. (For those paying one-demand for compute resources in the cloud, it can lead to meaningful cost savings.) As confidence builds, we will turn this feature on by default, and eventually eliminate the feature flag (and the old code).
+We encourage the Avro community to exercise this new feature early to help build confidence. (For those paying on demand for compute resources in the cloud, it can lead to meaningful cost savings.) As confidence builds, we will turn this feature on by default, and eventually eliminate the feature flag (and the old code).
 
 ## Serializing and deserializing without code generation
 Data in Avro is always stored with its corresponding schema, meaning we can always read a serialized item regardless of whether we know the schema ahead of time. This allows us to perform serialization and deserialization without code generation.

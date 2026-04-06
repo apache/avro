@@ -48,11 +48,11 @@ jobs:
       - name: Install Dart Sass
         run: sudo snap install dart-sass
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Node.js dependencies
         working-directory: doc/
-        run: ls -lah && npm ci
+        run: npm ci
       - name: Build with Hugo
         working-directory: doc/
         env:
@@ -65,7 +65,7 @@ jobs:
             --minify \
             --destination ${{ runner.temp }}/website \
             --baseURL "/"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: website
           path: ${{ runner.temp }}/website
@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Build C docs
         run: |
@@ -84,7 +84,7 @@ jobs:
           sudo apt-get install -q -y cmake liblzma-dev libsnappy-dev libjansson-dev zlib1g-dev pkg-config asciidoc source-highlight libsource-highlight-dev
           cd lang/c
           ./build.sh clean docs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: api-c
           path: build/c/docs
@@ -94,7 +94,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Build C++ docs
         run: |
@@ -103,7 +103,7 @@ jobs:
           sudo apt-get install -q -y gcc g++ libboost-all-dev cmake doxygen
           cd lang/c++
           ./build.sh clean doc
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: api-c++
           path: lang/c++/doc/html
@@ -113,7 +113,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Build C# docs
         run: |
@@ -125,7 +125,7 @@ jobs:
           cd lang/csharp
           mkdir -p build/doc
           doxygen Avro.dox
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: api-csharp
           path: lang/csharp/build/doc/html
@@ -135,16 +135,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      
+
       - name: 'Setup Maven'
         uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
         with:
@@ -164,7 +164,7 @@ jobs:
           set -x
           cd lang/java
           ./build.sh dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: api-java
           path: lang/java/target/reports/apidocs
@@ -174,21 +174,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: 3.11
 
-      - name: Install tox
-        run: python3 -m pip install tox
+      - name: Setup uv
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867
 
       - name: Build docs
         working-directory: lang/py
         run: ./build.sh doc
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: api-python
           path: lang/py/docs/build/
@@ -198,12 +198,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: 'apache/avro-rs'
 
       - name: Rust Toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
         with:
           toolchain: stable
 
@@ -211,11 +211,11 @@ jobs:
         run: |
           set -x
           cargo doc --all-features
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: api-rust
           path: target/doc
-        
+
 
   push-website:
     name: Push website
@@ -223,7 +223,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -231,46 +231,46 @@ jobs:
         run: |
           set -x
           sudo apt-get update -q
-          sudo apt-get install -q -y subversion  
+          sudo apt-get install -q -y subversion
 
       - name: Download website
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: website
           path: ${{ runner.temp }}/website
 
       - name: Download api-c
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: api-c
           path: api-c
 
       - name: Download api-c++
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: api-c++
           path: api-c++
 
       - name: Download api-csharp
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: api-csharp
           path: api-csharp
 
       - name: Download api-java
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: api-java
           path: api-java
 
       - name: Download api-python
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: api-python
           path: api-python
 
       - name: Download api-rust
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: api-rust
           path: api-rust
@@ -288,7 +288,7 @@ jobs:
           mv api-java/* $WEBSITE_API/java/
           mv api-python/* $WEBSITE_API/py/
           mv api-rust/* $WEBSITE_API/rust/
-          rmdir api-c api-c++ api-csharp api-python api-rust api-java 
+          rmdir api-c api-c++ api-csharp api-python api-rust api-java
 
       - name: Checkout old docs versions from Subversion
         run: |
@@ -310,7 +310,7 @@ jobs:
 
           git rm -rf *
 
-          mv ${{ runner.temp }}/website/* . 
+          mv ${{ runner.temp }}/website/* .
           echo "publish:
                   whoami: asf-site
                 " > .asf.yaml
@@ -320,4 +320,3 @@ jobs:
           git switch asf-site
           git reset --hard asf-site-staging
           git push origin asf-site --force
-          

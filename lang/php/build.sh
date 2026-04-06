@@ -59,13 +59,22 @@ do
 
     lint)
       composer install -d "../.."
-      find . -name "*.php" -print0 | xargs -0 -n1 -P8 php -l
-      ../../vendor/bin/phpcs --standard=PSR12 lib
+      ../../vendor/bin/php-cs-fixer fix --dry-run --show-progress=dots --verbose --diff --no-interaction
+      ;;
+
+    lint-fix)
+      composer install -d "../.."
+      ../../vendor/bin/php-cs-fixer fix --show-progress=dots --verbose --diff
+      ;;
+
+    phpstan)
+      composer install -d "../.."
+      ../../vendor/bin/phpstan
       ;;
 
     test)
       composer install -d "../.."
-      ../../vendor/bin/phpunit -v
+      ../../vendor/bin/phpunit
       ;;
 
     dist)
@@ -77,7 +86,7 @@ do
       ;;
 
     *)
-      echo "Usage: $0 {interop-data-generate|test-interop|lint|test|dist|clean}"
+      echo "Usage: $0 {interop-data-generate|test-interop|lint|lint-fix|test|dist|clean}"
   esac
 done
 

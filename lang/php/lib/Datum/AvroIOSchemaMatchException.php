@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+declare(strict_types=1);
+
 namespace Apache\Avro\Datum;
 
 use Apache\Avro\AvroException;
@@ -26,22 +28,20 @@ use Apache\Avro\Schema\AvroSchema;
 /**
  * Exceptions arising from incompatibility between
  * reader and writer schemas.
- *
- * @package Avro
  */
 class AvroIOSchemaMatchException extends AvroException
 {
     /**
-     * @param AvroSchema $writers_schema
-     * @param AvroSchema $readers_schema
+     * @param AvroSchema $writersSchema
+     * @param AvroSchema $readersSchema
      */
-    public function __construct($writers_schema, $readers_schema)
+    public function __construct($writersSchema, $readersSchema)
     {
         parent::__construct(
             sprintf(
                 "Writer's schema %s and Reader's schema %s do not match.",
-                $writers_schema,
-                $readers_schema
+                $writersSchema,
+                $readersSchema
             )
         );
     }
