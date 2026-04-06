@@ -22,6 +22,7 @@ namespace Apache\Avro;
 
 /**
  * General Avro exceptions.
+ * @package Avro
  */
 class AvroException extends \Exception
 {

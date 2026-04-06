@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-cmake_minimum_required (VERSION 3.20)
+cmake_minimum_required (VERSION 3.12)
 
 set (CMAKE_LEGACY_CYGWIN_WIN32 0)
 
@@ -70,6 +70,7 @@ if (WIN32 AND NOT CYGWIN AND NOT MSYS)
     add_definitions (/EHa)
     add_definitions (
         -DNOMINMAX
+        -DBOOST_SYSTEM_DYN_LINK
         -DBOOST_ALL_NO_LIB)
 endif()
 
@@ -79,11 +80,12 @@ endif ()
 
 if (AVRO_BUILD_TESTS OR AVRO_USE_BOOST)
     # Boost 1.70 and above provide a BoostConfig.cmake package configuration file.
+    # It guarantees that Boost::system target exists if found.
     # See https://cmake.org/cmake/help/latest/policy/CMP0167.html
-    find_package (Boost 1.70 REQUIRED CONFIG)
+    find_package (Boost 1.70 REQUIRED CONFIG COMPONENTS system)
 endif ()
 
-find_package(fmt QUIET)
+find_package(fmt)
 if (NOT fmt_FOUND)
     include(FetchContent)
     FetchContent_Declare(
@@ -151,9 +153,11 @@ function (setup_avro_lib target lib_type)
       $<BUILD_INTERFACE:ZLIB::ZLIB>
       $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
       $<$<BOOL:${zstd_FOUND}>:$<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
+      $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
       $<INSTALL_INTERFACE:ZLIB::ZLIB>
       $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
       $<$<BOOL:${zstd_FOUND}>:$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
+      $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Boost::system>>
     )
     target_include_directories (${target} PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -222,7 +226,7 @@ if (AVRO_BUILD_TESTS)
 
     macro (unittest name)
         add_executable (${name} test/${name}.cc)
-        target_link_libraries (${name} ${AVRO_LINK_LIB} ZLIB::ZLIB $<TARGET_NAME_IF_EXISTS:Snappy::snappy> $<$<BOOL:${zstd_FOUND}>:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>)
+        target_link_libraries (${name} ${AVRO_LINK_LIB} Boost::system ZLIB::ZLIB $<TARGET_NAME_IF_EXISTS:Snappy::snappy> $<$<BOOL:${zstd_FOUND}>:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>)
         add_test (NAME ${name} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name})
     endmacro (unittest)
@@ -254,7 +258,6 @@ if (AVRO_BUILD_TESTS)
 endif ()
 
 include (InstallRequiredSystemLibraries)
-include (GNUInstallDirs)
 
 set (CPACK_PACKAGE_FILE_NAME "avrocpp-${AVRO_VERSION_MAJOR}")
 
@@ -265,13 +268,13 @@ install (TARGETS ${AVRO_INSTALL_LIBS}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    INCLUDES DESTINATION include)
 
 if (AVRO_BUILD_EXECUTABLES)
     install (TARGETS avrogencpp EXPORT avrocpp_targets RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif ()
 
-install (DIRECTORY include/avro DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+install (DIRECTORY include/avro DESTINATION include
     FILES_MATCHING PATTERN *.hh)
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -290,28 +293,17 @@ write_basic_package_version_file(
 configure_package_config_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/avro-cpp-config.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config.cmake"
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/avro-cpp
+    INSTALL_DESTINATION lib/cmake/avro-cpp
 )
 
 install(EXPORT avrocpp_targets
     NAMESPACE avro-cpp::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/avro-cpp
+    DESTINATION lib/cmake/avro-cpp
     FILE "avro-cpp-targets.cmake"
 )
 
 install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp-config-version.cmake"
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/avro-cpp
-)
-
-cmake_path(APPEND pc_install_includedir "\${prefix}" "${CMAKE_INSTALL_INCLUDEDIR}")
-cmake_path(APPEND pc_install_libdir "\${exec_prefix}" "${CMAKE_INSTALL_LIBDIR}")
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/avro-cpp.pc.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp.pc"
-    @ONLY
-)
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/avro-cpp.pc"
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+    DESTINATION lib/cmake/avro-cpp
 )

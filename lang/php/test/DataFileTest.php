@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,38 +17,23 @@
  * limitations under the License.
  */
 
-declare(strict_types=1);
-
 namespace Apache\Avro\Tests;
 
 use Apache\Avro\DataFile\AvroDataIO;
+use DateTime;
 use PHPUnit\Framework\TestCase;
 
 class DataFileTest extends TestCase
 {
-    public const REMOVE_DATA_FILES = true;
-    private array $dataFiles = [];
+    const REMOVE_DATA_FILES = true;
+    private $data_files;
 
-    protected function setUp(): void
-    {
-        if (!file_exists(TEST_TEMP_DIR)) {
-            mkdir(TEST_TEMP_DIR);
-        }
-        $this->remove_data_files();
-        $this->dataFiles = [];
-    }
-
-    protected function tearDown(): void
-    {
-        $this->remove_data_files();
-    }
-
-    public function test_write_read_nothing_round_trip(): void
+    public function test_write_read_nothing_round_trip()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
             if (
-                (AvroDataIO::SNAPPY_CODEC === $codec && !extension_loaded('snappy'))
-                || (AvroDataIO::ZSTANDARD_CODEC === $codec && !extension_loaded('zstd'))
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
             ) {
                 continue;
             }
@@ -65,17 +49,28 @@ class DataFileTest extends TestCase
         }
     }
 
-    public static function current_timestamp(): string
+    protected function add_data_file($data_file)
     {
-        return (new \DateTime())->format('Y-m-d H:i:s');
+        if (is_null($this->data_files)) {
+            $this->data_files = array();
+        }
+        $data_file = "$data_file." . self::current_timestamp();
+        $full = join(DIRECTORY_SEPARATOR, array(TEST_TEMP_DIR, $data_file));
+        $this->data_files [] = $full;
+        return $full;
     }
 
-    public function test_write_read_null_round_trip(): void
+    public static function current_timestamp()
+    {
+        return date_format(new DateTime, 'Y-m-d H:i:s');
+    }
+
+    public function test_write_read_null_round_trip()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
             if (
-                (AvroDataIO::SNAPPY_CODEC === $codec && !extension_loaded('snappy'))
-                || (AvroDataIO::ZSTANDARD_CODEC === $codec && !extension_loaded('zstd'))
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
             ) {
                 continue;
             }
@@ -94,12 +89,12 @@ class DataFileTest extends TestCase
         }
     }
 
-    public function test_write_read_string_round_trip(): void
+    public function test_write_read_string_round_trip()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
             if (
-                (AvroDataIO::SNAPPY_CODEC === $codec && !extension_loaded('snappy'))
-                || (AvroDataIO::ZSTANDARD_CODEC === $codec && !extension_loaded('zstd'))
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
             ) {
                 continue;
             }
@@ -118,12 +113,12 @@ class DataFileTest extends TestCase
         }
     }
 
-    public function test_write_read_round_trip(): void
+    public function test_write_read_round_trip()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
             if (
-                (AvroDataIO::SNAPPY_CODEC === $codec && !extension_loaded('snappy'))
-                || (AvroDataIO::ZSTANDARD_CODEC === $codec && !extension_loaded('zstd'))
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
             ) {
                 continue;
             }
@@ -143,12 +138,12 @@ class DataFileTest extends TestCase
         }
     }
 
-    public function test_write_read_true_round_trip(): void
+    public function test_write_read_true_round_trip()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
             if (
-                (AvroDataIO::SNAPPY_CODEC === $codec && !extension_loaded('snappy'))
-                || (AvroDataIO::ZSTANDARD_CODEC === $codec && !extension_loaded('zstd'))
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
             ) {
                 continue;
             }
@@ -167,12 +162,12 @@ class DataFileTest extends TestCase
         }
     }
 
-    public function test_write_read_false_round_trip(): void
+    public function test_write_read_false_round_trip()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
             if (
-                (AvroDataIO::SNAPPY_CODEC === $codec && !extension_loaded('snappy'))
-                || (AvroDataIO::ZSTANDARD_CODEC === $codec && !extension_loaded('zstd'))
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
             ) {
                 continue;
             }
@@ -191,18 +186,18 @@ class DataFileTest extends TestCase
         }
     }
 
-    public function test_write_read_int_array_round_trip(): void
+    public function test_write_read_int_array_round_trip()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
             if (
-                (AvroDataIO::SNAPPY_CODEC === $codec && !extension_loaded('snappy'))
-                || (AvroDataIO::ZSTANDARD_CODEC === $codec && !extension_loaded('zstd'))
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
             ) {
                 continue;
             }
             $data_file = $this->add_data_file(sprintf('data-wr-int-ary-%s.avr', $codec));
             $writers_schema = '"int"';
-            $data = [10, 20, 30, 40, 50, 60, 70, 567, 89012345];
+            $data = array(10, 20, 30, 40, 50, 60, 70, 567, 89012345);
             $dw = AvroDataIO::openFile($data_file, 'w', $writers_schema, $codec);
             foreach ($data as $datum) {
                 $dw->append($datum);
@@ -212,55 +207,48 @@ class DataFileTest extends TestCase
             $dr = AvroDataIO::openFile($data_file);
             $read_data = $dr->data();
             $dr->close();
-            $this->assertEquals(
-                $data,
-                $read_data,
-                sprintf(
-                    "in: %s\nout: %s",
-                    json_encode($data),
-                    json_encode($read_data)
-                )
-            );
+            $this->assertEquals($data, $read_data,
+                sprintf("in: %s\nout: %s",
+                    json_encode($data), json_encode($read_data)));
         }
     }
 
-    public function test_differing_schemas_with_primitives(): void
+    public function test_differing_schemas_with_primitives()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
             if (
-                (AvroDataIO::SNAPPY_CODEC === $codec && !extension_loaded('snappy'))
-                || (AvroDataIO::ZSTANDARD_CODEC === $codec && !extension_loaded('zstd'))
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
             ) {
                 continue;
             }
             $data_file = $this->add_data_file(sprintf('data-prim-%s.avr', $codec));
 
             $writer_schema = <<<JSON
-                { "type": "record",
-                  "name": "User",
-                  "fields" : [
-                      {"name": "username", "type": "string"},
-                      {"name": "age", "type": "int"},
-                      {"name": "verified", "type": "boolean", "default": "false"}
-                      ]
-                      }
-                JSON;
-            $data = [
-                ['username' => 'john', 'age' => 25, 'verified' => true],
-                ['username' => 'ryan', 'age' => 23, 'verified' => false],
-            ];
+{ "type": "record",
+  "name": "User",
+  "fields" : [
+      {"name": "username", "type": "string"},
+      {"name": "age", "type": "int"},
+      {"name": "verified", "type": "boolean", "default": "false"}
+      ]}
+JSON;
+            $data = array(
+                array('username' => 'john', 'age' => 25, 'verified' => true),
+                array('username' => 'ryan', 'age' => 23, 'verified' => false)
+            );
             $dw = AvroDataIO::openFile($data_file, 'w', $writer_schema, $codec);
             foreach ($data as $datum) {
                 $dw->append($datum);
             }
             $dw->close();
             $reader_schema = <<<JSON
-                { "type": "record",
-                  "name": "User",
-                  "fields" : [
-                {"name": "username", "type": "string"}
-                ]}
-                JSON;
+        { "type": "record",
+          "name": "User",
+          "fields" : [
+        {"name": "username", "type": "string"}
+        ]}
+JSON;
             $dr = AvroDataIO::openFile($data_file, 'r', $reader_schema);
             foreach ($dr->data() as $index => $record) {
                 $this->assertEquals($data[$index]['username'], $record['username']);
@@ -268,75 +256,36 @@ class DataFileTest extends TestCase
         }
     }
 
-    public function test_differing_schemas_with_complex_objects(): void
+    public function test_differing_schemas_with_complex_objects()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
             if (
-                (AvroDataIO::SNAPPY_CODEC === $codec && !extension_loaded('snappy'))
-                || (AvroDataIO::ZSTANDARD_CODEC === $codec && !extension_loaded('zstd'))
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
             ) {
                 continue;
             }
             $data_file = $this->add_data_file(sprintf('data-complex-%s.avr', $codec));
 
             $writers_schema = <<<JSON
-                {
-                  "type": "record",
-                  "name": "something",
-                  "fields": [
-                    {
-                      "name": "something_fixed",
-                      "type": {
-                        "name": "inner_fixed",
-                        "type": "fixed",
-                        "size": 3
-                      }
-                    },
-                    {
-                      "name": "something_enum",
-                      "type": {
-                        "name": "inner_enum",
-                        "type": "enum",
-                        "symbols": [
-                          "hello",
-                          "goodbye"
-                        ]
-                      }
-                    },
-                    {
-                      "name": "something_array",
-                      "type": {
-                        "type": "array",
-                        "items": "int"
-                      }
-                    },
-                    {
-                      "name": "something_map",
-                      "type": {
-                        "type": "map",
-                        "values": "int"
-                      }
-                    },
-                    {
-                      "name": "something_record",
-                      "type": {
-                        "name": "inner_record",
-                        "type": "record",
-                        "fields": [
-                          {
-                            "name": "inner",
-                            "type": "int"
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "name": "username",
-                      "type": "string"
-                    }
-                  ]
-                }
-                JSON;
+{ "type": "record",
+  "name": "something",
+  "fields": [
+    {"name": "something_fixed", "type": {"name": "inner_fixed",
+                                         "type": "fixed", "size": 3}},
+    {"name": "something_enum", "type": {"name": "inner_enum",
+                                        "type": "enum",
+                                        "symbols": ["hello", "goodbye"]}},
+    {"name": "something_array", "type": {"type": "array", "items": "int"}},
+    {"name": "something_map", "type": {"type": "map", "values": "int"}},
+    {"name": "something_record", "type": {"name": "inner_record",
+                                          "type": "record",
+                                          "fields": [
+                                            {"name": "inner", "type": "int"}
+                                          ]}},
+    {"name": "username", "type": "string"}
+]}
+JSON;
 
             $data = [
                 [
@@ -346,7 +295,7 @@ class DataFileTest extends TestCase
                     "something_array" => [1, 2, 3],
                     "something_map" => ["a" => 1, "b" => 2],
                     "something_record" => ["inner" => 2],
-                    "something_error" => ["code" => 403],
+                    "something_error" => ["code" => 403]
                 ],
                 [
                     "username" => "ryan",
@@ -355,8 +304,8 @@ class DataFileTest extends TestCase
                     "something_array" => [1, 2, 3],
                     "something_map" => ["a" => 2, "b" => 6],
                     "something_record" => ["inner" => 1],
-                    "something_error" => ["code" => 401],
-                ],
+                    "something_error" => ["code" => 401]
+                ]
             ];
             $dw = AvroDataIO::openFile($data_file, 'w', $writers_schema, $codec);
             foreach ($data as $datum) {
@@ -364,15 +313,15 @@ class DataFileTest extends TestCase
             }
             $dw->close();
 
-            foreach ([
-                'fixed',
-                'enum',
-                'record',
-                'error',
-                'array',
-                'map',
-                'union',
-            ] as $s) {
+            foreach (array(
+                         'fixed',
+                         'enum',
+                         'record',
+                         'error',
+                         'array',
+                         'map',
+                         'union'
+                     ) as $s) {
                 $readers_schema = json_decode($writers_schema, true);
                 $dr = AvroDataIO::openFile($data_file, 'r', json_encode($readers_schema));
                 foreach ($dr->data() as $idx => $obj) {
@@ -386,29 +335,32 @@ class DataFileTest extends TestCase
         }
     }
 
-    protected function add_data_file(string $data_file): string
+    protected function setUp(): void
     {
-        $data_file = "$data_file.".self::current_timestamp();
-        $full = implode(DIRECTORY_SEPARATOR, [TEST_TEMP_DIR, $data_file]);
-        $this->dataFiles[] = $full;
-
-        return $full;
+        if (!file_exists(TEST_TEMP_DIR)) {
+            mkdir(TEST_TEMP_DIR);
+        }
+        $this->remove_data_files();
     }
 
-    protected function remove_data_files(): void
+    protected function remove_data_files()
     {
-        /** @phpstan-ignore booleanAnd.leftAlwaysTrue */
-        if (self::REMOVE_DATA_FILES && [] !== $this->dataFiles) {
-            foreach ($this->dataFiles as $data_file) {
+        if (self::REMOVE_DATA_FILES && $this->data_files) {
+            foreach ($this->data_files as $data_file) {
                 self::remove_data_file($data_file);
             }
         }
     }
 
-    protected static function remove_data_file($data_file): void
+    protected static function remove_data_file($data_file)
     {
         if (file_exists($data_file)) {
             unlink($data_file);
         }
+    }
+
+    protected function tearDown(): void
+    {
+        $this->remove_data_files();
     }
 }

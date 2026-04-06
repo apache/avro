@@ -18,85 +18,50 @@
  * limitations under the License.
  */
 
-declare(strict_types=1);
-
 namespace Apache\Avro\Protocol;
 
 use Apache\Avro\Schema\AvroNamedSchemata;
 use Apache\Avro\Schema\AvroSchema;
-use Apache\Avro\Schema\AvroSchemaParseException;
 
 /**
  * Avro library for protocols
- * @phpstan-import-type AvroSchemaDefinitionArray from AvroSchema
- * @phpstan-import-type AvroProtocolMessageDefinitionArray from AvroProtocolMessage
- * @phpstan-type AvroProtocolDefinitionArray array{
- *     types?: AvroSchemaDefinitionArray,
- *     protocol: string,
- *     namespace: string,
- *     messages?: array<string, AvroProtocolMessageDefinitionArray>
- * }
+ * @package Avro
  */
 class AvroProtocol
 {
-    public function __construct(
-        public readonly string $protocol,
-        public readonly string $name,
-        public readonly string $namespace,
-        public readonly AvroNamedSchemata $schemata,
-        /** @var array<int, AvroProtocolMessage> */
-        public readonly array $messages,
-    ) {
-    }
+    public $protocol;
+    public $name;
+    public $namespace;
+    public $schemata;
+    public $messages;
 
-    /**
-     * @throws AvroProtocolParseException
-     * @throws AvroSchemaParseException
-     */
-    public static function parse(string $json): self
+    public static function parse($json)
     {
-        try {
-            return self::realParse(
-                json_decode($json, associative: true, flags: JSON_THROW_ON_ERROR)
-            );
-        } catch (\JsonException $e) {
-            throw new AvroProtocolParseException(
-                "Protocol json schema is invalid: ".$e->getMessage(),
-                previous: $e
-            );
-        }
-    }
-
-    /**
-     * @param AvroProtocolDefinitionArray $avro AVRO protocol as associative array
-     * @throws AvroSchemaParseException
-     */
-    public static function realParse(array $avro): self
-    {
-        $schemata = new AvroNamedSchemata();
-
-        if (array_key_exists("types", $avro)) {
-            AvroSchema::realParse($avro["types"], $avro["namespace"], $schemata);
+        if (is_null($json)) {
+            throw new AvroProtocolParseException("Protocol can't be null");
         }
 
-        $messages = [];
-        if (is_array($avro["messages"] ?? null)) {
+        $protocol = new AvroProtocol();
+        $protocol->realParse(json_decode($json, true));
+        return $protocol;
+    }
+
+    public function realParse($avro)
+    {
+        $this->protocol = $avro["protocol"];
+        $this->namespace = $avro["namespace"];
+        $this->schemata = new AvroNamedSchemata();
+        $this->name = $avro["protocol"];
+
+        if (!is_null($avro["types"])) {
+            $types = AvroSchema::realParse($avro["types"], $this->namespace, $this->schemata);
+        }
+
+        if (!is_null($avro["messages"])) {
             foreach ($avro["messages"] as $messageName => $messageAvro) {
-                $messages[] = new AvroProtocolMessage(
-                    name: $messageName,
-                    avro: $messageAvro,
-                    namespace: $avro["namespace"],
-                    schemata: $schemata
-                );
+                $message = new AvroProtocolMessage($messageName, $messageAvro, $this);
+                $this->messages[$messageName] = $message;
             }
         }
-
-        return new self(
-            protocol: $avro["protocol"],
-            name: $avro["protocol"],
-            namespace: $avro["namespace"],
-            schemata: $schemata,
-            messages: $messages
-        );
     }
 }

@@ -164,13 +164,13 @@ size_t BinaryDecoder::doDecodeItemCount() {
     auto result = doDecodeLong();
     if (result < 0) {
         doDecodeLong();
-        return static_cast<size_t>(-(result + 1)) + 1;
+        return static_cast<size_t>(-result);
     }
     return static_cast<size_t>(result);
 }
 
 size_t BinaryDecoder::arrayNext() {
-    return doDecodeItemCount();
+    return static_cast<size_t>(doDecodeLong());
 }
 
 size_t BinaryDecoder::skipArray() {

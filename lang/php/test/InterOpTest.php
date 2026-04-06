@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,64 +19,62 @@
 
 namespace Apache\Avro\Tests;
 
-use Apache\Avro\AvroIO;
 use Apache\Avro\DataFile\AvroDataIO;
+use Apache\Avro\IO\AvroFile;
 use Apache\Avro\Schema\AvroSchema;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class InterOpTest extends TestCase
 {
-    private string $projectionJson;
-    private AvroSchema $projection;
+    private $projection_json;
+    private $projection;
 
     public function setUp(): void
     {
         $interop_schema_file_name = AVRO_INTEROP_SCHEMA;
-        $this->projectionJson = file_get_contents($interop_schema_file_name);
-        $this->projection = AvroSchema::parse($this->projectionJson);
+        $this->projection_json = file_get_contents($interop_schema_file_name);
+        $this->projection = AvroSchema::parse($this->projection_json);
     }
 
-    public static function file_name_provider(): array
+    public function file_name_provider()
     {
         $data_dir = AVRO_BUILD_DATA_DIR;
-        $data_files = [];
+        $data_files = array();
         if (!($dh = opendir($data_dir))) {
-            exit("Could not open data dir '$data_dir'\n");
+            die("Could not open data dir '$data_dir'\n");
         }
 
         while ($file = readdir($dh)) {
             if (preg_match('/^[a-z]+(_deflate|_snappy|_zstandard|_bzip2)?\.avro$/', $file)) {
-                $data_files[] = implode(DIRECTORY_SEPARATOR, [$data_dir, $file]);
-            } elseif (preg_match('/[^.]/', $file)) {
+                $data_files [] = implode(DIRECTORY_SEPARATOR, array($data_dir, $file));
+            } else if (preg_match('/[^.]/', $file)) {
                 echo "Skipped: $data_dir/$file", PHP_EOL;
             }
         }
         closedir($dh);
 
-        $ary = [];
+        $ary = array();
         foreach ($data_files as $df) {
             echo "Reading: $df", PHP_EOL;
-            $ary[] = [$df];
+            $ary [] = array($df);
         }
-
         return $ary;
     }
 
-    #[DataProvider('file_name_provider')]
-    public function test_read(string $file_name): void
+    /**
+     * @coversNothing
+     * @dataProvider file_name_provider
+     */
+    public function test_read($file_name)
     {
         $dr = AvroDataIO::openFile(
-            $file_name,
-            AvroIO::READ_MODE,
-            $this->projectionJson
-        );
+            $file_name, AvroFile::READ_MODE, $this->projection_json);
 
         $data = $dr->data();
 
         $this->assertNotCount(0, $data, sprintf("no data read from %s", $file_name));
 
-        foreach ($data as $datum) {
+        foreach ($data as $idx => $datum) {
             $this->assertNotNull($datum, sprintf("null datum from %s", $file_name));
         }
     }

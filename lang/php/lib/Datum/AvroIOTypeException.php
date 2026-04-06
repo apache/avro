@@ -25,6 +25,8 @@ use Apache\Avro\Schema\AvroSchema;
 
 /**
  * Exceptions arising from writing or reading Avro data.
+ *
+ * @package Avro
  */
 class AvroIOTypeException extends AvroException
 {

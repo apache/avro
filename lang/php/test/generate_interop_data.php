@@ -1,6 +1,5 @@
 #!/usr/bin/env php
 <?php
-
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,7 +18,7 @@
  * limitations under the License.
  */
 
-require_once __DIR__.'/test_helper.php';
+require_once __DIR__ . '/test_helper.php';
 
 use Apache\Avro\DataFile\AvroDataIO;
 
@@ -35,7 +34,7 @@ $datum = [
     'arrayField' => [5.0, -6.0, -10.5],
     'mapField' => [
         'a' => ['label' => 'a'],
-        'c' => ['label' => '3P0'],
+        'c' => ['label' => '3P0']
     ],
     'unionField' => 14.5,
     'enumField' => 'C',
@@ -45,15 +44,15 @@ $datum = [
         'children' => [
             [
                 'label' => 'inner',
-                'children' => [],
-            ],
-        ],
-    ],
+                'children' => []
+            ]
+        ]
+    ]
 ];
 
 $schema_json = file_get_contents(AVRO_INTEROP_SCHEMA);
 foreach (AvroDataIO::validCodecs() as $codec) {
-    $file_name = AvroDataIO::NULL_CODEC == $codec ? 'php.avro' : sprintf('php_%s.avro', $codec);
+    $file_name = $codec == AvroDataIO::NULL_CODEC ? 'php.avro' : sprintf('php_%s.avro', $codec);
     $data_file = implode(DIRECTORY_SEPARATOR, [AVRO_BUILD_DATA_DIR, $file_name]);
     $io_writer = AvroDataIO::openFile($data_file, 'w', $schema_json, $codec);
     $io_writer->append($datum);

@@ -20,7 +20,10 @@
 
 namespace Apache\Avro\Schema;
 
-class AvroName implements \Stringable
+/**
+ * @package Avro
+ */
+class AvroName
 {
     /**
      * @var string character used to separate names comprising the fullname
@@ -34,18 +37,26 @@ class AvroName implements \Stringable
     /**
      * @var string valid names are matched by self::NAME_REGEXP
      */
-    private string $name;
-    private ?string $namespace;
-    private string $fullname;
+    private $name;
+    /**
+     * @var string
+     */
+    private $namespace;
+    /**
+     * @var string
+     */
+    private $fullname;
     /**
      * @var string Name qualified as necessary given its default namespace.
      */
-    private string $qualifiedName;
+    private $qualified_name;
 
     /**
-     * @throws AvroSchemaParseException
+     * @param string $name
+     * @param string $namespace
+     * @param string $default_namespace
      */
-    public function __construct(mixed $name, ?string $namespace, ?string $defaultNamespace)
+    public function __construct($name, $namespace, $default_namespace)
     {
         if (!is_string($name) || empty($name)) {
             throw new AvroSchemaParseException('Name must be a non-empty string.');
@@ -57,104 +68,101 @@ class AvroName implements \Stringable
             throw new AvroSchemaParseException(sprintf('Invalid name "%s"', $name));
         } elseif (!is_null($namespace)) {
             $this->fullname = self::parseFullname($name, $namespace);
-        } elseif (!is_null($defaultNamespace)) {
-            $this->fullname = self::parseFullname($name, $defaultNamespace);
+        } elseif (!is_null($default_namespace)) {
+            $this->fullname = self::parseFullname($name, $default_namespace);
         } else {
             $this->fullname = $name;
         }
 
         [$this->name, $this->namespace] = self::extractNamespace($this->fullname);
-        $this->qualifiedName = (is_null($this->namespace) || $this->namespace === $defaultNamespace)
+        $this->qualified_name = (is_null($this->namespace) || $this->namespace === $default_namespace)
             ? $this->name
             : $this->fullname;
     }
 
     /**
-     * @return string fullname
-     * @uses $this->fullname()
-     */
-    public function __toString(): string
-    {
-        return (string) $this->fullname();
-    }
-
-    /**
-     * @return array{0: string, 1: null|string}
-     */
-    public static function extractNamespace(string $name, ?string $namespace = null): array
-    {
-        $parts = explode(self::NAME_SEPARATOR, $name);
-        if (count($parts) > 1) {
-            $name = array_pop($parts);
-            $namespace = implode(self::NAME_SEPARATOR, $parts);
-        }
-
-        return [$name, $namespace];
-    }
-
-    /**
-     * @return bool true if the given name is well-formed
-     *          (is a non-null, non-empty string) and false otherwise
-     */
-    public static function isWellFormedName(mixed $name): bool
-    {
-        return is_string($name) && !empty($name) && preg_match(self::NAME_REGEXP, $name);
-    }
-
-    /**
-     * @return array{0: string, 1: string}
-     */
-    public function nameAndNamespace(): array
-    {
-        return [$this->name, $this->namespace];
-    }
-
-    public function fullname(): string
-    {
-        return $this->fullname;
-    }
-
-    /**
-     * @return string name qualified for its context
-     */
-    public function qualifiedName(): string
-    {
-        return $this->qualifiedName;
-    }
-
-    public function namespace(): ?string
-    {
-        return $this->namespace;
-    }
-
-    /**
+     * @param string $namespace
+     * @returns boolean true if namespace is composed of valid names
      * @throws AvroSchemaParseException if any of the namespace components
      *                                  are invalid.
-     * @return bool true if namespace is composed of valid names
      */
-    private static function checkNamespaceNames(string $namespace): bool
+    private static function checkNamespaceNames($namespace)
     {
         foreach (explode(self::NAME_SEPARATOR, $namespace) as $n) {
             if (empty($n) || (0 === preg_match(self::NAME_REGEXP, $n))) {
                 throw new AvroSchemaParseException(sprintf('Invalid name "%s"', $n));
             }
         }
-
         return true;
     }
 
     /**
      * @param string $name
      * @param string $namespace
+     * @returns string
      * @throws AvroSchemaParseException if any of the names are not valid.
      */
-    private static function parseFullname($name, $namespace): string
+    private static function parseFullname($name, $namespace)
     {
         if (!is_string($namespace) || empty($namespace)) {
             throw new AvroSchemaParseException('Namespace must be a non-empty string.');
         }
         self::checkNamespaceNames($namespace);
+        return $namespace . '.' . $name;
+    }
 
-        return $namespace.'.'.$name;
+    /**
+     * @returns string[] array($name, $namespace)
+     */
+    public static function extractNamespace($name, $namespace = null)
+    {
+        $parts = explode(self::NAME_SEPARATOR, $name);
+        if (count($parts) > 1) {
+            $name = array_pop($parts);
+            $namespace = implode(self::NAME_SEPARATOR, $parts);
+        }
+        return [$name, $namespace];
+    }
+
+    /**
+     * @returns boolean true if the given name is well-formed
+     *          (is a non-null, non-empty string) and false otherwise
+     */
+    public static function isWellFormedName($name)
+    {
+        return (is_string($name) && !empty($name) && preg_match(self::NAME_REGEXP, $name));
+    }
+
+    /**
+     * @returns array array($name, $namespace)
+     */
+    public function nameAndNamespace()
+    {
+        return [$this->name, $this->namespace];
+    }
+
+    /**
+     * @returns string fullname
+     * @uses $this->fullname()
+     */
+    public function __toString()
+    {
+        return $this->fullname();
+    }
+
+    /**
+     * @returns string
+     */
+    public function fullname()
+    {
+        return $this->fullname;
+    }
+
+    /**
+     * @returns string name qualified for its context
+     */
+    public function qualifiedName()
+    {
+        return $this->qualified_name;
     }
 }

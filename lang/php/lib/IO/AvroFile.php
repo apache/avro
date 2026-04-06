@@ -18,16 +18,15 @@
  * limitations under the License.
  */
 
-declare(strict_types=1);
-
 namespace Apache\Avro\IO;
 
 use Apache\Avro\AvroIO;
 
 /**
  * AvroIO wrapper for PHP file access functions
+ * @package Avro
  */
-class AvroFile implements AvroIO
+class AvroFile extends AvroIO
 {
     /**
      * @var string fopen read mode value. Used internally.
@@ -40,28 +39,34 @@ class AvroFile implements AvroIO
     public const FOPEN_WRITE_MODE = 'wb';
 
     /**
+     * @var string
+     */
+    private $file_path;
+
+    /**
      * @var resource file handle for AvroFile instance
      */
-    private $fileHandle;
+    private $file_handle;
 
-    public function __construct(
-        private string $filePath,
-        string $mode = self::READ_MODE
-    ) {
+    public function __construct($file_path, $mode = self::READ_MODE)
+    {
+        /**
+         * XXX: should we check for file existence (in case of reading)
+         * or anything else about the provided file_path argument?
+         */
+        $this->file_path = $file_path;
         switch ($mode) {
             case self::WRITE_MODE:
-                $this->fileHandle = fopen($this->filePath, self::FOPEN_WRITE_MODE);
-                if (false === $this->fileHandle) {
+                $this->file_handle = fopen($this->file_path, self::FOPEN_WRITE_MODE);
+                if (false == $this->file_handle) {
                     throw new AvroIOException('Could not open file for writing');
                 }
-
                 break;
             case self::READ_MODE:
-                $this->fileHandle = fopen($this->filePath, self::FOPEN_READ_MODE);
-                if (false === $this->fileHandle) {
+                $this->file_handle = fopen($this->file_path, self::FOPEN_READ_MODE);
+                if (false == $this->file_handle) {
                     throw new AvroIOException('Could not open file for reading');
                 }
-
                 break;
             default:
                 throw new AvroIOException(
@@ -76,70 +81,66 @@ class AvroFile implements AvroIO
     }
 
     /**
+     * @returns int count of bytes written
      * @throws AvroIOException if write failed.
-     * @return int count of bytes written
      */
-    public function write(string $bytes): int
+    public function write($str)
     {
-        $len = fwrite($this->fileHandle, $bytes);
+        $len = fwrite($this->file_handle, $str);
         if (false === $len) {
             throw new AvroIOException(sprintf('Could not write to file'));
         }
-
         return $len;
     }
 
     /**
+     * @returns int current position within the file
      * @throws AvroIOException if tell failed.
-     * @return int current position within the file
      */
-    public function tell(): int
+    public function tell()
     {
-        $position = ftell($this->fileHandle);
+        $position = ftell($this->file_handle);
         if (false === $position) {
             throw new AvroIOException('Could not execute tell on reader');
         }
-
         return $position;
     }
 
     /**
      * Closes the file.
+     * @returns boolean true if successful.
      * @throws AvroIOException if there was an error closing the file.
-     * @return bool true if successful.
      */
-    public function close(): bool
+    public function close()
     {
-        $res = fclose($this->fileHandle);
+        $res = fclose($this->file_handle);
         if (false === $res) {
             throw new AvroIOException('Error closing file.');
         }
-
         return $res;
     }
 
     /**
-     * @return bool true if the pointer is at the end of the file,
+     * @returns boolean true if the pointer is at the end of the file,
      *                  and false otherwise.
      * @see AvroIO::isEof() as behavior differs from feof()
      */
-    public function isEof(): bool
+    public function isEof()
     {
         $this->read(1);
-        if (feof($this->fileHandle)) {
+        if (feof($this->file_handle)) {
             return true;
         }
         $this->seek(-1, self::SEEK_CUR);
-
         return false;
     }
 
     /**
      * @param int $len count of bytes to read.
+     * @returns string bytes read
      * @throws AvroIOException if length value is negative or if the read failed
-     * @return string bytes read
      */
-    public function read(int $len): string
+    public function read($len)
     {
         if (0 > $len) {
             throw new AvroIOException(
@@ -147,26 +148,27 @@ class AvroFile implements AvroIO
             );
         }
 
-        if (0 === $len) {
+        if (0 == $len) {
             return '';
         }
 
-        $bytes = fread($this->fileHandle, $len);
+        $bytes = fread($this->file_handle, $len);
         if (false === $bytes) {
             throw new AvroIOException('Could not read from file');
         }
-
         return $bytes;
     }
 
     /**
+     * @param int $offset
+     * @param int $whence
+     * @returns boolean true upon success
      * @throws AvroIOException if seek failed.
-     * @return bool true upon success
      * @see AvroIO::seek()
      */
-    public function seek(int $offset, int $whence = SEEK_SET): bool
+    public function seek($offset, $whence = SEEK_SET): bool
     {
-        $res = fseek($this->fileHandle, $offset, $whence);
+        $res = fseek($this->file_handle, $offset, $whence);
         // Note: does not catch seeking beyond end of file
         if (-1 === $res) {
             throw new AvroIOException(
@@ -177,21 +179,19 @@ class AvroFile implements AvroIO
                 )
             );
         }
-
         return true;
     }
 
     /**
+     * @returns boolean true if the flush was successful.
      * @throws AvroIOException if there was an error flushing the file.
-     * @return bool true if the flush was successful.
      */
-    public function flush(): bool
+    public function flush()
     {
-        $res = fflush($this->fileHandle);
+        $res = fflush($this->file_handle);
         if (false === $res) {
             throw new AvroIOException('Could not flush file.');
         }
-
         return true;
     }
 }

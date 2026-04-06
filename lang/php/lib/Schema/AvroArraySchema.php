@@ -23,56 +23,66 @@ namespace Apache\Avro\Schema;
 /**
  * Avro array schema, consisting of items of a particular
  * Avro schema type.
+ * @package Avro
  */
 class AvroArraySchema extends AvroSchema
 {
     /**
-     * @var AvroSchema The schema of the array elements
+     * @var AvroName|AvroSchema named schema name or AvroSchema of
+     *                          array element
      */
-    private AvroSchema $items;
-
-    private bool $isItemsSchemaFromSchemata;
+    private $items;
 
     /**
-     * @param mixed|string $items AvroNamedSchema name or object form
-     *        of decoded JSON schema representation.
-     * @throws AvroSchemaParseException
+     * @var boolean true if the items schema
+     * FIXME: couldn't we derive this from whether or not $this->items
+     *        is an AvroName or an AvroSchema?
      */
-    public function __construct($items, ?string $defaultNamespace, AvroNamedSchemata $schemata)
+    private $is_items_schema_from_schemata;
+
+    /**
+     * @param string|mixed $items AvroNamedSchema name or object form
+     *        of decoded JSON schema representation.
+     * @param string $defaultNamespace namespace of enclosing schema
+     * @param AvroNamedSchemata &$schemata
+     */
+    public function __construct($items, $defaultNamespace, &$schemata = null)
     {
         parent::__construct(AvroSchema::ARRAY_SCHEMA);
 
-        $itemsSchema = null;
-        $this->isItemsSchemaFromSchemata = false;
+        $this->is_items_schema_from_schemata = false;
+        $items_schema = null;
         if (
             is_string($items)
-            && $itemsSchema = $schemata->schemaByName(
+            && $items_schema = $schemata->schemaByName(
                 new AvroName($items, null, $defaultNamespace)
             )
         ) {
-            $this->isItemsSchemaFromSchemata = true;
+            $this->is_items_schema_from_schemata = true;
         } else {
-            $itemsSchema = AvroSchema::subparse($items, $defaultNamespace, $schemata);
+            $items_schema = AvroSchema::subparse($items, $defaultNamespace, $schemata);
         }
 
-        $this->items = $itemsSchema;
+        $this->items = $items_schema;
     }
 
     /**
-     * @return AvroName|AvroSchema named schema name or AvroSchema
+     * @returns AvroName|AvroSchema named schema name or AvroSchema
      *          of this array schema's elements.
      */
-    public function items(): AvroName|AvroSchema
+    public function items()
     {
         return $this->items;
     }
 
-    public function toAvro(): string|array
+    /**
+     * @returns mixed
+     */
+    public function toAvro()
     {
         $avro = parent::toAvro();
-        $avro[AvroSchema::ITEMS_ATTR] = $this->isItemsSchemaFromSchemata && $this->items instanceof AvroNamedSchema
+        $avro[AvroSchema::ITEMS_ATTR] = $this->is_items_schema_from_schemata
             ? $this->items->qualifiedName() : $this->items->toAvro();
-
         return $avro;
     }
 }

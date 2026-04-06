@@ -22,6 +22,7 @@ namespace Apache\Avro;
 
 /**
  * Avro "not implemented method" exception.
+ * @package Avro
  */
 class AvroNotImplementedException extends AvroException
 {

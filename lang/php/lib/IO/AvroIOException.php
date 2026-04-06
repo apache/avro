@@ -24,6 +24,7 @@ use Apache\Avro\AvroException;
 
 /**
  * Exceptions associated with AvroIO instances.
+ * @package Avro
  */
 class AvroIOException extends AvroException
 {
