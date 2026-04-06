@@ -24,19 +24,27 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import com.sun.management.UnixOperatingSystemMXBean;
 import org.apache.avro.file.DataFileReader;
+import org.apache.avro.file.DataFileConstants;
+import org.apache.avro.file.DataFileReader12;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.FileReader;
+import org.apache.avro.file.SeekableByteArrayInput;
 import org.apache.avro.file.SeekableFileInput;
 import org.apache.avro.file.SeekableInput;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.EncoderFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -235,5 +243,80 @@ public class TestDataFileReader {
       assertThrows(InvalidAvroMagicException.class,
           () -> DataFileReader.openReader(fileInput, new GenericDatumReader<>()));
     }
+  }
+
+  @Test
+  void missingSchemaMetadataDoesNotThrowNullPointerException() throws IOException {
+    byte[] malformedFile = buildContainerHeaderWithoutSchema();
+
+    IOException streamException = assertThrows(IOException.class,
+        () -> new DataFileStream<>(new ByteArrayInputStream(malformedFile), new GenericDatumReader<>()));
+    assertNotNull(streamException.getMessage());
+    assertTrue(streamException.getMessage().contains(DataFileConstants.SCHEMA));
+
+    IOException readerException = assertThrows(IOException.class,
+        () -> new DataFileReader<>(new SeekableByteArrayInput(malformedFile), new GenericDatumReader<>()));
+    assertNotNull(readerException.getMessage());
+    assertTrue(readerException.getMessage().contains(DataFileConstants.SCHEMA));
+  }
+
+  private static byte[] buildContainerHeaderWithoutSchema() throws IOException {
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    output.write(DataFileConstants.MAGIC);
+
+    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(output, null);
+    encoder.writeMapStart();
+    encoder.setItemCount(1);
+    encoder.startItem();
+    encoder.writeString(DataFileConstants.CODEC);
+    encoder.writeBytes("null".getBytes(StandardCharsets.UTF_8));
+    encoder.writeMapEnd();
+    encoder.writeFixed(new byte[DataFileConstants.SYNC_SIZE]);
+    encoder.flush();
+
+    return output.toByteArray();
+  }
+
+  @Test
+  void missingSchemaMetadataInVersion12DoesNotThrowNullPointerException() throws IOException {
+    byte[] malformedFile = buildVersion12ContainerWithoutSchema();
+
+    IOException exception = assertThrows(IOException.class,
+        () -> new DataFileReader12<>(new SeekableByteArrayInput(malformedFile), new GenericDatumReader<>()));
+    assertNotNull(exception.getMessage());
+    assertTrue(exception.getMessage().contains("schema"));
+  }
+
+  /**
+   * Builds a minimal Avro 1.2 format container with the footer metadata map
+   * containing only a sync marker but no schema entry.
+   */
+  private static byte[] buildVersion12ContainerWithoutSchema() throws IOException {
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    // Avro 1.2 magic: 'O' 'b' 'j' 0x00
+    output.write(new byte[] { (byte) 'O', (byte) 'b', (byte) 'j', 0 });
+
+    // Write the footer (metadata map with sync but no schema)
+    ByteArrayOutputStream footer = new ByteArrayOutputStream();
+    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(footer, null);
+    encoder.writeMapStart();
+    encoder.setItemCount(1);
+    encoder.startItem();
+    encoder.writeString("sync");
+    encoder.writeBytes(new byte[16]); // 16-byte sync marker
+    encoder.writeMapEnd();
+    encoder.flush();
+
+    byte[] footerBytes = footer.toByteArray();
+    // Footer size includes the 4 bytes for the size itself
+    int footerSize = footerBytes.length + 4;
+    output.write(footerBytes);
+    // Write footer size as big-endian 4 bytes at the end
+    output.write((footerSize >> 24) & 0xFF);
+    output.write((footerSize >> 16) & 0xFF);
+    output.write((footerSize >> 8) & 0xFF);
+    output.write(footerSize & 0xFF);
+
+    return output.toByteArray();
   }
 }
