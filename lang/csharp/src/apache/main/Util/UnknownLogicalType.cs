@@ -51,25 +51,7 @@ namespace Avro.Util
         /// <returns>An object representing the encoded value of the base type.</returns>
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
-            switch (schema.Name)
-            {
-                case @"string":
-                    return (System.String)logicalValue;
-                case @"boolean":
-                    return (System.Boolean)logicalValue;
-                case @"int":
-                    return (System.Int32)logicalValue;
-                case @"long":
-                    return (System.Int64)logicalValue;
-                case @"float":
-                    return (System.Single)logicalValue;
-                case @"double":
-                    return (System.Double)logicalValue;
-                case @"bytes":
-                    return (System.Byte[])logicalValue;
-                default:
-                    return logicalValue;
-            }
+            return logicalValue;
         }
 
         /// <summary>
@@ -124,7 +106,7 @@ namespace Avro.Util
                 case @"double":
                     return nullible ? typeof(System.Double?) : typeof(System.Double);
                 case @"bytes":
-                    return nullible ? typeof(System.Byte?[]) : typeof(System.Byte[]);
+                    return typeof(System.Byte[]);
                 default:
                     return typeof(System.Object);
             }

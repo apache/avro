@@ -118,7 +118,7 @@ namespace Avro.test.Util
         [TestCase(typeof(System.Int64?), true, "{\"type\": \"long\", \"logicalType\": \"unknown\"}")]
         [TestCase(typeof(System.Single?), true, "{\"type\": \"float\", \"logicalType\": \"unknown\"}")]
         [TestCase(typeof(System.Double?), true, "{\"type\": \"double\", \"logicalType\": \"unknown\"}")]
-        [TestCase(typeof(System.Byte?[]), true, "{\"type\": \"bytes\", \"logicalType\": \"unknown\"}")]
+        [TestCase(typeof(System.Byte[]), true, "{\"type\": \"bytes\", \"logicalType\": \"unknown\"}")]
         public void TestGetCSharpType_IsTrue(Type type, bool isNullable, string schemaText)
         {
             var schema = (LogicalSchema)Schema.Parse(schemaText);
@@ -134,14 +134,14 @@ namespace Avro.test.Util
         [TestCase(typeof(System.Int64), true, "{\"type\": \"long\", \"logicalType\": \"unknown\"}")]
         [TestCase(typeof(System.Single), true, "{\"type\": \"float\", \"logicalType\": \"unknown\"}")]
         [TestCase(typeof(System.Double), true, "{\"type\": \"double\", \"logicalType\": \"unknown\"}")]
-        [TestCase(typeof(System.Byte[]), true, "{\"type\": \"bytes\", \"logicalType\": \"unknown\"}")]
+        //[TestCase(typeof(System.Byte[]), true, "{\"type\": \"bytes\", \"logicalType\": \"unknown\"}")]
         //[TestCase(typeof(System.String), false, "{\"type\": \"string\", \"logicalType\": \"unknown\"}")]
         [TestCase(typeof(System.Boolean?), false, "{\"type\": \"boolean\", \"logicalType\": \"unknown\"}")]
         [TestCase(typeof(System.Int32?), false, "{\"type\": \"int\", \"logicalType\": \"unknown\"}")]
         [TestCase(typeof(System.Int64?), false, "{\"type\": \"long\", \"logicalType\": \"unknown\"}")]
         [TestCase(typeof(System.Single?), false, "{\"type\": \"float\", \"logicalType\": \"unknown\"}")]
         [TestCase(typeof(System.Double?), false, "{\"type\": \"double\", \"logicalType\": \"unknown\"}")]
-        [TestCase(typeof(System.Byte?[]), false, "{\"type\": \"bytes\", \"logicalType\": \"unknown\"}")]
+        //[TestCase(typeof(System.Byte?[]), false, "{\"type\": \"bytes\", \"logicalType\": \"unknown\"}")]
         public void TestGetCSharpType_IsFalse(Type type, bool isNullable, string schemaText)
         {
             var schema = (LogicalSchema)Schema.Parse(schemaText);

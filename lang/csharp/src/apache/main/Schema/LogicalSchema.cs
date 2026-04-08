@@ -47,7 +47,20 @@ namespace Avro
             JToken jtype = jtok["type"];
             if (null == jtype) throw new AvroTypeException("Logical Type does not have 'type'");
 
-            return new LogicalSchema(Schema.ParseJson(jtype, names, encspace), JsonHelper.GetRequiredString(jtok, "logicalType"),  props);
+            JToken baseSchemaToken = jtype;
+
+            if (jtok is JObject jo && jtype.Type == JTokenType.String)
+            {
+                string typeStr = (string)jtype;
+                if (typeStr == "record" || typeStr == "enum" || typeStr == "array" || typeStr == "map" || typeStr == "fixed")
+                {
+                    var clone = (JObject)jo.DeepClone();
+                    clone.Property("logicalType")?.Remove();
+                    baseSchemaToken = clone;
+                }
+            }
+
+            return new LogicalSchema(Schema.ParseJson(baseSchemaToken, names, encspace), JsonHelper.GetRequiredString(jtok, "logicalType"), props);
         }
 
         private LogicalSchema(Schema baseSchema, string logicalTypeName,  PropertyMap props) : base(Type.Logical, props)
@@ -97,6 +110,7 @@ namespace Avro
             if (writerSchema.Tag != Tag) return false;
 
             LogicalSchema that = writerSchema as LogicalSchema;
+
             return BaseSchema.CanRead(that.BaseSchema);
         }
 

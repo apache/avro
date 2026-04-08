@@ -45,7 +45,7 @@ namespace Avro.Util
                 { TimeMicrosecond.LogicalTypeName, new TimeMicrosecond() },
                 { TimestampMillisecond.LogicalTypeName, new TimestampMillisecond() },
                 { TimestampMicrosecond.LogicalTypeName, new TimestampMicrosecond() },
-                { Uuid.LogicalTypeName, new Uuid() },
+                { Uuid.LogicalTypeName, new Uuid() }
             };
         }
 
