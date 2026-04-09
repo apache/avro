@@ -573,14 +573,18 @@ namespace Avro.Test
         public void TestUnknownLogical(string s, string unknownType)
         {
             var schema = Schema.Parse(s);
-            Assert.IsNotNull(schema);   // make sure Variable is not null
+            Assert.IsNotNull(schema);
             Assert.IsInstanceOf(typeof(LogicalSchema), schema);
 
-            var logicalSchema = schema as LogicalSchema;
-            Assert.IsNotNull(logicalSchema);   // make sure Variable is not null
-            Assert.IsInstanceOf(typeof(UnknownLogicalType), logicalSchema.LogicalType);
-
-            Assert.AreEqual(logicalSchema.LogicalTypeName, unknownType);
+            if (schema is LogicalSchema logicalSchema)
+            {
+                Assert.IsInstanceOf(typeof(UnknownLogicalType), logicalSchema.LogicalType);
+                Assert.AreEqual(logicalSchema.LogicalTypeName, unknownType);
+            }
+            else
+            {
+                Assert.Fail("Parsed schema was not a LogicalSchema");
+            }
         }
 
         /*
