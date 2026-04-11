@@ -28,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import com.sun.management.UnixOperatingSystemMXBean;
@@ -269,7 +270,7 @@ public class TestDataFileReader {
     encoder.setItemCount(1);
     encoder.startItem();
     encoder.writeString(DataFileConstants.CODEC);
-    encoder.writeBytes("null".getBytes());
+    encoder.writeBytes("null".getBytes(StandardCharsets.UTF_8));
     encoder.writeMapEnd();
     encoder.writeFixed(new byte[DataFileConstants.SYNC_SIZE]);
     encoder.flush();
