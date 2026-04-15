@@ -58,7 +58,11 @@ case "$target" in
     ;;
 
   dist)
-    perl ./Makefile.PL && make dist
+    # The dist target is used to create a distribution tarball that can be uploaded to CPAN, 
+    # so we need to add VERSION.txt to the tarball to make it available to Makefile.PL
+    cp -vf ../../share/VERSION.txt ./ && \
+        perl ./Makefile.PL && make dist && \
+        rm -vf ./VERSION.txt
     ;;
 
   clean)
