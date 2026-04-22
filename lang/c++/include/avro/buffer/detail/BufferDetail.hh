@@ -20,6 +20,7 @@
 #define avro_BufferDetail_hh__
 
 #include <cassert>
+#include <cstring>
 #include <deque>
 #include <exception>
 #include <functional>
@@ -320,7 +321,7 @@ public:
         if (freeSpace_ && (sizeof(T) <= writeChunks_.front().freeSize())) {
             // fast path, there's enough room in the writeable chunk to just
             // straight out copy it
-            *(reinterpret_cast<T *>(writeChunks_.front().tellWritePos())) = val;
+            memcpy(writeChunks_.front().tellWritePos(), &val, sizeof(T));
             postWrite(sizeof(T));
         } else {
             // need to fixup chunks first, so use the regular memcpy
