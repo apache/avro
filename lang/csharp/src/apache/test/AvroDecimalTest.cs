@@ -23,17 +23,18 @@ namespace Avro.test
     [TestFixture]
     class AvroDecimalTest
     {
-        [TestCase(1)]
-        [TestCase(1000)]
-        [TestCase(10.10)]
-        [TestCase(0)]
-        [TestCase(0.1)]
-        [TestCase(0.01)]
-        [TestCase(-1)]
-        [TestCase(-1000)]
-        [TestCase(-10.10)]
-        [TestCase(-0.1)]
-        [TestCase(-0.01)]
+        //Use strings as parameters as otherwise doubles will be used intermediately by C# and scale will be lost in this process
+        [TestCase("1")]
+        [TestCase("1000")]
+        [TestCase("10.10")]
+        [TestCase("0")]
+        [TestCase("0.1")]
+        [TestCase("0.01")]
+        [TestCase("-1")]
+        [TestCase("-1000")]
+        [TestCase("-10.10")]
+        [TestCase("-0.1")]
+        [TestCase("-0.01")]
         public void TestAvroDecimalToString(decimal value)
         {
             var valueString = value.ToString();
@@ -62,6 +63,30 @@ namespace Avro.test
             avroDecimalString = avroDecimal.ToString();
 
             Assert.AreEqual(valueString, avroDecimalString);
+        }
+
+        //Use strings as parameters as otherwise doubles will be used intermediately by C# and scale will be lost in this process
+        [TestCase("0", "0", 0)]
+        [TestCase("1", "0", 1)]
+        [TestCase("0", "1", -1)]
+        [TestCase("1.0", "1.0", 0)]
+        [TestCase("1.0", "1", 0)]
+        [TestCase("1", "1.0", 0)]
+        [TestCase("1.0", "0", 1)]
+        [TestCase("0", "1.0", -1)]
+        [TestCase("-0.5", "-1.0", 1)]
+        [TestCase("-1.0", "-0.5", -1)]
+        [TestCase("0.1", "0.01", 1)]
+        [TestCase("0.01", "0.1", -1)]
+        [TestCase("-0.1", "-0.01", -1)]
+        [TestCase("-0.01", "-0.1", 1)]
+        public void TestAvroDecimalCompareTo(decimal left, decimal right, int expectedResult)
+        {
+            var leftAvroDecimal = new AvroDecimal(left);
+            var rightAvroDecimal = new AvroDecimal(right);
+
+            int actualResult = leftAvroDecimal.CompareTo(rightAvroDecimal);
+            Assert.AreEqual(expectedResult, actualResult);
         }
     }
 }
