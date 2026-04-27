@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System.Globalization;
 using NUnit.Framework;
 
 namespace Avro.test
@@ -35,11 +36,12 @@ namespace Avro.test
         [TestCase("-10.10")]
         [TestCase("-0.1")]
         [TestCase("-0.01")]
-        public void TestAvroDecimalToString(decimal value)
+        public void TestAvroDecimalToString(string value)
         {
-            var valueString = value.ToString();
+            var valueDecimal = decimal.Parse(value, CultureInfo.InvariantCulture);
+            var valueString = valueDecimal.ToString();
 
-            var avroDecimal = new AvroDecimal(value);
+            var avroDecimal = new AvroDecimal(valueDecimal);
             var avroDecimalString = avroDecimal.ToString();
 
             Assert.AreEqual(valueString, avroDecimalString);
@@ -66,27 +68,28 @@ namespace Avro.test
         }
 
         //Use strings as parameters as otherwise doubles will be used intermediately by C# and scale will be lost in this process
-        [TestCase("0", "0", 0)]
-        [TestCase("1", "0", 1)]
-        [TestCase("0", "1", -1)]
-        [TestCase("1.0", "1.0", 0)]
-        [TestCase("1.0", "1", 0)]
-        [TestCase("1", "1.0", 0)]
-        [TestCase("1.0", "0", 1)]
-        [TestCase("0", "1.0", -1)]
-        [TestCase("-0.5", "-1.0", 1)]
-        [TestCase("-1.0", "-0.5", -1)]
-        [TestCase("0.1", "0.01", 1)]
-        [TestCase("0.01", "0.1", -1)]
-        [TestCase("-0.1", "-0.01", -1)]
-        [TestCase("-0.01", "-0.1", 1)]
-        public void TestAvroDecimalCompareTo(decimal left, decimal right, int expectedResult)
+        [TestCase("0", "0", ExpectedResult = 0)]
+        [TestCase("1", "0", ExpectedResult = 1)]
+        [TestCase("0", "1", ExpectedResult = -1)]
+        [TestCase("1.0", "1.0", ExpectedResult = 0)]
+        [TestCase("1.0", "1", ExpectedResult = 0)]
+        [TestCase("1", "1.0", ExpectedResult = 0)]
+        [TestCase("1.0", "0", ExpectedResult = 1)]
+        [TestCase("0", "1.0", ExpectedResult = -1)]
+        [TestCase("-0.5", "-1.0", ExpectedResult = 1)]
+        [TestCase("-1.0", "-0.5", ExpectedResult = -1)]
+        [TestCase("0.1", "0.01", ExpectedResult = 1)]
+        [TestCase("0.01", "0.1", ExpectedResult = -1)]
+        [TestCase("-0.1", "-0.01", ExpectedResult = -1)]
+        [TestCase("-0.01", "-0.1", ExpectedResult = 1)]
+        public int TestAvroDecimalCompareTo(string left, string right)
         {
-            var leftAvroDecimal = new AvroDecimal(left);
-            var rightAvroDecimal = new AvroDecimal(right);
+            var leftDecimal = decimal.Parse(left, CultureInfo.InvariantCulture);
+            var rightDecimal = decimal.Parse(right, CultureInfo.InvariantCulture);
+            var leftAvroDecimal = new AvroDecimal(leftDecimal);
+            var rightAvroDecimal = new AvroDecimal(rightDecimal);
 
-            int actualResult = leftAvroDecimal.CompareTo(rightAvroDecimal);
-            Assert.AreEqual(expectedResult, actualResult);
+            return leftAvroDecimal.CompareTo(rightAvroDecimal);
         }
     }
 }
