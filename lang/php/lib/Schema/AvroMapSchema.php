@@ -23,6 +23,8 @@ namespace Apache\Avro\Schema;
 /**
  * Avro map schema consisting of named values of defined
  * Avro Schema types.
+ *
+ * @phpstan-import-type AvroSchemaDefinitionArray from AvroSchema
  */
 class AvroMapSchema extends AvroSchema
 {
@@ -37,28 +39,32 @@ class AvroMapSchema extends AvroSchema
      */
     private bool $isValuesSchemaFromSchemata;
 
-    public function __construct(string|array $values, ?string $defaultNamespace, ?AvroNamedSchemata &$schemata = null)
+    /**
+     * @param AvroSchemaDefinitionArray|string $values
+     * @throws AvroSchemaParseException
+     */
+    public function __construct(string|array $values, ?string $defaultNamespace, AvroNamedSchemata $schemata)
     {
         parent::__construct(AvroSchema::MAP_SCHEMA);
 
         $this->isValuesSchemaFromSchemata = false;
-        $values_schema = null;
+        $valuesSchema = null;
         if (
             is_string($values)
-            && $values_schema = $schemata->schemaByName(
+            && $valuesSchema = $schemata->schemaByName(
                 new AvroName($values, null, $defaultNamespace)
             )
         ) {
             $this->isValuesSchemaFromSchemata = true;
         } else {
-            $values_schema = AvroSchema::subparse(
+            $valuesSchema = AvroSchema::subparse(
                 $values,
                 $defaultNamespace,
                 $schemata
             );
         }
 
-        $this->values = $values_schema;
+        $this->values = $valuesSchema;
     }
 
     public function values(): AvroSchema

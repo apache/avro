@@ -19,7 +19,14 @@ use Config;
 use inc::Module::Install;
 
 my $version;
-$version = `cat ../../share/VERSION.txt`;
+# We need to have VERSION.txt file in place to allow Avro.pm to get the version from it, 
+# but VERSION.txt has to be copied from ../../share/VERSION.txt.
+# If we are in a cpan* installation we expect VERSION.txt to be already in place, 
+# but if we are in a git clone it won't be there, so we need to copy it.
+unless (-f 'VERSION.txt') {
+    `cp -vf ../../share/VERSION.txt ./`;
+}
+$version = `cat VERSION.txt`;
 chomp $version;
 
 license 'apache';
@@ -67,4 +74,9 @@ my %packages = (
 my %provides = map { $_ => { file => $packages{$_}, version => $version } } keys %packages;
 provides(%provides);
 
-WriteMakefile(PM_FILTER => "sed -e 's/\+\+MODULE_VERSION\+\+/$version/'");
+WriteMakefile(
+    PM_FILTER => "sed -e 's/\+\+MODULE_VERSION\+\+/$version/'",
+    realclean => {
+        FILES => "VERSION.txt" # can be removed on realclean
+    }
+);

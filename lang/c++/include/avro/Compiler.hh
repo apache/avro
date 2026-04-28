@@ -26,15 +26,15 @@
 
 namespace avro {
 
-class AVRO_DECL InputStream;
+class InputStream;
 
 /// This class is used to implement an avro spec parser using a flex/bison
 /// compiler.  In order for the lexer to be reentrant, this class provides a
 /// lexer object for each parse.  The bison parser also uses this class to
 /// build up an avro parse tree as the avro spec is parsed.
 
-class AVRO_DECL Name;
-class AVRO_DECL ValidSchema;
+class Name;
+class ValidSchema;
 
 /// Given a stream containing a JSON schema, compiles the schema to a
 /// ValidSchema object.  Throws if the schema cannot be compiled to a valid
@@ -60,7 +60,7 @@ AVRO_DECL ValidSchema compileJsonSchemaFromString(const std::string &input);
 
 AVRO_DECL ValidSchema compileJsonSchemaFromFile(const char *filename);
 
-AVRO_DECL ValidSchema compileJsonSchemaWithNamedReferences(std::istream &is, 
+AVRO_DECL ValidSchema compileJsonSchemaWithNamedReferences(std::istream &is,
                                                            const std::map<Name, ValidSchema> &namedReferences);
 
 } // namespace avro

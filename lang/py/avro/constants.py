@@ -19,7 +19,6 @@
 
 """Contains Constants for Python Avro"""
 
-
 DATE = "date"
 DECIMAL = "decimal"
 TIMESTAMP_MICROS = "timestamp-micros"

@@ -67,7 +67,7 @@ class TaskRunnerResponder(avro.ipc.Responder):
                 try:
                     self.task.partitions = request["partitions"]
                 except Exception:
-                    self.log.error("Exception occured while processing the partitions message: Message:\n%s", traceback.format_exc())
+                    self.log.error("Exception occurred while processing the partitions message: Message:\n%s", traceback.format_exc())
                     raise
             elif message.name == "input":
                 self.log.info("TetherTaskRunner: Received input")
@@ -83,8 +83,8 @@ class TaskRunnerResponder(avro.ipc.Responder):
             else:
                 self.log.warning("TetherTaskRunner: Received unknown message %s", message.name)
 
-        except Exception as e:
-            self.log.error("Error occured while processing message: %s", message.name)
+        except Exception:
+            self.log.error("Error occurred while processing message: %s", message.name)
             e = traceback.format_exc()
             self.task.fail(e)
 

@@ -28,17 +28,14 @@ class AvroEnumSchema extends AvroNamedSchema
     /**
      * @var string[] array of symbols
      */
-    private $symbols;
+    private array $symbols;
 
     /**
-     * @param AvroName $name
-     * @param string $doc
      * @param string[] $symbols
-     * @param AvroNamedSchemata &$schemata
-     * @param null|mixed $aliases
+     * @param null|array<string> $aliases
      * @throws AvroSchemaParseException
      */
-    public function __construct($name, $doc, $symbols, &$schemata = null, $aliases = null)
+    public function __construct(AvroName $name, ?string $doc, mixed $symbols, AvroNamedSchemata $schemata, ?array $aliases = null)
     {
         if (!AvroUtil::isList($symbols)) {
             throw new AvroSchemaParseException('Enum Schema symbols are not a list');
@@ -46,7 +43,7 @@ class AvroEnumSchema extends AvroNamedSchema
 
         if (count(array_unique($symbols)) > count($symbols)) {
             throw new AvroSchemaParseException(
-                sprintf('Duplicate symbols: %s', $symbols)
+                sprintf('Duplicate symbols: %s', implode(", ", $symbols))
             );
         }
 
@@ -63,7 +60,7 @@ class AvroEnumSchema extends AvroNamedSchema
     }
 
     /**
-     * @returns string[] this enum schema's symbols
+     * @return string[] this enum schema's symbols
      */
     public function symbols()
     {
@@ -72,7 +69,7 @@ class AvroEnumSchema extends AvroNamedSchema
 
     /**
      * @param string $symbol
-     * @returns boolean true if the given symbol exists in this
+     * @return bool true if the given symbol exists in this
      *          enum schema and false otherwise
      */
     public function hasSymbol($symbol)
@@ -82,7 +79,7 @@ class AvroEnumSchema extends AvroNamedSchema
 
     /**
      * @param int $index
-     * @returns string enum schema symbol with the given (zero-based) index
+     * @return string enum schema symbol with the given (zero-based) index
      */
     public function symbolByIndex($index)
     {
@@ -94,10 +91,10 @@ class AvroEnumSchema extends AvroNamedSchema
     }
 
     /**
-     * @param string $symbol
-     * @returns int the index of the given $symbol in the enum schema
+     * @throws AvroException
+     * @return int the index of the given $symbol in the enum schema
      */
-    public function symbolIndex($symbol)
+    public function symbolIndex(string $symbol): int
     {
         $idx = array_search($symbol, $this->symbols, true);
         if (false !== $idx) {

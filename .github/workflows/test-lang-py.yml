@@ -13,16 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: 'Test Python'
+name: "Test Python"
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
-    - .github/workflows/test-lang-py.yml
-    - lang/py/**
+      - .github/workflows/test-lang-py.yml
+      - lang/py/**
 
 defaults:
   run:
@@ -38,16 +38,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: 
+        os:
           - ubuntu-latest
           - ubuntu-24.04-arm
         python:
-          - '3.13'
-          - '3.12'
-          - '3.11'
-          - '3.10'
-          - 'pypy-3.11'
-          - 'pypy-3.10'
+          - "3.14"
+          - "3.13"
+          - "3.12"
+          - "3.11"
+          - "3.10"
+          - "pypy-3.11"
+          - "pypy-3.10"
 
     steps:
       - uses: actions/checkout@v6
@@ -56,6 +57,9 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
 
       - name: Apt Install Compression Libs
         run: |
@@ -67,33 +71,30 @@ jobs:
                                                             libzstd-dev
 
       - name: Install Dependencies
-        run: |
-          python3 -m pip install --upgrade pip setuptools tox
+        run: uv sync --frozen
 
       - name: Lint
         if: ${{ matrix.python == '3.10' }}
-        run: python3 -m tox -e lint
+        run: ./build.sh lint
 
       - name: Typechecks
         if: ${{ matrix.python == '3.10' }}
-        run: python3 -m tox -e typechecks
+        run: ./build.sh typechecks
 
       - name: Test
-        run: python3 -m tox -e py
+        run: ./build.sh test
 
   interop:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: 
+        os:
           - ubuntu-latest
           - ubuntu-24.04-arm
         python:
-          - '3.11'
-          - '3.10'
-          - '3.9'
-          - 'pypy-3.10'
+          - "3.13"
+          - "3.12"
 
     steps:
       - uses: actions/checkout@v6
@@ -102,6 +103,9 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
 
       - name: Apt Install Compression Libs
         run: |
@@ -113,9 +117,7 @@ jobs:
                                                             libzstd-dev
 
       - name: Install Dependencies
-        run: |
-          python3 -m pip install --upgrade pip setuptools tox
-          python3 -m pip install python-snappy zstandard
+        run: uv sync --frozen
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v5
@@ -125,17 +127,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: 'Setup Temurin JDK 8, 11, 17 & 21'
+      - name: "Setup Temurin JDK 8, 11, 17 & 21"
         uses: actions/setup-java@v5
         with:
-          distribution: 'temurin'
+          distribution: "temurin"
           java-version: |
             8
             11
             17
             21
 
-      - name: 'Setup Maven 3.9.11'
+      - name: "Setup Maven 3.9.11"
         uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
         with:
           maven-version: 3.9.11

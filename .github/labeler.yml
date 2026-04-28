@@ -18,36 +18,49 @@
 #
 # Pull Request Labeler Github Action Configuration: https://github.com/marketplace/actions/labeler
 
-C: 
+C:
   - changed-files:
     - any-glob-to-any-file: "lang/c/**/*"
-C++: 
+    - any-glob-to-any-file: ".github/workflows/test-lang-c.yml"
+C++:
   - changed-files:
     - any-glob-to-any-file: "lang/c++/**/*"
-C#: 
+    - any-glob-to-any-file: ".github/workflows/test-lang-c++.yml"
+C#:
   - changed-files:
     - any-glob-to-any-file: "lang/csharp/**/*"
-Java: 
+    - any-glob-to-any-file: ".github/workflows/*-csharp*.yml"
+Java:
   - changed-files:
     - any-glob-to-any-file: "lang/java/**/*"
-Js: 
+    - any-glob-to-any-file: ".github/workflows/*-java*.yml"
+    - any-glob-to-any-file: ".github/workflows/*maven*.yml"
+    - any-glob-to-any-file: ".github/workflows/*spotless*.yml"
+Js:
   - changed-files:
     - any-glob-to-any-file: "lang/js/**/*"
-Perl: 
+    - any-glob-to-any-file: ".github/workflows/*-js*.yml"
+Perl:
   - changed-files:
     - any-glob-to-any-file: "lang/perl/**/*"
-Php: 
+    - any-glob-to-any-file: ".github/workflows/test-lang-perl.yml"
+Php:
   - changed-files:
     - any-glob-to-any-file: "lang/php/**/*"
-Python: 
+    - any-glob-to-any-file: ".github/workflows/test-lang-php.yml"
+Python:
   - changed-files:
     - any-glob-to-any-file: "lang/py/**/*"
-Ruby: 
+    - any-glob-to-any-file: ".github/workflows/*-py*.yml"
+Ruby:
   - changed-files:
     - any-glob-to-any-file: "lang/ruby/**/*"
-build: 
+    - any-glob-to-any-file: ".github/workflows/test-lang-ruby.yml"
+build:
   - changed-files:
     - any-glob-to-any-file: ["**/*Dockerfile*", "**/*.sh", "**/*pom.xml", ".github/**/*"]
-website: 
+    - any-glob-to-any-file: ".github/workflows/test-docker.yml"
+website:
   - changed-files:
     - any-glob-to-any-file: "doc/**/*"
+    - any-glob-to-any-file: ".github/workflows/deploy-docs.yml"

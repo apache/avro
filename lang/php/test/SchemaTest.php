@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+declare(strict_types=1);
+
 namespace Apache\Avro\Tests;
 
 use Apache\Avro\AvroException;
@@ -28,25 +30,25 @@ use PHPUnit\Framework\TestCase;
 
 class SchemaExample
 {
-    public $name;
-    public $normalized_schema_string;
+    public string $name;
+    public string $normalizedSchemaString;
 
     public function __construct(
-        public $schema_string,
-        public $is_valid,
-        $normalized_schema_string = null,
-        $name = null,
-        public $comment = null
+        public string $schemaString,
+        public bool $isValid,
+        ?string $normalizedSchemaString = null,
+        ?string $name = null,
+        public ?string $comment = null
     ) {
-        $this->name = $name ?: $this->schema_string;
-        $this->normalized_schema_string = $normalized_schema_string ?: json_encode(json_decode((string) $this->schema_string, true));
+        $this->name = $name ?: $this->schemaString;
+        $this->normalizedSchemaString = $normalizedSchemaString ?: json_encode(json_decode((string) $this->schemaString, true));
     }
 }
 
 class SchemaTest extends TestCase
 {
-    private static $examples = [];
-    private static $valid_examples = [];
+    /** @var array<SchemaExample> */
+    private static array $examples = [];
 
     public function test_json_decode(): void
     {
@@ -70,6 +72,9 @@ class SchemaTest extends TestCase
         $this->assertEquals('boolean', json_decode('"boolean"'));
     }
 
+    /**
+     * @return array<array<SchemaExample>>
+     */
     public static function schema_examples_provider(): array
     {
         self::make_examples();
@@ -82,15 +87,15 @@ class SchemaTest extends TestCase
     }
 
     #[DataProvider('schema_examples_provider')]
-    public function test_parse($example): void
+    public function test_parse(SchemaExample $example): void
     {
-        $schema_string = $example->schema_string;
+        $schema_string = $example->schemaString;
 
         try {
-            $normalized_schema_string = $example->normalized_schema_string;
+            $normalized_schema_string = $example->normalizedSchemaString;
             $schema = AvroSchema::parse($schema_string);
             $this->assertTrue(
-                $example->is_valid,
+                $example->isValid,
                 sprintf(
                     "schema_string: %s\n",
                     $schema_string
@@ -99,7 +104,7 @@ class SchemaTest extends TestCase
             $this->assertEquals($normalized_schema_string, (string) $schema);
         } catch (AvroSchemaParseException $e) {
             $this->assertFalse(
-                $example->is_valid,
+                $example->isValid,
                 sprintf(
                     "schema_string: %s\n%s",
                     $schema_string,
@@ -230,6 +235,47 @@ class SchemaTest extends TestCase
                 }
                 JSON
         );
+    }
+
+    public function test_doc_attribute_on_primitive_fields(): void
+    {
+        $schemaJson = <<<JSON
+            {
+                "type": "record",
+                "name": "fruits",
+                "fields": [
+                    {
+                        "name": "banana",
+                        "type": "string",
+                        "doc": "This is a banana"
+                    }
+                ]
+            }
+            JSON;
+
+        $schema = AvroSchema::parse($schemaJson);
+
+        self::assertEquals(json_decode($schemaJson, associative: true), $schema->toAvro());
+    }
+
+    public function test_invalid_doc_attribute_on_field_throws_an_exception(): void
+    {
+        $schemaJson = <<<JSON
+            {
+                "type": "record",
+                "name": "fruits",
+                "fields": [
+                    {
+                        "name": "banana",
+                        "type": "string",
+                        "doc": 1
+                    }
+                ]
+            }
+            JSON;
+
+        $this->expectException(AvroSchemaParseException::class);
+        AvroSchema::parse($schemaJson);
     }
 
     public function test_logical_types_in_record(): void
@@ -376,114 +422,230 @@ class SchemaTest extends TestCase
     {
         $primitive_examples = array_merge(
             [
-                new SchemaExample('"True"', false),
-                new SchemaExample('{"no_type": "test"}', false),
-                new SchemaExample('{"type": "panther"}', false),
+                new SchemaExample(
+                    '"True"',
+                    false
+                ),
+                new SchemaExample(
+                    '{"no_type": "test"}',
+                    false
+                ),
+                new SchemaExample(
+                    '{"type": "panther"}',
+                    false
+                ),
             ],
-            self::make_primitive_examples()
+            self::makePrimitiveExamples()
         );
 
         $array_examples = [
             new SchemaExample('{"type": "array", "items": "long"}', true),
-            new SchemaExample('
-    {"type": "array",
-     "items": {"type": "enum", "name": "Test", "symbols": ["A", "B"]}}
-    ', true),
+            new SchemaExample(
+                <<<JSON
+                    {
+                       "type":"array",
+                       "items":{
+                          "type":"enum",
+                          "name":"Test",
+                          "symbols":[
+                             "A",
+                             "B"
+                          ]
+                       }
+                    }
+                    JSON,
+                true
+            ),
         ];
 
         $map_examples = [
-            new SchemaExample('{"type": "map", "values": "long"}', true),
-            new SchemaExample('
-    {"type": "map",
-     "values": {"type": "enum", "name": "Test", "symbols": ["A", "B"]}}
-    ', true),
+            new SchemaExample(
+                '{"type": "map", "values": "long"}',
+                true
+            ),
+            new SchemaExample(
+                <<<JSON
+                    {
+                       "type":"map",
+                       "values":{
+                          "type":"enum",
+                          "name":"Test",
+                          "symbols":[
+                             "A",
+                             "B"
+                          ]
+                       }
+                    }
+                    JSON,
+                true
+            ),
         ];
 
         $union_examples = [
             new SchemaExample('["string", "null", "long"]', true),
             new SchemaExample('["null", "null"]', false),
             new SchemaExample('["long", "long"]', false),
-            new SchemaExample('
-    [{"type": "array", "items": "long"}
-     {"type": "array", "items": "string"}]
-    ', false),
-            new SchemaExample('["long",
-                          {"type": "long"},
-                          "int"]', false),
-            new SchemaExample('["long",
-                          {"type": "array", "items": "long"},
-                          {"type": "map", "values": "long"},
-                          "int"]', true),
-            new SchemaExample('["long",
-                          ["string", "null"],
-                          "int"]', false),
-            new SchemaExample('["long",
-                          ["string", "null"],
-                          "int"]', false),
             new SchemaExample(
-                '["null", "boolean", "int", "long", "float", "double",
-                          "string", "bytes",
-                          {"type": "array", "items":"int"},
-                          {"type": "map", "values":"int"},
-                          {"name": "bar", "type":"record",
-                           "fields":[{"name":"label", "type":"string"}]},
-                          {"name": "foo", "type":"fixed",
-                           "size":16},
-                          {"name": "baz", "type":"enum", "symbols":["A", "B", "C"]}
-                         ]',
+                '[{"type": "array", "items": "long"} {"type": "array", "items": "string"}]',
+                false
+            ),
+            new SchemaExample(
+                '["long", {"type": "long"}, "int"]',
+                false
+            ),
+            new SchemaExample(
+                <<<JSON
+                    [
+                       "long",
+                       {
+                          "type":"array",
+                          "items":"long"
+                       },
+                       {
+                          "type":"map",
+                          "values":"long"
+                       },
+                       "int"
+                    ]
+                    JSON,
+                true
+            ),
+            new SchemaExample(
+                '["long", ["string", "null"], "int"]',
+                false
+            ),
+            new SchemaExample(
+                '["long", ["string", "null"], "int"]',
+                false
+            ),
+            new SchemaExample(
+                <<<JSON
+                    [
+                       "null",
+                       "boolean",
+                       "int",
+                       "long",
+                       "float",
+                       "double",
+                       "string",
+                       "bytes",
+                       {
+                          "type":"array",
+                          "items":"int"
+                       },
+                       {
+                          "type":"map",
+                          "values":"int"
+                       },
+                       {
+                          "name":"bar",
+                          "type":"record",
+                          "fields":[
+                             {
+                                "name":"label",
+                                "type":"string"
+                             }
+                          ]
+                       },
+                       {
+                          "name":"foo",
+                          "type":"fixed",
+                          "size":16
+                       },
+                       {
+                          "name":"baz",
+                          "type":"enum",
+                          "symbols":[
+                             "A",
+                             "B",
+                             "C"
+                          ]
+                       }
+                    ]
+                    JSON,
                 true,
                 '["null","boolean","int","long","float","double","string","bytes",{"type":"array","items":"int"},{"type":"map","values":"int"},{"type":"record","name":"bar","fields":[{"name":"label","type":"string"}]},{"type":"fixed","name":"foo","size":16},{"type":"enum","name":"baz","symbols":["A","B","C"]}]'
             ),
             new SchemaExample(
-                '
-    [{"name":"subtract", "namespace":"com.example",
-      "type":"record",
-      "fields":[{"name":"minuend", "type":"int"},
-                {"name":"subtrahend", "type":"int"}]},
-      {"name": "divide", "namespace":"com.example",
-      "type":"record",
-      "fields":[{"name":"quotient", "type":"int"},
-                {"name":"dividend", "type":"int"}]},
-      {"type": "array", "items": "string"}]
-    ',
+                <<<JSON
+                    [
+                       {
+                          "name":"subtract",
+                          "namespace":"com.example",
+                          "type":"record",
+                          "fields":[
+                             {
+                                "name":"minuend",
+                                "type":"int"
+                             },
+                             {
+                                "name":"subtrahend",
+                                "type":"int"
+                             }
+                          ]
+                       },
+                       {
+                          "name":"divide",
+                          "namespace":"com.example",
+                          "type":"record",
+                          "fields":[
+                             {
+                                "name":"quotient",
+                                "type":"int"
+                             },
+                             {
+                                "name":"dividend",
+                                "type":"int"
+                             }
+                          ]
+                       },
+                       {
+                          "type":"array",
+                          "items":"string"
+                       }
+                    ]
+                    JSON,
                 true,
                 '[{"type":"record","name":"subtract","namespace":"com.example","fields":[{"name":"minuend","type":"int"},{"name":"subtrahend","type":"int"}]},{"type":"record","name":"divide","namespace":"com.example","fields":[{"name":"quotient","type":"int"},{"name":"dividend","type":"int"}]},{"type":"array","items":"string"}]'
             ),
         ];
 
         $fixed_examples = [
-            new SchemaExample('{"type": "fixed", "name": "Test", "size": 1}', true),
-            new SchemaExample('
-    {"type": "fixed",
-     "name": "MyFixed",
-     "namespace": "org.apache.hadoop.avro",
-     "size": 1}
-    ', true),
-            new SchemaExample('
-    {"type": "fixed",
-     "name": "Missing size"}
-    ', false),
-            new SchemaExample('
-    {"type": "fixed",
-     "size": 314}
-    ', false),
+            new SchemaExample(
+                '{"type": "fixed", "name": "Test", "size": 1}',
+                true
+            ),
+            new SchemaExample(
+                <<<JSON
+                    {
+                       "type":"fixed",
+                       "name":"MyFixed",
+                       "namespace":"org.apache.hadoop.avro",
+                       "size":1
+                    }
+                    JSON,
+                true
+            ),
+            new SchemaExample(
+                '{"type": "fixed", "name": "Missing size"}',
+                false
+            ),
+            new SchemaExample(
+                '{"type": "fixed", "size": 314}',
+                false
+            ),
             new SchemaExample(
                 '{"type":"fixed","name":"ex","doc":"this shouldn\'t be ignored","size": 314}',
                 true,
                 '{"type":"fixed","name":"ex","doc":"this shouldn\'t be ignored","size":314}'
             ),
             new SchemaExample(
-                '{"name": "bar",
-                          "namespace": "com.example",
-                          "type": "fixed",
-                          "size": 32 }',
+                '{"name": "bar", "namespace": "com.example", "type": "fixed", "size": 32 }',
                 true,
                 '{"type":"fixed","name":"bar","namespace":"com.example","size":32}'
             ),
             new SchemaExample(
-                '{"name": "com.example.bar",
-                          "type": "fixed",
-                          "size": 32 }',
+                '{"name": "com.example.bar", "type": "fixed", "size": 32}',
                 true,
                 '{"type":"fixed","name":"bar","namespace":"com.example","size":32}'
             ),
@@ -509,258 +671,792 @@ class SchemaTest extends TestCase
         );
 
         $enum_examples = [
-            new SchemaExample('{"type": "enum", "name": "Test", "symbols": ["A", "B"]}', true),
-            new SchemaExample('
-    {"type": "enum",
-     "name": "Status",
-     "symbols": "Normal Caution Critical"}
-    ', false),
-            new SchemaExample('
-    {"type": "enum",
-     "name": [ 0, 1, 1, 2, 3, 5, 8 ],
-     "symbols": ["Golden", "Mean"]}
-    ', false),
-            new SchemaExample('
-    {"type": "enum",
-     "symbols" : ["I", "will", "fail", "no", "name"]}
-    ', false),
-            new SchemaExample('
-    {"type": "enum",
-     "name": "Test"
-     "symbols" : ["AA", "AA"]}
-    ', false),
+            new SchemaExample(
+                '{"type": "enum", "name": "Test", "symbols": ["A", "B"]}',
+                true
+            ),
+            new SchemaExample(
+                '{"type": "enum", "name": "Status", "symbols": "Normal Caution Critical"}',
+                false
+            ),
+            new SchemaExample(
+                '{"type": "enum", "name": [ 0, 1, 1, 2, 3, 5, 8 ], "symbols": ["Golden", "Mean"]}',
+                false
+            ),
+            new SchemaExample(
+                '{"type": "enum", "symbols" : ["I", "will", "fail", "no", "name"]}',
+                false
+            ),
+            new SchemaExample(
+                '{"type": "enum", "name": "Test" "symbols" : ["AA", "AA"]}',
+                false
+            ),
             new SchemaExample(
                 '{"type":"enum","name":"Test","symbols":["AA", 16]}',
                 false
             ),
-            new SchemaExample('
-    {"type": "enum",
-     "name": "blood_types",
-     "doc": "AB is freaky.",
-     "symbols" : ["A", "AB", "B", "O"]}
-    ', true),
-            new SchemaExample('
-    {"type": "enum",
-     "name": "blood-types",
-     "doc": 16,
-     "symbols" : ["A", "AB", "B", "O"]}
-    ', false),
+            new SchemaExample(
+                <<<JSON
+                    {
+                       "type":"enum",
+                       "name":"blood_types",
+                       "doc":"AB is freaky.",
+                       "symbols":[
+                          "A",
+                          "AB",
+                          "B",
+                          "O"
+                       ]
+                    }
+                    JSON,
+                true
+            ),
+            new SchemaExample(
+                <<<JSON
+                    {
+                       "type":"enum",
+                       "name":"blood-types",
+                       "doc":16,
+                       "symbols":[
+                          "A",
+                          "AB",
+                          "B",
+                          "O"
+                       ]
+                    }
+                    JSON,
+                false
+            ),
         ];
 
         $record_examples = [];
-        $record_examples[] = new SchemaExample('
-    {"type": "record",
-     "name": "Test",
-     "fields": [{"name": "f",
-                 "type": "long"}]}
-    ', true);
-        $record_examples[] = new SchemaExample('
-    {"type": "error",
-     "name": "Test",
-     "fields": [{"name": "f",
-                 "type": "long"}]}
-    ', true);
-        $record_examples[] = new SchemaExample('
-    {"type": "record",
-     "name": "Node",
-     "fields": [{"name": "label", "type": "string"},
-                {"name": "children",
-                 "type": {"type": "array", "items": "Node"}}]}
-    ', true);
-        $record_examples[] = new SchemaExample('
-    {"type": "record",
-     "name": "ListLink",
-     "fields": [{"name": "car", "type": "int"},
-                {"name": "cdr", "type": "ListLink"}]}
-    ', true);
-        $record_examples[] = new SchemaExample('
-    {"type": "record",
-     "name": "Lisp",
-     "fields": [{"name": "value",
-                 "type": ["null", "string"]}]}
-    ', true);
-        $record_examples[] = new SchemaExample('
-    {"type": "record",
-     "name": "Lisp",
-     "fields": [{"name": "value",
-                 "type": ["null", "string",
-                          {"type": "record",
-                           "name": "Cons",
-                           "fields": [{"name": "car", "type": "string"},
-                                      {"name": "cdr", "type": "string"}]}]}]}
-    ', true);
-        $record_examples[] = new SchemaExample('
-    {"type": "record",
-     "name": "Lisp",
-     "fields": [{"name": "value",
-                 "type": ["null", "string",
-                          {"type": "record",
-                           "name": "Cons",
-                           "fields": [{"name": "car", "type": "Lisp"},
-                                      {"name": "cdr", "type": "Lisp"}]}]}]}
-    ', true);
-        $record_examples[] = new SchemaExample('
-    {"type": "record",
-     "name": "HandshakeRequest",
-     "namespace": "org.apache.avro.ipc",
-     "fields": [{"name": "clientHash",
-                 "type": {"type": "fixed", "name": "MD5", "size": 16}},
-                {"name": "meta",
-                 "type": ["null", {"type": "map", "values": "bytes"}]}]}
-    ', true);
-        $record_examples[] = new SchemaExample('
-    {"type": "record",
-     "name": "HandshakeRequest",
-     "namespace": "org.apache.avro.ipc",
-     "fields": [{"name": "clientHash",
-                 "type": {"type": "fixed", "name": "MD5", "size": 16}},
-                {"name": "clientProtocol", "type": ["null", "string"]},
-                {"name": "serverHash", "type": "MD5"},
-                {"name": "meta",
-                 "type": ["null", {"type": "map", "values": "bytes"}]}]}
-    ', true);
         $record_examples[] = new SchemaExample(
-            '
-    {"type": "record",
-     "name": "HandshakeResponse",
-     "namespace": "org.apache.avro.ipc",
-     "fields": [{"name": "match",
-                 "type": {"type": "enum",
-                          "name": "HandshakeMatch",
-                          "symbols": ["BOTH", "CLIENT", "NONE"]}},
-                {"name": "serverProtocol", "type": ["null", "string"]},
-                {"name": "serverHash",
-                 "type": ["null",
-                          {"name": "MD5", "size": 16, "type": "fixed"}]},
-                {"name": "meta",
-                 "type": ["null", {"type": "map", "values": "bytes"}]}]}
-    ',
+            <<<JSON
+                            {
+                   "type":"record",
+                   "name":"Test",
+                   "fields":[
+                      {
+                         "name":"f",
+                         "type":"long"
+                      }
+                   ]
+                }
+                JSON,
+            true
+        );
+        $record_examples[] = new SchemaExample(
+            <<<JSON
+                {
+                   "type":"error",
+                   "name":"Test",
+                   "fields":[
+                      {
+                         "name":"f",
+                         "type":"long"
+                      }
+                   ]
+                }
+                JSON,
+            true
+        );
+        $record_examples[] = new SchemaExample(
+            <<<JSON
+                {
+                   "type":"record",
+                   "name":"Node",
+                   "fields":[
+                      {
+                         "name":"label",
+                         "type":"string"
+                      },
+                      {
+                         "name":"children",
+                         "type":{
+                            "type":"array",
+                            "items":"Node"
+                         }
+                      }
+                   ]
+                }
+                JSON,
+            true
+        );
+        $record_examples[] = new SchemaExample(
+            <<<JSON
+                {
+                   "type":"record",
+                   "name":"ListLink",
+                   "fields":[
+                      {
+                         "name":"car",
+                         "type":"int"
+                      },
+                      {
+                         "name":"cdr",
+                         "type":"ListLink"
+                      }
+                   ]
+                }
+                JSON,
+            true
+        );
+        $record_examples[] = new SchemaExample(
+            <<<JSON
+                {
+                   "type":"record",
+                   "name":"Lisp",
+                   "fields":[
+                      {
+                         "name":"value",
+                         "type":[
+                            "null",
+                            "string"
+                         ]
+                      }
+                   ]
+                }
+                JSON,
+            true
+        );
+        $record_examples[] = new SchemaExample(
+            <<<JSON
+                {
+                   "type":"record",
+                   "name":"Lisp",
+                   "fields":[
+                      {
+                         "name":"value",
+                         "type":[
+                            "null",
+                            "string",
+                            {
+                               "type":"record",
+                               "name":"Cons",
+                               "fields":[
+                                  {
+                                     "name":"car",
+                                     "type":"string"
+                                  },
+                                  {
+                                     "name":"cdr",
+                                     "type":"string"
+                                  }
+                               ]
+                            }
+                         ]
+                      }
+                   ]
+                }
+                JSON,
+            true
+        );
+        $record_examples[] = new SchemaExample(
+            <<<JSON
+                {
+                   "type":"record",
+                   "name":"Lisp",
+                   "fields":[
+                      {
+                         "name":"value",
+                         "type":[
+                            "null",
+                            "string",
+                            {
+                               "type":"record",
+                               "name":"Cons",
+                               "fields":[
+                                  {
+                                     "name":"car",
+                                     "type":"Lisp"
+                                  },
+                                  {
+                                     "name":"cdr",
+                                     "type":"Lisp"
+                                  }
+                               ]
+                            }
+                         ]
+                      }
+                   ]
+                }
+                JSON,
+            true
+        );
+        $record_examples[] = new SchemaExample(
+            <<<JSON
+                {
+                   "type":"record",
+                   "name":"HandshakeRequest",
+                   "namespace":"org.apache.avro.ipc",
+                   "fields":[
+                      {
+                         "name":"clientHash",
+                         "type":{
+                            "type":"fixed",
+                            "name":"MD5",
+                            "size":16
+                         }
+                      },
+                      {
+                         "name":"meta",
+                         "type":[
+                            "null",
+                            {
+                               "type":"map",
+                               "values":"bytes"
+                            }
+                         ]
+                      }
+                   ]
+                }
+                JSON,
+            true
+        );
+        $record_examples[] = new SchemaExample(
+            <<<JSON
+                {
+                   "type":"record",
+                   "name":"HandshakeRequest",
+                   "namespace":"org.apache.avro.ipc",
+                   "fields":[
+                      {
+                         "name":"clientHash",
+                         "type":{
+                            "type":"fixed",
+                            "name":"MD5",
+                            "size":16
+                         }
+                      },
+                      {
+                         "name":"clientProtocol",
+                         "type":[
+                            "null",
+                            "string"
+                         ]
+                      },
+                      {
+                         "name":"serverHash",
+                         "type":"MD5"
+                      },
+                      {
+                         "name":"meta",
+                         "type":[
+                            "null",
+                            {
+                               "type":"map",
+                               "values":"bytes"
+                            }
+                         ]
+                      }
+                   ]
+                }
+                JSON,
+            true
+        );
+        $record_examples[] = new SchemaExample(
+            <<<JSON
+                {
+                   "type":"record",
+                   "name":"HandshakeResponse",
+                   "namespace":"org.apache.avro.ipc",
+                   "fields":[
+                      {
+                         "name":"match",
+                         "type":{
+                            "type":"enum",
+                            "name":"HandshakeMatch",
+                            "symbols":[
+                               "BOTH",
+                               "CLIENT",
+                               "NONE"
+                            ]
+                         }
+                      },
+                      {
+                         "name":"serverProtocol",
+                         "type":[
+                            "null",
+                            "string"
+                         ]
+                      },
+                      {
+                         "name":"serverHash",
+                         "type":[
+                            "null",
+                            {
+                               "name":"MD5",
+                               "size":16,
+                               "type":"fixed"
+                            }
+                         ]
+                      },
+                      {
+                         "name":"meta",
+                         "type":[
+                            "null",
+                            {
+                               "type":"map",
+                               "values":"bytes"
+                            }
+                         ]
+                      }
+                   ]
+                }
+                JSON,
             true,
             '{"type":"record","name":"HandshakeResponse","namespace":"org.apache.avro.ipc","fields":[{"name":"match","type":{"type":"enum","name":"HandshakeMatch","symbols":["BOTH","CLIENT","NONE"]}},{"name":"serverProtocol","type":["null","string"]},{"name":"serverHash","type":["null",{"type":"fixed","name":"MD5","size":16}]},{"name":"meta","type":["null",{"type":"map","values":"bytes"}]}]}'
         );
         $record_examples[] = new SchemaExample(
-            '{"type": "record",
- "namespace": "org.apache.avro",
- "name": "Interop",
- "fields": [{"type": {"fields": [{"type": {"items": "org.apache.avro.Node",
-                                           "type": "array"},
-                                  "name": "children"}],
-                      "type": "record",
-                      "name": "Node"},
-             "name": "recordField"}]}
-',
+            <<<JSON
+                {
+                   "type":"record",
+                   "namespace":"org.apache.avro",
+                   "name":"Interop",
+                   "fields":[
+                      {
+                         "type":{
+                            "fields":[
+                               {
+                                  "type":{
+                                     "items":"org.apache.avro.Node",
+                                     "type":"array"
+                                  },
+                                  "name":"children"
+                               }
+                            ],
+                            "type":"record",
+                            "name":"Node"
+                         },
+                         "name":"recordField"
+                      }
+                   ]
+                }
+                JSON,
             true,
             '{"type":"record","name":"Interop","namespace":"org.apache.avro","fields":[{"name":"recordField","type":{"type":"record","name":"Node","fields":[{"name":"children","type":{"type":"array","items":"Node"}}]}}]}'
         );
         $record_examples[] = new SchemaExample(
-            '{"type": "record",
- "namespace": "org.apache.avro",
- "name": "Interop",
- "fields": [{"type": {"symbols": ["A", "B", "C"], "type": "enum", "name": "Kind"},
-             "name": "enumField"},
-            {"type": {"fields": [{"type": "string", "name": "label"},
-                                 {"type": {"items": "org.apache.avro.Node", "type": "array"},
-                                  "name": "children"}],
-                      "type": "record",
-                      "name": "Node"},
-             "name": "recordField"}]}',
+            <<<JSON
+                {
+                   "type":"record",
+                   "namespace":"org.apache.avro",
+                   "name":"Interop",
+                   "fields":[
+                      {
+                         "type":{
+                            "symbols":[
+                               "A",
+                               "B",
+                               "C"
+                            ],
+                            "type":"enum",
+                            "name":"Kind"
+                         },
+                         "name":"enumField"
+                      },
+                      {
+                         "type":{
+                            "fields":[
+                               {
+                                  "type":"string",
+                                  "name":"label"
+                               },
+                               {
+                                  "type":{
+                                     "items":"org.apache.avro.Node",
+                                     "type":"array"
+                                  },
+                                  "name":"children"
+                               }
+                            ],
+                            "type":"record",
+                            "name":"Node"
+                         },
+                         "name":"recordField"
+                      }
+                   ]
+                }
+                JSON,
             true,
             '{"type":"record","name":"Interop","namespace":"org.apache.avro","fields":[{"name":"enumField","type":{"type":"enum","name":"Kind","symbols":["A","B","C"]}},{"name":"recordField","type":{"type":"record","name":"Node","fields":[{"name":"label","type":"string"},{"name":"children","type":{"type":"array","items":"Node"}}]}}]}'
         );
 
         $record_examples[] = new SchemaExample(
-            '
-    {"type": "record",
-     "name": "Interop",
-     "namespace": "org.apache.avro",
-     "fields": [{"name": "intField", "type": "int"},
-                {"name": "longField", "type": "long"},
-                {"name": "stringField", "type": "string"},
-                {"name": "boolField", "type": "boolean"},
-                {"name": "floatField", "type": "float"},
-                {"name": "doubleField", "type": "double"},
-                {"name": "bytesField", "type": "bytes"},
-                {"name": "nullField", "type": "null"},
-                {"name": "arrayField",
-                 "type": {"type": "array", "items": "double"}},
-                {"name": "mapField",
-                 "type": {"type": "map",
-                          "values": {"name": "Foo",
-                                     "type": "record",
-                                     "fields": [{"name": "label",
-                                                 "type": "string"}]}}},
-                {"name": "unionField",
-                 "type": ["boolean",
-                          "double",
-                          {"type": "array", "items": "bytes"}]},
-                {"name": "enumField",
-                 "type": {"type": "enum",
-                          "name": "Kind",
-                          "symbols": ["A", "B", "C"]}},
-                {"name": "fixedField",
-                 "type": {"type": "fixed", "name": "MD5", "size": 16}},
-                {"name": "recordField",
-                 "type": {"type": "record",
-                          "name": "Node",
-                          "fields": [{"name": "label", "type": "string"},
-                                     {"name": "children",
-                                      "type": {"type": "array",
-                                               "items": "Node"}}]}}]}
-    ',
+            <<<JSON
+                {
+                   "type":"record",
+                   "name":"Interop",
+                   "namespace":"org.apache.avro",
+                   "fields":[
+                      {
+                         "name":"intField",
+                         "type":"int"
+                      },
+                      {
+                         "name":"longField",
+                         "type":"long"
+                      },
+                      {
+                         "name":"stringField",
+                         "type":"string"
+                      },
+                      {
+                         "name":"boolField",
+                         "type":"boolean"
+                      },
+                      {
+                         "name":"floatField",
+                         "type":"float"
+                      },
+                      {
+                         "name":"doubleField",
+                         "type":"double"
+                      },
+                      {
+                         "name":"bytesField",
+                         "type":"bytes"
+                      },
+                      {
+                         "name":"nullField",
+                         "type":"null"
+                      },
+                      {
+                         "name":"arrayField",
+                         "type":{
+                            "type":"array",
+                            "items":"double"
+                         }
+                      },
+                      {
+                         "name":"mapField",
+                         "type":{
+                            "type":"map",
+                            "values":{
+                               "name":"Foo",
+                               "type":"record",
+                               "fields":[
+                                  {
+                                     "name":"label",
+                                     "type":"string"
+                                  }
+                               ]
+                            }
+                         }
+                      },
+                      {
+                         "name":"unionField",
+                         "type":[
+                            "boolean",
+                            "double",
+                            {
+                               "type":"array",
+                               "items":"bytes"
+                            }
+                         ]
+                      },
+                      {
+                         "name":"enumField",
+                         "type":{
+                            "type":"enum",
+                            "name":"Kind",
+                            "symbols":[
+                               "A",
+                               "B",
+                               "C"
+                            ]
+                         }
+                      },
+                      {
+                         "name":"fixedField",
+                         "type":{
+                            "type":"fixed",
+                            "name":"MD5",
+                            "size":16
+                         }
+                      },
+                      {
+                         "name":"recordField",
+                         "type":{
+                            "type":"record",
+                            "name":"Node",
+                            "fields":[
+                               {
+                                  "name":"label",
+                                  "type":"string"
+                               },
+                               {
+                                  "name":"children",
+                                  "type":{
+                                     "type":"array",
+                                     "items":"Node"
+                                  }
+                               }
+                            ]
+                         }
+                      }
+                   ]
+                }
+                JSON,
             true,
             '{"type":"record","name":"Interop","namespace":"org.apache.avro","fields":[{"name":"intField","type":"int"},{"name":"longField","type":"long"},{"name":"stringField","type":"string"},{"name":"boolField","type":"boolean"},{"name":"floatField","type":"float"},{"name":"doubleField","type":"double"},{"name":"bytesField","type":"bytes"},{"name":"nullField","type":"null"},{"name":"arrayField","type":{"type":"array","items":"double"}},{"name":"mapField","type":{"type":"map","values":{"type":"record","name":"Foo","fields":[{"name":"label","type":"string"}]}}},{"name":"unionField","type":["boolean","double",{"type":"array","items":"bytes"}]},{"name":"enumField","type":{"type":"enum","name":"Kind","symbols":["A","B","C"]}},{"name":"fixedField","type":{"type":"fixed","name":"MD5","size":16}},{"name":"recordField","type":{"type":"record","name":"Node","fields":[{"name":"label","type":"string"},{"name":"children","type":{"type":"array","items":"Node"}}]}}]}'
         );
+
         $record_examples[] = new SchemaExample(
-            '{"type": "record", "namespace": "org.apache.avro", "name": "Interop", "fields": [{"type": "int", "name": "intField"}, {"type": "long", "name": "longField"}, {"type": "string", "name": "stringField"}, {"type": "boolean", "name": "boolField"}, {"type": "float", "name": "floatField"}, {"type": "double", "name": "doubleField"}, {"type": "bytes", "name": "bytesField"}, {"type": "null", "name": "nullField"}, {"type": {"items": "double", "type": "array"}, "name": "arrayField"}, {"type": {"type": "map", "values": {"fields": [{"type": "string", "name": "label"}], "type": "record", "name": "Foo"}}, "name": "mapField"}, {"type": ["boolean", "double", {"items": "bytes", "type": "array"}], "name": "unionField"}, {"type": {"symbols": ["A", "B", "C"], "type": "enum", "name": "Kind"}, "name": "enumField"}, {"type": {"type": "fixed", "name": "MD5", "size": 16}, "name": "fixedField"}, {"type": {"fields": [{"type": "string", "name": "label"}, {"type": {"items": "org.apache.avro.Node", "type": "array"}, "name": "children"}], "type": "record", "name": "Node"}, "name": "recordField"}]}
-',
+            <<<JSON
+                {
+                   "type":"record",
+                   "namespace":"org.apache.avro",
+                   "name":"Interop",
+                   "fields":[
+                      {
+                         "type":"int",
+                         "name":"intField"
+                      },
+                      {
+                         "type":"long",
+                         "name":"longField"
+                      },
+                      {
+                         "type":"string",
+                         "name":"stringField"
+                      },
+                      {
+                         "type":"boolean",
+                         "name":"boolField"
+                      },
+                      {
+                         "type":"float",
+                         "name":"floatField"
+                      },
+                      {
+                         "type":"double",
+                         "name":"doubleField"
+                      },
+                      {
+                         "type":"bytes",
+                         "name":"bytesField"
+                      },
+                      {
+                         "type":"null",
+                         "name":"nullField"
+                      },
+                      {
+                         "type":{
+                            "items":"double",
+                            "type":"array"
+                         },
+                         "name":"arrayField"
+                      },
+                      {
+                         "type":{
+                            "type":"map",
+                            "values":{
+                               "fields":[
+                                  {
+                                     "type":"string",
+                                     "name":"label"
+                                  }
+                               ],
+                               "type":"record",
+                               "name":"Foo"
+                            }
+                         },
+                         "name":"mapField"
+                      },
+                      {
+                         "type":[
+                            "boolean",
+                            "double",
+                            {
+                               "items":"bytes",
+                               "type":"array"
+                            }
+                         ],
+                         "name":"unionField"
+                      },
+                      {
+                         "type":{
+                            "symbols":[
+                               "A",
+                               "B",
+                               "C"
+                            ],
+                            "type":"enum",
+                            "name":"Kind"
+                         },
+                         "name":"enumField"
+                      },
+                      {
+                         "type":{
+                            "type":"fixed",
+                            "name":"MD5",
+                            "size":16
+                         },
+                         "name":"fixedField"
+                      },
+                      {
+                         "type":{
+                            "fields":[
+                               {
+                                  "type":"string",
+                                  "name":"label"
+                               },
+                               {
+                                  "type":{
+                                     "items":"org.apache.avro.Node",
+                                     "type":"array"
+                                  },
+                                  "name":"children"
+                               }
+                            ],
+                            "type":"record",
+                            "name":"Node"
+                         },
+                         "name":"recordField"
+                      }
+                   ]
+                }
+                JSON,
             true,
             '{"type":"record","name":"Interop","namespace":"org.apache.avro","fields":[{"name":"intField","type":"int"},{"name":"longField","type":"long"},{"name":"stringField","type":"string"},{"name":"boolField","type":"boolean"},{"name":"floatField","type":"float"},{"name":"doubleField","type":"double"},{"name":"bytesField","type":"bytes"},{"name":"nullField","type":"null"},{"name":"arrayField","type":{"type":"array","items":"double"}},{"name":"mapField","type":{"type":"map","values":{"type":"record","name":"Foo","fields":[{"name":"label","type":"string"}]}}},{"name":"unionField","type":["boolean","double",{"type":"array","items":"bytes"}]},{"name":"enumField","type":{"type":"enum","name":"Kind","symbols":["A","B","C"]}},{"name":"fixedField","type":{"type":"fixed","name":"MD5","size":16}},{"name":"recordField","type":{"type":"record","name":"Node","fields":[{"name":"label","type":"string"},{"name":"children","type":{"type":"array","items":"Node"}}]}}]}'
         );
+
         $record_examples[] = new SchemaExample(
-            '
-    {"type": "record",
-     "name": "ipAddr",
-     "fields": [{"name": "addr",
-                 "type": [{"name": "IPv6", "type": "fixed", "size": 16},
-                          {"name": "IPv4", "type": "fixed", "size": 4}]}]}
-    ',
+            <<<JSON
+                {
+                   "type":"record",
+                   "name":"ipAddr",
+                   "fields":[
+                      {
+                         "name":"addr",
+                         "type":[
+                            {
+                               "name":"IPv6",
+                               "type":"fixed",
+                               "size":16
+                            },
+                            {
+                               "name":"IPv4",
+                               "type":"fixed",
+                               "size":4
+                            }
+                         ]
+                      }
+                   ]
+                }
+                JSON,
             true,
             '{"type":"record","name":"ipAddr","fields":[{"name":"addr","type":[{"type":"fixed","name":"IPv6","size":16},{"type":"fixed","name":"IPv4","size":4}]}]}'
         );
-        $record_examples[] = new SchemaExample('
-    {"type": "record",
-     "name": "Address",
-     "fields": [{"type": "string"},
-                {"type": "string", "name": "City"}]}
-    ', false);
-        $record_examples[] = new SchemaExample('
-    {"type": "record",
-     "name": "Event",
-     "fields": [{"name": "Sponsor"},
-                {"name": "City", "type": "string"}]}
-    ', false);
-        $record_examples[] = new SchemaExample('
-    {"type": "record",
-     "fields": "His vision, from the constantly passing bars,"
-     "name", "Rainer"}
-    ', false);
-        $record_examples[] = new SchemaExample('
-    {"name": ["Tom", "Jerry"],
-     "type": "record",
-     "fields": [{"name": "name", "type": "string"}]}
-    ', false);
+
         $record_examples[] = new SchemaExample(
-            '
-    {"type":"record","name":"foo","doc":"doc string",
-     "fields":[{"name":"bar", "type":"int", "order":"ascending", "default":1}]}
-',
+            <<<JSON
+                {
+                   "type":"record",
+                   "name":"Address",
+                   "fields":[
+                      {
+                         "type":"string"
+                      },
+                      {
+                         "type":"string",
+                         "name":"City"
+                      }
+                   ]
+                }
+                JSON,
+            false
+        );
+
+        $record_examples[] = new SchemaExample(
+            <<<JSON
+                {
+                   "type":"record",
+                   "name":"Event",
+                   "fields":[
+                      {
+                         "name":"Sponsor"
+                      },
+                      {
+                         "name":"City",
+                         "type":"string"
+                      }
+                   ]
+                }
+                JSON,
+            false
+        );
+
+        $record_examples[] = new SchemaExample(
+            <<<JSON
+                {
+                  "type": "record",
+                  "fields": "His vision, from the constantly passing bars,"
+                  "name",
+                  "Rainer"
+                }
+                JSON,
+            false
+        );
+
+        $record_examples[] = new SchemaExample(
+            <<<JSON
+                {
+                   "name":[
+                      "Tom",
+                      "Jerry"
+                   ],
+                   "type":"record",
+                   "fields":[
+                      {
+                         "name":"name",
+                         "type":"string"
+                      }
+                   ]
+                }
+                JSON,
+            false
+        );
+
+        $record_examples[] = new SchemaExample(
+            <<<JSON
+                {
+                   "type":"record",
+                   "name":"foo",
+                   "doc":"doc string",
+                   "fields":[
+                      {
+                         "name":"bar",
+                         "type":"int",
+                         "order":"ascending",
+                         "default":1
+                      }
+                   ]
+                }
+                JSON,
             true,
             '{"type":"record","name":"foo","doc":"doc string","fields":[{"name":"bar","type":"int","default":1,"order":"ascending"}]}'
         );
-        $record_examples[] = new SchemaExample('
-    {"type":"record", "name":"foo", "doc":"doc string",
-     "fields":[{"name":"bar", "type":"int", "order":"bad"}]}
-', false);
+
+        $record_examples[] = new SchemaExample(
+            <<<JSON
+                {
+                   "type":"record",
+                   "name":"foo",
+                   "doc":"doc string",
+                   "fields":[
+                      {
+                         "name":"bar",
+                         "type":"int",
+                         "order":"bad"
+                      }
+                   ]
+                }
+                JSON,
+            false
+        );
+
         $record_examples[] = new SchemaExample(
             '{"type":"record", "name":"Record2", "aliases":["Record1"]}',
             false
@@ -775,15 +1471,9 @@ class SchemaTest extends TestCase
             $union_examples,
             $record_examples
         );
-        self::$valid_examples = [];
-        foreach (self::$examples as $example) {
-            if ($example->is_valid) {
-                self::$valid_examples[] = $example;
-            }
-        }
     }
 
-    protected static function make_primitive_examples()
+    protected static function makePrimitiveExamples(): array
     {
         $examples = [];
         foreach ([

@@ -18,10 +18,15 @@
  * limitations under the License.
  */
 
+declare(strict_types=1);
+
 namespace Apache\Avro\Schema;
 
 /**
  * Field of an {@link AvroRecordSchema}
+ *
+ * @phpstan-import-type AvroSchemaDefinitionArray from AvroSchema
+ * @phpstan-import-type AvroAliases from AvroAliasedSchema
  */
 class AvroField extends AvroSchema implements AvroAliasedSchema
 {
@@ -56,7 +61,7 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
     public const IGNORE_SORT_ORDER = 'ignore';
 
     /**
-     * @var array list of valid field sort order values
+     * @var list<string> list of valid field sort order values
      */
     private static array $validFieldSortOrders = [
         self::ASC_SORT_ORDER,
@@ -64,7 +69,7 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
         self::IGNORE_SORT_ORDER,
     ];
 
-    private ?string $name;
+    private string $name;
 
     private bool $isTypeFromSchemata;
 
@@ -74,32 +79,32 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
     private bool $hasDefault;
 
     /**
-     * @var string field default value
+     * @var mixed field default value
      */
     private mixed $default;
     /**
      * @var null|string sort order of this field
      */
     private ?string $order;
+
+    /** @var null|AvroAliases */
     private ?array $aliases;
+    private ?string $doc;
 
     /**
-     * @throws AvroSchemaParseException
+     * @param array<string> $aliases
      * @todo Check validity of $default value
      */
-    public function __construct(
-        ?string $name,
+    private function __construct(
+        string $name,
         string|AvroSchema $schema,
         bool $isTypeFromSchemata,
         bool $hasDefault,
         mixed $default,
         ?string $order = null,
-        mixed $aliases = null
+        ?array $aliases = null,
+        ?string $doc = null
     ) {
-        if (!AvroName::isWellFormedName($name)) {
-            throw new AvroSchemaParseException('Field requires a "name" attribute');
-        }
-
         parent::__construct($schema);
         $this->name = $name;
         $this->isTypeFromSchemata = $isTypeFromSchemata;
@@ -107,12 +112,69 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
         if ($this->hasDefault) {
             $this->default = $default;
         }
-        self::checkOrderValue($order);
         $this->order = $order;
-        self::hasValidAliases($aliases);
         $this->aliases = $aliases;
+
+        $this->doc = $doc;
     }
 
+    /**
+     * @param AvroSchemaDefinitionArray $avro
+     * @throws AvroSchemaParseException
+     */
+    public static function fromFieldDefinition(array $avro, ?string $defaultNamespace, AvroNamedSchemata $schemata): self
+    {
+        $name = $avro[self::FIELD_NAME_ATTR] ?? null;
+        $type = $avro[AvroSchema::TYPE_ATTR] ?? null;
+        $order = $avro[self::ORDER_ATTR] ?? null;
+        $aliases = $avro[AvroSchema::ALIASES_ATTR] ?? null;
+        $doc = $avro[AvroSchema::DOC_ATTR] ?? null;
+
+        if (!AvroName::isWellFormedName($name)) {
+            throw new AvroSchemaParseException('Field requires a "name" attribute');
+        }
+
+        self::checkOrderValue($order);
+        self::hasValidAliases($aliases);
+        self::hasValidDoc($doc);
+
+        $default = null;
+        $hasDefault = false;
+        if (array_key_exists(self::DEFAULT_ATTR, $avro)) {
+            $default = $avro[self::DEFAULT_ATTR];
+            $hasDefault = true;
+        }
+
+        $isSchemaFromSchemata = false;
+        $fieldAvroSchema = null;
+        if (
+            is_string($type)
+            && $fieldAvroSchema = $schemata->schemaByName(
+                new AvroName($type, null, $defaultNamespace)
+            )
+        ) {
+            $isSchemaFromSchemata = true;
+        } elseif (is_string($type) && self::isPrimitiveType($type)) {
+            $fieldAvroSchema = self::subparse($avro, $defaultNamespace, $schemata);
+        } else {
+            $fieldAvroSchema = self::subparse($type, $defaultNamespace, $schemata);
+        }
+
+        return new self(
+            name: $name,
+            schema: $fieldAvroSchema,
+            isTypeFromSchemata: $isSchemaFromSchemata,
+            hasDefault: $hasDefault,
+            default: $default,
+            order: $order,
+            aliases: $aliases,
+            doc: $doc
+        );
+    }
+
+    /**
+     * @return AvroSchemaDefinitionArray|string the Avro representation of this field
+     */
     public function toAvro(): string|array
     {
         $avro = [self::FIELD_NAME_ATTR => $this->name];
@@ -131,41 +193,62 @@ class AvroField extends AvroSchema implements AvroAliasedSchema
             $avro[self::ORDER_ATTR] = $this->order;
         }
 
+        if (!is_null($this->aliases)) {
+            $avro[AvroSchema::ALIASES_ATTR] = $this->aliases;
+        }
+
+        if (!is_null($this->doc)) {
+            $avro[AvroSchema::DOC_ATTR] = $this->doc;
+        }
+
         return $avro;
     }
 
     /**
-     * @returns string the name of this field
+     * @return string the name of this field
      */
-    public function name()
+    public function name(): string
     {
         return $this->name;
     }
 
     /**
-     * @returns mixed the default value of this field
+     * @return mixed the default value of this field
      */
-    public function defaultValue()
+    public function defaultValue(): mixed
     {
         return $this->default;
     }
 
     /**
-     * @returns boolean true if the field has a default and false otherwise
+     * @return bool true if the field has a default and false otherwise
      */
-    public function hasDefaultValue()
+    public function hasDefaultValue(): bool
     {
         return $this->hasDefault;
     }
 
+    /**
+     * @return null|AvroAliases
+     */
     public function getAliases(): ?array
     {
         return $this->aliases;
     }
 
-    public function hasAliases()
+    public function hasAliases(): bool
     {
         return null !== $this->aliases;
+    }
+
+    public function getDoc(): ?string
+    {
+        return $this->doc;
+    }
+
+    public function hasDoc(): bool
+    {
+        return null !== $this->doc;
     }
 
     /**

@@ -20,6 +20,9 @@
 
 namespace Apache\Avro\Schema;
 
+/**
+ * @phpstan-import-type AvroAliases from AvroAliasedSchema
+ */
 class AvroRecordSchema extends AvroNamedSchema
 {
     /**
@@ -33,12 +36,17 @@ class AvroRecordSchema extends AvroNamedSchema
      */
     private ?array $fieldsHash = null;
 
+    /**
+     * @param null|array<string, mixed> $fields
+     * @param null|AvroAliases $aliases
+     * @throws AvroSchemaParseException
+     */
     public function __construct(
         AvroName $name,
         ?string $doc,
         ?array $fields,
-        ?AvroNamedSchemata &$schemata = null,
-        string $schema_type = AvroSchema::RECORD_SCHEMA,
+        AvroNamedSchemata $schemata,
+        string $schemaType = AvroSchema::RECORD_SCHEMA,
         ?array $aliases = null
     ) {
         if (is_null($fields)) {
@@ -47,104 +55,77 @@ class AvroRecordSchema extends AvroNamedSchema
             );
         }
 
-        if (AvroSchema::REQUEST_SCHEMA === $schema_type) {
-            parent::__construct($schema_type, $name);
+        if (AvroSchema::REQUEST_SCHEMA === $schemaType) {
+            parent::__construct($schemaType, $name);
         } else {
-            parent::__construct($schema_type, $name, $doc, $schemata, $aliases);
+            parent::__construct($schemaType, $name, $doc, $schemata, $aliases);
         }
 
-        [$x, $namespace] = $name->nameAndNamespace();
+        [, $namespace] = $name->nameAndNamespace();
         $this->fields = self::parseFields($fields, $namespace, $schemata);
     }
 
     /**
-     * @param null|string $default_namespace namespace of enclosing schema
+     * @param array<string, mixed> $fieldsDefinitions
+     * @param null|string $defaultNamespace namespace of enclosing schema
      * @throws AvroSchemaParseException
+     * @return array<int, AvroField>
      */
     public static function parseFields(
-        array $field_data,
-        ?string $default_namespace,
-        ?AvroNamedSchemata $schemata = null
+        array $fieldsDefinitions,
+        ?string $defaultNamespace,
+        AvroNamedSchemata $schemata
     ): array {
         $fields = [];
-        $field_names = [];
-        $alias_names = [];
-        foreach ($field_data as $field) {
-            $name = $field[AvroField::FIELD_NAME_ATTR] ?? null;
-            $type = $field[AvroSchema::TYPE_ATTR] ?? null;
-            $order = $field[AvroField::ORDER_ATTR] ?? null;
-            $aliases = $field[AvroSchema::ALIASES_ATTR] ?? null;
+        $fieldNames = [];
+        $aliasNames = [];
+        foreach ($fieldsDefinitions as $fieldDefinition) {
+            $name = $fieldDefinition[AvroField::FIELD_NAME_ATTR] ?? null;
 
-            $default = null;
-            $has_default = false;
-            if (array_key_exists(AvroField::DEFAULT_ATTR, $field)) {
-                $default = $field[AvroField::DEFAULT_ATTR];
-                $has_default = true;
-            }
-
-            if (in_array($name, $field_names)) {
+            if (in_array($name, $fieldNames)) {
                 throw new AvroSchemaParseException(
                     sprintf("Field name %s is already in use", $name)
                 );
             }
 
-            $is_schema_from_schemata = false;
-            $field_schema = null;
-            if (
-                is_string($type)
-                && $field_schema = $schemata->schemaByName(
-                    new AvroName($type, null, $default_namespace)
-                )
-            ) {
-                $is_schema_from_schemata = true;
-            } elseif (is_string($type) && self::isPrimitiveType($type)) {
-                $field_schema = self::subparse($field, $default_namespace, $schemata);
-            } else {
-                $field_schema = self::subparse($type, $default_namespace, $schemata);
-            }
+            $newField = AvroField::fromFieldDefinition($fieldDefinition, $defaultNamespace, $schemata);
 
-            $new_field = new AvroField(
-                name: $name,
-                schema: $field_schema,
-                isTypeFromSchemata: $is_schema_from_schemata,
-                hasDefault: $has_default,
-                default: $default,
-                order: $order,
-                aliases: $aliases
-            );
-            $field_names[] = $name;
-            if ($new_field->hasAliases() && array_intersect($alias_names, $new_field->getAliases())) {
+            $fieldNames[] = $name;
+            if ($newField->hasAliases() && array_intersect($aliasNames, $newField->getAliases())) {
                 throw new AvroSchemaParseException("Alias already in use");
             }
-            if ($new_field->hasAliases()) {
-                array_push($alias_names, ...$new_field->getAliases());
+            if ($newField->hasAliases()) {
+                array_push($aliasNames, ...$newField->getAliases());
             }
-            $fields[] = $new_field;
+            $fields[] = $newField;
         }
 
         return $fields;
     }
 
+    /**
+     * @return array<string, mixed>|list<array<string, mixed>>|string the Avro representation of this AvroRecordSchema
+     */
     public function toAvro(): string|array
     {
         $avro = parent::toAvro();
 
-        $fields_avro = [];
+        $fieldsAvro = [];
         foreach ($this->fields as $field) {
-            $fields_avro[] = $field->toAvro();
+            $fieldsAvro[] = $field->toAvro();
         }
 
         if (AvroSchema::REQUEST_SCHEMA === $this->type) {
-            return $fields_avro;
+            return $fieldsAvro;
         }
 
-        $avro[AvroSchema::FIELDS_ATTR] = $fields_avro;
+        $avro[AvroSchema::FIELDS_ATTR] = $fieldsAvro;
 
         return $avro;
     }
 
     /**
-     * @returns array the schema definitions of the fields of this AvroRecordSchema
+     * @return array<int, AvroField> the schema definitions of the fields of this AvroRecordSchema
      */
     public function fields(): array
     {
@@ -152,7 +133,7 @@ class AvroRecordSchema extends AvroNamedSchema
     }
 
     /**
-     * @return array a hash table of the fields of this AvroRecordSchema fields
+     * @return array<string, AvroField> a hash table of the fields of this AvroRecordSchema fields
      *          keyed by each field's name
      */
     public function fieldsHash(): array
@@ -168,6 +149,9 @@ class AvroRecordSchema extends AvroNamedSchema
         return $this->fieldsHash;
     }
 
+    /**
+     * @return array<string, AvroField>
+     */
     public function fieldsByAlias(): array
     {
         $hash = [];

@@ -40,12 +40,12 @@ class AvroName implements \Stringable
     /**
      * @var string Name qualified as necessary given its default namespace.
      */
-    private string $qualified_name;
+    private string $qualifiedName;
 
     /**
      * @throws AvroSchemaParseException
      */
-    public function __construct(mixed $name, ?string $namespace, ?string $default_namespace)
+    public function __construct(mixed $name, ?string $namespace, ?string $defaultNamespace)
     {
         if (!is_string($name) || empty($name)) {
             throw new AvroSchemaParseException('Name must be a non-empty string.');
@@ -57,14 +57,14 @@ class AvroName implements \Stringable
             throw new AvroSchemaParseException(sprintf('Invalid name "%s"', $name));
         } elseif (!is_null($namespace)) {
             $this->fullname = self::parseFullname($name, $namespace);
-        } elseif (!is_null($default_namespace)) {
-            $this->fullname = self::parseFullname($name, $default_namespace);
+        } elseif (!is_null($defaultNamespace)) {
+            $this->fullname = self::parseFullname($name, $defaultNamespace);
         } else {
             $this->fullname = $name;
         }
 
         [$this->name, $this->namespace] = self::extractNamespace($this->fullname);
-        $this->qualified_name = (is_null($this->namespace) || $this->namespace === $default_namespace)
+        $this->qualifiedName = (is_null($this->namespace) || $this->namespace === $defaultNamespace)
             ? $this->name
             : $this->fullname;
     }
@@ -93,11 +93,10 @@ class AvroName implements \Stringable
     }
 
     /**
-     * @returns boolean true if the given name is well-formed
+     * @return bool true if the given name is well-formed
      *          (is a non-null, non-empty string) and false otherwise
-     * @param mixed $name
      */
-    public static function isWellFormedName($name): bool
+    public static function isWellFormedName(mixed $name): bool
     {
         return is_string($name) && !empty($name) && preg_match(self::NAME_REGEXP, $name);
     }
@@ -110,20 +109,17 @@ class AvroName implements \Stringable
         return [$this->name, $this->namespace];
     }
 
-    /**
-     * @returns string
-     */
-    public function fullname()
+    public function fullname(): string
     {
         return $this->fullname;
     }
 
     /**
-     * @returns string name qualified for its context
+     * @return string name qualified for its context
      */
-    public function qualifiedName()
+    public function qualifiedName(): string
     {
-        return $this->qualified_name;
+        return $this->qualifiedName;
     }
 
     public function namespace(): ?string
@@ -150,7 +146,6 @@ class AvroName implements \Stringable
     /**
      * @param string $name
      * @param string $namespace
-     * @returns string
      * @throws AvroSchemaParseException if any of the names are not valid.
      */
     private static function parseFullname($name, $namespace): string

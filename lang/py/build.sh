@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -15,10 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+set -eu
 
 usage() {
-  echo "Usage: $0 {clean|dist|doc|interop-data-generate|interop-data-test|lint|test}"
+  echo "Usage: $0 {clean|dist|doc|interop-data-generate|interop-data-test|lint|format|test|coverage|typechecks}"
   exit 1
 }
 
@@ -27,47 +27,65 @@ clean() {
 }
 
 dist() (
-  ##
-  # Use https://pypa-build.readthedocs.io to create the build artifacts.
-  local destination virtualenv
+  local destination
   destination=$(
     d=../../dist/py
     mkdir -p "$d"
     cd -P "$d"
     pwd
   )
-  virtualenv="$(mktemp -d)"
-  python3 -m venv "$virtualenv"
-  "$virtualenv/bin/python3" -m pip install build
-  "$virtualenv/bin/python3" -m build --outdir "$destination"
+  uv build --out-dir "${destination}"
 )
 
 doc() {
-  local doc_dir
-  local version=$(cat ../../share/VERSION.txt)
+  local doc_dir version
+  version=$(cat ../../share/VERSION.txt)
   doc_dir="../../build/avro-doc-$version/api/py"
-  _tox -e docs
+  uv run sphinx-build -b html docs/source/ docs/build/html
   mkdir -p "$doc_dir"
   cp -a docs/build/* "$doc_dir"
 }
 
 interop-data-generate() {
-  ./setup.py generate_interop_data
+  uv run ./setup.py generate_interop_data
   cp -r avro/test/interop/data ../../build/interop
 }
 
 interop-data-test() {
   mkdir -p avro/test/interop ../../build/interop/data
   cp -r ../../build/interop/data avro/test/interop
-  python3 -m unittest avro.test.test_datafile_interop
+  uv run python3 -m unittest avro.test.test_datafile_interop
 }
 
 lint() {
-  _tox -e lint
+  uvx ruff check .
+}
+
+format() {
+  uvx ruff format --diff .
 }
 
 test_() {
-  TOX_SKIP_ENV=lint _tox --skip-missing-interpreters
+  format
+  lint
+  typechecks
+  coverage
+}
+
+coverage() {
+  SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+  TEST_INTEROP_DIR=$(mktemp -d)
+  mkdir -p "${TEST_INTEROP_DIR}" "${SCRIPT_DIR}"/../../build/interop/data
+  cp -r "${SCRIPT_DIR}"/../../build/interop/data "${TEST_INTEROP_DIR}"
+  uv run coverage run -pm avro.test.gen_interop_data avro/interop.avsc "${TEST_INTEROP_DIR}"/data/py.avro
+  cp -r "${TEST_INTEROP_DIR}"/data "${SCRIPT_DIR}"/../../build/interop
+  uv run coverage run -pm unittest discover --buffer --failfast
+  uv run coverage combine --append
+  uv run coverage report
+}
+
+typechecks() {
+  uv run mypy avro/
 }
 
 main() {
@@ -80,22 +98,13 @@ main() {
       interop-data-generate) interop-data-generate;;
       interop-data-test) interop-data-test;;
       lint) lint;;
+      format) format;;
       test) test_;;
+      coverage) coverage ;;
+      typechecks) typechecks ;;
       *) usage;;
     esac
   done
-}
-
-_tox() {
-  if command -v tox 2> /dev/null; then
-    tox "$@"
-  else
-    echo 'Your experience will improve if you install tox'
-    virtualenv="$(mktemp -d)"
-    python3 -m venv "$virtualenv"
-    "$virtualenv/bin/python3" -m pip install tox
-    "$virtualenv/bin/tox" "$@"
-  fi
 }
 
 main "$@"
