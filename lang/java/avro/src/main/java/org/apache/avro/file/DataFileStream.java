@@ -118,6 +118,12 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
   /** Initialize the stream by reading from its head. */
   void initialize(InputStream in, byte[] magic) throws IOException {
+    initialize(in, magic, SchemaCache.NO_CACHE);
+  }
+
+
+  /** Initialize the stream by reading from its head. */
+  protected void initialize(InputStream in, byte[] magic, SchemaCache schemaCache) throws IOException {
     this.header = new Header();
     this.vin = DecoderFactory.get().binaryDecoder(in, vin);
     magic = (magic == null) ? readMagic() : magic;
@@ -140,8 +146,8 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
     // finalize the header
     header.metaKeyList = Collections.unmodifiableList(header.metaKeyList);
-    header.schema = new Schema.Parser(NameValidator.NO_VALIDATION).setValidateDefaults(false)
-        .parse(getMetaString(DataFileConstants.SCHEMA));
+    header.schema = schemaCache.getOrParseSchema(getMetaString(DataFileConstants.SCHEMA));
+
     this.codec = resolveCodec();
     reader.setSchema(header.schema);
   }
