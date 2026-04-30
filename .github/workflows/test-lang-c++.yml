@@ -41,7 +41,7 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install Dependencies
         run: sudo apt update && sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev libfmt-dev zlib1g-dev libzstd-dev cmake
