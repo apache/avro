@@ -17,9 +17,9 @@ name: 'Test JavaScript'
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [main, branch-1.11, branch-1.12]
   pull_request:
-    branches: [ main ]
+    branches: [main, branch-1.11, branch-1.12]
     paths:
     - .github/workflows/test-lang-js.yml
     - lang/js/**
