@@ -18,6 +18,7 @@
 
 package org.apache.avro;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -58,6 +59,20 @@ public class SystemLimitException extends AvroRuntimeException {
   private static int maxCollectionLength = MAX_ARRAY_VM_LIMIT;
   private static int maxStringLength = MAX_ARRAY_VM_LIMIT;
 
+  /**
+   * System property declaring max size of any decompression stream: {@value}.
+   */
+  public static final String MAX_DECOMPRESS_LENGTH_PROPERTY = "org.apache.avro.limits.decompress.maxLength";
+
+  /**
+   * Default limit: {@value}.
+   */
+  private static final long DEFAULT_MAX_DECOMPRESS_LENGTH = 200L * 1024 * 1024;
+  private static final Logger LOG = LoggerFactory.getLogger(SystemLimitException.class);
+
+  public static final long MAX_DECOMPRESS_LENGTH = getLongLimitFromProperty(MAX_DECOMPRESS_LENGTH_PROPERTY,
+      DEFAULT_MAX_DECOMPRESS_LENGTH);
+
   static {
     resetLimits();
   }
@@ -87,6 +102,35 @@ public class SystemLimitException extends AvroRuntimeException {
       }
     }
     return i;
+  }
+
+  /**
+   * Get a long value stored in a system property, used to configure the system
+   * behaviour of output.
+   *
+   * @param property     The system property to fetch
+   * @param defaultValue The value to use if the system property is not present or
+   *                     parsable as an int
+   * @return The value from the system property
+   */
+  private static long getLongLimitFromProperty(String property, long defaultValue) {
+    String prop = System.getProperty(MAX_DECOMPRESS_LENGTH_PROPERTY);
+    long limit = DEFAULT_MAX_DECOMPRESS_LENGTH;
+    if (prop != null) {
+      try {
+        long parsed = Long.parseLong(prop);
+        if (parsed <= 0) {
+          LOG.warn("Invalid value '{}' for property '{}': must be positive. Using default: {}", prop,
+              MAX_DECOMPRESS_LENGTH_PROPERTY, DEFAULT_MAX_DECOMPRESS_LENGTH);
+        } else {
+          limit = parsed;
+        }
+      } catch (NumberFormatException e) {
+        LOG.warn("Could not parse property '{}' value '{}'. Using default: {}", MAX_DECOMPRESS_LENGTH_PROPERTY, prop,
+            DEFAULT_MAX_DECOMPRESS_LENGTH);
+      }
+    }
+    return limit;
   }
 
   /**
