@@ -324,9 +324,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    */
   private long arrayNext(ResolvingDecoder in, Schema elementType) throws IOException {
     long l = in.arrayNext();
-    if (l > 0) {
-      ensureAvailableCollectionBytes(in, l, elementType);
-    }
+    ensureAvailableCollectionBytes(in, l, elementType);
     return l;
   }
 
@@ -365,9 +363,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     long l = in.readMapStart();
     LogicalType logicalType = eValue.getLogicalType();
     Conversion<?> conversion = getData().getConversionFor(logicalType);
-    if (l > 0) {
-      ensureAvailableMapBytes(in, l, eValue);
-    }
+    ensureAvailableMapBytes(in, l, eValue);
     Object map = newMap(old, (int) l);
     if (l > 0) {
       do {
@@ -392,9 +388,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    */
   private long mapNext(ResolvingDecoder in, Schema valueType) throws IOException {
     long l = in.mapNext();
-    if (l > 0) {
-      ensureAvailableMapBytes(in, l, valueType);
-    }
+    ensureAvailableMapBytes(in, l, valueType);
     return l;
   }
 
@@ -404,14 +398,15 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * per entry is {@code 1 + minBytesPerElement(valueSchema)}.
    */
   private static void ensureAvailableMapBytes(Decoder decoder, long count, Schema valueSchema) throws EOFException {
+    if (count <= 0) {
+      return;
+    }
     // Map keys are always strings: at least 1 byte for the length varint
-    int minBytesPerEntry = 1 + minBytesPerElement(valueSchema);
-    if (count > 0) {
-      int remaining = decoder.remainingBytes();
-      if (remaining >= 0 && count * (long) minBytesPerEntry > remaining) {
-        throw new EOFException("Map claims " + count + " entries with at least " + minBytesPerEntry
-            + " bytes each, but only " + remaining + " bytes are available");
-      }
+    long minBytesPerEntry = 1L + minBytesPerElement(valueSchema);
+    int remaining = decoder.remainingBytes();
+    if (remaining >= 0 && count * minBytesPerEntry > remaining) {
+      throw new EOFException("Map claims " + count + " entries with at least " + minBytesPerEntry
+          + " bytes each, but only " + remaining + " bytes are available");
     }
   }
 
@@ -490,8 +485,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    */
   private static void ensureAvailableCollectionBytes(Decoder decoder, long count, Schema elementSchema)
       throws EOFException {
+    if (count <= 0) {
+      return;
+    }
     int minBytes = minBytesPerElement(elementSchema);
-    if (minBytes > 0 && count > 0) {
+    if (minBytes > 0) {
       int remaining = decoder.remainingBytes();
       if (remaining >= 0 && count * (long) minBytes > remaining) {
         throw new EOFException("Collection claims " + count + " elements with at least " + minBytes

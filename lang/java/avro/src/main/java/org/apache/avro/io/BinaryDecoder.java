@@ -961,7 +961,8 @@ public class BinaryDecoder extends Decoder {
       int buffered = ba.getLim() - ba.getPos();
       try {
         if (in.getClass() == ByteArrayInputStream.class || in.getClass() == ByteBufferInputStream.class) {
-          return buffered + in.available();
+          long total = (long) buffered + in.available();
+          return (int) Math.min(total, Integer.MAX_VALUE);
         }
       } catch (IOException e) {
         return -1;
