@@ -52,7 +52,7 @@ public class NonCopyingByteArrayOutputStreamTest {
    */
   @Test
   public void testLimitedWrite() throws IOException {
-    NonCopyingByteArrayOutputStream out = new NonCopyingByteArrayOutputStream(1, 4);
+    NonCopyingByteArrayOutputStream out = NonCopyingByteArrayOutputStream.restrictedCapacityOutputStream(1, 4);
     out.write('a');
     // it's impossible to go over the limit in a write(bytes) call.
     final byte[] b = "longstring".getBytes();
@@ -69,5 +69,12 @@ public class NonCopyingByteArrayOutputStreamTest {
     for (byte value : "aloz".getBytes()) {
       assertEquals(value, buffer.get());
     }
+  }
+
+  @Test
+  public void testInnerLimitCheck() throws Throwable {
+    assertThrows(SystemLimitException.class, () ->
+        SystemLimitException.checkMaxDecompressCapacity(256L, 0, 100_000));
+    SystemLimitException.checkMaxDecompressCapacity(256L, 0, 256);
   }
 }

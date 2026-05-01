@@ -25,6 +25,8 @@ import org.apache.avro.util.NonCopyingByteArrayOutputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 
+import static org.apache.avro.util.NonCopyingByteArrayOutputStream.restrictedCapacityOutputStream;
+
 /** * Implements bzip2 compression and decompression. */
 public class BZip2Codec extends Codec {
 
@@ -45,7 +47,7 @@ public class BZip2Codec extends Codec {
 
   @Override
   public ByteBuffer compress(ByteBuffer uncompressedData) throws IOException {
-    NonCopyingByteArrayOutputStream baos = new NonCopyingByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
+    NonCopyingByteArrayOutputStream baos = restrictedCapacityOutputStream(DEFAULT_BUFFER_SIZE);
 
     try (BZip2CompressorOutputStream outputStream = new BZip2CompressorOutputStream(baos)) {
       outputStream.write(uncompressedData.array(), computeOffset(uncompressedData), uncompressedData.remaining());
@@ -60,7 +62,7 @@ public class BZip2Codec extends Codec {
         compressedData.remaining());
 
     @SuppressWarnings("resource")
-    NonCopyingByteArrayOutputStream baos = new NonCopyingByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
+    NonCopyingByteArrayOutputStream baos = restrictedCapacityOutputStream(DEFAULT_BUFFER_SIZE);
 
     try (BZip2CompressorInputStream inputStream = new BZip2CompressorInputStream(bais)) {
 

@@ -253,6 +253,21 @@ public class SystemLimitException extends AvroRuntimeException {
     return (int) length;
   }
 
+  /**
+   * Check there is capacity to write data to a stream.
+   * 
+   * @param limit        total capacity limit
+   * @param streamLength current stream size
+   * @param bytes        bytes to add to the stream
+   * @throws SystemLimitException if the limit is exceeded.
+   */
+  public static void checkMaxDecompressCapacity(long limit, long streamLength, int bytes) {
+    if (streamLength + bytes > limit) {
+      throw new SystemLimitException(
+          String.format("Buffer size %,d (bytes) exceeds maximum allowed size %,d.", (streamLength + bytes), limit));
+    }
+  }
+
   /** Reread the limits from the system properties. */
   // VisibleForTesting
   static void resetLimits() {
