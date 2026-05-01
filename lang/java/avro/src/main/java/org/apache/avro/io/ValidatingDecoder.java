@@ -246,4 +246,9 @@ public class ValidatingDecoder extends ParsingDecoder implements Parser.ActionHa
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
     return null;
   }
+
+  @Override
+  public int remainingBytes() {
+    return in != null ? in.remainingBytes() : -1;
+  }
 }
