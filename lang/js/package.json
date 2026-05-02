@@ -41,19 +41,23 @@
     "interop-data-generate": "node test/interop_data_generate.js",
     "interop-data-test": "mocha test/interop_data_test.js"
   },
-  "dependencies": {
-    "underscore": "^1.13.2"
-  },
+  "dependencies": {},
   "devDependencies": {
     "nyc": "^18.0.0",
-    "coveralls": "^3.1.1",
     "jshint": "^2.13.4",
     "mocha": "11.7.5",
     "tmp": "^0.2.1"
   },
+  "overrides": {
+    "diff": "8.0.4",
+    "serialize-javascript": "7.0.5",
+    "lodash": "4.18.1",
+    "minimatch": "^9.0.0",
+    "uuid": "14.0.0"
+  },
   "noAnalyze": true,
   "license": "Apache-2.0",
   "engine": {
-    "node": ">=0.11"
+    "node": ">=20"
   }
 }
