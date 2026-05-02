@@ -19,12 +19,12 @@ package org.apache.avro.file;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.InvalidAvroMagicException;
-import org.apache.avro.NameValidator;
 import org.apache.avro.Schema;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.file.SchemaCache.WeakSchemaCache;
 
 import java.io.Closeable;
 import java.io.EOFException;
@@ -48,6 +48,21 @@ import java.util.NoSuchElementException;
  * @see DataFileWriter
  */
 public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
+
+  private final static SchemaCache SCHEMA_CACHE;
+  static {
+    String cacheType = System.getProperty("avro.schema.cache", "none").toLowerCase();
+    switch (cacheType) {
+    case "none":
+      SCHEMA_CACHE = SchemaCache.NO_CACHE;
+      break;
+    case "weak":
+      SCHEMA_CACHE = WeakSchemaCache.INSTANCE;
+      break;
+    default:
+      throw new IllegalArgumentException("Unknown schema cache type: " + cacheType);
+    }
+  }
 
   /**
    * A handle that can be used to reopen a DataFile without re-reading the header
@@ -118,9 +133,8 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
   /** Initialize the stream by reading from its head. */
   void initialize(InputStream in, byte[] magic) throws IOException {
-    initialize(in, magic, SchemaCache.NO_CACHE);
+    initialize(in, magic, SCHEMA_CACHE);
   }
-
 
   /** Initialize the stream by reading from its head. */
   protected void initialize(InputStream in, byte[] magic, SchemaCache schemaCache) throws IOException {
