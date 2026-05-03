@@ -212,8 +212,9 @@ public class IdlReader {
     parser.setTrace(false);
 
     // Parse the input, then walk the parse tree using the listener.
-    // Although the parse can call the listener directly, there are edge cases where the enter and exit rules are not
-    // called in pairs. This a known issue and currently by design. See: https://github.com/antlr/antlr4/issues/18
+    // Although the parse can call the listener directly, there are edge cases where
+    // the enter and exit rules are not called in pairs. This a known issue and
+    // currently by design. See: https://github.com/antlr/antlr4/issues/18
     try {
       IdlFileContext idlFileContext = parser.idlFile();
       ParseTreeWalker.DEFAULT.walk(parseListener, idlFileContext);
