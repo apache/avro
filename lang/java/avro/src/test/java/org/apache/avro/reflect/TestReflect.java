@@ -55,8 +55,6 @@ import org.apache.avro.reflect.TestReflect.SampleRecord.AnotherSampleRecord;
 import org.apache.avro.util.Utf8;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 
 public class TestReflect {
 
@@ -1211,30 +1209,11 @@ public class TestReflect {
 
   /** Test that the error message contains the name of the class. */
   @Test
-  @EnabledForJreRange(min = JRE.JAVA_8, max = JRE.JAVA_11, disabledReason = "Java 11 announced: All illegal access operations will be denied in a future release")
-  // Java 11:
-  // - WARNING: An illegal reflective access operation has occurred
-  // - WARNING: Illegal reflective access by
-  // org.apache.avro.reflect.FieldAccessReflect$ReflectionBasedAccessor to field
-  // java.lang.String.coder
-  // - WARNING: Please consider reporting this to the maintainers of
-  // org.apache.avro.reflect.FieldAccessReflect$ReflectionBasedAccessor
-  // - WARNING: Use --illegal-access=warn to enable warnings of further illegal
-  // reflective access operations
-  // - WARNING: All illegal access operations will be denied in a future release
-  // Java 17:
-  // - [ERROR] org.apache.avro.reflect.TestReflect.reflectFieldError -- Time
-  // elapsed: 0.015 s <<< ERROR!
-  // - java.lang.reflect.InaccessibleObjectException: Unable to make field private
-  // final byte java.lang.String.coder accessible: module java.base does not
-  // "opens java.lang" to unnamed module @5a6d67c3
   void reflectFieldError() throws Exception {
     Object datum = "";
-    try {
+    assertThrows(java.lang.reflect.InaccessibleObjectException.class, () -> {
       ReflectData.get().getField(datum, "notAFieldOfString", 0);
-    } catch (AvroRuntimeException e) {
-      assertTrue(e.getMessage().contains(datum.getClass().getName()));
-    }
+    });
   }
 
   @AvroAlias(alias = "a", space = "b")
