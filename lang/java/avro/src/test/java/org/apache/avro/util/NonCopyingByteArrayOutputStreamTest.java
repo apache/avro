@@ -73,8 +73,7 @@ public class NonCopyingByteArrayOutputStreamTest {
 
   @Test
   public void testInnerLimitCheck() throws Throwable {
-    assertThrows(SystemLimitException.class, () ->
-        SystemLimitException.checkMaxDecompressCapacity(256L, 0, 100_000));
+    assertThrows(SystemLimitException.class, () -> SystemLimitException.checkMaxDecompressCapacity(256L, 0, 100_000));
     SystemLimitException.checkMaxDecompressCapacity(256L, 0, 256);
   }
 }
