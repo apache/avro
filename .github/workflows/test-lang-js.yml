@@ -41,7 +41,6 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
         node:
-          - 20
           - 22
           - 24
     steps:
@@ -72,7 +71,6 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
         node:
-          - 20
           - 22
           - 24
     steps:
