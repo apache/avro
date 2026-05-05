@@ -59,6 +59,8 @@ public class SystemLimitException extends AvroRuntimeException {
   private static int maxCollectionLength = MAX_ARRAY_VM_LIMIT;
   private static int maxStringLength = MAX_ARRAY_VM_LIMIT;
 
+  private static final Logger LOG = LoggerFactory.getLogger(SystemLimitException.class);
+
   /**
    * System property declaring max size of any decompression stream: {@value}.
    */
@@ -68,8 +70,10 @@ public class SystemLimitException extends AvroRuntimeException {
    * Default limit: {@value}.
    */
   private static final long DEFAULT_MAX_DECOMPRESS_LENGTH = 200L * 1024 * 1024;
-  private static final Logger LOG = LoggerFactory.getLogger(SystemLimitException.class);
 
+  /**
+   * Calculated max decompress length.
+   */
   public static final long MAX_DECOMPRESS_LENGTH = getLongLimitFromProperty(MAX_DECOMPRESS_LENGTH_PROPERTY,
       DEFAULT_MAX_DECOMPRESS_LENGTH);
 
@@ -114,20 +118,19 @@ public class SystemLimitException extends AvroRuntimeException {
    * @return The value from the system property
    */
   private static long getLongLimitFromProperty(String property, long defaultValue) {
-    String prop = System.getProperty(MAX_DECOMPRESS_LENGTH_PROPERTY);
-    long limit = DEFAULT_MAX_DECOMPRESS_LENGTH;
+    String prop = System.getProperty(property);
+    long limit = defaultValue;
     if (prop != null) {
       try {
         long parsed = Long.parseLong(prop);
         if (parsed <= 0) {
-          LOG.warn("Invalid value '{}' for property '{}': must be positive. Using default: {}", prop,
-              MAX_DECOMPRESS_LENGTH_PROPERTY, DEFAULT_MAX_DECOMPRESS_LENGTH);
+          LOG.warn("Invalid value '{}' for property '{}': must be positive. Using default: {}", prop, property,
+              defaultValue);
         } else {
           limit = parsed;
         }
       } catch (NumberFormatException e) {
-        LOG.warn("Could not parse property '{}' value '{}'. Using default: {}", MAX_DECOMPRESS_LENGTH_PROPERTY, prop,
-            DEFAULT_MAX_DECOMPRESS_LENGTH);
+        LOG.warn("Could not parse property '{}' value '{}'. Using default: {}", property, prop, defaultValue);
       }
     }
     return limit;
@@ -255,7 +258,7 @@ public class SystemLimitException extends AvroRuntimeException {
 
   /**
    * Check there is capacity to write data to a stream.
-   * 
+   *
    * @param limit        total capacity limit
    * @param streamLength current stream size
    * @param bytes        bytes to add to the stream
