@@ -27,7 +27,7 @@ import java.util.zip.InflaterOutputStream;
 
 import org.apache.avro.util.NonCopyingByteArrayOutputStream;
 
-import static org.apache.avro.util.NonCopyingByteArrayOutputStream.restrictedCapacityOutputStream;
+import static org.apache.avro.util.NonCopyingByteArrayOutputStream.capacityLimitedOutputStream;
 
 /**
  * Implements DEFLATE (RFC1951) compression and decompression.
@@ -71,7 +71,7 @@ public class DeflateCodec extends Codec {
 
   @Override
   public ByteBuffer compress(ByteBuffer data) throws IOException {
-    NonCopyingByteArrayOutputStream baos = restrictedCapacityOutputStream(DEFAULT_BUFFER_SIZE);
+    NonCopyingByteArrayOutputStream baos = capacityLimitedOutputStream(DEFAULT_BUFFER_SIZE);
     try (OutputStream outputStream = new DeflaterOutputStream(baos, getDeflater())) {
       outputStream.write(data.array(), computeOffset(data), data.remaining());
     }
@@ -80,7 +80,7 @@ public class DeflateCodec extends Codec {
 
   @Override
   public ByteBuffer decompress(ByteBuffer data) throws IOException {
-    NonCopyingByteArrayOutputStream baos = restrictedCapacityOutputStream(DEFAULT_BUFFER_SIZE);
+    NonCopyingByteArrayOutputStream baos = capacityLimitedOutputStream(DEFAULT_BUFFER_SIZE);
     try (OutputStream outputStream = new InflaterOutputStream(baos, getInflater())) {
       outputStream.write(data.array(), computeOffset(data), data.remaining());
     }

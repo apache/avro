@@ -110,7 +110,7 @@ public class NonCopyingByteArrayOutputStream extends ByteArrayOutputStream {
    * @param size buffer capacity
    * @return the output stream
    */
-  public static NonCopyingByteArrayOutputStream restrictedCapacityOutputStream(final int size) {
+  public static NonCopyingByteArrayOutputStream capacityLimitedOutputStream(final int size) {
     final long limit = SystemLimitException.MAX_DECOMPRESS_LENGTH;
     return new NonCopyingByteArrayOutputStream((int) Math.min(size, limit), limit);
   }
@@ -123,7 +123,7 @@ public class NonCopyingByteArrayOutputStream extends ByteArrayOutputStream {
    * @param limit max size of output buffer
    * @return the output stream
    */
-  public static NonCopyingByteArrayOutputStream restrictedCapacityOutputStream(final int size, long limit) {
+  public static NonCopyingByteArrayOutputStream capacityLimitedOutputStream(final int size, long limit) {
     return new NonCopyingByteArrayOutputStream(size, limit);
   }
 

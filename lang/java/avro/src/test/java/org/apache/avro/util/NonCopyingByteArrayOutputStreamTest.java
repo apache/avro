@@ -52,7 +52,7 @@ public class NonCopyingByteArrayOutputStreamTest {
    */
   @Test
   public void testLimitedWrite() throws IOException {
-    NonCopyingByteArrayOutputStream out = NonCopyingByteArrayOutputStream.restrictedCapacityOutputStream(1, 4);
+    NonCopyingByteArrayOutputStream out = NonCopyingByteArrayOutputStream.capacityLimitedOutputStream(1, 4);
     out.write('a');
     // it's impossible to go over the limit in a write(bytes) call.
     final byte[] b = "longstring".getBytes();
