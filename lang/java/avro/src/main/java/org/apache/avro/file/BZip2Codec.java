@@ -47,7 +47,7 @@ public class BZip2Codec extends Codec {
 
   @Override
   public ByteBuffer compress(ByteBuffer uncompressedData) throws IOException {
-    NonCopyingByteArrayOutputStream baos = capacityLimitedOutputStream(DEFAULT_BUFFER_SIZE);
+    NonCopyingByteArrayOutputStream baos = new NonCopyingByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
 
     try (BZip2CompressorOutputStream outputStream = new BZip2CompressorOutputStream(baos)) {
       outputStream.write(uncompressedData.array(), computeOffset(uncompressedData), uncompressedData.remaining());

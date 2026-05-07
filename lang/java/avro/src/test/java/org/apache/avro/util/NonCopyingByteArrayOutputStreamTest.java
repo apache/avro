@@ -72,6 +72,20 @@ public class NonCopyingByteArrayOutputStreamTest {
   }
 
   @Test
+  public void testLimitedWriteBytes() {
+    NonCopyingByteArrayOutputStream out = NonCopyingByteArrayOutputStream.capacityLimitedOutputStream(1, 4);
+    out.writeBytes("abcd".getBytes());
+    assertThrows(SystemLimitException.class, () -> out.writeBytes("e".getBytes()));
+  }
+
+  @Test
+  public void testInitialCapacityIsClampedToLimit() throws IOException {
+    NonCopyingByteArrayOutputStream out = NonCopyingByteArrayOutputStream.capacityLimitedOutputStream(1024, 4);
+    out.write("abcd".getBytes());
+    assertThrows(SystemLimitException.class, () -> out.write('e'));
+  }
+
+  @Test
   public void testInnerLimitCheck() throws Throwable {
     assertThrows(SystemLimitException.class, () -> SystemLimitException.checkMaxDecompressCapacity(256L, 0, 100_000));
     SystemLimitException.checkMaxDecompressCapacity(256L, 0, 256);

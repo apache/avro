@@ -67,15 +67,21 @@ public class SystemLimitException extends AvroRuntimeException {
   public static final String MAX_DECOMPRESS_LENGTH_PROPERTY = "org.apache.avro.limits.decompress.maxLength";
 
   /**
-   * Default limit: {@value}.
+   * Default limit when it is lower than the heap-aware limit: {@value}.
    */
   private static final long DEFAULT_MAX_DECOMPRESS_LENGTH = 200L * 1024 * 1024;
+
+  /**
+   * Keep the default decompression limit below the maximum heap to avoid allowing
+   * a single block to exhaust constrained JVMs: {@value}.
+   */
+  private static final long DEFAULT_MAX_DECOMPRESS_HEAP_FRACTION = 4;
 
   /**
    * Calculated max decompress length.
    */
   public static final long MAX_DECOMPRESS_LENGTH = getLongLimitFromProperty(MAX_DECOMPRESS_LENGTH_PROPERTY,
-      DEFAULT_MAX_DECOMPRESS_LENGTH);
+      defaultMaxDecompressLength());
 
   static {
     resetLimits();
@@ -114,7 +120,7 @@ public class SystemLimitException extends AvroRuntimeException {
    *
    * @param property     The system property to fetch
    * @param defaultValue The value to use if the system property is not present or
-   *                     parsable as an int
+   *                     parsable as a long
    * @return The value from the system property
    */
   private static long getLongLimitFromProperty(String property, long defaultValue) {
@@ -134,6 +140,16 @@ public class SystemLimitException extends AvroRuntimeException {
       }
     }
     return limit;
+  }
+
+  /**
+   * Calculate a max decompression length as a fraction of
+   * the maximum memory of the runtime.
+   * @return the calculated max default decompression length.
+   */
+  private static long defaultMaxDecompressLength() {
+    return Math.min(DEFAULT_MAX_DECOMPRESS_LENGTH,
+        Math.max(1L, Runtime.getRuntime().maxMemory() / DEFAULT_MAX_DECOMPRESS_HEAP_FRACTION));
   }
 
   /**

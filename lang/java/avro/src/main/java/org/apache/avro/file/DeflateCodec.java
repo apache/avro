@@ -71,7 +71,7 @@ public class DeflateCodec extends Codec {
 
   @Override
   public ByteBuffer compress(ByteBuffer data) throws IOException {
-    NonCopyingByteArrayOutputStream baos = capacityLimitedOutputStream(DEFAULT_BUFFER_SIZE);
+    NonCopyingByteArrayOutputStream baos = new NonCopyingByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
     try (OutputStream outputStream = new DeflaterOutputStream(baos, getDeflater())) {
       outputStream.write(data.array(), computeOffset(data), data.remaining());
     }

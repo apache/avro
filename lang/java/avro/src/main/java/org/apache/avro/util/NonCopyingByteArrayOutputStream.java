@@ -20,6 +20,7 @@ package org.apache.avro.util;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 import org.apache.avro.SystemLimitException;
 
@@ -91,12 +92,15 @@ public class NonCopyingByteArrayOutputStream extends ByteArrayOutputStream {
 
   @Override
   public synchronized void write(final byte[] b, final int off, final int len) {
+    Objects.requireNonNull(b);
+    Objects.checkFromIndexSize(off, len, b.length);
     checkCapacity(len);
     super.write(b, off, len);
   }
 
   @Override
   public void writeBytes(final byte[] b) {
+    Objects.requireNonNull(b);
     checkCapacity(b.length);
     super.writeBytes(b);
   }
@@ -124,7 +128,8 @@ public class NonCopyingByteArrayOutputStream extends ByteArrayOutputStream {
    * @return the output stream
    */
   public static NonCopyingByteArrayOutputStream capacityLimitedOutputStream(final int size, long limit) {
-    return new NonCopyingByteArrayOutputStream(size, limit);
+    final int initialSize = limit > 0 ? (int) Math.min(size, limit) : size;
+    return new NonCopyingByteArrayOutputStream(initialSize, limit);
   }
 
 }

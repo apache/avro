@@ -58,8 +58,7 @@ public class XZCodec extends Codec {
 
   @Override
   public ByteBuffer compress(ByteBuffer data) throws IOException {
-    NonCopyingByteArrayOutputStream baos = NonCopyingByteArrayOutputStream
-        .capacityLimitedOutputStream(DEFAULT_BUFFER_SIZE);
+    NonCopyingByteArrayOutputStream baos = new NonCopyingByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
     try (OutputStream outputStream = new XZCompressorOutputStream(baos, compressionLevel)) {
       outputStream.write(data.array(), computeOffset(data), data.remaining());
     }
