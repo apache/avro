@@ -19,10 +19,8 @@
 package org.apache.avro.perf;
 
 import org.apache.avro.Schema;
-import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.file.SeekableByteArrayInput;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
