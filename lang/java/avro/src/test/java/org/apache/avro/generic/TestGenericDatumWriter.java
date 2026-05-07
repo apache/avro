@@ -56,7 +56,7 @@ public class TestGenericDatumWriter {
       new GenericDatumWriter<>(s).write(r, EncoderFactory.get().jsonEncoder(s, bao));
       fail();
     } catch (final UnresolvedUnionException uue) {
-      assertEquals("Not in union [\"null\",\"string\"]: 100 (field=f)", uue.getMessage());
+      assertEquals("Not in union [\"null\",\"string\"]: java.lang.Integer (field=f)", uue.getMessage());
     }
   }
 
