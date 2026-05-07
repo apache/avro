@@ -17,17 +17,14 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.stream.Stream;
+
+import static java.util.Collections.emptyList;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.EnumSymbol;
@@ -41,7 +38,6 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
@@ -120,6 +116,11 @@ public class TestReadingWritingDataInEvolvedSchemas {
   private static final Schema UNION_FLOAT_DOUBLE_RECORD = SchemaBuilder.record(RECORD_A) //
       .fields() //
       .name(FIELD_A).type().unionOf().floatType().and().doubleType().endUnion().noDefault() //
+      .endRecord();
+
+  private static final Schema UNION_WITH_EMPTY_ARRAY_DEFAULT_RECORD = SchemaBuilder.record(RECORD_A) //
+      .fields() //
+      .name(FIELD_A).type().unionOf().array().items(INT_RECORD).and().nullType().endUnion().arrayDefault(emptyList()) //
       .endRecord();
 
   enum EncoderType {
@@ -232,9 +233,9 @@ public class TestReadingWritingDataInEvolvedSchemas {
     Schema writer = UNION_INT_LONG_FLOAT_DOUBLE_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42.0);
     byte[] encoded = encodeGenericBlob(record, encoderType);
-    AvroTypeException exception = Assertions.assertThrows(AvroTypeException.class,
+    AvroTypeException exception = assertThrows(AvroTypeException.class,
         () -> decodeGenericBlob(FLOAT_RECORD, writer, encoded, encoderType));
-    Assertions.assertEquals("Found double, expecting float", exception.getMessage());
+    assertEquals("Found double, expecting float", exception.getMessage());
   }
 
   @ParameterizedTest
@@ -243,9 +244,9 @@ public class TestReadingWritingDataInEvolvedSchemas {
     Schema writer = UNION_INT_LONG_FLOAT_DOUBLE_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42.0f);
     byte[] encoded = encodeGenericBlob(record, encoderType);
-    AvroTypeException exception = Assertions.assertThrows(AvroTypeException.class,
+    AvroTypeException exception = assertThrows(AvroTypeException.class,
         () -> decodeGenericBlob(LONG_RECORD, writer, encoded, encoderType));
-    Assertions.assertEquals("Found float, expecting long", exception.getMessage());
+    assertEquals("Found float, expecting long", exception.getMessage());
   }
 
   @ParameterizedTest
@@ -254,9 +255,9 @@ public class TestReadingWritingDataInEvolvedSchemas {
     Schema writer = UNION_INT_LONG_FLOAT_DOUBLE_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42L);
     byte[] encoded = encodeGenericBlob(record, encoderType);
-    AvroTypeException exception = Assertions.assertThrows(AvroTypeException.class,
+    AvroTypeException exception = assertThrows(AvroTypeException.class,
         () -> decodeGenericBlob(INT_RECORD, writer, encoded, encoderType));
-    Assertions.assertEquals("Found long, expecting int", exception.getMessage());
+    assertEquals("Found long, expecting int", exception.getMessage());
   }
 
   @ParameterizedTest
@@ -342,9 +343,9 @@ public class TestReadingWritingDataInEvolvedSchemas {
     Record record = defaultRecordWithSchema(writer, FIELD_A, new EnumSymbol(ENUM_ABC, "C"));
     byte[] encoded = encodeGenericBlob(record, encoderType);
 
-    AvroTypeException exception = Assertions.assertThrows(AvroTypeException.class,
+    AvroTypeException exception = assertThrows(AvroTypeException.class,
         () -> decodeGenericBlob(ENUM_AB_RECORD, writer, encoded, encoderType));
-    Assertions.assertEquals("No match for C", exception.getMessage());
+    assertEquals("No match for C", exception.getMessage());
   }
 
   @ParameterizedTest
@@ -363,9 +364,9 @@ public class TestReadingWritingDataInEvolvedSchemas {
     assertEquals(42, decoded.get(FIELD_A));
     try {
       decoded.get("newTopField");
-      Assertions.fail("get should throw a exception");
+      fail("get should throw a exception");
     } catch (AvroRuntimeException ex) {
-      Assertions.assertEquals("Not a valid schema field: newTopField", ex.getMessage());
+      assertEquals("Not a valid schema field: newTopField", ex.getMessage());
     }
   }
 
@@ -379,9 +380,9 @@ public class TestReadingWritingDataInEvolvedSchemas {
         .endRecord();
     Record record = defaultRecordWithSchema(INT_RECORD, FIELD_A, 42);
     byte[] encoded = encodeGenericBlob(record, encoderType);
-    AvroTypeException exception = Assertions.assertThrows(AvroTypeException.class,
+    AvroTypeException exception = assertThrows(AvroTypeException.class,
         () -> decodeGenericBlob(reader, INT_RECORD, encoded, encoderType));
-    Assertions.assertTrue(exception.getMessage().contains("missing required field newField"), exception.getMessage());
+    assertTrue(exception.getMessage().contains("missing required field newField"), exception.getMessage());
   }
 
   @ParameterizedTest
@@ -397,6 +398,18 @@ public class TestReadingWritingDataInEvolvedSchemas {
     Record decoded = decodeGenericBlob(reader, INT_RECORD, encoded, encoderType);
     assertEquals(42, decoded.get(FIELD_A));
     assertEquals(314, decoded.get("newFieldWithDefault"));
+  }
+
+  @ParameterizedTest
+  @EnumSource(EncoderType.class)
+  void readerWithEmptyListAsDefaultValueForUnionFieldIsApplied(EncoderType encoderType) throws Exception {
+    Schema writer = SchemaBuilder.record(RECORD_A) //
+        .fields() //
+        .endRecord();
+    Record record = new GenericData.Record(writer);
+    byte[] encoded = encodeGenericBlob(record, encoderType);
+    Record decoded = decodeGenericBlob(UNION_WITH_EMPTY_ARRAY_DEFAULT_RECORD, writer, encoded, encoderType);
+    assertEquals(emptyList(), decoded.get(FIELD_A));
   }
 
   @ParameterizedTest
