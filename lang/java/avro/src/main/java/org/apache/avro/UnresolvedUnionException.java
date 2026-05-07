@@ -24,13 +24,14 @@ public class UnresolvedUnionException extends AvroRuntimeException {
   private Schema unionSchema;
 
   public UnresolvedUnionException(Schema unionSchema, Object unresolvedDatum) {
-    super("Not in union " + unionSchema + ": " + unresolvedDatum);
+    super("Not in union " + unionSchema + ": " + datumTypeDescription(unresolvedDatum));
     this.unionSchema = unionSchema;
     this.unresolvedDatum = unresolvedDatum;
   }
 
   public UnresolvedUnionException(Schema unionSchema, Schema.Field field, Object unresolvedDatum) {
-    super("Not in union " + unionSchema + ": " + unresolvedDatum + " (field=" + field.name() + ")");
+    super(
+        "Not in union " + unionSchema + ": " + datumTypeDescription(unresolvedDatum) + " (field=" + field.name() + ")");
     this.unionSchema = unionSchema;
     this.unresolvedDatum = unresolvedDatum;
   }
@@ -41,5 +42,9 @@ public class UnresolvedUnionException extends AvroRuntimeException {
 
   public Schema getUnionSchema() {
     return unionSchema;
+  }
+
+  private static String datumTypeDescription(Object datum) {
+    return datum == null ? "null" : datum.getClass().getName();
   }
 }
