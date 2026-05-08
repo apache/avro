@@ -19,14 +19,16 @@ package org.apache.avro.file;
 
 import org.apache.avro.NameValidator;
 import org.apache.avro.Schema;
+
 import java.lang.ref.ReferenceQueue;
+import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
  * Abstract base class for caching parsed Avro schemas. Provides different
- * caching strategies including no cache, concurrent cache, and weak cache.
+ * caching strategies including no cache, concurrent cache, weak and soft cache.
  */
 public abstract class SchemaCache {
 
@@ -48,7 +50,9 @@ public abstract class SchemaCache {
    */
   public abstract Schema getOrParseSchema(String metaString);
 
-  /** return the number of cached entries */
+  /**
+   * return the number of cached entries
+   */
   public int size() {
     return 0;
   }
@@ -143,11 +147,79 @@ public abstract class SchemaCache {
   }
 
   /**
+   * A cache implementation that uses soft references for schema values, allowing
+   * them to be garbage collected when not strongly referenced, and the collector
+   * sees fit.
+   */
+  public static class SoftSchemaCache extends SchemaCache {
+    /**
+     * A weak cache implementation that allows schema values to be garbage
+     * collected.
+     */
+    public static final SchemaCache INSTANCE = createSoftCache();
+
+    private final ConcurrentMap<String, SoftValueRef> cache = new ConcurrentHashMap<>();
+    private final ReferenceQueue<Schema> queue = new ReferenceQueue<>();
+
+    @Override
+    public Schema getOrParseSchema(String metaString) {
+      trim();
+
+      return cache.compute(metaString, (k, ref) -> {
+        if (ref != null) {
+          Schema schema = ref.get();
+          if (schema != null) {
+            return ref;
+          }
+        }
+        // Absent or cleared, parse new
+        Schema schema = parse(metaString);
+        return new SoftValueRef(k, schema, queue);
+      }).get();
+    }
+
+    @Override
+    public int size() {
+      trim();
+      return cache.size();
+    }
+
+    /**
+     * Cleans up entries with cleared references from the cache.
+     */
+    void trim() {
+      // Clean up cleared references
+      SoftValueRef clearedRef;
+      while ((clearedRef = (SoftValueRef) queue.poll()) != null) {
+        cache.remove(clearedRef.key, clearedRef);
+      }
+    }
+
+    private static class SoftValueRef extends SoftReference<Schema> {
+      final String key;
+
+      SoftValueRef(String key, Schema referent, ReferenceQueue<Schema> q) {
+        super(referent, q);
+        this.key = key;
+      }
+    }
+  }
+
+  /**
    * Creates a weak cache that allows schema values to be garbage collected.
    *
    * @return a WeakSchemaCache instance
    */
   public static WeakSchemaCache createWeakCache() {
     return new WeakSchemaCache();
+  }
+
+  /**
+   * Creates a soft cache that allows schema values to be garbage collected.
+   *
+   * @return a SoftSchemaCache instance
+   */
+  public static SoftSchemaCache createSoftCache() {
+    return new SoftSchemaCache();
   }
 }

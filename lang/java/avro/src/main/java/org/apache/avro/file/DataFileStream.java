@@ -25,6 +25,7 @@ import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.file.SchemaCache.WeakSchemaCache;
+import org.apache.avro.file.SchemaCache.SoftSchemaCache;
 
 import java.io.Closeable;
 import java.io.EOFException;
@@ -58,6 +59,9 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
       break;
     case "weak":
       SCHEMA_CACHE = WeakSchemaCache.INSTANCE;
+      break;
+    case "soft":
+      SCHEMA_CACHE = SoftSchemaCache.INSTANCE;
       break;
     default:
       throw new IllegalArgumentException("Unknown schema cache type: " + cacheType);

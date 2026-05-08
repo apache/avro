@@ -57,7 +57,7 @@ public class SchemaCacheEffectTest {
   @Param({ "5", "50", "500" })
   private int numFields;
 
-  @Param({ "none", "weak" })
+  @Param({ "none", "weak", "soft" })
   private String cacheType;
 
   @Param({ "1", "10", "100" })
