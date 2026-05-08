@@ -41,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class WeakIdentityHashMap<K, V> implements Map<K, V> {
   private final ReferenceQueue<K> queue = new ReferenceQueue<>();
-  private Map<IdentityWeakReference, V> backingStore = new ConcurrentHashMap<>();
+  private Map<IdentityWeakReference<K>, V> backingStore = new ConcurrentHashMap<>();
 
   public WeakIdentityHashMap() {
   }
@@ -53,9 +53,10 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public boolean containsKey(Object key) {
     reap();
-    return backingStore.containsKey(new IdentityWeakReference(key));
+    return backingStore.containsKey(new IdentityWeakReference<>((K) key, queue));
   }
 
   @Override
@@ -64,11 +65,13 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
     return backingStore.containsValue(value);
   }
 
+  //NOTE - this breaks the general contract in that the returned value is not backed by this object
+  //so changes to this map are not reflected in the value previously returned
   @Override
   public Set<Map.Entry<K, V>> entrySet() {
     reap();
     Set<Map.Entry<K, V>> ret = new HashSet<>();
-    for (Map.Entry<IdentityWeakReference, V> ref : backingStore.entrySet()) {
+    for (Map.Entry<IdentityWeakReference<K>, V> ref : backingStore.entrySet()) {
       final K key = ref.getKey().get();
       final V value = ref.getValue();
       Map.Entry<K, V> entry = new Map.Entry<K, V>() {
@@ -92,34 +95,39 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
     return Collections.unmodifiableSet(ret);
   }
 
+  //NOTE - this breaks the general contract in that the returned value is not backed by this object
+  //so changes to this map are not reflected in the value previously returned
   @Override
   public Set<K> keySet() {
     reap();
     Set<K> ret = new HashSet<>();
-    for (IdentityWeakReference ref : backingStore.keySet()) {
+    for (IdentityWeakReference<K> ref : backingStore.keySet()) {
       ret.add(ref.get());
     }
     return Collections.unmodifiableSet(ret);
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public boolean equals(Object o) {
     if (!(o instanceof WeakIdentityHashMap)) {
       return false;
     }
-    return backingStore.equals(((WeakIdentityHashMap) o).backingStore);
+    return backingStore.equals(((WeakIdentityHashMap<K,V>) o).backingStore);
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public V get(Object key) {
     reap();
-    return backingStore.get(new IdentityWeakReference(key));
+    return backingStore.get(new IdentityWeakReference<>((K)key, queue));
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public V put(K key, V value) {
     reap();
-    return backingStore.put(new IdentityWeakReference(key), value);
+    return backingStore.put(new IdentityWeakReference<>(key, queue), value);
   }
 
   @Override
@@ -142,7 +150,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
   @Override
   public V remove(Object key) {
     reap();
-    return backingStore.remove(new IdentityWeakReference(key));
+    return backingStore.remove(new IdentityWeakReference<>((K) key, queue));
   }
 
   @Override
@@ -151,6 +159,8 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
     return backingStore.size();
   }
 
+  //NOTE - this breaks the general contract in that the returned value is not backed by this object
+  //so changes to this map are not reflected in the value previously returned
   @Override
   public Collection<V> values() {
     reap();
@@ -161,18 +171,17 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
     Object zombie = queue.poll();
 
     while (zombie != null) {
-      IdentityWeakReference victim = (IdentityWeakReference) zombie;
+      IdentityWeakReference<?> victim = (IdentityWeakReference<?>) zombie;
       backingStore.remove(victim);
       zombie = queue.poll();
     }
   }
 
-  class IdentityWeakReference extends WeakReference<K> {
+  static class IdentityWeakReference<K> extends WeakReference<K> {
     int hash;
 
-    @SuppressWarnings("unchecked")
-    IdentityWeakReference(Object obj) {
-      super((K) obj, queue);
+    IdentityWeakReference(K obj, ReferenceQueue<K> queue) {
+      super(obj, queue);
       hash = System.identityHashCode(obj);
     }
 
@@ -189,7 +198,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
       if (!(o instanceof WeakIdentityHashMap.IdentityWeakReference)) {
         return false;
       }
-      IdentityWeakReference ref = (IdentityWeakReference) o;
+      IdentityWeakReference<?> ref = (IdentityWeakReference<?>) o;
       return this.get() == ref.get();
     }
   }
