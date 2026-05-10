@@ -1441,6 +1441,12 @@ public class TestReflect {
         return false;
       return true;
     }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(value, left, right);
+    }
+
   }
 
   @Test
