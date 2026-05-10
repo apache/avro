@@ -739,6 +739,7 @@ public class ReflectData extends SpecificData {
           boolean error = Throwable.class.isAssignableFrom(c);
           schema = Schema.createRecord(name, doc, space, error);
           consumeAvroAliasAnnotation(c, schema);
+          names.put(fullName, schema);
           for (Field field : getCachedFields(c))
             if ((field.getModifiers() & (Modifier.TRANSIENT | Modifier.STATIC)) == 0
                 && !field.isAnnotationPresent(AvroIgnore.class)) {
@@ -781,6 +782,9 @@ public class ReflectData extends SpecificData {
             }
             schema.addProp(meta.key(), meta.value());
           }
+          // This is added immediately back into the names to ensure that the discoverable
+          // order is maintained if its a LinkedHashMap.
+          names.remove(fullName, schema);
         }
         names.put(fullName, schema);
       }
