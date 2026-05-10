@@ -14,39 +14,11 @@
  */
 package org.apache.avro.io;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.IntFunction;
-
-import org.apache.avro.AvroTypeException;
-import org.apache.avro.Conversion;
-import org.apache.avro.Conversions;
-import org.apache.avro.Resolver;
-import org.apache.avro.Resolver.Action;
-import org.apache.avro.Resolver.Container;
-import org.apache.avro.Resolver.EnumAdjust;
-import org.apache.avro.Resolver.Promote;
-import org.apache.avro.Resolver.ReaderUnion;
-import org.apache.avro.Resolver.RecordAdjust;
-import org.apache.avro.Resolver.Skip;
-import org.apache.avro.Resolver.WriterUnion;
-import org.apache.avro.Schema;
+import org.apache.avro.*;
+import org.apache.avro.Resolver.*;
 import org.apache.avro.Schema.Field;
-import org.apache.avro.generic.GenericArray;
-import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.*;
 import org.apache.avro.generic.GenericData.InstanceSupplier;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericEnumSymbol;
-import org.apache.avro.generic.GenericFixed;
-import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.FastReaderBuilder.RecordReader.Stage;
 import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
 import org.apache.avro.reflect.ReflectionUtil;
@@ -57,17 +29,45 @@ import org.apache.avro.util.Utf8;
 import org.apache.avro.util.WeakIdentityHashMap;
 import org.apache.avro.util.internal.Accessor;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.lang.ref.SoftReference;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.IntFunction;
+
 public class FastReaderBuilder {
 
   /**
-   * Generic/SpecificData instance that contains basic functionalities like
-   * instantiation of objects
+   * Generic/SpecificData instance that contains basic functionalities like instantiation of objects
    */
   private final GenericData data;
 
-  /** first schema is reader schema, second is writer schema */
-  private final Map<Schema, Map<Schema, RecordReader>> readerCache = Collections
-      .synchronizedMap(new WeakIdentityHashMap<>());
+  /**
+   * first schema is reader schema, second is writer schema As the RecordReader holds a strong reference to the reader
+   * cache. We rely on the writer cache being dereferenced, casing the inner map entry to remove the RecordReader. This
+   * in turn allows the outer Map entry to become weakly accessible and reclaimed.
+   * <p>
+   * Its essential that the reader and writer cache are no the same object, and in that case we use the
+   * readerSimpleCache. If we used this cache we would never release the memory, as the value would retain the strong
+   * reference
+   * <p>
+   * All access to the readerCache must consider thread safety, and use appropriate concurrent safe APIs
+   */
+  private final Map<Schema, Map<Schema, RecordReader>> readerCache = new WeakIdentityHashMap<>();
+
+  /**
+   * serves the same purpose as readerCache, but specifically used when the reader and writer Schemas are the same
+   * object. For the readerSimpleCache we rely on the holding only a soft reference to the RecordReader, which should
+   * eventually be cleared by the garbage collector. All access to the readerCache must consider thread safety, and use
+   * appropriate concurrent safe APIs
+   */
+  private final Map<Schema, SoftRef> readerSimpleCache = new WeakIdentityHashMap<>();
 
   private boolean keyClassEnabled = true;
 
@@ -242,10 +242,52 @@ public class FastReaderBuilder {
     }
   }
 
-  private RecordReader getRecordReaderFromCache(Schema readerSchema, Schema writerSchema) {
-    return readerCache.computeIfAbsent(readerSchema, k -> new WeakIdentityHashMap<>()).computeIfAbsent(writerSchema,
-        k -> new RecordReader());
+  private static class SoftRef extends SoftReference<RecordReader> {
+    RecordReader hardRef;
+
+    public SoftRef(RecordReader referent) {
+      super(referent);
+      hardRef = referent;
+    }
+
+    RecordReader getAndClearHardRef() {
+      RecordReader result = hardRef;
+      hardRef = null;
+      if (result == null)
+        result = get();
+      return result;
+    }
   }
+
+  private RecordReader getRecordReaderFromCache(Schema readerSchema, Schema writerSchema) {
+
+    if (writerSchema != readerSchema) {
+      return readerCache
+          .computeIfAbsent(readerSchema, k -> new WeakIdentityHashMap<>())
+          .computeIfAbsent(writerSchema,
+              k -> new RecordReader());
+    }
+    while (true) {
+      // Note - there is a chance that 2 threads concurrently access
+      // if they do only one will generate a value (if one is needed), but
+      // getAndClearHardRef may (in theory at least) return null if the hardRef and the SoftRef is enqueued in the race
+      // it seems unlikely, but that the reason we have this loop. If we repeatedly loop, then at least
+      // one thread processes
+      SoftRef softRef = readerSimpleCache.compute(readerSchema, (schema, ref) -> {
+            RecordReader result = (ref == null) ? null : ref.get();
+            if (result == null) {
+              return new SoftRef(new RecordReader());
+            }
+            ref.hardRef = result;
+            return ref;
+          }
+      );
+      RecordReader result = softRef.getAndClearHardRef();
+      if (result != null)
+        return result;
+    }
+  }
+
 
   private FieldReader applyConversions(Schema readerSchema, FieldReader reader, Conversion<?> explicitConversion) {
     Conversion<?> conversion = explicitConversion;
