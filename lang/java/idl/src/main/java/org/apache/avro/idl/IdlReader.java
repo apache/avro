@@ -208,7 +208,6 @@ public class IdlReader {
     IdlParser parser = new IdlParser(tokenStream);
     parser.removeErrorListeners();
     parser.addErrorListener(SIMPLE_AVRO_ERROR_LISTENER);
-    // parser.addParseListener(parseListener);
     parser.setTrace(false);
 
     // Parse the input, then walk the parse tree using the listener.
