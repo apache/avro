@@ -37,14 +37,13 @@ import java.util.function.Function;
  * implements the Map interface, it intentionally violates Map's general
  * contract, which mandates the use of the equals method when comparing objects.
  * This class is designed for use only in the rare cases wherein
- * reference-equality semantics are required.
- * It also violates the contract with respect to the {@link Map#entrySet()},
- * {@link Map#keySet()} ()}, {@link Map#values()} methods, which return
- * collections that are snapshots, and not backed by this map
- * *
- * Note that this implementation is not synchronized, but the backing store is a
- * ConcurrentHashMap. Caller must decide what additional protection is required in the case of
- * concurrent access.</b>b>
+ * reference-equality semantics are required. It also violates the contract with
+ * respect to the {@link Map#entrySet()}, {@link Map#keySet()} ()},
+ * {@link Map#values()} methods, which return collections that are snapshots,
+ * and not backed by this map * Note that this implementation is not
+ * synchronized, but the backing store is a ConcurrentHashMap. Caller must
+ * decide what additional protection is required in the case of concurrent
+ * access.</b>b>
  */
 public class WeakIdentityHashMap<K, V> implements Map<K, V> {
   private final ReferenceQueue<K> queue = new ReferenceQueue<>();
@@ -72,8 +71,9 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
     return backingStore.containsValue(value);
   }
 
-  //NOTE - this breaks the general contract in that the returned value is not backed by this object
-  //so changes to this map are not reflected in the value previously returned
+  // NOTE - this breaks the general contract in that the returned value is not
+  // backed by this object
+  // so changes to this map are not reflected in the value previously returned
   @Override
   public Set<Map.Entry<K, V>> entrySet() {
     reap();
@@ -102,8 +102,9 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
     return Collections.unmodifiableSet(ret);
   }
 
-  //NOTE - this breaks the general contract in that the returned value is not backed by this object
-  //so changes to this map are not reflected in the value previously returned
+  // NOTE - this breaks the general contract in that the returned value is not
+  // backed by this object
+  // so changes to this map are not reflected in the value previously returned
   @Override
   public Set<K> keySet() {
     reap();
@@ -122,7 +123,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
     if (!(o instanceof WeakIdentityHashMap)) {
       return false;
     }
-    return backingStore.equals(((WeakIdentityHashMap<K,V>) o).backingStore);
+    return backingStore.equals(((WeakIdentityHashMap<K, V>) o).backingStore);
   }
 
   @Override
@@ -171,8 +172,9 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
     return backingStore.size();
   }
 
-  //NOTE - this breaks the general contract in that the returned value is not backed by this object
-  //so changes to this map are not reflected in the value previously returned
+  // NOTE - this breaks the general contract in that the returned value is not
+  // backed by this object
+  // so changes to this map are not reflected in the value previously returned
   @Override
   public Collection<V> values() {
     reap();
@@ -212,13 +214,13 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
   @Override
   public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
     reap();
-    return backingStore.computeIfPresent(makeKey(key), (k,v) -> remappingFunction.apply(key,v));
+    return backingStore.computeIfPresent(makeKey(key), (k, v) -> remappingFunction.apply(key, v));
   }
 
   @Override
   public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
     reap();
-    return backingStore.compute(makeKey(key), (k,v) -> remappingFunction.apply(key,v));
+    return backingStore.compute(makeKey(key), (k, v) -> remappingFunction.apply(key, v));
   }
 
   @Override
