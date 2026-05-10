@@ -105,12 +105,12 @@ public class TestSchemaCache {
     schema = null;
     // Force GC
 
-    for (int i = 0; i < 10 & !weakRef.isEnqueued(); i++) {
+    for (int i = 0; i < 10; i++) {
       System.gc();
       System.runFinalization();
       Thread.sleep(100); // Allow GC to run
     }
-    // the isnt really a guarantee that its cler or not cleared by now, but is seems
+    // the isnt really a guarantee that its clear or not cleared by now, but is seems
     // ok fo the unit test
     // at least.
     // So by now we expect the GC to have not cleared the schema from the cache, as
@@ -132,7 +132,15 @@ public class TestSchemaCache {
       }
     } catch (OutOfMemoryError e) {
     }
-    assertEquals(0, cache.size(), "Cache should not be empty after GC");
+    // Force GC
+
+    for (int i = 0; i < 10 & !weakRef.isEnqueued(); i++) {
+      System.gc();
+      System.runFinalization();
+      Thread.sleep(100); // Allow GC to run
+    }
+
+    assertEquals(0, cache.size(), "Cache should be empty after OOM forces SoftRef clear");
 
   }
 }
