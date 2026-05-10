@@ -143,8 +143,9 @@ public class SystemLimitException extends AvroRuntimeException {
   }
 
   /**
-   * Calculate a max decompression length as a fraction of
-   * the maximum memory of the runtime.
+   * Calculate a max decompression length as a fraction of the maximum memory of
+   * the runtime.
+   * 
    * @return the calculated max default decompression length.
    */
   private static long defaultMaxDecompressLength() {
