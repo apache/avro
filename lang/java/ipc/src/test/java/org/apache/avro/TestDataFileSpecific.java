@@ -48,8 +48,8 @@ public class TestDataFileSpecific {
     File file = new File(DIR.getPath(), "testSpecificDatumReaderDefaultCtor");
 
     // like the specific Foo, but with another field
-    Schema s1 = new Schema.Parser()
-        .parse("{\"type\":\"record\",\"name\":\"Foo\"," + "\"namespace\":\"org.apache.avro\",\"fields\":["
+    Schema s1 = SchemaParser
+        .parseSingle("{\"type\":\"record\",\"name\":\"Foo\"," + "\"namespace\":\"org.apache.avro\",\"fields\":["
             + "{\"name\":\"label\",\"type\":\"string\"}," + "{\"name\":\"id\",\"type\":\"int\"}]}");
 
     // write a file using generic objects

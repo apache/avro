@@ -110,7 +110,10 @@ public abstract class Schema extends JsonProperties implements Serializable {
     private String schemaString;
 
     private Object readResolve() {
-      return new Schema.Parser().parse(schemaString);
+      // The schema can be built using any validation, which we cannot reproduce.
+      // Assuming best practice precautions when using serialized data, we can
+      // safely enough disable validation here.
+      return JsonSchemaParser.parseInternal(schemaString);
     }
   }
 

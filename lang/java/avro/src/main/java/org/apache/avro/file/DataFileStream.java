@@ -19,7 +19,7 @@ package org.apache.avro.file;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.InvalidAvroMagicException;
-import org.apache.avro.NameValidator;
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
@@ -71,7 +71,8 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   /** Decoder on raw input stream. (Used for metadata.) */
   BinaryDecoder vin;
   /**
-   * Secondary decoder, for datums. (Different than vin for block segments.)
+   * Secondary decoder, for datums. (Different from `vin`, which is used for block
+   * segments)
    */
   BinaryDecoder datumIn = null;
 
@@ -140,8 +141,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
     // finalize the header
     header.metaKeyList = Collections.unmodifiableList(header.metaKeyList);
-    header.schema = new Schema.Parser(NameValidator.NO_VALIDATION).setValidateDefaults(false)
-        .parse(getMetaString(DataFileConstants.SCHEMA));
+    header.schema = JsonSchemaParser.parseInternal(getMetaString(DataFileConstants.SCHEMA));
     this.codec = resolveCodec();
     reader.setSchema(header.schema);
   }

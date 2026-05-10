@@ -47,6 +47,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.SchemaBuilder;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.TestCircularReferences.ReferenceManager;
 import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.io.BinaryData;
@@ -513,17 +514,17 @@ public class TestGenericData {
 
   @Test
   void mapWithNonStringKeyToStringIsJson() throws Exception {
-    Schema intMapSchema = new Schema.Parser()
-        .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Integer\"}");
+    Schema intMapSchema = SchemaParser
+        .parseSingle("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Integer\"}");
     Field intMapField = new Field("intMap", Schema.createMap(intMapSchema), null, null);
-    Schema decMapSchema = new Schema.Parser()
-        .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.math.BigDecimal\"}");
+    Schema decMapSchema = SchemaParser
+        .parseSingle("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.math.BigDecimal\"}");
     Field decMapField = new Field("decMap", Schema.createMap(decMapSchema), null, null);
-    Schema boolMapSchema = new Schema.Parser()
-        .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Boolean\"}");
+    Schema boolMapSchema = SchemaParser
+        .parseSingle("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Boolean\"}");
     Field boolMapField = new Field("boolMap", Schema.createMap(boolMapSchema), null, null);
-    Schema fileMapSchema = new Schema.Parser()
-        .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.io.File\"}");
+    Schema fileMapSchema = SchemaParser
+        .parseSingle("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.io.File\"}");
     Field fileMapField = new Field("fileMap", Schema.createMap(fileMapSchema), null, null);
     Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
     schema.setFields(Arrays.asList(intMapField, decMapField, boolMapField, fileMapField));

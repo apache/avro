@@ -18,6 +18,7 @@
 package org.apache.avro.io;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.io.TestValidatingIO.Encoding;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -59,9 +60,9 @@ public class TestResolvingIO {
     Object[] values = TestValidatingIO.randomValues(writerCalls);
     Object[] expected = TestValidatingIO.randomValues(readerCalls);
 
-    Schema writerSchema = new Schema.Parser().parse(jsonWriterSchema);
+    Schema writerSchema = SchemaParser.parseSingle(jsonWriterSchema);
     byte[] bytes = TestValidatingIO.make(writerSchema, writerCalls, values, encoding);
-    Schema readerSchema = new Schema.Parser().parse(jsonReaderSchema);
+    Schema readerSchema = SchemaParser.parseSingle(jsonReaderSchema);
     TestValidatingIO.print(encoding, skipLevel, writerSchema, readerSchema, values, expected);
     check(writerSchema, readerSchema, bytes, readerCalls, expected, encoding, skipLevel);
   }
