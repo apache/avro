@@ -38,14 +38,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * Memory leak tests for {@link FastReaderBuilder}.
  *
  * <p>
- * These tests verify that the cache eviction mechanism works correctly and prevents memory leaks as described in
- * AVRO-4253. The issue occurs when {@code RecordReader} holds strong references to Schema objects that are cached as
- * weak keys in {@code WeakIdentityHashMap}, preventing garbage collection.
+ * These tests verify that the cache eviction mechanism works correctly and
+ * prevents memory leaks as described in AVRO-4253. The issue occurs when
+ * {@code RecordReader} holds strong references to Schema objects that are
+ * cached as weak keys in {@code WeakIdentityHashMap}, preventing garbage
+ * collection.
  *
- * <p>
- * The fix involves deep-cloning schemas when {@code readerSchema == writerSchema} (same object identity), ensuring that
- * the cached {@code RecordReader} holds a reference to the cloned schema rather than the original weak key, allowing
- * the original to be garbage collected.
  */
 @Isolated
 class TestFastReaderBuilder {
@@ -77,8 +75,8 @@ class TestFastReaderBuilder {
   // ============================================================================
 
   /**
-   * Tests for the case where reader and writer schemas are the same object. This uses the readerSimpleCache
-   * (soft-referenced) to prevent memory leaks.
+   * Tests for the case where reader and writer schemas are the same object. This
+   * uses the readerSimpleCache (soft-referenced) to prevent memory leaks.
    */
   @Nested
   class WhenSchemasIdentical {
@@ -98,7 +96,8 @@ class TestFastReaderBuilder {
         Schema freshSchema = new Schema.Parser().parse(schemaJson);
         schemaRefs.add(new WeakReference<>(freshSchema));
 
-        // This calls createDatumReader(schema, schema) where both args are the same object
+        // This calls createDatumReader(schema, schema) where both args are the same
+        // object
         DatumReader<?> reader = builder.createDatumReader(freshSchema);
         assertNotNull(reader, "Reader should be created");
 
@@ -119,9 +118,8 @@ class TestFastReaderBuilder {
       }
 
       // Verify both caches are cleared
-      assertTrue(collectedCount > 0,
-          "At least some schemas should be garbage collected. "
-              + collectedCount + " / " + schemaRefs.size() + " collected");
+      assertTrue(collectedCount > 0, "At least some schemas should be garbage collected. " + collectedCount + " / "
+          + schemaRefs.size() + " collected");
       assertAllCachesCleared();
     }
 
@@ -219,8 +217,9 @@ class TestFastReaderBuilder {
   // ============================================================================
 
   /**
-   * Tests for the case where reader and writer schemas are different objects. This uses the readerCache (weak
-   * references) which should allow eviction when schemas are no longer externally referenced.
+   * Tests for the case where reader and writer schemas are different objects.
+   * This uses the readerCache (weak references) which should allow eviction when
+   * schemas are no longer externally referenced.
    */
   @Nested
   class WhenSchemasDifferent {
@@ -263,10 +262,12 @@ class TestFastReaderBuilder {
       int collectedWriters = 0;
       int collectedReaders = 0;
       for (WeakReference<Schema> ref : writerRefs) {
-        if (ref.get() == null) collectedWriters++;
+        if (ref.get() == null)
+          collectedWriters++;
       }
       for (WeakReference<Schema> ref : readerRefs) {
-        if (ref.get() == null) collectedReaders++;
+        if (ref.get() == null)
+          collectedReaders++;
       }
 
       // Both sets of schemas should be evictable
@@ -276,6 +277,7 @@ class TestFastReaderBuilder {
       // Verify both caches are cleared
       assertAllCachesCleared();
     }
+
     @Test
     void testCache() throws Exception {
       Schema baseWriterSchema = buildNestedWriterSchema(0);
@@ -373,12 +375,12 @@ class TestFastReaderBuilder {
   }
 
   /**
-   * Build a nested record schema with specified depth. Each level has 10 string fields and an optional child record.
+   * Build a nested record schema with specified depth. Each level has 10 string
+   * fields and an optional child record.
    */
   private Schema buildNestedWriterSchema(int level) {
     SchemaBuilder.FieldAssembler<Schema> fields = SchemaBuilder.record("Level_" + level)
-        .namespace("org.apache.avro.test.retention")
-        .fields();
+        .namespace("org.apache.avro.test.retention").fields();
 
     for (int f = 0; f < 10; f++) {
       fields = fields.requiredString("field_" + f);
@@ -391,13 +393,14 @@ class TestFastReaderBuilder {
 
     return fields.endRecord();
   }
+
   /**
-   * Build a nested record schema with specified depth. Each level has 5 string fields and an optional child record.
+   * Build a nested record schema with specified depth. Each level has 5 string
+   * fields and an optional child record.
    */
   private Schema buildNestedReaderSchema(int level) {
     SchemaBuilder.FieldAssembler<Schema> fields = SchemaBuilder.record("Level_" + level)
-        .namespace("org.apache.avro.test.retention")
-        .fields();
+        .namespace("org.apache.avro.test.retention").fields();
 
     for (int f = 0; f < 5; f++) {
       fields = fields.requiredString("field_" + f);
@@ -412,7 +415,8 @@ class TestFastReaderBuilder {
   }
 
   /**
-   * Get the number of entries in the outer WeakIdentityHashMap (one per unique reader schema).
+   * Get the number of entries in the outer WeakIdentityHashMap (one per unique
+   * reader schema).
    */
   @SuppressWarnings("unchecked")
   private int getOuterCacheSize() {
@@ -442,7 +446,8 @@ class TestFastReaderBuilder {
   }
 
   /**
-   * Get the number of entries in the simple cache (used for identical reader/writer schemas).
+   * Get the number of entries in the simple cache (used for identical
+   * reader/writer schemas).
    */
   @SuppressWarnings("unchecked")
   private int getSimpleCacheSize() {
@@ -485,7 +490,7 @@ class TestFastReaderBuilder {
         memory.add(new byte[1024 * 1024 * 1024]); // Allocate 1GB blocks to fill up memory and clear soft references
       }
     } catch (OutOfMemoryError e) {
-      //ignored
+      // ignored
     }
   }
 }

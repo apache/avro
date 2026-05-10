@@ -17,6 +17,7 @@ package org.apache.avro.io;
 import org.apache.avro.*;
 import org.apache.avro.Resolver.*;
 import org.apache.avro.Schema.Field;
+
 import org.apache.avro.generic.*;
 import org.apache.avro.generic.GenericData.InstanceSupplier;
 import org.apache.avro.io.FastReaderBuilder.RecordReader.Stage;
@@ -44,28 +45,33 @@ import java.util.function.IntFunction;
 public class FastReaderBuilder {
 
   /**
-   * Generic/SpecificData instance that contains basic functionalities like instantiation of objects
+   * Generic/SpecificData instance that contains basic functionalities like
+   * instantiation of objects
    */
   private final GenericData data;
 
   /**
-   * first schema is reader schema, second is writer schema As the RecordReader holds a strong reference to the reader
-   * cache. We rely on the writer cache being dereferenced, casing the inner map entry to remove the RecordReader. This
-   * in turn allows the outer Map entry to become weakly accessible and reclaimed.
+   * first schema is reader schema, second is writer schema As the RecordReader
+   * holds a strong reference to the reader cache. We rely on the writer cache
+   * being dereferenced, casing the inner map entry to remove the RecordReader.
+   * This in turn allows the outer Map entry to become weakly accessible and
+   * reclaimed.
    * <p>
-   * Its essential that the reader and writer cache are no the same object, and in that case we use the
-   * readerSimpleCache. If we used this cache we would never release the memory, as the value would retain the strong
-   * reference
+   * Its essential that the reader and writer cache are no the same object, and in
+   * that case we use the readerSimpleCache. If we used this cache we would never
+   * release the memory, as the value would retain the strong reference
    * <p>
-   * All access to the readerCache must consider thread safety, and use appropriate concurrent safe APIs
+   * All access to the readerCache must consider thread safety, and use
+   * appropriate concurrent safe APIs
    */
   private final Map<Schema, Map<Schema, RecordReader>> readerCache = new WeakIdentityHashMap<>();
 
   /**
-   * serves the same purpose as readerCache, but specifically used when the reader and writer Schemas are the same
-   * object. For the readerSimpleCache we rely on the holding only a soft reference to the RecordReader, which should
-   * eventually be cleared by the garbage collector. All access to the readerCache must consider thread safety, and use
-   * appropriate concurrent safe APIs
+   * serves the same purpose as readerCache, but specifically used when the reader
+   * and writer Schemas are the same object. For the readerSimpleCache we rely on
+   * the holding only a soft reference to the RecordReader, which should
+   * eventually be cleared by the garbage collector. All access to the readerCache
+   * must consider thread safety, and use appropriate concurrent safe APIs
    */
   private final Map<Schema, SoftRef> readerSimpleCache = new WeakIdentityHashMap<>();
 
@@ -262,32 +268,30 @@ public class FastReaderBuilder {
   private RecordReader getRecordReaderFromCache(Schema readerSchema, Schema writerSchema) {
 
     if (writerSchema != readerSchema) {
-      return readerCache
-          .computeIfAbsent(readerSchema, k -> new WeakIdentityHashMap<>())
-          .computeIfAbsent(writerSchema,
-              k -> new RecordReader());
+      return readerCache.computeIfAbsent(readerSchema, k -> new WeakIdentityHashMap<>()).computeIfAbsent(writerSchema,
+          k -> new RecordReader());
     }
     while (true) {
       // Note - there is a chance that 2 threads concurrently access
       // if they do only one will generate a value (if one is needed), but
-      // getAndClearHardRef may (in theory at least) return null if the hardRef and the SoftRef is enqueued in the race
-      // it seems unlikely, but that the reason we have this loop. If we repeatedly loop, then at least
+      // getAndClearHardRef may (in theory at least) return null if the hardRef and
+      // the SoftRef is enqueued in the race
+      // it seems unlikely, but that the reason we have this loop. If we repeatedly
+      // loop, then at least
       // one thread processes
       SoftRef softRef = readerSimpleCache.compute(readerSchema, (schema, ref) -> {
-            RecordReader result = (ref == null) ? null : ref.get();
-            if (result == null) {
-              return new SoftRef(new RecordReader());
-            }
-            ref.hardRef = result;
-            return ref;
-          }
-      );
+        RecordReader result = (ref == null) ? null : ref.get();
+        if (result == null) {
+          return new SoftRef(new RecordReader());
+        }
+        ref.hardRef = result;
+        return ref;
+      });
       RecordReader result = softRef.getAndClearHardRef();
       if (result != null)
         return result;
     }
   }
-
 
   private FieldReader applyConversions(Schema readerSchema, FieldReader reader, Conversion<?> explicitConversion) {
     Conversion<?> conversion = explicitConversion;
