@@ -18,6 +18,7 @@
 
 package org.apache.avro;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -58,6 +59,30 @@ public class SystemLimitException extends AvroRuntimeException {
   private static int maxCollectionLength = MAX_ARRAY_VM_LIMIT;
   private static int maxStringLength = MAX_ARRAY_VM_LIMIT;
 
+  private static final Logger LOG = LoggerFactory.getLogger(SystemLimitException.class);
+
+  /**
+   * System property declaring max size of any decompression stream: {@value}.
+   */
+  public static final String MAX_DECOMPRESS_LENGTH_PROPERTY = "org.apache.avro.limits.decompress.maxLength";
+
+  /**
+   * Default limit when it is lower than the heap-aware limit: {@value}.
+   */
+  private static final long DEFAULT_MAX_DECOMPRESS_LENGTH = 200L * 1024 * 1024;
+
+  /**
+   * Keep the default decompression limit below the maximum heap to avoid allowing
+   * a single block to exhaust constrained JVMs: {@value}.
+   */
+  private static final long DEFAULT_MAX_DECOMPRESS_HEAP_FRACTION = 4;
+
+  /**
+   * Calculated max decompress length.
+   */
+  public static final long MAX_DECOMPRESS_LENGTH = getLongLimitFromProperty(MAX_DECOMPRESS_LENGTH_PROPERTY,
+      defaultMaxDecompressLength());
+
   static {
     resetLimits();
   }
@@ -87,6 +112,45 @@ public class SystemLimitException extends AvroRuntimeException {
       }
     }
     return i;
+  }
+
+  /**
+   * Get a long value stored in a system property, used to configure the system
+   * behaviour of output.
+   *
+   * @param property     The system property to fetch
+   * @param defaultValue The value to use if the system property is not present or
+   *                     parsable as a long
+   * @return The value from the system property
+   */
+  private static long getLongLimitFromProperty(String property, long defaultValue) {
+    String prop = System.getProperty(property);
+    long limit = defaultValue;
+    if (prop != null) {
+      try {
+        long parsed = Long.parseLong(prop);
+        if (parsed <= 0) {
+          LOG.warn("Invalid value '{}' for property '{}': must be positive. Using default: {}", prop, property,
+              defaultValue);
+        } else {
+          limit = parsed;
+        }
+      } catch (NumberFormatException e) {
+        LOG.warn("Could not parse property '{}' value '{}'. Using default: {}", property, prop, defaultValue);
+      }
+    }
+    return limit;
+  }
+
+  /**
+   * Calculate a max decompression length as a fraction of the maximum memory of
+   * the runtime.
+   * 
+   * @return the calculated max default decompression length.
+   */
+  private static long defaultMaxDecompressLength() {
+    return Math.min(DEFAULT_MAX_DECOMPRESS_LENGTH,
+        Math.max(1L, Runtime.getRuntime().maxMemory() / DEFAULT_MAX_DECOMPRESS_HEAP_FRACTION));
   }
 
   /**
@@ -207,6 +271,21 @@ public class SystemLimitException extends AvroRuntimeException {
       throw new SystemLimitException("String length " + length + " exceeds maximum allowed");
     }
     return (int) length;
+  }
+
+  /**
+   * Check there is capacity to write data to a stream.
+   *
+   * @param limit        total capacity limit
+   * @param streamLength current stream size
+   * @param bytes        bytes to add to the stream
+   * @throws SystemLimitException if the limit is exceeded.
+   */
+  public static void checkMaxDecompressCapacity(long limit, long streamLength, int bytes) {
+    if (streamLength + bytes > limit) {
+      throw new SystemLimitException(
+          String.format("Buffer size %,d (bytes) exceeds maximum allowed size %,d.", (streamLength + bytes), limit));
+    }
   }
 
   /** Reread the limits from the system properties. */
