@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import org.apache.avro.AvroRuntimeException;
@@ -1416,4 +1417,61 @@ public class TestReflect {
             + "{\"name\":\"foo\",\"type\":\"int\",\"doc\":\"Some Documentation\"}" + "]}");
   }
 
+  // test recursive record schema
+  public static class TreeNode {
+    public int value = 0;
+    @Nullable
+    public TreeNode left;
+    @Nullable
+    public TreeNode right;
+
+    public TreeNode() {
+    }
+
+    public TreeNode(int value) {
+      this.value = value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof TreeNode))
+        return false;
+      TreeNode that = (TreeNode) o;
+      if (value != that.value || !Objects.equals(left, that.left) || !Objects.equals(right, that.right))
+        return false;
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(value, left, right);
+    }
+
+  }
+
+  @Test
+  void recursiveRecord() throws Exception {
+    Schema schema = ReflectData.get().getSchema(TreeNode.class);
+    assertEquals("TreeNode", schema.getName());
+    assertEquals(3, schema.getFields().size());
+
+    // Verify that the left tree node contains the parent schema
+    Schema leftSchema = schema.getField("left").schema();
+    assertEquals(Schema.Type.UNION, leftSchema.getType());
+    assertEquals(2, leftSchema.getTypes().size());
+    assertEquals(Schema.Type.NULL, leftSchema.getTypes().get(0).getType());
+    assertEquals(schema, leftSchema.getTypes().get(1));
+
+    // Verify that the right tree node is the same union
+    Schema rightSchema = schema.getField("right").schema();
+    assertEquals(leftSchema, rightSchema);
+
+    // Test serialization with actual recursive data
+    TreeNode root = new TreeNode(100);
+    root.left = new TreeNode(90);
+    root.right = new TreeNode(101);
+    root.left.left = new TreeNode(-100);
+
+    checkReadWrite(root);
+  }
 }
