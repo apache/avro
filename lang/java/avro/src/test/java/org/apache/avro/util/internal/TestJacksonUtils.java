@@ -79,6 +79,10 @@ public class TestJacksonUtils {
     assertEquals(1, toObject(IntNode.valueOf(1)));
     assertEquals(2L, toObject(IntNode.valueOf(2), Schema.create(Schema.Type.LONG)));
     assertEquals(1.0f, toObject(DoubleNode.valueOf(1.0), Schema.create(Schema.Type.FLOAT)));
+    assertEquals(1.1f, toObject(DoubleNode.valueOf(1.1),
+        Schema.createUnion(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.FLOAT))));
+    assertEquals(1.2f, toObject(DoubleNode.valueOf(1.2),
+        Schema.createUnion(Schema.create(Schema.Type.FLOAT), Schema.create(Schema.Type.NULL))));
     assertEquals(2.0, toObject(DoubleNode.valueOf(2.0)));
     assertEquals(TextNode.valueOf("\u0001\u0002"), toJsonNode(new byte[] { 1, 2 }));
     assertArrayEquals(new byte[] { 1, 2 },
@@ -89,6 +93,15 @@ public class TestJacksonUtils {
     ArrayNode an = JsonNodeFactory.instance.arrayNode();
     an.add(1);
     assertEquals(Collections.singletonList(1), toObject(an));
+
+    assertEquals(Collections.singletonList(1), toObject(an, Schema.createUnion(Schema.create(Schema.Type.NULL),
+        Schema.createArray(Schema.createUnion(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.INT))))));
+
+    assertEquals(Collections.singletonList(1),
+        toObject(an,
+            Schema.createUnion(
+                Schema.createArray(Schema.createUnion(Schema.create(Schema.Type.INT), Schema.create(Schema.Type.NULL))),
+                Schema.create(Schema.Type.NULL))));
 
     ObjectNode on = JsonNodeFactory.instance.objectNode();
     on.put("a", 1);
