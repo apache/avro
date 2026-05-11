@@ -114,14 +114,26 @@ public class JacksonUtils {
   }
 
   public static Object toObject(JsonNode jsonNode, Schema schema) {
-    if (schema != null && schema.getType().equals(Schema.Type.UNION)) {
-      return toObject(jsonNode, schema.getTypes().get(0));
-    }
     if (jsonNode == null) {
       return null;
     } else if (jsonNode.isNull()) {
       return JsonProperties.NULL_VALUE;
-    } else if (jsonNode.isBoolean()) {
+    }
+
+    if (schema != null && schema.getType().equals(Schema.Type.UNION)) {
+      for (Schema unionType : schema.getTypes()) {
+        if (unionType.getType().equals(Schema.Type.NULL)) {
+          continue;
+        }
+        Object unionObject = toObject(jsonNode, unionType);
+        if (unionObject != null) {
+          return unionObject;
+        }
+      }
+      return null;
+    }
+
+    if (jsonNode.isBoolean()) {
       return jsonNode.asBoolean();
     } else if (jsonNode.isInt()) {
       if (schema == null || schema.getType().equals(Schema.Type.INT)) {
@@ -187,7 +199,7 @@ public class JacksonUtils {
 
   /**
    * Convert an object into a map
-   * 
+   *
    * @param datum The object
    * @return Its Map representation
    */
