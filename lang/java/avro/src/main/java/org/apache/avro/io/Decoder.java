@@ -20,6 +20,7 @@ package org.apache.avro.io;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.util.Utf8;
 
 /**
@@ -40,6 +41,8 @@ import org.apache.avro.util.Utf8;
  */
 
 public abstract class Decoder {
+
+  private static final byte[] EMPTY_BYTES = new byte[0];
 
   /**
    * "Reads" a null value. (Doesn't actually read anything, but advances the state
@@ -125,6 +128,28 @@ public abstract class Decoder {
    *                           the type of the next value to be read
    */
   public abstract ByteBuffer readBytes(ByteBuffer old) throws IOException;
+
+  /**
+   * Reads a byte-string written by {@link Encoder#writeBytes}.
+   * <p>
+   * This is useful when you want to avoid the creation of a ByteBuffer, and only want the byte[], e.g.:
+   * <pre>
+   *     ByteBuffer buffer = decoder.readBytes(null);
+   *     byte[] array = buffer.array();
+   * </pre>
+   *
+   * @throws AvroTypeException If this is a stateful reader and byte-string is not the type of the next value to be
+   *                           read
+   */
+  public byte[] readBytes() throws IOException {
+    int length = SystemLimitException.checkMaxBytesLength(readLong());
+    if (length == 0) {
+      return EMPTY_BYTES;
+    }
+    byte[] result = new byte[length];
+    readFixed(result);
+    return result;
+  }
 
   /**
    * Discards a byte-string written by {@link Encoder#writeBytes}.

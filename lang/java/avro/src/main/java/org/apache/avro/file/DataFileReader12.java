@@ -75,9 +75,7 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
       do {
         for (long i = 0; i < l; i++) {
           String key = vin.readString(null).toString();
-          ByteBuffer value = vin.readBytes(null);
-          byte[] bb = new byte[value.remaining()];
-          value.get(bb);
+          byte[] bb = vin.readBytes();
           meta.put(key, bb);
         }
       } while ((l = vin.mapNext()) != 0);

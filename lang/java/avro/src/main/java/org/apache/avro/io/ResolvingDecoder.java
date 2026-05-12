@@ -202,7 +202,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
   public Utf8 readString(Utf8 old) throws IOException {
     Symbol actual = parser.advance(Symbol.STRING);
     if (actual == Symbol.BYTES) {
-      return new Utf8(in.readBytes(null).array());
+      return old == null? new Utf8(in.readBytes()) : old.set(in.readBytes());
     } else {
       assert actual == Symbol.STRING;
       return in.readString(old);
@@ -213,7 +213,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
   public String readString() throws IOException {
     Symbol actual = parser.advance(Symbol.STRING);
     if (actual == Symbol.BYTES) {
-      return new String(in.readBytes(null).array(), StandardCharsets.UTF_8);
+      return new String(in.readBytes(), StandardCharsets.UTF_8);
     } else {
       assert actual == Symbol.STRING;
       return in.readString();

@@ -244,14 +244,11 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
 
   @Override
   protected Object readBytes(Object old, Schema s, Decoder in) throws IOException {
-    ByteBuffer bytes = in.readBytes(null);
     Class<?> c = ReflectData.getClassProp(s, SpecificData.CLASS_PROP);
     if (c != null && c.isArray()) {
-      byte[] result = new byte[bytes.remaining()];
-      bytes.get(result);
-      return result;
+      return in.readBytes();
     } else {
-      return bytes;
+      return in.readBytes(null);
     }
   }
 
