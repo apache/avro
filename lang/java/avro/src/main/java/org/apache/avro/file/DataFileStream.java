@@ -151,7 +151,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     if (l > 0) {
       do {
         for (long i = 0; i < l; i++) {
-          String key = vin.readString(null).toString();
+          String key = vin.readString();
           ByteBuffer value = vin.readBytes(null);
           byte[] bb = new byte[value.remaining()];
           value.get(bb);
