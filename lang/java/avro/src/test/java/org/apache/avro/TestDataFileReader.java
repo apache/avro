@@ -24,19 +24,26 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import com.sun.management.UnixOperatingSystemMXBean;
 import org.apache.avro.file.DataFileReader;
+import org.apache.avro.file.DataFileConstants;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.FileReader;
+import org.apache.avro.file.SeekableByteArrayInput;
 import org.apache.avro.file.SeekableFileInput;
 import org.apache.avro.file.SeekableInput;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.EncoderFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -237,5 +244,37 @@ public class TestDataFileReader {
       assertThrows(InvalidAvroMagicException.class,
           () -> DataFileReader.openReader(fileInput, new GenericDatumReader<>()));
     }
+  }
+
+  @Test
+  void missingSchemaMetadataDoesNotThrowNullPointerException() throws IOException {
+    byte[] malformedFile = buildContainerHeaderWithoutSchema();
+
+    IOException streamException = assertThrows(IOException.class,
+        () -> new DataFileStream<>(new ByteArrayInputStream(malformedFile), new GenericDatumReader<>()));
+    assertNotNull(streamException.getMessage());
+    assertTrue(streamException.getMessage().contains(DataFileConstants.SCHEMA));
+
+    IOException readerException = assertThrows(IOException.class,
+        () -> new DataFileReader<>(new SeekableByteArrayInput(malformedFile), new GenericDatumReader<>()));
+    assertNotNull(readerException.getMessage());
+    assertTrue(readerException.getMessage().contains(DataFileConstants.SCHEMA));
+  }
+
+  private static byte[] buildContainerHeaderWithoutSchema() throws IOException {
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    output.write(DataFileConstants.MAGIC);
+
+    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(output, null);
+    encoder.writeMapStart();
+    encoder.setItemCount(1);
+    encoder.startItem();
+    encoder.writeString(DataFileConstants.CODEC);
+    encoder.writeBytes("null".getBytes(StandardCharsets.UTF_8));
+    encoder.writeMapEnd();
+    encoder.writeFixed(new byte[DataFileConstants.SYNC_SIZE]);
+    encoder.flush();
+
+    return output.toByteArray();
   }
 }
