@@ -21,21 +21,43 @@ package org.apache.avro.util;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
+import org.apache.avro.SystemLimitException;
+
 /**
  * Utility to make data written to an {@link ByteArrayOutputStream} directly
- * available as a {@link ByteBuffer}.
+ * available as a {@link ByteBuffer}.Supports limits to the amount of data which
+ * may be written. All decompressors MUST create capacity restricted streams to
+ * prevent maliciously compressed data to trigger memory problems across
+ * threads.
+ *
  */
 public class NonCopyingByteArrayOutputStream extends ByteArrayOutputStream {
 
   /**
-   * Creates a new byte array output stream, with a buffer capacity of the
-   * specified size, in bytes.
+   * Size limit, -1 for no limits.
+   */
+  private final long limit;
+
+  /**
+   * Creates a new byte array output stream, with no size limit.
    *
    * @param size the initial size
    * @throws IllegalArgumentException if size is negative
    */
   public NonCopyingByteArrayOutputStream(int size) {
+    this(size, -1);
+  }
+
+  /**
+   * Creates a new byte array output stream, with a buffer capacity of the
+   * specified size, in bytes, capacity limit as specified in {@code limit}.
+   *
+   * @param size  buffer capacity
+   * @param limit size limit or -1 for no limit.
+   */
+  private NonCopyingByteArrayOutputStream(final int size, final long limit) {
     super(size);
+    this.limit = limit;
   }
 
   /**
@@ -48,4 +70,78 @@ public class NonCopyingByteArrayOutputStream extends ByteArrayOutputStream {
   public ByteBuffer asByteBuffer() {
     return ByteBuffer.wrap(super.buf, 0, super.count);
   }
+
+  /**
+   * Check there is capacity to write data. Throws SystemLimitException if the
+   * limit is exceeded.
+   *
+   * @param bytes bytes to add
+   */
+  private void checkCapacity(int bytes) {
+    if (limit > 0) {
+      SystemLimitException.checkMaxDecompressCapacity(limit, size(), bytes);
+    }
+  }
+
+  @Override
+  public synchronized void write(final int b) {
+    checkCapacity(1);
+    super.write(b);
+  }
+
+  @Override
+  public synchronized void write(final byte[] b, final int off, final int len) {
+    if (b == null) {
+      throw new NullPointerException();
+    }
+    if (off < 0 || len < 0 || off + len > b.length) {
+      throw new IndexOutOfBoundsException();
+    }
+    checkCapacity(len);
+    super.write(b, off, len);
+  }
+
+  /**
+   * Writes the complete contents of the specified byte array to this output
+   * stream.
+   *
+   * @param b the data
+   * @throws NullPointerException if b is null
+   * @throws SystemLimitException if the limit is exceeded
+   */
+  public void writeBytes(final byte[] b) {
+    if (b == null) {
+      throw new NullPointerException();
+    }
+    checkCapacity(b.length);
+    write(b, 0, b.length);
+  }
+
+  /**
+   * Creates a new byte array output stream, with a buffer capacity of the
+   * specified size, in bytes. The amount of data which can be written to any
+   * output stream is limited by the system property
+   * {@link SystemLimitException#MAX_DECOMPRESS_LENGTH_PROPERTY}
+   *
+   * @param size buffer capacity
+   * @return the output stream
+   */
+  public static NonCopyingByteArrayOutputStream capacityLimitedOutputStream(final int size) {
+    final long limit = SystemLimitException.MAX_DECOMPRESS_LENGTH;
+    return new NonCopyingByteArrayOutputStream((int) Math.min(size, limit), limit);
+  }
+
+  /**
+   * Creates a new byte array output stream, with a buffer capacity of the
+   * specified size, in bytes, capacity limit as specified in {@code limit}.
+   *
+   * @param size  buffer capacity
+   * @param limit max size of output buffer
+   * @return the output stream
+   */
+  public static NonCopyingByteArrayOutputStream capacityLimitedOutputStream(final int size, long limit) {
+    final int initialSize = limit > 0 ? (int) Math.min(size, limit) : size;
+    return new NonCopyingByteArrayOutputStream(initialSize, limit);
+  }
+
 }
