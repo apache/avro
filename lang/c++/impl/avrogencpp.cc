@@ -805,7 +805,14 @@ void CodeGen::emitGeneratedWarning() {
 string CodeGen::guard() {
     string h = headerFile_;
     makeCanonical(h, true);
-    return h + "_" + std::to_string(random_()) + "_H";
+    // headerFile_ is already a unique-per-output path, so the canonicalised
+    // form is already a valid, unique include guard. Avoid mixing in a
+    // time-seeded RNG here so the generated output is byte-deterministic
+    // across invocations -- otherwise build systems that key their cache on
+    // input-content digests (e.g. Bazel remote cache, Nix store paths) end
+    // up rebuilding every downstream consumer on every invocation, even on
+    // byte-identical schemas.
+    return h + "_H";
 }
 
 void CodeGen::generate(const ValidSchema &schema) {
