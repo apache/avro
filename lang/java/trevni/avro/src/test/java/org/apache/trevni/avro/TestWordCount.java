@@ -21,6 +21,7 @@ package org.apache.trevni.avro;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
+import org.apache.avro.SchemaParser;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
@@ -116,7 +117,7 @@ public class TestWordCount {
 
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapredTest");
 
-    Schema subSchema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"PairValue\"," + "\"fields\": [ "
+    Schema subSchema = SchemaParser.parseSingle("{\"type\":\"record\"," + "\"name\":\"PairValue\"," + "\"fields\": [ "
         + "{\"name\":\"value\", \"type\":\"long\"}" + "]}");
     AvroJob.setInputSchema(job, subSchema);
     AvroJob.setMapperClass(job, Counter.class);

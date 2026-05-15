@@ -19,6 +19,7 @@ package org.apache.avro.io;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.SystemLimitException;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -204,7 +205,7 @@ public class TestBinaryDecoder {
         + "{\"name\":\"floatField\", \"type\":\"float\"}," + "{\"name\":\"doubleField\", \"type\":\"double\"},"
         + "{\"name\":\"arrayField\", \"type\": " + "{\"type\":\"array\", \"items\":\"boolean\"}},"
         + "{\"name\":\"longField\", \"type\":\"long\"}]}";
-    schema = new Schema.Parser().parse(jsonSchema);
+    schema = SchemaParser.parseSingle(jsonSchema);
     GenericDatumWriter<Object> writer = new GenericDatumWriter<>();
     writer.setSchema(schema);
     ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);

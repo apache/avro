@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.junit.jupiter.api.Test;
@@ -119,7 +120,7 @@ public class TestEncoders {
 
   @Test
   void jsonEncoderInit() throws IOException {
-    Schema s = new Schema.Parser().parse("\"int\"");
+    Schema s = Schema.create(Type.INT);
     OutputStream out = new ByteArrayOutputStream();
     FACTORY.jsonEncoder(s, out);
     JsonEncoder enc = FACTORY.jsonEncoder(s, new JsonFactory().createGenerator(out, JsonEncoding.UTF8));
@@ -158,7 +159,7 @@ public class TestEncoders {
     String value = "{\"b\": {\"string\":\"myVal\"}, \"a\": 1}";
     String schemaStr = "{\"type\": \"record\", \"name\": \"ab\", \"fields\": ["
         + "{\"name\": \"a\", \"type\": \"int\"}, {\"name\": \"b\", \"type\": [\"null\", \"string\"]}" + "]}";
-    Schema schema = new Schema.Parser().parse(schemaStr);
+    Schema schema = SchemaParser.parseSingle(schemaStr);
     byte[] avroBytes = fromJsonToAvro(value, schema);
     ObjectMapper mapper = new ObjectMapper();
 
@@ -171,7 +172,7 @@ public class TestEncoders {
     String value = "{\"b\": {\"string\":\"myVal\"}, \"a\": 1}";
     String schemaStr = "{\"type\": \"record\", \"name\": \"ab\", \"fields\": ["
         + "{\"name\": \"a\", \"type\": \"int\"}, {\"name\": \"b\", \"type\": [\"null\", \"string\"]}" + "]}";
-    Schema schema = new Schema.Parser().parse(schemaStr);
+    Schema schema = SchemaParser.parseSingle(schemaStr);
     byte[] avroBytes = fromJsonToAvro(value, schema);
     ObjectMapper mapper = new ObjectMapper();
 
@@ -181,7 +182,7 @@ public class TestEncoders {
 
   @Test
   void validatingEncoderInit() throws IOException {
-    Schema s = new Schema.Parser().parse("\"int\"");
+    Schema s = Schema.create(Type.INT);
     OutputStream out = new ByteArrayOutputStream();
     Encoder e = FACTORY.directBinaryEncoder(out, null);
     FACTORY.validatingEncoder(s, e).configure(e);
@@ -190,7 +191,7 @@ public class TestEncoders {
   @Test
   void jsonRecordOrdering() throws IOException {
     String value = "{\"b\": 2, \"a\": 1}";
-    Schema schema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": ["
+    Schema schema = SchemaParser.parseSingle("{\"type\": \"record\", \"name\": \"ab\", \"fields\": ["
         + "{\"name\": \"a\", \"type\": \"int\"}, {\"name\": \"b\", \"type\": \"int\"}" + "]}");
     GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
     Decoder decoder = DecoderFactory.get().jsonDecoder(schema, value);
@@ -202,7 +203,7 @@ public class TestEncoders {
   void jsonExcessFields() throws IOException {
     assertThrows(AvroTypeException.class, () -> {
       String value = "{\"b\": { \"b3\": 1.4, \"b2\": 3.14, \"b1\": \"h\"}, \"a\": {\"a0\": 45, \"a2\":true, \"a1\": null}}";
-      Schema schema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+      Schema schema = SchemaParser.parseSingle("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
           + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
           + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}},\n"
           + "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n"
@@ -217,7 +218,7 @@ public class TestEncoders {
   @Test
   void jsonRecordOrdering2() throws IOException {
     String value = "{\"b\": { \"b3\": 1.4, \"b2\": 3.14, \"b1\": \"h\"}, \"a\": {\"a2\":true, \"a1\": null}}";
-    Schema schema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+    Schema schema = SchemaParser.parseSingle("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
         + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
         + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}},\n"
         + "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n"
@@ -233,13 +234,13 @@ public class TestEncoders {
   @Test
   void jsonRecordOrderingWithProjection() throws IOException {
     String value = "{\"b\": { \"b3\": 1.4, \"b2\": 3.14, \"b1\": \"h\"}, \"a\": {\"a2\":true, \"a1\": null}}";
-    Schema writerSchema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+    Schema writerSchema = SchemaParser.parseSingle("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
         + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
         + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}},\n"
         + "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n"
         + "[{\"name\":\"b1\", \"type\":\"string\"}, {\"name\":\"b2\", \"type\":\"float\"}, {\"name\":\"b3\", \"type\":\"double\"}]}}\n"
         + "]}");
-    Schema readerSchema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+    Schema readerSchema = SchemaParser.parseSingle("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
         + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
         + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}}\n" + "]}");
     GenericDatumReader<Object> reader = new GenericDatumReader<>(writerSchema, readerSchema);
@@ -251,13 +252,13 @@ public class TestEncoders {
   @Test
   void jsonRecordOrderingWithProjection2() throws IOException {
     String value = "{\"b\": { \"b1\": \"h\", \"b2\": [3.14, 3.56], \"b3\": 1.4}, \"a\": {\"a2\":true, \"a1\": null}}";
-    Schema writerSchema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+    Schema writerSchema = SchemaParser.parseSingle("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
         + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
         + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}},\n"
         + "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n"
         + "[{\"name\":\"b1\", \"type\":\"string\"}, {\"name\":\"b2\", \"type\":{\"type\":\"array\", \"items\":\"float\"}}, {\"name\":\"b3\", \"type\":\"double\"}]}}\n"
         + "]}");
-    Schema readerSchema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+    Schema readerSchema = SchemaParser.parseSingle("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
         + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
         + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}}\n" + "]}");
     GenericDatumReader<Object> reader = new GenericDatumReader<>(writerSchema, readerSchema);
@@ -351,7 +352,7 @@ public class TestEncoders {
 
   @Test
   public void testJsonEncoderInitAutoFlush() throws IOException {
-    Schema s = new Schema.Parser().parse("\"int\"");
+    Schema s = Schema.create(Type.INT);
     OutputStream baos = new ByteArrayOutputStream();
     OutputStream out = new BufferedOutputStream(baos);
     JsonEncoder enc = FACTORY.jsonEncoder(s, out, false);
