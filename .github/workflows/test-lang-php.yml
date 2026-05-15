@@ -23,7 +23,13 @@ on:
     paths:
     - .github/workflows/test-lang-php.yml
     - composer.json
-    - lang/php/**
+    - lang/php/bin/**
+    - lang/php/lib/**
+    - lang/php/test/**
+    - lang/php/.php-cs-fixer.dist.php
+    - lang/php/build.sh
+    - lang/php/phpstan*
+    - lang/php/phpunit.xml
 
 defaults:
   run:
