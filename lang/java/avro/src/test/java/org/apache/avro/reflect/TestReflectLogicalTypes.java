@@ -73,6 +73,8 @@ public class TestReflectLogicalTypes {
     Schema expected = SchemaBuilder.record(RecordWithUUIDList.class.getName()).fields().name("uuids").type().array()
         .items().stringType().noDefault().endRecord();
     expected.getField("uuids").schema().addProp(SpecificData.CLASS_PROP, List.class.getName());
+    expected.addProp("java-class", "org.apache.avro.reflect.RecordWithUUIDList");
+
     LogicalTypes.uuid().addToSchema(expected.getField("uuids").schema().getElementType());
 
     Schema actual = REFLECT.getSchema(RecordWithUUIDList.class);
