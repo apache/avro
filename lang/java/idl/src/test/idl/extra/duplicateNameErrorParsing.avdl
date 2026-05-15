@@ -1,0 +1,14 @@
+namespace duplicateNameParseError;
+
+// Test that parsing fails when redefining an enum with different symbols.
+// Avro 1.12.0 fails to parse this, but the correct result is an explicit error that redefinition is not allowed.
+
+enum Foo {
+  UNKNOWN,
+  BAR
+} = UNKNOWN;
+
+enum Foo {
+  UNKNOWN,
+  BAZ
+} = UNKNOWN;
