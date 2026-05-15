@@ -18,6 +18,7 @@
 package org.apache.avro.io;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.util.Utf8;
 
 import org.junit.jupiter.api.Assertions;
@@ -54,7 +55,7 @@ public class TestValidatingIO {
   @MethodSource("data")
   public void testMain(Encoding enc, int skip, String js, String cls) throws IOException {
     for (int i = 0; i < COUNT; i++) {
-      testOnce(new Schema.Parser().parse(js), cls, skip, enc);
+      testOnce(SchemaParser.parseSingle(js), cls, skip, enc);
     }
   }
 

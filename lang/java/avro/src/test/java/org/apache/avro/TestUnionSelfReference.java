@@ -43,7 +43,7 @@ public class TestUnionSelfReference {
 
   @Test
   void selfReferenceInUnion() {
-    Schema schema = new Schema.Parser().parse(SIMPLE_BINARY_TREE);
+    Schema schema = SchemaParser.parseSingle(SIMPLE_BINARY_TREE);
     Field leftField = schema.getField("left");
     assertEquals(JsonProperties.NULL_VALUE, leftField.defaultVal());
     final Schema leftFieldSchema = leftField.schema();
@@ -61,7 +61,7 @@ public class TestUnionSelfReference {
 
   @Test
   void selfReferenceInThreeUnion() {
-    Schema schema = new Schema.Parser().parse(THREE_TYPE_UNION);
+    Schema schema = SchemaParser.parseSingle(THREE_TYPE_UNION);
     Field leftField = schema.getField("left");
     assertEquals(JsonProperties.NULL_VALUE, leftField.defaultVal());
     final Schema leftFieldSchema = leftField.schema();

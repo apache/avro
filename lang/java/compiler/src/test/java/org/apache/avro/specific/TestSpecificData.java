@@ -46,7 +46,9 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -64,7 +66,7 @@ public class TestSpecificData {
 
   @Test
   void separateThreadContextClassLoader() throws Exception {
-    Schema schema = new Schema.Parser().parse(new File("src/test/resources/foo.Bar.avsc"));
+    Schema schema = new SchemaParser().parse(new File("src/test/resources/foo.Bar.avsc")).mainSchema();
     SpecificCompiler compiler = new SpecificCompiler(schema);
     compiler.setStringType(GenericData.StringType.String);
     compiler.compileToDestination(null, new File("target"));

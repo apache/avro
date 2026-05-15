@@ -41,7 +41,7 @@ import org.apache.avro.generic.GenericDatumWriter;
  * name, an HDFS URI, or stdout.
  */
 public class FromTextTool implements Tool {
-  private static final String TEXT_FILE_SCHEMA = "\"bytes\"";
+  private static final Schema TEXT_FILE_SCHEMA = Schema.create(Schema.Type.BYTES);
 
   @Override
   public String getName() {
@@ -76,7 +76,7 @@ public class FromTextTool implements Tool {
 
     DataFileWriter<ByteBuffer> writer = new DataFileWriter<>(new GenericDatumWriter<>());
     writer.setCodec(codecFactory);
-    writer.create(new Schema.Parser().parse(TEXT_FILE_SCHEMA), outStream);
+    writer.create(TEXT_FILE_SCHEMA, outStream);
 
     ByteBuffer line = ByteBuffer.allocate(128);
     boolean returnSeen = false;

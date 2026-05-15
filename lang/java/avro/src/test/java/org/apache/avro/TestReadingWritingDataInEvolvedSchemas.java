@@ -415,12 +415,11 @@ public class TestReadingWritingDataInEvolvedSchemas {
   @ParameterizedTest
   @EnumSource(EncoderType.class)
   void aliasesInSchema(EncoderType encoderType) throws Exception {
-    Schema writer = new Schema.Parser()
-        .parse("{\"namespace\": \"example.avro\", \"type\": \"record\", \"name\": \"User\", \"fields\": ["
-            + "{\"name\": \"name\", \"type\": \"int\"}\n" + "]}\n");
-    Schema reader = new Schema.Parser()
-        .parse("{\"namespace\": \"example.avro\", \"type\": \"record\", \"name\": \"User\", \"fields\": ["
-            + "{\"name\": \"fname\", \"type\": \"int\", \"aliases\" : [ \"name\" ]}\n" + "]}\n");
+    Schema writer = SchemaParser.parseSingle("{\"namespace\": \"example.avro\", \"type\": \"record\", "
+        + "\"name\": \"User\", \"fields\": [{\"name\": \"name\", \"type\": \"int\"}\n" + "]}\n");
+    Schema reader = SchemaParser.parseSingle("{\"namespace\": \"example.avro\", \"type\": \"record\", "
+        + "\"name\": \"User\", \"fields\": [{\"name\": \"fname\", \"type\": \"int\", \"aliases\" : [ \"name\" ]}\n"
+        + "]}\n");
 
     GenericData.Record record = defaultRecordWithSchema(writer, "name", 1);
     byte[] encoded = encodeGenericBlob(record, encoderType);

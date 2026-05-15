@@ -57,24 +57,76 @@ public class SchemaParser {
   private final Collection<FormattedSchemaParser> formattedSchemaParsers;
 
   /**
-   * Create a schema parser. Initially, the list of known (named) schemata is
-   * empty.
+   * <p>
+   * Use a default SchemaParser to parse a single schema. Equivalent to:
+   * </p>
+   * <code>
+   *   new SchemaParser().parse(schema).mainSchema()
+   * </code>
+   *
+   * @param schema the formatted schema to parse
+   * @return the parsed schema
+   * @throws SchemaParseException when the schema is invalid
+   * @see SchemaParser#parse(CharSequence)
+   */
+  public static Schema parseSingle(String schema) throws SchemaParseException {
+    return new SchemaParser().parse(schema).mainSchema();
+  }
+
+  /**
+   * <p>
+   * Use a default SchemaParser to parse a single schema from a file. Equivalent
+   * to:
+   * </p>
+   * <code>
+   *   new SchemaParser().parse(schemaFile).mainSchema()
+   * </code>
+   *
+   * @param schemaFile the formatted schema to parse
+   * @return the parsed schema
+   * @throws SchemaParseException when the schema is invalid
+   * @see SchemaParser#parse(Path)
+   */
+  public static Schema parseSingle(Path schemaFile) throws SchemaParseException, IOException {
+    return new SchemaParser().parse(schemaFile).mainSchema();
+  }
+
+  /**
+   * Create a schema parser that validates names using
+   * {@link NameValidator#UTF_VALIDATOR}. Initially, the list of known (named)
+   * schemata is empty.
    */
   public SchemaParser() {
-    this.parseContext = new ParseContext();
+    this(NameValidator.UTF_VALIDATOR);
+  }
+
+  /**
+   * Create a schema parser with the specified name validator.
+   * <p>
+   * Initially, the list of known (named) schemata is empty.
+   * </p>
+   * <p>
+   * Note: using {@link NameValidator#STRICT_VALIDATOR} to validate names is
+   * advised for maximum interoperability.
+   * </p>
+   *
+   * @param nameValidator the name validator to use
+   */
+  public SchemaParser(NameValidator nameValidator) {
+    NameValidator validator = nameValidator != null ? nameValidator : NameValidator.NO_VALIDATION;
+    this.parseContext = new ParseContext(validator);
     this.formattedSchemaParsers = new ArrayList<>();
     for (FormattedSchemaParser formattedSchemaParser : ServiceLoader.load(FormattedSchemaParser.class)) {
       formattedSchemaParsers.add(formattedSchemaParser);
     }
-    // Add the default / JSON parser last (not as a service, even though it
-    // implements the service interface), to allow implementations that parse JSON
-    // files into schemata differently.
+    // Add the default JSON parser last (it is not registered as a service, even
+    // though it implements the service interface), to allow implementations that
+    // parse JSON files into schemata differently.
     formattedSchemaParsers.add(new JsonSchemaParser());
   }
 
   /**
-   * Parse an Avro schema from a file. The file content is assumed to be UTF-8
-   * text.
+   * Parse an Avro schema from a file. The file content is assumed to be UTF text.
    *
    * @param file the file to read
    * @return the schema
@@ -82,7 +134,7 @@ public class SchemaParser {
    * @throws SchemaParseException if parsing the schema failed; contains
    *                              suppressed underlying parse exceptions if
    *                              available
-   * @see UtfTextUtils
+   * @see UtfTextUtils UTF detection algorithm in UtfTextUtils
    */
   public ParseResult parse(File file) throws IOException, SchemaParseException {
     return parse(file, null);
@@ -104,8 +156,7 @@ public class SchemaParser {
   }
 
   /**
-   * Parse an Avro schema from a file. The file content is assumed to be UTF-8
-   * text.
+   * Parse an Avro schema from a file. The file content is assumed to be UTF text.
    *
    * @param file the file to read
    * @return the schema
@@ -113,7 +164,7 @@ public class SchemaParser {
    * @throws SchemaParseException if parsing the schema failed; contains
    *                              suppressed underlying parse exceptions if
    *                              available
-   * @see UtfTextUtils
+   * @see UtfTextUtils UTF detection algorithm in UtfTextUtils
    */
   public ParseResult parse(Path file) throws IOException, SchemaParseException {
     return parse(file, null);
@@ -158,7 +209,7 @@ public class SchemaParser {
 
   /**
    * Parse an Avro schema from an input stream. The stream content is assumed to
-   * be UTF-8 text. Note that the stream stays open after reading.
+   * be UTF text. Note that the stream stays open after reading.
    *
    * @param in the stream to read
    * @return the schema
@@ -166,7 +217,7 @@ public class SchemaParser {
    * @throws SchemaParseException if parsing the schema failed; contains
    *                              suppressed underlying parse exceptions if
    *                              available
-   * @see UtfTextUtils
+   * @see UtfTextUtils UTF detection algorithm in UtfTextUtils
    */
   public ParseResult parse(InputStream in) throws IOException, SchemaParseException {
     return parse(in, null);

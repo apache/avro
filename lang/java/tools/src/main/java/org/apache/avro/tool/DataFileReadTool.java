@@ -30,6 +30,7 @@ import joptsimple.OptionSpec;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.generic.GenericDatumReader;
@@ -111,7 +112,7 @@ public class DataFileReadTool implements Tool {
       readerSchema = Util.parseSchemaFromFS(schemaFile);
     } else if (schemaStr != null) {
       LOG.info("Reading schema from string '{}'", schemaStr);
-      readerSchema = new Schema.Parser().parse(schemaStr);
+      readerSchema = SchemaParser.parseSingle(schemaStr);
     }
     return readerSchema;
   }

@@ -24,6 +24,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.io.UnsupportedEncodingException;
 
+import org.apache.avro.JsonSchemaParser;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.lib.IdentityMapper;
@@ -74,7 +75,7 @@ public class AvroJob {
   /** Return a job's map input schema. */
   public static Schema getInputSchema(Configuration job) {
     String schemaString = job.get(INPUT_SCHEMA);
-    return schemaString != null ? new Schema.Parser().parse(schemaString) : null;
+    return schemaString != null ? JsonSchemaParser.parseInternal(schemaString) : null;
   }
 
   /**
@@ -89,7 +90,7 @@ public class AvroJob {
 
   /** Return a job's map output key schema. */
   public static Schema getMapOutputSchema(Configuration job) {
-    return new Schema.Parser().parse(job.get(MAP_OUTPUT_SCHEMA, job.get(OUTPUT_SCHEMA)));
+    return JsonSchemaParser.parseInternal(job.get(MAP_OUTPUT_SCHEMA, job.get(OUTPUT_SCHEMA)));
   }
 
   /**
@@ -148,7 +149,7 @@ public class AvroJob {
 
   /** Return a job's output key schema. */
   public static Schema getOutputSchema(Configuration job) {
-    return new Schema.Parser().parse(job.get(OUTPUT_SCHEMA));
+    return JsonSchemaParser.parseInternal(job.get(OUTPUT_SCHEMA));
   }
 
   private static void configureAvroInput(JobConf job) {
