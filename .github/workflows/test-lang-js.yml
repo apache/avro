@@ -17,9 +17,9 @@ name: 'Test JavaScript'
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [master, branch-1.11, branch-1.12]
   pull_request:
-    branches: [ master ]
+    branches: [master, branch-1.11, branch-1.12]
     paths:
     - .github/workflows/test-lang-js.yml
     - lang/js/**
@@ -39,9 +39,9 @@ jobs:
     strategy:
       matrix:
         node:
-        - 12
-        - 14
-        - 16
+        - 20
+        - 22
+        - 24
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
@@ -68,9 +68,9 @@ jobs:
     strategy:
       matrix:
         node:
-        - 12
-        - 14
-        - 16
+        - 20
+        - 22
+        - 24
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
