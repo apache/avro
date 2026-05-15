@@ -25,7 +25,7 @@
   "require": {
     "php": "^8.1",
     "nikic/php-parser": "^5.7",
-    "symfony/console": "^7.4"
+    "symfony/console": "^6.4"
   },
   "deps": [
     "vendor/phpunit/phpunit"
