@@ -76,17 +76,8 @@ class AvroCodeGenerator
             };
 
             if (null !== $node) {
-                $code = <<<PHP
-                    <?php
-                    
-                    declare(strict_types=1);
-                    
-                    {$this->printer->prettyPrint([$node])}
-                    
-                    PHP;
-
                 $filename = $path.'/'.ucwords($name).'.php';
-                $files[$filename] = $code;
+                $files[$filename] = "<?php\n\ndeclare(strict_types=1);\n\n{$this->printer->prettyPrint([$node])}\n";
             }
         }
 
