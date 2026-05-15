@@ -34,7 +34,7 @@ class GenerateCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->outputDir = sys_get_temp_dir() . '/avro_test_' . uniqid();
+        $this->outputDir = sys_get_temp_dir().'/avro_test_'.uniqid();
     }
 
     protected function tearDown(): void
@@ -42,25 +42,6 @@ class GenerateCommandTest extends TestCase
         if (is_dir($this->outputDir)) {
             $this->removeDir($this->outputDir);
         }
-    }
-
-    private function removeDir(string $dir): void
-    {
-        foreach (array_diff(scandir($dir), ['.', '..']) as $file) {
-            $path = $dir . '/' . $file;
-            is_dir($path) ? $this->removeDir($path) : unlink($path);
-        }
-        rmdir($dir);
-    }
-
-    private function tester(): CommandTester
-    {
-        return new CommandTester(new GenerateCommand());
-    }
-
-    private function schemaPath(string $name): string
-    {
-        return __DIR__ . '/../Fixtures/Schemas/' . $name;
     }
 
     #[Test]
@@ -82,7 +63,7 @@ class GenerateCommandTest extends TestCase
         $tester = $this->tester();
         $exitCode = $tester->execute([
             '--file' => $this->schemaPath('user.avsc'),
-            '--directory' => __DIR__ . '/../Fixtures/Schemas',
+            '--directory' => __DIR__.'/../Fixtures/Schemas',
             '--output' => $this->outputDir,
             '--namespace' => 'App\\Generated',
         ]);
@@ -156,7 +137,7 @@ class GenerateCommandTest extends TestCase
         ]);
 
         self::assertSame(Command::SUCCESS, $exitCode);
-        self::assertFileExists($this->outputDir . '/User.php');
+        self::assertFileExists($this->outputDir.'/User.php');
         self::assertStringContainsString('1 file(s) generated', $tester->getDisplay());
     }
 
@@ -165,21 +146,21 @@ class GenerateCommandTest extends TestCase
     {
         $tester = $this->tester();
         $exitCode = $tester->execute([
-            '--directory' => __DIR__ . '/../Fixtures/Schemas',
+            '--directory' => __DIR__.'/../Fixtures/Schemas',
             '--output' => $this->outputDir,
             '--namespace' => 'App\\Generated',
         ]);
 
         self::assertSame(Command::SUCCESS, $exitCode);
-        self::assertFileExists($this->outputDir . '/User.php');
-        self::assertFileExists($this->outputDir . '/Status.php');
+        self::assertFileExists($this->outputDir.'/User.php');
+        self::assertFileExists($this->outputDir.'/Status.php');
         self::assertStringContainsString('2 file(s) generated', $tester->getDisplay());
     }
 
     #[Test]
     public function creates_output_directory_when_it_does_not_exist(): void
     {
-        $nestedOutputDir = $this->outputDir . '/nested/path';
+        $nestedOutputDir = $this->outputDir.'/nested/path';
 
         $tester = $this->tester();
         $exitCode = $tester->execute([
@@ -190,7 +171,7 @@ class GenerateCommandTest extends TestCase
 
         self::assertSame(Command::SUCCESS, $exitCode);
         self::assertDirectoryExists($nestedOutputDir);
-        self::assertFileExists($nestedOutputDir . '/User.php');
+        self::assertFileExists($nestedOutputDir.'/User.php');
     }
 
     #[Test]
@@ -203,7 +184,7 @@ class GenerateCommandTest extends TestCase
             '--namespace' => 'My\\App\\Avro',
         ]);
 
-        $content = file_get_contents($this->outputDir . '/User.php');
+        $content = file_get_contents($this->outputDir.'/User.php');
         self::assertStringContainsString('namespace My\\App\\Avro;', $content);
         self::assertStringContainsString('final class User', $content);
     }
@@ -218,10 +199,29 @@ class GenerateCommandTest extends TestCase
             '--namespace' => 'App\\Generated',
         ]);
 
-        $content = file_get_contents($this->outputDir . '/Status.php');
+        $content = file_get_contents($this->outputDir.'/Status.php');
         self::assertStringContainsString('enum Status', $content);
         self::assertStringContainsString("case ACTIVE = 'active'", $content);
         self::assertStringContainsString("case INACTIVE = 'inactive'", $content);
         self::assertStringContainsString("case PENDING = 'pending'", $content);
+    }
+
+    private function removeDir(string $dir): void
+    {
+        foreach (array_diff(scandir($dir), ['.', '..']) as $file) {
+            $path = $dir.'/'.$file;
+            is_dir($path) ? $this->removeDir($path) : unlink($path);
+        }
+        rmdir($dir);
+    }
+
+    private function tester(): CommandTester
+    {
+        return new CommandTester(new GenerateCommand());
+    }
+
+    private function schemaPath(string $name): string
+    {
+        return __DIR__.'/../Fixtures/Schemas/'.$name;
     }
 }
