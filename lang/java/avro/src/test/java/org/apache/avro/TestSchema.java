@@ -648,6 +648,15 @@ public class TestSchema {
     new Schema.Parser((NameValidator) null).parse("{\"type\":\"record\",\"name\":\"\",\"fields\":[]}"); // Empty name
   }
 
+  @Test
+  void disallowTypeObjectForNamedType() {
+    String withTypeObjectWithNamedType = "{"
+        + "\"namespace\":\"tests\",\"type\":\"record\",\"name\":\"Invalid\",\"fields\":["
+        + "{\"name\":\"good\",\"type\":{\"type\":\"fixed\",\"name\":\"Hash\",\"size\":16}},"
+        + "{\"name\":\"right\",\"type\":{\"type\":\"Hash\"}}]}";
+    assertThrows(SchemaParseException.class, () -> new SchemaParser().parse(withTypeObjectWithNamedType).mainSchema());
+  }
+
   /**
    * Tests when a user tries to write a record with an invalid enum symbol value
    * that the exception returned is more descriptive than just a NPE or an
