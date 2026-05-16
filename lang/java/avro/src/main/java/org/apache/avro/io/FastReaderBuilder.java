@@ -14,22 +14,6 @@
  */
 package org.apache.avro.io;
 
-import org.apache.avro.*;
-import org.apache.avro.Resolver.*;
-import org.apache.avro.Schema.Field;
-
-import org.apache.avro.generic.*;
-import org.apache.avro.generic.GenericData.InstanceSupplier;
-import org.apache.avro.io.FastReaderBuilder.RecordReader.Stage;
-import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
-import org.apache.avro.reflect.ReflectionUtil;
-import org.apache.avro.specific.SpecificData;
-import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.avro.util.ClassUtils;
-import org.apache.avro.util.Utf8;
-import org.apache.avro.util.WeakIdentityHashMap;
-import org.apache.avro.util.internal.Accessor;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
@@ -41,6 +25,37 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.IntFunction;
+
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.Conversion;
+import org.apache.avro.Conversions;
+import org.apache.avro.Resolver;
+import org.apache.avro.Resolver.Action;
+import org.apache.avro.Resolver.Container;
+import org.apache.avro.Resolver.EnumAdjust;
+import org.apache.avro.Resolver.Promote;
+import org.apache.avro.Resolver.ReaderUnion;
+import org.apache.avro.Resolver.RecordAdjust;
+import org.apache.avro.Resolver.Skip;
+import org.apache.avro.Resolver.WriterUnion;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.GenericArray;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericData.InstanceSupplier;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericEnumSymbol;
+import org.apache.avro.generic.GenericFixed;
+import org.apache.avro.generic.IndexedRecord;
+import org.apache.avro.io.FastReaderBuilder.RecordReader.Stage;
+import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
+import org.apache.avro.reflect.ReflectionUtil;
+import org.apache.avro.specific.SpecificData;
+import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.avro.util.ClassUtils;
+import org.apache.avro.util.Utf8;
+import org.apache.avro.util.WeakIdentityHashMap;
+import org.apache.avro.util.internal.Accessor;
 
 public class FastReaderBuilder {
 
