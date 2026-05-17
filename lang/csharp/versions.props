@@ -61,8 +61,8 @@
     <BenchmarkDotNetVersion>0.15.8</BenchmarkDotNetVersion>
     <CoverletCollectorVersion>10.0.0</CoverletCollectorVersion>
     <CoverletMSBuildVersion>10.0.0</CoverletMSBuildVersion>
-    <MicrosoftBuildFrameworkVersion>18.4.0</MicrosoftBuildFrameworkVersion>
-    <MicrosoftBuildUtilitiesCoreVersion>18.4.0</MicrosoftBuildUtilitiesCoreVersion>
+    <MicrosoftBuildFrameworkVersion>18.6.3</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>18.6.3</MicrosoftBuildUtilitiesCoreVersion>
     <MicrosoftCodeAnalysisVersion>4.7.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisCSharpVersion>4.7.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.7.0</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
