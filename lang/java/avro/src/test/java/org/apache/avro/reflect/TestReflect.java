@@ -40,7 +40,6 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.JsonSchemaParser;
-import org.apache.avro.NameValidator;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;

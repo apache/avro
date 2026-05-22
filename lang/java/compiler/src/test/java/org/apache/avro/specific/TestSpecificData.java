@@ -46,7 +46,6 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
-import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParser;
 import org.apache.avro.compiler.specific.SpecificCompiler;

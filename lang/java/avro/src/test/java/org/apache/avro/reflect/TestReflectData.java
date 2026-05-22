@@ -19,7 +19,6 @@
 package org.apache.avro.reflect;
 
 import org.apache.avro.AvroTypeException;
-import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParser;

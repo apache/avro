@@ -340,8 +340,7 @@
               <file>${main.basedir}/lang/java/eclipse-java-formatter.xml</file>
               <version>4.19</version>
             </eclipse>
-            <!-- Temporarily disabled for JDK 16+ builds -->
-            <!--<removeUnusedImports/>-->
+            <removeUnusedImports/>
             <replaceRegex>
               <name>Remove wildcard imports</name>
               <searchRegex>import\s+[^\*\s]+\*;(\r\n|\r|\n)</searchRegex>
