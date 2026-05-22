@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <cstring>
 #include <sstream>
 #include <unordered_set>
 #include <utility>

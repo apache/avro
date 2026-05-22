@@ -19,7 +19,7 @@
 #ifndef avro_Types_hh__
 #define avro_Types_hh__
 
-#include <fmt/format.h>
+#include <format>
 #include <iostream>
 
 #include "Config.hh"
@@ -111,10 +111,9 @@ std::ostream &operator<<(std::ostream &os, const Null &null);
 } // namespace avro
 
 template<>
-struct fmt::formatter<avro::Type> : fmt::formatter<std::string> {
-    template<typename FormatContext>
-    constexpr auto format(avro::Type t, FormatContext &ctx) const {
-        return fmt::formatter<std::string>::format(avro::toString(t), ctx);
+struct std::formatter<avro::Type, char> : std::formatter<std::string, char> {
+    auto format(avro::Type t, std::format_context &ctx) const {
+        return std::formatter<std::string, char>::format(avro::toString(t), ctx);
     }
 };
 
