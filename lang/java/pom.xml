@@ -499,13 +499,6 @@
         </plugins>
       </build>
     </profile>
-    <!-- This profile is used on tests to validate backwards compatibility with Hadoop 2 -->
-    <profile>
-      <id>hadoop2</id>
-      <properties>
-        <hadoop.version>2.10.1</hadoop.version>
-      </properties>
-    </profile>
   </profiles>
 
   <!-- dependencyManagement can be used to define dependency versions, scopes, and
