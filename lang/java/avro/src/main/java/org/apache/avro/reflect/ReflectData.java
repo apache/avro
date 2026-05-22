@@ -69,8 +69,6 @@ import java.util.concurrent.ConcurrentMap;
 /** Utilities to use existing Java classes and interfaces via reflection. */
 public class ReflectData extends SpecificData {
 
-  private static final String STRING_OUTER_PARENT_REFERENCE = "this$0";
-
   // holds a wrapper so null entries will have a cached value
   private final ConcurrentMap<Schema, CustomEncodingWrapper> encoderCache = new ConcurrentHashMap<>();
 
@@ -741,6 +739,9 @@ public class ReflectData extends SpecificData {
           schema = Schema.createRecord(name, doc, space, error);
           consumeAvroAliasAnnotation(c, schema);
           names.put(fullName, schema);
+          if (c.isMemberClass() && !Modifier.isStatic(c.getModifiers())) {
+            throw new AvroTypeException("Class " + fullName + " must be a static inner class");
+          }
           for (Field field : getCachedFields(c))
             if ((field.getModifiers() & (Modifier.TRANSIENT | Modifier.STATIC)) == 0
                 && !field.isAnnotationPresent(AvroIgnore.class)) {
@@ -752,9 +753,6 @@ public class ReflectData extends SpecificData {
 
               AvroName annotatedName = field.getAnnotation(AvroName.class); // Rename fields
               String fieldName = (annotatedName != null) ? annotatedName.value() : field.getName();
-              if (STRING_OUTER_PARENT_REFERENCE.equals(fieldName)) {
-                throw new AvroTypeException("Class " + fullName + " must be a static inner class");
-              }
               Schema.Field recordField = new Schema.Field(fieldName, fieldSchema, doc, defaultValue);
 
               AvroMeta[] metadata = field.getAnnotationsByType(AvroMeta.class); // add metadata

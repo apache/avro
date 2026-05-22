@@ -24,8 +24,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaParser;
 import org.apache.avro.util.internal.JacksonUtils;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -143,8 +141,6 @@ public class TestReflectData {
   }
 
   @Test
-  // FIXME: Why does this test fail under JDK 21?
-  @EnabledForJreRange(min = JRE.JAVA_8, max = JRE.JAVA_17, disabledReason = "Doesn't work under JRE 21, no clue why")
   void nonStaticInnerClasses() {
     assertThrows(AvroTypeException.class, () -> {
       ReflectData.get().getSchema(Definition.class);
