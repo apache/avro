@@ -1225,7 +1225,7 @@ public class SpecificCompiler {
   }
 
   /**
-   * Generates the name of a field accessor method that returns a Java 8 Optional.
+   * Generates the name of a field accessor method that returns an Optional.
    *
    * @param schema the schema in which the field is defined.
    * @param field  the field for which to generate the accessor name.
