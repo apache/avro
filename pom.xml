@@ -40,7 +40,6 @@
        Java artifacts are copied to the final build destination with a custom profile.
        -->
   <properties>
-    <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.release>17</maven.compiler.release>
     <main.basedir>${project.basedir}</main.basedir>
     <avro.distDir>dist</avro.distDir>
