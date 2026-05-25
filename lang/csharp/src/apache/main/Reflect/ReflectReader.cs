@@ -18,6 +18,7 @@
 
 using Avro.IO;
 using Avro.Generic;
+using Avro.Reflect.Interfaces.Services;
 
 namespace Avro.Reflect
 {
@@ -57,6 +58,19 @@ namespace Avro.Reflect
         public ReflectReader(Schema writerSchema, Schema readerSchema, ClassCache cache = null)
         {
             _reader = new ReflectDefaultReader(typeof(T), writerSchema, readerSchema, cache);
+        }
+
+        /// <summary>
+        /// Constructs a generic reader for the given schemas using the DefaultReader. If the
+        /// reader's and writer's schemas are different this class performs the resolution.
+        /// </summary>
+        /// <param name="writerSchema">The schema used while generating the data</param>
+        /// <param name="readerSchema">The schema desired by the reader</param>
+        /// <param name="cacheService"></param>
+        /// <param name="arrayService"></param>
+        public ReflectReader(Schema writerSchema, Schema readerSchema, ICacheService cacheService, IArrayService arrayService)
+        {
+            _reader = new ReflectDefaultReader(typeof(T), writerSchema, readerSchema, cacheService, arrayService);
         }
 
         /// <summary>

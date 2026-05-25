@@ -20,15 +20,16 @@ using System;
 using System.Reflection;
 using System.Collections.Concurrent;
 using Avro;
+using Avro.Reflect.Interfaces.Models;
 
 namespace Avro.Reflect
 {
     /// <summary>
     /// Collection of DotNetProperty objects to repre
     /// </summary>
-    public class DotnetClass
+    public class DotnetClass : IDotnetClass
     {
-        private ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
+        private readonly ConcurrentDictionary<string, IDotnetProperty> _propertyMap = new ConcurrentDictionary<string, IDotnetProperty>();
 
         private Type _type;
 
@@ -94,7 +95,7 @@ namespace Avro.Reflect
         /// <returns></returns>
         public object GetValue(object o, Field f)
         {
-            DotnetProperty p;
+            IDotnetProperty p;
             if (!_propertyMap.TryGetValue(f.Name, out p))
             {
                 throw new AvroException($"ByPosClass doesn't contain property {f.Name}");
@@ -111,7 +112,7 @@ namespace Avro.Reflect
         /// <param name="v">value for the property referenced by the field schema</param>
         public void SetValue(object o, Field f, object v)
         {
-            DotnetProperty p;
+            IDotnetProperty p;
             if (!_propertyMap.TryGetValue(f.Name, out p))
             {
                 throw new AvroException($"ByPosClass doesn't contain property {f.Name}");
@@ -136,7 +137,7 @@ namespace Avro.Reflect
         /// <returns></returns>
         public Type GetPropertyType(Field f)
         {
-            DotnetProperty p;
+            IDotnetProperty p;
             if (!_propertyMap.TryGetValue(f.Name, out p))
             {
                 throw new AvroException($"ByPosClass doesn't contain property {f.Name}");
