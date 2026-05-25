@@ -89,7 +89,7 @@ if (NOT fmt_FOUND)
     FetchContent_Declare(
             fmt
             GIT_REPOSITORY  https://github.com/fmtlib/fmt.git
-            GIT_TAG         10.2.1
+            GIT_TAG         12.1.0
             GIT_PROGRESS    TRUE
             USES_TERMINAL_DOWNLOAD TRUE
     )
@@ -153,6 +153,7 @@ function (setup_avro_lib target lib_type)
       $<BUILD_INTERFACE:ZLIB::ZLIB>
       $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
       $<$<BOOL:${zstd_FOUND}>:$<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
+      $<INSTALL_INTERFACE:fmt::fmt-header-only>
       $<INSTALL_INTERFACE:ZLIB::ZLIB>
       $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
       $<$<BOOL:${zstd_FOUND}>:$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
