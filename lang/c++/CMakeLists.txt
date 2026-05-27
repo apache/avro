@@ -21,11 +21,11 @@ cmake_minimum_required (VERSION 3.20)
 set (CMAKE_LEGACY_CYGWIN_WIN32 0)
 
 if (NOT DEFINED CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD 20)
 endif()
 
-if (CMAKE_CXX_STANDARD LESS 17)
-    message(FATAL_ERROR "Avro requires at least C++17")
+if (CMAKE_CXX_STANDARD LESS 20)
+    message(FATAL_ERROR "Avro requires at least C++20")
 endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
