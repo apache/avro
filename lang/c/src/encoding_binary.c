@@ -134,9 +134,9 @@ static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 	}
 
 	max_available = avro_max_read(reader);
-	if (max_available >= 0 && str_len > max_available) {
+	if (max_available >= 0 && *len > max_available) {
 	    avro_set_error("String length %" PRId64 " is greater than available buffer size %" PRId64,
-				str_len, max_available);
+				*len, max_available);
 		return ERANGE;
 	}
 
