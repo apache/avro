@@ -281,11 +281,26 @@ int64_t avro_max_read(avro_reader_t reader)
 		struct _avro_reader_memory_t *mem_reader = avro_reader_to_memory(reader);
 		return mem_reader->len - mem_reader->read;
 	} else if (is_file_io(reader)) {
-		struct _avro_reader_file_t *file_reader = avro_reader_to_file(reader);
-		return bytes_available(file_reader);
-	}
+		struct _avro_reader_file_t *file_reader = avro_reader_to_file(reader); 
+		
+		// For file I/O - needs to get file size and current position  
+		int64_t current_pos, file_size;  
+      
+	    // Get current position (accounting for buffered data)  
+	    current_pos = ftell(file_reader->fp) - bytes_available(file_reader);  
+	      
+	    // Get file size  
+	    fseek(file_reader->fp, 0, SEEK_END);  
+	    file_size = ftell(file_reader->fp);  
+	    fseek(file_reader->fp, current_pos, SEEK_SET);  
+	      
+	    return file_size - current_pos;  
+	}  
 	return -1;
 }
+
+
+
 
 
 static int avro_skip_memory(struct _avro_reader_memory_t *reader, int64_t len)
