@@ -20,6 +20,7 @@
 #define avro_BufferReader_hh__
 
 #include "Buffer.hh"
+#include <cstring>
 #include <type_traits>
 
 #ifdef min
@@ -233,7 +234,7 @@ private:
         }
 
         if (sizeof(T) <= chunkRemaining()) {
-            val = *(reinterpret_cast<const T *>(addr()));
+            memcpy(&val, addr(), sizeof(T));
             incrementChunk(sizeof(T));
         } else {
             read(reinterpret_cast<data_type *>(&val), sizeof(T));

@@ -77,7 +77,8 @@ public class ZstandardCodec extends Codec {
 
   @Override
   public ByteBuffer decompress(ByteBuffer compressedData) throws IOException {
-    NonCopyingByteArrayOutputStream baos = new NonCopyingByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
+    NonCopyingByteArrayOutputStream baos = NonCopyingByteArrayOutputStream
+        .capacityLimitedOutputStream(DEFAULT_BUFFER_SIZE);
     InputStream bytesIn = new ByteArrayInputStream(compressedData.array(), computeOffset(compressedData),
         compressedData.remaining());
     try (InputStream ios = ZstandardLoader.input(bytesIn, useBufferPool)) {

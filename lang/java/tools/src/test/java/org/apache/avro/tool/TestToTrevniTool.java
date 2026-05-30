@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.util.RandomData;
@@ -52,7 +53,7 @@ public class TestToTrevniTool {
 
   @Test
   void test() throws Exception {
-    Schema schema = new Schema.Parser().parse(SCHEMA_FILE);
+    Schema schema = new SchemaParser().parse(SCHEMA_FILE).mainSchema();
 
     DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>());
     File avroFile = dataDir.resolve("random.avro").toFile();

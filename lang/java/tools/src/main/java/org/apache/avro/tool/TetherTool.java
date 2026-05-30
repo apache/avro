@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.mapred.AvroJob;
 import org.apache.avro.mapred.tether.TetherJob;
 import org.apache.hadoop.fs.Path;
@@ -135,7 +136,7 @@ public class TetherTool implements Tool {
       job.set(AvroJob.OUTPUT_SCHEMA, Schema.parse(outschema).toString());
       if (line.hasOption("outschemamap")) {
         job.set(AvroJob.MAP_OUTPUT_SCHEMA,
-            new Schema.Parser().parse((File) line.getParsedOptionValue("outschemamap")).toString());
+            new SchemaParser().parse((File) line.getParsedOptionValue("outschemamap")).mainSchema().toString());
       }
       if (line.hasOption("reduces")) {
         job.setNumReduceTasks((Integer) line.getParsedOptionValue("reduces"));

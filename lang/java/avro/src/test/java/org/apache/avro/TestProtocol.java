@@ -88,7 +88,7 @@ public class TestProtocol {
         + "    {  \"name\":\"f2\", " + "       \"type\":{\n" + "         \"type\":\"enum\",  \"name\":\"Sub\",\n" // define
                                                                                                                   // Sub
         + "         \"symbols\":[\"OPEN\",\"CLOSE\"]\n" + "        }\n" + "    }\n" + " ]\n" + "}";
-    Schema s = new Schema.Parser().parse(schema);
+    Schema s = SchemaParser.parseSingle(schema);
     assertNotNull(s);
 
     String parsingForm = SchemaNormalization.toParsingForm(s);

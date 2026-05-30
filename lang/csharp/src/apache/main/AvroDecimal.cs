@@ -1140,20 +1140,14 @@ namespace Avro
             var unscaledValueCompare = UnscaledValue.CompareTo(other.UnscaledValue);
             var scaleCompare = Scale.CompareTo(other.Scale);
 
-            // if both are the same value, return the value
-            if (unscaledValueCompare == scaleCompare)
-            {
-                return unscaledValueCompare;
-            }
-
             // if the scales are both the same return unscaled value
             if (scaleCompare == 0)
             {
                 return unscaledValueCompare;
             }
 
-            var scaledValue = BigInteger.Divide(UnscaledValue, BigInteger.Pow(new BigInteger(10), Scale));
-            var otherScaledValue = BigInteger.Divide(other.UnscaledValue, BigInteger.Pow(new BigInteger(10), other.Scale));
+            var scaledValue = (decimal) UnscaledValue / (decimal) Math.Pow(10, Scale);
+            var otherScaledValue = (decimal) other.UnscaledValue / (decimal) Math.Pow(10, other.Scale);
 
             return scaledValue.CompareTo(otherScaledValue);
         }

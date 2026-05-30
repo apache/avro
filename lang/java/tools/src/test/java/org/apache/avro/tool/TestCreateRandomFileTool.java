@@ -20,6 +20,7 @@ package org.apache.avro.tool;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Iterator;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericDatumReader;
@@ -50,17 +52,17 @@ public class TestCreateRandomFileTool {
   private Path dataDir;
   private static final File SCHEMA_FILE = new File("../../../share/test/schemas/weather.avsc");
 
-  private final Schema.Parser schemaParser = new Schema.Parser();
-
   private static final long SEED = System.currentTimeMillis();
 
   private ByteArrayOutputStream out;
   private ByteArrayOutputStream err;
+  private Schema schema;
 
   @BeforeEach
-  public void before() {
+  public void before() throws IOException {
     out = new ByteArrayOutputStream();
     err = new ByteArrayOutputStream();
+    schema = new SchemaParser().parse(SCHEMA_FILE).mainSchema();
   }
 
   @AfterEach
@@ -95,7 +97,7 @@ public class TestCreateRandomFileTool {
     DataFileReader<Object> reader = new DataFileReader<>(outFile, new GenericDatumReader<>());
 
     Iterator<Object> found = reader.iterator();
-    for (Object expected : new RandomData(schemaParser.parse(SCHEMA_FILE), Integer.parseInt(COUNT), SEED))
+    for (Object expected : new RandomData(schema, Integer.parseInt(COUNT), SEED))
       assertEquals(expected, found.next());
 
     reader.close();
@@ -136,7 +138,7 @@ public class TestCreateRandomFileTool {
     DataFileStream<Object> reader = new DataFileStream<>(new ByteArrayInputStream(file), new GenericDatumReader<>());
 
     Iterator<Object> found = reader.iterator();
-    for (Object expected : new RandomData(schemaParser.parse(SCHEMA_FILE), Integer.parseInt(COUNT), SEED))
+    for (Object expected : new RandomData(schema, Integer.parseInt(COUNT), SEED))
       assertEquals(expected, found.next());
 
     reader.close();

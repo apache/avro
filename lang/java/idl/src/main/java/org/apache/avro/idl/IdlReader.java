@@ -34,6 +34,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.LogicalType;
@@ -207,20 +208,21 @@ public class IdlReader {
     IdlParser parser = new IdlParser(tokenStream);
     parser.removeErrorListeners();
     parser.addErrorListener(SIMPLE_AVRO_ERROR_LISTENER);
-    parser.addParseListener(parseListener);
     parser.setTrace(false);
-    parser.setBuildParseTree(false);
 
+    // Parse the input, then walk the parse tree using the listener.
+    // Although the parse can call the listener directly, there are edge cases where
+    // the enter and exit rules are not called in pairs. This a known issue and
+    // currently by design. See: https://github.com/antlr/antlr4/issues/18
     try {
-      // Trigger parsing.
-      parser.idlFile();
+      IdlFileContext idlFileContext = parser.idlFile();
+      ParseTreeWalker.DEFAULT.walk(parseListener, idlFileContext);
+      return parseListener.getIdlFile();
     } catch (SchemaParseException e) {
       throw e;
     } catch (RuntimeException e) {
       throw new SchemaParseException(e);
     }
-
-    return parseListener.getIdlFile();
   }
 
   /* Package private to facilitate testing */

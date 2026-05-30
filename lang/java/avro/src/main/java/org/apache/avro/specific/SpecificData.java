@@ -23,6 +23,7 @@ import org.apache.avro.Conversions;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.data.TimeConversions;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.BinaryDecoder;
@@ -534,8 +535,8 @@ public class SpecificData extends GenericData {
 
           if (!fullName.equals(getClassName(schema)))
             // HACK: schema mismatches class. maven shade plugin? try replacing.
-            schema = new Schema.Parser()
-                .parse(schema.toString().replace(schema.getNamespace(), c.getPackage().getName()));
+            schema = SchemaParser
+                .parseSingle(schema.toString().replace(schema.getNamespace(), c.getPackage().getName()));
         } catch (NoSuchFieldException e) {
           throw new AvroRuntimeException("Not a Specific class: " + c);
         } catch (IllegalAccessException e) {

@@ -24,6 +24,8 @@ import java.util.zip.CRC32;
 
 import org.xerial.snappy.Snappy;
 
+import org.apache.avro.SystemLimitException;
+
 /** * Implements Snappy compression and decompression. */
 public class SnappyCodec extends Codec {
   private final CRC32 crc32 = new CRC32();
@@ -66,7 +68,9 @@ public class SnappyCodec extends Codec {
   @Override
   public ByteBuffer decompress(ByteBuffer in) throws IOException {
     int offset = computeOffset(in);
-    ByteBuffer out = ByteBuffer.allocate(Snappy.uncompressedLength(in.array(), offset, in.remaining() - 4));
+    final int uncompressedLength = Snappy.uncompressedLength(in.array(), offset, in.remaining() - 4);
+    SystemLimitException.checkMaxDecompressCapacity(SystemLimitException.MAX_DECOMPRESS_LENGTH, 0, uncompressedLength);
+    ByteBuffer out = ByteBuffer.allocate(uncompressedLength);
     int size = Snappy.uncompress(in.array(), offset, in.remaining() - 4, out.array(), 0);
     ((Buffer) out).limit(size);
 

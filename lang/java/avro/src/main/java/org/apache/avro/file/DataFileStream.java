@@ -90,7 +90,8 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   /** Decoder on raw input stream. (Used for metadata.) */
   BinaryDecoder vin;
   /**
-   * Secondary decoder, for datums. (Different than vin for block segments.)
+   * Secondary decoder, for datums. (Different from `vin`, which is used for block
+   * segments)
    */
   BinaryDecoder datumIn = null;
 
