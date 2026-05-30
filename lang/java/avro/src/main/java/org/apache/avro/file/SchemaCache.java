@@ -17,7 +17,7 @@
  */
 package org.apache.avro.file;
 
-import org.apache.avro.NameValidator;
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 
 import java.lang.ref.ReferenceQueue;
@@ -64,7 +64,7 @@ public abstract class SchemaCache {
    * @return the parsed Schema
    */
   protected Schema parse(String metaString) {
-    return new Schema.Parser(NameValidator.NO_VALIDATION).setValidateDefaults(false).parse(metaString);
+    return JsonSchemaParser.parseInternal(metaString);
   }
 
   /**

@@ -110,11 +110,10 @@ public class TestSchemaCache {
       System.runFinalization();
       Thread.sleep(100); // Allow GC to run
     }
-    // the isnt really a guarantee that its clear or not cleared by now, but is seems
-    // ok fo the unit test
-    // at least.
+    // the isnt really a guarantee that its clear or not cleared by now, but is
+    // seems ok for the unit test at least.
     // So by now we expect the GC to have not cleared the schema from the cache, as
-    // there isnt any pressure
+    // there isn't any pressure
     // so the weak reference should be not null and the cache should not be empty.
 
     assertNotNull(weakRef.get(), "Schema should not have been GC'd, its soft and there is no pressure");
