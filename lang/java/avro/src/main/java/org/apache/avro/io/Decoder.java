@@ -132,14 +132,16 @@ public abstract class Decoder {
   /**
    * Reads a byte-string written by {@link Encoder#writeBytes}.
    * <p>
-   * This is useful when you want to avoid the creation of a ByteBuffer, and only want the byte[], e.g.:
+   * This is useful when you want to avoid the creation of a ByteBuffer, and only
+   * want the byte[], e.g.:
+   * 
    * <pre>
-   *     ByteBuffer buffer = decoder.readBytes(null);
-   *     byte[] array = buffer.array();
+   * ByteBuffer buffer = decoder.readBytes(null);
+   * byte[] array = buffer.array();
    * </pre>
    *
-   * @throws AvroTypeException If this is a stateful reader and byte-string is not the type of the next value to be
-   *                           read
+   * @throws AvroTypeException If this is a stateful reader and byte-string is not
+   *                           the type of the next value to be read
    */
   public byte[] readBytes() throws IOException {
     int length = SystemLimitException.checkMaxBytesLength(readLong());

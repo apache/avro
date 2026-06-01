@@ -134,7 +134,8 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
 
   public Utf8 set(byte[] bytes) {
     this.bytes = bytes;
-    this.length = SystemLimitException.checkMaxStringLength(length);;
+    this.length = SystemLimitException.checkMaxStringLength(length);
+    ;
     this.hash = 0;
     return this;
   }

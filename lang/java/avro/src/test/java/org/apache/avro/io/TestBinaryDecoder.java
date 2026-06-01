@@ -430,6 +430,7 @@ public class TestBinaryDecoder {
         () -> this.newDecoder(useDirect, -1).readBytes(null));
     Assertions.assertEquals(ERROR_NEGATIVE, ex.getMessage());
   }
+
   @ParameterizedTest
   @ValueSource(booleans = { true, false })
   public void testBytesNegativeLengthRaw(boolean useDirect) throws IOException {
