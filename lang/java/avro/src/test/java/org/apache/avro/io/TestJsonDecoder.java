@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 
@@ -54,7 +55,7 @@ public class TestJsonDecoder {
 
   private void checkNumeric(String type, Object value) throws Exception {
     String def = "{\"type\":\"record\",\"name\":\"X\",\"fields\":" + "[{\"type\":\"" + type + "\",\"name\":\"n\"}]}";
-    Schema schema = new Schema.Parser().parse(def);
+    Schema schema = SchemaParser.parseSingle(def);
     DatumReader<GenericRecord> reader = new GenericDatumReader<>(schema);
 
     String[] records = { "{\"n\":1}", "{\"n\":1.0}" };
@@ -73,7 +74,7 @@ public class TestJsonDecoder {
   void reorderFields() throws Exception {
     String w = "{\"type\":\"record\",\"name\":\"R\",\"fields\":" + "[{\"type\":\"long\",\"name\":\"l\"},"
         + "{\"type\":{\"type\":\"array\",\"items\":\"int\"},\"name\":\"a\"}" + "]}";
-    Schema ws = new Schema.Parser().parse(w);
+    Schema ws = SchemaParser.parseSingle(w);
     DecoderFactory df = DecoderFactory.get();
     String data = "{\"a\":[1,2],\"l\":100}{\"l\": 200, \"a\":[1,2]}";
     JsonDecoder in = df.jsonDecoder(ws, data);
@@ -100,7 +101,7 @@ public class TestJsonDecoder {
         + "{\"type\":\"float\",\"name\":\"negativeInfinityFloat\"}," + "{\"type\":\"double\",\"name\":\"nanDouble\"},"
         + "{\"type\":\"double\",\"name\":\"infinityDouble\"},"
         + "{\"type\":\"double\",\"name\":\"negativeInfinityDouble\"}" + "]}";
-    Schema schema = new Schema.Parser().parse(def);
+    Schema schema = SchemaParser.parseSingle(def);
     DatumReader<GenericRecord> reader = new GenericDatumReader<>(schema);
 
     String record = "{\"nanFloat\":\"NaN\", \"infinityFloat\":\"Infinity\", \"negativeInfinityFloat\":\"-Infinity\", "

@@ -19,8 +19,10 @@
 package org.apache.avro.reflect;
 
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.util.internal.JacksonUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
@@ -128,8 +130,7 @@ public class TestReflectData {
 
     final String schemaString = schema.toString(true);
 
-    Schema.Parser parser = new Schema.Parser();
-    Schema cloneSchema = parser.parse(schemaString);
+    Schema cloneSchema = SchemaParser.parseSingle(schemaString);
 
     Map testCases = JacksonUtils.objectToMap(meta);
 

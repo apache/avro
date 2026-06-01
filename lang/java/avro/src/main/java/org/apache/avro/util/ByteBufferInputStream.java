@@ -65,6 +65,18 @@ public class ByteBufferInputStream extends InputStream {
     }
   }
 
+  @Override
+  public int available() throws IOException {
+    long remaining = 0;
+    for (int i = current; i < buffers.size(); i++) {
+      remaining += buffers.get(i).remaining();
+      if (remaining >= Integer.MAX_VALUE) {
+        return Integer.MAX_VALUE;
+      }
+    }
+    return (int) remaining;
+  }
+
   /**
    * Read a buffer from the input without copying, if possible.
    */

@@ -42,25 +42,25 @@
     <commons-compress.version>1.28.0</commons-compress.version>
     <commons-text.version>1.15.0</commons-text.version>
     <commons-lang3.version>3.20.0</commons-lang3.version>
-    <grpc.version>1.80.0</grpc.version>
+    <grpc.version>1.81.0</grpc.version>
     <hadoop.version>3.4.3</hadoop.version>
     <hamcrest.version>3.0</hamcrest.version>
-    <jackson-bom.version>2.21.2</jackson-bom.version>
+    <jackson-bom.version>2.21.4</jackson-bom.version>
     <jetty.version>9.4.58.v20250814</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit5.version>5.14.4</junit5.version>
     <maven-core.version>3.9.6</maven-core.version>
     <mockito.version>5.23.0</mockito.version>
-    <netty.version>4.2.12.Final</netty.version>
-    <protobuf.version>4.34.1</protobuf.version>
+    <netty.version>4.2.14.Final</netty.version>
+    <protobuf.version>4.35.0</protobuf.version>
     <reload4j.version>1.2.26</reload4j.version>
     <servlet-api.version>4.0.1</servlet-api.version>
-    <slf4j.version>2.0.17</slf4j.version>
+    <slf4j.version>2.0.18</slf4j.version>
     <snappy.version>1.1.10.8</snappy.version>
     <thrift.version>0.20.0</thrift.version>
     <tukaani.version>1.12</tukaani.version>
     <velocity.version>2.4.1</velocity.version>
-    <zstd-jni.version>1.5.7-7</zstd-jni.version>
+    <zstd-jni.version>1.5.7-9</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.4.1</archetype-plugin.version>
     <bundle-plugin-version>6.0.2</bundle-plugin-version>

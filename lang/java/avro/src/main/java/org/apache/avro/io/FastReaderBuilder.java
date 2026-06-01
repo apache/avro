@@ -197,7 +197,16 @@ public class FastReaderBuilder {
     } else if (defaultValue instanceof Utf8) {
       return createFieldSetter(field, reusingReader((old, d) -> readUtf8(old, (Utf8) defaultValue)));
     } else if (defaultValue instanceof List && ((List<?>) defaultValue).isEmpty()) {
-      return createFieldSetter(field, reusingReader((old, d) -> data.newArray(old, 0, field.schema())));
+      Schema arraySchema = field.schema();
+      if (arraySchema.getType() == Schema.Type.UNION) {
+        arraySchema = arraySchema.getTypes().stream()
+            .filter(nestedSchema -> nestedSchema.getType() == Schema.Type.ARRAY).findFirst()
+            .orElseThrow(() -> new AvroTypeException(String.format(
+                "Union schema %s has a default value of type Array, but none of the union types is of type Array",
+                field.schema().toString())));
+      }
+      final Schema schema = arraySchema;
+      return createFieldSetter(field, reusingReader((old, d) -> data.newArray(old, 0, schema)));
     } else if (defaultValue instanceof Map && ((Map<?, ?>) defaultValue).isEmpty()) {
       return createFieldSetter(field, reusingReader((old, d) -> data.newMap(old, 0)));
     } else {
@@ -434,7 +443,11 @@ public class FastReaderBuilder {
       Function<String, ?> transformer = findClass(valueClass)
           .map(clazz -> ReflectionUtil.getConstructorAsFunction(String.class, clazz)).orElse(null);
       if (transformer != null) {
-        return (old, decoder) -> transformer.apply((String) stringReader.read(null, decoder));
+        return (old, decoder) -> {
+          Object value = stringReader.read(null, decoder);
+          String stringValue = value instanceof Utf8 ? ((Utf8) value).toString() : (String) value;
+          return transformer.apply(stringValue);
+        };
       }
     }
 

@@ -110,7 +110,10 @@ public abstract class Schema extends JsonProperties implements Serializable {
     private String schemaString;
 
     private Object readResolve() {
-      return new Schema.Parser().parse(schemaString);
+      // The schema can be built using any validation, which we cannot reproduce.
+      // Assuming best practice precautions when using serialized data, we can
+      // safely enough disable validation here.
+      return JsonSchemaParser.parseInternal(schemaString);
     }
   }
 
@@ -1842,8 +1845,9 @@ public abstract class Schema extends JsonProperties implements Serializable {
         return parseMap(schema, context, currentNameSpace);
       } else if ("fixed".equals(type)) { // fixed
         return parseFixed(schema, context, currentNameSpace);
-      } else { // For unions with self reference
-        return context.find(type, currentNameSpace);
+      } else {
+        throw new SchemaParseException("A schema \"type\" MUST be a primitive type or one of"
+            + " \"enum\", \"fixed\", \"record\", \"error\", \"array\" or \"map\".");
       }
     } else if (schema.isArray()) { // union
       return parseUnion(schema, context, currentNameSpace);

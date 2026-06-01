@@ -35,6 +35,7 @@ import java.util.Set;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericData.StringType;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility;
@@ -88,16 +89,16 @@ public class SpecificCompilerTool implements Tool {
     compilerOpts.fieldVisibility = Optional.empty();
 
     List<String> args = new ArrayList<>(origArgs);
-    int arg = 0;
+    int arg;
 
     if (args.contains("-noSetters")) {
       compilerOpts.createSetters = false;
-      args.remove(args.indexOf("-noSetters"));
+      args.remove("-noSetters");
     }
 
     if (args.contains("-nullSafeAnnotations")) {
       compilerOpts.createNullSafeAnnotations = true;
-      args.remove(args.indexOf("-nullSafeAnnotations"));
+      args.remove("-nullSafeAnnotations");
     }
 
     if (args.contains("-nullSafeAnnotationNullable")) {
@@ -116,7 +117,7 @@ public class SpecificCompilerTool implements Tool {
 
     if (args.contains("-addExtraOptionalGetters")) {
       compilerOpts.addExtraOptionalGetters = true;
-      args.remove(args.indexOf("-addExtraOptionalGetters"));
+      args.remove("-addExtraOptionalGetters");
     }
 
     if (args.contains("-optionalGetters")) {
@@ -141,7 +142,7 @@ public class SpecificCompilerTool implements Tool {
 
     if (args.contains("-string")) {
       compilerOpts.stringType = StringType.String;
-      args.remove(args.indexOf("-string"));
+      args.remove("-string");
     }
 
     if (args.contains("-fieldVisibility")) {
@@ -177,12 +178,19 @@ public class SpecificCompilerTool implements Tool {
     }
 
     if ("schema".equals(method)) {
-      Schema.Parser parser = new Schema.Parser();
+      SchemaParser parser = new SchemaParser();
+      File latestSourceFile = null;
       for (File src : determineInputs(inputs, SCHEMA_FILTER)) {
-        Schema schema = parser.parse(src);
-        final SpecificCompiler compiler = new SpecificCompiler(schema);
-        executeCompiler(compiler, compilerOpts, src, output);
+        parser.parse(src);
+        if (latestSourceFile == null || latestSourceFile.lastModified() < src.lastModified()) {
+          latestSourceFile = src;
+        }
       }
+      for (Schema schema : parser.getParsedNamedSchemas()) {
+        final SpecificCompiler compiler = new SpecificCompiler(schema);
+        executeCompiler(compiler, compilerOpts, latestSourceFile, output);
+      }
+
     } else if ("protocol".equals(method)) {
       for (File src : determineInputs(inputs, PROTOCOL_FILTER)) {
         Protocol protocol = Protocol.parse(src);
@@ -277,7 +285,7 @@ public class SpecificCompilerTool implements Tool {
       }
     }
 
-    if (fileSet.size() > 0) {
+    if (!fileSet.isEmpty()) {
       System.err.println("Input files to compile:");
       for (File file : fileSet) {
         System.err.println("  " + file);
