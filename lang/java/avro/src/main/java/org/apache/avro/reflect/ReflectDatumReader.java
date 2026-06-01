@@ -19,7 +19,6 @@ package org.apache.avro.reflect;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.HashMap;
@@ -132,11 +131,11 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     throw new AvroRuntimeException("reflectDatumReader does not use addToArray");
   }
 
-  @Override
   /**
    * Called to read an array instance. May be overridden for alternate array
    * representations.
    */
+  @Override
   protected Object readArray(Object old, Schema expected, ResolvingDecoder in) throws IOException {
     Schema expectedType = expected.getElementType();
     long l = in.readArrayStart();
