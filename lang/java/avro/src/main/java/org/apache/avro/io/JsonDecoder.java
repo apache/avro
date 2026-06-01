@@ -311,6 +311,18 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
     }
   }
 
+  @Override
+  public byte[] readBytes() throws IOException {
+    advance(Symbol.BYTES);
+    if (in.getCurrentToken() == JsonToken.VALUE_STRING) {
+      byte[] result = readByteArray();
+      in.nextToken();
+      return result;
+    } else {
+      throw error("bytes");
+    }
+  }
+
   private byte[] readByteArray() throws IOException {
     return in.getText().getBytes(StandardCharsets.ISO_8859_1);
   }
