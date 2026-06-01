@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.IO;
 using System.IO.Compression;
 
@@ -78,10 +79,16 @@ namespace Avro.File
         /// <inheritdoc/>
         public override bool Equals(object other)
         {
-            return this == other || GetType().Name == other.GetType().Name;
+            if (other == this)
+            {
+                return true;
+            }
+
+            return other != null
+                && other.GetType() == typeof(DeflateCodec);
         }
 
-        /// <inheritdoc/>
+/// <inheritdoc/>
         public override int GetHashCode()
         {
             return DataFileConstants.DeflateCodecHash;

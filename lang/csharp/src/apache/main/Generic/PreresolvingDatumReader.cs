@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Collections.Generic;
 using System.IO;
 using Avro.IO;
@@ -690,12 +691,16 @@ namespace Avro.Generic
                 return Equals( _writerSchema, other._writerSchema ) && Equals( _readerSchema, other._readerSchema );
             }
 
-            public override bool Equals( object obj )
+            public override bool Equals(object obj)
             {
-                if( ReferenceEquals( null, obj ) ) return false;
-                if( ReferenceEquals( this, obj ) ) return true;
-                if( obj.GetType() != this.GetType() ) return false;
-                return Equals( (SchemaPair) obj );
+                if (this == obj)
+                {
+                    return true;
+                }
+
+                return obj != null
+                    && obj.GetType() == typeof(SchemaPair)
+                    && Equals((SchemaPair)obj);
             }
 
             public override int GetHashCode()
