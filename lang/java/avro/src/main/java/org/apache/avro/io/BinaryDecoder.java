@@ -341,7 +341,7 @@ public class BinaryDecoder extends Decoder {
     if (length == 0) {
       return EMPTY_BYTES;
     }
-    byte[] result = new byte[length];
+    final byte[] result = new byte[length];
     doReadBytes(result, 0, result.length);
     return result;
   }

@@ -248,7 +248,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
     Symbol actual = parser.advance(Symbol.BYTES);
     if (actual == Symbol.STRING) {
       Utf8 s = in.readString(null);
-      return s.getBytes();
+      return s.getBytes(); // readString(null) allocated an exactly fitting byte[]
     } else {
       assert actual == Symbol.BYTES;
       return in.readBytes();
