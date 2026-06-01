@@ -244,6 +244,18 @@ public class ResolvingDecoder extends ValidatingDecoder {
   }
 
   @Override
+  public byte[] readBytes() throws IOException {
+    Symbol actual = parser.advance(Symbol.BYTES);
+    if (actual == Symbol.STRING) {
+      Utf8 s = in.readString(null);
+      return s.getBytes();
+    } else {
+      assert actual == Symbol.BYTES;
+      return in.readBytes();
+    }
+  }
+
+  @Override
   public void skipBytes() throws IOException {
     Symbol actual = parser.advance(Symbol.BYTES);
     if (actual == Symbol.STRING) {

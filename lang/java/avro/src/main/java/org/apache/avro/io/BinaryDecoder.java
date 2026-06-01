@@ -335,6 +335,18 @@ public class BinaryDecoder extends Decoder {
   }
 
   @Override
+  public byte[] readBytes() throws IOException {
+    int length = SystemLimitException.checkMaxBytesLength(readLong());
+    ensureAvailableBytes(length);
+    if (length == 0) {
+      return EMPTY_BYTES;
+    }
+    byte[] result = new byte[length];
+    doReadBytes(result, 0, result.length);
+    return result;
+  }
+
+  @Override
   public void skipBytes() throws IOException {
     doSkipBytes(readLong());
   }
