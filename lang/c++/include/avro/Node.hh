@@ -22,6 +22,7 @@
 #include "Config.hh"
 
 #include <cassert>
+#include <format>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -223,10 +224,9 @@ inline std::ostream &operator<<(std::ostream &os, const avro::Node &n) {
 } // namespace std
 
 template<>
-struct fmt::formatter<avro::Name> : fmt::formatter<std::string> {
-    template<typename FormatContext>
-    constexpr auto format(const avro::Name &n, FormatContext &ctx) const {
-        return fmt::formatter<std::string>::format(n.fullname(), ctx);
+struct std::formatter<avro::Name, char> : std::formatter<std::string, char> {
+    auto format(const avro::Name &n, std::format_context &ctx) const {
+        return std::formatter<std::string, char>::format(n.fullname(), ctx);
     }
 };
 
