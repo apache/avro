@@ -132,8 +132,8 @@ static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 		avro_set_error("Cannot allocate buffer for bytes value");
 		return ENOMEM;
 	}
-	AVRO_READ(reader, *bytes, *len);
 	(*bytes)[*len] = '\0';
+	AVRO_READ_OR_FREE(reader, *bytes, *len);
 	return 0;
 }
 
@@ -182,7 +182,7 @@ static int read_string(avro_reader_t reader, char **s, int64_t *len)
 		return ENOMEM;
 	}
 	(*s)[str_len] = '\0';
-	AVRO_READ(reader, *s, str_len);
+	AVRO_READ_OR_FREE(reader, *s, str_len);
 	return 0;
 }
 
