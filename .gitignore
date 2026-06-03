@@ -28,5 +28,6 @@ test-output
 vendor
 composer.lock
 .phpunit.result.cache
-.mvn/jvm.config # Maven JVM settings
+.mvn/jvm.config    # Maven JVM settings
+.mvn/maven.config  # Local Maven settings
 **/*.run.xml    # Intellij IDEA Run configurations
