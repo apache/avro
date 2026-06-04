@@ -29,6 +29,7 @@
 #include "avro_generic_internal.h"
 #include "avro_private.h"
 
+#define align_up(sz) ((sz + (sizeof(void*)-1)) & ~(sizeof(void*)-1))
 
 /*-----------------------------------------------------------------------
  * Forward definitions
@@ -57,7 +58,7 @@ avro_generic_value_new(avro_value_iface_t *iface, avro_value_t *dest)
 	avro_generic_value_iface_t  *giface =
 	    container_of(iface, avro_generic_value_iface_t, parent);
 	size_t  instance_size = avro_value_instance_size(giface);
-	void  *self = avro_malloc(instance_size + sizeof(volatile int));
+	void  *self = avro_malloc(instance_size + sizeof(volatile long));
 	if (self == NULL) {
 		avro_set_error(strerror(ENOMEM));
 		dest->iface = NULL;
@@ -65,8 +66,8 @@ avro_generic_value_new(avro_value_iface_t *iface, avro_value_t *dest)
 		return ENOMEM;
 	}
 
-	volatile int  *refcount = (volatile int *) self;
-	self = (char *) self + sizeof(volatile int);
+	volatile long  *refcount = (volatile long *) self;
+	self = (char *) self + sizeof(volatile long);
 
 	*refcount = 1;
 	rval = avro_value_init(giface, self);
@@ -90,8 +91,8 @@ avro_generic_value_free(const avro_value_iface_t *iface, void *self)
 		    container_of(iface, avro_generic_value_iface_t, parent);
 		size_t  instance_size = avro_value_instance_size(giface);
 		avro_value_done(giface, self);
-		self = (char *) self - sizeof(volatile int);
-		avro_free(self, instance_size + sizeof(volatile int));
+		self = (char *) self - sizeof(volatile long);
+		avro_free(self, instance_size + sizeof(volatile long));
 	}
 }
 
@@ -102,7 +103,7 @@ avro_generic_value_incref(avro_value_t *value)
 	 * This only works if you pass in the top-level value.
 	 */
 
-	volatile int  *refcount = (volatile int *) ((char *) value->self - sizeof(volatile int));
+	volatile long  *refcount = (volatile long *) ((char *) value->self - sizeof(volatile long));
 	avro_refcount_inc(refcount);
 }
 
@@ -113,7 +114,7 @@ avro_generic_value_decref(avro_value_t *value)
 	 * This only works if you pass in the top-level value.
 	 */
 
-	volatile int  *refcount = (volatile int *) ((char *) value->self - sizeof(volatile int));
+	volatile long  *refcount = (volatile long *) ((char *) value->self - sizeof(volatile long));
 	if (avro_refcount_dec(refcount)) {
 		avro_generic_value_free(value->iface, value->self);
 	}
@@ -147,7 +148,7 @@ struct avro_generic_link_value_iface {
 	avro_generic_value_iface_t  parent;
 
 	/** The reference count for this interface. */
-	volatile int  refcount;
+	volatile long  refcount;
 
 	/** The schema for this interface. */
 	avro_schema_t  schema;
@@ -1910,7 +1911,7 @@ avro_generic_string_new_length(avro_value_t *value, const char *str, size_t size
 
 typedef struct avro_generic_array_value_iface {
 	avro_generic_value_iface_t  parent;
-	volatile int  refcount;
+	volatile long  refcount;
 	avro_schema_t  schema;
 	avro_generic_value_iface_t  *child_giface;
 } avro_generic_array_value_iface_t;
@@ -2162,7 +2163,7 @@ avro_generic_array_class(avro_schema_t schema, memoize_state_t *state)
 
 typedef struct avro_generic_enum_value_iface {
 	avro_generic_value_iface_t  parent;
-	volatile int  refcount;
+	volatile long  refcount;
 	avro_schema_t  schema;
 } avro_generic_enum_value_iface_t;
 
@@ -2335,7 +2336,7 @@ avro_generic_enum_class(avro_schema_t schema)
 
 typedef struct avro_generic_fixed_value_iface {
 	avro_generic_value_iface_t  parent;
-	volatile int  refcount;
+	volatile long  refcount;
 	avro_schema_t  schema;
 	size_t  data_size;
 } avro_generic_fixed_value_iface_t;
@@ -2545,7 +2546,7 @@ avro_generic_fixed_class(avro_schema_t schema)
 
 typedef struct avro_generic_map_value_iface {
 	avro_generic_value_iface_t  parent;
-	volatile int  refcount;
+	volatile long  refcount;
 	avro_schema_t  schema;
 	avro_generic_value_iface_t  *child_giface;
 } avro_generic_map_value_iface_t;
@@ -2833,7 +2834,7 @@ avro_generic_map_class(avro_schema_t schema, memoize_state_t *state)
 
 typedef struct avro_generic_record_value_iface {
 	avro_generic_value_iface_t  parent;
-	volatile int  refcount;
+	volatile long  refcount;
 	avro_schema_t  schema;
 
 	/** The total size of each value struct for this record. */
@@ -3156,6 +3157,9 @@ avro_generic_record_class(avro_schema_t schema, memoize_state_t *state)
 			goto error;
 		}
 
+		/* align to the nearest multiple of pointer size */
+		field_size = align_up(field_size);
+
 #if DEBUG_FIELD_OFFSETS
 		fprintf(stderr, "    Offset %" PRIsz ", size %" PRIsz "\n",
 			next_offset, field_size);
@@ -3192,11 +3196,11 @@ error:
  * union
  */
 
-#ifndef DEBUG_BRANCHES_OFFSETS
-#define DEBUG_BRANCHES_OFFSETS 0
+#ifndef DEBUG_BRANCHES
+#define DEBUG_BRANCHES 0
 #endif
 
-#if DEBUG_BRANCHES_OFFSETS
+#if DEBUG_BRANCHES
 #include <stdio.h>
 #endif
 
@@ -3209,7 +3213,7 @@ error:
 
 typedef struct avro_generic_union_value_iface {
 	avro_generic_value_iface_t  parent;
-	volatile int  refcount;
+	volatile long  refcount;
 	avro_schema_t  schema;
 
 	/** The total size of each value struct for this union. */
@@ -3241,7 +3245,7 @@ typedef struct avro_generic_union {
 
 /** Return a pointer to the active branch within a union struct. */
 #define avro_generic_union_branch(_union) \
-	(((char *) (_union)) + sizeof(avro_generic_union_t))
+	(((char *) (_union)) + align_up(sizeof(avro_generic_union_t)))
 
 
 static avro_value_iface_t *
@@ -3534,7 +3538,8 @@ avro_generic_union_class(avro_schema_t schema, memoize_state_t *state)
 	}
 
 	iface->instance_size =
-		sizeof(avro_generic_union_t) + max_branch_size;
+		align_up(sizeof(avro_generic_union_t)) + max_branch_size;
+
 #if DEBUG_BRANCHES
 	fprintf(stderr, "MAX BRANCH SIZE: %" PRIsz "\n", max_branch_size);
 #endif
