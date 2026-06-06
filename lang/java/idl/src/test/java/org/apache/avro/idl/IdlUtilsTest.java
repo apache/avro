@@ -33,11 +33,14 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.junit.jupiter.api.Test;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class IdlUtilsTest {
   @Test
@@ -101,6 +104,23 @@ public class IdlUtilsTest {
   public void cannotWriteProtocolWithUnnamedTypes() {
     assertThrows(AvroRuntimeException.class,
         () -> IdlUtils.writeIdlProtocol(new StringWriter(), Schema.create(Schema.Type.STRING)));
+  }
+
+  @Test
+  public void enumDefaultIsWrittenToIdl() throws IOException {
+    Schema withDefault = Schema.createEnum("Status", null, "naming", asList("ACTIVE", "INACTIVE"), "ACTIVE");
+    Schema withoutDefault = Schema.createEnum("Status", null, "naming", asList("ACTIVE", "INACTIVE"));
+
+    StringWriter withDefaultWriter = new StringWriter();
+    IdlUtils.writeIdlProtocol(withDefaultWriter, withDefault);
+
+    StringWriter withoutDefaultWriter = new StringWriter();
+    IdlUtils.writeIdlProtocol(withoutDefaultWriter, withoutDefault);
+
+    assertTrue(withDefaultWriter.toString().contains("} = ACTIVE;"),
+        "Enum with default should serialize default value");
+    assertFalse(withoutDefaultWriter.toString().contains("="),
+        "Enum without default should not contain '='");
   }
 
   @Test
