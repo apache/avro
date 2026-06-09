@@ -225,7 +225,8 @@ inline std::ostream &operator<<(std::ostream &os, const avro::Node &n) {
 
 template<>
 struct std::formatter<avro::Name, char> : std::formatter<std::string, char> {
-    auto format(const avro::Name &n, std::format_context &ctx) const {
+    template<typename FormatContext>
+    auto format(const avro::Name &n, FormatContext &ctx) const {
         return std::formatter<std::string, char>::format(n.fullname(), ctx);
     }
 };

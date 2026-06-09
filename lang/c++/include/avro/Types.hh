@@ -112,7 +112,8 @@ std::ostream &operator<<(std::ostream &os, const Null &null);
 
 template<>
 struct std::formatter<avro::Type, char> : std::formatter<std::string, char> {
-    auto format(avro::Type t, std::format_context &ctx) const {
+    template<typename FormatContext>
+    auto format(avro::Type t, FormatContext &ctx) const {
         return std::formatter<std::string, char>::format(avro::toString(t), ctx);
     }
 };
