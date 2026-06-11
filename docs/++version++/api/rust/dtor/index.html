@@ -1,0 +1,219 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Build Status"><title>dtor - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="dtor" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.0 (ac68faa20 2026-05-25)" data-channel="1.96.0" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../static.files/storage-41dd4d93.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Crate dtor</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../dtor/index.html">dtor</a><span class="version">0.11.0</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#dtor" title="dtor">dtor</a></li><li><a href="#examples" title="Examples">Examples</a></li><li><a href="#platform-support" title="Platform Support">Platform Support</a></li><li><a href="#shutdown-method-dtormethod--" title="Shutdown Method (`#[dtor(method = ...)]`)">Shutdown Method (<code>#[dtor(method = ...)]</code>)</a></li><li><a href="#under-the-hood" title="Under the Hood">Under the Hood</a></li><li><a href="#crate-features" title="Crate Features">Crate Features</a></li><li><a href="#macro-attributes" title="Macro Attributes">Macro Attributes</a></li><li><a href="#defaults" title="Defaults">Defaults</a><ul><li><a href="#ctor_export_name_prefix" title="`ctor_export_name_prefix`"><code>ctor_export_name_prefix</code></a></li><li><a href="#ctor_link_section" title="`ctor_link_section`"><code>ctor_link_section</code></a></li><li><a href="#default_term_method" title="`default_term_method`"><code>default_term_method</code></a></li><li><a href="#default_unload_method" title="`default_unload_method`"><code>default_unload_method</code></a></li><li><a href="#export_name_prefix" title="`export_name_prefix`"><code>export_name_prefix</code></a></li><li><a href="#link_section" title="`link_section`"><code>link_section</code></a></li><li><a href="#method" title="`method`"><code>method</code></a></li></ul></li></ul><h3><a href="#modules">Crate Items</a></h3><ul class="block"><li><a href="#modules" title="Modules">Modules</a></li><li><a href="#functions" title="Functions">Functions</a></li><li><a href="#attributes" title="Attribute Macros">Attribute Macros</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1>Crate <span>dtor</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/dtor/lib.rs.html#1-270">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p><img src="https://github.com/mmastrac/rust-ctor/actions/workflows/rust.yml/badge.svg" alt="Build Status" /></p>
+<div><table><thead><tr><th>crate</th><th>docs</th><th>version</th></tr></thead><tbody>
+<tr><td><code>ctor</code></td><td><a href="https://docs.rs/ctor"><img src="https://docs.rs/ctor/badge.svg" alt="docs.rs" /></a></td><td><a href="https://crates.io/crates/ctor"><img src="https://img.shields.io/crates/v/ctor.svg" alt="crates.io" /></a></td></tr>
+<tr><td><code>dtor</code></td><td><a href="https://docs.rs/dtor"><img src="https://docs.rs/dtor/badge.svg" alt="docs.rs" /></a></td><td><a href="https://crates.io/crates/dtor"><img src="https://img.shields.io/crates/v/dtor.svg" alt="crates.io" /></a></td></tr>
+<tr><td><code>link-section</code></td><td><a href="https://docs.rs/link-section"><img src="https://docs.rs/link-section/badge.svg" alt="docs.rs" /></a></td><td><a href="https://crates.io/crates/link-section"><img src="https://img.shields.io/crates/v/link-section.svg" alt="crates.io" /></a></td></tr>
+</tbody></table>
+</div><h2 id="dtor"><a class="doc-anchor" href="#dtor">§</a>dtor</h2>
+<p>Shutdown functions for Rust (like <code>__attribute__((destructor))</code> in C/C++) for
+Linux, OSX, Windows, mobile (iOS/Android), WASM, BSD/BSD-likes and many other
+platforms.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>dtor::dtor;
+
+<span class="attr">#[dtor(<span class="kw">unsafe</span>)]
+</span><span class="kw">fn </span>foo() {
+    <span class="macro">println!</span>(<span class="string">"Life after main!"</span>);
+}</code></pre></div><h2 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h2>
+<p>Print a message at shutdown time.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[dtor(<span class="kw">unsafe</span>)]
+</span><span class="kw">fn </span>shutdown() {
+    <span class="comment">// Using println! or eprintln! here may panic as Rust may have
+    // shut down some stdlib services at this time.
+    </span><span class="macro">libc_println!</span>(<span class="string">"Shutting down!"</span>);
+}</code></pre></div><h2 id="platform-support"><a class="doc-anchor" href="#platform-support">§</a>Platform Support</h2><div><table><thead><tr><th>Platform</th><th>Link Section</th><th>at_binary_exit</th><th>at_module_exit</th></tr></thead><tbody>
+<tr><td>Linux</td><td><code>.fini_array</code></td><td>Yes (<code>atexit</code>)</td><td>Yes (<code>__cxa_atexit</code>)</td></tr>
+<tr><td>MacOS</td><td><code>.mod_term_func</code> <sup><sup>🍎</sup></sup></td><td>Yes (<code>atexit</code>)</td><td>Yes (<code>__cxa_atexit</code>)</td></tr>
+<tr><td>Windows</td><td><code>.CRT$XPU</code> <sup><sup>🪟</sup></sup></td><td>No</td><td>Yes (<code>atexit</code>)</td></tr>
+<tr><td>AIX</td><td>No <sup><sup>🔵</sup></sup></td><td>Yes</td><td>Yes</td></tr>
+<tr><td>Other POSIX-like platforms</td><td><code>.fini_array</code>/<code>.dtors</code></td><td>Yes (<code>atexit</code>)</td><td>Yes (<code>__cxa_atexit</code>)</td></tr>
+</tbody></table>
+</div>
+<p>Notes:</p>
+<ul>
+<li><sup><sup>🍎</sup></sup> Not recommended. Apple platforms no longer call
+<code>mod_term_func</code> functions.</li>
+<li><sup><sup>🪟</sup></sup> Not recommended. Windows platforms may not reliably
+call functions in link sections, unless a binary is built with a static CRT.</li>
+<li><sup><sup>🔵</sup></sup> Link sections are not supported on AIX, but the
+platform calls functions with the prefix <code>__sinit</code> and <code>__sterm</code> at startup
+and shutdown respectively.</li>
+</ul>
+<h2 id="shutdown-method-dtormethod--"><a class="doc-anchor" href="#shutdown-method-dtormethod--">§</a>Shutdown Method (<code>#[dtor(method = ...)]</code>)</h2>
+<p>The <code>#[dtor]</code> macro supports multiple registration strategies via
+<code>#[dtor(method = ...)]</code>. The best choice is platform-dependent:</p>
+<ul>
+<li><code>#[dtor]</code> (no method specified): Use the platform’s most reliable method:
+<code>at_module_exit</code> on Windows and Apple platforms, and <code>linker</code> on others.</li>
+<li><code>unload</code>: Run on <em>module unload</em> (library unload or process exit) using the
+platform’s default unload method.</li>
+<li><code>term</code>: Run on <em>process termination only</em> using the platform’s default
+termination method. Not recommended: code may be unloaded before the dtor
+runs.</li>
+<li><code>at_module_exit</code>: Register using <code>__cxa_atexit</code> (non-Windows) or <code>atexit</code>
+(Windows) so the dtor runs when the module unloads.</li>
+<li><code>at_binary_exit</code>: Register to run at process exit (unsupported on Windows).</li>
+<li><code>linker</code>: Register using the platform’s linker mechanism (<code>link_section</code> on
+all platforms with the exception of <code>export_name_prefix</code> on AIX). Unsupported
+on Apple platforms.</li>
+</ul>
+<p>Default:</p>
+<ul>
+<li>Apple and Windows default to <code>at_module_exit</code></li>
+<li>Most other platforms default to <code>linker</code></li>
+</ul>
+<p>Examples:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>dtor::dtor;
+<span class="doccomment">/// Use `at_module_exit` on all platforms
+</span><span class="attr">#[dtor(<span class="kw">unsafe</span>, method = at_module_exit)]
+</span><span class="kw">fn </span>shutdown() {}</code></pre></div>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>dtor::dtor;
+
+<span class="doccomment">/// Use `link_section` with a section name of `.dtors` on most platforms,
+/// and `export_name_prefix` on AIX
+</span><span class="attr">#[dtor(<span class="kw">unsafe</span>, method = linker, link_section = <span class="string">".dtors"</span>)]
+</span><span class="kw">fn </span>shutdown() {}</code></pre></div><h2 id="under-the-hood"><a class="doc-anchor" href="#under-the-hood">§</a>Under the Hood</h2>
+<p>The <code>#[dtor]</code> macro effectively creates a constructor that calls <code>libc::atexit</code>
+with the provided function, i.e. roughly equivalent to:</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="attr">#[ctor]
+</span><span class="kw">fn </span>dtor_atexit() {
+    libc::atexit(dtor);
+}</code></pre></div><h2 id="crate-features"><a class="doc-anchor" href="#crate-features">§</a>Crate Features</h2><div><table><thead><tr><th>Cargo feature</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>no_warn_on_missing_unsafe</code></td><td>Do not warn when a ctor or dtor is missing the <code>unsafe</code> keyword.</td></tr>
+<tr><td><code>proc_macro</code></td><td>Enable support for the proc-macro <code>#[dtor]</code> attribute. The declarative form (<code>dtor!(...)</code>) is always available. It is recommended that crates re-exporting the <code>dtor</code> macro disable this feature and only use the declarative form.</td></tr>
+<tr><td><code>std</code></td><td>Enable support for the standard library.</td></tr>
+<tr><td><code>used_linker</code></td><td>Applies <code>used(linker)</code> to all <code>dtor</code>-generated functions. Requires nightly and <code>feature(used_with_arg)</code>.</td></tr>
+</tbody></table>
+</div><h2 id="macro-attributes"><a class="doc-anchor" href="#macro-attributes">§</a>Macro Attributes</h2><table><tr><th>Attribute</th><th>Description</th></tr>
+<tr><td><code>anonymous</code></td><td>
+<p>Make the ctor function anonymous.</p>
+</td></tr>
+<tr><td><code>crate_path = $path : pat</code></td><td>
+<p>Specify a custom crate path for the <code>dtor</code> crate. Used when re-exporting the dtor macro.</p>
+</td></tr>
+<tr><td><code>ctor(export_name_prefix = $ctor_export_name_prefix_str : literal)</code></td><td>
+<p>Specify a custom export name prefix for the constructor function.</p>
+<p>If specified, an export with the given prefix will be generated in the form:</p>
+<p><code>&lt;prefix&gt;_&lt;unique_id&gt;</code></p>
+</td></tr>
+<tr><td><code>ctor(link_section = $ctor_link_section_name : literal)</code></td><td>
+<p>Place the initialization function pointer in a custom link section.</p>
+</td></tr>
+<tr><td><code>export_name_prefix = $export_name_prefix_str : literal</code></td><td>
+<p>Specify a custom export name prefix for the destructor function.</p>
+<p>If specified, an export with the given prefix will be generated in the form:</p>
+<p><code>&lt;prefix&gt;_&lt;unique_id&gt;</code></p>
+</td></tr>
+<tr><td><code>link_section = $section : literal</code></td><td>
+<p>Place the destructor function pointer in a custom link section.</p>
+</td></tr>
+<tr><td><code>method = $method_id : ident</code></td><td>
+<p>Specify the dtor method.</p>
+<ul>
+<li><code>term</code>: Run the dtor on binary termination using the platform’s
+<a href="#default_term_method">default_term_method</a>. Not recommended as code
+may be unloaded before the dtor is called.</li>
+<li><code>unload</code>: Run the dtor on module unload (library or binary) using the
+platform’s <a href="#default_unload_method">default_unload_method</a>.</li>
+<li><code>at_module_exit</code>: Run the dtor using the platform’s
+<a href="fn.at_module_exit.html" title="fn dtor::at_module_exit"><code>at_module_exit</code></a> (<code>__cxa_atexit</code> on all platforms
+other than Windows, <code>atexit</code> on Windows).</li>
+<li><code>at_binary_exit</code>: Run the dtor using the platform’s
+<a href="fn.at_binary_exit.html" title="fn dtor::at_binary_exit"><code>at_binary_exit</code></a> (unsupported on Windows
+platforms).</li>
+<li><code>linker</code>: Register the dtor using the platform’s
+<a href="#link_section">link_section</a> or
+<a href="#export_name_prefix">export_name_prefix</a> (unsupported on Apple
+platforms).</li>
+</ul>
+</td></tr>
+<tr><td><code>unsafe</code></td><td>
+<p>Marks a ctor/dtor as unsafe.</p>
+</td></tr>
+<tr><td><code>used(linker)</code></td><td>
+<p>Mark generated functions for this <code>dtor</code> as <code>used(linker)</code>. Requires nightly and <code>feature(used_with_arg)</code>.</p>
+</td></tr>
+</table>
+<h2 id="defaults"><a class="doc-anchor" href="#defaults">§</a>Defaults</h2><h3 id="ctor_export_name_prefix"><a class="doc-anchor" href="#ctor_export_name_prefix">§</a><code>ctor_export_name_prefix</code></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[cfg(target_os = <span class="string">"aix"</span>)]
+</span>ctor_export_name_prefix = <span class="string">"__sinit80000000"
+
+</span><span class="comment">// default
+</span>ctor_export_name_prefix = ()</code></pre></div><h3 id="ctor_link_section"><a class="doc-anchor" href="#ctor_link_section">§</a><code>ctor_link_section</code></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[cfg(target_vendor = <span class="string">"apple"</span>)]
+</span>ctor_link_section = <span class="string">"__DATA,__mod_init_func,mod_init_funcs"
+
+</span><span class="attr">#[cfg(any(target_os = <span class="string">"linux"</span>, target_os = <span class="string">"android"</span>, target_os = <span class="string">"freebsd"</span>,
+target_os = <span class="string">"netbsd"</span>, target_os = <span class="string">"openbsd"</span>, target_os = <span class="string">"dragonfly"</span>,
+target_os = <span class="string">"illumos"</span>, target_os = <span class="string">"haiku"</span>, target_os = <span class="string">"vxworks"</span>, target_os =
+<span class="string">"nto"</span>, target_family = <span class="string">"wasm"</span>))]
+</span>ctor_link_section = <span class="string">".init_array"
+
+</span><span class="attr">#[cfg(target_os = <span class="string">"none"</span>)]
+</span>ctor_link_section = <span class="string">".init_array"
+
+</span><span class="attr">#[cfg(target_arch = <span class="string">"xtensa"</span>)]
+</span>ctor_link_section = <span class="string">".ctors"
+
+</span><span class="attr">#[cfg(all(target_vendor = <span class="string">"pc"</span>, any(target_env = <span class="string">"gnu"</span>, target_env = <span class="string">"msvc"</span>)))]
+</span>ctor_link_section = <span class="string">".CRT$XCU"
+
+</span><span class="attr">#[cfg(all(target_vendor = <span class="string">"pc"</span>, not(any(target_env = <span class="string">"gnu"</span>, target_env = <span class="string">"msvc"</span>))))]
+</span>ctor_link_section = <span class="string">".ctors"
+
+</span><span class="attr">#[cfg(all(target_os = <span class="string">"aix"</span>))]
+</span>ctor_link_section = ()
+
+<span class="comment">// default
+</span>ctor_link_section = (<span class="macro">compile_error!</span> (<span class="string">"Unsupported target for #[ctor]"</span>))</code></pre></div><h3 id="default_term_method"><a class="doc-anchor" href="#default_term_method">§</a><code>default_term_method</code></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[cfg(target_vendor = <span class="string">"pc"</span>)]
+</span>default_term_method = at_module_exit
+
+<span class="comment">// default
+</span>default_term_method = at_binary_exit</code></pre></div><h3 id="default_unload_method"><a class="doc-anchor" href="#default_unload_method">§</a><code>default_unload_method</code></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="comment">// default
+</span>default_unload_method = at_module_exit</code></pre></div><h3 id="export_name_prefix"><a class="doc-anchor" href="#export_name_prefix">§</a><code>export_name_prefix</code></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[cfg(target_os = <span class="string">"aix"</span>)]
+</span>export_name_prefix = <span class="string">"__sterm80000000"
+
+</span><span class="comment">// default
+</span>export_name_prefix = ()</code></pre></div><h3 id="link_section"><a class="doc-anchor" href="#link_section">§</a><code>link_section</code></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[cfg(target_vendor = <span class="string">"apple"</span>)]
+</span>link_section = <span class="string">"__DATA,__mod_term_func,mod_term_funcs"
+
+</span><span class="attr">#[cfg(any(target_os = <span class="string">"linux"</span>, target_os = <span class="string">"android"</span>, target_os = <span class="string">"freebsd"</span>,
+target_os = <span class="string">"netbsd"</span>, target_os = <span class="string">"openbsd"</span>, target_os = <span class="string">"dragonfly"</span>,
+target_os = <span class="string">"illumos"</span>, target_os = <span class="string">"haiku"</span>, target_os = <span class="string">"vxworks"</span>, target_os =
+<span class="string">"nto"</span>, target_family = <span class="string">"wasm"</span>))]
+</span>link_section = <span class="string">".fini_array"
+
+</span><span class="attr">#[cfg(target_os = <span class="string">"none"</span>)]
+</span>link_section = <span class="string">".fini_array"
+
+</span><span class="attr">#[cfg(target_arch = <span class="string">"xtensa"</span>)]
+</span>link_section = <span class="string">".dtors"
+
+</span><span class="attr">#[cfg(all(target_vendor = <span class="string">"pc"</span>, any(target_env = <span class="string">"gnu"</span>, target_env = <span class="string">"msvc"</span>)))]
+</span>link_section = <span class="string">".CRT$XPU"
+
+</span><span class="attr">#[cfg(all(target_vendor = <span class="string">"pc"</span>, not(any(target_env = <span class="string">"gnu"</span>, target_env = <span class="string">"msvc"</span>))))]
+</span>link_section = <span class="string">".dtors"
+
+</span><span class="attr">#[cfg(all(target_os = <span class="string">"aix"</span>))]
+</span>link_section = ()
+
+<span class="comment">// default
+</span>link_section = (<span class="macro">compile_error!</span> (<span class="string">"Unsupported target for #[dtor]"</span>))</code></pre></div><h3 id="method"><a class="doc-anchor" href="#method">§</a><code>method</code></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[cfg(target_vendor = <span class="string">"apple"</span>)]
+</span>method = at_module_exit
+
+<span class="attr">#[cfg(target_vendor = <span class="string">"pc"</span>)]
+</span>method = at_module_exit
+
+<span class="comment">// default
+</span>method = linker</code></pre></div></div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="declarative/index.html" title="mod dtor::declarative">declarative</a></dt><dd>Declarative forms of the <code>#[dtor]</code> macro.</dd></dl><h2 id="functions" class="section-header">Functions<a href="#functions" class="anchor">§</a></h2><dl class="item-table"><dt><a class="fn" href="fn.at_binary_exit.html" title="fn dtor::at_binary_exit">at_<wbr>binary_<wbr>exit</a><sup title="unsafe function">⚠</sup></dt><dd>Registers a raw function to be called at binary exit time.</dd><dt><a class="fn" href="fn.at_module_exit.html" title="fn dtor::at_module_exit">at_<wbr>module_<wbr>exit</a><sup title="unsafe function">⚠</sup></dt><dd>Registers a raw function to be called at library (libc calls this a DSO
+or “dynamic shared object”) exit time.</dd></dl><h2 id="attributes" class="section-header">Attribute Macros<a href="#attributes" class="anchor">§</a></h2><dl class="item-table"><dt><a class="attr" href="attr.dtor.html" title="attr dtor::dtor">dtor</a></dt><dd>Marks a function as a library/executable destructor. This uses OS-specific
+linker sections to call a specific function at termination time.</dd></dl></section></div></main></body></html>

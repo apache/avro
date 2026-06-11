@@ -1,0 +1,9 @@
+var searchData=
+[
+  ['objectcreator',['ObjectCreator',['../classAvro_1_1Specific_1_1ObjectCreator.html',1,'Avro::Specific']]],
+  ['oneway',['Oneway',['../classAvro_1_1Message.html#acd3cb031d3fbd974b233cebf6b65ccfb',1,'Avro::Message']]],
+  ['openreader',['OpenReader',['../classAvro_1_1File_1_1DataFileReader-g.html#ac963b95c1045268bc3937114bedf25d2',1,'Avro::File::DataFileReader-g.OpenReader(string path)'],['../classAvro_1_1File_1_1DataFileReader-g.html#a4c1539c2a125698f97ecb2fdacb2ff8a',1,'Avro::File::DataFileReader-g.OpenReader(string path, Schema readerSchema)'],['../classAvro_1_1File_1_1DataFileReader-g.html#abfe2d467a7832b4a2b0d64f3b5e47a91',1,'Avro::File::DataFileReader-g.OpenReader(Stream inStream)'],['../classAvro_1_1File_1_1DataFileReader-g.html#a194b7149a26e99a4c8f66426f7f41733',1,'Avro::File::DataFileReader-g.OpenReader(Stream inStream, Schema readerSchema)']]],
+  ['openwriter',['OpenWriter',['../classAvro_1_1File_1_1DataFileWriter-g.html#ab7f2a2a39cf80f9e3c7b4aff0e4ce36a',1,'Avro::File::DataFileWriter-g.OpenWriter(DatumWriter&lt; T &gt; writer, string path)'],['../classAvro_1_1File_1_1DataFileWriter-g.html#ac3876ec1af15087c5339128f0fefcb3d',1,'Avro::File::DataFileWriter-g.OpenWriter(DatumWriter&lt; T &gt; writer, Stream outStream)'],['../classAvro_1_1File_1_1DataFileWriter-g.html#ab184047129ceb942bcc2cfefb044fce7',1,'Avro::File::DataFileWriter-g.OpenWriter(DatumWriter&lt; T &gt; writer, string path, Codec codec)'],['../classAvro_1_1File_1_1DataFileWriter-g.html#a0d9fe68f60d429c5123dd9b93859e672',1,'Avro::File::DataFileWriter-g.OpenWriter(DatumWriter&lt; T &gt; writer, Stream outStream, Codec codec)']]],
+  ['ordering',['Ordering',['../classAvro_1_1Field.html#a93d852d70cd612ea6a7963f1cc1e7360',1,'Avro::Field']]],
+  ['ordinal',['Ordinal',['../classAvro_1_1EnumSchema.html#a01b7496c32463ef29125bfcfb0b2be3f',1,'Avro::EnumSchema']]]
+];

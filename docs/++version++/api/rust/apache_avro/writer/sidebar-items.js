@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["datum","single_object"],"struct":["Writer","WriterBuilder"],"trait":["Clearable"]};

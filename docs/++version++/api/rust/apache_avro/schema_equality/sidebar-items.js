@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["set_schemata_equality_comparator"],"struct":["SpecificationEq","StructFieldEq"],"trait":["SchemataEq"]};

@@ -1,0 +1,665 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta content="Apache Forrest" name="Generator">
+<meta name="Forrest-version" content="0.8">
+<meta name="Forrest-skin-name" content="pelt">
+<title>Apache Avro&#153; 1.5.2 IDL</title>
+<link type="text/css" href="skin/basic.css" rel="stylesheet">
+<link media="screen" type="text/css" href="skin/screen.css" rel="stylesheet">
+<link media="print" type="text/css" href="skin/print.css" rel="stylesheet">
+<link type="text/css" href="skin/profile.css" rel="stylesheet">
+<script src="skin/getBlank.js" language="javascript" type="text/javascript"></script><script src="skin/getMenu.js" language="javascript" type="text/javascript"></script><script src="skin/fontsize.js" language="javascript" type="text/javascript"></script>
+<link rel="shortcut icon" href="images/favicon.ico">
+</head>
+<body onload="init()">
+<script type="text/javascript">ndeSetTextSize();</script>
+<div id="top">
+<!--+
+    |breadtrail
+    +-->
+<div class="breadtrail">
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://avro.apache.org/">Avro</a> &gt; <a href="http://avro.apache.org/">Avro</a><script src="skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script>
+</div>
+<!--+
+    |header
+    +-->
+<div class="header">
+<!--+
+    |start group logo
+    +-->
+<div class="grouplogo">
+<a href="http://www.apache.org/"><img class="logoImage" alt="Apache" src="images/apache_feather.gif" title="The Apache Software Foundation"></a>
+</div>
+<!--+
+    |end group logo
+    +-->
+<!--+
+    |start Project Logo
+    +-->
+<div class="projectlogo">
+<a href="http://avro.apache.org/"><img class="logoImage" alt="Avro" src="images/avro-logo.png" title="Serialization System"></a>
+</div>
+<!--+
+    |end Project Logo
+    +-->
+<!--+
+    |start Search
+    +-->
+<div class="searchbox">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+<input value="hadoop.apache.org" name="sitesearch" type="hidden"><input onFocus="getBlank (this, 'Search the site with google');" size="25" name="q" id="query" type="text" value="Search the site with google">&nbsp; 
+                    <input name="Search" value="Search" type="submit">
+</form>
+</div>
+<!--+
+    |end search
+    +-->
+<!--+
+    |start Tabs
+    +-->
+<ul id="tabs">
+<li>
+<a class="unselected" href="http://hadoop.apache.org/avro/">Project</a>
+</li>
+<li>
+<a class="unselected" href="http://wiki.apache.org/hadoop/Avro/">Wiki</a>
+</li>
+<li class="current">
+<a class="selected" href="index.html">Avro 1.5.2 Documentation</a>
+</li>
+</ul>
+<!--+
+    |end Tabs
+    +-->
+</div>
+</div>
+<div id="main">
+<div id="publishedStrip">
+<!--+
+    |start Subtabs
+    +-->
+<div id="level2tabs"></div>
+<!--+
+    |end Endtabs
+    +-->
+<script type="text/javascript"><!--
+document.write("Last Published: " + document.lastModified);
+//  --></script>
+</div>
+<!--+
+    |breadtrail
+    +-->
+<div class="breadtrail">
+
+             &nbsp;
+           </div>
+<!--+
+    |start Menu, mainarea
+    +-->
+<!--+
+    |start Menu
+    +-->
+<div id="menu">
+<div onclick="SwitchMenu('menu_selected_1.1', 'skin/')" id="menu_selected_1.1Title" class="menutitle" style="background-image: url('skin/images/chapter_open.gif');">Documentation</div>
+<div id="menu_selected_1.1" class="selectedmenuitemgroup" style="display: block;">
+<div class="menuitem">
+<a href="index.html">Overview</a>
+</div>
+<div class="menuitem">
+<a href="spec.html">Specification</a>
+</div>
+<div class="menuitem">
+<a href="api/java/index.html">Java API</a>
+</div>
+<div class="menuitem">
+<a href="api/c/index.html">C API</a>
+</div>
+<div class="menuitem">
+<a href="api/cpp/html/index.html">C++ API</a>
+</div>
+<div class="menupage">
+<div class="menupagetitle">IDL language</div>
+</div>
+<div class="menuitem">
+<a href="sasl.html">SASL profile</a>
+</div>
+<div class="menuitem">
+<a href="http://wiki.apache.org/hadoop/Avro/">Wiki</a>
+</div>
+<div class="menuitem">
+<a href="http://wiki.apache.org/hadoop/Avro/FAQ">FAQ</a>
+</div>
+</div>
+<div id="credit"></div>
+<div id="roundbottom">
+<img style="display: none" class="corner" height="15" width="15" alt="" src="skin/images/rc-b-l-15-1body-2menu-3menu.png"></div>
+<!--+
+  |alternative credits
+  +-->
+<div id="credit2"></div>
+</div>
+<!--+
+    |end Menu
+    +-->
+<!--+
+    |start content
+    +-->
+<div id="content">
+<div title="Portable Document Format" class="pdflink">
+<a class="dida" href="idl.pdf"><img alt="PDF -icon" src="skin/images/pdfdoc.gif" class="skin"><br>
+        PDF</a>
+</div>
+<h1>Apache Avro&#153; 1.5.2 IDL</h1>
+<div id="minitoc-area">
+<ul class="minitoc">
+<li>
+<a href="#preamble">Introduction</a>
+</li>
+<li>
+<a href="#overview">Overview</a>
+<ul class="minitoc">
+<li>
+<a href="#overview_purpose">Purpose</a>
+</li>
+<li>
+<a href="#overview_usage">Usage</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#defining_protocol">Defining a Protocol in Avro IDL</a>
+</li>
+<li>
+<a href="#imports">Imports</a>
+</li>
+<li>
+<a href="#format_enums">Defining an Enumeration</a>
+</li>
+<li>
+<a href="#format_fixed">Defining a Fixed Length Field</a>
+</li>
+<li>
+<a href="#format_records">Defining Records and Errors</a>
+<ul class="minitoc">
+<li>
+<a href="#primitive_types">Primitive Types</a>
+</li>
+<li>
+<a href="#schema_references">References to Named Schemata</a>
+</li>
+<li>
+<a href="#default_values">Default Values</a>
+</li>
+<li>
+<a href="#complex_types">Complex Types</a>
+<ul class="minitoc">
+<li>
+<a href="#arrays">Arrays</a>
+</li>
+<li>
+<a href="#maps">Maps</a>
+</li>
+<li>
+<a href="#unions">Unions</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<a href="#define_messages">Defining RPC Messages</a>
+</li>
+<li>
+<a href="#minutiae">Other Language Features</a>
+<ul class="minitoc">
+<li>
+<a href="#minutiae_comments">Comments</a>
+</li>
+<li>
+<a href="#minutiae_escaping">Escaping Identifiers</a>
+</li>
+<li>
+<a href="#minutiae_annotations">Annotations for Ordering and Namespaces</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#example">Complete Example</a>
+</li>
+</ul>
+</div>
+
+    
+<a name="N1000D"></a><a name="preamble"></a>
+<h2 class="h3">Introduction</h2>
+<div class="section">
+<p>This document defines Avro IDL, an experimental higher-level language for authoring Avro schemata.
+      Before reading this document, you should have familiarity with the concepts of schemata and protocols,
+      as well as the various primitive and complex types available in Avro.
+      </p>
+<p>
+        
+<strong>N.B.</strong> This feature is considered experimental in the current version of Avro and the language
+        has not been finalized. Although major changes are unlikely, some syntax may change in future
+        versions of Avro.
+      </p>
+</div>
+
+    
+<a name="N1001D"></a><a name="overview"></a>
+<h2 class="h3">Overview</h2>
+<div class="section">
+<a name="N10023"></a><a name="overview_purpose"></a>
+<h3 class="h4">Purpose</h3>
+<p>The aim of the Avro IDL language is to enable developers to author schemata in a way that
+        feels more similar to common programming languages like Java, C++, or Python. Additionally,
+        the Avro IDL language may feel more familiar for those users who have previously used the
+        interface description languages (IDLs) in other frameworks like Thrift, Protocol Buffers, or CORBA.
+        </p>
+<a name="N1002D"></a><a name="overview_usage"></a>
+<h3 class="h4">Usage</h3>
+<p>
+          Each Avro IDL file defines a single Avro Protocol, and thus generates as its output a JSON-format
+          Avro Protocol file with extension <span class="codefrag">.avpr</span>.
+        </p>
+<p>
+          To convert a <span class="codefrag">.avdl</span> file into a <span class="codefrag">.avpr</span> file, it must be processed by the
+          <span class="codefrag">idl</span> tool. For example:
+        </p>
+<pre class="code">
+$ java -jar avroj-tools-1.4.0.jar idl src/test/idl/input/namespaces.avdl /tmp/namespaces.avpr
+$ head /tmp/namespaces.avpr
+{
+  "protocol" : "TestNamespace",
+  "namespace" : "avro.test.protocol",
+        </pre>
+<p>
+          The <span class="codefrag">idl</span> tool can also process input to and from <em>stdin</em> and <em>stdout</em>.
+          See <span class="codefrag">idl --help</span> for full usage information.
+        </p>
+</div> <!-- end overview -->
+
+    
+<a name="N1005C"></a><a name="defining_protocol"></a>
+<h2 class="h3">Defining a Protocol in Avro IDL</h2>
+<div class="section">
+<p>An Avro IDL file consists of exactly one protocol definition. The minimal protocol is defined
+      by the following code:
+      </p>
+<pre class="code">
+protocol MyProtocol {
+}
+      </pre>
+<p>
+        This is equivalent to (and generates) the following JSON protocol definition:
+      </p>
+<pre class="code">
+{
+"protocol" : "MyProtocol",
+  "types" : [ ],
+  "messages" : {
+  }
+}
+      </pre>
+<p>
+        The namespace of the protocol may be changed using the <span class="codefrag">@namespace</span> annotation:
+      </p>
+<pre class="code">
+@namespace("mynamespace")
+protocol MyProtocol {
+}
+      </pre>
+<p>
+        This notation is used throughout Avro IDL as a way of specifying properties for the annotated element,
+        as will be described later in this document.
+      </p>
+<p>
+        Protocols in Avro IDL can contain the following items:
+      </p>
+<ul>
+          
+<li>Imports of external protocol and schema files.</li>
+          
+<li>Definitions of named schemata, including <em>record</em>s, <em>error</em>s, <em>enum</em>s, and <em>fixed</em>s.</li>
+          
+<li>Definitions of RPC messages</li>
+        
+</ul>
+</div>
+    
+<a name="N1009B"></a><a name="imports"></a>
+<h2 class="h3">Imports</h2>
+<div class="section">
+<p>Files may be imported in one of three formats: </p>
+<ul>
+        
+<li>An IDL file may be imported with a statement like:
+	  <pre class="code">import idl "foo.avdl";</pre>
+	
+</li>
+        
+<li>A JSON protocol file may be imported with a statement like:
+	  <pre class="code">import protocol "foo.avpr";</pre>
+	
+</li>
+        
+<li>A JSON schema file may be imported with a statement like:
+	  <pre class="code">import schema "foo.avsc";</pre>
+	
+</li>
+      
+</ul>
+<p>Messages and types in the imported file are added to this
+	file's protocol.</p>
+<p>Imported file names are resolved relative to the current IDL file.</p>
+</div>
+    
+<a name="N100C3"></a><a name="format_enums"></a>
+<h2 class="h3">Defining an Enumeration</h2>
+<div class="section">
+<p>
+        Enums are defined in Avro IDL using a syntax similar to C or Java:
+      </p>
+<pre class="code">
+enum Suit {
+  SPADES, DIAMONDS, CLUBS, HEARTS
+}
+      </pre>
+<p>
+        Note that, unlike the JSON format, anonymous enums cannot be defined.
+      </p>
+</div>
+    
+<a name="N100D4"></a><a name="format_fixed"></a>
+<h2 class="h3">Defining a Fixed Length Field</h2>
+<div class="section">
+<p>
+        Fixed fields are defined using the following syntax:
+      </p>
+<pre class="code">
+fixed MD5(16);
+      </pre>
+<p>This example defines a fixed-length type called <span class="codefrag">MD5</span> which contains 16 bytes.</p>
+</div>
+
+    
+<a name="N100E8"></a><a name="format_records"></a>
+<h2 class="h3">Defining Records and Errors</h2>
+<div class="section">
+<p>
+        Records are defined in Avro IDL using a syntax similar to a <span class="codefrag">struct</span> definition in C:
+      </p>
+<pre class="code">
+record Employee {
+  string name;
+  boolean active = true;
+  long salary;
+}
+      </pre>
+<p>
+        The above example defines a record with the name &ldquo;Employee&rdquo; with three fields.
+      </p>
+<p>
+        To define an error, simply use the keyword <span class="codefrag">error</span> instead of <span class="codefrag">record</span>.
+        For example:
+      </p>
+<pre class="code">
+error Kaboom {
+  string explanation;
+  int result_code = -1;
+}
+      </pre>
+<p>
+        Each field in a record or error consists of a type and a name,
+        optional property annotations and an optional default value.
+      </p>
+<p>A type reference in Avro IDL must be one of:</p>
+<ul>
+        
+<li>A primitive type</li>
+        
+<li>A named schema defined prior to this usage in the same Protocol</li>
+        
+<li>A complex type (array, map, or union)</li>
+      
+</ul>
+<a name="N1011A"></a><a name="primitive_types"></a>
+<h3 class="h4">Primitive Types</h3>
+<p>The primitive types supported by Avro IDL are the same as those supported by Avro's JSON format.
+        This list includes <span class="codefrag">int</span>, <span class="codefrag">long</span>, <span class="codefrag">string</span>, <span class="codefrag">boolean</span>,
+        <span class="codefrag">float</span>, <span class="codefrag">double</span>, <span class="codefrag">null</span>, and <span class="codefrag">bytes</span>.
+        </p>
+<a name="N1013C"></a><a name="schema_references"></a>
+<h3 class="h4">References to Named Schemata</h3>
+<p>If a named schema has already been defined in the same Avro IDL file, it may be referenced by name
+        as if it were a primitive type:
+        </p>
+<pre class="code">
+record Card {
+  Suit suit; // refers to the enum Card defined above
+  int number;
+}
+        </pre>
+<a name="N1014A"></a><a name="default_values"></a>
+<h3 class="h4">Default Values</h3>
+<p>Default values for fields may be optionally
+	specified by using an equals sign after the field name
+	followed by a JSON expression indicating the default value.
+	This JSON is interpreted as described in
+	the <a href="spec.html#schema_record">spec</a>.</p>
+<a name="N1015A"></a><a name="complex_types"></a>
+<h3 class="h4">Complex Types</h3>
+<a name="N10160"></a><a name="arrays"></a>
+<h4>Arrays</h4>
+<p>
+            Array types are written in a manner that will seem familiar to C++ or Java programmers. An array of
+            any type <span class="codefrag">t</span> is denoted <span class="codefrag">array&lt;t&gt;</span>. For example, an array of strings is
+            denoted <span class="codefrag">array&lt;string&gt;</span>, and a multidimensional array of <span class="codefrag">Foo</span> records
+            would be <span class="codefrag">array&lt;array&lt;Foo&gt;&gt;</span>.
+          </p>
+<a name="N10179"></a><a name="maps"></a>
+<h4>Maps</h4>
+<p>Map types are written similarly to array types. An array that contains values of type
+          <span class="codefrag">t</span> is written <span class="codefrag">map&lt;t&gt;</span>. As in the JSON schema format, all
+          maps contain <span class="codefrag">string</span>-type keys.</p>
+<a name="N1018C"></a><a name="unions"></a>
+<h4>Unions</h4>
+<p>Union types are denoted as <span class="codefrag">union { typeA, typeB, typeC, ... }</span>. For example,
+          this record contains a string field that is optional (unioned with <span class="codefrag">null</span>):
+          </p>
+<pre class="code">
+record RecordWithUnion {
+  union { null, string } optionalString;
+}
+          </pre>
+<p>
+            Note that the same restrictions apply to Avro IDL unions as apply to unions defined in the
+            JSON format; namely, a record may not contain multiple elements of the same type.
+          </p>
+</div> <!-- how to define records -->
+    
+<a name="N101AB"></a><a name="define_messages"></a>
+<h2 class="h3">Defining RPC Messages</h2>
+<div class="section">
+<p>The syntax to define an RPC message within a Avro IDL protocol is similar to the syntax for
+      a method declaration within a C header file or a Java interface. To define an RPC message
+      <span class="codefrag">add</span> which takes two arguments named <span class="codefrag">foo</span> and <span class="codefrag">bar</span>,
+      returning an <span class="codefrag">int</span>, simply include the following definition within the protocol:
+      </p>
+<pre class="code">
+int add(int foo, int bar = 0);
+      </pre>
+<p>Message arguments, like record fields, may specify default
+      values.</p>
+<p>To define a message with no response, you may use the alias <span class="codefrag">void</span>, equivalent
+      to the Avro <span class="codefrag">null</span> type:
+      </p>
+<pre class="code">
+void logMessage(string message);
+      </pre>
+<p>
+        If you have previously defined an error type within the same protocol, you may declare that
+        a message can throw this error using the syntax:
+      </p>
+<pre class="code">
+void goKaboom() throws Kaboom;
+      </pre>
+<p>To define a one-way message, use the
+      keyword <span class="codefrag">oneway</span> after the parameter list, for example:
+      </p>
+<pre class="code">
+void fireAndForget(string message) oneway;
+      </pre>
+</div> <!-- define messages -->
+    
+<a name="N101E8"></a><a name="minutiae"></a>
+<h2 class="h3">Other Language Features</h2>
+<div class="section">
+<a name="N101EE"></a><a name="minutiae_comments"></a>
+<h3 class="h4">Comments</h3>
+<p>All Java-style comments are supported within a Avro IDL file. Any text following
+        <span class="codefrag">//</span> on a line is ignored, as is any text between <span class="codefrag">/*</span> and
+        <span class="codefrag">*/</span>, possibly spanning multiple lines.</p>
+<p>Comments that begin with <span class="codefrag">/**</span> are used as the
+        documentation string for the type or field definition that
+        follows the comment.</p>
+<a name="N10207"></a><a name="minutiae_escaping"></a>
+<h3 class="h4">Escaping Identifiers</h3>
+<p>Occasionally, one will need to use a reserved language keyword as an identifier. In order
+        to do so, backticks (<span class="codefrag">`</span>) may be used to escape the identifier. For example, to define
+        a message with the literal name <em>error</em>, you may write:
+        </p>
+<pre class="code">
+void `error`();
+        </pre>
+<p>This syntax is allowed anywhere an identifier is expected.</p>
+<a name="N1021E"></a><a name="minutiae_annotations"></a>
+<h3 class="h4">Annotations for Ordering and Namespaces</h3>
+<p>Java-style annotations may be used to add additional
+          properties to types and fields throughout Avro IDL.</p>
+<p>For example, to specify the sort order of a field within
+          a record, one may use the <span class="codefrag">@order</span> annotation
+          before the field name as follows:</p>
+<pre class="code">
+record MyRecord {
+  string @order("ascending") myAscendingSortField;
+  string @order("descending")  myDescendingField;
+  string @order("ignore") myIgnoredField;
+}
+        </pre>
+<p>A field's type may also be preceded by annotations, e.g.: </p>
+<pre class="code">
+record MyRecord {
+  @java_class("java.util.ArrayList") array&lt;string&gt; myStrings;
+}
+        </pre>
+<p>Similarly, a <span class="codefrag">@namespace</span> annotation may be used to modify the namespace
+        when defining a named schema. For example:
+        </p>
+<pre class="code">
+@namespace("org.apache.avro.firstNamespace")
+protocol MyProto {
+  @namespace("org.apache.avro.someOtherNamespace")
+  record Foo {}
+
+  record Bar {}
+}
+        </pre>
+<p>
+          will define a protocol in the <span class="codefrag">firstNamespace</span> namespace. The record <span class="codefrag">Foo</span> will be
+          defined in <span class="codefrag">someOtherNamespace</span> and <span class="codefrag">Bar</span> will be defined in <span class="codefrag">firstNamespace</span>
+          as it inherits its default from its container.
+        </p>
+<p>Type and field aliases are specified with
+	the <span class="codefrag">@aliases</span> annotation as follows:</p>
+<pre class="code">
+@aliases(["org.old.OldRecord", "org.ancient.AncientRecord"])
+record MyRecord {
+  string @aliases(["oldField", "ancientField"]) myNewField;
+}
+        </pre>
+</div>
+    
+<a name="N10260"></a><a name="example"></a>
+<h2 class="h3">Complete Example</h2>
+<div class="section">
+<p>The following is a complete example of a Avro IDL file that shows most of the above features:</p>
+<pre class="code">
+/**
+ * An example protocol in Avro IDL
+ */
+@namespace("org.apache.avro.test")
+protocol Simple {
+
+  @aliases(["org.foo.KindOf"])
+  enum Kind {
+    FOO,
+    BAR, // the bar enum value
+    BAZ
+  }
+
+  fixed MD5(16);
+
+  record TestRecord {
+    @order("ignore")
+    string name;
+
+    @order("descending")
+    Kind kind;
+
+    MD5 hash;
+
+    union { MD5, null} @aliases(["hash"]) nullableHash;
+
+    array&lt;long&gt; arrayOfLongs;
+  }
+
+  error TestError {
+    string message;
+  }
+
+  string hello(string greeting);
+  TestRecord echo(TestRecord `record`);
+  int add(int arg1, int arg2);
+  bytes echoBytes(bytes data);
+  void `error`() throws TestError;
+  void ping() oneway;
+}
+      </pre>
+<p>Additional examples may be found in the Avro source tree under the <span class="codefrag">src/test/idl/input</span> directory.</p>
+</div>
+
+  
+<p>
+<em>Apache Avro, Avro, Apache, and the Avro and Apache logos are
+   trademarks of The Apache Software Foundation.</em>
+</p>
+
+  
+</div>
+<!--+
+    |end content
+    +-->
+<div class="clearboth">&nbsp;</div>
+</div>
+<div id="footer">
+<!--+
+    |start bottomstrip
+    +-->
+<div class="lastmodified">
+<script type="text/javascript"><!--
+document.write("Last Published: " + document.lastModified);
+//  --></script>
+</div>
+<div class="copyright">
+        Copyright &copy;
+         2009 <a href="http://www.apache.org/licenses/">The Apache Software Foundation.</a>
+</div>
+<!--+
+    |end bottomstrip
+    +-->
+</div>
+</body>
+</html>

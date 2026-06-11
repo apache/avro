@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"attr":["dtor"],"fn":["at_binary_exit","at_module_exit"],"mod":["declarative"]};

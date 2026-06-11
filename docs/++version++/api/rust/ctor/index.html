@@ -1,0 +1,196 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Build Status"><title>ctor - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="ctor" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.0 (ac68faa20 2026-05-25)" data-channel="1.96.0" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../static.files/storage-41dd4d93.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Crate ctor</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../ctor/index.html">ctor</a><span class="version">0.11.1</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#ctor" title="ctor">ctor</a><ul><li><a href="#msrv" title="MSRV">MSRV</a></li><li><a href="#lightweight" title="Lightweight">Lightweight</a></li><li><a href="#support" title="Support">Support</a></li><li><a href="#warnings" title="Warnings">Warnings</a></li><li><a href="#examples" title="Examples">Examples</a></li><li><a href="#under-the-hood" title="Under the Hood">Under the Hood</a></li><li><a href="#inspiration" title="Inspiration">Inspiration</a></li></ul></li><li><a href="#crate-features" title="Crate Features">Crate Features</a></li><li><a href="#macro-attributes" title="Macro Attributes">Macro Attributes</a></li><li><a href="#defaults" title="Defaults">Defaults</a><ul><li><a href="#export_name_prefix" title="`export_name_prefix`"><code>export_name_prefix</code></a></li><li><a href="#link_section" title="`link_section`"><code>link_section</code></a></li></ul></li></ul><h3><a href="#modules">Crate Items</a></h3><ul class="block"><li><a href="#modules" title="Modules">Modules</a></li><li><a href="#attributes" title="Attribute Macros">Attribute Macros</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1>Crate <span>ctor</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/ctor/lib.rs.html#1-393">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p><img src="https://github.com/mmastrac/rust-ctor/actions/workflows/rust.yml/badge.svg" alt="Build Status" /></p>
+<div><table><thead><tr><th>crate</th><th>docs</th><th>version</th></tr></thead><tbody>
+<tr><td><code>ctor</code></td><td><a href="https://docs.rs/ctor"><img src="https://docs.rs/ctor/badge.svg" alt="docs.rs" /></a></td><td><a href="https://crates.io/crates/ctor"><img src="https://img.shields.io/crates/v/ctor.svg" alt="crates.io" /></a></td></tr>
+<tr><td><code>dtor</code></td><td><a href="https://docs.rs/dtor"><img src="https://docs.rs/dtor/badge.svg" alt="docs.rs" /></a></td><td><a href="https://crates.io/crates/dtor"><img src="https://img.shields.io/crates/v/dtor.svg" alt="crates.io" /></a></td></tr>
+<tr><td><code>link-section</code></td><td><a href="https://docs.rs/link-section"><img src="https://docs.rs/link-section/badge.svg" alt="docs.rs" /></a></td><td><a href="https://crates.io/crates/link-section"><img src="https://img.shields.io/crates/v/link-section.svg" alt="crates.io" /></a></td></tr>
+</tbody></table>
+</div><h2 id="ctor"><a class="doc-anchor" href="#ctor">§</a>ctor</h2>
+<p>Module initialization functions for Rust (like <code>__attribute__((constructor))</code> in
+C/C++) for Linux, OSX, Windows, WASM, BSD-likes, and many others.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>ctor::ctor;
+
+<span class="attr">#[ctor(<span class="kw">unsafe</span>)]
+</span><span class="kw">fn </span>foo() {
+    <span class="macro">println!</span>(<span class="string">"Life before main!"</span>);
+}</code></pre></div><h3 id="msrv"><a class="doc-anchor" href="#msrv">§</a>MSRV</h3>
+<p>For most platforms, this library currently has a MSRV of <strong>Rust &gt;= 1.60</strong>.</p>
+<p>MSRV for WASM targets is <strong>Rust &gt;= 1.85</strong>.</p>
+<h3 id="lightweight"><a class="doc-anchor" href="#lightweight">§</a>Lightweight</h3>
+<p><code>ctor</code> has no dependencies other than the <code>ctor-proc-macro</code> and <code>link-section</code>
+crates. The proc-macro is only used to delegate to the declarative macro and
+should have minimal effect on compilation time.</p>
+<h3 id="support"><a class="doc-anchor" href="#support">§</a>Support</h3>
+<p>This library works and is regularly tested on Linux, OSX, Windows, and FreeBSD,
+with both <code>+crt-static</code> and <code>-crt-static</code> and <code>bin</code>/<code>cdylib</code> outputs.</p>
+<p>Contributions to support other platforms or improve testing are welcome.</p>
+<div><table><thead><tr><th>OS</th><th>Supported</th><th>CI Tested</th></tr></thead><tbody>
+<tr><td>Linux</td><td>✅</td><td>✅</td></tr>
+<tr><td>OSX</td><td>✅</td><td>✅</td></tr>
+<tr><td>Windows</td><td>✅</td><td>✅</td></tr>
+<tr><td>FreeBSD</td><td>✅</td><td>✅</td></tr>
+<tr><td>WASM</td><td>✅</td><td>✅</td></tr>
+<tr><td>NetBSD</td><td>✅</td><td>-</td></tr>
+<tr><td>OpenBSD</td><td>✅</td><td>-</td></tr>
+<tr><td>DragonFlyBSD</td><td>✅</td><td>-</td></tr>
+<tr><td>Illumos</td><td>✅</td><td>-</td></tr>
+<tr><td>Android</td><td>✅</td><td>-</td></tr>
+<tr><td>iOS</td><td>✅</td><td>-</td></tr>
+<tr><td>AIX</td><td>✅</td><td>-</td></tr>
+<tr><td>Haiku</td><td>✅</td><td>-</td></tr>
+<tr><td>VxWorks</td><td>✅</td><td>-</td></tr>
+<tr><td>Xtensa</td><td>✅</td><td>-</td></tr>
+<tr><td>NTO</td><td>✅</td><td>-</td></tr>
+</tbody></table>
+</div><h3 id="warnings"><a class="doc-anchor" href="#warnings">§</a>Warnings</h3>
+<p>Rust’s philosophy is that nothing happens before or after main and this library
+explicitly subverts that. The code that runs in the <code>ctor</code> and <code>dtor</code> functions
+should be careful to limit itself to <code>libc</code> functions and code that does not
+rely on Rust’s stdlib services.</p>
+<p>For example, using stdout in a <code>dtor</code> function is a guaranteed panic. Consider
+using the <a href="https://crates.io/crates/libc-print"><code>libc-print</code> crate</a> for output
+to stderr/stdout during <code>#[ctor]</code> and <code>#[dtor]</code> methods. Other issues may
+involve signal processing or panic handling in that early code.</p>
+<p>Some linker configurations may cause <code>#[ctor]</code> and <code>#[dtor]</code> functions to be
+stripped from the final binary. The <code>used_linker</code> feature may prevent this, but
+is not supported outside of nightly Rust. Often, a simple <code>use module_with_ctor</code>
+is sufficient to ensure the linker does not strip the function.</p>
+<p>On some platforms, unloading of shared libraries may not actually happen until
+process exit, even if explicitly unloaded. The rules for this are arcane and
+difficult to understand. For example, thread-local storage on OSX will affect
+this (see
+<a href="https://github.com/rust-lang/rust/issues/28794#issuecomment-368693049">this comment</a>).</p>
+<h3 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h3>
+<p>Marks the function <code>foo</code> as a module constructor, called when a static library
+is loaded or an executable is started:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::sync::atomic::{AtomicBool, Ordering};
+<span class="kw">use </span>ctor::ctor;
+
+<span class="kw">static </span>INITED: AtomicBool = AtomicBool::new(<span class="bool-val">false</span>);
+
+<span class="attr">#[ctor]
+</span><span class="kw">fn </span>foo() {
+    INITED.store(<span class="bool-val">true</span>, Ordering::SeqCst);
+}</code></pre></div>
+<p>Creates a <code>HashMap</code> populated with strings when a static library is loaded or an
+executable is started (new in <code>0.1.7</code>):</p>
+<p><code>static</code> items are equivalent to <code>std::sync::OnceLock</code>, with an automatic deref
+implementation and eager initialization at startup time. <code>#[ctor]</code> on <code>static</code>
+items requires the default <code>std</code> feature.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>ctor::ctor;
+
+<span class="attr">#[ctor]
+</span><span class="doccomment">/// This is an immutable static, evaluated at init time
+</span><span class="kw">static </span>STATIC_CTOR: HashMap&lt;u32, <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; = {
+    <span class="kw">let </span><span class="kw-2">mut </span>m = HashMap::new();
+    m.insert(<span class="number">0</span>, <span class="string">"foo"</span>);
+    m.insert(<span class="number">1</span>, <span class="string">"bar"</span>);
+    m.insert(<span class="number">2</span>, <span class="string">"baz"</span>);
+    m
+};</code></pre></div>
+<p>Print a message at shutdown time. Note that Rust may have shut down some stdlib
+services at this time.</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">use </span>libc::printf;
+<span class="kw">use </span>ctor::dtor;
+
+<span class="attr">#[dtor]
+</span><span class="kw">unsafe fn </span>shutdown() {
+    <span class="comment">// Using println or eprintln here will panic as Rust has shut down
+    </span>libc::printf(<span class="string">c"Shutting down!\n" </span><span class="kw">as _</span>);
+}</code></pre></div><h3 id="under-the-hood"><a class="doc-anchor" href="#under-the-hood">§</a>Under the Hood</h3>
+<p>The <code>#[ctor]</code> macro makes use of linker sections to ensure that a function is
+run at startup time.</p>
+<p>The above example translates into the following Rust code (approximately):</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[used]
+#[cfg_attr(target_os = <span class="string">"linux"</span>, link_section = <span class="string">".init_array"</span>)]
+#[cfg_attr(target_vendor = <span class="string">"apple"</span>, link_section = <span class="string">"__DATA,__mod_init_func,mod_init_funcs"</span>)]
+#[cfg_attr(target_os = <span class="string">"windows"</span>, link_section = <span class="string">".CRT$XCU"</span>)]
+</span><span class="comment">/* ... other platforms elided ... */
+</span><span class="kw">static </span>FOO: <span class="kw">extern fn</span>() = {
+    <span class="kw">extern fn </span>foo() { <span class="comment">/* ... */ </span>};
+    foo
+};</code></pre></div><h3 id="inspiration"><a class="doc-anchor" href="#inspiration">§</a>Inspiration</h3>
+<p>The idea for <code>ctor</code> was originally inspired by the Neon project.</p>
+<h2 id="crate-features"><a class="doc-anchor" href="#crate-features">§</a>Crate Features</h2><div><table><thead><tr><th>Cargo feature</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>dtor</code></td><td>Enable support for the <code>#[dtor]</code> attribute. Deprecated: use the <code>dtor</code> crate directly instead.</td></tr>
+<tr><td><code>no_warn_on_missing_unsafe</code></td><td>Do not warn when a ctor is missing the <code>unsafe</code> keyword.</td></tr>
+<tr><td><code>priority_enabled</code></td><td>Enable support for the priority parameter.</td></tr>
+<tr><td><code>proc_macro</code></td><td>Enable support for the proc-macro <code>#[ctor]</code> attribute. The declarative form (<code>ctor!(...)</code>) is always available. It is recommended that crates re-exporting the <code>ctor</code> macro disable this feature and only use the declarative form.</td></tr>
+<tr><td><code>std</code></td><td>Enable support for the standard library.</td></tr>
+<tr><td><code>used_linker</code></td><td>Applies <code>used(linker)</code> to all <code>ctor</code>-generated functions. Requires nightly and <code>feature(used_with_arg)</code>.</td></tr>
+</tbody></table>
+</div><h2 id="macro-attributes"><a class="doc-anchor" href="#macro-attributes">§</a>Macro Attributes</h2><table><tr><th>Attribute</th><th>Description</th></tr>
+<tr><td><code>anonymous</code></td><td>
+<p>Do not give the constructor a name in the generated code (allows for
+multiple constructors with the same name). Equivalent to wrapping the
+constructor in an anonymous const (i.e.: <code>const _ = { ... };</code>).</p>
+</td></tr>
+<tr><td><code>crate_path = $path : pat</code></td><td>
+<p>The path to the <code>ctor</code> crate containing the support macros. If you
+re-export <code>ctor</code> items as part of your crate, you can use this to
+redirect the macro’s output to the correct crate.</p>
+<p>Using the declarative <a href="declarative/macro.ctor.html" title="macro ctor::declarative::ctor"><code>ctor!</code></a> form is
+preferred over this parameter.</p>
+</td></tr>
+<tr><td><code>export_name_prefix = $export_name_prefix_str : literal</code></td><td>
+<p>Specify a custom export name prefix for the constructor function.</p>
+<p>If specified, an export with the given prefix will be generated in the form:</p>
+<p><code>&lt;prefix&gt;&lt;priority&gt;_&lt;unique_id&gt;</code></p>
+</td></tr>
+<tr><td><code>link_section = $section : literal</code></td><td>
+<p>Place the constructor function pointer in a custom link section. By
+default, this uses the appropriate platform-specific link section.</p>
+</td></tr>
+<tr><td><code>unsafe</code></td><td>
+<p>Marks a ctor as unsafe. Recommended.</p>
+</td></tr>
+<tr><td><code>priority = $priority_value : tt</code></td><td>
+<p>The priority of the constructor. Higher-<code>N</code>-priority constructors are
+run last. <code>N</code> must be between 0 and 999 for ordering guarantees (<code>N</code> &gt;=
+1000 ordering is platform-defined).</p>
+<p>Ordering with respect to constructors without a priority is
+platform-defined.</p>
+</td></tr>
+<tr><td><code>used(linker)</code></td><td>
+<p>Mark generated functions for this <code>ctor</code> as <code>used(linker)</code>. Requires nightly and <code>feature(used_with_arg)</code>.</p>
+</td></tr>
+</table>
+<h2 id="defaults"><a class="doc-anchor" href="#defaults">§</a>Defaults</h2><h3 id="export_name_prefix"><a class="doc-anchor" href="#export_name_prefix">§</a><code>export_name_prefix</code></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[cfg(target_os = <span class="string">"aix"</span>)]
+</span>export_name_prefix = <span class="string">"__sinit"
+
+</span><span class="comment">// default
+</span>export_name_prefix = ()</code></pre></div><h3 id="link_section"><a class="doc-anchor" href="#link_section">§</a><code>link_section</code></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[cfg(target_vendor = <span class="string">"apple"</span>)]
+</span>link_section = <span class="string">"__DATA,__mod_init_func,mod_init_funcs"
+
+</span><span class="attr">#[cfg(any(target_os = <span class="string">"linux"</span>, target_os = <span class="string">"android"</span>, target_os = <span class="string">"freebsd"</span>,
+target_os = <span class="string">"netbsd"</span>, target_os = <span class="string">"openbsd"</span>, target_os = <span class="string">"dragonfly"</span>,
+target_os = <span class="string">"illumos"</span>, target_os = <span class="string">"haiku"</span>, target_os = <span class="string">"vxworks"</span>, target_os =
+<span class="string">"nto"</span>, target_family = <span class="string">"wasm"</span>))]
+</span>link_section = <span class="string">".init_array"
+
+</span><span class="attr">#[cfg(target_os = <span class="string">"none"</span>)]
+</span>link_section = <span class="string">".init_array"
+
+</span><span class="attr">#[cfg(target_arch = <span class="string">"xtensa"</span>)]
+</span>link_section = <span class="string">".ctors"
+
+</span><span class="attr">#[cfg(all(target_vendor = <span class="string">"pc"</span>, any(target_env = <span class="string">"gnu"</span>, target_env = <span class="string">"msvc"</span>)))]
+</span>link_section = <span class="string">".CRT$XCU"
+
+</span><span class="attr">#[cfg(all(target_vendor = <span class="string">"pc"</span>, not(any(target_env = <span class="string">"gnu"</span>, target_env = <span class="string">"msvc"</span>))))]
+</span>link_section = <span class="string">".ctors"
+
+</span><span class="attr">#[cfg(all(target_os = <span class="string">"aix"</span>))]
+</span>link_section = ()
+
+<span class="comment">// default
+</span>link_section = (<span class="macro">compile_error!</span> (<span class="string">"Unsupported target for #[ctor]"</span>))</code></pre></div></div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="declarative/index.html" title="mod ctor::declarative">declarative</a></dt><dd>Declarative form of the <code>#[ctor]</code> macro.</dd><dt><a class="mod" href="statics/index.html" title="mod ctor::statics">statics</a></dt><dd>Support for static variables that are initialized at startup time.</dd></dl><h2 id="attributes" class="section-header">Attribute Macros<a href="#attributes" class="anchor">§</a></h2><dl class="item-table"><dt><a class="attr" href="attr.ctor.html" title="attr ctor::ctor">ctor</a></dt><dd>Marks a function or static variable as a library/executable constructor.
+This uses OS-specific linker sections to call a specific function at load
+time.</dd><dt><a class="attr" href="attr.dtor.html" title="attr ctor::dtor">dtor</a></dt><dd>Re-exported <code>#[dtor]</code> proc-macro from <code>dtor</code> crate.</dd></dl></section></div></main></body></html>

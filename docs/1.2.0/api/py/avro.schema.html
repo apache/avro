@@ -1,0 +1,308 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module avro.schema</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="avro.html"><font color="#ffffff">avro</font></a>.schema</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/cutting/src/avro/test/src/py/avro/schema.py">/home/cutting/src/avro/test/src/py/avro/schema.py</a></font></td></tr></table>
+    <p><tt>Contains&nbsp;the&nbsp;<a href="#Schema">Schema</a>&nbsp;classes.<br>
+A&nbsp;schema&nbsp;may&nbsp;be&nbsp;one&nbsp;of:<br>
+&nbsp;&nbsp;An&nbsp;record,&nbsp;mapping&nbsp;field&nbsp;names&nbsp;to&nbsp;field&nbsp;value&nbsp;data;<br>
+&nbsp;&nbsp;An&nbsp;enum,&nbsp;containing&nbsp;one&nbsp;of&nbsp;a&nbsp;small&nbsp;set&nbsp;of&nbsp;symbols;<br>
+&nbsp;&nbsp;An&nbsp;array&nbsp;of&nbsp;values,&nbsp;all&nbsp;of&nbsp;the&nbsp;same&nbsp;schema;<br>
+&nbsp;&nbsp;A&nbsp;map&nbsp;containing&nbsp;string/value&nbsp;pairs,&nbsp;each&nbsp;of&nbsp;a&nbsp;declared&nbsp;schema;<br>
+&nbsp;&nbsp;A&nbsp;union&nbsp;of&nbsp;other&nbsp;schemas;<br>
+&nbsp;&nbsp;A&nbsp;fixed&nbsp;sized&nbsp;binary&nbsp;<a href="__builtin__.html#object">object</a>;<br>
+&nbsp;&nbsp;A&nbsp;unicode&nbsp;string;<br>
+&nbsp;&nbsp;A&nbsp;sequence&nbsp;of&nbsp;bytes;<br>
+&nbsp;&nbsp;A&nbsp;32-bit&nbsp;signed&nbsp;int;<br>
+&nbsp;&nbsp;A&nbsp;64-bit&nbsp;signed&nbsp;long;<br>
+&nbsp;&nbsp;A&nbsp;32-bit&nbsp;floating-point&nbsp;float;<br>
+&nbsp;&nbsp;A&nbsp;64-bit&nbsp;floating-point&nbsp;double;&nbsp;or<br>
+&nbsp;&nbsp;A&nbsp;boolean.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="cStringIO.html">cStringIO</a><br>
+</td><td width="25%" valign=top><a href="odict.html">odict</a><br>
+</td><td width="25%" valign=top><a href="simplejson.html">simplejson</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="avro.schema.html#Field">Field</a>
+</font></dt><dt><font face="helvetica, arial"><a href="avro.schema.html#Schema">Schema</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="avro.schema.html#NamedSchema">NamedSchema</a>
+</font></dt></dl>
+</dd>
+</dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="exceptions.html#Exception">exceptions.Exception</a>(<a href="exceptions.html#BaseException">exceptions.BaseException</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="avro.schema.html#AvroException">AvroException</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="avro.schema.html#SchemaParseException">SchemaParseException</a>
+</font></dt></dl>
+</dd>
+</dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="AvroException">class <strong>AvroException</strong></a>(<a href="exceptions.html#Exception">exceptions.Exception</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="avro.schema.html#AvroException">AvroException</a></dd>
+<dd><a href="exceptions.html#Exception">exceptions.Exception</a></dd>
+<dd><a href="exceptions.html#BaseException">exceptions.BaseException</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Methods inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><a name="AvroException-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#AvroException-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;x.__class__.__doc__&nbsp;for&nbsp;signature</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object at 0x8226dc0&gt;<dd><tt>T.<a href="#AvroException-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+<hr>
+Methods inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><a name="AvroException-__delattr__"><strong>__delattr__</strong></a>(...)</dt><dd><tt>x.<a href="#AvroException-__delattr__">__delattr__</a>('name')&nbsp;&lt;==&gt;&nbsp;del&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="AvroException-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#AvroException-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="AvroException-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#AvroException-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="AvroException-__getslice__"><strong>__getslice__</strong></a>(...)</dt><dd><tt>x.<a href="#AvroException-__getslice__">__getslice__</a>(i,&nbsp;j)&nbsp;&lt;==&gt;&nbsp;x[i:j]<br>
+&nbsp;<br>
+Use&nbsp;of&nbsp;negative&nbsp;indices&nbsp;is&nbsp;not&nbsp;supported.</tt></dd></dl>
+
+<dl><dt><a name="AvroException-__reduce__"><strong>__reduce__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="AvroException-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#AvroException-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="AvroException-__setattr__"><strong>__setattr__</strong></a>(...)</dt><dd><tt>x.<a href="#AvroException-__setattr__">__setattr__</a>('name',&nbsp;value)&nbsp;&lt;==&gt;&nbsp;x.name&nbsp;=&nbsp;value</tt></dd></dl>
+
+<dl><dt><a name="AvroException-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="AvroException-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#AvroException-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="AvroException-__unicode__"><strong>__unicode__</strong></a>(...)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+<dl><dt><strong>message</strong></dt>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Field">class <strong>Field</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Field-__eq__"><strong>__eq__</strong></a>(self, other, seen<font color="#909090">={}</font>)</dt></dl>
+
+<dl><dt><a name="Field-__init__"><strong>__init__</strong></a>(self, name, schema, defaultvalue<font color="#909090">=None</font>)</dt></dl>
+
+<dl><dt><a name="Field-getdefaultvalue"><strong>getdefaultvalue</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Field-getname"><strong>getname</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Field-getschema"><strong>getschema</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="NamedSchema">class <strong>NamedSchema</strong></a>(<a href="avro.schema.html#Schema">Schema</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="avro.schema.html#NamedSchema">NamedSchema</a></dd>
+<dd><a href="avro.schema.html#Schema">Schema</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="NamedSchema-__hash__"><strong>__hash__</strong></a>(self, seen<font color="#909090">=None</font>)</dt></dl>
+
+<dl><dt><a name="NamedSchema-__init__"><strong>__init__</strong></a>(self, type, name, space)</dt></dl>
+
+<dl><dt><a name="NamedSchema-equalnames"><strong>equalnames</strong></a>(self, other)</dt></dl>
+
+<dl><dt><a name="NamedSchema-getname"><strong>getname</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="NamedSchema-getspace"><strong>getspace</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="NamedSchema-namestring"><strong>namestring</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="avro.schema.html#Schema">Schema</a>:<br>
+<dl><dt><a name="NamedSchema-__eq__"><strong>__eq__</strong></a>(self, other, seen<font color="#909090">=None</font>)</dt></dl>
+
+<dl><dt><a name="NamedSchema-gettype"><strong>gettype</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="avro.schema.html#Schema">Schema</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Schema">class <strong>Schema</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Base&nbsp;class&nbsp;for&nbsp;all&nbsp;<a href="#Schema">Schema</a>&nbsp;classes.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Schema-__eq__"><strong>__eq__</strong></a>(self, other, seen<font color="#909090">=None</font>)</dt></dl>
+
+<dl><dt><a name="Schema-__hash__"><strong>__hash__</strong></a>(self, seen<font color="#909090">=None</font>)</dt></dl>
+
+<dl><dt><a name="Schema-__init__"><strong>__init__</strong></a>(self, type)</dt></dl>
+
+<dl><dt><a name="Schema-gettype"><strong>gettype</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="SchemaParseException">class <strong>SchemaParseException</strong></a>(<a href="avro.schema.html#AvroException">AvroException</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="avro.schema.html#SchemaParseException">SchemaParseException</a></dd>
+<dd><a href="avro.schema.html#AvroException">AvroException</a></dd>
+<dd><a href="exceptions.html#Exception">exceptions.Exception</a></dd>
+<dd><a href="exceptions.html#BaseException">exceptions.BaseException</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data descriptors inherited from <a href="avro.schema.html#AvroException">AvroException</a>:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Methods inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><a name="SchemaParseException-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#SchemaParseException-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;x.__class__.__doc__&nbsp;for&nbsp;signature</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object at 0x8226dc0&gt;<dd><tt>T.<a href="#SchemaParseException-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+<hr>
+Methods inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><a name="SchemaParseException-__delattr__"><strong>__delattr__</strong></a>(...)</dt><dd><tt>x.<a href="#SchemaParseException-__delattr__">__delattr__</a>('name')&nbsp;&lt;==&gt;&nbsp;del&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="SchemaParseException-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#SchemaParseException-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="SchemaParseException-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#SchemaParseException-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="SchemaParseException-__getslice__"><strong>__getslice__</strong></a>(...)</dt><dd><tt>x.<a href="#SchemaParseException-__getslice__">__getslice__</a>(i,&nbsp;j)&nbsp;&lt;==&gt;&nbsp;x[i:j]<br>
+&nbsp;<br>
+Use&nbsp;of&nbsp;negative&nbsp;indices&nbsp;is&nbsp;not&nbsp;supported.</tt></dd></dl>
+
+<dl><dt><a name="SchemaParseException-__reduce__"><strong>__reduce__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="SchemaParseException-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#SchemaParseException-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="SchemaParseException-__setattr__"><strong>__setattr__</strong></a>(...)</dt><dd><tt>x.<a href="#SchemaParseException-__setattr__">__setattr__</a>('name',&nbsp;value)&nbsp;&lt;==&gt;&nbsp;x.name&nbsp;=&nbsp;value</tt></dd></dl>
+
+<dl><dt><a name="SchemaParseException-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="SchemaParseException-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#SchemaParseException-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="SchemaParseException-__unicode__"><strong>__unicode__</strong></a>(...)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+<dl><dt><strong>message</strong></dt>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-parse"><strong>parse</strong></a>(json_string)</dt><dd><tt>Constructs&nbsp;the&nbsp;<a href="#Schema">Schema</a>&nbsp;from&nbsp;the&nbsp;json&nbsp;text.</tt></dd></dl>
+ <dl><dt><a name="-stringval"><strong>stringval</strong></a>(schm)</dt><dd><tt>Returns&nbsp;the&nbsp;string&nbsp;representation&nbsp;of&nbsp;the&nbsp;schema&nbsp;instance.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>ARRAY</strong> = 8<br>
+<strong>BOOLEAN</strong> = 6<br>
+<strong>BYTES</strong> = 1<br>
+<strong>DOUBLE</strong> = 5<br>
+<strong>ENUM</strong> = 13<br>
+<strong>FIXED</strong> = 11<br>
+<strong>FLOAT</strong> = 4<br>
+<strong>INT</strong> = 2<br>
+<strong>LONG</strong> = 3<br>
+<strong>MAP</strong> = 9<br>
+<strong>NULL</strong> = 7<br>
+<strong>RECORD</strong> = 12<br>
+<strong>STRING</strong> = 0<br>
+<strong>UNION</strong> = 10</td></tr></table>
+</body></html>

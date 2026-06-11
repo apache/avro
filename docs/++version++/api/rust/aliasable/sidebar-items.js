@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["boxed","prelude","string","vec"],"struct":["AliasableMut"]};
