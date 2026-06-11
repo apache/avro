@@ -69,8 +69,8 @@ As well as the Avro Maven plugin (for performing code generation):
   <groupId>org.apache.maven.plugins</groupId>
   <artifactId>maven-compiler-plugin</artifactId>
   <configuration>
-    <source>1.8</source>
-    <target>1.8</target>
+    <source>17</source>
+    <target>17</target>
   </configuration>
 </plugin>
 ```

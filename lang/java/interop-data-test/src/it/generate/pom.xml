@@ -30,7 +30,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
-    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.release>17</maven.compiler.release>
 
     <main.basedir>../../../../../..</main.basedir>
 

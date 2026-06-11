@@ -163,7 +163,7 @@ public class ThriftData extends GenericData {
         return super.newRecord(old, schema); // punt to generic
       if (c.isInstance(old))
         return old; // reuse instance
-      return c.newInstance(); // create new instance
+      return c.getDeclaredConstructor().newInstance(); // create new instance
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
