@@ -67,6 +67,7 @@
     <cyclonedx-maven-plugin.version>2.9.1</cyclonedx-maven-plugin.version>
     <exec-plugin.version>3.6.3</exec-plugin.version>
     <file-management.version>3.2.0</file-management.version>
+    <japicmp-maven-plugin.version>0.25.6</japicmp-maven-plugin.version>
     <javacc-plugin.version>3.8.0</javacc-plugin.version>
     <javacc.version>7.0.13</javacc.version>
     <maven-antrun-plugin.version>3.2.0</maven-antrun-plugin.version>
@@ -267,6 +268,40 @@
           <groupId>org.cyclonedx</groupId>
           <artifactId>cyclonedx-maven-plugin</artifactId>
           <version>${cyclonedx-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>com.github.siom79.japicmp</groupId>
+          <artifactId>japicmp-maven-plugin</artifactId>
+          <version>${japicmp-maven-plugin.version}</version>
+          <configuration>
+            <parameter>
+              <accessModifier>public</accessModifier>
+              <onlyModified>true</onlyModified>
+              <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
+              <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
+              <skipXmlReport>true</skipXmlReport>
+              <excludes>
+                <exclude>org.apache.avro.ipc.jetty.StaticServlet</exclude>
+              </excludes>
+              <excludeModules>
+                <excludeModule>avro-integration-test</excludeModule>
+                <excludeModule>avro-interop-data-test</excludeModule>
+                <excludeModule>avro-maven-plugin</excludeModule>
+                <excludeModule>avro-perf</excludeModule>
+                <excludeModule>avro-tools</excludeModule>
+                <excludeModule>avro-service-archetype</excludeModule>
+              </excludeModules>
+            </parameter>
+          </configuration>
+          <executions>
+            <execution>
+              <id>japicmp-check</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>cmp</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
