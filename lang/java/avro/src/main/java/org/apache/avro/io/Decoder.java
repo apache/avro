@@ -299,4 +299,14 @@ public abstract class Decoder {
    *                           type of the next value to be read
    */
   public abstract int readIndex() throws IOException;
+
+  /**
+   * Returns the total number of bytes remaining that can be read from this
+   * decoder, or {@code -1} if the total is unknown. Implementations that can
+   * determine remaining capacity (for example, byte-array-backed decoders) should
+   * override this method. The default returns {@code -1}.
+   */
+  public int remainingBytes() {
+    return -1;
+  }
 }

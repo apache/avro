@@ -5,6 +5,8 @@
  */
 package org.apache.avro.specific;
 
+import com.fasterxml.jackson.databind.jsonschema.JsonSchema;
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.SchemaStore;
@@ -13,8 +15,8 @@ import org.apache.avro.message.SchemaStore;
 public class int$ extends SpecificRecordBase implements SpecificRecord {
   private static final long serialVersionUID = 3003385205621277651L;
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser()
-      .parse("{\"type\":\"record\",\"name\":\"int\",\"namespace\":\"org.apache.avro.specific\",\"fields\":[]}");
+  public static final org.apache.avro.Schema SCHEMA$ = JsonSchemaParser
+      .parseInternal("{\"type\":\"record\",\"name\":\"int\",\"namespace\":\"org.apache.avro.specific\",\"fields\":[]}");
 
   public static org.apache.avro.Schema getClassSchema() {
     return SCHEMA$;

@@ -59,6 +59,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
+import static org.apache.avro.JsonSchemaParser.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -76,9 +77,10 @@ public class TestSchema {
     String schemaString = s.toString();
     int mid = schemaString.length() / 2;
 
-    Schema parsedStringSchema = new org.apache.avro.Schema.Parser().parse(s.toString());
-    Schema parsedArrayOfStringSchema = new org.apache.avro.Schema.Parser().parse(schemaString.substring(0, mid),
-        schemaString.substring(mid));
+    // Use the internal parser: the use case for split string schemas is the
+    // SCHEMA$ constant in compiled schemas (implementing SpecificRecord).
+    Schema parsedStringSchema = parseInternal(s.toString());
+    Schema parsedArrayOfStringSchema = parseInternal(schemaString.substring(0, mid), schemaString.substring(mid));
     assertNotNull(parsedStringSchema);
     assertNotNull(parsedArrayOfStringSchema);
     assertEquals(parsedStringSchema.toString(), parsedArrayOfStringSchema.toString());
@@ -134,7 +136,7 @@ public class TestSchema {
   @Test
   void parseEmptySchema() {
     assertThrows(SchemaParseException.class, () -> {
-      new Schema.Parser().parse("");
+      SchemaParser.parseSingle("");
     });
   }
 
@@ -227,7 +229,7 @@ public class TestSchema {
         ObjectOutputStream oos = new ObjectOutputStream(bos);
         InputStream jsonSchema = getClass().getResourceAsStream("/SchemaBuilder.avsc")) {
 
-      Schema payload = new Schema.Parser().parse(jsonSchema);
+      Schema payload = new SchemaParser().parse(jsonSchema).mainSchema();
       oos.writeObject(payload);
 
       try (ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
@@ -244,9 +246,9 @@ public class TestSchema {
         + "\"fields\":" + "[{\"name\":\"childField\",\"type\":\"string\"}]}";
     String parent = "{\"type\":\"record\"," + "\"name\":\"Parent\"," + "\"namespace\":\"org.apache.avro.nested\","
         + "\"fields\":" + "[{\"name\":\"child\",\"type\":\"Child\"}]}";
-    Schema.Parser parser = new Schema.Parser();
-    Schema childSchema = parser.parse(child);
-    Schema parentSchema = parser.parse(parent);
+    SchemaParser parser = new SchemaParser();
+    Schema childSchema = parser.parse(child).mainSchema();
+    Schema parentSchema = parser.parse(parent).mainSchema();
     String parentWithoutInlinedChildReference = parentSchema.toString(Collections.singleton(childSchema), false);
     // The generated string should be the same as the original parent
     // schema string that did not have the child schema inlined.
@@ -419,10 +421,10 @@ public class TestSchema {
     final String schemaString = "{\n  \"type\" : \"record\",\n  \"name\" : \"ns.int\",\n"
         + "  \"fields\" : [ \n    {\"name\" : \"value\", \"type\" : \"int\"}, \n"
         + "    {\"name\" : \"next\", \"type\" : [ \"null\", \"ns.int\" ]}\n  ]\n}";
-    final Schema schema = new Schema.Parser().parse(schemaString);
+    final Schema schema = SchemaParser.parseSingle(schemaString);
     String toString = schema.toString(true);
 
-    final Schema schema2 = new Schema.Parser().parse(toString);
+    final Schema schema2 = SchemaParser.parseSingle(toString);
     assertEquals(schema, schema2);
   }
 
@@ -496,7 +498,7 @@ public class TestSchema {
         + "                \"type\":\"enum\",\n" + "                \"name\":\"Sub\",\n"
         + "                \"symbols\":[\"OPEN\",\"CLOSE\"]\n" + "            }\n" + "        }\n" + "    ]\n" + "}";
 
-    final Schema schema = new Schema.Parser().parse(schemaString);
+    final Schema schema = SchemaParser.parseSingle(schemaString);
     Schema f1Schema = schema.getField("f1").schema();
     Schema f2Schema = schema.getField("f2").schema();
     assertSame(f1Schema, f2Schema);
@@ -520,14 +522,14 @@ public class TestSchema {
         + "                      \"doc\": \"\",\n" + "                      \"default\": 0\n"
         + "                    }\n" + "                  ]\n" + "                }\n" + "              ]\n"
         + "            }\n" + "          }\n" + "        ]\n" + "      }\n" + "    }\n" + "  ]\n" + "}";
-    final Schema schema = new Schema.Parser().parse(schemaString);
+    final Schema schema = SchemaParser.parseSingle(schemaString);
     assertNotNull(schema);
   }
 
   /*
    * @Test public void testRec() { String schemaString =
    * "[{\"name\":\"employees\",\"type\":[\"null\",{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"Pair1081149ea1d6eb80\",\"fields\":[{\"name\":\"key\",\"type\":\"int\"},{\"name\":\"value\",\"type\":{\"type\":\"record\",\"name\":\"EmployeeInfo2\",\"fields\":[{\"name\":\"companyMap\",\"type\":[\"null\",{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"PairIntegerString\",\"fields\":[{\"name\":\"key\",\"type\":\"int\"},{\"name\":\"value\",\"type\":\"string\"}]},\"java-class\":\"java.util.HashMap\"}],\"default\":null},{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null}]}}]},\"java-class\":\"java.util.HashMap\"}],\"default\":null}]";
-   * final Schema schema = new Schema.Parser().parse(schemaString);
+   * final Schema schema = JsonSchemaParser.parseInternal(schemaString);
    * Assert.assertNotNull(schema);
    *
    * }
@@ -536,7 +538,7 @@ public class TestSchema {
   @Test
   public void testUnionFieldType() {
     String schemaString = "{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": [{\"name\":\"value\", \"type\":[\"null\", \"string\",{\"type\": \"record\", \"name\": \"Cons\", \"fields\": [{\"name\":\"car\", \"type\":\"Lisp\"},{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}";
-    final Schema schema = new Schema.Parser().parse(schemaString);
+    final Schema schema = SchemaParser.parseSingle(schemaString);
     Field value = schema.getField("value");
     Schema fieldSchema = value.schema();
     Schema subSchema = fieldSchema.getTypes().stream().filter((Schema s) -> s.getType() == Type.RECORD).findFirst()
@@ -568,13 +570,14 @@ public class TestSchema {
 
   @Test
   void testContentAfterAvsc() {
-    Schema.Parser parser = new Schema.Parser(NameValidator.UTF_VALIDATOR);
-    parser.setValidateDefaults(true);
+    SchemaParser parser = new SchemaParser();
     assertThrows(SchemaParseException.class, () -> parser.parse("{\"type\": \"string\"}; DROP TABLE STUDENTS"));
   }
 
   @Test
   void testContentAfterAvscInInputStream() throws Exception {
+    // This test only works for the old parser, as the new parser first consumes
+    // the entire input stream.
     Schema.Parser parser = new Schema.Parser(NameValidator.UTF_VALIDATOR);
     parser.setValidateDefaults(true);
     String avsc = "{\"type\": \"string\"}; DROP TABLE STUDENTS";
@@ -591,8 +594,7 @@ public class TestSchema {
       writer.flush();
     }
 
-    Schema.Parser parser = new Schema.Parser(NameValidator.UTF_VALIDATOR);
-    parser.setValidateDefaults(true);
+    SchemaParser parser = new SchemaParser();
     assertThrows(SchemaParseException.class, () -> parser.parse(avscFile));
   }
 
@@ -630,10 +632,11 @@ public class TestSchema {
         + "  {\"name\":\"f1\", \"type\":\"record1\" }" + "]}"; // register schema1 in schema.
     Schema schemaRecord1 = Schema.createRecord("record1", "doc", "", false);
     schemaRecord1.setFields(Collections.singletonList(new Field("name", Schema.create(Type.STRING))));
-    Schema.Parser parser = new Schema.Parser().addTypes(Collections.singleton(schemaRecord1));
+    SchemaParser parser = new SchemaParser();
+    parser.parse(schemaRecord1.toString());
 
     // parse schema for record2 that contains field for schema1.
-    final Schema schema = parser.parse(schemaRecord2);
+    final Schema schema = parser.parse(schemaRecord2).mainSchema();
     final Field f1 = schema.getField("f1");
     assertNotNull(f1);
     assertEquals(schemaRecord1, f1.schema());
@@ -645,7 +648,16 @@ public class TestSchema {
    */
   @Test
   void testParserNullValidate() {
-    new Schema.Parser((NameValidator) null).parse("{\"type\":\"record\",\"name\":\"\",\"fields\":[]}"); // Empty name
+    new SchemaParser(null).parse("{\"type\":\"record\",\"name\":\"\",\"fields\":[]}"); // Empty name
+  }
+
+  @Test
+  void disallowTypeObjectForNamedType() {
+    String withTypeObjectWithNamedType = "{"
+        + "\"namespace\":\"tests\",\"type\":\"record\",\"name\":\"Invalid\",\"fields\":["
+        + "{\"name\":\"good\",\"type\":{\"type\":\"fixed\",\"name\":\"Hash\",\"size\":16}},"
+        + "{\"name\":\"right\",\"type\":{\"type\":\"Hash\"}}]}";
+    assertThrows(SchemaParseException.class, () -> new SchemaParser().parse(withTypeObjectWithNamedType).mainSchema());
   }
 
   /**

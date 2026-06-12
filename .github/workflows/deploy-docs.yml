@@ -182,7 +182,7 @@ jobs:
           python-version: 3.11
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # 7.3.1
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
 
       - name: Build docs
         working-directory: lang/py
@@ -203,7 +203,7 @@ jobs:
           repository: 'apache/avro-rs'
 
       - name: Rust Toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
         with:
           toolchain: stable
 

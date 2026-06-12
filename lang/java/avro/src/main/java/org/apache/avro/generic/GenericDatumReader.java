@@ -17,12 +17,16 @@
  */
 package org.apache.avro.generic;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -291,6 +295,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     long l = in.readArrayStart();
     long base = 0;
     if (l > 0) {
+      ensureAvailableCollectionBytes(in, l, expectedType);
       LogicalType logicalType = expectedType.getLogicalType();
       Conversion<?> conversion = getData().getConversionFor(logicalType);
       Object array = newArray(old, (int) l, expected);
@@ -306,11 +311,21 @@ public class GenericDatumReader<D> implements DatumReader<D> {
           }
         }
         base += l;
-      } while ((l = in.arrayNext()) > 0);
+      } while ((l = arrayNext(in, expectedType)) > 0);
       return pruneArray(array);
     } else {
       return pruneArray(newArray(old, 0, expected));
     }
+  }
+
+  /**
+   * Reads the next array block count and validates remaining bytes before the
+   * caller allocates storage.
+   */
+  private long arrayNext(ResolvingDecoder in, Schema elementType) throws IOException {
+    long l = in.arrayNext();
+    ensureAvailableCollectionBytes(in, l, elementType);
+    return l;
   }
 
   private Object pruneArray(Object object) {
@@ -348,6 +363,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     long l = in.readMapStart();
     LogicalType logicalType = eValue.getLogicalType();
     Conversion<?> conversion = getData().getConversionFor(logicalType);
+    ensureAvailableMapBytes(in, l, eValue);
     Object map = newMap(old, (int) l);
     if (l > 0) {
       do {
@@ -361,9 +377,37 @@ public class GenericDatumReader<D> implements DatumReader<D> {
             addToMap(map, readMapKey(null, expected, in), readWithoutConversion(null, eValue, in));
           }
         }
-      } while ((l = in.mapNext()) > 0);
+      } while ((l = mapNext(in, eValue)) > 0);
     }
     return map;
+  }
+
+  /**
+   * Reads the next map block count and validates remaining bytes before the
+   * caller allocates storage.
+   */
+  private long mapNext(ResolvingDecoder in, Schema valueType) throws IOException {
+    long l = in.mapNext();
+    ensureAvailableMapBytes(in, l, valueType);
+    return l;
+  }
+
+  /**
+   * Validates remaining bytes for a map block. Each map entry has a string key
+   * (at least 1 byte for the length varint) plus a value, so the minimum bytes
+   * per entry is {@code 1 + minBytesPerElement(valueSchema)}.
+   */
+  private static void ensureAvailableMapBytes(Decoder decoder, long count, Schema valueSchema) throws EOFException {
+    if (count <= 0) {
+      return;
+    }
+    // Map keys are always strings: at least 1 byte for the length varint
+    long minBytesPerEntry = 1L + minBytesPerElement(valueSchema);
+    int remaining = decoder.remainingBytes();
+    if (remaining >= 0 && count * minBytesPerEntry > remaining) {
+      throw new EOFException("Map claims " + count + " entries with at least " + minBytesPerEntry
+          + " bytes each, but only " + remaining + " bytes are available");
+    }
   }
 
   /**
@@ -382,6 +426,76 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   @SuppressWarnings("unchecked")
   protected void addToMap(Object map, Object key, Object value) {
     ((Map) map).put(key, value);
+  }
+
+  /**
+   * Returns the minimum number of bytes required to encode a single value of the
+   * given schema in Avro binary format. Used to validate that the decoder has
+   * enough data remaining before allocating collection backing arrays.
+   * <p>
+   * Returns 0 for types whose binary encoding is empty ({@code null}, zero-length
+   * {@code fixed}, records with only zero-byte fields). Returns a positive value
+   * for all other types.
+   */
+  static int minBytesPerElement(Schema schema) {
+    return minBytesPerElement(schema, Collections.newSetFromMap(new IdentityHashMap<>()));
+  }
+
+  private static int minBytesPerElement(Schema schema, Set<Schema> visited) {
+    switch (schema.getType()) {
+    case NULL:
+      return 0;
+    case FIXED:
+      return schema.getFixedSize();
+    case FLOAT:
+      return 4;
+    case DOUBLE:
+      return 8;
+    case RECORD:
+      if (!visited.add(schema)) {
+        return 0; // break recursion for self-referencing schemas
+      }
+      long sum = 0;
+      for (Schema.Field f : schema.getFields()) {
+        sum += minBytesPerElement(f.schema(), visited);
+        if (sum >= Integer.MAX_VALUE) {
+          sum = Integer.MAX_VALUE;
+          break;
+        }
+      }
+      visited.remove(schema);
+      return (int) sum;
+    case UNION:
+      // The branch index varint is always at least 1 byte
+      return 1;
+    default:
+      // BOOLEAN, INT, LONG, ENUM, STRING, BYTES, ARRAY, MAP are all >= 1 byte
+      return 1;
+    }
+  }
+
+  /**
+   * Validates that the decoder has enough remaining bytes to hold {@code count}
+   * elements of the given schema, assuming each element requires at least
+   * {@link #minBytesPerElement} bytes. Throws {@link EOFException} if the decoder
+   * reports fewer remaining bytes than required.
+   * <p>
+   * This check prevents out-of-memory errors from pre-allocating huge backing
+   * arrays when the source data is truncated or malicious.
+   */
+  private static void ensureAvailableCollectionBytes(Decoder decoder, long count, Schema elementSchema)
+      throws EOFException {
+    if (count <= 0) {
+      return;
+    }
+    int minBytes = minBytesPerElement(elementSchema);
+    if (minBytes > 0) {
+      int remaining = decoder.remainingBytes();
+      if (remaining >= 0 && count * (long) minBytes > remaining) {
+        throw new EOFException("Collection claims " + count + " elements with at least " + minBytes
+            + " bytes each, but only " + remaining + " bytes are available");
+      }
+    }
   }
 
   /**

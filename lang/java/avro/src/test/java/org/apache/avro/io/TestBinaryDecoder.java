@@ -19,6 +19,7 @@ package org.apache.avro.io;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.SystemLimitException;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -204,7 +205,7 @@ public class TestBinaryDecoder {
         + "{\"name\":\"floatField\", \"type\":\"float\"}," + "{\"name\":\"doubleField\", \"type\":\"double\"},"
         + "{\"name\":\"arrayField\", \"type\": " + "{\"type\":\"array\", \"items\":\"boolean\"}},"
         + "{\"name\":\"longField\", \"type\":\"long\"}]}";
-    schema = new Schema.Parser().parse(jsonSchema);
+    schema = SchemaParser.parseSingle(jsonSchema);
     GenericDatumWriter<Object> writer = new GenericDatumWriter<>();
     writer.setSchema(schema);
     ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);
@@ -415,6 +416,51 @@ public class TestBinaryDecoder {
       System.clearProperty(SystemLimitException.MAX_STRING_LENGTH_PROPERTY);
       resetLimits();
     }
+  }
+
+  /**
+   * Verify that a byte-array-backed decoder rejects a string whose varint length
+   * exceeds the remaining bytes, throwing {@link EOFException} <em>before</em>
+   * allocating the buffer.
+   */
+  @Test
+  public void testStringLengthExceedsAvailableBytes() throws IOException {
+    // Encode a varint claiming 10_000_000 bytes of string data, but supply none.
+    // The byte-array-backed decoder knows it has only a few bytes left after
+    // the varint, so ensureAvailableBytes must throw EOFException.
+    BinaryDecoder bd = newDecoder(false, 10_000_000L);
+    Assertions.assertThrows(EOFException.class, () -> bd.readString(null));
+  }
+
+  /**
+   * Same as {@link #testStringLengthExceedsAvailableBytes()} but for
+   * {@link BinaryDecoder#readBytes(ByteBuffer)}.
+   */
+  @Test
+  public void testBytesLengthExceedsAvailableBytes() throws IOException {
+    BinaryDecoder bd = newDecoder(false, 10_000_000L);
+    Assertions.assertThrows(EOFException.class, () -> bd.readBytes(null));
+  }
+
+  @Test
+  public void testStringLengthDoesNotTrustUnknownAvailable() throws IOException {
+    byte[] encoded;
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+      BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
+      encoder.writeString("hello");
+      encoder.flush();
+      encoded = baos.toByteArray();
+    }
+
+    InputStream in = new ByteArrayInputStream(encoded) {
+      @Override
+      public synchronized int available() {
+        return 0;
+      }
+    };
+
+    BinaryDecoder decoder = factory.binaryDecoder(in, null);
+    Assertions.assertEquals("hello", decoder.readString(null).toString());
   }
 
   @ParameterizedTest

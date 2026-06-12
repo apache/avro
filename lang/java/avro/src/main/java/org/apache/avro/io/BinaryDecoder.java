@@ -20,8 +20,10 @@ package org.apache.avro.io;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.InvalidNumberEncodingException;
 import org.apache.avro.SystemLimitException;
+import org.apache.avro.util.ByteBufferInputStream;
 import org.apache.avro.util.Utf8;
 
+import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -295,6 +297,7 @@ public class BinaryDecoder extends Decoder {
   @Override
   public Utf8 readString(Utf8 old) throws IOException {
     int length = SystemLimitException.checkMaxStringLength(readLong());
+    ensureAvailableBytes(length);
     Utf8 result = (old != null ? old : new Utf8());
     result.setByteLength(length);
     if (0 != length) {
@@ -318,6 +321,7 @@ public class BinaryDecoder extends Decoder {
   @Override
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
     int length = SystemLimitException.checkMaxBytesLength(readLong());
+    ensureAvailableBytes(length);
     final ByteBuffer result;
     if (old != null && length <= old.capacity()) {
       result = old;
@@ -509,6 +513,21 @@ public class BinaryDecoder extends Decoder {
   }
 
   /**
+   * Returns the total number of bytes remaining that can be read from this
+   * decoder (including any buffered bytes), or {@code -1} if the total is
+   * unknown.
+   * <p>
+   * Byte-array-backed decoders return an exact count. InputStream-backed decoders
+   * return an exact count only when the wrapped stream can report one.
+   * <p>
+   * {@link DirectBinaryDecoder} always returns {@code -1}.
+   */
+  @Override
+  public int remainingBytes() {
+    return source != null ? source.remainingBytes() : -1;
+  }
+
+  /**
    * Ensures that buf[pos + num - 1] is not out of the buffer array bounds.
    * However, buf[pos + num -1] may be >= limit if there is not enough data left
    * in the source to fill the array with num bytes.
@@ -527,6 +546,27 @@ public class BinaryDecoder extends Decoder {
       source.compactAndFill(buf, pos, minPos, remaining);
       if (pos >= limit)
         throw new EOFException();
+    }
+  }
+
+  /**
+   * Validates that the source has at least {@code length} bytes remaining before
+   * proceeding. Throws early if the declared length is inconsistent with the
+   * available data.
+   * <p>
+   * This check is only applied when the decoder knows the exact remaining byte
+   * count.
+   *
+   * @param length the number of bytes expected to be available
+   * @throws EOFException if the source is known to have fewer bytes remaining
+   */
+  private void ensureAvailableBytes(int length) throws EOFException {
+    if (source != null && length > 0) {
+      int remaining = source.remainingBytes();
+      if (remaining >= 0 && length > remaining) {
+        throw new EOFException(
+            "Attempted to read " + length + " bytes, but only " + remaining + " bytes are available");
+      }
     }
   }
 
@@ -663,6 +703,12 @@ public class BinaryDecoder extends Decoder {
     }
 
     abstract boolean isEof();
+
+    /**
+     * Returns the total number of bytes remaining that can be read from this source
+     * (including any buffered bytes), or {@code -1} if the total is unknown.
+     */
+    protected abstract int remainingBytes();
 
     protected void attach(int bufferSize, BinaryDecoder decoder) {
       decoder.buf = new byte[bufferSize];
@@ -911,6 +957,20 @@ public class BinaryDecoder extends Decoder {
     }
 
     @Override
+    protected int remainingBytes() {
+      int buffered = ba.getLim() - ba.getPos();
+      try {
+        if (in.getClass() == ByteArrayInputStream.class || in.getClass() == ByteBufferInputStream.class) {
+          long total = (long) buffered + in.available();
+          return (int) Math.min(total, Integer.MAX_VALUE);
+        }
+      } catch (IOException e) {
+        return -1;
+      }
+      return -1;
+    }
+
+    @Override
     public void close() throws IOException {
       in.close();
     }
@@ -1027,6 +1087,11 @@ public class BinaryDecoder extends Decoder {
     public boolean isEof() {
       int remaining = ba.getLim() - ba.getPos();
       return (remaining == 0);
+    }
+
+    @Override
+    protected int remainingBytes() {
+      return ba.getLim() - ba.getPos();
     }
   }
 }

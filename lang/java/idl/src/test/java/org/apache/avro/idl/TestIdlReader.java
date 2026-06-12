@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParseException;
 import org.junit.Before;
 import org.junit.Test;
 import java.io.BufferedReader;
@@ -156,7 +157,16 @@ public class TestIdlReader {
         warnings);
   }
 
-  @SuppressWarnings("SameParameterValue")
+  @Test
+  public void testErrorDuplicateNamedType() throws IOException {
+    try {
+      parseExtraIdlFile("duplicateNameErrorParsing.avdl");
+      fail("Expected a failure: named schemas cannot be redefined.");
+    } catch (SchemaParseException e) {
+      assertEquals("Can't redefine: duplicateNameParseError.Foo", e.getMessage());
+    }
+  }
+
   private IdlFile parseExtraIdlFile(String fileName) throws IOException {
     return new IdlReader().parse(EXTRA_TEST_DIR.toPath().resolve(fileName));
   }

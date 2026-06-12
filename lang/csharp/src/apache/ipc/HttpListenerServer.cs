@@ -77,7 +77,7 @@ namespace Avro.ipc
                 //    ExceptionHandler(ex, result);
                 //else
                 //    Debug.Print("Exception occured while processing a request, no exception handler was provided - ignoring", ex);
-                Debug.Print("Exception occured while processing a web request, skipping this request: ", ex);
+                Debug.Print("Exception occurred while processing a web request, skipping this request: ", ex);
             }
         }
 

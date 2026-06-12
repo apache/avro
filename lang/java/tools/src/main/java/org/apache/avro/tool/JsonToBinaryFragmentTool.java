@@ -27,6 +27,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Encoder;
@@ -57,7 +58,7 @@ public class JsonToBinaryFragmentTool implements Tool {
     Schema schema;
     String inputFile;
     if (schemaFile == null) {
-      schema = new Schema.Parser().parse(nargs.get(0));
+      schema = SchemaParser.parseSingle(nargs.get(0));
       inputFile = nargs.get(1);
     } else {
       schema = Util.parseSchemaFromFS(schemaFile);

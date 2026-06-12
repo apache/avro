@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
@@ -110,7 +111,7 @@ public class TestResolvingGrammarGenerator {
     final ObjectMapper mapper = new ObjectMapper(factory);
 
     return ret.stream().map((String[] args) -> {
-      Schema schema = new Schema.Parser().parse(args[0]);
+      Schema schema = SchemaParser.parseSingle(args[0]);
       try {
         JsonNode data = mapper.readTree(new StringReader(args[1]));
         return Arguments.of(schema, data);
