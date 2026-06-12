@@ -335,7 +335,7 @@ class AvroSchema implements \Stringable
         $schemata = new AvroNamedSchemata();
 
         return self::realParse(
-            avro: json_decode($json, true, JSON_THROW_ON_ERROR),
+            avro: json_decode($json, associative: true, flags: JSON_THROW_ON_ERROR),
             schemata: $schemata
         );
     }
