@@ -51,6 +51,15 @@ class DirectBinaryDecoder extends BinaryDecoder {
       result.limit(length);
       return result;
     }
+
+    public byte[] read(int length) throws IOException {
+      if (length == 0) {
+        return EMPTY_BYTES;
+      }
+      final byte[] result = new byte[length];
+      doReadBytes(result, 0, length);
+      return result;
+    }
   }
 
   private class ReuseByteReader extends ByteReader {
@@ -157,6 +166,12 @@ class DirectBinaryDecoder extends BinaryDecoder {
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
     long length = readLong();
     return byteReader.read(old, SystemLimitException.checkMaxBytesLength(length));
+  }
+
+  @Override
+  public byte[] readBytes() throws IOException {
+    long length = readLong();
+    return byteReader.read(SystemLimitException.checkMaxBytesLength(length));
   }
 
   @Override
