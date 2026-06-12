@@ -332,12 +332,17 @@ class AvroSchema implements \Stringable
      */
     public static function parse(string $json): self
     {
-        $schemata = new AvroNamedSchemata();
-
-        return self::realParse(
-            avro: json_decode($json, associative: true, flags: JSON_THROW_ON_ERROR),
-            schemata: $schemata
-        );
+        try {
+            return self::realParse(
+                avro: json_decode($json, associative: true, flags: JSON_THROW_ON_ERROR),
+                schemata: new AvroNamedSchemata()
+            );
+        } catch (\JsonException $e) {
+            throw new AvroSchemaParseException(
+                message: 'Invalid JSON string for schema.',
+                previous: $e
+            );
+        }
     }
 
     /**
@@ -351,7 +356,7 @@ class AvroSchema implements \Stringable
         array|string|null $avro,
         ?string $defaultNamespace = null,
         AvroNamedSchemata $schemata = new AvroNamedSchemata()
-    ): AvroSchema {
+    ): self {
         if (is_array($avro)) {
             $type = $avro[self::TYPE_ATTR] ?? null;
 
