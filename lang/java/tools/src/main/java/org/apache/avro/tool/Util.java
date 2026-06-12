@@ -272,14 +272,15 @@ class Util {
   static CodecFactory codecFactory(OptionSet opts, OptionSpec<String> codec, OptionSpec<Integer> level,
       String defaultCodec) {
     String codecName = opts.hasArgument(codec) ? codec.value(opts) : defaultCodec;
+    boolean levelSet = opts.hasArgument(level);
     if (codecName.equals(DEFLATE_CODEC)) {
-      return CodecFactory.deflateCodec(level.value(opts));
+      return CodecFactory.deflateCodec(levelSet ? level.value(opts) : CodecFactory.DEFAULT_DEFLATE_LEVEL);
     } else if (codecName.equals(DataFileConstants.XZ_CODEC)) {
-      return CodecFactory.xzCodec(level.value(opts));
+      return CodecFactory.xzCodec(levelSet ? level.value(opts) : CodecFactory.DEFAULT_XZ_LEVEL);
     } else if (codecName.equals(DataFileConstants.ZSTANDARD_CODEC)) {
-      return CodecFactory.zstandardCodec(level.value(opts));
+      return CodecFactory.zstandardCodec(levelSet ? level.value(opts) : CodecFactory.DEFAULT_ZSTANDARD_LEVEL);
     } else {
-      return CodecFactory.fromString(codec.value(opts));
+      return CodecFactory.fromString(codecName);
     }
   }
 
