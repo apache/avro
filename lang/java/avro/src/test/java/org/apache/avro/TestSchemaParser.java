@@ -41,6 +41,21 @@ class TestSchemaParser {
       StandardCharsets.UTF_16BE };
 
   @Test
+  void testStaticParseText() {
+    Schema schema = SchemaParser.parseSingle(SCHEMA_JSON);
+    assertEquals(SCHEMA_REAL, schema);
+  }
+
+  @Test
+  void testStaticParsePath() throws IOException {
+    Path tempFile = Files.createTempFile("TestSchemaParser", null);
+    Files.write(tempFile, singletonList(SCHEMA_JSON));
+
+    Schema schema = SchemaParser.parseSingle(tempFile);
+    assertEquals(SCHEMA_REAL, schema);
+  }
+
+  @Test
   void testParseFile() throws IOException {
     Path tempFile = Files.createTempFile("TestSchemaParser", null);
     Files.write(tempFile, singletonList(SCHEMA_JSON));

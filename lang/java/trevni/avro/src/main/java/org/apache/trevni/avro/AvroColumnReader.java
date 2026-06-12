@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.avro.SchemaParser;
 import org.apache.trevni.ColumnMetaData;
 import org.apache.trevni.ColumnFileReader;
 import org.apache.trevni.ColumnValues;
@@ -91,7 +92,7 @@ public class AvroColumnReader<D> implements Iterator<D>, Iterable<D>, Closeable 
   public AvroColumnReader(Params params) throws IOException {
     this.reader = new ColumnFileReader(params.input);
     this.model = params.model;
-    this.fileSchema = new Schema.Parser().parse(reader.getMetaData().getString(AvroColumnWriter.SCHEMA_KEY));
+    this.fileSchema = SchemaParser.parseSingle(reader.getMetaData().getString(AvroColumnWriter.SCHEMA_KEY));
     this.readSchema = params.schema == null ? fileSchema : params.schema;
     initialize();
   }

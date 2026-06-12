@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.avro.InvalidAvroMagicException;
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.UnknownAvroCodecException;
 import org.apache.avro.io.DatumReader;
@@ -88,7 +89,7 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
     if (codec != null && !codec.equals(NULL_CODEC)) {
       throw new UnknownAvroCodecException("Unknown codec: " + codec);
     }
-    this.schema = new Schema.Parser().parse(getMetaString(SCHEMA));
+    this.schema = JsonSchemaParser.parseInternal(getMetaString(SCHEMA));
     this.reader = reader;
 
     reader.setSchema(schema);

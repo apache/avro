@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>37</version>
+    <version>38</version>
   </parent>
 
   <groupId>org.apache.avro</groupId>
@@ -47,23 +47,23 @@
     <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>
 
     <!-- plugin versions -->
-    <apache-rat-plugin.version>0.17</apache-rat-plugin.version>
+    <apache-rat-plugin.version>0.18</apache-rat-plugin.version>
     <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
     <checkstyle.version>13.3.0</checkstyle.version>
-    <enforcer-plugin.version>3.6.2</enforcer-plugin.version>
-    <extra-enforcer-rules.version>1.11.0</extra-enforcer-rules.version>
+    <enforcer-plugin.version>3.6.3</enforcer-plugin.version>
+    <extra-enforcer-rules.version>1.12.0</extra-enforcer-rules.version>
     <maven-antrun-plugin.version>3.2.0</maven-antrun-plugin.version>
     <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
     <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
     <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
     <maven-plugin-plugin.version>3.15.2</maven-plugin-plugin.version>
     <maven-remote-resources-plugin.version>3.3.0</maven-remote-resources-plugin.version>
-    <maven-shade-plugin.version>3.6.1</maven-shade-plugin.version>
+    <maven-shade-plugin.version>3.6.2</maven-shade-plugin.version>
     <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
     <maven-toolchains-plugin.version>3.2.0</maven-toolchains-plugin.version>
     <plugin-tools-javadoc.version>3.5.2</plugin-tools-javadoc.version>
-    <spotless-maven-plugin.version>3.2.1</spotless-maven-plugin.version>
-    <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
+    <spotless-maven-plugin.version>3.6.0</spotless-maven-plugin.version>
+    <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
 
     <!-- Pin output timestamp to make the Java build reproducible -->
     <project.build.outputTimestamp>1723122283</project.build.outputTimestamp>

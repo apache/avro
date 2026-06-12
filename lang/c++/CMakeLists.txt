@@ -21,11 +21,11 @@ cmake_minimum_required (VERSION 3.20)
 set (CMAKE_LEGACY_CYGWIN_WIN32 0)
 
 if (NOT DEFINED CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD 20)
 endif()
 
-if (CMAKE_CXX_STANDARD LESS 17)
-    message(FATAL_ERROR "Avro requires at least C++17")
+if (CMAKE_CXX_STANDARD LESS 20)
+    message(FATAL_ERROR "Avro requires at least C++20")
 endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -83,19 +83,6 @@ if (AVRO_BUILD_TESTS OR AVRO_USE_BOOST)
     find_package (Boost 1.70 REQUIRED CONFIG)
 endif ()
 
-find_package(fmt QUIET)
-if (NOT fmt_FOUND)
-    include(FetchContent)
-    FetchContent_Declare(
-            fmt
-            GIT_REPOSITORY  https://github.com/fmtlib/fmt.git
-            GIT_TAG         10.2.1
-            GIT_PROGRESS    TRUE
-            USES_TERMINAL_DOWNLOAD TRUE
-    )
-    FetchContent_MakeAvailable(fmt)
-endif ()
-
 find_package(Snappy CONFIG)
 if (Snappy_FOUND)
     # Use CONFIG mode to guarantee that Snappy::snappy target exists if found.
@@ -149,7 +136,6 @@ function (setup_avro_lib target lib_type)
     endif ()
     set_target_properties (${target} PROPERTIES VERSION ${AVRO_VERSION})
     target_link_libraries (${target} PUBLIC
-      $<BUILD_INTERFACE:fmt::fmt-header-only>
       $<BUILD_INTERFACE:ZLIB::ZLIB>
       $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
       $<$<BOOL:${zstd_FOUND}>:$<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>
