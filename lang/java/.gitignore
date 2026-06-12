@@ -20,3 +20,6 @@
 dependency-reduced-pom.xml
 mapred/userlogs/
 tools/userlogs/
+gradle-plugin/build
+gradle-plugin/.kotlin
+gradle-plugin/.gradle
