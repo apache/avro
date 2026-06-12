@@ -51,3 +51,86 @@ If you're pulling from source, put `lib/` in your include path and require `lib/
     require_once('lib/autoload.php');
 
 Take a look in `examples/` for usage.
+
+Code Generation
+===============
+
+The `avro` CLI tool generates PHP classes from Avro schema files (`.avsc`).
+
+## Usage
+
+```
+vendor/bin/avro [options]
+```
+
+### Options
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--file` | `-f` | Path to a single `.avsc` schema file |
+| `--directory` | `-d` | Path to a directory containing `.avsc` schema files |
+| `--output` | `-o` | Output directory for the generated PHP files (created if it does not exist) |
+| `--namespace` | `-ns` | PHP namespace for the generated classes |
+
+Exactly one of `--file` or `--directory` must be provided.
+
+## Examples
+
+Generate a PHP class from a single schema file:
+
+```bash
+vendor/bin/avro --file path/to/user.avsc --output src/Generated --namespace App\\Avro\\Generated
+```
+
+Generate PHP classes from all `.avsc` files in a directory:
+
+```bash
+vendor/bin/avro --directory path/to/schemas --output src/Generated --namespace App\\Avro\\Generated
+```
+
+## Generated output
+
+Given a record schema:
+
+```json
+{
+    "type": "record",
+    "name": "User",
+    "fields": [
+        {"name": "name", "type": "string"},
+        {"name": "age",  "type": "int"}
+    ]
+}
+```
+
+The command produces `src/Generated/User.php`:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Avro\Generated;
+
+final class User implements \JsonSerializable
+{
+    private string $name;
+    private int $age;
+
+    public function __construct(string $name, int $age)
+    {
+        $this->name = $name;
+        $this->age  = $age;
+    }
+
+    public function name(): string { return $this->name; }
+    public function age(): int     { return $this->age; }
+
+    public function jsonSerialize(): mixed
+    {
+        return ['name' => $this->name, 'age' => $this->age];
+    }
+}
+```
+
+Enum schemas generate a PHP backed enum. Nested record and enum types each produce their own file.

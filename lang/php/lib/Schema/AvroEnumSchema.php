@@ -62,7 +62,7 @@ class AvroEnumSchema extends AvroNamedSchema
     /**
      * @return string[] this enum schema's symbols
      */
-    public function symbols()
+    public function symbols(): array
     {
         return $this->symbols;
     }
@@ -72,13 +72,14 @@ class AvroEnumSchema extends AvroNamedSchema
      * @return bool true if the given symbol exists in this
      *          enum schema and false otherwise
      */
-    public function hasSymbol($symbol)
+    public function hasSymbol($symbol): bool
     {
         return in_array($symbol, $this->symbols);
     }
 
     /**
      * @param int $index
+     * @throws AvroException
      * @return string enum schema symbol with the given (zero-based) index
      */
     public function symbolByIndex($index)
