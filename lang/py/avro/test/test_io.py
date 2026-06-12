@@ -179,11 +179,25 @@ SCHEMAS_TO_VALIDATE = tuple(
             {"value": {"car": {"value": "head"}, "cdr": {"value": None}}},
         ),
         (
-            {"type": "record", "name": "record", "fields": [{"name": "value", "type": "int"}, {"name": "next", "type": ["null", "record"]}]},
+            {
+                "type": "record",
+                "name": "record",
+                "fields": [
+                    {"name": "value", "type": "int"},
+                    {"name": "next", "type": ["null", "record"]},
+                ],
+            },
             {"value": 0, "next": {"value": 1, "next": None}},
         ),
         (
-            {"type": "record", "name": "ns.long", "fields": [{"name": "value", "type": "int"}, {"name": "next", "type": ["null", "ns.long"]}]},
+            {
+                "type": "record",
+                "name": "ns.long",
+                "fields": [
+                    {"name": "value", "type": "int"},
+                    {"name": "next", "type": ["null", "ns.long"]},
+                ],
+            },
             {"value": 0, "next": {"value": 1, "next": None}},
         ),
         # Optional logical types.
@@ -278,7 +292,11 @@ def write_datum(datum: object, writers_schema: avro.schema.Schema) -> Tuple[io.B
     return writer, encoder, datum_writer
 
 
-def read_datum(buffer: io.BytesIO, writers_schema: avro.schema.Schema, readers_schema: Optional[avro.schema.Schema] = None) -> object:
+def read_datum(
+    buffer: io.BytesIO,
+    writers_schema: avro.schema.Schema,
+    readers_schema: Optional[avro.schema.Schema] = None,
+) -> object:
     reader = io.BytesIO(buffer.getvalue())
     decoder = avro.io.BinaryDecoder(reader)
     datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
@@ -302,7 +320,7 @@ class IoValidateTestCase(unittest.TestCase):
         """
         In these cases, the provided data should be valid with the given schema.
         """
-        with warnings.catch_warnings(record=True) as actual_warnings:
+        with warnings.catch_warnings(record=True) as _actual_warnings:
             self.assertTrue(
                 avro.io.validate(self.test_schema, self.test_datum),
                 f"{self.test_datum} did not validate in the schema {self.test_schema}",
@@ -326,7 +344,7 @@ class RoundTripTestCase(unittest.TestCase):
         """
         A datum should be the same after being encoded and then decoded.
         """
-        with warnings.catch_warnings(record=True) as actual_warnings:
+        with warnings.catch_warnings(record=True) as _actual_warnings:
             writer, encoder, datum_writer = write_datum(self.test_datum, self.test_schema)
             round_trip_datum = read_datum(writer, self.test_schema)
             expected: object
@@ -367,7 +385,7 @@ class BinaryEncodingTestCase(unittest.TestCase):
         warnings.simplefilter("always")
 
     def check_binary_encoding(self) -> None:
-        with warnings.catch_warnings(record=True) as actual_warnings:
+        with warnings.catch_warnings(record=True) as _actual_warnings:
             writer, encoder, datum_writer = write_datum(self.test_datum, self.writers_schema)
             writer.seek(0)
             hex_val = avro_hexlify(writer)
@@ -379,7 +397,7 @@ class BinaryEncodingTestCase(unittest.TestCase):
 
     def check_skip_encoding(self) -> None:
         VALUE_TO_READ = 6253
-        with warnings.catch_warnings(record=True) as actual_warnings:
+        with warnings.catch_warnings(record=True) as _actual_warnings:
             # write the value to skip and a known value
             writer, encoder, datum_writer = write_datum(self.test_datum, self.writers_schema)
             datum_writer.write(VALUE_TO_READ, encoder)
@@ -418,7 +436,7 @@ class SchemaPromotionTestCase(unittest.TestCase):
         # note that checking writers_schema.type in read_data
         # allows us to handle promotion correctly
         DATUM_TO_WRITE = 219
-        with warnings.catch_warnings(record=True) as actual_warnings:
+        with warnings.catch_warnings(record=True) as _actual_warnings:
             writer, enc, dw = write_datum(DATUM_TO_WRITE, self.writers_schema)
             datum_read = read_datum(writer, self.writers_schema, self.readers_schema)
             self.assertEqual(
@@ -429,7 +447,11 @@ class SchemaPromotionTestCase(unittest.TestCase):
 
 
 class DefaultValueTestCase(unittest.TestCase):
-    def __init__(self, field_type: Collection[str], default: Union[Dict[str, int], List[int], None, float, str]) -> None:
+    def __init__(
+        self,
+        field_type: Collection[str],
+        default: Union[Dict[str, int], List[int], None, float, str],
+    ) -> None:
         """Ignore the normal signature for unittest.TestCase because we are generating
         many test cases from this one class. This is safe as long as the autoloader
         ignores this class. The autoloader will ignore this class as long as it has
@@ -443,7 +465,7 @@ class DefaultValueTestCase(unittest.TestCase):
 
     def check_default_value(self) -> None:
         datum_read: DefaultValueTestCaseType
-        with warnings.catch_warnings(record=True) as actual_warnings:
+        with warnings.catch_warnings(record=True) as _actual_warnings:
             datum_to_read = cast(DefaultValueTestCaseType, {"H": self.default})
             readers_schema = avro.schema.parse(
                 json.dumps(
@@ -461,7 +483,10 @@ class DefaultValueTestCase(unittest.TestCase):
                 )
             )
             writer, _, _ = write_datum(LONG_RECORD_DATUM, LONG_RECORD_SCHEMA)
-            datum_read_ = cast(DefaultValueTestCaseType, read_datum(writer, LONG_RECORD_SCHEMA, readers_schema))
+            datum_read_ = cast(
+                DefaultValueTestCaseType,
+                read_datum(writer, LONG_RECORD_SCHEMA, readers_schema),
+            )
             datum_read = {"H": cast(bytes, datum_read_["H"]).decode()} if isinstance(datum_read_["H"], bytes) else datum_read_
             self.assertEqual(datum_to_read, datum_read)
 
@@ -505,7 +530,11 @@ class TestIncompatibleSchemaReading(unittest.TestCase):
             enc_bytes = writer_bio.getvalue()
         reader = avro.io.DatumReader(reader_schema)
         with io.BytesIO(enc_bytes) as reader_bio:
-            self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, reader.read, avro.io.BinaryDecoder(reader_bio))
+            self.assertRaises(
+                avro.errors.InvalidAvroBinaryEncoding,
+                reader.read,
+                avro.io.BinaryDecoder(reader_bio),
+            )
 
         incompatibleUserRecord = {"name": -10, "age": 21, "location": "Woodford"}
         with io.BytesIO() as writer_bio:
@@ -514,7 +543,11 @@ class TestIncompatibleSchemaReading(unittest.TestCase):
             enc_bytes = writer_bio.getvalue()
         reader = avro.io.DatumReader(reader_schema)
         with io.BytesIO(enc_bytes) as reader_bio:
-            self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, reader.read, avro.io.BinaryDecoder(reader_bio))
+            self.assertRaises(
+                avro.errors.InvalidAvroBinaryEncoding,
+                reader.read,
+                avro.io.BinaryDecoder(reader_bio),
+            )
 
 
 class TestMisc(unittest.TestCase):
@@ -648,7 +681,15 @@ class TestMisc(unittest.TestCase):
         assert str(exc.exception) == 'The datum "Bad" provided for "F" is not an example of the schema "int"'
 
     def test_type_exception_long(self) -> None:
-        writers_schema = avro.schema.parse(json.dumps({"type": "record", "name": "Test", "fields": [{"name": "foo", "type": "long"}]}))
+        writers_schema = avro.schema.parse(
+            json.dumps(
+                {
+                    "type": "record",
+                    "name": "Test",
+                    "fields": [{"name": "foo", "type": "long"}],
+                }
+            )
+        )
         datum_to_write = {"foo": 5.0}
 
         with self.assertRaises(avro.errors.AvroTypeException) as exc:
@@ -656,10 +697,21 @@ class TestMisc(unittest.TestCase):
         assert str(exc.exception) == 'The datum "5.0" provided for "foo" is not an example of the schema "long"'
 
     def test_type_exception_record(self) -> None:
-        writers_schema = avro.schema.parse(json.dumps({"type": "record", "name": "Test", "fields": [{"name": "foo", "type": "long"}]}))
+        writers_schema = avro.schema.parse(
+            json.dumps(
+                {
+                    "type": "record",
+                    "name": "Test",
+                    "fields": [{"name": "foo", "type": "long"}],
+                }
+            )
+        )
         datum_to_write = ("foo", 5.0)
 
-        with self.assertRaisesRegex(avro.errors.AvroTypeException, r"The datum \".*\" provided for \".*\" is not an example of the schema [\s\S]*"):
+        with self.assertRaisesRegex(
+            avro.errors.AvroTypeException,
+            r"The datum \".*\" provided for \".*\" is not an example of the schema [\s\S]*",
+        ):
             write_datum(datum_to_write, writers_schema)
 
 

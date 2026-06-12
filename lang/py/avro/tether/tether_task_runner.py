@@ -83,7 +83,7 @@ class TaskRunnerResponder(avro.ipc.Responder):
             else:
                 self.log.warning("TetherTaskRunner: Received unknown message %s", message.name)
 
-        except Exception as e:
+        except Exception:
             self.log.error("Error occured while processing message: %s", message.name)
             e = traceback.format_exc()
             self.task.fail(e)

@@ -322,7 +322,7 @@ class Responder:
             else:
                 writers_schema = local_message.errors
                 self.write_error(writers_schema, error, buffer_encoder)
-        except schema.AvroException as e:
+        except avro.errors.AvroException as e:
             error = avro.errors.AvroRemoteException(str(e))
             buffer_encoder = avro.io.BinaryEncoder(io.BytesIO())
             META_WRITER.write(response_metadata, buffer_encoder)

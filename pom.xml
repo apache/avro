@@ -49,11 +49,11 @@
     <!-- plugin versions -->
     <apache-rat-plugin.version>0.17</apache-rat-plugin.version>
     <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
-    <checkstyle.version>13.0.0</checkstyle.version>
+    <checkstyle.version>13.3.0</checkstyle.version>
     <enforcer-plugin.version>3.6.2</enforcer-plugin.version>
     <extra-enforcer-rules.version>1.11.0</extra-enforcer-rules.version>
     <maven-antrun-plugin.version>3.2.0</maven-antrun-plugin.version>
-    <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
+    <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
     <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
     <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
     <maven-plugin-plugin.version>3.15.2</maven-plugin-plugin.version>
@@ -62,8 +62,8 @@
     <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
     <maven-toolchains-plugin.version>3.2.0</maven-toolchains-plugin.version>
     <plugin-tools-javadoc.version>3.5.2</plugin-tools-javadoc.version>
-    <spotless-maven-plugin.version>3.2.0</spotless-maven-plugin.version>
-    <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
+    <spotless-maven-plugin.version>3.2.1</spotless-maven-plugin.version>
+    <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
 
     <!-- Pin output timestamp to make the Java build reproducible -->
     <project.build.outputTimestamp>1723122283</project.build.outputTimestamp>
@@ -518,7 +518,7 @@
                 <exclude>lang/perl/inc/Module/Install/*.pm</exclude>
                 <exclude>lang/py/.eggs/**</exclude>
                 <exclude>lang/py/.mypy_cache/**</exclude>
-                <exclude>lang/py/.tox/**</exclude>
+                <exclude>lang/py/uv.lock</exclude>
                 <exclude>lang/py/build/**</exclude>
                 <exclude>lang/py/dist/**</exclude>
                 <exclude>lang/py/userlogs/**</exclude>
@@ -542,7 +542,7 @@
                 <exclude>lang/c++/m4/*.m4</exclude>
                 <exclude>lang/java/ipc/src/main/velocity/org/apache/avro/ipc/stats/static/protovis-r3.2.js</exclude>
                 <exclude>lang/java/ipc/src/main/velocity/org/apache/avro/ipc/stats/static/g.bar.js</exclude>
-                <exclude>lang/java/ipc/src/main/velocity/org/apache/avro/ipc/stats/static/jquery-1.6.3.min.js</exclude>
+                <exclude>lang/java/ipc/src/main/velocity/org/apache/avro/ipc/stats/static/jquery-3.7.1.min.js</exclude>
                 <!-- License files -->
                 <exclude>lang/java/tools/src/main/resources/META-INF/cddl-1.0.text</exclude>
                 <exclude>lang/java/tools/src/main/resources/META-INF/cddl-1.1.text</exclude>
