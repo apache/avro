@@ -209,6 +209,28 @@ class AvroCodeGeneratorTest extends TestCase
     }
 
     #[Test]
+    public function namespaced_schema_uses_short_name_for_filename(): void
+    {
+        $schema = <<<JSON
+            {
+                "type": "record",
+                "namespace": "com.example",
+                "name": "User",
+                "fields": [
+                    {"name": "id", "type": "int"}
+                ]
+            }
+            JSON;
+
+        $avroSchema = AvroSchema::parse($schema);
+        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Model');
+
+        self::assertCount(1, $files);
+        self::assertArrayHasKey('/generated/User.php', $files);
+        self::assertArrayNotHasKey('/generated/Com.example.User.php', $files);
+    }
+
+    #[Test]
     public function enum_schema_generation(): void
     {
         $schema = <<<JSON

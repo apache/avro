@@ -57,7 +57,7 @@ class GenerateCommand extends Command
 
         /** @var null|string $file */
         $file = $input->getOption('file');
-        /** @var null|string $file */
+        /** @var null|string $directory */
         $directory = $input->getOption('directory');
 
         if (
@@ -76,7 +76,7 @@ class GenerateCommand extends Command
         }
 
         if (null === $namespace || '' === $namespace) {
-            $io->error('PHP namespace is required (--namespace / -n).');
+            $io->error('PHP namespace is required (--namespace / -ns).');
 
             return Command::FAILURE;
         }
@@ -97,7 +97,7 @@ class GenerateCommand extends Command
 
                 return Command::FAILURE;
             }
-            $files = glob(rtrim($directory, '/').'/*.avsc');
+            $files = glob(rtrim($directory, '/').'/*.avsc') ?: [];
         }
 
         $generator = new AvroCodeGenerator();

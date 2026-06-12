@@ -89,7 +89,11 @@ class AvroSpecificDatumWriter
     private function writeRecord(AvroRecordSchema $schema, object $datum, AvroIOBinaryEncoder $encoder): void
     {
         foreach ($schema->fields() as $field) {
-            $value = $datum->{$field->name()}();
+            $getter = $field->name();
+            if (!method_exists($datum, $getter)) {
+                throw new AvroIOTypeException($schema, $datum);
+            }
+            $value = $datum->{$getter}();
             $this->writeData($field->type(), $value, $encoder);
         }
     }
@@ -99,8 +103,12 @@ class AvroSpecificDatumWriter
      *
      * @throws AvroException
      */
-    private function writeEnum(AvroEnumSchema $schema, \BackedEnum $datum, AvroIOBinaryEncoder $encoder): void
+    private function writeEnum(AvroEnumSchema $schema, mixed $datum, AvroIOBinaryEncoder $encoder): void
     {
+        if (!$datum instanceof \BackedEnum) {
+            throw new AvroIOTypeException($schema, $datum);
+        }
+
         $symbolIndex = $schema->symbolIndex($datum->value);
         $encoder->writeInt($symbolIndex);
     }

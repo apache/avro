@@ -25,6 +25,7 @@ namespace Apache\Avro\Generator;
 use Apache\Avro\Schema\AvroArraySchema;
 use Apache\Avro\Schema\AvroEnumSchema;
 use Apache\Avro\Schema\AvroMapSchema;
+use Apache\Avro\Schema\AvroNamedSchema;
 use Apache\Avro\Schema\AvroPrimitiveSchema;
 use Apache\Avro\Schema\AvroRecordSchema;
 use Apache\Avro\Schema\AvroSchema;
@@ -61,7 +62,7 @@ class AvroCodeGenerator
 
         $files = [];
 
-        foreach ($this->registry as $name => $registeredSchema) {
+        foreach ($this->registry as $registeredSchema) {
             $node = match (true) {
                 $registeredSchema instanceof AvroEnumSchema => $this->buildEnum(
                     $registeredSchema,
@@ -75,8 +76,8 @@ class AvroCodeGenerator
                 default => null
             };
 
-            if (null !== $node) {
-                $filename = $path.'/'.ucwords($name).'.php';
+            if (null !== $node && $registeredSchema instanceof AvroNamedSchema) {
+                $filename = $path.'/'.ucwords($registeredSchema->name()).'.php';
                 $files[$filename] = "<?php\n\ndeclare(strict_types=1);\n\n{$this->printer->prettyPrint([$node])}\n";
             }
         }
