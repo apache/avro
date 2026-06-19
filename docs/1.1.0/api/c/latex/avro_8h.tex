@@ -1,0 +1,134 @@
+\hypertarget{avro_8h}{
+\section{avro.h File Reference}
+\label{avro_8h}\index{avro.h@{avro.h}}
+}
+\hyperlink{struct_a_v_r_o}{AVRO} API.  
+
+
+{\tt \#include $<$stdarg.h$>$}\par
+{\tt \#include $<$stdint.h$>$}\par
+{\tt \#include $<$sys/types.h$>$}\par
+{\tt \#include $<$apr\_\-pools.h$>$}\par
+{\tt \#include $<$apr\_\-file\_\-io.h$>$}\par
+{\tt \#include $<$apr\_\-network\_\-io.h$>$}\par
+\subsection*{Data Structures}
+\begin{CompactItemize}
+\item 
+struct \hyperlink{struct_a_v_r_o}{AVRO}
+\item 
+struct \textbf{AVRO::AVRO::avro\_\-ops}
+\end{CompactItemize}
+\subsection*{Defines}
+\begin{CompactItemize}
+\item 
+\hypertarget{group___handle___routines_gec7f77fb08d34504a65e49f23673e2f2}{
+\#define \textbf{CHECK\_\-ERROR}(\_\-\_\-status)~if(\_\-\_\-status != AVRO\_\-OK)\{ return \_\-\_\-status; \}}
+\label{group___handle___routines_gec7f77fb08d34504a65e49f23673e2f2}
+
+\item 
+\hypertarget{group___handle___routines_ga11bb99285d5512c5739aacb0b9352ca}{
+\#define \textbf{AVRO\_\-GETBYTES}(avro, addr, len)~($\ast$(avro) $\rightarrow$ a\_\-ops $\rightarrow$ a\_\-getbytes)(avro, addr, len)}
+\label{group___handle___routines_ga11bb99285d5512c5739aacb0b9352ca}
+
+\item 
+\hypertarget{group___handle___routines_gec949ab6bc010632000ad15f9adad118}{
+\#define \textbf{AVRO\_\-PUTBYTES}(avro, addr, len)~($\ast$(avro) $\rightarrow$ a\_\-ops $\rightarrow$ a\_\-putbytes)(avro, addr, len)}
+\label{group___handle___routines_gec949ab6bc010632000ad15f9adad118}
+
+\end{CompactItemize}
+\subsection*{Typedefs}
+\begin{CompactItemize}
+\item 
+\hypertarget{group___handle___routines_g845b3c301ea3d376db7167e40b8cc77e}{
+typedef enum \hyperlink{group___handle___routines_gcd8ee9ad4a4882eef8e3d9a0d5faec68}{avro\_\-op} \textbf{avro\_\-op}}
+\label{group___handle___routines_g845b3c301ea3d376db7167e40b8cc77e}
+
+\item 
+\hypertarget{group___handle___routines_g0c34cda845744621fb4e6bb24b82c416}{
+typedef enum \hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \textbf{avro\_\-status\_\-t}}
+\label{group___handle___routines_g0c34cda845744621fb4e6bb24b82c416}
+
+\item 
+\hypertarget{group___handle___routines_g6e3ec80aeb6c2317c76d6fb2a919b665}{
+typedef struct \hyperlink{struct_a_v_r_o}{AVRO} \textbf{AVRO}}
+\label{group___handle___routines_g6e3ec80aeb6c2317c76d6fb2a919b665}
+
+\item 
+\hypertarget{group___a_v_r_o_ga7ab6d317ac114c2a8c6e963add2e078}{
+typedef \hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t}($\ast$ \textbf{avroproc\_\-t} )(\hyperlink{struct_a_v_r_o}{AVRO} $\ast$, void $\ast$,...)}
+\label{group___a_v_r_o_ga7ab6d317ac114c2a8c6e963add2e078}
+
+\item 
+\hypertarget{group___a_v_r_o_g812d16e5494522586b3784e55d479912}{
+typedef int \textbf{bool\_\-t}}
+\label{group___a_v_r_o_g812d16e5494522586b3784e55d479912}
+
+\end{CompactItemize}
+\subsection*{Enumerations}
+\begin{CompactItemize}
+\item 
+enum \hyperlink{group___handle___routines_gcd8ee9ad4a4882eef8e3d9a0d5faec68}{avro\_\-op} \{ \hyperlink{group___handle___routines_ggcd8ee9ad4a4882eef8e3d9a0d5faec68037c26ec9dd8b98243aa9aed3f80160b}{AVRO\_\-ENCODE} =  0, 
+\hyperlink{group___handle___routines_ggcd8ee9ad4a4882eef8e3d9a0d5faec682802292d4fd32b8eb68872bcc03bd1dd}{AVRO\_\-DECODE} =  1
+ \}
+\item 
+enum \hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \{ \hyperlink{group___handle___routines_gg4271ca78aabaaad628d7b632aa5a1499c6fd26496969f7d61ece32e42612675f}{AVRO\_\-OK} =  0, 
+\hyperlink{group___handle___routines_gg4271ca78aabaaad628d7b632aa5a1499c0a18cacdcccfd794fc1c49b3e98c5bb}{AVRO\_\-FAILURE} =  1
+ \}
+\end{CompactItemize}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___handle___routines_gabfc5b0acfbb6439e7d3d7511035f11b}{avro\_\-initialize} (void)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___handle___routines_ga8d57587e61e593b8878b80163977430}{avro\_\-create\_\-memory} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, apr\_\-pool\_\-t $\ast$pool, caddr\_\-t addr, int64\_\-t len, \hyperlink{group___handle___routines_gcd8ee9ad4a4882eef8e3d9a0d5faec68}{avro\_\-op} op)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___handle___routines_g072028012d958aec05067e1c1e04ee0e}{avro\_\-create\_\-file} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, apr\_\-pool\_\-t $\ast$pool, apr\_\-file\_\-t $\ast$file, \hyperlink{group___handle___routines_gcd8ee9ad4a4882eef8e3d9a0d5faec68}{avro\_\-op} op)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___handle___routines_g2fb229d05fdcaad3da0f6a9899bd09be}{avro\_\-create\_\-socket} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, apr\_\-pool\_\-t $\ast$pool, apr\_\-socket\_\-t $\ast$socket, \hyperlink{group___handle___routines_gcd8ee9ad4a4882eef8e3d9a0d5faec68}{avro\_\-op} op)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___primitives_gad3a89fbddd4853036ed861dba1ee2c1}{avro\_\-null} (void)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___primitives_gef604d6a5f83d9769b4c5d47e8b505f2}{avro\_\-int64} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, int64\_\-t $\ast$lp)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___primitives_g4d568c22cdd854ea5a9c85ed622f7d91}{avro\_\-string} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, char $\ast$$\ast$str, int64\_\-t maxlen)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___primitives_g883aa71b77043b51296ab278c2a84a23}{avro\_\-bytes} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, char $\ast$$\ast$bytes, int64\_\-t $\ast$len, int64\_\-t maxlen)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___primitives_ga230ba9c2028579916da8e3ef7abbb07}{avro\_\-bool} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, bool\_\-t $\ast$bp)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___primitives_ge1346e273aa3d82cc324992f081c6a49}{avro\_\-float} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, float $\ast$fp)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___primitives_g16c546852402edffa666a3cd214d4f7c}{avro\_\-double} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, double $\ast$dp)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___compound_g52f0a4383812a3d19a00f461ddb1a27c}{avro\_\-array} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, caddr\_\-t $\ast$addrp, uint32\_\-t $\ast$sizep, uint32\_\-t maxsize, uint32\_\-t elsize, avroproc\_\-t elproc)
+\item 
+\hypertarget{group___a_v_r_o_ge6f2feafe06746f9f48d3d1ee186d173}{
+void \textbf{avro\_\-dump\_\-memory} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, FILE $\ast$fp)}
+\label{group___a_v_r_o_ge6f2feafe06746f9f48d3d1ee186d173}
+
+\item 
+\hypertarget{group___a_v_r_o_ga164f39fde7378d15bcbf5ae68bde902}{
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \textbf{avro\_\-getint32\_\-raw} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, int32\_\-t $\ast$value)}
+\label{group___a_v_r_o_ga164f39fde7378d15bcbf5ae68bde902}
+
+\item 
+\hypertarget{group___a_v_r_o_gf3117aff45720e3a226e5101b7067bc8}{
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \textbf{avro\_\-putint32\_\-raw} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, const int32\_\-t value)}
+\label{group___a_v_r_o_gf3117aff45720e3a226e5101b7067bc8}
+
+\item 
+\hypertarget{group___a_v_r_o_g23be6d2c7a1e1adec170cd0a35c44b96}{
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \textbf{avro\_\-getint64\_\-raw} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, int64\_\-t $\ast$value)}
+\label{group___a_v_r_o_g23be6d2c7a1e1adec170cd0a35c44b96}
+
+\item 
+\hypertarget{group___a_v_r_o_g233761be573e51ca3fa393ff6d7dea04}{
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \textbf{avro\_\-putint64\_\-raw} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, const int64\_\-t value)}
+\label{group___a_v_r_o_g233761be573e51ca3fa393ff6d7dea04}
+
+\end{CompactItemize}
+
+
+\subsection{Detailed Description}
+\hyperlink{struct_a_v_r_o}{AVRO} API. 
+

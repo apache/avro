@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Mapping the Avro data model to the Serde data model"><title>apache_avro::documentation::avro_data_model_to_serde - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="apache_avro" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.0 (ac68faa20 2026-05-25)" data-channel="1.96.0" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Module avro_data_model_to_serde</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../apache_avro/index.html">apache_<wbr>avro</a><span class="version">0.22.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module avro_<wbr>data_<wbr>model_<wbr>to_<wbr>serde</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#mapping-the-avro-data-model-to-the-serde-data-model" title="Mapping the Avro data model to the Serde data model">Mapping the Avro data model to the Serde data model</a><ul><li><a href="#primitive-types" title="Primitive Types">Primitive Types</a></li><li><a href="#complex-types" title="Complex Types">Complex Types</a></li></ul></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In apache_<wbr>avro::<wbr>documentation</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">apache_avro</a>::<wbr><a href="../index.html">documentation</a></div><h1>Module <span>avro_<wbr>data_<wbr>model_<wbr>to_<wbr>serde</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/apache_avro/documentation/avro_data_model_to_serde.rs.html#18-54">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="mapping-the-avro-data-model-to-the-serde-data-model"><a class="doc-anchor" href="#mapping-the-avro-data-model-to-the-serde-data-model">§</a>Mapping the Avro data model to the Serde data model</h2>
+<p>When manually mapping an Avro schema to Rust types it is important to understand
+how the different data models are mapped. When mapping from Rust types to an Avro schema,
+see <a href="../serde_data_model_to_avro/index.html" title="mod apache_avro::documentation::serde_data_model_to_avro">the documentation for the reverse</a>.</p>
+<p>Only the mapping as defined here is supported. Any other behavior might change in a minor version.</p>
+<h3 id="primitive-types"><a class="doc-anchor" href="#primitive-types">§</a>Primitive Types</h3>
+<ul>
+<li><code>null</code>: <code>()</code></li>
+<li><code>boolean</code>: <a href="https://doc.rust-lang.org/1.96.0/std/primitive.bool.html" title="primitive bool"><code>bool</code></a></li>
+<li><code>int</code>: <a href="https://doc.rust-lang.org/1.96.0/std/primitive.i32.html" title="primitive i32"><code>i32</code></a> (or <a href="https://doc.rust-lang.org/1.96.0/std/primitive.i16.html" title="primitive i16"><code>i16</code></a>, <a href="https://doc.rust-lang.org/1.96.0/std/primitive.i8.html" title="primitive i8"><code>i8</code></a>, <a href="https://doc.rust-lang.org/1.96.0/std/primitive.u16.html" title="primitive u16"><code>u16</code></a>, <a href="https://doc.rust-lang.org/1.96.0/std/primitive.u8.html" title="primitive u8"><code>u8</code></a>)</li>
+<li><code>long</code>: <a href="https://doc.rust-lang.org/1.96.0/std/primitive.i64.html" title="primitive i64"><code>i64</code></a> (or <a href="https://doc.rust-lang.org/1.96.0/std/primitive.u32.html" title="primitive u32"><code>u32</code></a>)</li>
+<li><code>float</code>: <a href="https://doc.rust-lang.org/1.96.0/std/primitive.f32.html" title="primitive f32"><code>f32</code></a></li>
+<li><code>double</code>: <a href="https://doc.rust-lang.org/1.96.0/std/primitive.f64.html" title="primitive f64"><code>f64</code></a></li>
+<li><code>bytes</code>: <a href="https://doc.rust-lang.org/1.96.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec"><code>Vec&lt;u8&gt;</code></a> (or any type that uses <a href="../../../serde_core/ser/trait.Serializer.html" title="trait serde_core::ser::Serializer"><code>Serializer::serialize_bytes</code></a>, <a href="../../../serde_core/de/trait.Deserializer.html" title="trait serde_core::de::Deserializer"><code>Deserializer::deserialize_bytes</code></a>, <a href="../../../serde_core/de/trait.Deserializer.html" title="trait serde_core::de::Deserializer"><code>Deserializer::deserialize_byte_buf</code></a>)
+<ul>
+<li>It is required to use <a href="../../serde/bytes/index.html" title="mod apache_avro::serde::bytes"><code>apache_avro::serde::bytes</code></a> as otherwise Serde will (de)serialize a <code>Vec</code> as an array of integers instead.</li>
+</ul>
+</li>
+<li><code>string</code>: <a href="https://doc.rust-lang.org/1.96.0/alloc/string/struct.String.html" title="struct alloc::string::String"><code>String</code></a> (or any type that uses <a href="../../../serde_core/ser/trait.Serializer.html" title="trait serde_core::ser::Serializer"><code>Serializer::serialize_str</code></a>, <a href="../../../serde_core/de/trait.Deserializer.html" title="trait serde_core::de::Deserializer"><code>Deserializer::deserialize_str</code></a>, <a href="../../../serde_core/de/trait.Deserializer.html" title="trait serde_core::de::Deserializer"><code>Deserializer::deserialize_string</code></a>)</li>
+</ul>
+<h3 id="complex-types"><a class="doc-anchor" href="#complex-types">§</a>Complex Types</h3>
+<ul>
+<li><code>records</code>: A struct with the same name and fields or a tuple with the same fields.
+<ul>
+<li>Extra fields can be added to the struct if they are marked with <code>#[serde(skip)]</code></li>
+</ul>
+</li>
+<li><code>enums</code>: A enum with the same name and unit variants for every symbol
+<ul>
+<li>The index of the symbol must match the index of the variant</li>
+</ul>
+</li>
+<li><code>arrays</code>: <a href="https://doc.rust-lang.org/1.96.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec"><code>Vec</code></a> (or any type that uses <a href="../../../serde_core/ser/trait.Serializer.html" title="trait serde_core::ser::Serializer"><code>Serializer::serialize_seq</code></a>, <a href="../../../serde_core/de/trait.Deserializer.html" title="trait serde_core::de::Deserializer"><code>Deserializer::deserialize_seq</code></a>)
+<ul>
+<li><code>[T; N]</code> is (de)serialized as a tuple by Serde, to (de)serialize them as an <code>array</code> use <a href="../../serde/array/index.html" title="mod apache_avro::serde::array"><code>apache_avro::serde::array</code></a></li>
+</ul>
+</li>
+<li><code>maps</code>: <a href="https://doc.rust-lang.org/1.96.0/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap"><code>HashMap&lt;String, _&gt;</code></a> (or any type that uses <a href="../../../serde_core/ser/trait.Serializer.html" title="trait serde_core::ser::Serializer"><code>Serializer::serialize_map</code></a>, <a href="../../../serde_core/de/trait.Deserializer.html" title="trait serde_core::de::Deserializer"><code>Deserializer::deserialize_map</code></a>)</li>
+<li><code>unions</code>: An enum with a variant for each union variant
+<ul>
+<li>The index of the union variant must match the enum variant</li>
+<li>A <code>null</code> can be a unit variant or a newtype variant with a unit type</li>
+<li>All other variants must be newtype variants, struct variants, or tuple variants.</li>
+</ul>
+</li>
+<li><code>fixed</code>: <a href="https://doc.rust-lang.org/1.96.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec"><code>Vec&lt;u8&gt;</code></a> (or any type that uses <a href="../../../serde_core/ser/trait.Serializer.html" title="trait serde_core::ser::Serializer"><code>Serializer::serialize_bytes</code></a>, <a href="../../../serde_core/de/trait.Deserializer.html" title="trait serde_core::de::Deserializer"><code>Deserializer::deserialize_bytes</code></a>, <a href="../../../serde_core/de/trait.Deserializer.html" title="trait serde_core::de::Deserializer"><code>Deserializer::deserialize_byte_buf</code></a>)
+<ul>
+<li>It is required to use <a href="../../serde/fixed/index.html" title="mod apache_avro::serde::fixed"><code>apache_avro::serde::fixed</code></a> as otherwise Serde will (de)serialize a <code>Vec</code> as an array of integers instead.</li>
+</ul>
+</li>
+</ul>
+</div></details></section></div></main></body></html>
