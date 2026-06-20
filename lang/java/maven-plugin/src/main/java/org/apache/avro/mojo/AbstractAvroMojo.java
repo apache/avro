@@ -149,8 +149,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   /**
    * The createOptionalGetters parameter enables generating the getOptional...
-   * methods that return an Optional of the requested type. This works ONLY on
-   * Java 8+
+   * methods that return an Optional of the requested type.
    *
    * @parameter property="createOptionalGetters"
    */
@@ -158,7 +157,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   /**
    * The gettersReturnOptional parameter enables generating get... methods that
-   * return an Optional of the requested type. This works ONLY on Java 8+
+   * return an Optional of the requested type.
    *
    * @parameter property="gettersReturnOptional"
    */
@@ -168,7 +167,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * The optionalGettersForNullableFieldsOnly parameter works in conjunction with
    * gettersReturnOptional option. If it is set, Optional getters will be
    * generated only for fields that are nullable. If the field is mandatory,
-   * regular getter will be generated. This works ONLY on Java 8+.
+   * regular getter will be generated.
    *
    * @parameter property="optionalGettersForNullableFieldsOnly"
    */

@@ -22,7 +22,6 @@ import java.io.File;
 import java.util.Arrays;
 
 import org.apache.avro.Protocol;
-import org.apache.avro.Schema;
 import org.apache.avro.SchemaParser;
 import org.apache.avro.entities.Person;
 import org.apache.avro.protocols.Remote;
