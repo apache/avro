@@ -273,6 +273,7 @@ static int file_read_header(avro_reader_t reader,
 		return EILSEQ;
 	}
 	avro_schema_decref(meta_schema);
+	avro_schema_decref(meta_values_schema);
 
 	rval = avro_value_get_by_name(&meta, "avro.codec", &codec_val, NULL);
 	if (rval) {
