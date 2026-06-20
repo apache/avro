@@ -72,7 +72,7 @@ RUN apt-get -qqy update \
 
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/bbb9892e165d40fb35fa19f38929effc5d0c709b/Dockerfile#L30
-ENV MAVEN_VERSION=3.9.11
+ENV MAVEN_VERSION=3.9.12
 # Ideally we use the 1st URL only, but if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
 ENV APACHE_DIST_URLS="https://www.apache.org/dyn/closer.cgi?action=download&filename= \
   https://www-us.apache.org/dist/ \
