@@ -24,10 +24,10 @@ version = "1.13.0"
 requires-python = ">=3.10"
 authors = [{name = "Apache Avro", email = "dev@avro.apache.org"}]
 keywords = ["avro", "serialization", "rpc"]
-license-files = ["LICENSE.txt"]
+license = "Apache-2.0"
+license-files = ["avro/LICENSE"]
 readme = "README.md"
 classifiers = [
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -56,9 +56,12 @@ zstandard = ["zstandard"]
 [tool.ruff]
 line-length = 150
 
+[tool.setuptools.packages.find]
+include = ["avro*"]
+
 [tool.setuptools.package-data]
 "avro" = [
-  "HandshakeRequest.avsc", "HandshakeResponse.avsc", "LICENSE.txt",
+  "HandshakeRequest.avsc", "HandshakeResponse.avsc", "LICENSE",
   "NOTICE", "README.md", "VERSION.txt" ]
 "avro.tether" = ["InputProtocol.avpr", "OutputProtocol.avpr"]
 
