@@ -150,6 +150,12 @@ public class TestBinaryDecoder {
 
   @ParameterizedTest
   @ValueSource(booleans = { true, false })
+  void eofBytesRaw(boolean useDirect) {
+    Assertions.assertThrows(EOFException.class, () -> newDecoderWithNoData(useDirect).readBytes());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = { true, false })
   void eofString(boolean useDirect) {
     Assertions.assertThrows(EOFException.class, () -> newDecoderWithNoData(useDirect).readString(new Utf8("a")));
   }
@@ -473,9 +479,25 @@ public class TestBinaryDecoder {
 
   @ParameterizedTest
   @ValueSource(booleans = { true, false })
+  public void testBytesNegativeLengthRaw(boolean useDirect) throws IOException {
+    Exception ex = Assertions.assertThrows(AvroRuntimeException.class,
+        () -> this.newDecoder(useDirect, -1).readBytes());
+    Assertions.assertEquals(ERROR_NEGATIVE, ex.getMessage());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = { true, false })
   public void testBytesVmMaxSize(boolean useDirect) throws IOException {
     Exception ex = Assertions.assertThrows(UnsupportedOperationException.class,
         () -> this.newDecoder(useDirect, MAX_ARRAY_VM_LIMIT + 1).readBytes(null));
+    Assertions.assertEquals(ERROR_VM_LIMIT_BYTES, ex.getMessage());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = { true, false })
+  public void testBytesVmMaxSizeRaw(boolean useDirect) throws IOException {
+    Exception ex = Assertions.assertThrows(UnsupportedOperationException.class,
+        () -> this.newDecoder(useDirect, MAX_ARRAY_VM_LIMIT + 1).readBytes());
     Assertions.assertEquals(ERROR_VM_LIMIT_BYTES, ex.getMessage());
   }
 

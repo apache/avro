@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import org.apache.avro.SystemLimitException;
 import org.apache.avro.TestSystemLimitException;
@@ -97,6 +98,20 @@ public class TestUtf8 {
     assertEquals(127791473, u.hashCode());
     u.setByteLength(4);
     assertEquals(4122302, u.hashCode());
+
+    u.set(getTrimmedBytes(new Utf8("zz")));
+    assertEquals(4865, u.hashCode());
+    u.setByteLength(1);
+    assertEquals(153, u.hashCode());
+
+    u.set(getTrimmedBytes(new Utf8("hello")));
+    assertEquals(127791473, u.hashCode());
+    u.setByteLength(4);
+    assertEquals(4122302, u.hashCode());
+  }
+
+  private byte[] getTrimmedBytes(Utf8 utf8) {
+    return Arrays.copyOf(utf8.getBytes(), utf8.getByteLength());
   }
 
   /**

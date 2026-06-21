@@ -394,18 +394,14 @@ public class FastReaderBuilder {
   private FieldReader createBytesPromotingToStringReader(Schema readerSchema) {
     String stringProperty = readerSchema.getProp(GenericData.STRING_PROP);
     if (GenericData.StringType.String.name().equals(stringProperty)) {
-      return (old, decoder) -> getStringFromByteBuffer(decoder.readBytes(null));
+      return (old, decoder) -> new String(decoder.readBytes(), StandardCharsets.UTF_8);
     } else {
-      return (old, decoder) -> getUtf8FromByteBuffer(old, decoder.readBytes(null));
+      return (old, decoder) -> getUtf8FromByteArray(old, decoder.readBytes());
     }
   }
 
-  private String getStringFromByteBuffer(ByteBuffer buffer) {
-    return new String(buffer.array(), buffer.position(), buffer.remaining(), StandardCharsets.UTF_8);
-  }
-
-  private Utf8 getUtf8FromByteBuffer(Object old, ByteBuffer buffer) {
-    return (old instanceof Utf8) ? ((Utf8) old).set(new Utf8(buffer.array())) : new Utf8(buffer.array());
+  private Utf8 getUtf8FromByteArray(Object old, byte[] bytes) {
+    return (old instanceof Utf8) ? ((Utf8) old).set(bytes) : new Utf8(bytes);
   }
 
   private FieldReader createUnionReader(WriterUnion action) throws IOException {
