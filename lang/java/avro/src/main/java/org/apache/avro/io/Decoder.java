@@ -20,7 +20,6 @@ package org.apache.avro.io;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.avro.AvroTypeException;
 import org.apache.avro.util.Utf8;
 
 /**
