@@ -1,0 +1,19 @@
+{
+  "namespace": "model",
+  "type": "record",
+  "doc": "",
+  "name": "DocumentInfo",
+  "fields": [
+    {
+      "name": "documentId",
+      "type": "string",
+      "doc": "Document ID"
+    },
+    {
+      "name": "filePath",
+      "type": "string",
+      "doc": "Document Path"
+    }
+  ]
+
+}
