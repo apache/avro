@@ -178,11 +178,14 @@ class GenerateCommandTest extends TestCase
     public function generated_file_contains_correct_namespace_and_class(): void
     {
         $tester = $this->tester();
-        $tester->execute([
+        $exitCode = $tester->execute([
             '--file' => $this->schemaPath('user.avsc'),
             '--output' => $this->outputDir,
             '--namespace' => 'My\\App\\Avro',
         ]);
+
+        self::assertSame(Command::SUCCESS, $exitCode);
+        self::assertFileExists($this->outputDir.'/User.php');
 
         $content = file_get_contents($this->outputDir.'/User.php');
         self::assertStringContainsString('namespace My\\App\\Avro;', $content);
@@ -193,11 +196,14 @@ class GenerateCommandTest extends TestCase
     public function generated_enum_file_contains_correct_cases(): void
     {
         $tester = $this->tester();
-        $tester->execute([
+        $exitCode = $tester->execute([
             '--file' => $this->schemaPath('status.avsc'),
             '--output' => $this->outputDir,
             '--namespace' => 'App\\Generated',
         ]);
+
+        self::assertSame(Command::SUCCESS, $exitCode);
+        self::assertFileExists($this->outputDir.'/Status.php');
 
         $content = file_get_contents($this->outputDir.'/Status.php');
         self::assertStringContainsString('enum Status', $content);

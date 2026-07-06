@@ -67,10 +67,10 @@ vendor/bin/avro [options]
 
 | Option | Short | Description |
 |--------|-------|-------------|
-| `--file` | `-f` | Path to a single `.avsc` schema file |
-| `--directory` | `-d` | Path to a directory containing `.avsc` schema files |
-| `--output` | `-o` | Output directory for the generated PHP files (created if it does not exist) |
-| `--namespace` | `-ns` | PHP namespace for the generated classes |
+| `--file` | `-f`  | Path to a single `.avsc` schema file |
+| `--directory` | `-d`  | Path to a directory containing `.avsc` schema files |
+| `--output` | `-o`  | Output directory for the generated PHP files (created if it does not exist) |
+| `--namespace` | `-N`  | PHP namespace for the generated classes |
 
 Exactly one of `--file` or `--directory` must be provided.
 

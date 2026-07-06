@@ -43,7 +43,7 @@ class GenerateCommand extends Command
             ->addOption('file', 'f', InputOption::VALUE_OPTIONAL, 'One Avro schema file (.avsc)')
             ->addOption('directory', 'd', InputOption::VALUE_OPTIONAL, 'A directory containing multiple Avro schema files (.avsc)')
             ->addOption('output', 'o', InputOption::VALUE_REQUIRED, 'Output directory for generated PHP files')
-            ->addOption('namespace', 'ns', InputOption::VALUE_REQUIRED, 'PHP namespace for generated classes');
+            ->addOption('namespace', 'N', InputOption::VALUE_REQUIRED, 'PHP namespace for generated classes');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
