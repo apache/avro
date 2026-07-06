@@ -93,34 +93,30 @@ class AvroCodeGenerator
 
     private function collectSchemas(AvroSchema $schema): void
     {
-        switch ($schema::class) {
-            case AvroRecordSchema::class:
-                if (!array_key_exists($schema->fullname(), $this->registry)) {
-                    $this->registry[$schema->fullname()] = $schema;
-                    foreach ($schema->fields() as $field) {
-                        $this->collectSchemas($field->type());
-                    }
-                }
+        match (true) {
+            $schema instanceof AvroRecordSchema => $this->collectSchemasFromRecord($schema),
+            $schema instanceof AvroEnumSchema => $this->registry[$schema->fullname()] = $schema,
+            $schema instanceof AvroArraySchema => $this->collectSchemas($schema->items()),
+            $schema instanceof AvroMapSchema => $this->collectSchemas($schema->values()),
+            $schema instanceof AvroUnionSchema => $this->collectSchemasFromUnion($schema),
+            default => null
+        };
+    }
 
-                break;
-            case AvroEnumSchema::class:
-                $this->registry[$schema->fullname()] = $schema;
+    private function collectSchemasFromRecord(AvroRecordSchema $schema): void
+    {
+        if (!array_key_exists($schema->fullname(), $this->registry)) {
+            $this->registry[$schema->fullname()] = $schema;
+            foreach ($schema->fields() as $field) {
+                $this->collectSchemas($field->type());
+            }
+        }
+    }
 
-                break;
-            case AvroArraySchema::class:
-                $this->collectSchemas($schema->items());
-
-                break;
-            case AvroMapSchema::class:
-                $this->collectSchemas($schema->values());
-
-                break;
-            case AvroUnionSchema::class:
-                foreach ($schema->schemas() as $unionSchema) {
-                    $this->collectSchemas($unionSchema);
-                }
-
-                break;
+    private function collectSchemasFromUnion(AvroUnionSchema $schema): void
+    {
+        foreach ($schema->schemas() as $unionSchema) {
+            $this->collectSchemas($unionSchema);
         }
     }
 
