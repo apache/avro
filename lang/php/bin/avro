@@ -44,7 +44,11 @@ if (!class_exists(GenerateCommand::class)) {
     exit(1);
 }
 
-$version = InstalledVersions::getPrettyVersion('apache/avro');
+try {
+    $version = InstalledVersions::getPrettyVersion('apache/avro');
+} catch (\Throwable $t) {
+    $version = 'unknown';
+}
 
 $app = new Application('avro', $version);
 $app->add(new GenerateCommand());
