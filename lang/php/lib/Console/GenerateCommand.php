@@ -81,7 +81,7 @@ class GenerateCommand extends Command
             return Command::FAILURE;
         }
 
-        if (!is_dir($outputDir) && !mkdir($outputDir, 0755, true) && !is_dir($outputDir)) {
+        if (!is_dir($outputDir) && !mkdir($outputDir, 0744, true) && !is_dir($outputDir)) {
             $io->error(sprintf('Could not create output directory "%s".', $outputDir));
 
             return Command::FAILURE;
@@ -150,6 +150,8 @@ class GenerateCommand extends Command
         if ([] !== $written) {
             $io->listing($written);
             $io->success(sprintf('%d file(s) generated in %s.', count($written), $outputDir));
+        } else {
+            $io->warning('No files were generated.');
         }
 
         return $exitCode;
