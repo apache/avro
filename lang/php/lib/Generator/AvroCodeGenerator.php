@@ -77,7 +77,7 @@ class AvroCodeGenerator
             };
 
             if (null !== $node && $registeredSchema instanceof AvroNamedSchema) {
-                $filename = $path.'/'.ucwords($registeredSchema->name()).'.php';
+                $filename = $this->pathForSchema($registeredSchema, $path);
                 $files[$filename] = "<?php\n\ndeclare(strict_types=1);\n\n{$this->printer->prettyPrint([$node])}\n";
             }
         }
@@ -124,7 +124,7 @@ class AvroCodeGenerator
         AvroRecordSchema $avroRecord,
         string $phpNamespace
     ): Node {
-        $className = ucwords($avroRecord->name());
+        $className = $this->classNameForSchema($avroRecord);
         $class = $this->factory->class($className)->makeFinal()->implement('\\JsonSerializable');
 
         foreach ($avroRecord->fields() as $field) {
@@ -213,7 +213,7 @@ class AvroCodeGenerator
             );
         $class->addStmt($jsonSerialize);
 
-        return $this->factory->namespace($phpNamespace)
+        return $this->factory->namespace($this->namespaceForSchema($avroRecord, $phpNamespace))
             ->addStmt($class)
             ->getNode();
     }
@@ -255,7 +255,7 @@ class AvroCodeGenerator
         string $phpNamespace,
         array $values
     ): Node {
-        $className = ucwords($avroEnum->name());
+        $className = $this->classNameForSchema($avroEnum);
         $enum = $this->factory->enum($className)->setScalarType('string');
 
         foreach ($values as $value) {
@@ -265,7 +265,7 @@ class AvroCodeGenerator
             );
         }
 
-        return $this->factory->namespace($phpNamespace)
+        return $this->factory->namespace($this->namespaceForSchema($avroEnum, $phpNamespace))
             ->addStmt($enum)
             ->getNode();
     }
@@ -275,7 +275,7 @@ class AvroCodeGenerator
         return match (true) {
             $schema instanceof AvroPrimitiveSchema => $this->avroPrimitiveTypeToPhp($schema),
             $schema instanceof AvroArraySchema, $schema instanceof AvroMapSchema => 'array',
-            $schema instanceof AvroRecordSchema, $schema instanceof AvroEnumSchema => '\\'.$phpNamespace.'\\'.ucwords($schema->name()),
+            $schema instanceof AvroRecordSchema, $schema instanceof AvroEnumSchema => '\\'.$this->fullyQualifiedClassNameForSchema($schema, $phpNamespace),
             $schema instanceof AvroUnionSchema => $this->unionToPhp($schema, $phpNamespace),
             default => 'mixed'
         };
@@ -333,10 +333,80 @@ class AvroCodeGenerator
             $schema instanceof AvroPrimitiveSchema => $this->avroPrimitiveTypeToPhp($schema),
             $schema instanceof AvroArraySchema => 'list<'.$this->avroTypeToPhpDocInner($schema->items(), $phpNamespace).'>',
             $schema instanceof AvroMapSchema => 'array<string, '.$this->avroTypeToPhpDocInner($schema->values(), $phpNamespace).'>',
-            $schema instanceof AvroRecordSchema, $schema instanceof AvroEnumSchema => '\\'.$phpNamespace.'\\'.ucwords($schema->name()),
+            $schema instanceof AvroRecordSchema, $schema instanceof AvroEnumSchema => '\\'.$this->fullyQualifiedClassNameForSchema($schema, $phpNamespace),
             $schema instanceof AvroUnionSchema => $this->unionToPhp($schema, $phpNamespace),
             default => 'mixed',
         };
+    }
+
+    private function classNameForSchema(AvroNamedSchema $schema): string
+    {
+        $parts = explode('.', $schema->fullname());
+        $name = end($parts);
+
+        return $this->normalizeNamePart(false !== $name ? $name : $schema->name());
+    }
+
+    private function namespaceForSchema(AvroNamedSchema $schema, string $phpNamespace): string
+    {
+        $namespaceParts = [];
+        foreach ($this->namespacePartsForSchema($schema) as $part) {
+            $namespaceParts[] = $this->normalizeNamePart($part);
+        }
+
+        return $this->buildPhpNamespace($phpNamespace, $namespaceParts);
+    }
+
+    private function fullyQualifiedClassNameForSchema(AvroNamedSchema $schema, string $phpNamespace): string
+    {
+        return $this->namespaceForSchema($schema, $phpNamespace).'\\'.$this->classNameForSchema($schema);
+    }
+
+    private function pathForSchema(AvroNamedSchema $schema, string $path): string
+    {
+        $relativeParts = [];
+        foreach ($this->namespacePartsForSchema($schema) as $part) {
+            $relativeParts[] = $this->normalizeNamePart($part);
+        }
+
+        $relativeParts[] = $this->classNameForSchema($schema).'.php';
+
+        return rtrim($path, '/').'/'.implode('/', $relativeParts);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function namespacePartsForSchema(AvroNamedSchema $schema): array
+    {
+        $parts = explode('.', $schema->fullname());
+        array_pop($parts);
+
+        return array_values(array_filter($parts, static fn (string $part): bool => '' !== $part));
+    }
+
+    /**
+     * @param list<string> $namespaceParts
+     */
+    private function buildPhpNamespace(string $prefix, array $namespaceParts): string
+    {
+        $prefix = trim($prefix, '\\');
+
+        if ([] === $namespaceParts) {
+            return $prefix;
+        }
+
+        return $prefix.'\\'.implode('\\', $namespaceParts);
+    }
+
+    private function normalizeNamePart(string $part): string
+    {
+        $normalizedPart = preg_replace('/\W+/', '_', $part);
+        if (null === $normalizedPart || '' === $normalizedPart) {
+            return 'Generated';
+        }
+
+        return ucfirst($normalizedPart);
     }
 
     private function unionToPhpDoc(AvroUnionSchema $union, string $phpNamespace): ?string

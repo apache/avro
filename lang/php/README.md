@@ -134,3 +134,10 @@ final class User implements \JsonSerializable
 ```
 
 Enum schemas generate a PHP backed enum. Nested record and enum types each produce their own file.
+
+When an Avro schema has a namespace, its fully-qualified Avro name is mapped to a PHP namespace segment tree and written using a PSR-style directory structure under `--output`, prefixed by `--namespace`.
+
+Example: `org.Acme.Entity.User` with `--namespace App\\Avro\\Generated` is generated as:
+
+- `src/Generated/Org/Acme/Entity/User.php`
+- `namespace App\Avro\Generated\Org\Acme\Entity;`

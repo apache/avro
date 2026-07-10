@@ -209,7 +209,7 @@ class AvroCodeGeneratorTest extends TestCase
     }
 
     #[Test]
-    public function namespaced_schema_uses_short_name_for_filename(): void
+    public function namespaced_schema_uses_namespace_directories_and_prefix_namespace(): void
     {
         $schema = <<<JSON
             {
@@ -226,8 +226,87 @@ class AvroCodeGeneratorTest extends TestCase
         $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Model');
 
         self::assertCount(1, $files);
-        self::assertArrayHasKey('/generated/User.php', $files);
-        self::assertArrayNotHasKey('/generated/Com.example.User.php', $files);
+        self::assertArrayHasKey('/generated/Com/Example/User.php', $files);
+        self::assertStringContainsString('namespace App\\Model\\Com\\Example;', $files['/generated/Com/Example/User.php']);
+    }
+
+    #[Test]
+    public function duplicate_record_names_with_different_namespaces_generate_distinct_classes(): void
+    {
+        $schema = <<<JSON
+            {
+                "type": "record",
+                "name": "Organization",
+                "fields": [
+                    {
+                        "name": "sector1User",
+                        "type": {
+                            "type": "record",
+                            "name": "User",
+                            "namespace": "org.Acme.Sector1",
+                            "fields": [
+                                {"name": "id", "type": "int"}
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sector2User",
+                        "type": {
+                            "type": "record",
+                            "name": "User",
+                            "namespace": "org.Acme.Sector2",
+                            "fields": [
+                                {"name": "id", "type": "int"}
+                            ]
+                        }
+                    }
+                ]
+            }
+            JSON;
+
+        $avroSchema = AvroSchema::parse($schema);
+        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Model');
+
+        self::assertCount(3, $files);
+        self::assertArrayHasKey('/generated/Organization.php', $files);
+        self::assertArrayHasKey('/generated/Org/Acme/Sector1/User.php', $files);
+        self::assertArrayHasKey('/generated/Org/Acme/Sector2/User.php', $files);
+
+        $expectedOrganization = <<<PHP
+            <?php
+            
+            declare(strict_types=1);
+            
+            namespace App\Model;
+            
+            final class Organization implements \JsonSerializable
+            {
+                private \App\Model\Org\Acme\Sector1\User \$sector1User;
+                private \App\Model\Org\Acme\Sector2\User \$sector2User;
+                public function __construct(\App\Model\Org\Acme\Sector1\User \$sector1User, \App\Model\Org\Acme\Sector2\User \$sector2User)
+                {
+                    \$this->sector1User = \$sector1User;
+                    \$this->sector2User = \$sector2User;
+                }
+                public function sector1User(): \App\Model\Org\Acme\Sector1\User
+                {
+                    return \$this->sector1User;
+                }
+                public function sector2User(): \App\Model\Org\Acme\Sector2\User
+                {
+                    return \$this->sector2User;
+                }
+                public function jsonSerialize(): mixed
+                {
+                    return ['sector1User' => \$this->sector1User, 'sector2User' => \$this->sector2User];
+                }
+            }
+
+            PHP;
+
+        self::assertEquals($expectedOrganization, $files['/generated/Organization.php']);
+        self::assertStringContainsString('namespace App\\Model\\Org\\Acme\\Sector1;', $files['/generated/Org/Acme/Sector1/User.php']);
+        self::assertStringContainsString('namespace App\\Model\\Org\\Acme\\Sector2;', $files['/generated/Org/Acme/Sector2/User.php']);
     }
 
     #[Test]

@@ -212,6 +212,69 @@ class GenerateCommandTest extends TestCase
         self::assertStringContainsString("case PENDING = 'pending'", $content);
     }
 
+    #[Test]
+    public function namespaced_records_are_generated_in_psr_directories_with_prefixed_namespace(): void
+    {
+        $schemaFile = tempnam(sys_get_temp_dir(), 'avro_schema_');
+        if (false === $schemaFile) {
+            self::fail('Unable to create temporary schema file');
+        }
+
+        $schema = <<<'JSON'
+            {
+                "type": "record",
+                "name": "Organization",
+                "fields": [
+                    {
+                        "name": "sector1User",
+                        "type": {
+                            "type": "record",
+                            "name": "User",
+                            "namespace": "org.Acme.Sector1",
+                            "fields": [
+                                {"name": "id", "type": "int"}
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sector2User",
+                        "type": {
+                            "type": "record",
+                            "name": "User",
+                            "namespace": "org.Acme.Sector2",
+                            "fields": [
+                                {"name": "id", "type": "int"}
+                            ]
+                        }
+                    }
+                ]
+            }
+            JSON;
+
+        file_put_contents($schemaFile, $schema);
+
+        $tester = $this->tester();
+        $exitCode = $tester->execute([
+            '--file' => $schemaFile,
+            '--output' => $this->outputDir,
+            '--namespace' => 'App\\Generated',
+        ]);
+
+        unlink($schemaFile);
+
+        self::assertSame(Command::SUCCESS, $exitCode);
+        self::assertFileExists($this->outputDir.'/Organization.php');
+        self::assertFileExists($this->outputDir.'/Org/Acme/Sector1/User.php');
+        self::assertFileExists($this->outputDir.'/Org/Acme/Sector2/User.php');
+
+        $organization = file_get_contents($this->outputDir.'/Organization.php');
+        self::assertStringContainsString('\\App\\Generated\\Org\\Acme\\Sector1\\User', $organization);
+        self::assertStringContainsString('\\App\\Generated\\Org\\Acme\\Sector2\\User', $organization);
+
+        $sector1User = file_get_contents($this->outputDir.'/Org/Acme/Sector1/User.php');
+        self::assertStringContainsString('namespace App\\Generated\\Org\\Acme\\Sector1;', $sector1User);
+    }
+
     private function removeDir(string $dir): void
     {
         foreach (array_diff(scandir($dir), ['.', '..']) as $file) {
