@@ -21,6 +21,10 @@
 
 declare(strict_types=1);
 
+use Apache\Avro\Console\GenerateCommand;
+use Composer\InstalledVersions;
+use Symfony\Component\Console\Application;
+
 const _AVRO_AUTOLOADER_LOCATIONS = [
         __DIR__ . '/../../autoload.php',
         __DIR__ . '/../vendor/autoload.php',
@@ -30,15 +34,10 @@ const _AVRO_AUTOLOADER_LOCATIONS = [
 
 foreach (_AVRO_AUTOLOADER_LOCATIONS as $autoloader) {
     if (file_exists($autoloader)) {
-        echo "FOUND AUTOLOADER: {$autoloader}\n";
         require $autoloader;
         break;
     }
 }
-
-use Apache\Avro\Console\GenerateCommand;
-use Composer\InstalledVersions;
-use Symfony\Component\Console\Application;
 
 if (!class_exists(GenerateCommand::class)) {
     fwrite(STDERR, "Error: Composer autoloader not found. Run 'composer install' first.\n");
