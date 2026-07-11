@@ -886,14 +886,19 @@ class DatumReader:
         """
         read_items = {}
         block_count = decoder.read_long()
+        # Track the number of pairs decoded rather than len(read_items): repeated
+        # keys collapse in the dict and would otherwise let the cumulative check
+        # be bypassed by a stream that keeps rewriting the same key.
+        items_read = 0
         while block_count != 0:
             if block_count < 0:
                 block_count = -block_count
                 decoder.skip_long()
-            check_max_collection_items(len(read_items), block_count, self.max_collection_items)
+            check_max_collection_items(items_read, block_count, self.max_collection_items)
             for i in range(block_count):
                 key = decoder.read_utf8()
                 read_items[key] = self.read_data(writers_schema.values, readers_schema.values, decoder)
+            items_read += block_count
             block_count = decoder.read_long()
         return read_items
 

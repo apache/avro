@@ -772,6 +772,18 @@ class TestCollectionSizeLimit(unittest.TestCase):
         with self.assertRaises(avro.errors.AvroCollectionSizeException):
             self._decode(buffer, schema, max_items=10)
 
+    def test_map_cumulative_limit_with_repeated_keys(self) -> None:
+        """Repeated keys must not let the cumulative pair count bypass the limit."""
+        schema = avro.schema.parse('{"type": "map", "values": "null"}')
+        buffer = io.BytesIO()
+        encoder = avro.io.BinaryEncoder(buffer)
+        encoder.write_long(6)  # first block: 6 pairs (all the same key)
+        for _ in range(6):
+            encoder.write_utf8("a")  # identical key; a null value occupies no bytes
+        encoder.write_long(6)  # second block would push the total to 12 > 10
+        with self.assertRaises(avro.errors.AvroCollectionSizeException):
+            self._decode(buffer, schema, max_items=10)
+
     def test_negative_block_count_is_bounded(self) -> None:
         """A negative block count (with block size) uses its absolute value and is bounded."""
         schema = avro.schema.parse('{"type": "array", "items": "null"}')
