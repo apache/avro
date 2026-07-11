@@ -62,14 +62,13 @@ static void checkCodecRejectsOversized(Codec codec, const char *name) {
     std::string path = tempFile(name);
     std::string big(4 * 1024 * 1024, 'a'); // 4 MiB, compresses tiny
 
-    try {
+    // Let any writer exception propagate: a failure here is a real problem
+    // (e.g. permissions or I/O), not a reason to silently skip. Codecs that are
+    // not compiled in are excluded via the #ifdef guards on the callers below.
+    {
         DataFileWriter<std::string> writer(path.c_str(), schema, 64 * 1024 * 1024, codec);
         writer.write(big);
         writer.close();
-    } catch (const Exception &) {
-        // Codec not available in this build; nothing to exercise.
-        std::filesystem::remove(path);
-        return;
     }
 
     setDecompressLimit("1048576"); // 1 MiB, smaller than the 4 MiB block
@@ -91,11 +90,19 @@ static void testDeflateDecompressionLimit() {
 }
 
 static void testSnappyDecompressionLimit() {
+#ifdef SNAPPY_CODEC_AVAILABLE
     checkCodecRejectsOversized(SNAPPY_CODEC, "avro_decompress_limit_snappy.avro");
+#else
+    BOOST_TEST_MESSAGE("Snappy codec not available; skipping");
+#endif
 }
 
 static void testZstdDecompressionLimit() {
+#ifdef ZSTD_CODEC_AVAILABLE
     checkCodecRejectsOversized(ZSTD_CODEC, "avro_decompress_limit_zstd.avro");
+#else
+    BOOST_TEST_MESSAGE("Zstandard codec not available; skipping");
+#endif
 }
 
 static void testWithinLimitStillReads() {

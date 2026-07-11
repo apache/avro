@@ -18,8 +18,10 @@
 
 #include "DataFile.hh"
 #include "Compiler.hh"
+#include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include "Exception.hh"
 
 #include <random>
@@ -69,7 +71,13 @@ size_t maxDecompressLength() {
         errno = 0;
         char *end = nullptr;
         unsigned long long value = std::strtoull(env, &end, 10);
-        if (errno == 0 && end != nullptr && *end == '\0' && value > 0) {
+        // Reject a leading sign (strtoull would otherwise wrap it) and clamp to
+        // what size_t can represent so a huge value does not truncate on 32-bit
+        // (or smaller size_t) builds.
+        if (errno == 0 && end != nullptr && *end == '\0' && value > 0 && env[0] != '-') {
+            if (value > std::numeric_limits<size_t>::max()) {
+                return std::numeric_limits<size_t>::max();
+            }
             return static_cast<size_t>(value);
         }
     }

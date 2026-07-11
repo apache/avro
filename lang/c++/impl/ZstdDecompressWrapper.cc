@@ -43,12 +43,12 @@ std::string ZstdDecompressWrapper::decompress(const std::vector<char> &compresse
             if (ZSTD_isError(ret)) {
                 throw Exception("ZSTD decompression error: {}", ZSTD_getErrorName(ret));
             }
-            uncompressed.append(tmp.data(), out.pos);
-            // Reject a block that decompresses to more than the allowed maximum.
-            if (uncompressed.size() > maxLength) {
+            // Reject before appending so the buffer never grows past the limit.
+            if (out.pos > maxLength - uncompressed.size()) {
                 throw Exception(
                     "Decompressed block size exceeds the maximum allowed of {} bytes", maxLength);
             }
+            uncompressed.append(tmp.data(), out.pos);
         } while (ret != 0);
     } else {
         // The frame declares its decompressed size; reject it before allocating.
