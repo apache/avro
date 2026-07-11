@@ -345,12 +345,23 @@ class AvroDataIOReader
             throw new AvroException('Please install ext-snappy to use snappy compression.');
         }
         $maxLength = self::maxDecompressLength();
+        // The block is a Snappy payload followed by a 4-byte CRC32 trailer; a
+        // shorter block is malformed and must not be sliced with negative
+        // offsets (which would make unpack() return false below).
+        if (strlen($compressed) < 4) {
+            throw new AvroException('snappy uncompression failed - block too small.');
+        }
+        $payload = substr($compressed, 0, -4);
+        $unpacked = unpack('N', substr($compressed, -4));
+        if (false === $unpacked) {
+            throw new AvroException('snappy uncompression failed - missing crc32 trailer.');
+        }
+        $crc32 = $unpacked[1];
         // The Snappy block header declares the uncompressed length as a varint;
         // reject an over-large block before allocating for it. Parsed with an
         // early cap so it stays correct even if a 32-bit int would overflow.
-        self::ensureSnappyWithinLimit(substr((string) $compressed, 0, -4), $maxLength);
-        $crc32 = unpack('N', substr((string) $compressed, -4))[1];
-        $datum = snappy_uncompress(substr((string) $compressed, 0, -4));
+        self::ensureSnappyWithinLimit($payload, $maxLength);
+        $datum = snappy_uncompress($payload);
 
         if (false === $datum) {
             throw new AvroException('snappy uncompression failed.');
@@ -396,5 +407,10 @@ class AvroDataIOReader
                 throw new AvroException('snappy uncompression failed - malformed length header.');
             }
         }
+
+        // The data ended before a terminating byte (top bit clear) was seen, so
+        // the length header is truncated/malformed; reject it rather than
+        // letting a malformed block bypass the guard.
+        throw new AvroException('snappy uncompression failed - truncated length header.');
     }
 }
