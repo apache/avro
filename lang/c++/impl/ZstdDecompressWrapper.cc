@@ -46,7 +46,8 @@ std::string ZstdDecompressWrapper::decompress(const std::vector<char> &compresse
             // Reject before appending so the buffer never grows past the limit.
             if (out.pos > maxLength - uncompressed.size()) {
                 throw Exception(
-                    "Decompressed block size exceeds the maximum allowed of {} bytes", maxLength);
+                    "Decompressed block size {} exceeds the maximum allowed of {} bytes",
+                    uncompressed.size() + out.pos, maxLength);
             }
             uncompressed.append(tmp.data(), out.pos);
         } while (ret != 0);
