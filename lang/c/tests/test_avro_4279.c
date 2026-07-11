@@ -51,8 +51,16 @@ static int
 try_read(avro_value_iface_t *iface, const char *bytes, size_t len)
 {
 	avro_value_t value;
-	avro_generic_value_new(iface, &value);
+	if (avro_generic_value_new(iface, &value) != 0) {
+		fprintf(stderr, "Cannot create value: %s\n", avro_strerror());
+		exit(EXIT_FAILURE);
+	}
 	avro_reader_t reader = avro_reader_memory(bytes, (int64_t) len);
+	if (reader == NULL) {
+		fprintf(stderr, "Cannot create memory reader\n");
+		avro_value_decref(&value);
+		exit(EXIT_FAILURE);
+	}
 	int rc = avro_value_read(reader, &value);
 	avro_reader_free(reader);
 	avro_value_decref(&value);
@@ -103,10 +111,11 @@ int main(void)
 
 	/* A negative count (unsigned varint 0x15 -> -11) uses its absolute value
 	 * (11) as the item count and is followed by a block size (0x00). It must
-	 * still be bounded. */
+	 * still be bounded, for both arrays and maps. */
 	{
 		const char bytes[] = { 0x15, 0x00 };
 		expect_rejected(array_iface, bytes, sizeof(bytes), "array negative count");
+		expect_rejected(map_iface, bytes, sizeof(bytes), "map negative count");
 	}
 
 	/* A block count of INT64_MIN (zigzag of 2^64-1: nine 0xFF bytes then

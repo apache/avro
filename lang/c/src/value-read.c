@@ -16,6 +16,8 @@
  */
 
 #include <avro/platform.h>
+#include <errno.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -56,8 +58,13 @@ avro_max_collection_items(void)
 	const char *env = getenv("AVRO_MAX_COLLECTION_ITEMS");
 	if (env != NULL && *env != '\0') {
 		char *end = NULL;
-		long long value = strtoll(env, &end, 10);
-		if (end != NULL && *end == '\0' && value > 0) {
+		long long value;
+		errno = 0;
+		value = strtoll(env, &end, 10);
+		/* Reject trailing garbage and out-of-range values (strtoll returns
+		 * LLONG_MAX/LLONG_MIN with errno == ERANGE on overflow). */
+		if (errno == 0 && end != NULL && *end == '\0' &&
+		    value > 0 && value <= (long long) INT64_MAX) {
 			return (int64_t) value;
 		}
 	}
