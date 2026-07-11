@@ -404,8 +404,14 @@ namespace Avro.Generic
             ArraySchema rs = (ArraySchema)readerSchema;
             object result = CreateArray(reuse, rs);
             int i = 0;
-            for (int n = (int)d.ReadArrayStart(); n != 0; n = (int)d.ReadArrayNext())
+            int minBytes = MinBytesPerElement(writerSchema.ItemSchema);
+            for (long nl = d.ReadArrayStart(); nl != 0; nl = d.ReadArrayNext())
             {
+                // Reject a block whose element count could not be backed by the
+                // bytes remaining before allocating for it (checked on the raw
+                // long, which also avoids the int cast overflowing).
+                EnsureCollectionAvailable(d, nl, minBytes);
+                int n = (int)nl;
                 if (GetArraySize(result) < (i + n)) ResizeArray(ref result, i + n);
                 for (int j = 0; j < n; j++, i++)
                 {
@@ -490,8 +496,12 @@ namespace Avro.Generic
         {
             MapSchema rs = (MapSchema)readerSchema;
             object result = CreateMap(reuse, rs);
-            for (int n = (int)d.ReadMapStart(); n != 0; n = (int)d.ReadMapNext())
+            // Map keys are strings (>= 1 byte length prefix) plus the value.
+            int minBytes = 1 + MinBytesPerElement(writerSchema.ValueSchema);
+            for (long nl = d.ReadMapStart(); nl != 0; nl = d.ReadMapNext())
             {
+                EnsureCollectionAvailable(d, nl, minBytes);
+                int n = (int)nl;
                 for (int j = 0; j < n; j++)
                 {
                     string k = d.ReadString();
@@ -499,6 +509,71 @@ namespace Avro.Generic
                 }
             }
             return result;
+        }
+
+        /// <summary>
+        /// Minimum number of bytes a single value of the given schema can occupy
+        /// on the wire. Used to reject an array/map block count that could not be
+        /// backed by the bytes remaining. A type that can encode to zero bytes
+        /// (null) returns 0, which disables the collection check for it (so an
+        /// array of nulls is not falsely rejected). A depth limit breaks
+        /// self-referencing schemas.
+        /// </summary>
+        private static int MinBytesPerElement(Schema schema, int depth = 0)
+        {
+            if (schema == null || depth > 64)
+            {
+                return 0;
+            }
+
+            switch (schema.Tag)
+            {
+                case Schema.Type.Null:
+                    return 0;
+                case Schema.Type.Float:
+                    return 4;
+                case Schema.Type.Double:
+                    return 8;
+                case Schema.Type.Fixed:
+                    return ((FixedSchema)schema).Size;
+                case Schema.Type.Record:
+                case Schema.Type.Error:
+                    int total = 0;
+                    foreach (Field f in (RecordSchema)schema)
+                    {
+                        total += MinBytesPerElement(f.Schema, depth + 1);
+                    }
+
+                    return total;
+                default:
+                    // boolean, int, long, bytes, string, enum, union, array, map:
+                    // all encode to at least one byte.
+                    return 1;
+            }
+        }
+
+        /// <summary>
+        /// Rejects a collection (array or map) block whose declared element count
+        /// could not be backed by the bytes actually remaining, before
+        /// allocating. Skipped when the per-element minimum is zero, or when the
+        /// decoder cannot report how many bytes remain.
+        /// </summary>
+        private static void EnsureCollectionAvailable(Decoder d, long count, int minBytesPerElement)
+        {
+            if (count <= 0 || minBytesPerElement <= 0)
+            {
+                return;
+            }
+
+            if (d is BinaryDecoder bd)
+            {
+                long remaining = bd.RemainingBytes();
+                if (remaining >= 0 && count > remaining / minBytesPerElement)
+                {
+                    throw new AvroException(
+                        $"Collection claims {count} elements with at least {minBytesPerElement} bytes each, but only {remaining} bytes are available");
+                }
+            }
         }
 
         /// <summary>

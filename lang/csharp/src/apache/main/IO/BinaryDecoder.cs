@@ -264,9 +264,46 @@ namespace Avro.IO
         // Read p bytes into a new byte buffer
         private byte[] read(long p)
         {
+            EnsureAvailableBytes(p);
             byte[] buffer = new byte[p];
             Read(buffer, 0, buffer.Length);
             return buffer;
+        }
+
+        /// <summary>
+        /// When the underlying stream can report its length, verifies that at
+        /// least <paramref name="length"/> bytes remain before the caller
+        /// allocates a buffer of that size. This guards against an
+        /// out-of-memory attack from a malicious or truncated input that
+        /// declares a huge length prefix but carries little actual data. The
+        /// check is skipped for non-seekable streams, whose remaining length is
+        /// unknown.
+        /// </summary>
+        /// <param name="length">Number of bytes about to be read.</param>
+        internal void EnsureAvailableBytes(long length)
+        {
+            if (length > 0)
+            {
+                long remaining = RemainingBytes();
+                if (remaining >= 0 && length > remaining)
+                {
+                    throw new AvroException(
+                        $"Cannot read {length} bytes, only {remaining} bytes remaining in the stream");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the number of bytes still available to read from the
+        /// underlying stream when it is seekable, or -1 when that count is not
+        /// known (a non-seekable stream). Used to reject a declared length or a
+        /// collection block count that exceeds the data actually available
+        /// before allocating for it.
+        /// </summary>
+        /// <returns>The number of bytes remaining, or -1 if unknown.</returns>
+        public long RemainingBytes()
+        {
+            return stream.CanSeek ? stream.Length - stream.Position : -1;
         }
 
         private byte read()

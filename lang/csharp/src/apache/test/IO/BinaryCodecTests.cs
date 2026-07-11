@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Avro.IO;
+using Avro.Generic;
 
 namespace Avro.Test
 {
@@ -278,10 +279,12 @@ namespace Avro.Test
                 iostr.Position = 0;
                 Decoder d = new BinaryDecoder(iostr);
 
+                // The declared length far exceeds the bytes remaining in the
+                // (seekable) stream, so it is rejected before any allocation.
                 var exception = Assert.Throws<AvroException>(() => d.ReadString());
 
                 Assert.NotNull(exception);
-                Assert.AreEqual("String length is not supported!", exception.Message);
+                StringAssert.Contains("bytes remaining in the stream", exception.Message);
                 iostr.Close();
             }
         }
@@ -306,10 +309,12 @@ namespace Avro.Test
                 iostr.Position = 0;
                 Decoder d = new BinaryDecoder(iostr);
 
+                // The declared length far exceeds the bytes remaining in the
+                // (seekable) stream, so it is rejected before any allocation.
                 var exception = Assert.Throws<AvroException>(() => d.ReadString());
 
                 Assert.NotNull(exception);
-                Assert.AreEqual("Could not read as many bytes from stream as expected!", exception.Message);
+                StringAssert.Contains("bytes remaining in the stream", exception.Message);
                 iostr.Close();
             }
         }
@@ -429,6 +434,125 @@ namespace Avro.Test
                 (Encoder e, byte[] t) => e.WriteFixed(t), size);
             TestSkip(b, (Decoder d) => d.SkipFixed(size),
                 (Encoder e, byte[] t) => e.WriteFixed(t), size);
+        }
+
+        // A bytes/string value is a length prefix followed by that many bytes.
+        // A malicious or truncated input can declare a huge length with little
+        // actual data; on a seekable stream the reader must reject it before
+        // allocating, rather than attempting a huge allocation.
+        [Test]
+        public void TestReadBytesRejectsLengthBeyondStream()
+        {
+            MemoryStream ms = new MemoryStream();
+            Encoder e = new BinaryEncoder(ms);
+            e.WriteLong(1_000_000); // declares 1,000,000 bytes...
+            ms.Position = 0;        // ...but no data follows
+            Decoder d = new BinaryDecoder(ms);
+            Assert.Throws<AvroException>(() => d.ReadBytes());
+        }
+
+        [Test]
+        public void TestReadStringRejectsLengthBeyondStream()
+        {
+            MemoryStream ms = new MemoryStream();
+            Encoder e = new BinaryEncoder(ms);
+            e.WriteLong(1_000_000); // declares 1,000,000 bytes...
+            ms.Position = 0;        // ...but no data follows
+            Decoder d = new BinaryDecoder(ms);
+            Assert.Throws<AvroException>(() => d.ReadString());
+        }
+
+        // A well-formed value whose declared length fits the stream still reads.
+        [Test]
+        public void TestReadBytesWithinStreamStillReads()
+        {
+            byte[] payload = Encoding.UTF8.GetBytes("hello");
+            MemoryStream ms = new MemoryStream();
+            Encoder e = new BinaryEncoder(ms);
+            e.WriteBytes(payload);
+            ms.Position = 0;
+            Decoder d = new BinaryDecoder(ms);
+            Assert.AreEqual(payload, d.ReadBytes());
+        }
+
+        // On a non-seekable stream the remaining length is unknown, so the
+        // pre-check is skipped and a valid value still decodes.
+        [Test]
+        public void TestReadBytesNonSeekableStreamStillReads()
+        {
+            byte[] payload = Encoding.UTF8.GetBytes("hello");
+            MemoryStream backing = new MemoryStream();
+            Encoder e = new BinaryEncoder(backing);
+            e.WriteBytes(payload);
+            byte[] encoded = backing.ToArray();
+
+            using (var ns = new NonSeekableStream(new MemoryStream(encoded)))
+            {
+                Decoder d = new BinaryDecoder(ns);
+                Assert.AreEqual(payload, d.ReadBytes());
+            }
+        }
+
+        // An array/map block declares an element count; a malicious or truncated
+        // input can declare far more elements than the remaining bytes could
+        // hold. The count is validated against the bytes remaining before
+        // allocating, using the minimum on-wire size of the element schema (so
+        // 0-byte elements like null are not falsely rejected).
+        [Test]
+        public void TestReadArrayRejectsCountBeyondStream()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"long\"}");
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong(1000000); // 1,000,000 longs, no data
+            ms.Position = 0;
+            var reader = new GenericReader<object>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
+        }
+
+        [Test]
+        public void TestReadMapRejectsCountBeyondStream()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"map\",\"values\":\"long\"}");
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong(1000000);
+            ms.Position = 0;
+            var reader = new GenericReader<object>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
+        }
+
+        [Test]
+        public void TestReadArrayOfNullNotFalselyRejected()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"null\"}");
+            var ms = new MemoryStream();
+            var enc = new BinaryEncoder(ms);
+            enc.WriteLong(100000); // one block of 100,000 nulls (zero bytes each)
+            enc.WriteLong(0);      // end-of-array marker
+            ms.Position = 0;
+            var reader = new GenericReader<object>(schema, schema);
+            var result = (Array)reader.Read(null, new BinaryDecoder(ms));
+            Assert.AreEqual(100000, result.Length);
+        }
+
+        // Minimal read-only, forward-only stream wrapper reporting CanSeek=false.
+        private sealed class NonSeekableStream : Stream
+        {
+            private readonly Stream inner;
+            public NonSeekableStream(Stream inner) { this.inner = inner; }
+            public override bool CanRead => true;
+            public override bool CanSeek => false;
+            public override bool CanWrite => false;
+            public override long Length => throw new NotSupportedException();
+            public override long Position
+            {
+                get => throw new NotSupportedException();
+                set => throw new NotSupportedException();
+            }
+            public override void Flush() { }
+            public override int Read(byte[] buffer, int offset, int count) => inner.Read(buffer, offset, count);
+            public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+            public override void SetLength(long value) => throw new NotSupportedException();
+            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
         }
     }
 }

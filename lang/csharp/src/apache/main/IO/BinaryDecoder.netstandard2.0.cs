@@ -85,6 +85,8 @@ namespace Avro.IO
                 throw new AvroException("Can not deserialize a string with negative length!");
             }
 
+            EnsureAvailableBytes(length);
+
             if (length > MaxDotNetArrayLength)
             {
                 throw new AvroException("String length is not supported!");
