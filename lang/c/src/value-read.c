@@ -18,6 +18,7 @@
 #include <avro/platform.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "avro/allocation.h"
 #include "avro/basics.h"
@@ -74,7 +75,13 @@ min_bytes_per_element(avro_schema_t schema, int depth)
 		for (i = 0; i < n; i++) {
 			avro_schema_t  field =
 			    avro_schema_record_field_get_by_index(schema, i);
-			total += min_bytes_per_element(field, depth + 1);
+			int64_t  field_min = min_bytes_per_element(field, depth + 1);
+			/* Saturate rather than overflow: a wrapped (negative)
+			 * total would disable the collection check. */
+			if (field_min > INT64_MAX - total) {
+				return INT64_MAX;
+			}
+			total += field_min;
 		}
 		return total;
 	}
@@ -167,9 +174,13 @@ read_map_value(avro_reader_t reader, avro_value_t *dest)
 	int64_t  min_bytes;
 	avro_schema_t  map_schema = avro_value_get_schema(dest);
 
-	/* Map keys are strings (>= 1 byte length prefix) plus the value. */
-	min_bytes = 1 + min_bytes_per_element(
+	/* Map keys are strings (>= 1 byte length prefix) plus the value.
+	 * Saturate the +1 so a maxed-out value minimum cannot wrap. */
+	min_bytes = min_bytes_per_element(
 	    map_schema ? avro_schema_map_values(map_schema) : NULL, 0);
+	if (min_bytes < INT64_MAX) {
+		min_bytes += 1;
+	}
 
 	check_prefix(rval, avro_binary_encoding.read_long(reader, &block_count),
 		     "Cannot read map block count: ");

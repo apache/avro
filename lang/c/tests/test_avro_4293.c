@@ -139,6 +139,13 @@ static int check_accepts_valid(void)
 		return EXIT_FAILURE;
 	}
 	reader = avro_reader_memory(valid, sizeof(valid));
+	if (reader == NULL) {
+		fprintf(stderr, "valid: avro_reader_memory failed\n");
+		avro_value_decref(&decoded);
+		avro_value_iface_decref(iface);
+		avro_schema_decref(schema);
+		return EXIT_FAILURE;
+	}
 	rc = avro_value_read(reader, &decoded);
 	if (rc == 0 && avro_value_get_string(&decoded, &text, &text_size) == 0 &&
 	    text_size == 4 && strcmp(text, "abc") == 0) {
@@ -187,6 +194,13 @@ static int check_accepts_null_array(void)
 		return EXIT_FAILURE;
 	}
 	reader = avro_reader_memory(null_array, sizeof(null_array));
+	if (reader == NULL) {
+		fprintf(stderr, "null-array: avro_reader_memory failed\n");
+		avro_value_decref(&decoded);
+		avro_value_iface_decref(iface);
+		avro_schema_decref(schema);
+		return EXIT_FAILURE;
+	}
 	rc = avro_value_read(reader, &decoded);
 	if (rc == 0 && avro_value_get_size(&decoded, &count) == 0 && count == 127) {
 		fprintf(stderr, "null-array: 127 nulls decoded, not falsely rejected\n");
