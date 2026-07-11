@@ -29,6 +29,7 @@ converting charsets (https://docs.python.org/3/library/codecs.html).
 import abc
 import binascii
 import io
+import os
 import struct
 import zlib
 from typing import Dict, Tuple, Type
@@ -40,6 +41,55 @@ import avro.io
 # Constants
 #
 STRUCT_CRC32 = struct.Struct(">I")  # big-endian unsigned int
+
+# Name of the environment variable used to override the default maximum size of
+# a single decompressed data-file block.
+MAX_DECOMPRESS_LENGTH_ENV = "AVRO_MAX_DECOMPRESS_LENGTH"
+
+# Default upper bound, in bytes, on the size a single data-file block may
+# decompress to. A block with a very high compression ratio (or a malformed
+# block) can otherwise expand to far more memory than its compressed size.
+# Reading a block that would decompress beyond this limit raises an
+# :class:`avro.errors.AvroDecompressionSizeException`. This mirrors the Java
+# SDK's ``org.apache.avro.limits.decompress.maxLength`` limit (AVRO-4247). The
+# default may be overridden with the ``AVRO_MAX_DECOMPRESS_LENGTH`` environment
+# variable.
+DEFAULT_MAX_DECOMPRESS_LENGTH = 200 * 1024 * 1024  # 200 MiB
+
+
+def _max_decompress_length() -> int:
+    """Return the maximum decompressed block size, honoring the environment override."""
+    value = os.environ.get(MAX_DECOMPRESS_LENGTH_ENV)
+    if value is None:
+        return DEFAULT_MAX_DECOMPRESS_LENGTH
+    try:
+        parsed = int(value)
+    except ValueError:
+        return DEFAULT_MAX_DECOMPRESS_LENGTH
+    return parsed if parsed > 0 else DEFAULT_MAX_DECOMPRESS_LENGTH
+
+
+def _raise_decompression_too_large(limit: int) -> None:
+    raise avro.errors.AvroDecompressionSizeException(f"Decompressed block size exceeds the maximum allowed of {limit} bytes")
+
+
+def _snappy_uncompressed_length(data: bytes) -> "int | None":
+    """Return the uncompressed length declared in a raw Snappy block header.
+
+    The Snappy format prefixes the compressed data with the uncompressed length
+    encoded as a little-endian base-128 varint. Returns ``None`` if the header
+    cannot be parsed.
+    """
+    result = 0
+    shift = 0
+    for byte in data:
+        result |= (byte & 0x7F) << shift
+        if not (byte & 0x80):
+            return result
+        shift += 7
+        if shift > 63:
+            break
+    return None
 
 
 def _check_crc32(bytes_: bytes, checksum: bytes) -> None:
@@ -123,7 +173,16 @@ class DeflateCodec(Codec):
         data = readers_decoder.read_bytes()
         # -15 is the log of the window size; negative indicates
         # "raw" (no zlib headers) decompression.  See zlib.h.
-        uncompressed = zlib.decompress(data, -15)
+        limit = _max_decompress_length()
+        decompressor = zlib.decompressobj(-15)
+        # Request at most limit + 1 bytes so that an over-large block is detected
+        # without allocating the whole (potentially huge) output.
+        uncompressed = decompressor.decompress(data, limit + 1)
+        if len(uncompressed) > limit:
+            _raise_decompression_too_large(limit)
+        uncompressed += decompressor.flush()
+        if len(uncompressed) > limit:
+            _raise_decompression_too_large(limit)
         return avro.io.BinaryDecoder(io.BytesIO(uncompressed))
 
 
@@ -139,7 +198,11 @@ if has_bzip2:
         def decompress(readers_decoder: avro.io.BinaryDecoder) -> avro.io.BinaryDecoder:
             length = readers_decoder.read_long()
             data = readers_decoder.read(length)
-            uncompressed = bz2.decompress(data)
+            limit = _max_decompress_length()
+            decompressor = bz2.BZ2Decompressor()
+            uncompressed = decompressor.decompress(data, limit + 1)
+            if len(uncompressed) > limit:
+                _raise_decompression_too_large(limit)
             return avro.io.BinaryDecoder(io.BytesIO(uncompressed))
 
 
@@ -158,7 +221,15 @@ if has_snappy:
             # Compressed data includes a 4-byte CRC32 checksum
             length = readers_decoder.read_long()
             data = readers_decoder.read(length - 4)
+            limit = _max_decompress_length()
+            # The Snappy block header declares the uncompressed length as a
+            # varint; reject an over-large block before allocating for it.
+            declared = _snappy_uncompressed_length(data)
+            if declared is not None and declared > limit:
+                _raise_decompression_too_large(limit)
             uncompressed = snappy.decompress(data)
+            if len(uncompressed) > limit:
+                _raise_decompression_too_large(limit)
             checksum = readers_decoder.read(4)
             _check_crc32(uncompressed, checksum)
             return avro.io.BinaryDecoder(io.BytesIO(uncompressed))
@@ -176,6 +247,7 @@ if has_zstandard:
         def decompress(readers_decoder: avro.io.BinaryDecoder) -> avro.io.BinaryDecoder:
             length = readers_decoder.read_long()
             data = readers_decoder.read(length)
+            limit = _max_decompress_length()
             uncompressed = bytearray()
             dctx = zstd.ZstdDecompressor()
             with dctx.stream_reader(io.BytesIO(data)) as reader:
@@ -184,6 +256,8 @@ if has_zstandard:
                     if not chunk:
                         break
                     uncompressed.extend(chunk)
+                    if len(uncompressed) > limit:
+                        _raise_decompression_too_large(limit)
             return avro.io.BinaryDecoder(io.BytesIO(uncompressed))
 
 

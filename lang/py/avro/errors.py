@@ -83,6 +83,14 @@ class AvroOutOfScaleException(AvroTypeException):
         return super().__init__(f"The exponent of {datum}, {exponent}, is too large for the schema scale of {scale}")
 
 
+class AvroDecompressionSizeException(AvroException):
+    """Raised when a data-file block decompresses to more than the configured maximum.
+
+    This guards against unbounded memory allocation when a highly compressible
+    (or malformed) block would expand to far more than its compressed size.
+    """
+
+
 class SchemaResolutionException(AvroException):
     def __init__(self, fail_msg, writers_schema=None, readers_schema=None, *args):
         writers_message = f"\nWriter's Schema: {_safe_pretty(writers_schema)}" if writers_schema else ""
