@@ -65,6 +65,13 @@ avro_max_collection_items(void)
 		 * LLONG_MAX/LLONG_MIN with errno == ERANGE on overflow). */
 		if (errno == 0 && end != NULL && *end == '\0' &&
 		    value > 0 && value <= (long long) INT64_MAX) {
+			/* Clamp to SIZE_MAX so the (size_t) cast of the block count in
+			 * the decode loops cannot truncate. On 64-bit builds size_t is
+			 * at least as wide as int64_t so this never clamps; it only
+			 * applies on 32-bit builds, where SIZE_MAX fits in int64_t. */
+			if ((uint64_t) value > (uint64_t) SIZE_MAX) {
+				return (int64_t) SIZE_MAX;
+			}
 			return (int64_t) value;
 		}
 	}

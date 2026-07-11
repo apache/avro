@@ -138,11 +138,34 @@ int main(void)
 		expect_rejected(array_iface, bytes, sizeof(bytes), "array cumulative");
 	}
 
+	/* Same for maps: two blocks of 6 pairs (key string 0x02 0x61 = "a",
+	 * null value = no bytes) exceed the limit cumulatively. */
+	{
+		const char bytes[] = {
+			0x0c,
+			0x02, 0x61, 0x02, 0x61, 0x02, 0x61,
+			0x02, 0x61, 0x02, 0x61, 0x02, 0x61,
+			0x0c
+		};
+		expect_rejected(map_iface, bytes, sizeof(bytes), "map cumulative");
+	}
+
 	/* Three items (zigzag(3) = 0x06) then the end-of-array marker (0x00) is
 	 * within the limit and must decode successfully. */
 	{
 		const char bytes[] = { 0x06, 0x00 };
 		expect_accepted(array_iface, bytes, sizeof(bytes), "array within limit");
+	}
+
+	/* A map of three pairs with distinct keys "a", "b", "c" then the
+	 * end-of-map marker (0x00) is within the limit and must decode. */
+	{
+		const char bytes[] = {
+			0x06,
+			0x02, 0x61, 0x02, 0x62, 0x02, 0x63,
+			0x00
+		};
+		expect_accepted(map_iface, bytes, sizeof(bytes), "map within limit");
 	}
 
 	avro_value_iface_decref(array_iface);
