@@ -2171,8 +2171,35 @@ static void setCollectionLimit(const char *value) {
 #endif
 }
 
+// Sets AVRO_MAX_COLLECTION_ITEMS for the current scope and restores the previous
+// value (or unsets it) on destruction so tests do not interfere with each other
+// or with other tests running in the same process.
+struct CollectionLimitGuard {
+    std::string previous_;
+    bool had_;
+    explicit CollectionLimitGuard(const char *value) {
+        const char *p = std::getenv("AVRO_MAX_COLLECTION_ITEMS");
+        had_ = (p != nullptr);
+        if (had_) {
+            previous_ = p;
+        }
+        setCollectionLimit(value);
+    }
+    ~CollectionLimitGuard() {
+        if (had_) {
+            setCollectionLimit(previous_.c_str());
+        } else {
+#ifdef _WIN32
+            _putenv_s("AVRO_MAX_COLLECTION_ITEMS", "");
+#else
+            unsetenv("AVRO_MAX_COLLECTION_ITEMS");
+#endif
+        }
+    }
+};
+
 static void testArrayBlockCountIsBounded() {
-    setCollectionLimit("10");
+    CollectionLimitGuard guard("10");
     const char *schema = R"({"type": "array", "items": "null"})";
 
     // A single block declaring 11 items (zigzag(11) = 0x16) exceeds the limit
@@ -2204,13 +2231,35 @@ static void testArrayBlockCountIsBounded() {
 }
 
 static void testMapBlockCountIsBounded() {
-    setCollectionLimit("10");
+    CollectionLimitGuard guard("10");
     const char *schema = R"({"type": "map", "values": "null"})";
 
-    // Block count 11 (zigzag = 0x16) exceeds the limit of 10.
+    // A single block of 11 pairs (zigzag(11) = 0x16) exceeds the limit of 10.
     const uint8_t overLimit[] = {0x16, 0x00};
     BOOST_CHECK_THROW(decodeNullCollection(schema, overLimit, sizeof(overLimit)),
                       Exception);
+
+    // Two blocks of 6 pairs each (zigzag(6) = 0x0c), all keyed "a"
+    // (key string = 0x02 0x61, null value = no bytes), exceed the limit
+    // cumulatively. This also confirms repeated keys are counted per pair.
+    const uint8_t cumulative[] = {
+        0x0c, 0x02, 0x61, 0x02, 0x61, 0x02, 0x61,
+        0x02, 0x61, 0x02, 0x61, 0x02, 0x61, 0x0c};
+    BOOST_CHECK_THROW(decodeNullCollection(schema, cumulative, sizeof(cumulative)),
+                      Exception);
+
+    // A negative count (zigzag(-11) = 0x15) followed by a block byte-size (0x00)
+    // uses its absolute value (11) and must still be bounded.
+    const uint8_t negative[] = {0x15, 0x00};
+    BOOST_CHECK_THROW(decodeNullCollection(schema, negative, sizeof(negative)),
+                      Exception);
+
+    // Three pairs (zigzag(3) = 0x06) with distinct keys "a", "b", "c" then the
+    // end-of-map marker (0x00) is within the limit and decodes successfully.
+    const uint8_t withinLimit[] = {0x06, 0x02, 0x61, 0x02, 0x62, 0x02, 0x63, 0x00};
+    GenericDatum datum =
+        decodeNullCollection(schema, withinLimit, sizeof(withinLimit));
+    BOOST_CHECK_EQUAL(datum.value<GenericMap>().value().size(), 3u);
 }
 
 } // namespace avro

@@ -19,6 +19,7 @@
 #include "Generic.hh"
 #include <cerrno>
 #include <cstdlib>
+#include <limits>
 #include <utility>
 
 namespace avro {
@@ -42,10 +43,19 @@ constexpr size_t DEFAULT_MAX_COLLECTION_ITEMS = (size_t(1) << 31) - 8; // 2^31 -
 size_t maxCollectionItems() {
     const char *env = std::getenv("AVRO_MAX_COLLECTION_ITEMS");
     if (env != nullptr && *env != '\0') {
+        // Accept only a run of decimal digits: strtoull would otherwise accept a
+        // leading '-' (wrapping to a huge value) or '+', effectively disabling
+        // the limit.
+        for (const char *p = env; *p != '\0'; ++p) {
+            if (*p < '0' || *p > '9') {
+                return DEFAULT_MAX_COLLECTION_ITEMS;
+            }
+        }
         errno = 0;
         char *end = nullptr;
         unsigned long long value = std::strtoull(env, &end, 10);
-        if (errno == 0 && end != nullptr && *end == '\0' && value > 0) {
+        if (errno == 0 && end != nullptr && *end == '\0' && value > 0 &&
+            value <= std::numeric_limits<size_t>::max()) {
             return static_cast<size_t>(value);
         }
     }
