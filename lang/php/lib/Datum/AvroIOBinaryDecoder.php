@@ -39,6 +39,14 @@ use Apache\Avro\Schema\AvroUnionSchema;
 class AvroIOBinaryDecoder
 {
     /**
+     * Reads with a declared length above this many bytes are validated against
+     * the number of bytes actually remaining before allocating, to guard
+     * against an out-of-memory attack from a malicious or truncated input.
+     * Smaller reads skip the check to avoid per-value overhead.
+     */
+    private const MAX_UNCHECKED_READ = 1048576; // 1 MiB
+
+    /**
      * @param AvroIO $io object from which to read.
      */
     public function __construct(
@@ -65,7 +73,30 @@ class AvroIOBinaryDecoder
      */
     public function read(int $len): string
     {
+        if ($len > self::MAX_UNCHECKED_READ) {
+            $remaining = $this->bytesRemaining();
+            if ($len > $remaining) {
+                throw new AvroException("Cannot read {$len} bytes, only {$remaining} remaining.");
+            }
+        }
+
         return $this->io->read($len);
+    }
+
+    /**
+     * Number of bytes still available to read, determined by seeking to the end
+     * and restoring the position (which both the string and file IO
+     * implementations support). Used to reject a declared length or collection
+     * block count that exceeds the data actually available before allocating.
+     */
+    public function bytesRemaining(): int
+    {
+        $current = $this->io->tell();
+        $this->io->seek(0, AvroIO::SEEK_END);
+        $end = $this->io->tell();
+        $this->io->seek($current, AvroIO::SEEK_SET);
+
+        return $end - $current;
     }
 
     public function readInt(): int

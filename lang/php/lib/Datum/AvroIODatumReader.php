@@ -290,6 +290,7 @@ class AvroIODatumReader
                 $blockCount = -$blockCount;
                 $decoder->readLong(); // Read (and ignore) block size
             }
+            self::ensureCollectionAvailable($decoder, $blockCount, self::minBytesPerElement($writersSchema->items()));
             for ($i = 0; $i < $blockCount; $i++) {
                 $items[] = $this->readData(
                     $writersSchema->items(),
@@ -320,6 +321,8 @@ class AvroIODatumReader
                 $decoder->readLong();
             }
 
+            // Map keys are strings (>= 1 byte length prefix) plus the value.
+            self::ensureCollectionAvailable($decoder, $pair_count, 1 + self::minBytesPerElement($writersSchema->values()));
             for ($i = 0; $i < $pair_count; $i++) {
                 $key = $decoder->readString();
                 $items[$key] = $this->readData(
@@ -537,5 +540,81 @@ class AvroIODatumReader
         $int = unpack('J', $padded)[1];
 
         return (string) ($scale > 0 ? ($int / (10 ** $scale)) : $int);
+    }
+
+    /**
+     * Minimum number of bytes a single value of the given schema can occupy on
+     * the wire. Used to reject an array/map block count that could not be backed
+     * by the bytes remaining. A type that can encode to zero bytes (null)
+     * returns 0, which disables the collection check for it (so an array of
+     * nulls is not falsely rejected). Types that cannot be resolved cheaply
+     * default to 1, which is safe because the only zero-byte primitive is null.
+     *
+     * @param array<int, bool> $visited
+     */
+    private static function minBytesPerElement(mixed $schema, array $visited = []): int
+    {
+        $type = $schema instanceof AvroSchema ? $schema->type() : $schema;
+        // Named/complex field types may nest a schema object; unwrap one level.
+        if ($type instanceof AvroSchema) {
+            return self::minBytesPerElement($type, $visited);
+        }
+        if (!is_string($type)) {
+            return 1;
+        }
+        switch ($type) {
+            case AvroSchema::NULL_TYPE:
+                return 0;
+            case AvroSchema::FLOAT_TYPE:
+                return 4;
+            case AvroSchema::DOUBLE_TYPE:
+                return 8;
+            case AvroSchema::FIXED_SCHEMA:
+                return $schema instanceof AvroFixedSchema ? $schema->size() : 1;
+            case AvroSchema::RECORD_SCHEMA:
+            case AvroSchema::ERROR_SCHEMA:
+                if (!$schema instanceof AvroRecordSchema) {
+                    return 1;
+                }
+                $id = spl_object_id($schema);
+                if (isset($visited[$id])) {
+                    return 0; // break recursion for self-referencing schemas
+                }
+                $visited[$id] = true;
+                $total = 0;
+                foreach ($schema->fields() as $field) {
+                    $total += self::minBytesPerElement($field, $visited);
+                }
+
+                return $total;
+            default:
+                // boolean, int, long, bytes, string, enum, union, array, map:
+                // all encode to at least one byte.
+                return 1;
+        }
+    }
+
+    /**
+     * Rejects a collection (array or map) block whose declared element count
+     * could not be backed by the bytes actually remaining, before iterating.
+     * Skipped when the per-element minimum is zero (e.g. an array of nulls).
+     *
+     * @throws AvroException if the declared count exceeds the bytes remaining
+     */
+    private static function ensureCollectionAvailable(
+        AvroIOBinaryDecoder $decoder,
+        int $count,
+        int $minBytesPerElement
+    ): void {
+        if ($count <= 0 || $minBytesPerElement <= 0) {
+            return;
+        }
+        $remaining = $decoder->bytesRemaining();
+        if ($count * $minBytesPerElement > $remaining) {
+            throw new AvroException(
+                "Collection claims {$count} elements with at least {$minBytesPerElement} "
+                ."bytes each, but only {$remaining} bytes are available."
+            );
+        }
     }
 }

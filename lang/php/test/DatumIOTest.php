@@ -261,6 +261,66 @@ class DatumIOTest extends TestCase
         $writer->write("10000", $encoder);
     }
 
+    // A bytes/string value declares a length prefix; a malicious or truncated
+    // input can declare far more bytes than actually exist. On a reader that
+    // can report its size, that is rejected before allocating for it.
+    public function test_read_bytes_rejects_length_beyond_stream(): void
+    {
+        $io = new AvroStringIO();
+        (new AvroIOBinaryEncoder($io))->writeLong(100 * 1024 * 1024);
+        $io->seek(0);
+        $decoder = new AvroIOBinaryDecoder($io);
+
+        $this->expectException(AvroException::class);
+        $decoder->readBytes();
+    }
+
+    public function test_read_bytes_within_stream_still_reads(): void
+    {
+        $payload = str_repeat('x', 2 * 1024 * 1024);
+        $io = new AvroStringIO();
+        (new AvroIOBinaryEncoder($io))->writeBytes($payload);
+        $io->seek(0);
+        $decoder = new AvroIOBinaryDecoder($io);
+
+        $this->assertEquals($payload, $decoder->readBytes());
+    }
+
+    public function test_read_array_rejects_count_beyond_stream(): void
+    {
+        $io = new AvroStringIO();
+        (new AvroIOBinaryEncoder($io))->writeLong(1000000); // 1,000,000 longs, no data
+        $this->expectException(AvroException::class);
+        $this->decodeWith('{"type":"array","items":"long"}', $io);
+    }
+
+    public function test_read_map_rejects_count_beyond_stream(): void
+    {
+        $io = new AvroStringIO();
+        (new AvroIOBinaryEncoder($io))->writeLong(1000000);
+        $this->expectException(AvroException::class);
+        $this->decodeWith('{"type":"map","values":"long"}', $io);
+    }
+
+    public function test_read_array_of_null_not_falsely_rejected(): void
+    {
+        $count = 100000;
+        $io = new AvroStringIO();
+        $encoder = new AvroIOBinaryEncoder($io);
+        $encoder->writeLong($count); // one block of `count` nulls (zero bytes each)
+        $encoder->writeLong(0);      // end-of-array marker
+        $result = $this->decodeWith('{"type":"array","items":"null"}', $io);
+        $this->assertCount($count, $result);
+    }
+
+    public function test_read_array_within_stream_still_reads(): void
+    {
+        $schema = AvroSchema::parse('{"type":"array","items":"long"}');
+        $io = new AvroStringIO();
+        (new AvroIODatumWriter($schema))->write([1, 2, 3], new AvroIOBinaryEncoder($io));
+        $this->assertEquals([1, 2, 3], $this->decodeWith('{"type":"array","items":"long"}', $io));
+    }
+
     public static function validDurationLogicalTypes(): array
     {
         return [
@@ -418,6 +478,20 @@ class DatumIOTest extends TestCase
         } else {
             $this->fail(sprintf('expected field record[f]: %s', print_r($record, true)));
         }
+    }
+
+    // An array/map block declares an element count; a malicious or truncated
+    // input can declare far more elements than the remaining bytes could hold.
+    // The count is validated against the bytes remaining before iterating, using
+    // the minimum on-wire size of the element schema (so 0-byte elements like
+    // null are not falsely rejected).
+    private function decodeWith(string $schemaJson, AvroStringIO $io): mixed
+    {
+        $schema = AvroSchema::parse($schemaJson);
+        $io->seek(0);
+        $reader = new AvroIODatumReader($schema);
+
+        return $reader->read(new AvroIOBinaryDecoder($io));
     }
 
     /**
