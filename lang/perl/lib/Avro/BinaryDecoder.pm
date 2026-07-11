@@ -152,7 +152,7 @@ use constant _MAX_UNCHECKED_READ => 1024 * 1024;
 sub _bytes_remaining {
     my ($reader) = @_;
     my $current = eval { $reader->tell };
-    return undef if !defined $current || $current < 0;
+    return if !defined $current || $current < 0;
     return eval {
         $reader->seek(0, 2)         # SEEK_END
             or die "seek to end failed\n";
