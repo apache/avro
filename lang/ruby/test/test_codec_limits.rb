@@ -87,4 +87,18 @@ class TestCodecLimits < Test::Unit::TestCase
       end
     end
   end
+
+  def test_zstandard_within_limit_round_trips
+    begin
+      require 'zstd-ruby'
+    rescue LoadError
+      omit('zstd-ruby gem not available')
+    end
+    codec = Avro::DataFile::ZstandardCodec.new
+    payload = ('the quick brown fox ' * 10).b # well under the limit
+    compressed = codec.compress(payload)
+    with_limit(LIMIT) do
+      assert_equal payload, codec.decompress(compressed)
+    end
+  end
 end

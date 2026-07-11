@@ -345,10 +345,10 @@ module Avro
         # Inflate in chunks so an over-large (or malicious) block is rejected
         # before its full decompressed form is materialized in memory.
         append = lambda do |chunk|
-          data << chunk
-          if data.bytesize > limit
+          if data.bytesize + chunk.bytesize > limit
             raise DecompressionSizeError, "Decompressed block size exceeds the maximum allowed of #{limit} bytes"
           end
+          data << chunk
         end
         zstream.inflate(compressed, &append)
         remaining = zstream.finish
@@ -445,11 +445,12 @@ module Avro
         # Decompress the block in chunks so an over-large (or malicious) block is
         # rejected before its full decompressed form is materialized in memory.
         while offset < size
-          uncompressed << stream.decompress(data.byteslice(offset, ZSTD_DECOMPRESS_CHUNK_SIZE))
+          out = stream.decompress(data.byteslice(offset, ZSTD_DECOMPRESS_CHUNK_SIZE))
           offset += ZSTD_DECOMPRESS_CHUNK_SIZE
-          if uncompressed.bytesize > limit
+          if uncompressed.bytesize + out.bytesize > limit
             raise DecompressionSizeError, "Decompressed block size exceeds the maximum allowed of #{limit} bytes"
           end
+          uncompressed << out
         end
         uncompressed
       end
