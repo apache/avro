@@ -32,16 +32,15 @@ use constant MARKER_SIZE => 16;
 # a very high compression ratio (or a malformed block) can expand to far more
 # memory than its compressed size. To guard against unbounded allocation, the
 # decompressed size of a single block is capped. This mirrors the Java SDK's
-# decompression limit (AVRO-4247). The default can be overridden per reader via
-# the block_max_size attribute, or globally with the AVRO_MAX_DECOMPRESS_LENGTH
-# environment variable.
+# decompression limit (AVRO-4247). The default can be overridden with the
+# AVRO_MAX_DECOMPRESS_LENGTH environment variable.
 use constant DEFAULT_MAX_DECOMPRESS_LENGTH => 200 * 1024 * 1024; # 200 MiB
 
 use Avro::DataFile;
 use Avro::BinaryDecoder;
 use Avro::Schema;
 use Carp;
-use Compress::Zstd;
+use Compress::Zstd::Decompressor;
 use IO::Uncompress::Bunzip2 qw(bunzip2);
 use IO::Uncompress::RawInflate ;
 use Fcntl();
@@ -223,9 +222,11 @@ sub read_block_header {
 
     ## The decompressed size of a block is capped to guard against a block with
     ## a very high compression ratio expanding to far more memory than its
-    ## compressed size.
-    my $limit = $datafile->block_max_size;
-    $limit = _max_decompress_length() unless defined $limit;
+    ## compressed size. The limit is the AVRO_MAX_DECOMPRESS_LENGTH environment
+    ## variable, or DEFAULT_MAX_DECOMPRESS_LENGTH. (Note: block_max_size is a
+    ## writer-side flush threshold measured in compressed bytes and is not reused
+    ## here to avoid conflating the two units.)
+    my $limit = _max_decompress_length();
 
     ## this is our new reader
     $datafile->{reader} = do {
@@ -242,8 +243,7 @@ sub read_block_header {
             do { open my $fh, '<', \$uncompressed; $fh };
         }
         elsif ($codec eq 'zstandard') {
-            my $uncompressed = decompress(\$block);
-            _check_decompress_length(length($uncompressed), $limit);
+            my $uncompressed = _zstd_decompress_bounded(\$block, $limit);
             do { open my $fh, '<', \$uncompressed; $fh };
         }
     };
@@ -253,18 +253,43 @@ sub read_block_header {
 
 ## Read from a streaming decompressor in chunks, rejecting the block as soon as
 ## its decompressed size would exceed $limit so an over-large (or malicious)
-## block is not fully materialized in memory.
+## block is not fully materialized in memory. Each read is sized to the
+## remaining budget (capped at 64 KiB) so the buffer overshoots $limit by at
+## most one byte before the check fires.
 sub _inflate_bounded {
     my ($z, $limit) = @_;
     my $uncompressed = '';
     my $chunk;
     my $status;
-    while (($status = $z->read($chunk, 65536)) > 0) {
+    while (1) {
+        my $budget = $limit - length($uncompressed) + 1;
+        my $to_read = $budget < 65536 ? $budget : 65536;
+        $status = $z->read($chunk, $to_read);
+        last unless defined $status && $status > 0;
         $uncompressed .= $chunk;
         _check_decompress_length(length($uncompressed), $limit);
     }
     if (!defined $status || $status < 0) {
-        croak "Error decompressing block";
+        croak "Error decompressing block: " . $z->error;
+    }
+    return $uncompressed;
+}
+
+## Streaming zstandard decompression, bounded the same way as _inflate_bounded so
+## a high-ratio block is rejected before its full form is materialized.
+sub _zstd_decompress_bounded {
+    my ($block_ref, $limit) = @_;
+    my $decompressor = Compress::Zstd::Decompressor->new;
+    my $uncompressed = '';
+    my $length = length($$block_ref);
+    my $offset = 0;
+    while ($offset < $length) {
+        my $piece = substr($$block_ref, $offset, 65536);
+        $offset += 65536;
+        my $out = $decompressor->decompress($piece);
+        next unless defined $out;
+        $uncompressed .= $out;
+        _check_decompress_length(length($uncompressed), $limit);
     }
     return $uncompressed;
 }
@@ -363,6 +388,6 @@ package Avro::DataFile::Error::UnsupportedCodec;
 use parent 'Error::Simple';
 
 package Avro::DataFile::Error::DecompressionSize;
-use parent -norequire, 'Error::Simple';
+use parent 'Error::Simple';
 
 1;
