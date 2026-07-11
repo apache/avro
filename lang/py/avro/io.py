@@ -847,7 +847,7 @@ class DatumReader:
         The actual count in this case
         is the absolute value of the count written.
         """
-        read_items = []
+        read_items: List[object] = []
         block_count = decoder.read_long()
         while block_count != 0:
             if block_count < 0:
