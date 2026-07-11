@@ -24,6 +24,12 @@
 
 use strict;
 use warnings;
+
+# Load the decoder with its default limit regardless of the runner environment:
+# $MAX_COLLECTION_ITEMS is initialized from AVRO_MAX_COLLECTION_ITEMS at load
+# time, so clear it before any Avro module is loaded.
+BEGIN { delete $ENV{AVRO_MAX_COLLECTION_ITEMS}; }
+
 use Avro::Schema;
 use Test::More;
 use Test::Exception;
@@ -58,6 +64,13 @@ my $err = 'Avro::BinaryDecoder::Error::CollectionSize';
     # Two blocks of 6 items (zigzag(6) = 0x0c) exceed the limit cumulatively.
     throws_ok { decode_bytes($array_schema, "\x0c\x0c") } $err,
         "array cumulative block count above limit is rejected";
+
+    # Repeated map keys collapse in the hash; the cumulative check must still
+    # count every decoded pair. Two blocks of 6 pairs all keyed "a"
+    # (zigzag(6)=0x0c, key string = 0x02 0x61, null value = no bytes) exceed 10.
+    my $repeated_key_map = "\x0c" . ("\x02\x61" x 6) . "\x0c";
+    throws_ok { decode_bytes($map_schema, $repeated_key_map) } $err,
+        "map cumulative pair count with repeated keys is rejected";
 
     # Negative count: unsigned varint 0x15 decodes (zigzag) to -11, whose
     # absolute value (11) is used; a block size long (0x00) follows.

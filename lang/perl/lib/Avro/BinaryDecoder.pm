@@ -46,8 +46,10 @@ our $MAX_COLLECTION_ITEMS =
     : $DEFAULT_MAX_COLLECTION_ITEMS;
 
 ## Ensure that decoding the next block of $block_count items would not grow the
-## collection beyond $MAX_COLLECTION_ITEMS. Throws on a negative block count or
-## when the running total would exceed the limit.
+## collection beyond $MAX_COLLECTION_ITEMS. Callers pass the normalized
+## (non-negative) block count -- in the Avro encoding a negative count merely
+## signals that a block-size long follows, and its absolute value is the count.
+## The negative check here is a defensive guard against malformed input.
 sub _check_collection_items {
     my ($existing, $block_count) = @_;
     if ($block_count < 0 || $existing + $block_count > $MAX_COLLECTION_ITEMS) {
@@ -322,6 +324,10 @@ sub decode_map {
     my $block_count = decode_long($class, @_);
     my $writer_values = $writer_schema->values;
     my $reader_values = $reader_schema->values;
+    ## Track the number of pairs decoded rather than scalar(keys %hash):
+    ## repeated keys collapse in the hash and would otherwise let the cumulative
+    ## check be bypassed by a stream that keeps rewriting the same key.
+    my $pairs_read = 0;
     while ($block_count) {
         my $block_size;
         if ($block_count < 0) {
@@ -329,7 +335,7 @@ sub decode_map {
             $block_size = decode_long($class, @_);
             ## XXX we can skip with $reader_schema?
         }
-        _check_collection_items(scalar(keys %hash), $block_count);
+        _check_collection_items($pairs_read, $block_count);
         for (1..$block_count) {
             my $key = decode_string($class, @_);
             unless (defined $key && length $key) {
@@ -341,6 +347,7 @@ sub decode_map {
                 reader        => $reader,
             );
         }
+        $pairs_read += $block_count;
         $block_count = decode_long($class, @_);
     }
     return \%hash;
