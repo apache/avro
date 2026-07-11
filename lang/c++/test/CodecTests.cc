@@ -27,6 +27,7 @@
 
 #include <boost/bind/bind.hpp>
 #include <cstdint>
+#include <cstdlib>
 #include <functional>
 #include <stack>
 #include <string>
@@ -2145,6 +2146,73 @@ static void testByteCount() {
     BOOST_CHECK_EQUAL(os1->byteCount(), 3);
 }
 
+// AVRO-4278: the block count of an array or map is read from the input and
+// drives allocation of the resulting collection in GenericReader::read(). A
+// very large or malformed block count must be rejected rather than eagerly
+// resizing the collection. These tests cap the limit via the
+// AVRO_MAX_COLLECTION_ITEMS environment variable.
+
+static GenericDatum decodeNullCollection(const char *schemaJson,
+                                         const uint8_t *data, size_t len) {
+    ValidSchema vs = parsing::makeValidSchema(schemaJson);
+    InputStreamPtr is = memoryInputStream(data, len);
+    DecoderPtr d = binaryDecoder();
+    d->init(*is);
+    GenericDatum datum(vs);
+    GenericReader::read(*d, datum);
+    return datum;
+}
+
+static void setCollectionLimit(const char *value) {
+#ifdef _WIN32
+    _putenv_s("AVRO_MAX_COLLECTION_ITEMS", value);
+#else
+    setenv("AVRO_MAX_COLLECTION_ITEMS", value, 1);
+#endif
+}
+
+static void testArrayBlockCountIsBounded() {
+    setCollectionLimit("10");
+    const char *schema = R"({"type": "array", "items": "null"})";
+
+    // A single block declaring 11 items (zigzag(11) = 0x16) exceeds the limit
+    // of 10 and must be rejected before the vector is resized. The null items
+    // occupy no bytes, so a tiny input could otherwise drive a huge allocation.
+    const uint8_t overLimit[] = {0x16, 0x00};
+    BOOST_CHECK_THROW(decodeNullCollection(schema, overLimit, sizeof(overLimit)),
+                      Exception);
+
+    // Two blocks of 6 items (zigzag(6) = 0x0c) exceed the limit cumulatively
+    // even though neither block does on its own.
+    const uint8_t cumulative[] = {0x0c, 0x0c};
+    BOOST_CHECK_THROW(decodeNullCollection(schema, cumulative, sizeof(cumulative)),
+                      Exception);
+
+    // A negative count (zigzag(-11) = 0x15) uses its absolute value (11) as the
+    // item count and is followed by a block byte-size (0x00). It must still be
+    // bounded.
+    const uint8_t negative[] = {0x15, 0x00};
+    BOOST_CHECK_THROW(decodeNullCollection(schema, negative, sizeof(negative)),
+                      Exception);
+
+    // Three items (zigzag(3) = 0x06) then the end-of-array marker (0x00) is
+    // within the limit and decodes successfully.
+    const uint8_t withinLimit[] = {0x06, 0x00};
+    GenericDatum datum =
+        decodeNullCollection(schema, withinLimit, sizeof(withinLimit));
+    BOOST_CHECK_EQUAL(datum.value<GenericArray>().value().size(), 3u);
+}
+
+static void testMapBlockCountIsBounded() {
+    setCollectionLimit("10");
+    const char *schema = R"({"type": "map", "values": "null"})";
+
+    // Block count 11 (zigzag = 0x16) exceeds the limit of 10.
+    const uint8_t overLimit[] = {0x16, 0x00};
+    BOOST_CHECK_THROW(decodeNullCollection(schema, overLimit, sizeof(overLimit)),
+                      Exception);
+}
+
 } // namespace avro
 
 boost::unit_test::test_suite *
@@ -2161,6 +2229,8 @@ init_unit_test_suite(int, char *[]) {
     ts->add(BOOST_TEST_CASE(avro::testJsonCodecReinit));
     ts->add(BOOST_TEST_CASE(avro::testArrayNegativeBlockCount));
     ts->add(BOOST_TEST_CASE(avro::testByteCount));
+    ts->add(BOOST_TEST_CASE(avro::testArrayBlockCountIsBounded));
+    ts->add(BOOST_TEST_CASE(avro::testMapBlockCountIsBounded));
 
     return ts;
 }

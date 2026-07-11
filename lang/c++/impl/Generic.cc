@@ -17,6 +17,8 @@
  */
 
 #include "Generic.hh"
+#include <cerrno>
+#include <cstdlib>
 #include <utility>
 
 namespace avro {
@@ -26,6 +28,41 @@ using std::string;
 using std::vector;
 
 typedef vector<uint8_t> bytes;
+
+namespace {
+
+// The block count of an array or map is read from the (potentially untrusted or
+// truncated) input and drives allocation of the resulting collection. To guard
+// against unbounded memory allocation from a very large or malformed block
+// count, the number of items in a single decoded array or map is capped. This
+// mirrors the Java SDK's collection item limit. The default can be overridden
+// with the AVRO_MAX_COLLECTION_ITEMS environment variable.
+constexpr size_t DEFAULT_MAX_COLLECTION_ITEMS = (size_t(1) << 31) - 8; // 2^31 - 8
+
+size_t maxCollectionItems() {
+    const char *env = std::getenv("AVRO_MAX_COLLECTION_ITEMS");
+    if (env != nullptr && *env != '\0') {
+        errno = 0;
+        char *end = nullptr;
+        unsigned long long value = std::strtoull(env, &end, 10);
+        if (errno == 0 && end != nullptr && *end == '\0' && value > 0) {
+            return static_cast<size_t>(value);
+        }
+    }
+    return DEFAULT_MAX_COLLECTION_ITEMS;
+}
+
+// Ensure that adding `items` more elements to a collection that already holds
+// `existing` elements would not exceed the configured maximum, before the
+// collection is grown to accommodate them.
+void checkCollectionItems(size_t existing, size_t items) {
+    const size_t limit = maxCollectionItems();
+    if (existing > limit || items > limit - existing) {
+        throw Exception("Cannot read collections larger than {} items", limit);
+    }
+}
+
+} // anonymous namespace
 
 void GenericContainer::assertType(const NodePtr &schema, Type type) {
     if (schema->type() != type) {
@@ -106,6 +143,7 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
             r.resize(0);
             size_t start = 0;
             for (size_t m = d.arrayStart(); m != 0; m = d.arrayNext()) {
+                checkCollectionItems(r.size(), m);
                 r.resize(r.size() + m);
                 for (; start < r.size(); ++start) {
                     r[start] = GenericDatum(nn);
@@ -120,6 +158,7 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
             r.resize(0);
             size_t start = 0;
             for (size_t m = d.mapStart(); m != 0; m = d.mapNext()) {
+                checkCollectionItems(r.size(), m);
                 r.resize(r.size() + m);
                 for (; start < r.size(); ++start) {
                     d.decodeString(r[start].first);
