@@ -408,6 +408,13 @@ class IODatumReaderTest extends TestCase
         $this->assertEquals([null, null, null], $reader->read($decoder));
     }
 
+    public function test_set_max_collection_items_rejects_negative(): void
+    {
+        $reader = new AvroIODatumReader();
+        $this->expectException(\InvalidArgumentException::class);
+        $reader->setMaxCollectionItems(-1);
+    }
+
     /**
      * Encode the given longs (block counts / sizes / markers) into a decoder.
      */

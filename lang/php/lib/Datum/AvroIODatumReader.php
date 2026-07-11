@@ -70,9 +70,16 @@ class AvroIODatumReader
 
     /**
      * Set the maximum number of items permitted in a single decoded array or map.
+     *
+     * @throws \InvalidArgumentException if $maxCollectionItems is negative
      */
     public function setMaxCollectionItems(int $maxCollectionItems): void
     {
+        if ($maxCollectionItems < 0) {
+            throw new \InvalidArgumentException(
+                sprintf('maxCollectionItems must not be negative, got %d.', $maxCollectionItems)
+            );
+        }
         $this->maxCollectionItems = $maxCollectionItems;
     }
 
