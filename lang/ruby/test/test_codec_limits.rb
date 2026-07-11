@@ -73,6 +73,24 @@ class TestCodecLimits < Test::Unit::TestCase
     end
   end
 
+  def test_snappy_rejects_unparseable_length_header
+    begin
+      require 'snappy'
+    rescue LoadError
+      omit('snappy gem not available')
+    end
+    codec = Avro::DataFile::SnappyCodec.new
+    # A header made entirely of continuation bytes never terminates, so the
+    # declared length cannot be parsed; the codec must fail closed rather than
+    # hand the block to the decompressor with the guard bypassed.
+    malformed = ("\x80".b * 12)
+    with_limit(LIMIT) do
+      assert_raise(Avro::DataFile::DataFileError) do
+        codec.decompress(malformed)
+      end
+    end
+  end
+
   def test_zstandard_rejects_oversized_block
     begin
       require 'zstd-ruby'

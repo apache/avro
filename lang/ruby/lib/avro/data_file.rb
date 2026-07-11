@@ -376,7 +376,12 @@ module Avro
         # reject an over-large block before allocating for it.
         limit = DataFile.max_decompress_length
         declared = self.class.snappy_declared_length(data)
-        if declared && declared > limit
+        # Fail closed: a block whose length header cannot be parsed is malformed
+        # and must not be handed to the decompressor with the guard bypassed.
+        if declared.nil?
+          raise DataFileError, "Snappy block has an unparseable length header"
+        end
+        if declared > limit
           raise DecompressionSizeError, "Decompressed block size exceeds the maximum allowed of #{limit} bytes"
         end
         crc32 = data.slice(-4..-1).unpack('N').first
