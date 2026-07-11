@@ -24,6 +24,7 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -44,6 +45,34 @@ static void setDecompressLimit(const char *value) {
 #endif
 }
 
+static void unsetDecompressLimit() {
+#ifdef _WIN32
+    _putenv_s("AVRO_MAX_DECOMPRESS_LENGTH", "");
+#else
+    unsetenv("AVRO_MAX_DECOMPRESS_LENGTH");
+#endif
+}
+
+// Saves AVRO_MAX_DECOMPRESS_LENGTH on construction and restores it on
+// destruction, so a test's override does not leak into other test cases that
+// share the process.
+struct DecompressLimitGuard {
+    std::optional<std::string> previous;
+    DecompressLimitGuard() {
+        const char *env = std::getenv("AVRO_MAX_DECOMPRESS_LENGTH");
+        if (env != nullptr) {
+            previous = std::string(env);
+        }
+    }
+    ~DecompressLimitGuard() {
+        if (previous) {
+            setDecompressLimit(previous->c_str());
+        } else {
+            unsetDecompressLimit();
+        }
+    }
+};
+
 static ValidSchema stringSchema() {
     std::istringstream iss("\"string\"");
     ValidSchema vs;
@@ -58,6 +87,7 @@ static std::string tempFile(const char *name) {
 // Write a single, highly compressible value with the given codec, then read it
 // back with a small decompression limit and confirm the read is rejected.
 static void checkCodecRejectsOversized(Codec codec, const char *name) {
+    DecompressLimitGuard guard;
     ValidSchema schema = stringSchema();
     std::string path = tempFile(name);
     std::string big(4 * 1024 * 1024, 'a'); // 4 MiB, compresses tiny
@@ -106,6 +136,7 @@ static void testZstdDecompressionLimit() {
 }
 
 static void testWithinLimitStillReads() {
+    DecompressLimitGuard guard;
     ValidSchema schema = stringSchema();
     std::string path = tempFile("avro_decompress_within_limit.avro");
     std::string payload = "hello world";

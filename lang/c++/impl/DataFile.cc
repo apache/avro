@@ -68,17 +68,27 @@ const size_t defaultMaxDecompressLength = static_cast<size_t>(200) * 1024 * 1024
 size_t maxDecompressLength() {
     const char *env = std::getenv("AVRO_MAX_DECOMPRESS_LENGTH");
     if (env != nullptr && *env != '\0') {
-        errno = 0;
-        char *end = nullptr;
-        unsigned long long value = std::strtoull(env, &end, 10);
-        // Reject a leading sign (strtoull would otherwise wrap it) and clamp to
-        // what size_t can represent so a huge value does not truncate on 32-bit
-        // (or smaller size_t) builds.
-        if (errno == 0 && end != nullptr && *end == '\0' && value > 0 && env[0] != '-') {
-            if (value > std::numeric_limits<size_t>::max()) {
-                return std::numeric_limits<size_t>::max();
+        // Skip leading whitespace so a signed value such as "  -5" is still
+        // detected below; strtoull silently accepts leading whitespace and
+        // wraps a negative into a huge unsigned value otherwise.
+        const char *p = env;
+        while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r' ||
+               *p == '\f' || *p == '\v') {
+            ++p;
+        }
+        // Reject an explicit sign before parsing (strtoull would wrap '-').
+        if (*p != '-' && *p != '+') {
+            errno = 0;
+            char *end = nullptr;
+            unsigned long long value = std::strtoull(p, &end, 10);
+            // Clamp to what size_t can represent so a huge value does not
+            // truncate on 32-bit (or smaller size_t) builds.
+            if (errno == 0 && end != nullptr && *end == '\0' && value > 0) {
+                if (value > std::numeric_limits<size_t>::max()) {
+                    return std::numeric_limits<size_t>::max();
+                }
+                return static_cast<size_t>(value);
             }
-            return static_cast<size_t>(value);
         }
     }
     return defaultMaxDecompressLength;
@@ -601,12 +611,13 @@ void DataFileReaderBase::readDataBlock() {
             // Reject an over-large block before allocating for it, based on the
             // uncompressed length declared in the Snappy block header.
             size_t declared = 0;
+            const size_t maxLength = maxDecompressLength();
             if (snappy::GetUncompressedLength(reinterpret_cast<const char *>(compressed_.data()),
                                               len - 4, &declared) &&
-                declared > maxDecompressLength()) {
+                declared > maxLength) {
                 throw Exception(
                     "Decompressed block size {} exceeds the maximum allowed of {} bytes",
-                    declared, maxDecompressLength());
+                    declared, maxLength);
             }
         }
         if (!snappy::Uncompress(reinterpret_cast<const char *>(compressed_.data()),
