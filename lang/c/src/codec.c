@@ -16,6 +16,7 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 #ifdef SNAPPY_CODEC
 #include <snappy-c.h>
 #  if defined(__APPLE__)
@@ -45,6 +46,31 @@
 #include "codec.h"
 
 #define DEFAULT_BLOCK_SIZE	(16 * 1024)
+
+/*
+ * When reading a data file, each block is decompressed according to the file's
+ * codec. A block with a very high compression ratio (or a malformed block) can
+ * expand to far more memory than its compressed size. To guard against
+ * unbounded allocation, the decompressed size of a single block is capped. This
+ * mirrors the Java SDK's decompression limit (AVRO-4247). The default can be
+ * overridden with the AVRO_MAX_DECOMPRESS_LENGTH environment variable.
+ */
+#define AVRO_DEFAULT_MAX_DECOMPRESS_LENGTH	((int64_t) 200 * 1024 * 1024)  /* 200 MiB */
+
+static int64_t
+avro_max_decompress_length(void)
+{
+	const char *env = getenv("AVRO_MAX_DECOMPRESS_LENGTH");
+	if (env != NULL && *env != '\0') {
+		char *end = NULL;
+		long long value = strtoll(env, &end, 10);
+		if (end != NULL && *end == '\0' && value > 0) {
+			return (int64_t) value;
+		}
+	}
+	return AVRO_DEFAULT_MAX_DECOMPRESS_LENGTH;
+}
+
 
 /* NULL codec */
 
@@ -146,6 +172,12 @@ static int decode_snappy(avro_codec_t c, void * data, int64_t len)
 		avro_set_error("Uncompressed length error in snappy");
 		return 1;
         }
+
+	if ((int64_t) outlen > avro_max_decompress_length()) {
+		avro_set_error("Decompressed block size %llu exceeds the maximum allowed of %lld bytes",
+			       (unsigned long long) outlen, (long long) avro_max_decompress_length());
+		return 1;
+	}
 
 	if (!c->block_data) {
 		c->block_data = avro_malloc(outlen);
@@ -304,6 +336,7 @@ static int encode_deflate(avro_codec_t c, void * data, int64_t len)
 static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 {
 	int err;
+	int64_t max_len = avro_max_decompress_length();
 	z_stream *s = codec_data_inflate_stream(c->codec_data);
 
 	if (!c->block_data) {
@@ -331,6 +364,15 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 	{
 		err = inflate(s, Z_FINISH);
 
+		// Reject a block that decompresses to more than the allowed maximum,
+		// to guard against unbounded allocation from a high-ratio block.
+		if ((int64_t) s->total_out > max_len) {
+			inflateEnd(s);
+			avro_set_error("Decompressed block size exceeds the maximum allowed of %lld bytes",
+				       (long long) max_len);
+			return 1;
+		}
+
 		// Apparently if there is yet available space in the output then something
 		// has gone wrong in decompressing the data (according to cpython zlibmodule.c)
 		if (err == Z_BUF_ERROR && s->avail_out > 0) {
@@ -339,13 +381,24 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 			return 1;
 		}
 
-		// The buffer was not big enough. resize it.
+		// The buffer was not big enough. resize it, without growing beyond
+		// the configured maximum decompressed size.
 		if (err == Z_BUF_ERROR)
 		{
-			c->block_data = avro_realloc(c->block_data, c->block_size, c->block_size * 2);
+			int64_t new_size = c->block_size * 2;
+			if (new_size > max_len) {
+				new_size = max_len;
+			}
+			if (new_size <= c->block_size) {
+				inflateEnd(s);
+				avro_set_error("Decompressed block size exceeds the maximum allowed of %lld bytes",
+					       (long long) max_len);
+				return 1;
+			}
+			c->block_data = avro_realloc(c->block_data, c->block_size, new_size);
 			s->next_out = c->block_data + s->total_out;
-			s->avail_out += c->block_size;
-			c->block_size = c->block_size * 2;
+			s->avail_out += (uInt)(new_size - c->block_size);
+			c->block_size = new_size;
 		}
 	} while (err == Z_BUF_ERROR);
 
@@ -462,6 +515,7 @@ static int decode_lzma(avro_codec_t codec, void * data, int64_t len)
 {
 	size_t read_pos = 0;
 	size_t write_pos = 0;
+	int64_t max_len = avro_max_decompress_length();
 	lzma_ret ret;
 	lzma_filter* filters = codec_data_lzma_filters(codec->codec_data);
 
@@ -483,11 +537,28 @@ static int decode_lzma(avro_codec_t codec, void * data, int64_t len)
 
 		codec->used_size = write_pos;
 
-		// If it ran out of space to decode, give it more!!
-		// It will continue where it left off because of read_pos and write_pos.
+		// Reject a block that decompresses to more than the allowed maximum,
+		// to guard against unbounded allocation from a high-ratio block.
+		if ((int64_t) write_pos > max_len) {
+			avro_set_error("Decompressed block size exceeds the maximum allowed of %lld bytes",
+				       (long long) max_len);
+			return 1;
+		}
+
+		// If it ran out of space to decode, give it more (without growing
+		// beyond the configured maximum decompressed size).
 		if (ret == LZMA_BUF_ERROR) {
-			codec->block_data = avro_realloc(codec->block_data, codec->block_size, codec->block_size * 2);
-			codec->block_size = codec->block_size * 2;
+			int64_t new_size = codec->block_size * 2;
+			if (new_size > max_len) {
+				new_size = max_len;
+			}
+			if (new_size <= codec->block_size) {
+				avro_set_error("Decompressed block size exceeds the maximum allowed of %lld bytes",
+					       (long long) max_len);
+				return 1;
+			}
+			codec->block_data = avro_realloc(codec->block_data, codec->block_size, new_size);
+			codec->block_size = new_size;
 		}
 
 	} while (ret == LZMA_BUF_ERROR);
