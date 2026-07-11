@@ -24,6 +24,7 @@
 // must be rejected before allocating for it.
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
