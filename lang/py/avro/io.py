@@ -87,9 +87,10 @@ in that datum, if there are any.
 import collections
 import datetime
 import decimal
+import io
 import struct
 import warnings
-from typing import IO, Generator, Iterable, List, Mapping, Optional, Sequence, Union
+from typing import IO, Generator, Iterable, List, Mapping, Optional, Sequence, Set, Union
 
 import avro.constants
 import avro.errors
@@ -198,6 +199,13 @@ class BinaryDecoder:
 
     _reader: IO[bytes]
 
+    #: Reads with a declared length above this many bytes are validated against
+    #: the number of bytes actually remaining (when the reader is seekable)
+    #: before allocating, to guard against an out-of-memory attack from a
+    #: malicious or truncated input. Smaller reads skip the check to avoid
+    #: per-value overhead, since they cannot cause a meaningful over-allocation.
+    _MAX_UNCHECKED_READ = 1024 * 1024
+
     def __init__(self, reader: IO[bytes]) -> None:
         """
         reader is a Python object on which we can call read, seek, and tell.
@@ -214,10 +222,29 @@ class BinaryDecoder:
         """
         if n < 0:
             raise avro.errors.InvalidAvroBinaryEncoding(f"Requested {n} bytes to read, expected positive integer.")
+        if n > self._MAX_UNCHECKED_READ:
+            remaining = self.bytes_remaining()
+            if remaining is not None and n > remaining:
+                raise avro.errors.InvalidAvroBinaryEncoding(f"Requested {n} bytes to read, but only {remaining} remain.")
         read_bytes = self.reader.read(n)
         if len(read_bytes) != n:
             raise avro.errors.InvalidAvroBinaryEncoding(f"Read {len(read_bytes)} bytes, expected {n} bytes")
         return read_bytes
+
+    def bytes_remaining(self) -> Optional[int]:
+        """
+        Return the number of bytes still available to read, or ``None`` when
+        that count is not known (a non-seekable reader). Used to reject a
+        declared length or collection block count that exceeds the data
+        actually available before allocating for it.
+        """
+        reader = self.reader
+        if not getattr(reader, "seekable", None) or not reader.seekable():
+            return None
+        pos = reader.tell()
+        end = reader.seek(0, io.SEEK_END)
+        reader.seek(pos)
+        return end - pos
 
     def read_null(self) -> None:
         """
@@ -599,6 +626,40 @@ class BinaryEncoder:
 #
 # DatumReader/Writer
 #
+def _min_bytes_per_element(schema: avro.schema.Schema, visited: Optional[Set[int]] = None) -> int:
+    """
+    Return the minimum number of bytes a single value of ``schema`` can occupy
+    on the wire. Used to reject an array/map block count that could not possibly
+    be backed by the bytes remaining. A type that can encode to zero bytes
+    (``null``) returns 0, which disables the collection check for it (avoiding a
+    false positive on, e.g., an array of nulls).
+    """
+    if visited is None:
+        visited = set()
+    schema_type = schema.type
+    if schema_type == "null":
+        return 0
+    if schema_type == "float":
+        return 4
+    if schema_type == "double":
+        return 8
+    if schema_type == "fixed":
+        return getattr(schema, "size", 1)
+    if schema_type in ("record", "error"):
+        # Guard against self-referencing records (recursion would not terminate).
+        if id(schema) in visited:
+            return 0
+        visited.add(id(schema))
+        total = 0
+        for field in getattr(schema, "fields", []):
+            total += _min_bytes_per_element(field.type, visited)
+        visited.discard(id(schema))
+        return total
+    # boolean, int, long, bytes, string, enum, union, array, map: all >= 1 byte
+    # (a union encodes at least a 1-byte branch index).
+    return 1
+
+
 class DatumReader:
     """Deserialize Avro-encoded data into a Python data structure."""
 
@@ -780,6 +841,22 @@ class DatumReader:
     def skip_enum(self, writers_schema: avro.schema.EnumSchema, decoder: BinaryDecoder) -> None:
         return decoder.skip_int()
 
+    @staticmethod
+    def _ensure_collection_available(decoder: BinaryDecoder, count: int, min_bytes_per_element: int) -> None:
+        """
+        Reject a collection (array or map) block whose declared element count
+        could not be backed by the bytes actually remaining, before iterating.
+        Skipped when the per-element minimum is zero (e.g. an array of nulls) or
+        when the reader cannot report how many bytes remain.
+        """
+        if count <= 0 or min_bytes_per_element <= 0:
+            return
+        remaining = decoder.bytes_remaining()
+        if remaining is not None and count * min_bytes_per_element > remaining:
+            raise avro.errors.InvalidAvroBinaryEncoding(
+                f"Collection claims {count} elements with at least {min_bytes_per_element} bytes each, but only {remaining} bytes are available."
+            )
+
     def read_array(self, writers_schema: avro.schema.ArraySchema, readers_schema: avro.schema.ArraySchema, decoder: BinaryDecoder) -> List[object]:
         """
         Arrays are encoded as a series of blocks.
@@ -801,6 +878,7 @@ class DatumReader:
             if block_count < 0:
                 block_count = -block_count
                 decoder.skip_long()
+            self._ensure_collection_available(decoder, block_count, _min_bytes_per_element(writers_schema.items))
             for i in range(block_count):
                 read_items.append(self.read_data(writers_schema.items, readers_schema.items, decoder))
             block_count = decoder.read_long()
@@ -838,6 +916,8 @@ class DatumReader:
             if block_count < 0:
                 block_count = -block_count
                 decoder.skip_long()
+            # Map keys are strings (>= 1 byte length prefix) plus the value.
+            self._ensure_collection_available(decoder, block_count, 1 + _min_bytes_per_element(writers_schema.values))
             for i in range(block_count):
                 key = decoder.read_utf8()
                 read_items[key] = self.read_data(writers_schema.values, readers_schema.values, decoder)

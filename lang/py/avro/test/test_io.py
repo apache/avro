@@ -550,6 +550,108 @@ class TestIncompatibleSchemaReading(unittest.TestCase):
             )
 
 
+class TestBinaryDecoderAvailableBytes(unittest.TestCase):
+    """A bytes/string value declares a length prefix; a malicious or truncated
+    input can declare far more bytes than actually exist. On a seekable reader
+    that is rejected before allocating for it."""
+
+    @staticmethod
+    def _encode_length_prefix(length: int) -> bytes:
+        buf = io.BytesIO()
+        avro.io.BinaryEncoder(buf).write_long(length)
+        return buf.getvalue()
+
+    def test_read_rejects_length_beyond_stream(self) -> None:
+        # Declares 100 MiB but provides no data.
+        prefix = self._encode_length_prefix(100 * 1024 * 1024)
+        with io.BytesIO(prefix) as bio:
+            decoder = avro.io.BinaryDecoder(bio)
+            self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, decoder.read_bytes)
+
+    def test_read_within_stream_still_reads(self) -> None:
+        # A well-formed large value whose data is actually present still reads.
+        payload = b"x" * (2 * 1024 * 1024)
+        buf = io.BytesIO()
+        avro.io.BinaryEncoder(buf).write_bytes(payload)
+        with io.BytesIO(buf.getvalue()) as bio:
+            decoder = avro.io.BinaryDecoder(bio)
+            self.assertEqual(decoder.read_bytes(), payload)
+
+    def test_read_non_seekable_falls_back(self) -> None:
+        # A non-seekable reader skips the pre-check, but the post-read length
+        # check still rejects a truncated oversized value.
+        prefix = self._encode_length_prefix(100 * 1024 * 1024)
+
+        class NonSeekable:
+            def __init__(self, data: bytes) -> None:
+                self._bio = io.BytesIO(data)
+
+            def read(self, n: int = -1) -> bytes:
+                return self._bio.read(n)
+
+            def seekable(self) -> bool:
+                return False
+
+        decoder = avro.io.BinaryDecoder(NonSeekable(prefix))  # type: ignore[arg-type]
+        self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, decoder.read_bytes)
+
+
+class TestDatumReaderCollectionAvailableBytes(unittest.TestCase):
+    """An array/map block declares an element count; a malicious or truncated
+    input can declare far more elements than the remaining bytes could hold.
+    The count is validated against the bytes remaining before iterating, using
+    the minimum on-wire size of the element schema (so 0-byte elements such as
+    ``null`` are not falsely rejected)."""
+
+    @staticmethod
+    def _decode(schema_json: str, encoded: bytes) -> object:
+        schema = avro.schema.parse(schema_json)
+        reader = avro.io.DatumReader(schema)
+        with io.BytesIO(encoded) as bio:
+            return reader.read(avro.io.BinaryDecoder(bio))
+
+    def test_array_rejects_count_beyond_stream(self) -> None:
+        # A long array block count (1,000,000 long elements) with no element
+        # data following it.
+        buf = io.BytesIO()
+        avro.io.BinaryEncoder(buf).write_long(1_000_000)
+        self.assertRaises(
+            avro.errors.InvalidAvroBinaryEncoding,
+            self._decode,
+            '{"type": "array", "items": "long"}',
+            buf.getvalue(),
+        )
+
+    def test_map_rejects_count_beyond_stream(self) -> None:
+        buf = io.BytesIO()
+        avro.io.BinaryEncoder(buf).write_long(1_000_000)
+        self.assertRaises(
+            avro.errors.InvalidAvroBinaryEncoding,
+            self._decode,
+            '{"type": "map", "values": "long"}',
+            buf.getvalue(),
+        )
+
+    def test_array_of_null_not_falsely_rejected(self) -> None:
+        # null elements occupy zero bytes, so a large count is legitimate and
+        # must not be rejected.
+        count = 100_000
+        buf = io.BytesIO()
+        enc = avro.io.BinaryEncoder(buf)
+        enc.write_long(count)  # one block of `count` nulls
+        enc.write_long(0)  # end-of-array marker
+        result = self._decode('{"type": "array", "items": "null"}', buf.getvalue())
+        self.assertEqual(result, [None] * count)
+
+    def test_array_within_stream_still_reads(self) -> None:
+        schema_json = '{"type": "array", "items": "long"}'
+        schema = avro.schema.parse(schema_json)
+        buf = io.BytesIO()
+        writer = avro.io.DatumWriter(schema)
+        writer.write([1, 2, 3], avro.io.BinaryEncoder(buf))
+        self.assertEqual(self._decode(schema_json, buf.getvalue()), [1, 2, 3])
+
+
 class TestMisc(unittest.TestCase):
     def test_decimal_bytes_small_scale(self) -> None:
         """Avro should raise an AvroTypeException when attempting to write a decimal with a larger exponent than the schema's scale."""
@@ -729,6 +831,8 @@ def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) 
     )
     suite.addTests(DefaultValueTestCase(field_type, default) for field_type, default in DEFAULT_VALUE_EXAMPLES)
     suite.addTests(loader.loadTestsFromTestCase(TestIncompatibleSchemaReading))
+    suite.addTests(loader.loadTestsFromTestCase(TestBinaryDecoderAvailableBytes))
+    suite.addTests(loader.loadTestsFromTestCase(TestDatumReaderCollectionAvailableBytes))
     return suite
 
 
