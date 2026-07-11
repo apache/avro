@@ -23,6 +23,7 @@
 #include "avro/basics.h"
 #include "avro/data.h"
 #include "avro/io.h"
+#include "avro/schema.h"
 #include "avro/value.h"
 #include "avro_private.h"
 #include "encoding.h"
@@ -38,6 +39,73 @@ static int
 read_value(avro_reader_t reader, avro_value_t *dest);
 
 
+/*
+ * Minimum number of bytes a single value of the given schema can occupy on the
+ * wire. Used to reject an array/map block count that could not be backed by the
+ * bytes remaining. A type that can encode to zero bytes (null) returns 0, which
+ * disables the collection check for it (so an array of nulls is not falsely
+ * rejected). A recursion guard breaks self-referencing schemas.
+ */
+static int64_t
+min_bytes_per_element(avro_schema_t schema, int depth)
+{
+	if (schema == NULL || depth > 64) {
+		return 0;
+	}
+	switch (avro_typeof(schema)) {
+	case AVRO_NULL:
+		return 0;
+	case AVRO_FLOAT:
+		return 4;
+	case AVRO_DOUBLE:
+		return 8;
+	case AVRO_FIXED:
+		return avro_schema_fixed_size(schema);
+	case AVRO_RECORD: {
+		size_t  n = avro_schema_record_size(schema);
+		int64_t  total = 0;
+		size_t  i;
+		for (i = 0; i < n; i++) {
+			avro_schema_t  field =
+			    avro_schema_record_field_get_by_index(schema, i);
+			total += min_bytes_per_element(field, depth + 1);
+		}
+		return total;
+	}
+	case AVRO_LINK:
+		return min_bytes_per_element(avro_schema_link_target(schema),
+					     depth + 1);
+	default:
+		/* boolean, int, long, bytes, string, enum, union, array, map:
+		 * all encode to at least one byte. */
+		return 1;
+	}
+}
+
+/*
+ * Reject a collection (array or map) block whose declared element count could
+ * not be backed by the bytes actually remaining, before appending. Skipped when
+ * the per-element minimum is zero or when the reader cannot report how many
+ * bytes remain. The comparison avoids overflow by dividing.
+ */
+static int
+ensure_collection_available(avro_reader_t reader, int64_t count, int64_t min_bytes)
+{
+	int64_t available;
+	if (count <= 0 || min_bytes <= 0) {
+		return 0;
+	}
+	available = avro_reader_bytes_available(reader);
+	if (available >= 0 && count > available / min_bytes) {
+		avro_set_error("Collection claims %" PRId64
+			       " elements with at least %" PRId64
+			       " bytes each, but only %" PRId64 " bytes available",
+			       count, min_bytes, available);
+		return EINVAL;
+	}
+	return 0;
+}
+
 static int
 read_array_value(avro_reader_t reader, avro_value_t *dest)
 {
@@ -46,6 +114,11 @@ read_array_value(avro_reader_t reader, avro_value_t *dest)
 	size_t  index = 0;  /* index within the entire array */
 	int64_t  block_count;
 	int64_t  block_size;
+	int64_t  min_bytes;
+	avro_schema_t  array_schema = avro_value_get_schema(dest);
+
+	min_bytes = min_bytes_per_element(
+	    array_schema ? avro_schema_array_items(array_schema) : NULL, 0);
 
 	check_prefix(rval, avro_binary_encoding.
 		     read_long(reader, &block_count),
@@ -58,6 +131,8 @@ read_array_value(avro_reader_t reader, avro_value_t *dest)
 				     read_long(reader, &block_size),
 				     "Cannot read array block size: ");
 		}
+
+		check(rval, ensure_collection_available(reader, block_count, min_bytes));
 
 		for (i = 0; i < (size_t) block_count; i++, index++) {
 			avro_value_t  child;
@@ -83,6 +158,12 @@ read_map_value(avro_reader_t reader, avro_value_t *dest)
 	size_t  index = 0;  /* index within the entire array */
 	int64_t  block_count;
 	int64_t  block_size;
+	int64_t  min_bytes;
+	avro_schema_t  map_schema = avro_value_get_schema(dest);
+
+	/* Map keys are strings (>= 1 byte length prefix) plus the value. */
+	min_bytes = 1 + min_bytes_per_element(
+	    map_schema ? avro_schema_map_values(map_schema) : NULL, 0);
 
 	check_prefix(rval, avro_binary_encoding.read_long(reader, &block_count),
 		     "Cannot read map block count: ");
@@ -94,6 +175,8 @@ read_map_value(avro_reader_t reader, avro_value_t *dest)
 				     read_long(reader, &block_size),
 				     "Cannot read map block size: ");
 		}
+
+		check(rval, ensure_collection_available(reader, block_count, min_bytes));
 
 		for (i = 0; i < (size_t) block_count; i++, index++) {
 			char *key;

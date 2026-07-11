@@ -104,5 +104,15 @@ typedef struct avro_encoding_t avro_encoding_t;
 extern const avro_encoding_t avro_binary_encoding;	/* in
 							 * encoding_binary 
 							 */
+
+/*
+ * Returns the number of bytes still available to read from a memory-backed
+ * reader, or -1 when the amount remaining is unknown (e.g. file readers).
+ * Defined in io.c. Used to reject a length prefix that exceeds the data
+ * actually available before allocating for it, to guard against an
+ * out-of-memory attack from a malicious or truncated input.
+ */
+int64_t avro_reader_bytes_available(avro_reader_t reader);
+
 CLOSE_EXTERN
 #endif

@@ -20,6 +20,7 @@
 #include "avro/errors.h"
 #include "avro/io.h"
 #include "avro_private.h"
+#include "encoding.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -196,6 +197,19 @@ avro_read_memory(struct _avro_reader_memory_t *reader, void *buf, int64_t len)
 		reader->read += len;
 	}
 	return 0;
+}
+
+int64_t
+avro_reader_bytes_available(avro_reader_t reader)
+{
+	if (is_memory_io(reader)) {
+		struct _avro_reader_memory_t *mem_reader =
+		    avro_reader_to_memory(reader);
+		return mem_reader->len - mem_reader->read;
+	}
+	/* File readers buffer internally and cannot cheaply report how many
+	 * bytes remain in the underlying file, so the amount is unknown. */
+	return -1;
 }
 
 #define bytes_available(reader) (reader->end - reader->cur)

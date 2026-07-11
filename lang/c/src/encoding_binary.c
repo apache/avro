@@ -125,10 +125,22 @@ static int64_t size_int(avro_writer_t writer, const int32_t i)
 static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 {
 	int rval;
+	int64_t available;
 	check_prefix(rval, read_long(reader, len),
 		     "Cannot read bytes length: ");
 	if (*len < 0) {
 		avro_set_error("Invalid bytes length: %" PRId64, *len);
+		return EINVAL;
+	}
+	/* Reject a declared length that exceeds the data actually available
+	 * before allocating for it, to guard against an out-of-memory attack
+	 * from a malicious or truncated input. Only enforced when the reader
+	 * can report the amount remaining. */
+	available = avro_reader_bytes_available(reader);
+	if (available >= 0 && *len > available) {
+		avro_set_error("Bytes length %" PRId64
+			       " exceeds %" PRId64 " bytes available",
+			       *len, available);
 		return EINVAL;
 	}
 	*bytes = (char *) avro_malloc(*len + 1);
@@ -180,11 +192,23 @@ size_bytes(avro_writer_t writer, const char *bytes, const int64_t len)
 static int read_string(avro_reader_t reader, char **s, int64_t *len)
 {
 	int64_t  str_len = 0;
+	int64_t  available;
 	int rval;
 	check_prefix(rval, read_long(reader, &str_len),
 		     "Cannot read string length: ");
 	if (str_len < 0) {
 		avro_set_error("Invalid string length: %" PRId64, str_len);
+		return EINVAL;
+	}
+	/* Reject a declared length that exceeds the data actually available
+	 * before allocating for it, to guard against an out-of-memory attack
+	 * from a malicious or truncated input. Only enforced when the reader
+	 * can report the amount remaining. */
+	available = avro_reader_bytes_available(reader);
+	if (available >= 0 && str_len > available) {
+		avro_set_error("String length %" PRId64
+			       " exceeds %" PRId64 " bytes available",
+			       str_len, available);
 		return EINVAL;
 	}
 	*len = str_len + 1;
