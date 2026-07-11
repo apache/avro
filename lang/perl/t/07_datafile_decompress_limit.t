@@ -80,16 +80,31 @@ SKIP: {
 }
 
 ## A block within the limit still decodes correctly.
-{
+sub assert_codec_within_limit_decodes {
+    my ($codec) = @_;
     my $payload = "hello world";
-    my $fh = codec_file('deflate', $payload);
+    my $fh = codec_file($codec, $payload);
     local $ENV{AVRO_MAX_DECOMPRESS_LENGTH} = 1024 * 1024;
     my $reader = Avro::DataFileReader->new(
         fh            => $fh,
         reader_schema => $schema,
     );
     my @all = $reader->all;
-    is_deeply \@all, [$payload], 'deflate block within the limit decodes';
+    is_deeply \@all, [$payload], "$codec block within the limit decodes";
+}
+
+assert_codec_within_limit_decodes('deflate');
+
+SKIP: {
+    eval { require IO::Compress::Bzip2; 1 }
+        or skip 'IO::Compress::Bzip2 not available', 1;
+    assert_codec_within_limit_decodes('bzip2');
+}
+
+SKIP: {
+    eval { require Compress::Zstd; 1 }
+        or skip 'Compress::Zstd not available', 1;
+    assert_codec_within_limit_decodes('zstandard');
 }
 
 done_testing;

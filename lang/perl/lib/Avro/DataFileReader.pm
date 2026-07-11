@@ -287,7 +287,14 @@ sub _zstd_decompress_bounded {
         my $piece = substr($$block_ref, $offset, 65536);
         $offset += 65536;
         my $out = $decompressor->decompress($piece);
-        next unless defined $out;
+        # The streaming decompressor croaks on a corrupt frame and otherwise
+        # emits all output produced while consuming the input it is given (there
+        # is no separate flush step in this API). Treat an undefined return as a
+        # failure and fail closed, rather than silently skipping it, so a
+        # malformed block cannot masquerade as a short, within-limit result.
+        unless (defined $out) {
+            croak "Error decompressing zstandard block";
+        }
         $uncompressed .= $out;
         _check_decompress_length(length($uncompressed), $limit);
     }
