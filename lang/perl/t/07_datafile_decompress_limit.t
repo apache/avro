@@ -74,8 +74,8 @@ SKIP: {
 }
 
 SKIP: {
-    eval { require Compress::Zstd; 1 }
-        or skip 'Compress::Zstd not available', 1;
+    eval { require Compress::Zstd::Decompressor; 1 }
+        or skip 'Compress::Zstd::Decompressor not available', 1;
     assert_codec_rejects_oversized('zstandard');
 }
 
@@ -102,8 +102,8 @@ SKIP: {
 }
 
 SKIP: {
-    eval { require Compress::Zstd; 1 }
-        or skip 'Compress::Zstd not available', 1;
+    eval { require Compress::Zstd::Decompressor; 1 }
+        or skip 'Compress::Zstd::Decompressor not available', 1;
     assert_codec_within_limit_decodes('zstandard');
 }
 
