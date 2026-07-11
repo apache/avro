@@ -218,7 +218,7 @@ sub read_block_header {
     ## block whose declared compressed size exceeds that bound up front.
     my $block_max = $datafile->{block_max_size};
     if (defined $block_max && $datafile->{block_size} > $block_max) {
-        Avro::DataFile::Error::DecompressionSize->throw(
+        Avro::DataFile::Error::CompressedBlockSize->throw(
             "Compressed block size $datafile->{block_size} exceeds the configured block_max_size of $block_max bytes"
         );
     }
@@ -325,8 +325,12 @@ sub _zstd_decompress_bounded {
         unless (defined $out) {
             croak "Error decompressing zstandard block";
         }
+        # Check the prospective total before growing $uncompressed so a single
+        # large decompressed chunk cannot transiently balloon memory past the
+        # limit (or double peak memory from string reallocation).
+        _check_decompress_length(
+            bytes::length($uncompressed) + bytes::length($out), $limit);
         $uncompressed .= $out;
-        _check_decompress_length(bytes::length($uncompressed), $limit);
     }
     return $uncompressed;
 }
@@ -425,6 +429,13 @@ package Avro::DataFile::Error::UnsupportedCodec;
 use parent 'Error::Simple';
 
 package Avro::DataFile::Error::DecompressionSize;
+use parent 'Error::Simple';
+
+## Raised when a block's declared *compressed* size exceeds the reader's
+## configured block_max_size, before the block is read into memory. Kept
+## distinct from DecompressionSize (which is about the *decompressed* size cap)
+## so callers can tell the two conditions apart.
+package Avro::DataFile::Error::CompressedBlockSize;
 use parent 'Error::Simple';
 
 1;

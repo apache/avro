@@ -113,14 +113,21 @@ SKIP: {
 {
     my $payload = "a" x (32 * 1024); # 32 KiB, compresses to a few dozen bytes
     my $fh = codec_file('deflate', $payload);
+    # Set a large decompressed-size cap so the rejection can only come from the
+    # compressed-size guard, not the decompression limit, regardless of any
+    # AVRO_MAX_DECOMPRESS_LENGTH the runner may have set.
+    local $ENV{AVRO_MAX_DECOMPRESS_LENGTH} = 1024 * 1024 * 1024;
     my $reader = Avro::DataFileReader->new(
         fh             => $fh,
         reader_schema  => $schema,
         block_max_size => 8, # smaller than any real compressed block
     );
-    throws_ok { $reader->all }
-        'Avro::DataFile::Error::DecompressionSize',
+    eval { $reader->all };
+    my $err = $@;
+    isa_ok $err, 'Avro::DataFile::Error::CompressedBlockSize',
         'compressed block exceeding block_max_size is rejected before reading';
+    like "$err", qr/block_max_size/,
+        'rejection is due to the compressed-size guard, not the decompression cap';
 }
 
 done_testing;
