@@ -23,6 +23,8 @@ declare(strict_types=1);
 namespace Apache\Avro\Tests;
 
 use Apache\Avro\DataFile\AvroDataIO;
+use Apache\Avro\DataFile\AvroDataIODecompressionSizeException;
+use Apache\Avro\DataFile\AvroDataIOReader;
 use PHPUnit\Framework\TestCase;
 
 class DataFileTest extends TestCase
@@ -393,6 +395,63 @@ class DataFileTest extends TestCase
         $this->dataFiles[] = $full;
 
         return $full;
+    }
+
+    /**
+     * A block with a very high compression ratio can expand to far more memory
+     * than its compressed size; reading such a block must be rejected once its
+     * decompressed size would exceed the configured maximum.
+     */
+    public function test_deflate_block_decompression_limit(): void
+    {
+        $data_file = $this->add_data_file('data-decompress-limit-deflate.avr');
+        $dw = AvroDataIO::openFile($data_file, 'w', '"string"', AvroDataIO::DEFLATE_CODEC);
+        $dw->append(str_repeat('a', 64 * 1024)); // 64 KiB, compresses tiny
+        $dw->close();
+
+        $previous = getenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
+        putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV . '=1024');
+        try {
+            $dr = AvroDataIO::openFile($data_file);
+            $thrown = false;
+            try {
+                $dr->data();
+            } catch (AvroDataIODecompressionSizeException $e) {
+                $thrown = true;
+            }
+            $dr->close();
+            $this->assertTrue($thrown, 'expected a decompression size exception');
+        } finally {
+            if (false === $previous) {
+                putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
+            } else {
+                putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV . '=' . $previous);
+            }
+        }
+    }
+
+    public function test_deflate_block_within_decompression_limit(): void
+    {
+        $data_file = $this->add_data_file('data-decompress-within-limit.avr');
+        $payload = 'hello world';
+        $dw = AvroDataIO::openFile($data_file, 'w', '"string"', AvroDataIO::DEFLATE_CODEC);
+        $dw->append($payload);
+        $dw->close();
+
+        $previous = getenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
+        putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV . '=1048576');
+        try {
+            $dr = AvroDataIO::openFile($data_file);
+            $data = $dr->data();
+            $dr->close();
+            $this->assertSame([$payload], $data);
+        } finally {
+            if (false === $previous) {
+                putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
+            } else {
+                putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV . '=' . $previous);
+            }
+        }
     }
 
     protected function remove_data_files(): void

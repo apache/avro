@@ -33,6 +33,17 @@ use Apache\Avro\Schema\AvroSchema;
  */
 class AvroDataIOReader
 {
+    /**
+     * Default upper bound, in bytes, on the size a single data-file block may
+     * decompress to. A block with a very high compression ratio (or a malformed
+     * block) can otherwise expand to far more memory than its compressed size.
+     * Mirrors the Java SDK's decompression limit (AVRO-4247). Overridable with
+     * the AVRO_MAX_DECOMPRESS_LENGTH environment variable.
+     */
+    public const DEFAULT_MAX_DECOMPRESS_LENGTH = 209715200; // 200 MiB
+
+    public const MAX_DECOMPRESS_LENGTH_ENV = 'AVRO_MAX_DECOMPRESS_LENGTH';
+
     public string $sync_marker;
     /**
      * @var array<string, mixed> object container metadata
@@ -221,15 +232,45 @@ class AvroDataIOReader
     }
 
     /**
+     * The maximum number of bytes a single block is allowed to decompress to.
+     */
+    private static function maxDecompressLength(): int
+    {
+        $value = getenv(self::MAX_DECOMPRESS_LENGTH_ENV);
+        if (false !== $value && ctype_digit($value) && (int) $value > 0) {
+            return (int) $value;
+        }
+
+        return self::DEFAULT_MAX_DECOMPRESS_LENGTH;
+    }
+
+    /**
+     * @throws AvroDataIODecompressionSizeException if the length exceeds the limit
+     */
+    private static function checkDecompressLength(int $length, int $maxLength): void
+    {
+        if ($length > $maxLength) {
+            throw new AvroDataIODecompressionSizeException($maxLength);
+        }
+    }
+
+    /**
      * @throws AvroException
      */
     private function gzUncompress(string $compressed): string
     {
-        $datum = gzinflate($compressed);
+        $maxLength = self::maxDecompressLength();
+        // gzinflate caps its output at the given length: a block that would
+        // decompress to more than the limit yields false here without
+        // materializing the full (potentially huge) output. The '@' suppresses
+        // the "insufficient memory" notice zlib emits when the cap is hit.
+        $datum = @gzinflate($compressed, $maxLength + 1);
 
         if (false === $datum) {
-            throw new AvroException('gzip uncompression failed.');
+            throw new AvroDataIODecompressionSizeException($maxLength);
         }
+
+        self::checkDecompressLength(strlen($datum), $maxLength);
 
         return $datum;
     }
@@ -248,6 +289,8 @@ class AvroDataIOReader
             throw new AvroException('zstd uncompression failed.');
         }
 
+        self::checkDecompressLength(strlen($datum), self::maxDecompressLength());
+
         return $datum;
     }
 
@@ -265,6 +308,8 @@ class AvroDataIOReader
             throw new AvroException('bz2 uncompression failed.');
         }
 
+        self::checkDecompressLength(strlen($datum), self::maxDecompressLength());
+
         return $datum;
     }
 
@@ -276,6 +321,13 @@ class AvroDataIOReader
         if (!extension_loaded('snappy')) {
             throw new AvroException('Please install ext-snappy to use snappy compression.');
         }
+        $maxLength = self::maxDecompressLength();
+        // The Snappy block header declares the uncompressed length as a varint;
+        // reject an over-large block before allocating for it.
+        $declared = self::snappyDeclaredLength(substr((string) $compressed, 0, -4));
+        if (null !== $declared) {
+            self::checkDecompressLength($declared, $maxLength);
+        }
         $crc32 = unpack('N', substr((string) $compressed, -4))[1];
         $datum = snappy_uncompress(substr((string) $compressed, 0, -4));
 
@@ -283,10 +335,37 @@ class AvroDataIOReader
             throw new AvroException('snappy uncompression failed.');
         }
 
+        self::checkDecompressLength(strlen($datum), $maxLength);
+
         if ($crc32 !== crc32($datum)) {
             throw new AvroException('snappy uncompression failed - crc32 mismatch.');
         }
 
         return $datum;
+    }
+
+    /**
+     * Return the uncompressed length declared in a raw Snappy block header,
+     * which prefixes the data as a little-endian base-128 varint. Returns null
+     * if the header cannot be parsed.
+     */
+    private static function snappyDeclaredLength(string $data): ?int
+    {
+        $result = 0;
+        $shift = 0;
+        $length = strlen($data);
+        for ($i = 0; $i < $length; $i++) {
+            $byte = ord($data[$i]);
+            $result |= ($byte & 0x7F) << $shift;
+            if (0 === ($byte & 0x80)) {
+                return $result;
+            }
+            $shift += 7;
+            if ($shift > 63) {
+                break;
+            }
+        }
+
+        return null;
     }
 }
