@@ -32,6 +32,31 @@ unless ($Config{use64bitint}) {
     $complement = Math::BigInt->new("0b" . ("1" x 57) . ("0" x 7));
 }
 
+## The block count of an array or map is read from the (potentially untrusted or
+## truncated) input and drives allocation of the resulting collection. To guard
+## against unbounded memory allocation from a very large or malformed block
+## count, the number of items in a single decoded array or map is capped. This
+## mirrors the Java SDK's collection item limit. The default can be overridden
+## with the AVRO_MAX_COLLECTION_ITEMS environment variable, or by setting
+## $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS directly.
+our $DEFAULT_MAX_COLLECTION_ITEMS = (2 ** 31) - 8;
+our $MAX_COLLECTION_ITEMS =
+    ( defined $ENV{AVRO_MAX_COLLECTION_ITEMS} && $ENV{AVRO_MAX_COLLECTION_ITEMS} =~ /\A[0-9]+\z/ )
+    ? $ENV{AVRO_MAX_COLLECTION_ITEMS} + 0
+    : $DEFAULT_MAX_COLLECTION_ITEMS;
+
+## Ensure that decoding the next block of $block_count items would not grow the
+## collection beyond $MAX_COLLECTION_ITEMS. Throws on a negative block count or
+## when the running total would exceed the limit.
+sub _check_collection_items {
+    my ($existing, $block_count) = @_;
+    if ($block_count < 0 || $existing + $block_count > $MAX_COLLECTION_ITEMS) {
+        throw Avro::BinaryDecoder::Error::CollectionSize(
+            "Cannot read collections larger than $MAX_COLLECTION_ITEMS items");
+    }
+    return;
+}
+
 =head2 decode(%param)
 
 Resolve the given writer and reader_schema to decode the data provided by the
@@ -258,6 +283,7 @@ sub decode_array {
             $block_size = decode_long($class, @_);
             ## XXX we can skip with $reader_schema?
         }
+        _check_collection_items(scalar(@array), $block_count);
         for (1..$block_count) {
             push @array, $class->decode(
                 writer_schema => $writer_items,
@@ -303,6 +329,7 @@ sub decode_map {
             $block_size = decode_long($class, @_);
             ## XXX we can skip with $reader_schema?
         }
+        _check_collection_items(scalar(keys %hash), $block_count);
         for (1..$block_count) {
             my $key = decode_string($class, @_);
             unless (defined $key && length $key) {
@@ -389,5 +416,8 @@ sub unsigned_varint {
     } until (! $more);
     return $int;
 }
+
+package Avro::BinaryDecoder::Error::CollectionSize;
+use parent -norequire, 'Error::Simple';
 
 1;
