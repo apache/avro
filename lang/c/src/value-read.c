@@ -38,6 +38,50 @@ static int
 read_value(avro_reader_t reader, avro_value_t *dest);
 
 
+/*
+ * The block count of an array or map is read from the (potentially untrusted or
+ * truncated) input and drives allocation of the resulting collection. To guard
+ * against unbounded memory allocation from a very large or malformed block
+ * count, the number of items in a single decoded array or map is capped. This
+ * mirrors the Java SDK's collection item limit. The default can be overridden
+ * with the AVRO_MAX_COLLECTION_ITEMS environment variable.
+ */
+
+#define AVRO_DEFAULT_MAX_COLLECTION_ITEMS  ((int64_t) 2147483639)  /* 2^31 - 8 */
+
+static int64_t
+avro_max_collection_items(void)
+{
+	const char *env = getenv("AVRO_MAX_COLLECTION_ITEMS");
+	if (env != NULL && *env != '\0') {
+		char *end = NULL;
+		long long value = strtoll(env, &end, 10);
+		if (end != NULL && *end == '\0' && value > 0) {
+			return (int64_t) value;
+		}
+	}
+	return AVRO_DEFAULT_MAX_COLLECTION_ITEMS;
+}
+
+/*
+ * Ensure that decoding the next block of block_count items would not grow the
+ * collection (which already holds `existing` items) beyond the configured
+ * maximum. Returns 0 when it is safe to proceed, or EINVAL for a negative or
+ * over-large block count.
+ */
+static int
+avro_check_collection_items(int64_t existing, int64_t block_count)
+{
+	int64_t limit = avro_max_collection_items();
+	if (block_count < 0 || existing < 0 || block_count > limit - existing) {
+		avro_set_error("Cannot read collections larger than %lld items",
+			       (long long) limit);
+		return EINVAL;
+	}
+	return 0;
+}
+
+
 static int
 read_array_value(avro_reader_t reader, avro_value_t *dest)
 {
@@ -58,6 +102,8 @@ read_array_value(avro_reader_t reader, avro_value_t *dest)
 				     read_long(reader, &block_size),
 				     "Cannot read array block size: ");
 		}
+
+		check(rval, avro_check_collection_items(index, block_count));
 
 		for (i = 0; i < (size_t) block_count; i++, index++) {
 			avro_value_t  child;
@@ -94,6 +140,8 @@ read_map_value(avro_reader_t reader, avro_value_t *dest)
 				     read_long(reader, &block_size),
 				     "Cannot read map block size: ");
 		}
+
+		check(rval, avro_check_collection_items(index, block_count));
 
 		for (i = 0; i < (size_t) block_count; i++, index++) {
 			char *key;
