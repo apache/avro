@@ -201,10 +201,29 @@ if has_bzip2:
             length = readers_decoder.read_long()
             data = readers_decoder.read(length)
             limit = _max_decompress_length()
+            uncompressed = bytearray()
             decompressor = bz2.BZ2Decompressor()
-            uncompressed = decompressor.decompress(data, limit + 1)
-            if len(uncompressed) > limit:
-                _raise_decompression_too_large(limit)
+            input_data = data
+            while True:
+                # Request enough to detect exceeding the limit without allocating
+                # the full (potentially huge) output.
+                want = limit + 1 - len(uncompressed)
+                if want <= 0:
+                    want = 1
+                uncompressed += decompressor.decompress(input_data, want)
+                input_data = b""  # subsequent calls drain buffered output
+                if len(uncompressed) > limit:
+                    _raise_decompression_too_large(limit)
+                if decompressor.eof:
+                    # Handle concatenated bzip2 streams as bz2.decompress does.
+                    input_data = decompressor.unused_data
+                    if not input_data:
+                        break
+                    decompressor = bz2.BZ2Decompressor()
+                elif decompressor.needs_input:
+                    # All input consumed but the stream did not end: truncated or corrupt.
+                    raise avro.errors.InvalidAvroBinaryEncoding("Truncated or corrupt bzip2 block")
+                # otherwise output was capped for this call; loop to drain more
             return avro.io.BinaryDecoder(io.BytesIO(uncompressed))
 
 
