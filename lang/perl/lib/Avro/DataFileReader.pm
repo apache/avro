@@ -28,8 +28,14 @@ use Object::Tiny qw{
 
 use constant MARKER_SIZE => 16;
 
-# TODO: refuse to read a block more than block_max_size, instead
-# do partial reads
+# A data-file block is decompressed according to the file's codec. A block with
+# a very high compression ratio (or a malformed block) can expand to far more
+# memory than its compressed size. To guard against unbounded allocation, the
+# decompressed size of a single block is capped. This mirrors the Java SDK's
+# decompression limit (AVRO-4247). The default can be overridden per reader via
+# the block_max_size attribute, or globally with the AVRO_MAX_DECOMPRESS_LENGTH
+# environment variable.
+use constant DEFAULT_MAX_DECOMPRESS_LENGTH => 200 * 1024 * 1024; # 200 MiB
 
 use Avro::DataFile;
 use Avro::BinaryDecoder;
@@ -215,22 +221,70 @@ sub read_block_header {
     my $marker = substr $block, -(MARKER_SIZE), MARKER_SIZE, '';
     $datafile->{block_marker} = $marker;
 
+    ## The decompressed size of a block is capped to guard against a block with
+    ## a very high compression ratio expanding to far more memory than its
+    ## compressed size.
+    my $limit = $datafile->block_max_size;
+    $limit = _max_decompress_length() unless defined $limit;
+
     ## this is our new reader
     $datafile->{reader} = do {
         if ($codec eq 'deflate') {
-            IO::Uncompress::RawInflate->new(\$block);
+            my $z = IO::Uncompress::RawInflate->new(\$block)
+                or croak "Error inflating block: $IO::Uncompress::RawInflate::RawInflateError";
+            my $uncompressed = _inflate_bounded($z, $limit);
+            do { open my $fh, '<', \$uncompressed; $fh };
         }
         elsif ($codec eq 'bzip2') {
-            my $uncompressed;
-            bunzip2 \$block => \$uncompressed;
-            do { open $fh, '<', \$uncompressed; $fh };
+            my $z = IO::Uncompress::Bunzip2->new(\$block)
+                or croak "Error decompressing bzip2 block: $IO::Uncompress::Bunzip2::Bunzip2Error";
+            my $uncompressed = _inflate_bounded($z, $limit);
+            do { open my $fh, '<', \$uncompressed; $fh };
         }
         elsif ($codec eq 'zstandard') {
-            do { open $fh, '<', \(decompress(\$block)); $fh };
+            my $uncompressed = decompress(\$block);
+            _check_decompress_length(length($uncompressed), $limit);
+            do { open my $fh, '<', \$uncompressed; $fh };
         }
     };
 
     return;
+}
+
+## Read from a streaming decompressor in chunks, rejecting the block as soon as
+## its decompressed size would exceed $limit so an over-large (or malicious)
+## block is not fully materialized in memory.
+sub _inflate_bounded {
+    my ($z, $limit) = @_;
+    my $uncompressed = '';
+    my $chunk;
+    my $status;
+    while (($status = $z->read($chunk, 65536)) > 0) {
+        $uncompressed .= $chunk;
+        _check_decompress_length(length($uncompressed), $limit);
+    }
+    if (!defined $status || $status < 0) {
+        croak "Error decompressing block";
+    }
+    return $uncompressed;
+}
+
+sub _check_decompress_length {
+    my ($length, $limit) = @_;
+    if ($length > $limit) {
+        Avro::DataFile::Error::DecompressionSize->throw(
+            "Decompressed block size exceeds the maximum allowed of $limit bytes"
+        );
+    }
+    return;
+}
+
+sub _max_decompress_length {
+    my $value = $ENV{AVRO_MAX_DECOMPRESS_LENGTH};
+    if (defined $value && $value =~ /\A[0-9]+\z/ && $value > 0) {
+        return $value + 0;
+    }
+    return DEFAULT_MAX_DECOMPRESS_LENGTH;
 }
 
 sub verify_marker {
@@ -307,5 +361,8 @@ sub eof {
 
 package Avro::DataFile::Error::UnsupportedCodec;
 use parent 'Error::Simple';
+
+package Avro::DataFile::Error::DecompressionSize;
+use parent -norequire, 'Error::Simple';
 
 1;
