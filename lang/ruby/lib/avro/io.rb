@@ -115,6 +115,11 @@ module Avro
         # out-of-memory attack from a malicious or truncated input. The check
         # is only applied to larger reads; smaller reads and stream readers that
         # cannot report their size fall back to reading directly.
+        if len < 0
+          # A negative length would make IO#read return the rest of the stream,
+          # which bypasses the size check and can allocate without bound.
+          raise AvroError, "Cannot read a negative number of bytes: #{len}"
+        end
         if len > MAX_UNCHECKED_READ
           remaining = bytes_remaining
           if remaining && len > remaining
@@ -536,7 +541,7 @@ module Avro
         when :float then 4
         when :double then 8
         when :fixed then schema.size
-        when :record, :error
+        when :record, :error, :request
           return 0 if visited[schema]
           visited[schema] = true
           total = schema.fields.sum { |field| min_bytes_per_element(field.type, visited) }
