@@ -531,6 +531,52 @@ describe('files', function () {
         });
     });
 
+    it('rejects a block that decompresses beyond the limit', function (cb) {
+      // A large, highly compressible payload compresses to a tiny block but
+      // would decompress to far more than the configured limit.
+      var t = createType('string');
+      var big = new Array(100001).join('a'); // 100000 bytes when decompressed
+      var encoder = new streams.BlockEncoder(t, {codec: 'deflate'});
+      var decoder = new streams.BlockDecoder({maxDecompressLength: 1024})
+        .on('data', function () {})
+        .on('error', function () { cb(); });
+      encoder.pipe(decoder);
+      encoder.end(big);
+    });
+
+    it('decompresses a block within the limit', function (cb) {
+      var t = createType('string');
+      var payload = 'hello world';
+      var out = [];
+      var encoder = new streams.BlockEncoder(t, {codec: 'deflate'});
+      var decoder = new streams.BlockDecoder({maxDecompressLength: 1024})
+        .on('data', function (s) { out.push(s); })
+        .on('end', function () {
+          assert.deepEqual(out, [payload]);
+          cb();
+        });
+      encoder.pipe(decoder);
+      encoder.end(payload);
+    });
+
+    it('enforces the limit for custom codecs', function (cb) {
+      // A custom codec that yields more than the limit is rejected by the
+      // size safeguard applied to every codec.
+      var t = createType('int');
+      var codecs = {
+        'null': function (data, cb) { cb(null, Buffer.alloc(4096)); }
+      };
+      var encoder = new streams.BlockEncoder(t, {codec: 'null'});
+      var decoder = new streams.BlockDecoder({
+        codecs: codecs,
+        maxDecompressLength: 1024
+      })
+        .on('data', function () {})
+        .on('error', function () { cb(); });
+      encoder.pipe(decoder);
+      encoder.end(1);
+    });
+
   });
 
   it('createFileDecoder', function (cb) {

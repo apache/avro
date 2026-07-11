@@ -58,6 +58,25 @@ var LONG_TYPE = schemas.createType('long');
 // First 4 bytes of an Avro object container file.
 var MAGIC_BYTES = Buffer.from('Obj\x01');
 
+// Default upper bound, in bytes, on the size a single data-file block may
+// decompress to. A block with a very high compression ratio (or a malformed
+// block) can otherwise expand to far more memory than its compressed size.
+// Mirrors the Java SDK's decompression limit (AVRO-4247). Overridable per
+// decoder via the `maxDecompressLength` option, or globally with the
+// `AVRO_MAX_DECOMPRESS_LENGTH` environment variable.
+var DEFAULT_MAX_DECOMPRESS_LENGTH = 200 * 1024 * 1024; // 200 MiB
+
+function getDefaultMaxDecompressLength() {
+  var value = process.env.AVRO_MAX_DECOMPRESS_LENGTH;
+  if (value !== undefined) {
+    var parsed = parseInt(value, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+  return DEFAULT_MAX_DECOMPRESS_LENGTH;
+}
+
 // Convenience.
 var f = util.format;
 var Tap = utils.Tap;
@@ -145,6 +164,8 @@ function BlockDecoder(opts) {
   this._type = null;
   this._codecs = opts.codecs;
   this._parseOpts = opts.parseOpts || {};
+  this._maxDecompressLength = opts.maxDecompressLength > 0 ?
+    opts.maxDecompressLength : getDefaultMaxDecompressLength();
   this._tap = new Tap(Buffer.alloc(0));
   this._blockTap = new Tap(Buffer.alloc(0));
   this._syncMarker = null;
@@ -187,11 +208,39 @@ BlockDecoder.prototype._decodeHeader = function () {
   }
 
   var codec = (header.meta['avro.codec'] || 'null').toString();
-  this._decompress = (this._codecs || BlockDecoder.getDefaultCodecs())[codec];
-  if (!this._decompress) {
+  var decompress = (this._codecs || BlockDecoder.getDefaultCodecs())[codec];
+  if (!decompress) {
     this.emit('error', new Error(f('unknown codec: %s', codec)));
     return;
   }
+
+  // Bound the decompressed size of each block to guard against a block with a
+  // very high compression ratio (or a malformed block) expanding to far more
+  // memory than its compressed size. For the built-in deflate codec the limit
+  // is passed to zlib so the allocation itself is capped; every codec's output
+  // is additionally checked as a safeguard.
+  var maxLength = this._maxDecompressLength;
+  if (!this._codecs && codec === 'deflate') {
+    decompress = function (buf, cb) {
+      zlib.inflateRaw(buf, {maxOutputLength: maxLength}, cb);
+    };
+  }
+  this._decompress = function (buf, cb) {
+    decompress(buf, function (err, data) {
+      if (err) {
+        cb(err);
+        return;
+      }
+      if (data && data.length > maxLength) {
+        cb(new Error(f(
+          'decompressed block size exceeds the maximum allowed of %d bytes',
+          maxLength
+        )));
+        return;
+      }
+      cb(null, data);
+    });
+  };
 
   try {
     var schema = JSON.parse(header.meta['avro.schema'].toString());
