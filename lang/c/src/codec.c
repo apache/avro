@@ -167,15 +167,24 @@ static int decode_snappy(avro_codec_t c, void * data, int64_t len)
 {
         uint32_t crc;
         size_t outlen;
+        int64_t max_len = avro_max_decompress_length();
+
+        /* The block carries a trailing 4-byte CRC; a length below that is
+         * malformed and would underflow len - 4. */
+        if (len < 4) {
+                avro_set_error("Snappy block too small (%lld bytes), expected at least 4",
+                               (long long) len);
+                return 1;
+        }
 
         if (snappy_uncompressed_length((const char*)data, len-4, &outlen) != SNAPPY_OK) {
 		avro_set_error("Uncompressed length error in snappy");
 		return 1;
         }
 
-	if ((int64_t) outlen > avro_max_decompress_length()) {
+	if ((int64_t) outlen > max_len) {
 		avro_set_error("Decompressed block size %llu exceeds the maximum allowed of %lld bytes",
-			       (unsigned long long) outlen, (long long) avro_max_decompress_length());
+			       (unsigned long long) outlen, (long long) max_len);
 		return 1;
 	}
 
@@ -395,8 +404,14 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 					       (long long) max_len);
 				return 1;
 			}
-			c->block_data = avro_realloc(c->block_data, c->block_size, new_size);
-			s->next_out = c->block_data + s->total_out;
+			void *new_data = avro_realloc(c->block_data, c->block_size, new_size);
+			if (new_data == NULL) {
+				inflateEnd(s);
+				avro_set_error("Cannot allocate memory for deflate");
+				return 1;
+			}
+			c->block_data = new_data;
+			s->next_out = (Bytef *) c->block_data + s->total_out;
 			s->avail_out += (uInt)(new_size - c->block_size);
 			c->block_size = new_size;
 		}
@@ -557,7 +572,12 @@ static int decode_lzma(avro_codec_t codec, void * data, int64_t len)
 					       (long long) max_len);
 				return 1;
 			}
-			codec->block_data = avro_realloc(codec->block_data, codec->block_size, new_size);
+			void *new_data = avro_realloc(codec->block_data, codec->block_size, new_size);
+			if (new_data == NULL) {
+				avro_set_error("Cannot allocate memory for lzma decoder");
+				return 1;
+			}
+			codec->block_data = new_data;
 			codec->block_size = new_size;
 		}
 

@@ -59,12 +59,18 @@ check_codec_rejects_oversized(const char *name, const char *payload, int64_t pay
 
 	/* Copy the compressed bytes; decode reuses the codec's block buffer. */
 	int64_t compressed_len = codec.used_size;
-	char *compressed = (char *) malloc(compressed_len);
+	if (compressed_len <= 0) {
+		fprintf(stderr, "  codec %s: unexpected compressed length %lld\n",
+			name, (long long) compressed_len);
+		avro_codec_reset(&codec);
+		return 1;
+	}
+	char *compressed = (char *) malloc((size_t) compressed_len);
 	if (compressed == NULL) {
 		avro_codec_reset(&codec);
 		return 1;
 	}
-	memcpy(compressed, codec.block_data, compressed_len);
+	memcpy(compressed, codec.block_data, (size_t) compressed_len);
 
 	int rc = avro_codec_decode(&codec, compressed, compressed_len);
 
