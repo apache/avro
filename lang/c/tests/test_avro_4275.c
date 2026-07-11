@@ -38,8 +38,8 @@
  * the 10-byte varint: FF FF FF FF FF FF FF FF FF 01
  */
 static const char int64min_block_count[] = {
-    '\xFF', '\xFF', '\xFF', '\xFF', '\xFF',
-    '\xFF', '\xFF', '\xFF', '\xFF', '\x01'
+    (char)0xFF, (char)0xFF, (char)0xFF, (char)0xFF, (char)0xFF,
+    (char)0xFF, (char)0xFF, (char)0xFF, (char)0xFF, 0x01
 };
 
 /*
