@@ -264,6 +264,11 @@ namespace Avro.IO
         // Read p bytes into a new byte buffer
         private byte[] read(long p)
         {
+            if (p < 0)
+            {
+                throw new AvroException($"Can not read a negative number of bytes: {p}");
+            }
+
             EnsureAvailableBytes(p);
             byte[] buffer = new byte[p];
             Read(buffer, 0, buffer.Length);

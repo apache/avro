@@ -534,6 +534,32 @@ namespace Avro.Test
             Assert.AreEqual(100000, result.Length);
         }
 
+        // A negative bytes length must be rejected explicitly rather than
+        // flowing into a negative array allocation.
+        [Test]
+        public void TestReadBytesRejectsNegativeLength()
+        {
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong(-5);
+            ms.Position = 0;
+            var d = new BinaryDecoder(ms);
+            Assert.Throws<AvroException>(() => d.ReadBytes());
+        }
+
+        // A block count larger than int.MaxValue must be rejected before the
+        // int cast, even for a null-element array where the byte check is
+        // skipped.
+        [Test]
+        public void TestReadArrayRejectsCountAboveIntMax()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"null\"}");
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong((long)int.MaxValue + 1);
+            ms.Position = 0;
+            var reader = new GenericReader<object>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
+        }
+
         // Minimal read-only, forward-only stream wrapper reporting CanSeek=false.
         private sealed class NonSeekableStream : Stream
         {
@@ -553,6 +579,16 @@ namespace Avro.Test
             public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
             public override void SetLength(long value) => throw new NotSupportedException();
             public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    inner.Dispose();
+                }
+
+                base.Dispose(disposing);
+            }
         }
     }
 }

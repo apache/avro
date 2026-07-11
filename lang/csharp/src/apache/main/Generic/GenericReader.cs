@@ -521,9 +521,17 @@ namespace Avro.Generic
         /// </summary>
         private static int MinBytesPerElement(Schema schema, int depth = 0)
         {
-            if (schema == null || depth > 64)
+            if (schema == null)
             {
                 return 0;
+            }
+
+            if (depth > 64)
+            {
+                // A cyclic or pathologically deep schema. Return 1 (not 0) so the
+                // collection check stays enabled rather than being silently
+                // bypassed; a valid recursive value always encodes to >= 1 byte.
+                return 1;
             }
 
             switch (schema.Tag)
@@ -538,13 +546,20 @@ namespace Avro.Generic
                     return ((FixedSchema)schema).Size;
                 case Schema.Type.Record:
                 case Schema.Type.Error:
-                    int total = 0;
+                    // Accumulate in a long and clamp so a deeply nested schema
+                    // cannot overflow int into a value <= 0, which would disable
+                    // the collection check.
+                    long total = 0;
                     foreach (Field f in (RecordSchema)schema)
                     {
                         total += MinBytesPerElement(f.Schema, depth + 1);
+                        if (total >= int.MaxValue)
+                        {
+                            return int.MaxValue;
+                        }
                     }
 
-                    return total;
+                    return (int)total;
                 default:
                     // boolean, int, long, bytes, string, enum, union, array, map:
                     // all encode to at least one byte.
@@ -560,7 +575,22 @@ namespace Avro.Generic
         /// </summary>
         private static void EnsureCollectionAvailable(Decoder d, long count, int minBytesPerElement)
         {
-            if (count <= 0 || minBytesPerElement <= 0)
+            if (count <= 0)
+            {
+                return;
+            }
+
+            // A .NET collection cannot hold more than int.MaxValue elements and
+            // the callers cast the block count to int; reject an out-of-range
+            // count independently of the per-element size (which is 0 for e.g.
+            // arrays of null, where the byte check below is skipped).
+            if (count > int.MaxValue)
+            {
+                throw new AvroException(
+                    $"Collection block count {count} exceeds the maximum supported size");
+            }
+
+            if (minBytesPerElement <= 0)
             {
                 return;
             }
