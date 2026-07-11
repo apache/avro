@@ -76,8 +76,9 @@ my $err = 'Avro::BinaryDecoder::Error::CollectionSize';
         "map cumulative pair count with repeated keys is rejected";
 
     # Negative count: unsigned varint 0x15 decodes (zigzag) to -11, whose
-    # absolute value (11) is used; a block size long (0x00) follows.
-    throws_ok { decode_bytes($array_schema, "\x15\x00") } $err,
+    # absolute value (11) is used; a block size long (0x00) follows, then the
+    # terminating 0 block count makes the encoding well-formed.
+    throws_ok { decode_bytes($array_schema, "\x15\x00\x00") } $err,
         "negative array block count is bounded by its absolute value";
 
     # zigzag(3) = 0x06: three null items are within the limit and decode fine.
@@ -87,6 +88,7 @@ my $err = 'Avro::BinaryDecoder::Error::CollectionSize';
 }
 
 # By default the limit is generous enough not to affect ordinary decoding.
+no warnings 'once'; # $DEFAULT_MAX_COLLECTION_ITEMS is a package global set at load time
 is $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS, $Avro::BinaryDecoder::DEFAULT_MAX_COLLECTION_ITEMS,
     "default collection item limit restored outside local scope";
 
