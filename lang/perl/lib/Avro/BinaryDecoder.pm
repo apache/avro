@@ -132,6 +132,10 @@ sub decode_bytes {
     my $class = shift;
     my $reader = pop;
     my $size = decode_long($class, undef, undef, $reader);
+    if ($size < 0) {
+        throw Avro::Schema::Error::Parse(
+            "Invalid negative bytes/string length: $size");
+    }
     _ensure_available($reader, $size);
     $reader->read(my $buf, $size);
     return $buf;
@@ -153,14 +157,22 @@ sub _bytes_remaining {
     my ($reader) = @_;
     my $current = eval { $reader->tell };
     return if !defined $current || $current < 0;
-    return eval {
-        $reader->seek(0, 2)         # SEEK_END
-            or die "seek to end failed\n";
-        my $end = $reader->tell;
-        $reader->seek($current, 0); # SEEK_SET, restore position
-        die "unknown end position\n" if !defined $end || $end < 0;
-        $end - $current;
-    };
+
+    # Attempt to seek to the end. Readers that cannot (e.g. a streaming
+    # decompressor) leave the position unchanged; skip the check for them.
+    my $moved = eval { $reader->seek(0, 2) };   # SEEK_END
+    return if !$moved;
+
+    # We are now at the end. Record the end offset, then ALWAYS restore the
+    # original position. A restore failure leaves the reader corrupted for
+    # subsequent decoding, so treat it as fatal rather than continuing.
+    my $end = eval { $reader->tell };
+    unless (eval { $reader->seek($current, 0) }) {   # SEEK_SET
+        throw Avro::Schema::Error::Parse(
+            "Failed to restore reader position after size check");
+    }
+    return if !defined $end || $end < 0;
+    return $end - $current;
 }
 
 sub _ensure_available {
@@ -383,8 +395,10 @@ sub decode_map {
     my $block_count = decode_long($class, @_);
     my $writer_values = $writer_schema->values;
     my $reader_values = $reader_schema->values;
-    # Map keys are strings (>= 1 byte length prefix) plus the value.
-    my $min_bytes = 1 + _min_bytes_per_element($writer_values);
+    # A map key is a non-empty string (decode_map rejects empty keys below), so
+    # its minimum on-wire size is 2 bytes: a 1-byte length prefix plus at least
+    # 1 byte of key data, in addition to the value.
+    my $min_bytes = 2 + _min_bytes_per_element($writer_values);
     while ($block_count) {
         my $block_size;
         if ($block_count < 0) {
