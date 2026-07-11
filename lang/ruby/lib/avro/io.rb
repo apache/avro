@@ -137,7 +137,10 @@ module Avro
         size = @reader.size
         pos = @reader.tell
         return nil unless size.is_a?(Integer) && pos.is_a?(Integer)
-        size - pos
+        # Clamp negative (e.g. the file was truncated below the current position)
+        # to 0 so callers see "no bytes available" rather than a confusing
+        # negative count.
+        [size - pos, 0].max
       rescue IOError, SystemCallError, NotImplementedError
         # The reader responds to #size/#tell but cannot actually report them;
         # treat the remaining size as unknown and skip the check.
@@ -349,13 +352,14 @@ module Avro
 
       def read_array(writers_schema, readers_schema, decoder)
         read_items = []
+        min_bytes = min_bytes_per_element(writers_schema.items)
         block_count = decoder.read_long
         while block_count != 0
           if block_count < 0
             block_count = -block_count
             _block_size = decoder.read_long
           end
-          ensure_collection_available(decoder, block_count, min_bytes_per_element(writers_schema.items))
+          ensure_collection_available(decoder, block_count, min_bytes)
           block_count.times do
             read_items << read_data(writers_schema.items,
                                     readers_schema.items,
@@ -369,14 +373,15 @@ module Avro
 
       def read_map(writers_schema, readers_schema, decoder)
         read_items = {}
+        # Map keys are strings (>= 1 byte length prefix) plus the value.
+        min_bytes = 1 + min_bytes_per_element(writers_schema.values)
         block_count = decoder.read_long
         while block_count != 0
           if block_count < 0
             block_count = -block_count
             _block_size = decoder.read_long
           end
-          # Map keys are strings (>= 1 byte length prefix) plus the value.
-          ensure_collection_available(decoder, block_count, 1 + min_bytes_per_element(writers_schema.values))
+          ensure_collection_available(decoder, block_count, min_bytes)
           block_count.times do
             key = decoder.read_string
             read_items[key] = read_data(writers_schema.values,
