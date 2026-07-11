@@ -163,8 +163,11 @@ size_t BinaryDecoder::arrayStart() {
 size_t BinaryDecoder::doDecodeItemCount() {
     auto result = doDecodeLong();
     if (result < 0) {
+        if (result == INT64_MIN) {
+            throw Exception("Invalid negative block count: {}", result);
+        }
         doDecodeLong();
-        return static_cast<size_t>(-(result + 1)) + 1;
+        return static_cast<size_t>(-result);
     }
     return static_cast<size_t>(result);
 }

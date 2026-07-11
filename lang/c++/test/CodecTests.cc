@@ -2145,6 +2145,37 @@ static void testByteCount() {
     BOOST_CHECK_EQUAL(os1->byteCount(), 3);
 }
 
+static void testArrayInt64MinBlockCount() {
+    // INT64_MIN encoded as a zigzag varint is the 10-byte sequence:
+    // FF FF FF FF FF FF FF FF FF 01
+    // When used as an array block count, the decoder should reject it
+    // rather than returning 2^63 as the item count.
+    const uint8_t data[] = {
+        0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0x01
+    };
+
+    InputStreamPtr is = memoryInputStream(data, sizeof(data));
+    DecoderPtr d = binaryDecoder();
+    d->init(*is);
+
+    BOOST_CHECK_THROW(d->arrayStart(), Exception);
+}
+
+static void testMapInt64MinBlockCount() {
+    // Same INT64_MIN varint, but as a map block count.
+    const uint8_t data[] = {
+        0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0x01
+    };
+
+    InputStreamPtr is = memoryInputStream(data, sizeof(data));
+    DecoderPtr d = binaryDecoder();
+    d->init(*is);
+
+    BOOST_CHECK_THROW(d->mapStart(), Exception);
+}
+
 } // namespace avro
 
 boost::unit_test::test_suite *
@@ -2161,6 +2192,8 @@ init_unit_test_suite(int, char *[]) {
     ts->add(BOOST_TEST_CASE(avro::testJsonCodecReinit));
     ts->add(BOOST_TEST_CASE(avro::testArrayNegativeBlockCount));
     ts->add(BOOST_TEST_CASE(avro::testByteCount));
+    ts->add(BOOST_TEST_CASE(avro::testArrayInt64MinBlockCount));
+    ts->add(BOOST_TEST_CASE(avro::testMapInt64MinBlockCount));
 
     return ts;
 }
