@@ -44,6 +44,7 @@ use Compress::Zstd::Decompressor;
 use IO::Uncompress::Bunzip2 ();
 use IO::Uncompress::RawInflate ;
 use Fcntl();
+use bytes ();
 
 our $VERSION = '++MODULE_VERSION++';
 
@@ -262,12 +263,12 @@ sub _inflate_bounded {
     my $chunk;
     my $status;
     while (1) {
-        my $budget = $limit - length($uncompressed) + 1;
+        my $budget = $limit - bytes::length($uncompressed) + 1;
         my $to_read = $budget < 65536 ? $budget : 65536;
         $status = $z->read($chunk, $to_read);
         last unless defined $status && $status > 0;
         $uncompressed .= $chunk;
-        _check_decompress_length(length($uncompressed), $limit);
+        _check_decompress_length(bytes::length($uncompressed), $limit);
     }
     if (!defined $status || $status < 0) {
         croak "Error decompressing block: " . $z->error;
@@ -281,7 +282,7 @@ sub _zstd_decompress_bounded {
     my ($block_ref, $limit) = @_;
     my $decompressor = Compress::Zstd::Decompressor->new;
     my $uncompressed = '';
-    my $length = length($$block_ref);
+    my $length = bytes::length($$block_ref);
     my $offset = 0;
     while ($offset < $length) {
         my $piece = substr($$block_ref, $offset, 65536);
@@ -296,7 +297,7 @@ sub _zstd_decompress_bounded {
             croak "Error decompressing zstandard block";
         }
         $uncompressed .= $out;
-        _check_decompress_length(length($uncompressed), $limit);
+        _check_decompress_length(bytes::length($uncompressed), $limit);
     }
     return $uncompressed;
 }
