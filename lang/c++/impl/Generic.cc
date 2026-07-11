@@ -17,6 +17,7 @@
  */
 
 #include "Generic.hh"
+#include <limits>
 #include <utility>
 
 namespace avro {
@@ -47,12 +48,24 @@ static int64_t minBytesPerElement(const NodePtr &node, int depth) {
             return 4;
         case AVRO_DOUBLE:
             return 8;
-        case AVRO_FIXED:
-            return static_cast<int64_t>(node->fixedSize());
+        case AVRO_FIXED: {
+            // fixedSize() is a size_t; clamp to int64_t so a huge fixed size
+            // cannot wrap negative.
+            size_t sz = node->fixedSize();
+            return sz > static_cast<size_t>(std::numeric_limits<int64_t>::max())
+                       ? std::numeric_limits<int64_t>::max()
+                       : static_cast<int64_t>(sz);
+        }
         case AVRO_RECORD: {
             int64_t total = 0;
             for (size_t i = 0; i < node->leaves(); ++i) {
-                total += minBytesPerElement(node->leafAt(i), depth + 1);
+                int64_t fieldMin = minBytesPerElement(node->leafAt(i), depth + 1);
+                // Saturate rather than overflow: a wrapped (negative) total
+                // would disable the collection check.
+                if (fieldMin > std::numeric_limits<int64_t>::max() - total) {
+                    return std::numeric_limits<int64_t>::max();
+                }
+                total += fieldMin;
             }
             return total;
         }
@@ -195,7 +208,13 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
             r.resize(0);
             size_t start = 0;
             // Map keys are strings (>= 1 byte length prefix) plus the value.
-            int64_t minBytes = isResolving ? 0 : (1 + minBytesPerElement(nn, 0));
+            // Saturate the +1 so a maxed-out value minimum cannot wrap.
+            int64_t valuesMin = minBytesPerElement(nn, 0);
+            int64_t minBytes = isResolving
+                                   ? 0
+                                   : (valuesMin < std::numeric_limits<int64_t>::max()
+                                          ? valuesMin + 1
+                                          : valuesMin);
             for (size_t m = d.mapStart(); m != 0; m = d.mapNext()) {
                 ensureCollectionAvailable(d, m, minBytes);
                 ensureCanGrow(r, m);
