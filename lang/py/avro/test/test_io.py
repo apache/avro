@@ -796,6 +796,27 @@ class TestCollectionSizeLimit(unittest.TestCase):
         buffer = self._encode_longs(3, 0)  # 3 null items, then end-of-array
         self.assertEqual([None, None, None], self._decode(buffer, schema, max_items=10))
 
+    def _reader(self, buffer: io.BytesIO, schema: avro.schema.Schema, max_items: int) -> "tuple[avro.io.DatumReader, avro.io.BinaryDecoder]":
+        decoder = avro.io.BinaryDecoder(io.BytesIO(buffer.getvalue()))
+        datum_reader = avro.io.DatumReader(schema)
+        datum_reader.max_collection_items = max_items
+        return datum_reader, decoder
+
+    def test_skip_array_respects_limit(self) -> None:
+        """Skipping an array must bound the per-item loop like reading does."""
+        schema = avro.schema.parse('{"type": "array", "items": "null"}')
+        buffer = self._encode_longs(11, 0)  # 11 items in one block
+        datum_reader, decoder = self._reader(buffer, schema, max_items=10)
+        with self.assertRaises(avro.errors.AvroCollectionSizeException):
+            datum_reader.skip_array(cast(avro.schema.ArraySchema, schema), decoder)
+
+    def test_skip_map_respects_limit(self) -> None:
+        schema = avro.schema.parse('{"type": "map", "values": "null"}')
+        buffer = self._encode_longs(11, 0)
+        datum_reader, decoder = self._reader(buffer, schema, max_items=10)
+        with self.assertRaises(avro.errors.AvroCollectionSizeException):
+            datum_reader.skip_map(cast(avro.schema.MapSchema, schema), decoder)
+
 
 def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) -> unittest.TestSuite:
     """Generate test cases across many test schema."""

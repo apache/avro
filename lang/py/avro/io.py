@@ -127,10 +127,10 @@ def _default_max_collection_items() -> int:
     try:
         parsed = int(value)
     except ValueError:
-        warnings.warn(f"Ignoring invalid {MAX_COLLECTION_ITEMS_ENV} value: {value!r}", avro.errors.AvroWarning)
+        warnings.warn(avro.errors.AvroWarning(f"Ignoring invalid {MAX_COLLECTION_ITEMS_ENV} value: {value!r}"))
         return DEFAULT_MAX_COLLECTION_ITEMS
     if parsed < 0:
-        warnings.warn(f"Ignoring negative {MAX_COLLECTION_ITEMS_ENV} value: {value!r}", avro.errors.AvroWarning)
+        warnings.warn(avro.errors.AvroWarning(f"Ignoring negative {MAX_COLLECTION_ITEMS_ENV} value: {value!r}"))
         return DEFAULT_MAX_COLLECTION_ITEMS
     return parsed
 
@@ -861,13 +861,19 @@ class DatumReader:
 
     def skip_array(self, writers_schema: avro.schema.ArraySchema, decoder: BinaryDecoder) -> None:
         block_count = decoder.read_long()
+        items_skipped = 0
         while block_count != 0:
             if block_count < 0:
                 block_size = decoder.read_long()
                 decoder.skip(block_size)
             else:
+                # A negative block is skipped by byte size above; only the
+                # positive per-item skip loop can be driven unbounded by a large
+                # untrusted block count, so apply the same cumulative cap here.
+                check_max_collection_items(items_skipped, block_count, self.max_collection_items)
                 for i in range(block_count):
                     self.skip_data(writers_schema.items, decoder)
+                items_skipped += block_count
             block_count = decoder.read_long()
 
     def read_map(self, writers_schema: avro.schema.MapSchema, readers_schema: avro.schema.MapSchema, decoder: BinaryDecoder) -> Mapping[str, object]:
@@ -905,14 +911,19 @@ class DatumReader:
 
     def skip_map(self, writers_schema: avro.schema.MapSchema, decoder: BinaryDecoder) -> None:
         block_count = decoder.read_long()
+        items_skipped = 0
         while block_count != 0:
             if block_count < 0:
                 block_size = decoder.read_long()
                 decoder.skip(block_size)
             else:
+                # As in skip_array, only the positive per-item skip loop can be
+                # driven unbounded, so bound the cumulative count here too.
+                check_max_collection_items(items_skipped, block_count, self.max_collection_items)
                 for i in range(block_count):
                     decoder.skip_utf8()
                     self.skip_data(writers_schema.values, decoder)
+                items_skipped += block_count
             block_count = decoder.read_long()
 
     def read_union(self, writers_schema: avro.schema.UnionSchema, readers_schema: avro.schema.UnionSchema, decoder: BinaryDecoder) -> object:
