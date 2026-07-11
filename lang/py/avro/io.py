@@ -248,8 +248,6 @@ class BinaryDecoder:
         except (OSError, ValueError, AttributeError):
             # Not seekable, or the position/size could not be determined.
             return None
-        if not isinstance(pos, int) or not isinstance(end, int):
-            return None
         return end - pos
 
     def read_null(self) -> None:
