@@ -216,11 +216,12 @@ BlockDecoder.prototype._decodeHeader = function () {
 
   // Bound the decompressed size of each block to guard against a block with a
   // very high compression ratio (or a malformed block) expanding to far more
-  // memory than its compressed size. For the built-in deflate codec the limit
-  // is passed to zlib so the allocation itself is capped; every codec's output
-  // is additionally checked as a safeguard.
+  // memory than its compressed size. Whenever the resolved codec is Node's raw
+  // inflater -- the built-in default or a custom codecs map that reuses it --
+  // the limit is passed to zlib so the allocation itself is capped; every
+  // codec's output is additionally checked as a safeguard.
   var maxLength = this._maxDecompressLength;
-  if (!this._codecs && codec === 'deflate') {
+  if (decompress === zlib.inflateRaw) {
     decompress = function (buf, cb) {
       zlib.inflateRaw(buf, {maxOutputLength: maxLength}, cb);
     };
@@ -296,11 +297,14 @@ BlockDecoder.prototype._createBlockCallback = function () {
   this._pending++;
 
   return function (err, data) {
+    // Always account for this block's completion, even on error, so a failed
+    // decompression (e.g. the size safeguard firing) cannot leave `_pending`
+    // permanently above zero and hang the stream at finish.
+    self._pending--;
     if (err) {
       self.emit('error', err);
       return;
     }
-    self._pending--;
     self._queue.push(new BlockData(index, data));
     if (self._needPush) {
       self._needPush = false;

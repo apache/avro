@@ -577,6 +577,23 @@ describe('files', function () {
       encoder.end(1);
     });
 
+    it('caps a custom deflate codec that reuses zlib.inflateRaw', function (cb) {
+      // A custom codecs map that reuses the built-in raw inflater must still get
+      // the zlib maxOutputLength cap (not just the post-decompress check).
+      var zlib = require('zlib');
+      var t = createType('string');
+      var big = new Array(100001).join('a'); // 100000 bytes when decompressed
+      var encoder = new streams.BlockEncoder(t, {codec: 'deflate'});
+      var decoder = new streams.BlockDecoder({
+        codecs: {deflate: zlib.inflateRaw},
+        maxDecompressLength: 1024
+      })
+        .on('data', function () {})
+        .on('error', function () { cb(); });
+      encoder.pipe(decoder);
+      encoder.end(big);
+    });
+
   });
 
   it('createFileDecoder', function (cb) {
