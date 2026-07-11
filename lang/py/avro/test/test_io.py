@@ -818,6 +818,21 @@ class TestCollectionSizeLimit(unittest.TestCase):
         with self.assertRaises(avro.errors.AvroCollectionSizeException):
             datum_reader.skip_map(cast(avro.schema.MapSchema, schema), decoder)
 
+    def test_skip_array_rejects_negative_block_size(self) -> None:
+        """A negative block size must not seek the decoder backwards."""
+        schema = avro.schema.parse('{"type": "array", "items": "null"}')
+        buffer = self._encode_longs(-1, -1)  # negative block count, then negative block size
+        datum_reader, decoder = self._reader(buffer, schema, max_items=10)
+        with self.assertRaises(avro.errors.InvalidAvroBinaryEncoding):
+            datum_reader.skip_array(cast(avro.schema.ArraySchema, schema), decoder)
+
+    def test_skip_map_rejects_negative_block_size(self) -> None:
+        schema = avro.schema.parse('{"type": "map", "values": "null"}')
+        buffer = self._encode_longs(-1, -1)
+        datum_reader, decoder = self._reader(buffer, schema, max_items=10)
+        with self.assertRaises(avro.errors.InvalidAvroBinaryEncoding):
+            datum_reader.skip_map(cast(avro.schema.MapSchema, schema), decoder)
+
     def _default_limit_with_env(self, value: Optional[str]) -> int:
         """Return the default collection-item limit with the env var set to `value`."""
         previous = os.environ.get(avro.io.MAX_COLLECTION_ITEMS_ENV)

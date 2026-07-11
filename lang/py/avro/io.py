@@ -868,6 +868,8 @@ class DatumReader:
         while block_count != 0:
             if block_count < 0:
                 block_size = decoder.read_long()
+                if block_size < 0:
+                    raise avro.errors.InvalidAvroBinaryEncoding(f"Array block size must be non-negative, got: {block_size}")
                 decoder.skip(block_size)
             else:
                 # A negative block is skipped by byte size above; only the
@@ -918,6 +920,8 @@ class DatumReader:
         while block_count != 0:
             if block_count < 0:
                 block_size = decoder.read_long()
+                if block_size < 0:
+                    raise avro.errors.InvalidAvroBinaryEncoding(f"Map block size must be non-negative, got: {block_size}")
                 decoder.skip(block_size)
             else:
                 # As in skip_array, only the positive per-item skip loop can be
