@@ -268,11 +268,12 @@ class AvroDataIOReader
             throw new AvroException('gzip uncompression failed.');
         }
 
-        // Inflate in chunks and check the running length after each step so an
-        // over-large (or malicious) block is rejected without materializing the
-        // full output, while genuine decompression errors (inflate_add === false)
-        // are reported distinctly. Pieces are collected and joined once at the
-        // end to avoid repeatedly reallocating a growing result string.
+        // Inflate in chunks and check the running total after each step so an
+        // over-large (or malicious) block is rejected before its whole output is
+        // accumulated (each inflated chunk is still materialized), while genuine
+        // decompression errors (inflate_add === false) are reported distinctly.
+        // Pieces are collected and joined once at the end to avoid repeatedly
+        // reallocating a growing result string.
         $pieces = [];
         $total = 0;
         $length = strlen($compressed);
