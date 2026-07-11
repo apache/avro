@@ -234,16 +234,22 @@ class BinaryDecoder:
     def bytes_remaining(self) -> Optional[int]:
         """
         Return the number of bytes still available to read, or ``None`` when
-        that count is not known (a non-seekable reader). Used to reject a
-        declared length or collection block count that exceeds the data
-        actually available before allocating for it.
+        that count is not known (a non-seekable reader, or one whose position
+        cannot be obtained). Used to reject a declared length or collection
+        block count that exceeds the data actually available before allocating
+        for it.
         """
         reader = self.reader
-        if not getattr(reader, "seekable", None) or not reader.seekable():
+        try:
+            pos = reader.tell()
+            reader.seek(0, os.SEEK_END)
+            end = reader.tell()
+            reader.seek(pos)
+        except (OSError, ValueError, AttributeError):
+            # Not seekable, or the position/size could not be determined.
             return None
-        pos = reader.tell()
-        end = reader.seek(0, os.SEEK_END)
-        reader.seek(pos)
+        if not isinstance(pos, int) or not isinstance(end, int):
+            return None
         return end - pos
 
     def read_null(self) -> None:
@@ -876,12 +882,13 @@ class DatumReader:
         is the absolute value of the count written.
         """
         read_items = []
+        min_bytes = _min_bytes_per_element(writers_schema.items)
         block_count = decoder.read_long()
         while block_count != 0:
             if block_count < 0:
                 block_count = -block_count
                 decoder.skip_long()
-            self._ensure_collection_available(decoder, block_count, _min_bytes_per_element(writers_schema.items))
+            self._ensure_collection_available(decoder, block_count, min_bytes)
             for i in range(block_count):
                 read_items.append(self.read_data(writers_schema.items, readers_schema.items, decoder))
             block_count = decoder.read_long()
@@ -914,13 +921,14 @@ class DatumReader:
         is the absolute value of the count written.
         """
         read_items = {}
+        # Map keys are strings (>= 1 byte length prefix) plus the value.
+        min_bytes = 1 + _min_bytes_per_element(writers_schema.values)
         block_count = decoder.read_long()
         while block_count != 0:
             if block_count < 0:
                 block_count = -block_count
                 decoder.skip_long()
-            # Map keys are strings (>= 1 byte length prefix) plus the value.
-            self._ensure_collection_available(decoder, block_count, 1 + _min_bytes_per_element(writers_schema.values))
+            self._ensure_collection_available(decoder, block_count, min_bytes)
             for i in range(block_count):
                 key = decoder.read_utf8()
                 read_items[key] = self.read_data(writers_schema.values, readers_schema.values, decoder)
