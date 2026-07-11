@@ -73,6 +73,11 @@ class AvroIOBinaryDecoder
      */
     public function read(int $len): string
     {
+        if ($len < 0) {
+            // AvroStringIO::read() accepts a negative length and moves the
+            // pointer backwards; reject it before delegating.
+            throw new AvroException("Cannot read a negative number of bytes: {$len}");
+        }
         if ($len > self::MAX_UNCHECKED_READ) {
             $remaining = $this->bytesRemaining();
             if ($len > $remaining) {

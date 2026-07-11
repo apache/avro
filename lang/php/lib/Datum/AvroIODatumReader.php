@@ -285,7 +285,7 @@ class AvroIODatumReader
     ): array {
         $items = [];
         $blockCount = $decoder->readLong();
-        while (0 !== $blockCount) {
+        while (0 != $blockCount) {
             if ($blockCount < 0) {
                 $blockCount = -$blockCount;
                 $decoder->readLong(); // Read (and ignore) block size
@@ -610,7 +610,7 @@ class AvroIODatumReader
             return;
         }
         $remaining = $decoder->bytesRemaining();
-        if ($count * $minBytesPerElement > $remaining) {
+        if ($count > intdiv($remaining, $minBytesPerElement)) {
             throw new AvroException(
                 "Collection claims {$count} elements with at least {$minBytesPerElement} "
                 ."bytes each, but only {$remaining} bytes are available."
