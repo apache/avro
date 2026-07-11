@@ -43,10 +43,61 @@ use Apache\Avro\Schema\AvroUnionSchema;
  */
 class AvroIODatumReader
 {
+    /**
+     * Default upper bound on the number of items in a single decoded array or
+     * map. The block count of an array or map is read from the (potentially
+     * untrusted or truncated) input and drives allocation of the resulting
+     * collection. Reading a collection that declares more items than this limit
+     * throws an {@see AvroIOCollectionSizeException} instead of attempting a
+     * potentially huge allocation. Mirrors the Java SDK's collection item limit.
+     */
+    public const DEFAULT_MAX_COLLECTION_ITEMS = 2147483639; // 2^31 - 8
+
+    /**
+     * Name of the environment variable used to override the default maximum
+     * number of items permitted in a single decoded array or map.
+     */
+    public const MAX_COLLECTION_ITEMS_ENV = 'AVRO_MAX_COLLECTION_ITEMS';
+
+    private int $maxCollectionItems;
+
     public function __construct(
         private ?AvroSchema $writersSchema = null,
         private ?AvroSchema $readersSchema = null
     ) {
+        $this->maxCollectionItems = self::defaultMaxCollectionItems();
+    }
+
+    /**
+     * Set the maximum number of items permitted in a single decoded array or map.
+     */
+    public function setMaxCollectionItems(int $maxCollectionItems): void
+    {
+        $this->maxCollectionItems = $maxCollectionItems;
+    }
+
+    private static function defaultMaxCollectionItems(): int
+    {
+        $env = getenv(self::MAX_COLLECTION_ITEMS_ENV);
+        if (false !== $env && ctype_digit($env)) {
+            return (int) $env;
+        }
+
+        return self::DEFAULT_MAX_COLLECTION_ITEMS;
+    }
+
+    /**
+     * Guard against unbounded allocation when decoding an array or map.
+     *
+     * @throws AvroIOCollectionSizeException if the block count is negative or
+     *                                       the running total would exceed the
+     *                                       configured maximum.
+     */
+    private function checkCollectionItems(int $existing, int $blockCount): void
+    {
+        if ($blockCount < 0 || $existing + $blockCount > $this->maxCollectionItems) {
+            throw new AvroIOCollectionSizeException($this->maxCollectionItems);
+        }
     }
 
     public function setWritersSchema(AvroSchema $schema): void
@@ -290,6 +341,7 @@ class AvroIODatumReader
                 $blockCount = -$blockCount;
                 $decoder->readLong(); // Read (and ignore) block size
             }
+            $this->checkCollectionItems(count($items), $blockCount);
             for ($i = 0; $i < $blockCount; $i++) {
                 $items[] = $this->readData(
                     $writersSchema->items(),
@@ -320,6 +372,7 @@ class AvroIODatumReader
                 $decoder->readLong();
             }
 
+            $this->checkCollectionItems(count($items), $pair_count);
             for ($i = 0; $i < $pair_count; $i++) {
                 $key = $decoder->readString();
                 $items[$key] = $this->readData(

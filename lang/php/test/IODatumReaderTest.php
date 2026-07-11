@@ -22,6 +22,7 @@ namespace Apache\Avro\Tests;
 
 use Apache\Avro\Datum\AvroIOBinaryDecoder;
 use Apache\Avro\Datum\AvroIOBinaryEncoder;
+use Apache\Avro\Datum\AvroIOCollectionSizeException;
 use Apache\Avro\Datum\AvroIODatumReader;
 use Apache\Avro\Datum\AvroIODatumWriter;
 use Apache\Avro\Datum\Type\AvroDuration;
@@ -326,5 +327,78 @@ class IODatumReaderTest extends TestCase
             ],
             $record
         );
+    }
+
+    /**
+     * Encode the given longs (block counts / sizes / markers) into a decoder.
+     */
+    private function decoderForLongs(int ...$values): AvroIOBinaryDecoder
+    {
+        $io = new AvroStringIO();
+        $encoder = new AvroIOBinaryEncoder($io);
+        foreach ($values as $value) {
+            $encoder->writeLong($value);
+        }
+
+        return new AvroIOBinaryDecoder(new AvroStringIO($io->string()));
+    }
+
+    public function test_array_block_count_is_bounded(): void
+    {
+        $schema = AvroSchema::parse('{"type":"array","items":"null"}');
+        // A single block declaring more items than the configured limit must be
+        // rejected before allocating.
+        $decoder = $this->decoderForLongs(11, 0);
+        $reader = new AvroIODatumReader($schema, $schema);
+        $reader->setMaxCollectionItems(10);
+
+        $this->expectException(AvroIOCollectionSizeException::class);
+        $reader->read($decoder);
+    }
+
+    public function test_map_block_count_is_bounded(): void
+    {
+        $schema = AvroSchema::parse('{"type":"map","values":"null"}');
+        $decoder = $this->decoderForLongs(11, 0);
+        $reader = new AvroIODatumReader($schema, $schema);
+        $reader->setMaxCollectionItems(10);
+
+        $this->expectException(AvroIOCollectionSizeException::class);
+        $reader->read($decoder);
+    }
+
+    public function test_array_cumulative_limit_across_blocks(): void
+    {
+        $schema = AvroSchema::parse('{"type":"array","items":"null"}');
+        // Two blocks of 6 items each exceed a limit of 10 even though neither
+        // block does on its own.
+        $decoder = $this->decoderForLongs(6, 6, 0);
+        $reader = new AvroIODatumReader($schema, $schema);
+        $reader->setMaxCollectionItems(10);
+
+        $this->expectException(AvroIOCollectionSizeException::class);
+        $reader->read($decoder);
+    }
+
+    public function test_negative_block_count_is_bounded(): void
+    {
+        $schema = AvroSchema::parse('{"type":"array","items":"null"}');
+        // Negative count -11 -> 11 items, followed by a block size that is skipped.
+        $decoder = $this->decoderForLongs(-11, 0);
+        $reader = new AvroIODatumReader($schema, $schema);
+        $reader->setMaxCollectionItems(10);
+
+        $this->expectException(AvroIOCollectionSizeException::class);
+        $reader->read($decoder);
+    }
+
+    public function test_array_within_limit_still_reads(): void
+    {
+        $schema = AvroSchema::parse('{"type":"array","items":"null"}');
+        $decoder = $this->decoderForLongs(3, 0); // 3 null items, then end-of-array
+        $reader = new AvroIODatumReader($schema, $schema);
+        $reader->setMaxCollectionItems(10);
+
+        $this->assertEquals([null, null, null], $reader->read($decoder));
     }
 }
