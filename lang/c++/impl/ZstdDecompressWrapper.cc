@@ -25,7 +25,7 @@
 
 namespace avro {
 
-std::string ZstdDecompressWrapper::decompress(const std::vector<char> &compressed) {
+std::string ZstdDecompressWrapper::decompress(const std::vector<char> &compressed, size_t maxLength) {
     std::string uncompressed;
     // Get the decompressed size
     size_t decompressed_size = ZSTD_getFrameContentSize(compressed.data(), compressed.size());
@@ -44,8 +44,19 @@ std::string ZstdDecompressWrapper::decompress(const std::vector<char> &compresse
                 throw Exception("ZSTD decompression error: {}", ZSTD_getErrorName(ret));
             }
             uncompressed.append(tmp.data(), out.pos);
+            // Reject a block that decompresses to more than the allowed maximum.
+            if (uncompressed.size() > maxLength) {
+                throw Exception(
+                    "Decompressed block size exceeds the maximum allowed of {} bytes", maxLength);
+            }
         } while (ret != 0);
     } else {
+        // The frame declares its decompressed size; reject it before allocating.
+        if (decompressed_size > maxLength) {
+            throw Exception(
+                "Decompressed block size {} exceeds the maximum allowed of {} bytes",
+                decompressed_size, maxLength);
+        }
         // Batch decompress the data
         uncompressed.resize(decompressed_size);
         size_t result = ZSTD_decompress(
