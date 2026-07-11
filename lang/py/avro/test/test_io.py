@@ -23,6 +23,7 @@ import decimal
 import io
 import itertools
 import json
+import os
 import unittest
 import uuid
 import warnings
@@ -576,6 +577,34 @@ class TestBinaryDecoderAvailableBytes(unittest.TestCase):
         with io.BytesIO(buf.getvalue()) as bio:
             decoder = avro.io.BinaryDecoder(bio)
             self.assertEqual(decoder.read_bytes(), payload)
+
+    def test_bytes_remaining_restores_position(self) -> None:
+        # bytes_remaining() must leave the reader position unchanged.
+        with io.BytesIO(b"abcdefghij") as bio:
+            bio.seek(3)
+            decoder = avro.io.BinaryDecoder(bio)
+            self.assertEqual(decoder.bytes_remaining(), 7)
+            self.assertEqual(bio.tell(), 3)
+
+    def test_bytes_remaining_restores_position_on_error(self) -> None:
+        # If reading the end offset fails after seeking, the original position
+        # must still be restored (via the finally block).
+        class FailingEndStream(io.BytesIO):
+            def __init__(self, data: bytes) -> None:
+                super().__init__(data)
+                self._calls = 0
+
+            def seek(self, offset: int, whence: int = os.SEEK_SET) -> int:
+                # Fail only when seeking to the end.
+                if whence == os.SEEK_END:
+                    raise OSError("cannot seek to end")
+                return super().seek(offset, whence)
+
+        stream = FailingEndStream(b"abcdefghij")
+        stream.seek(4)
+        decoder = avro.io.BinaryDecoder(stream)
+        self.assertIsNone(decoder.bytes_remaining())
+        self.assertEqual(stream.tell(), 4)
 
     def test_read_non_seekable_falls_back(self) -> None:
         # A non-seekable reader skips the pre-check, but the post-read length
