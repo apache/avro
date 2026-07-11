@@ -233,7 +233,7 @@ namespace Avro.File
             catch (Exception e)
             {
                 throw new AvroRuntimeException(string.Format(CultureInfo.InvariantCulture,
-                    "Error fetching meta data for key: {0}", key), e);
+                    "Error fetching next object from block: {0}", e.Message), e);
             }
         }
 
