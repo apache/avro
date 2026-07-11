@@ -560,6 +560,23 @@ namespace Avro.Test
             Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
         }
 
+        // A bytes length above the maximum .NET array length must be rejected
+        // with a consistent AvroException rather than letting new byte[p] throw.
+        // A non-seekable stream is used so the length reaches the array-length
+        // check without needing gigabytes of backing data.
+        [Test]
+        public void TestReadBytesRejectsLengthAboveMaxArrayLength()
+        {
+            var backing = new MemoryStream();
+            new BinaryEncoder(backing).WriteLong(3_000_000_000L); // > any MaxDotNetArrayLength
+            byte[] encoded = backing.ToArray();
+            using (var ns = new NonSeekableStream(new MemoryStream(encoded)))
+            {
+                var d = new BinaryDecoder(ns);
+                Assert.Throws<AvroException>(() => d.ReadBytes());
+            }
+        }
+
         // Minimal read-only, forward-only stream wrapper reporting CanSeek=false.
         private sealed class NonSeekableStream : Stream
         {

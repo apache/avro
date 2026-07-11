@@ -269,6 +269,14 @@ namespace Avro.IO
                 throw new AvroException($"Can not read a negative number of bytes: {p}");
             }
 
+            if (p > MaxDotNetArrayLength)
+            {
+                // A .NET array cannot be larger than this; reject with a
+                // consistent AvroException rather than letting new byte[p] throw
+                // an OverflowException/OutOfMemoryException. Matches ReadString().
+                throw new AvroException($"Length {p} exceeds the maximum supported array length");
+            }
+
             EnsureAvailableBytes(p);
             byte[] buffer = new byte[p];
             Read(buffer, 0, buffer.Length);
