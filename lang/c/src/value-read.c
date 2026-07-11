@@ -16,6 +16,7 @@
  */
 
 #include <avro/platform.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -47,7 +48,7 @@ read_value(avro_reader_t reader, avro_value_t *dest);
  * with the AVRO_MAX_COLLECTION_ITEMS environment variable.
  */
 
-#define AVRO_DEFAULT_MAX_COLLECTION_ITEMS  ((int64_t) 2147483639)  /* 2^31 - 8 */
+#define AVRO_DEFAULT_MAX_COLLECTION_ITEMS  ((int64_t) 2147483639)  /* Integer.MAX_VALUE - 8, matching the Java SDK */
 
 static int64_t
 avro_max_collection_items(void)
@@ -97,6 +98,11 @@ read_array_value(avro_reader_t reader, avro_value_t *dest)
 
 	while (block_count != 0) {
 		if (block_count < 0) {
+			if (block_count == INT64_MIN) {
+				avro_set_error("Invalid array block count: %lld",
+					       (long long) block_count);
+				return EINVAL;
+			}
 			block_count = block_count * -1;
 			check_prefix(rval, avro_binary_encoding.
 				     read_long(reader, &block_size),
@@ -135,6 +141,11 @@ read_map_value(avro_reader_t reader, avro_value_t *dest)
 
 	while (block_count != 0) {
 		if (block_count < 0) {
+			if (block_count == INT64_MIN) {
+				avro_set_error("Invalid map block count: %lld",
+					       (long long) block_count);
+				return EINVAL;
+			}
 			block_count = block_count * -1;
 			check_prefix(rval, avro_binary_encoding.
 				     read_long(reader, &block_size),

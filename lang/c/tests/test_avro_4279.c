@@ -109,6 +109,19 @@ int main(void)
 		expect_rejected(array_iface, bytes, sizeof(bytes), "array negative count");
 	}
 
+	/* A block count of INT64_MIN (zigzag of 2^64-1: nine 0xFF bytes then
+	 * 0x01) cannot be negated without signed-overflow UB and must be rejected
+	 * outright. */
+	{
+		const char bytes[] = {
+			(char) 0xFF, (char) 0xFF, (char) 0xFF, (char) 0xFF,
+			(char) 0xFF, (char) 0xFF, (char) 0xFF, (char) 0xFF,
+			(char) 0xFF, 0x01
+		};
+		expect_rejected(array_iface, bytes, sizeof(bytes), "array INT64_MIN count");
+		expect_rejected(map_iface, bytes, sizeof(bytes), "map INT64_MIN count");
+	}
+
 	/* Two blocks of 6 items (zigzag(6) = 0x0c) exceed the limit cumulatively
 	 * even though neither block does on its own. */
 	{
