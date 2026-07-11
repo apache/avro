@@ -34,7 +34,7 @@ module Avro
     # Mirrors the Java SDK's decompression limit (AVRO-4247). Overridable with
     # the AVRO_MAX_DECOMPRESS_LENGTH environment variable.
     DEFAULT_MAX_DECOMPRESS_LENGTH = 200 * 1024 * 1024 # 200 MiB
-    MAX_DECOMPRESS_LENGTH_ENV = 'AVRO_MAX_DECOMPRESS_LENGTH'.freeze
+    MAX_DECOMPRESS_LENGTH_ENV = 'AVRO_MAX_DECOMPRESS_LENGTH'
 
     class DataFileError < AvroError; end
 
