@@ -213,6 +213,17 @@ sub read_block_header {
 
     return if $codec eq 'null';
 
+    ## Guard against an attacker-controlled block_size triggering a huge
+    ## allocation for the compressed block itself, before any decompression
+    ## happens. When the reader is configured with block_max_size, reject a
+    ## block whose declared compressed size exceeds that bound up front.
+    my $block_max = $datafile->{block_max_size};
+    if (defined $block_max && $datafile->{block_size} > $block_max) {
+        Avro::DataFile::Error::DecompressionSize->throw(
+            "Compressed block size $datafile->{block_size} exceeds the configured block_max_size of $block_max bytes"
+        );
+    }
+
     ## we need to read the entire block into memory, to inflate it
     my $nread = read $fh, my $block, $datafile->{block_size} + MARKER_SIZE
         or croak "Error reading from file: $!";
@@ -235,21 +246,32 @@ sub read_block_header {
             my $z = IO::Uncompress::RawInflate->new(\$block)
                 or croak "Error inflating block: $IO::Uncompress::RawInflate::RawInflateError";
             my $uncompressed = _inflate_bounded($z, $limit);
-            do { open my $fh, '<', \$uncompressed; $fh };
+            _open_decompressed(\$uncompressed);
         }
         elsif ($codec eq 'bzip2') {
             my $z = IO::Uncompress::Bunzip2->new(\$block)
                 or croak "Error decompressing bzip2 block: $IO::Uncompress::Bunzip2::Bunzip2Error";
             my $uncompressed = _inflate_bounded($z, $limit);
-            do { open my $fh, '<', \$uncompressed; $fh };
+            _open_decompressed(\$uncompressed);
         }
         elsif ($codec eq 'zstandard') {
             my $uncompressed = _zstd_decompress_bounded(\$block, $limit);
-            do { open my $fh, '<', \$uncompressed; $fh };
+            _open_decompressed(\$uncompressed);
         }
     };
 
     return;
+}
+
+## Open an in-memory read handle over the decompressed block, surfacing any
+## failure via croak rather than leaving $datafile->{reader} undefined (which
+## would fail later with a less clear error). The handle keeps a reference to
+## the scalar, so the caller's buffer stays alive for the lifetime of the read.
+sub _open_decompressed {
+    my ($uncompressed_ref) = @_;
+    open my $fh, '<', $uncompressed_ref
+        or croak "Error opening decompressed block for reading: $!";
+    return $fh;
 }
 
 ## Read from a streaming decompressor in chunks, rejecting the block as soon as

@@ -107,4 +107,20 @@ SKIP: {
     assert_codec_within_limit_decodes('zstandard');
 }
 
+## When block_max_size is configured on the reader, a block whose declared
+## compressed size exceeds it is rejected before the compressed block is read
+## into memory (guarding against an attacker-controlled block_size allocation).
+{
+    my $payload = "a" x (32 * 1024); # 32 KiB, compresses to a few dozen bytes
+    my $fh = codec_file('deflate', $payload);
+    my $reader = Avro::DataFileReader->new(
+        fh             => $fh,
+        reader_schema  => $schema,
+        block_max_size => 8, # smaller than any real compressed block
+    );
+    throws_ok { $reader->all }
+        'Avro::DataFile::Error::DecompressionSize',
+        'compressed block exceeding block_max_size is rejected before reading';
+}
+
 done_testing;
