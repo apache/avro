@@ -53,7 +53,12 @@ class BinaryDecoder : public Decoder {
     int64_t doDecodeLong();
     size_t doDecodeItemCount();
     size_t doDecodeLength();
+    void checkAvailableBytes(size_t len);
     void drain() final;
+
+    int64_t bytesRemaining() const final {
+        return in_.remainingBytes();
+    }
 };
 
 DecoderPtr binaryDecoder() {
@@ -109,12 +114,25 @@ size_t BinaryDecoder::doDecodeLength() {
     return len;
 }
 
+void BinaryDecoder::checkAvailableBytes(size_t len) {
+    // Reject a declared length that exceeds the data actually available before
+    // allocating for it, to guard against an out-of-memory attack from a
+    // malicious or truncated input. Only enforced when the stream can report
+    // how many bytes remain.
+    int64_t remaining = in_.remainingBytes();
+    if (remaining >= 0 && static_cast<uint64_t>(len) > static_cast<uint64_t>(remaining)) {
+        throw Exception(
+            "Length {} exceeds the {} bytes available in the stream", len, remaining);
+    }
+}
+
 void BinaryDecoder::drain() {
     in_.drain(false);
 }
 
 void BinaryDecoder::decodeString(std::string &value) {
     size_t len = doDecodeLength();
+    checkAvailableBytes(len);
     value.resize(len);
     if (len > 0) {
         in_.readBytes(const_cast<uint8_t *>(
@@ -130,6 +148,7 @@ void BinaryDecoder::skipString() {
 
 void BinaryDecoder::decodeBytes(std::vector<uint8_t> &value) {
     size_t len = doDecodeLength();
+    checkAvailableBytes(len);
     value.resize(len);
     if (len > 0) {
         in_.readBytes(value.data(), len);

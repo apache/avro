@@ -84,6 +84,15 @@ public:
     size_t byteCount() const final {
         return cur_ * chunkSize_ + curLen_;
     }
+
+    int64_t remainingBytes() const final {
+        // Total capacity across all chunks: full chunks plus the (partial)
+        // last chunk, minus what has already been consumed.
+        int64_t total = (size_ == 0)
+                            ? 0
+                            : static_cast<int64_t>((size_ - 1) * chunkSize_ + available_);
+        return total - static_cast<int64_t>(cur_ * chunkSize_ + curLen_);
+    }
 };
 
 class MemoryInputStream2 : public InputStream {
@@ -118,6 +127,10 @@ public:
 
     size_t byteCount() const final {
         return curLen_;
+    }
+
+    int64_t remainingBytes() const final {
+        return static_cast<int64_t>(size_ - curLen_);
     }
 };
 

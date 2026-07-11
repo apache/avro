@@ -74,6 +74,17 @@ public:
      * to be used unless, returned back using backup.
      */
     virtual size_t byteCount() const = 0;
+
+    /**
+     * Returns the number of bytes still available to be read from this
+     * stream, or a negative value when that count is not known (for example a
+     * streaming source that cannot report its size). The default is
+     * "unknown". Memory-backed streams override this so a length prefix that
+     * exceeds the data actually available can be rejected before allocating
+     * for it, guarding against an out-of-memory attack from a malicious or
+     * truncated input.
+     */
+    virtual int64_t remainingBytes() const { return -1; }
 };
 
 typedef std::unique_ptr<InputStream> InputStreamPtr;
@@ -343,6 +354,26 @@ struct StreamReader {
      */
     bool hasMore() {
         return next_ != end_ || fill();
+    }
+
+    /**
+     * Returns the number of bytes still available to be read: those already
+     * buffered in this reader plus whatever the underlying stream reports as
+     * remaining. Returns a negative value when the underlying stream cannot
+     * report its remaining size.
+     */
+    int64_t remainingBytes() const {
+        if (in_ == nullptr) {
+            return -1;
+        }
+        int64_t streamRemaining = in_->remainingBytes();
+        if (streamRemaining < 0) {
+            return -1;
+        }
+        // end_ - next_ is the data already buffered in this reader; it is added
+        // to what the underlying stream still has. The addition promotes the
+        // pointer difference to int64_t.
+        return (end_ - next_) + streamRemaining;
     }
 
     /**

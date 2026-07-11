@@ -25,6 +25,57 @@ using std::ostringstream;
 using std::string;
 using std::vector;
 
+// Minimum number of bytes a single value of the given schema node can occupy on
+// the wire. Used to reject an array/map block count that could not be backed by
+// the bytes remaining. A type that can encode to zero bytes (null) returns 0,
+// which disables the collection check for it (so an array of nulls is not
+// falsely rejected). A depth limit breaks self-referencing (symbolic) schemas.
+static int64_t minBytesPerElement(const NodePtr &node, int depth) {
+    if (!node || depth > 64) {
+        return 0;
+    }
+    switch (node->type()) {
+        case AVRO_NULL:
+            return 0;
+        case AVRO_FLOAT:
+            return 4;
+        case AVRO_DOUBLE:
+            return 8;
+        case AVRO_FIXED:
+            return static_cast<int64_t>(node->fixedSize());
+        case AVRO_RECORD: {
+            int64_t total = 0;
+            for (size_t i = 0; i < node->leaves(); ++i) {
+                total += minBytesPerElement(node->leafAt(i), depth + 1);
+            }
+            return total;
+        }
+        default:
+            // boolean, int, long, bytes, string, enum, union, array, map and
+            // symbolic references all encode to at least one byte.
+            return 1;
+    }
+}
+
+// Reject a collection (array or map) block whose declared element count could
+// not be backed by the bytes actually remaining, before resizing for it.
+// Skipped when the per-element minimum is zero, or when the decoder cannot
+// report how many bytes remain. The comparison divides to avoid overflow.
+static void ensureCollectionAvailable(Decoder &d, size_t count, int64_t minBytes) {
+    if (count == 0 || minBytes <= 0) {
+        return;
+    }
+    int64_t remaining = d.bytesRemaining();
+    if (remaining >= 0 &&
+        static_cast<uint64_t>(count) >
+            static_cast<uint64_t>(remaining) / static_cast<uint64_t>(minBytes)) {
+        throw Exception(
+            "Collection claims {} elements with at least {} bytes each, "
+            "but only {} bytes are available",
+            count, minBytes, remaining);
+    }
+}
+
 typedef vector<uint8_t> bytes;
 
 void GenericContainer::assertType(const NodePtr &schema, Type type) {
@@ -105,7 +156,13 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
             const NodePtr &nn = v.schema()->leafAt(0);
             r.resize(0);
             size_t start = 0;
+            // Only when not resolving: the datum schema then matches the wire
+            // schema, so minBytesPerElement is a true lower bound. Under
+            // resolution the wire (writer) type may be smaller than the datum
+            // (reader) type, which would over-estimate and reject valid data.
+            int64_t minBytes = isResolving ? 0 : minBytesPerElement(nn, 0);
             for (size_t m = d.arrayStart(); m != 0; m = d.arrayNext()) {
+                ensureCollectionAvailable(d, m, minBytes);
                 r.resize(r.size() + m);
                 for (; start < r.size(); ++start) {
                     r[start] = GenericDatum(nn);
@@ -119,7 +176,10 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
             const NodePtr &nn = v.schema()->leafAt(1);
             r.resize(0);
             size_t start = 0;
+            // Map keys are strings (>= 1 byte length prefix) plus the value.
+            int64_t minBytes = isResolving ? 0 : (1 + minBytesPerElement(nn, 0));
             for (size_t m = d.mapStart(); m != 0; m = d.mapNext()) {
+                ensureCollectionAvailable(d, m, minBytes);
                 r.resize(r.size() + m);
                 for (; start < r.size(); ++start) {
                     d.decodeString(r[start].first);
