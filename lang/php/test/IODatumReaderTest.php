@@ -378,6 +378,26 @@ class IODatumReaderTest extends TestCase
         $reader->read($decoder);
     }
 
+    public function test_map_cumulative_limit_with_repeated_keys(): void
+    {
+        // Repeated keys collapse in the result map; the cumulative check must
+        // still count every decoded pair so the limit cannot be bypassed.
+        $schema = AvroSchema::parse('{"type":"map","values":"null"}');
+        $io = new AvroStringIO();
+        $encoder = new AvroIOBinaryEncoder($io);
+        $encoder->writeLong(6); // first block: 6 pairs, all the same key
+        for ($i = 0; $i < 6; $i++) {
+            $encoder->writeString('a'); // identical key; a null value has no bytes
+        }
+        $encoder->writeLong(6); // second block would push the total to 12 > 10
+        $decoder = new AvroIOBinaryDecoder(new AvroStringIO($io->string()));
+        $reader = new AvroIODatumReader($schema, $schema);
+        $reader->setMaxCollectionItems(10);
+
+        $this->expectException(AvroIOCollectionSizeException::class);
+        $reader->read($decoder);
+    }
+
     public function test_array_within_limit_still_reads(): void
     {
         $schema = AvroSchema::parse('{"type":"array","items":"null"}');

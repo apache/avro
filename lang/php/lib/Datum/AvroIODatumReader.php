@@ -340,6 +340,7 @@ class AvroIODatumReader
         AvroIOBinaryDecoder $decoder
     ): array {
         $items = [];
+        $itemsRead = 0;
         $pair_count = $decoder->readLong();
         while (0 != $pair_count) {
             if ($pair_count < 0) {
@@ -348,7 +349,10 @@ class AvroIODatumReader
                 $decoder->readLong();
             }
 
-            $this->checkCollectionItems(count($items), $pair_count);
+            // Track the number of decoded pairs rather than count($items): repeated
+            // keys collapse in the result and would otherwise let the cumulative
+            // check be bypassed by a stream that keeps rewriting the same key.
+            $this->checkCollectionItems($itemsRead, $pair_count);
             for ($i = 0; $i < $pair_count; $i++) {
                 $key = $decoder->readString();
                 $items[$key] = $this->readData(
@@ -357,6 +361,7 @@ class AvroIODatumReader
                     $decoder
                 );
             }
+            $itemsRead += $pair_count;
             $pair_count = $decoder->readLong();
         }
 
@@ -572,13 +577,18 @@ class AvroIODatumReader
     /**
      * Guard against unbounded allocation when decoding an array or map.
      *
-     * @throws AvroIOCollectionSizeException if the block count is negative or
-     *                                       the running total would exceed the
-     *                                       configured maximum.
+     * @param int $existing  the number of items already decoded for the collection
+     * @param int $blockCount the number of items in the next block; this is the
+     *                        normalized (non-negative) count
+     *
+     * @throws AvroIOCollectionSizeException if the block count is negative or the
+     *                                       running total would exceed the maximum
      */
     private function checkCollectionItems(int $existing, int $blockCount): void
     {
-        if ($blockCount < 0 || $existing + $blockCount > $this->maxCollectionItems) {
+        // Use subtraction rather than $existing + $blockCount so the comparison
+        // cannot overflow when the limit is configured close to PHP_INT_MAX.
+        if ($blockCount < 0 || $blockCount > $this->maxCollectionItems - $existing) {
             throw new AvroIOCollectionSizeException($this->maxCollectionItems);
         }
     }
