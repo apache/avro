@@ -139,14 +139,17 @@ def check_max_collection_items(existing: int, items: int, limit: int) -> None:
     """Guard against unbounded allocation when decoding an array or map.
 
     :param existing: the number of items already read for the collection.
-    :param items: the number of items in the next block to be read. A negative
-                  value indicates malformed input.
+    :param items: the number of items in the next block to be read. Callers pass
+                  the normalized (non-negative) block count -- in the Avro
+                  encoding a negative count merely signals that a block-size long
+                  follows and its absolute value is the count.
     :param limit: the maximum total number of items permitted.
-    :raises avro.errors.AvroCollectionSizeException: if the block count is
-        negative or the running total would exceed ``limit``.
+    :raises avro.errors.AvroCollectionSizeException: if the running total would
+        exceed ``limit`` (or, defensively, if ``items`` is negative, which would
+        indicate an un-normalized count was passed).
     """
     if items < 0:
-        raise avro.errors.AvroCollectionSizeException(f"Malformed data. Block count is negative: {items}")
+        raise avro.errors.AvroCollectionSizeException(f"Block count must be normalized before checking, got: {items}")
     if existing + items > limit:
         raise avro.errors.AvroCollectionSizeException(f"Cannot read collections larger than {limit} items")
 

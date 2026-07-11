@@ -23,6 +23,7 @@ import decimal
 import io
 import itertools
 import json
+import os
 import unittest
 import uuid
 import warnings
@@ -816,6 +817,50 @@ class TestCollectionSizeLimit(unittest.TestCase):
         datum_reader, decoder = self._reader(buffer, schema, max_items=10)
         with self.assertRaises(avro.errors.AvroCollectionSizeException):
             datum_reader.skip_map(cast(avro.schema.MapSchema, schema), decoder)
+
+    def _default_limit_with_env(self, value: Optional[str]) -> int:
+        """Return the default collection-item limit with the env var set to `value`."""
+        previous = os.environ.get(avro.io.MAX_COLLECTION_ITEMS_ENV)
+        try:
+            if value is None:
+                os.environ.pop(avro.io.MAX_COLLECTION_ITEMS_ENV, None)
+            else:
+                os.environ[avro.io.MAX_COLLECTION_ITEMS_ENV] = value
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", avro.errors.AvroWarning)
+                return avro.io._default_max_collection_items()
+        finally:
+            if previous is None:
+                os.environ.pop(avro.io.MAX_COLLECTION_ITEMS_ENV, None)
+            else:
+                os.environ[avro.io.MAX_COLLECTION_ITEMS_ENV] = previous
+
+    def test_env_override_is_honored(self) -> None:
+        self.assertEqual(5, self._default_limit_with_env("5"))
+
+    def test_env_override_invalid_falls_back_to_default(self) -> None:
+        for bad in ("not-a-number", "-1", ""):
+            self.assertEqual(avro.io.DEFAULT_MAX_COLLECTION_ITEMS, self._default_limit_with_env(bad))
+
+    def test_env_override_unset_uses_default(self) -> None:
+        self.assertEqual(avro.io.DEFAULT_MAX_COLLECTION_ITEMS, self._default_limit_with_env(None))
+
+    def test_env_override_rejects_over_limit_collection(self) -> None:
+        """A reader constructed with the env-set limit enforces it end to end."""
+        previous = os.environ.get(avro.io.MAX_COLLECTION_ITEMS_ENV)
+        try:
+            os.environ[avro.io.MAX_COLLECTION_ITEMS_ENV] = "5"
+            schema = avro.schema.parse('{"type": "array", "items": "null"}')
+            datum_reader = avro.io.DatumReader(schema)  # reads the env at construction
+            self.assertEqual(5, datum_reader.max_collection_items)
+            decoder = avro.io.BinaryDecoder(io.BytesIO(self._encode_longs(6, 0).getvalue()))
+            with self.assertRaises(avro.errors.AvroCollectionSizeException):
+                datum_reader.read(decoder)
+        finally:
+            if previous is None:
+                os.environ.pop(avro.io.MAX_COLLECTION_ITEMS_ENV, None)
+            else:
+                os.environ[avro.io.MAX_COLLECTION_ITEMS_ENV] = previous
 
 
 def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) -> unittest.TestSuite:
