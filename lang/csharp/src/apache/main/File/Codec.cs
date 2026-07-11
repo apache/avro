@@ -69,7 +69,8 @@ namespace Avro.File
             if (length > maxLength)
             {
                 throw new AvroRuntimeException(
-                    $"Decompressed block size exceeds the maximum allowed of {maxLength} bytes");
+                    $"Decompressed block size {length} exceeds the maximum allowed of {maxLength} bytes. " +
+                    $"Set the {MaxDecompressLengthEnvVar} environment variable to raise the limit.");
             }
         }
 
@@ -83,6 +84,21 @@ namespace Avro.File
         /// <param name="maxLength">The maximum number of decompressed bytes allowed.</param>
         public static void CopyBounded(Stream source, Stream destination, long maxLength)
         {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (destination == null)
+            {
+                throw new ArgumentNullException(nameof(destination));
+            }
+
+            if (maxLength < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(maxLength), "maxLength must not be negative.");
+            }
+
             byte[] buffer = new byte[81920];
             long total = 0;
             int read;

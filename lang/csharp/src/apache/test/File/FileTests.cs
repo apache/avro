@@ -470,6 +470,17 @@ namespace Avro.Test.File
             }
         }
 
+        [Test]
+        public void TestCopyBoundedValidatesArguments()
+        {
+            using (var stream = new MemoryStream())
+            {
+                Assert.Throws<ArgumentNullException>(() => Codec.CopyBounded(null, stream, 10));
+                Assert.Throws<ArgumentNullException>(() => Codec.CopyBounded(stream, null, 10));
+                Assert.Throws<ArgumentOutOfRangeException>(() => Codec.CopyBounded(stream, stream, -1));
+            }
+        }
+
         /// <summary>
         /// This test is a single test case of
         /// <see cref="TestGenericData(string, object[], Codec.Type)"/> but introduces a
