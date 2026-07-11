@@ -134,7 +134,14 @@ module Avro
       # count that exceeds the data actually available before allocating for it.
       def bytes_remaining
         return nil unless @reader.respond_to?(:size) && @reader.respond_to?(:tell)
-        @reader.size - @reader.tell
+        size = @reader.size
+        pos = @reader.tell
+        return nil unless size.is_a?(Integer) && pos.is_a?(Integer)
+        size - pos
+      rescue IOError, SystemCallError, NotImplementedError
+        # The reader responds to #size/#tell but cannot actually report them;
+        # treat the remaining size as unknown and skip the check.
+        nil
       end
 
       def skip_null
@@ -561,7 +568,9 @@ module Avro
       def ensure_collection_available(decoder, count, min_bytes_per_element)
         return if count <= 0 || min_bytes_per_element <= 0
         remaining = decoder.bytes_remaining
-        if remaining && count * min_bytes_per_element > remaining
+        # Compare via integer division rather than multiplying, so a huge count
+        # does not create a large intermediate product.
+        if remaining && count > remaining / min_bytes_per_element
           raise AvroError, "Collection claims #{count} elements with at least #{min_bytes_per_element} bytes each, but only #{remaining} bytes are available"
         end
       end
