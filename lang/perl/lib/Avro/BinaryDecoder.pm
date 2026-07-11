@@ -132,8 +132,93 @@ sub decode_bytes {
     my $class = shift;
     my $reader = pop;
     my $size = decode_long($class, undef, undef, $reader);
+    _ensure_available($reader, $size);
     $reader->read(my $buf, $size);
     return $buf;
+}
+
+## Reject a declared length that exceeds the bytes actually remaining before
+## allocating for it, to guard against an out-of-memory attack from a malicious
+## or truncated input. Only enforced for larger reads and when the reader can
+## report its size via seek/tell; smaller reads and non-seekable readers fall
+## through to a direct read.
+use constant _MAX_UNCHECKED_READ => 1024 * 1024;
+
+## Number of bytes still available to read, or undef when the reader cannot
+## report its size. Used to reject a declared length or collection block count
+## that exceeds the data actually available before allocating for it. Readers
+## that do not support seeking to the end (e.g. a streaming decompressor) return
+## undef, so the check is simply skipped for them.
+sub _bytes_remaining {
+    my ($reader) = @_;
+    my $current = eval { $reader->tell };
+    return undef if !defined $current || $current < 0;
+    return eval {
+        $reader->seek(0, 2)         # SEEK_END
+            or die "seek to end failed\n";
+        my $end = $reader->tell;
+        $reader->seek($current, 0); # SEEK_SET, restore position
+        die "unknown end position\n" if !defined $end || $end < 0;
+        $end - $current;
+    };
+}
+
+sub _ensure_available {
+    my ($reader, $size) = @_;
+    return if $size <= _MAX_UNCHECKED_READ;
+    my $remaining = _bytes_remaining($reader);
+    return unless defined $remaining;
+    if ($size > $remaining) {
+        throw Avro::Schema::Error::Parse(
+            "Cannot read $size bytes, only $remaining remaining");
+    }
+    return;
+}
+
+## Minimum number of bytes a single value of the given schema can occupy on the
+## wire. Used to reject an array/map block count that could not be backed by the
+## bytes remaining. A type that can encode to zero bytes (null) returns 0, which
+## disables the collection check for it (so an array of nulls is not falsely
+## rejected).
+sub _min_bytes_per_element {
+    my ($schema, $visited) = @_;
+    $visited ||= {};
+    my $type = $schema->type;
+    return 0 if $type eq 'null';
+    return 4 if $type eq 'float';
+    return 8 if $type eq 'double';
+    return $schema->size if $type eq 'fixed';
+    if ($type eq 'record' || $type eq 'error') {
+        my $id = "$schema"; # stringified reference as identity
+        return 0 if $visited->{$id};
+        $visited->{$id} = 1;
+        my $total = 0;
+        for my $field (@{ $schema->fields }) {
+            $total += _min_bytes_per_element($field->{type}, $visited);
+        }
+        delete $visited->{$id};
+        return $total;
+    }
+    # boolean, int, long, bytes, string, enum, union, array, map: >= 1 byte
+    # (a union encodes at least a 1-byte branch index).
+    return 1;
+}
+
+## Reject a collection (array or map) block whose declared element count could
+## not be backed by the bytes actually remaining, before iterating. Skipped when
+## the per-element minimum is zero or when the reader cannot report how many
+## bytes remain.
+sub _ensure_collection_available {
+    my ($reader, $count, $min_bytes) = @_;
+    return if $count <= 0 || $min_bytes <= 0;
+    my $remaining = _bytes_remaining($reader);
+    return unless defined $remaining;
+    if ($count * $min_bytes > $remaining) {
+        throw Avro::Schema::Error::Parse(
+            "Collection claims $count elements with at least $min_bytes bytes each, "
+          . "but only $remaining bytes are available");
+    }
+    return;
 }
 
 sub skip_string { &skip_bytes }
@@ -251,6 +336,7 @@ sub decode_array {
     my @array;
     my $writer_items = $writer_schema->items;
     my $reader_items = $reader_schema->items;
+    my $min_bytes = _min_bytes_per_element($writer_items);
     while ($block_count) {
         my $block_size;
         if ($block_count < 0) {
@@ -258,6 +344,7 @@ sub decode_array {
             $block_size = decode_long($class, @_);
             ## XXX we can skip with $reader_schema?
         }
+        _ensure_collection_available($reader, $block_count, $min_bytes);
         for (1..$block_count) {
             push @array, $class->decode(
                 writer_schema => $writer_items,
@@ -296,6 +383,8 @@ sub decode_map {
     my $block_count = decode_long($class, @_);
     my $writer_values = $writer_schema->values;
     my $reader_values = $reader_schema->values;
+    # Map keys are strings (>= 1 byte length prefix) plus the value.
+    my $min_bytes = 1 + _min_bytes_per_element($writer_values);
     while ($block_count) {
         my $block_size;
         if ($block_count < 0) {
@@ -303,6 +392,7 @@ sub decode_map {
             $block_size = decode_long($class, @_);
             ## XXX we can skip with $reader_schema?
         }
+        _ensure_collection_available($reader, $block_count, $min_bytes);
         for (1..$block_count) {
             my $key = decode_string($class, @_);
             unless (defined $key && length $key) {

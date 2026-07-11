@@ -255,4 +255,101 @@ EOP
     is $dec->{one}[0], 1.0, "kind of dumb test";
 }
 
+## A bytes/string value declares a length prefix; a malicious or truncated
+## input can declare far more bytes than actually exist. On a seekable reader
+## that is rejected before allocating for it.
+{
+    my $bytes_schema = Avro::Schema->parse(q({ "type": "bytes" }));
+
+    ## A length prefix declaring 100 MiB, with no payload following it.
+    my $enc = '';
+    Avro::BinaryEncoder->encode(
+        schema  => Avro::Schema->parse(q({ "type": "long" })),
+        data    => 100 * 1024 * 1024,
+        emit_cb => sub { $enc .= ${ $_[0] } },
+    );
+    open my $reader, '<', \$enc or die "Can't open memory file: $!";
+    throws_ok {
+        Avro::BinaryDecoder->decode(
+            writer_schema => $bytes_schema,
+            reader_schema => $bytes_schema,
+            reader        => $reader,
+        );
+    } qr/Cannot read/, "oversized bytes length is rejected before allocating";
+
+    ## A well-formed value above the check threshold whose data is present
+    ## still decodes.
+    my $payload = 'x' x (2 * 1024 * 1024);
+    my $enc2 = '';
+    Avro::BinaryEncoder->encode(
+        schema  => $bytes_schema,
+        data    => $payload,
+        emit_cb => sub { $enc2 .= ${ $_[0] } },
+    );
+    open my $reader2, '<', \$enc2 or die "Can't open memory file: $!";
+    my $dec = Avro::BinaryDecoder->decode(
+        writer_schema => $bytes_schema,
+        reader_schema => $bytes_schema,
+        reader        => $reader2,
+    );
+    is $dec, $payload, "within-limit bytes value still decodes";
+}
+
+## An array/map block declares an element count; a malicious or truncated input
+## can declare far more elements than the remaining bytes could hold. The count
+## is validated against the bytes remaining before iterating, using the minimum
+## on-wire size of the element schema (so 0-byte elements like null are not
+## falsely rejected).
+sub encode_long {
+    my ($value) = @_;
+    my $enc = '';
+    Avro::BinaryEncoder->encode(
+        schema  => Avro::Schema->parse(q({ "type": "long" })),
+        data    => $value,
+        emit_cb => sub { $enc .= ${ $_[0] } },
+    );
+    return $enc;
+}
+
+{
+    my $array_schema = Avro::Schema->parse(q({ "type": "array", "items": "long" }));
+    my $enc = encode_long(1_000_000); # 1,000,000 longs, no element data
+    open my $reader, '<', \$enc or die "Can't open memory file: $!";
+    throws_ok {
+        Avro::BinaryDecoder->decode(
+            writer_schema => $array_schema,
+            reader_schema => $array_schema,
+            reader        => $reader,
+        );
+    } qr/Collection claims/, "oversized array count is rejected before iterating";
+}
+
+{
+    my $map_schema = Avro::Schema->parse(q({ "type": "map", "values": "long" }));
+    my $enc = encode_long(1_000_000);
+    open my $reader, '<', \$enc or die "Can't open memory file: $!";
+    throws_ok {
+        Avro::BinaryDecoder->decode(
+            writer_schema => $map_schema,
+            reader_schema => $map_schema,
+            reader        => $reader,
+        );
+    } qr/Collection claims/, "oversized map count is rejected before iterating";
+}
+
+{
+    ## An array of nulls: null elements occupy zero bytes, so a large count is
+    ## legitimate and must not be rejected.
+    my $array_schema = Avro::Schema->parse(q({ "type": "array", "items": "null" }));
+    my $count = 100_000;
+    my $enc = encode_long($count) . encode_long(0); # one block + end marker
+    open my $reader, '<', \$enc or die "Can't open memory file: $!";
+    my $dec = Avro::BinaryDecoder->decode(
+        writer_schema => $array_schema,
+        reader_schema => $array_schema,
+        reader        => $reader,
+    );
+    is scalar(@$dec), $count, "array of nulls is not falsely rejected";
+}
+
 done_testing;
