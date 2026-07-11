@@ -44,7 +44,10 @@ module Avro
     # The maximum number of bytes a single block is allowed to decompress to.
     def self.max_decompress_length
       value = ENV[MAX_DECOMPRESS_LENGTH_ENV]
-      return value.to_i if value && value =~ /\A\d+\z/ && value.to_i > 0
+      if value && value =~ /\A\d+\z/
+        parsed = value.to_i
+        return parsed if parsed > 0
+      end
       DEFAULT_MAX_DECOMPRESS_LENGTH
     end
 
@@ -426,14 +429,27 @@ module Avro
     end
 
     class ZstandardCodec
+      # Size of the compressed input fed to the streaming decompressor per step,
+      # so the decompressed output can be bounded incrementally.
+      ZSTD_DECOMPRESS_CHUNK_SIZE = 16 * 1024
+
       def codec_name; 'zstandard'; end
 
       def decompress(data)
         load_zstandard!
-        uncompressed = Zstd.decompress(data)
         limit = DataFile.max_decompress_length
-        if uncompressed.bytesize > limit
-          raise DecompressionSizeError, "Decompressed block size exceeds the maximum allowed of #{limit} bytes"
+        stream = Zstd::StreamingDecompress.new
+        uncompressed = +''.b
+        offset = 0
+        size = data.bytesize
+        # Decompress the block in chunks so an over-large (or malicious) block is
+        # rejected before its full decompressed form is materialized in memory.
+        while offset < size
+          uncompressed << stream.decompress(data.byteslice(offset, ZSTD_DECOMPRESS_CHUNK_SIZE))
+          offset += ZSTD_DECOMPRESS_CHUNK_SIZE
+          if uncompressed.bytesize > limit
+            raise DecompressionSizeError, "Decompressed block size exceeds the maximum allowed of #{limit} bytes"
+          end
         end
         uncompressed
       end
