@@ -51,7 +51,7 @@ class AvroIODatumReader
      * throws an {@see AvroIOCollectionSizeException} instead of attempting a
      * potentially huge allocation. Mirrors the Java SDK's collection item limit.
      */
-    public const DEFAULT_MAX_COLLECTION_ITEMS = 2147483639; // 2^31 - 8
+    public const DEFAULT_MAX_COLLECTION_ITEMS = 2147483639; // Integer.MAX_VALUE - 8, matching the Java SDK
 
     /**
      * Name of the environment variable used to override the default maximum
@@ -312,7 +312,9 @@ class AvroIODatumReader
     ): array {
         $items = [];
         $blockCount = $decoder->readLong();
-        while (0 !== $blockCount) {
+        // Loose comparison: on 32-bit builds with GMP, readLong() may return a
+        // numeric string, so a strict check against 0 would never terminate.
+        while (0 != $blockCount) {
             if ($blockCount < 0) {
                 $blockCount = -$blockCount;
                 $decoder->readLong(); // Read (and ignore) block size
