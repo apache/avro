@@ -124,6 +124,10 @@ sub skip_bytes {
     my $class = shift;
     my $reader = pop;
     my $size = decode_long($class, undef, undef, $reader);
+    if ($size < 0) {
+        throw Avro::Schema::Error::Parse(
+            "Invalid negative bytes/string length: $size");
+    }
     $reader->seek($size, 0);
     return;
 }
@@ -137,7 +141,13 @@ sub decode_bytes {
             "Invalid negative bytes/string length: $size");
     }
     _ensure_available($reader, $size);
-    $reader->read(my $buf, $size);
+    my $nread = $reader->read(my $buf, $size);
+    if (!defined $nread || $nread != $size) {
+        # A short read means the input is truncated; failing here avoids
+        # returning an under-sized buffer and misaligning the decoder.
+        throw Avro::Schema::Error::Parse(
+            "Expected $size bytes but read " . (defined $nread ? $nread : 0));
+    }
     return $buf;
 }
 
