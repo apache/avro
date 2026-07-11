@@ -426,6 +426,51 @@ namespace Avro.Test.File
         }
 
         /// <summary>
+        /// A block with a very high compression ratio can expand to far more memory
+        /// than its compressed size; decompressing such a block must be rejected once
+        /// its decompressed size would exceed the configured maximum.
+        /// </summary>
+        [Test]
+        public void TestDeflateDecompressionLimit()
+        {
+            var codec = new DeflateCodec();
+            byte[] big = new byte[4 * 1024 * 1024]; // 4 MiB of zeros, compresses tiny
+            byte[] compressed = codec.Compress(big);
+
+            var previous = Environment.GetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar);
+            Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, "1048576"); // 1 MiB
+            try
+            {
+                Assert.Throws<AvroRuntimeException>(
+                    () => codec.Decompress(compressed, compressed.Length));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, previous);
+            }
+        }
+
+        [Test]
+        public void TestDeflateWithinDecompressionLimit()
+        {
+            var codec = new DeflateCodec();
+            byte[] payload = System.Text.Encoding.UTF8.GetBytes("hello world");
+            byte[] compressed = codec.Compress(payload);
+
+            var previous = Environment.GetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar);
+            Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, "1048576"); // 1 MiB
+            try
+            {
+                byte[] result = codec.Decompress(compressed, compressed.Length);
+                Assert.AreEqual(payload, result);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, previous);
+            }
+        }
+
+        /// <summary>
         /// This test is a single test case of
         /// <see cref="TestGenericData(string, object[], Codec.Type)"/> but introduces a
         /// DeflateStream as it is a standard non-seekable Stream that has the same behavior as the

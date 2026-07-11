@@ -30,6 +30,71 @@ namespace Avro.File
     public abstract class Codec
     {
         /// <summary>
+        /// Default upper bound, in bytes, on the size a single data-file block may
+        /// decompress to. A block with a very high compression ratio (or a malformed
+        /// block) can otherwise expand to far more memory than its compressed size.
+        /// Mirrors the Java SDK's decompression limit (AVRO-4247). Overridable with
+        /// the AVRO_MAX_DECOMPRESS_LENGTH environment variable.
+        /// </summary>
+        public const long DefaultMaxDecompressLength = 200L * 1024 * 1024; // 200 MiB
+
+        /// <summary>
+        /// Name of the environment variable used to override the default maximum
+        /// decompressed size of a single block.
+        /// </summary>
+        public const string MaxDecompressLengthEnvVar = "AVRO_MAX_DECOMPRESS_LENGTH";
+
+        /// <summary>
+        /// The maximum number of bytes a single block is allowed to decompress to.
+        /// </summary>
+        /// <returns>The configured limit, honoring the environment override.</returns>
+        public static long GetMaxDecompressLength()
+        {
+            var value = Environment.GetEnvironmentVariable(MaxDecompressLengthEnvVar);
+            if (value != null && long.TryParse(value, out var parsed) && parsed > 0)
+            {
+                return parsed;
+            }
+
+            return DefaultMaxDecompressLength;
+        }
+
+        /// <summary>
+        /// Throws if the given decompressed length exceeds the maximum allowed.
+        /// </summary>
+        /// <param name="length">The number of decompressed bytes.</param>
+        /// <param name="maxLength">The maximum number of decompressed bytes allowed.</param>
+        public static void CheckDecompressLength(long length, long maxLength)
+        {
+            if (length > maxLength)
+            {
+                throw new AvroRuntimeException(
+                    $"Decompressed block size exceeds the maximum allowed of {maxLength} bytes");
+            }
+        }
+
+        /// <summary>
+        /// Copies a decompression stream to the destination, rejecting the block as
+        /// soon as its decompressed size would exceed <paramref name="maxLength"/> so
+        /// an over-large (or malicious) block is not fully materialized in memory.
+        /// </summary>
+        /// <param name="source">The decompression stream to read from.</param>
+        /// <param name="destination">The stream to write the decompressed data to.</param>
+        /// <param name="maxLength">The maximum number of decompressed bytes allowed.</param>
+        public static void CopyBounded(Stream source, Stream destination, long maxLength)
+        {
+            byte[] buffer = new byte[81920];
+            long total = 0;
+            int read;
+            while ((read = source.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                total += read;
+                CheckDecompressLength(total, maxLength);
+                destination.Write(buffer, 0, read);
+            }
+        }
+
+        /// <summary>
         /// Compress data using implemented codec.
         /// </summary>
         /// <param name="uncompressedData">The uncompressed data.</param>

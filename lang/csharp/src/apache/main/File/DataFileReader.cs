@@ -335,6 +335,11 @@ namespace Avro.File
                     {
                         _currentBlock = NextRawBlock(_currentBlock);
                         _currentBlock.Data = _codec.Decompress(_currentBlock.Data, (int)_blockSize);
+                        // Guard against a block that decompresses to more than the
+                        // allowed maximum (a decompression bomb). The built-in deflate
+                        // codec is already bounded during decompression; this covers
+                        // any codec that returns a fully decompressed buffer.
+                        Codec.CheckDecompressLength(_currentBlock.Data.Length, Codec.GetMaxDecompressLength());
                         _datumDecoder = new BinaryDecoder(_currentBlock.GetDataAsStream());
                     }
                 }
