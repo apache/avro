@@ -303,6 +303,13 @@ BlockDecoder.prototype._createBlockCallback = function () {
     self._pending--;
     if (err) {
       self.emit('error', err);
+      // If the writable side already finished and this was the last pending
+      // block, end the readable side too so a consumer waiting on the queue is
+      // not left hanging after the error.
+      if (self._needPush && self._finished && !self._pending) {
+        self._needPush = false;
+        self.push(null);
+      }
       return;
     }
     self._queue.push(new BlockData(index, data));

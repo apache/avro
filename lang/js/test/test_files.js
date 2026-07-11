@@ -539,7 +539,11 @@ describe('files', function () {
       var encoder = new streams.BlockEncoder(t, {codec: 'deflate'});
       var decoder = new streams.BlockDecoder({maxDecompressLength: 1024})
         .on('data', function () {})
-        .on('error', function () { cb(); });
+        .on('error', function (err) {
+          // zlib's maxOutputLength cap fires, so the allocation itself is bounded.
+          assert.equal(err.code, 'ERR_BUFFER_TOO_LARGE');
+          cb();
+        });
       encoder.pipe(decoder);
       encoder.end(big);
     });
@@ -572,7 +576,11 @@ describe('files', function () {
         maxDecompressLength: 1024
       })
         .on('data', function () {})
-        .on('error', function () { cb(); });
+        .on('error', function (err) {
+          // The generic post-decompress size safeguard fires for custom codecs.
+          assert(/decompressed block size exceeds/.test(err.message));
+          cb();
+        });
       encoder.pipe(decoder);
       encoder.end(1);
     });
@@ -589,7 +597,10 @@ describe('files', function () {
         maxDecompressLength: 1024
       })
         .on('data', function () {})
-        .on('error', function () { cb(); });
+        .on('error', function (err) {
+          assert.equal(err.code, 'ERR_BUFFER_TOO_LARGE');
+          cb();
+        });
       encoder.pipe(decoder);
       encoder.end(big);
     });
