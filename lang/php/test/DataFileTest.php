@@ -388,15 +388,6 @@ class DataFileTest extends TestCase
         }
     }
 
-    protected function add_data_file(string $data_file): string
-    {
-        $data_file = "$data_file.".self::current_timestamp();
-        $full = implode(DIRECTORY_SEPARATOR, [TEST_TEMP_DIR, $data_file]);
-        $this->dataFiles[] = $full;
-
-        return $full;
-    }
-
     /**
      * A block with a very high compression ratio can expand to far more memory
      * than its compressed size; reading such a block must be rejected once its
@@ -410,10 +401,12 @@ class DataFileTest extends TestCase
         $dw->close();
 
         $previous = getenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
-        putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV . '=1024');
+        putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV.'=1024');
+
         try {
             $dr = AvroDataIO::openFile($data_file);
             $thrown = false;
+
             try {
                 $dr->data();
             } catch (AvroDataIODecompressionSizeException $e) {
@@ -425,7 +418,7 @@ class DataFileTest extends TestCase
             if (false === $previous) {
                 putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
             } else {
-                putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV . '=' . $previous);
+                putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV.'='.$previous);
             }
         }
     }
@@ -439,7 +432,8 @@ class DataFileTest extends TestCase
         $dw->close();
 
         $previous = getenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
-        putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV . '=1048576');
+        putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV.'=1048576');
+
         try {
             $dr = AvroDataIO::openFile($data_file);
             $data = $dr->data();
@@ -449,9 +443,18 @@ class DataFileTest extends TestCase
             if (false === $previous) {
                 putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
             } else {
-                putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV . '=' . $previous);
+                putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV.'='.$previous);
             }
         }
+    }
+
+    protected function add_data_file(string $data_file): string
+    {
+        $data_file = "$data_file.".self::current_timestamp();
+        $full = implode(DIRECTORY_SEPARATOR, [TEST_TEMP_DIR, $data_file]);
+        $this->dataFiles[] = $full;
+
+        return $full;
     }
 
     protected function remove_data_files(): void
