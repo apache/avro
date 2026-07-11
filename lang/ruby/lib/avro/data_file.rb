@@ -28,7 +28,25 @@ module Avro
     META_SCHEMA = Schema.parse('{"type": "map", "values": "bytes"}')
     VALID_ENCODINGS = ['binary'].freeze # not used yet
 
+    # Default upper bound, in bytes, on the size a single data-file block may
+    # decompress to. A block with a very high compression ratio (or a malformed
+    # block) can otherwise expand to far more memory than its compressed size.
+    # Mirrors the Java SDK's decompression limit (AVRO-4247). Overridable with
+    # the AVRO_MAX_DECOMPRESS_LENGTH environment variable.
+    DEFAULT_MAX_DECOMPRESS_LENGTH = 200 * 1024 * 1024 # 200 MiB
+    MAX_DECOMPRESS_LENGTH_ENV = 'AVRO_MAX_DECOMPRESS_LENGTH'.freeze
+
     class DataFileError < AvroError; end
+
+    # Raised when a data-file block decompresses to more than the configured maximum.
+    class DecompressionSizeError < DataFileError; end
+
+    # The maximum number of bytes a single block is allowed to decompress to.
+    def self.max_decompress_length
+      value = ENV[MAX_DECOMPRESS_LENGTH_ENV]
+      return value.to_i if value && value =~ /\A\d+\z/ && value.to_i > 0
+      DEFAULT_MAX_DECOMPRESS_LENGTH
+    end
 
     def self.open(file_path, mode='r', schema=nil, codec=nil)
       schema = Avro::Schema.parse(schema) if schema
@@ -319,10 +337,22 @@ module Avro
         # (without the RFC1950 header & checksum). See the docs for
         # inflateInit2 in https://www.zlib.net/manual.html
         zstream = Zlib::Inflate.new(-Zlib::MAX_WBITS)
-        data = zstream.inflate(compressed)
-        data << zstream.finish
+        limit = DataFile.max_decompress_length
+        data = "".b
+        # Inflate in chunks so an over-large (or malicious) block is rejected
+        # before its full decompressed form is materialized in memory.
+        append = lambda do |chunk|
+          data << chunk
+          if data.bytesize > limit
+            raise DecompressionSizeError, "Decompressed block size exceeds the maximum allowed of #{limit} bytes"
+          end
+        end
+        zstream.inflate(compressed, &append)
+        remaining = zstream.finish
+        append.call(remaining) unless remaining.empty?
+        data
       ensure
-        zstream.close
+        zstream.close if zstream
       end
 
       def compress(data)
@@ -339,6 +369,13 @@ module Avro
 
       def decompress(data)
         load_snappy!
+        # The Snappy block header declares the uncompressed length as a varint;
+        # reject an over-large block before allocating for it.
+        limit = DataFile.max_decompress_length
+        declared = self.class.snappy_declared_length(data)
+        if declared && declared > limit
+          raise DecompressionSizeError, "Decompressed block size exceeds the maximum allowed of #{limit} bytes"
+        end
         crc32 = data.slice(-4..-1).unpack('N').first
         uncompressed = Snappy.inflate(data.slice(0..-5))
 
@@ -355,6 +392,21 @@ module Avro
         # the last 4 bytes may cause Snappy to fail. recover by assuming the
         # payload is from an older file and uncompress the entire buffer.
         Snappy.inflate(data)
+      end
+
+      # Return the uncompressed length declared in a raw Snappy block header,
+      # which prefixes the data as a little-endian base-128 varint. Returns nil
+      # if the header cannot be parsed.
+      def self.snappy_declared_length(data)
+        result = 0
+        shift = 0
+        data.each_byte do |byte|
+          result |= (byte & 0x7f) << shift
+          return result if (byte & 0x80).zero?
+          shift += 7
+          return nil if shift > 63
+        end
+        nil
       end
 
       def compress(data)
@@ -378,7 +430,12 @@ module Avro
 
       def decompress(data)
         load_zstandard!
-        Zstd.decompress(data)
+        uncompressed = Zstd.decompress(data)
+        limit = DataFile.max_decompress_length
+        if uncompressed.bytesize > limit
+          raise DecompressionSizeError, "Decompressed block size exceeds the maximum allowed of #{limit} bytes"
+        end
+        uncompressed
       end
 
       def compress(data)
