@@ -225,7 +225,9 @@ sub _ensure_collection_available {
     return if $count <= 0 || $min_bytes <= 0;
     my $remaining = _bytes_remaining($reader);
     return unless defined $remaining;
-    if ($count * $min_bytes > $remaining) {
+    # Compare via integer division rather than multiplying, so $count * $min_bytes
+    # cannot overflow/wrap (notably on 32-bit builds) and defeat the check.
+    if ($count > int($remaining / $min_bytes)) {
         throw Avro::Schema::Error::Parse(
             "Collection claims $count elements with at least $min_bytes bytes each, "
           . "but only $remaining bytes are available");
