@@ -343,7 +343,7 @@ module Avro
             block_count = -block_count
             _block_size = decoder.read_long
           end
-          ensure_collection_available(decoder, block_count, self.class.min_bytes_per_element(writers_schema.items))
+          ensure_collection_available(decoder, block_count, min_bytes_per_element(writers_schema.items))
           block_count.times do
             read_items << read_data(writers_schema.items,
                                     readers_schema.items,
@@ -364,7 +364,7 @@ module Avro
             _block_size = decoder.read_long
           end
           # Map keys are strings (>= 1 byte length prefix) plus the value.
-          ensure_collection_available(decoder, block_count, 1 + self.class.min_bytes_per_element(writers_schema.values))
+          ensure_collection_available(decoder, block_count, 1 + min_bytes_per_element(writers_schema.values))
           block_count.times do
             key = decoder.read_string
             read_items[key] = read_data(writers_schema.values,
@@ -529,18 +529,18 @@ module Avro
       # backed by the bytes remaining. A type that can encode to zero bytes
       # (null) returns 0, which disables the check for it (so an array of nulls
       # is not falsely rejected).
-      def self.min_bytes_per_element(schema, visited = nil)
-        visited ||= {}
+      def min_bytes_per_element(schema, visited = nil)
+        visited ||= {}.compare_by_identity
         case schema.type_sym
         when :null then 0
         when :float then 4
         when :double then 8
         when :fixed then schema.size
         when :record, :error
-          return 0 if visited[schema.object_id]
-          visited[schema.object_id] = true
+          return 0 if visited[schema]
+          visited[schema] = true
           total = schema.fields.sum { |field| min_bytes_per_element(field.type, visited) }
-          visited.delete(schema.object_id)
+          visited.delete(schema)
           total
         else
           # boolean, int, long, bytes, string, enum, union, array, map: >= 1 byte
