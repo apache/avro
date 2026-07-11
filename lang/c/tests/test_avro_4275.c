@@ -63,14 +63,14 @@ static const char valid_neg_block_array[] = {
  *
  * Layout:
  *   03        = varint 3 = zigzag(-2) => block_count = -2
- *   0E        = varint 14 = zigzag(7) => block_size = 7 bytes
+ *   0C        = varint 12 = zigzag(6) => block_size = 6 bytes
  *   02 61 14  = key "a" (len=1, 'a'), value int 10
  *   02 62 28  = key "b" (len=1, 'b'), value int 20
  *   00        = terminator
  */
 static const char valid_neg_block_map[] = {
     '\x03',                     /* block_count = -2 */
-    '\x0E',                     /* block_size = 7 */
+    '\x0C',                     /* block_size = 6 */
     '\x02', '\x61', '\x14',    /* key "a", value 10 */
     '\x02', '\x62', '\x28',    /* key "b", value 20 */
     '\x00'                      /* terminator */
