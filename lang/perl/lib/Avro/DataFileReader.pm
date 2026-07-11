@@ -223,9 +223,18 @@ sub read_block_header {
         );
     }
 
-    ## we need to read the entire block into memory, to inflate it
-    my $nread = read $fh, my $block, $datafile->{block_size} + MARKER_SIZE
-        or croak "Error reading from file: $!";
+    ## we need to read the entire block into memory, to inflate it. Verify the
+    ## exact byte count: a short read (truncated/malformed file) would otherwise
+    ## slip through and surface later as a confusing marker/decompressor error.
+    my $want = $datafile->{block_size} + MARKER_SIZE;
+    my $block;
+    my $nread = read $fh, $block, $want;
+    if (!defined $nread) {
+        croak "Error reading from file: $!";
+    }
+    if ($nread != $want) {
+        croak "Short read: expected $want bytes for the block, got $nread (truncated file?)";
+    }
 
     ## remove the marker
     my $marker = substr $block, -(MARKER_SIZE), MARKER_SIZE, '';
