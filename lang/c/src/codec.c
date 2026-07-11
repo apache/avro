@@ -182,7 +182,9 @@ static int decode_snappy(avro_codec_t c, void * data, int64_t len)
 		return 1;
         }
 
-	if ((int64_t) outlen > max_len) {
+	/* Compare as unsigned 64-bit: casting outlen (size_t) to int64_t could
+	 * wrap negative for a declared length above INT64_MAX and bypass the cap. */
+	if ((uint64_t) outlen > (uint64_t) max_len) {
 		avro_set_error("Decompressed block size %llu exceeds the maximum allowed of %lld bytes",
 			       (unsigned long long) outlen, (long long) max_len);
 		return 1;

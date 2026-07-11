@@ -73,12 +73,25 @@ check_codec_rejects_oversized(const char *name, const char *payload, int64_t pay
 	memcpy(compressed, codec.block_data, (size_t) compressed_len);
 
 	int rc = avro_codec_decode(&codec, compressed, compressed_len);
+	/* Capture the error before reset/free may clobber it. */
+	char err_copy[512];
+	err_copy[0] = '\0';
+	if (rc != 0) {
+		strncpy(err_copy, avro_strerror(), sizeof(err_copy) - 1);
+		err_copy[sizeof(err_copy) - 1] = '\0';
+	}
 
 	free(compressed);
 	avro_codec_reset(&codec);
 
 	if (rc == 0) {
 		fprintf(stderr, "  codec %s: expected decompression to be rejected but it succeeded\n", name);
+		return 1;
+	}
+	/* Ensure it was rejected specifically for exceeding the size limit, not
+	 * some unrelated failure (e.g. a CRC error or regression). */
+	if (strstr(err_copy, "exceeds the maximum") == NULL) {
+		fprintf(stderr, "  codec %s: rejected but not for the size limit: %s\n", name, err_copy);
 		return 1;
 	}
 	fprintf(stderr, "  codec %s: over-limit block rejected as expected\n", name);
