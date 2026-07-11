@@ -101,7 +101,9 @@ class AvroIOBinaryDecoder
         $end = $this->io->tell();
         $this->io->seek($current, AvroIO::SEEK_SET);
 
-        return $end - $current;
+        // Clamp to 0: AvroStringIO::seek() allows seeking past EOF, which would
+        // otherwise yield a confusing negative "remaining" count.
+        return max(0, $end - $current);
     }
 
     public function readInt(): int

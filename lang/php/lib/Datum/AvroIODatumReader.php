@@ -578,7 +578,7 @@ class AvroIODatumReader
                 }
                 $id = spl_object_id($schema);
                 if (isset($visited[$id])) {
-                    return 0; // break recursion for self-referencing schemas
+                    return 1; // self-referencing schema: safe lower bound of 1 byte
                 }
                 $visited[$id] = true;
                 $total = 0;
