@@ -516,8 +516,11 @@ namespace Avro.Test.File
                 {
                     using (var reader = DataFileReader<GenericRecord>.OpenReader(inStream, schema))
                     {
+                        // Enumerating forces the block to be read and
+                        // decompressed, which is where the limit is enforced.
                         foreach (var rec in reader.NextEntries)
                         {
+                            Assert.NotNull(rec);
                         }
                     }
                 });
