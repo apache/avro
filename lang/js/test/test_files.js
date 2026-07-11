@@ -563,6 +563,24 @@ describe('files', function () {
       encoder.end(payload);
     });
 
+    it('clamps an out-of-range limit instead of throwing', function (cb) {
+      // A limit larger than the runtime's maximum buffer length (or otherwise
+      // out of range) must be normalized so it does not make zlib throw
+      // synchronously; a normal block still decodes.
+      var t = createType('string');
+      var payload = 'hello world';
+      var out = [];
+      var encoder = new streams.BlockEncoder(t, {codec: 'deflate'});
+      var decoder = new streams.BlockDecoder({maxDecompressLength: Infinity})
+        .on('data', function (s) { out.push(s); })
+        .on('end', function () {
+          assert.deepEqual(out, [payload]);
+          cb();
+        });
+      encoder.pipe(decoder);
+      encoder.end(payload);
+    });
+
     it('enforces the limit for custom codecs', function (cb) {
       // A custom codec that yields more than the limit is rejected by the
       // size safeguard applied to every codec.

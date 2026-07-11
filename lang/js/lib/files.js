@@ -24,6 +24,7 @@
 var protocols = require('./protocols'),
     schemas = require('./schemas'),
     utils = require('./utils'),
+    buffer = require('buffer'),
     fs = require('fs'),
     stream = require('stream'),
     util = require('util'),
@@ -66,15 +67,31 @@ var MAGIC_BYTES = Buffer.from('Obj\x01');
 // `AVRO_MAX_DECOMPRESS_LENGTH` environment variable.
 var DEFAULT_MAX_DECOMPRESS_LENGTH = 200 * 1024 * 1024; // 200 MiB
 
-function getDefaultMaxDecompressLength() {
-  var value = process.env.AVRO_MAX_DECOMPRESS_LENGTH;
-  if (value !== undefined) {
-    var parsed = parseInt(value, 10);
-    if (!isNaN(parsed) && parsed > 0) {
-      return parsed;
-    }
+// Largest value safe to pass as zlib's `maxOutputLength`. A value above the
+// runtime's maximum buffer length (or a non-finite / non-integer one) can make
+// `zlib.inflateRaw` throw synchronously, so every configured limit is
+// normalized to a positive integer bounded by this cap before use.
+var MAX_DECOMPRESS_LENGTH_CAP =
+  (buffer.constants && buffer.constants.MAX_LENGTH) || 0x7fffffff;
+
+// Normalize a user- or environment-supplied limit to a positive, finite
+// integer bounded by MAX_DECOMPRESS_LENGTH_CAP. Returns undefined when the
+// input is missing or invalid, so callers can fall back to a default.
+function normalizeMaxDecompressLength(value) {
+  var parsed = typeof value === 'number' ? value : parseInt(value, 10);
+  if (!isFinite(parsed) || parsed <= 0) {
+    return undefined;
   }
-  return DEFAULT_MAX_DECOMPRESS_LENGTH;
+  parsed = Math.floor(parsed);
+  if (parsed > MAX_DECOMPRESS_LENGTH_CAP) {
+    return MAX_DECOMPRESS_LENGTH_CAP;
+  }
+  return parsed;
+}
+
+function getDefaultMaxDecompressLength() {
+  var normalized = normalizeMaxDecompressLength(process.env.AVRO_MAX_DECOMPRESS_LENGTH);
+  return normalized === undefined ? DEFAULT_MAX_DECOMPRESS_LENGTH : normalized;
 }
 
 // Convenience.
@@ -164,8 +181,9 @@ function BlockDecoder(opts) {
   this._type = null;
   this._codecs = opts.codecs;
   this._parseOpts = opts.parseOpts || {};
-  this._maxDecompressLength = opts.maxDecompressLength > 0 ?
-    opts.maxDecompressLength : getDefaultMaxDecompressLength();
+  var normalizedMax = normalizeMaxDecompressLength(opts.maxDecompressLength);
+  this._maxDecompressLength = normalizedMax === undefined ?
+    getDefaultMaxDecompressLength() : normalizedMax;
   this._tap = new Tap(Buffer.alloc(0));
   this._blockTap = new Tap(Buffer.alloc(0));
   this._syncMarker = null;
