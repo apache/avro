@@ -87,11 +87,13 @@ public:
 
     int64_t remainingBytes() const final {
         // Total capacity across all chunks: full chunks plus the (partial)
-        // last chunk, minus what has already been consumed.
+        // last chunk, minus what has already been consumed. Widen to int64_t
+        // before multiplying so the arithmetic cannot overflow size_t.
         int64_t total = (size_ == 0)
                             ? 0
-                            : static_cast<int64_t>((size_ - 1) * chunkSize_ + available_);
-        return total - static_cast<int64_t>(cur_ * chunkSize_ + curLen_);
+                            : static_cast<int64_t>(size_ - 1) * static_cast<int64_t>(chunkSize_) + static_cast<int64_t>(available_);
+        int64_t consumed = static_cast<int64_t>(cur_) * static_cast<int64_t>(chunkSize_) + static_cast<int64_t>(curLen_);
+        return total - consumed;
     }
 };
 

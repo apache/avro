@@ -31,8 +31,14 @@ using std::vector;
 // which disables the collection check for it (so an array of nulls is not
 // falsely rejected). A depth limit breaks self-referencing (symbolic) schemas.
 static int64_t minBytesPerElement(const NodePtr &node, int depth) {
-    if (!node || depth > 64) {
+    if (!node) {
         return 0;
+    }
+    if (depth > 64) {
+        // A cyclic or pathologically deep schema. Return 1 (not 0) so the
+        // collection check stays enabled rather than being silently bypassed;
+        // a valid recursive value always encodes to at least 1 byte.
+        return 1;
     }
     switch (node->type()) {
         case AVRO_NULL:
@@ -73,6 +79,17 @@ static void ensureCollectionAvailable(Decoder &d, size_t count, int64_t minBytes
             "Collection claims {} elements with at least {} bytes each, "
             "but only {} bytes are available",
             count, minBytes, remaining);
+    }
+}
+
+// Guard against size_t overflow / an over-large request when growing a
+// collection container by `count` elements before calling resize().
+template<typename Container>
+static void ensureCanGrow(const Container &c, size_t count) {
+    if (count > c.max_size() - c.size()) {
+        throw Exception(
+            "Collection block count {} exceeds the maximum container size",
+            count);
     }
 }
 
@@ -163,6 +180,7 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
             int64_t minBytes = isResolving ? 0 : minBytesPerElement(nn, 0);
             for (size_t m = d.arrayStart(); m != 0; m = d.arrayNext()) {
                 ensureCollectionAvailable(d, m, minBytes);
+                ensureCanGrow(r, m);
                 r.resize(r.size() + m);
                 for (; start < r.size(); ++start) {
                     r[start] = GenericDatum(nn);
@@ -180,6 +198,7 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
             int64_t minBytes = isResolving ? 0 : (1 + minBytesPerElement(nn, 0));
             for (size_t m = d.mapStart(); m != 0; m = d.mapNext()) {
                 ensureCollectionAvailable(d, m, minBytes);
+                ensureCanGrow(r, m);
                 r.resize(r.size() + m);
                 for (; start < r.size(); ++start) {
                     d.decodeString(r[start].first);
