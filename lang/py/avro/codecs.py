@@ -176,8 +176,10 @@ class DeflateCodec(Codec):
         limit = _max_decompress_length()
         decompressor = zlib.decompressobj(-15)
         # Request at most limit + 1 bytes so that an over-large block is detected
-        # without allocating the whole (potentially huge) output.
-        uncompressed = decompressor.decompress(data, limit + 1)
+        # without allocating the whole (potentially huge) output. Accumulate into
+        # a bytearray so the flush() output is appended in place rather than
+        # creating an extra full-size copy of the already-decompressed data.
+        uncompressed = bytearray(decompressor.decompress(data, limit + 1))
         if len(uncompressed) > limit:
             _raise_decompression_too_large(limit)
         uncompressed += decompressor.flush()
@@ -255,9 +257,10 @@ if has_zstandard:
                     chunk = reader.read(16384)
                     if not chunk:
                         break
-                    uncompressed.extend(chunk)
-                    if len(uncompressed) > limit:
+                    # Check before extending so the buffer never grows past the limit.
+                    if len(uncompressed) + len(chunk) > limit:
                         _raise_decompression_too_large(limit)
+                    uncompressed.extend(chunk)
             return avro.io.BinaryDecoder(io.BytesIO(uncompressed))
 
 
