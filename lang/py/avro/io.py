@@ -87,7 +87,7 @@ in that datum, if there are any.
 import collections
 import datetime
 import decimal
-import io
+import os
 import struct
 import warnings
 from typing import IO, Generator, Iterable, List, Mapping, Optional, Sequence, Set, Union
@@ -242,7 +242,7 @@ class BinaryDecoder:
         if not getattr(reader, "seekable", None) or not reader.seekable():
             return None
         pos = reader.tell()
-        end = reader.seek(0, io.SEEK_END)
+        end = reader.seek(0, os.SEEK_END)
         reader.seek(pos)
         return end - pos
 
@@ -852,7 +852,10 @@ class DatumReader:
         if count <= 0 or min_bytes_per_element <= 0:
             return
         remaining = decoder.bytes_remaining()
-        if remaining is not None and count * min_bytes_per_element > remaining:
+        # Compare via integer division rather than multiplying, so an
+        # attacker-controlled (unbounded) count does not create a huge
+        # intermediate product.
+        if remaining is not None and count > remaining // min_bytes_per_element:
             raise avro.errors.InvalidAvroBinaryEncoding(
                 f"Collection claims {count} elements with at least {min_bytes_per_element} bytes each, but only {remaining} bytes are available."
             )
