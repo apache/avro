@@ -41,7 +41,7 @@ use Avro::BinaryDecoder;
 use Avro::Schema;
 use Carp;
 use Compress::Zstd::Decompressor;
-use IO::Uncompress::Bunzip2 qw(bunzip2);
+use IO::Uncompress::Bunzip2 ();
 use IO::Uncompress::RawInflate ;
 use Fcntl();
 
