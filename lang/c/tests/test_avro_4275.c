@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <errno.h>
 #include <avro.h>
 
 /*
@@ -118,12 +119,13 @@ static int test_array_int64min(void)
         return 1;
     }
 
-    /* This MUST fail gracefully (return error) rather than looping
-     * unboundedly or triggering undefined behavior. */
+    /* This MUST fail with EINVAL rather than looping unboundedly or
+     * triggering undefined behavior from negating INT64_MIN. */
     rc = avro_value_read(reader, &value);
-    if (rc == 0) {
+    if (rc != EINVAL) {
         fprintf(stderr,
-                "FAIL: INT64_MIN array block count was not rejected\n");
+                "FAIL: INT64_MIN array block count: expected EINVAL, "
+                "got rc=%d (%s)\n", rc, avro_strerror());
         avro_reader_free(reader);
         avro_value_decref(&value);
         avro_value_iface_decref(iface);
@@ -131,7 +133,7 @@ static int test_array_int64min(void)
         return 1;
     }
 
-    printf("PASS: INT64_MIN array block count rejected: %s\n",
+    printf("PASS: INT64_MIN array block count rejected with EINVAL: %s\n",
            avro_strerror());
 
     avro_reader_free(reader);
@@ -183,11 +185,13 @@ static int test_map_int64min(void)
         return 1;
     }
 
-    /* This MUST fail gracefully. */
+    /* This MUST fail with EINVAL rather than looping unboundedly or
+     * triggering undefined behavior from negating INT64_MIN. */
     rc = avro_value_read(reader, &value);
-    if (rc == 0) {
+    if (rc != EINVAL) {
         fprintf(stderr,
-                "FAIL: INT64_MIN map block count was not rejected\n");
+                "FAIL: INT64_MIN map block count: expected EINVAL, "
+                "got rc=%d (%s)\n", rc, avro_strerror());
         avro_reader_free(reader);
         avro_value_decref(&value);
         avro_value_iface_decref(iface);
@@ -195,7 +199,7 @@ static int test_map_int64min(void)
         return 1;
     }
 
-    printf("PASS: INT64_MIN map block count rejected: %s\n",
+    printf("PASS: INT64_MIN map block count rejected with EINVAL: %s\n",
            avro_strerror());
 
     avro_reader_free(reader);
