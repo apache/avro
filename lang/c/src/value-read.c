@@ -49,8 +49,14 @@ read_value(avro_reader_t reader, avro_value_t *dest);
 static int64_t
 min_bytes_per_element(avro_schema_t schema, int depth)
 {
-	if (schema == NULL || depth > 64) {
+	if (schema == NULL) {
 		return 0;
+	}
+	if (depth > 64) {
+		/* A cyclic or pathologically deep schema. Return 1 (not 0) so the
+		 * collection check stays enabled rather than being silently
+		 * bypassed; a valid recursive value always encodes to >= 1 byte. */
+		return 1;
 	}
 	switch (avro_typeof(schema)) {
 	case AVRO_NULL:

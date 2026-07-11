@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <errno.h>
 #include <avro.h>
 
 /* Decodes buf against the given schema and returns the avro_value_read rc.
@@ -89,6 +90,12 @@ static int check_rejects_oversized(const char *schema_literal, const char *label
 	rc = try_decode(iface, oversized, sizeof(oversized));
 	if (rc == 0) {
 		fprintf(stderr, "%s: FAIL - oversized length was accepted\n", label);
+	} else if (rc != EINVAL) {
+		/* The availability checks reject with EINVAL before allocating.
+		 * A different error (e.g. ENOSPC from failing to read after a
+		 * large allocation) would indicate the pre-fix behavior. */
+		fprintf(stderr, "%s: FAIL - rejected with rc=%d (expected EINVAL): %s\n",
+			label, rc, avro_strerror());
 	} else {
 		fprintf(stderr, "%s: oversized length rejected as expected: %s\n",
 			label, avro_strerror());
