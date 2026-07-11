@@ -76,30 +76,6 @@ class AvroIODatumReader
         $this->maxCollectionItems = $maxCollectionItems;
     }
 
-    private static function defaultMaxCollectionItems(): int
-    {
-        $env = getenv(self::MAX_COLLECTION_ITEMS_ENV);
-        if (false !== $env && ctype_digit($env)) {
-            return (int) $env;
-        }
-
-        return self::DEFAULT_MAX_COLLECTION_ITEMS;
-    }
-
-    /**
-     * Guard against unbounded allocation when decoding an array or map.
-     *
-     * @throws AvroIOCollectionSizeException if the block count is negative or
-     *                                       the running total would exceed the
-     *                                       configured maximum.
-     */
-    private function checkCollectionItems(int $existing, int $blockCount): void
-    {
-        if ($blockCount < 0 || $existing + $blockCount > $this->maxCollectionItems) {
-            throw new AvroIOCollectionSizeException($this->maxCollectionItems);
-        }
-    }
-
     public function setWritersSchema(AvroSchema $schema): void
     {
         $this->writersSchema = $schema;
@@ -580,6 +556,30 @@ class AvroIODatumReader
                 return $record;
             default:
                 throw new AvroException(sprintf('Unknown type: %s', $fieldSchema->type()));
+        }
+    }
+
+    private static function defaultMaxCollectionItems(): int
+    {
+        $env = getenv(self::MAX_COLLECTION_ITEMS_ENV);
+        if (false !== $env && ctype_digit($env)) {
+            return (int) $env;
+        }
+
+        return self::DEFAULT_MAX_COLLECTION_ITEMS;
+    }
+
+    /**
+     * Guard against unbounded allocation when decoding an array or map.
+     *
+     * @throws AvroIOCollectionSizeException if the block count is negative or
+     *                                       the running total would exceed the
+     *                                       configured maximum.
+     */
+    private function checkCollectionItems(int $existing, int $blockCount): void
+    {
+        if ($blockCount < 0 || $existing + $blockCount > $this->maxCollectionItems) {
+            throw new AvroIOCollectionSizeException($this->maxCollectionItems);
         }
     }
 

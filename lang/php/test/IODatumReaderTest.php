@@ -329,20 +329,6 @@ class IODatumReaderTest extends TestCase
         );
     }
 
-    /**
-     * Encode the given longs (block counts / sizes / markers) into a decoder.
-     */
-    private function decoderForLongs(int ...$values): AvroIOBinaryDecoder
-    {
-        $io = new AvroStringIO();
-        $encoder = new AvroIOBinaryEncoder($io);
-        foreach ($values as $value) {
-            $encoder->writeLong($value);
-        }
-
-        return new AvroIOBinaryDecoder(new AvroStringIO($io->string()));
-    }
-
     public function test_array_block_count_is_bounded(): void
     {
         $schema = AvroSchema::parse('{"type":"array","items":"null"}');
@@ -400,5 +386,19 @@ class IODatumReaderTest extends TestCase
         $reader->setMaxCollectionItems(10);
 
         $this->assertEquals([null, null, null], $reader->read($decoder));
+    }
+
+    /**
+     * Encode the given longs (block counts / sizes / markers) into a decoder.
+     */
+    private function decoderForLongs(int ...$values): AvroIOBinaryDecoder
+    {
+        $io = new AvroStringIO();
+        $encoder = new AvroIOBinaryEncoder($io);
+        foreach ($values as $value) {
+            $encoder->writeLong($value);
+        }
+
+        return new AvroIOBinaryDecoder(new AvroStringIO($io->string()));
     }
 }
