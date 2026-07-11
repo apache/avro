@@ -150,6 +150,7 @@ def check_max_collection_items(existing: int, items: int, limit: int) -> None:
     if existing + items > limit:
         raise avro.errors.AvroCollectionSizeException(f"Cannot read collections larger than {limit} items")
 
+
 ValidationNode = collections.namedtuple("ValidationNode", ["schema", "datum", "name"])
 ValidationNodeGeneratorType = Generator[ValidationNode, None, None]
 JsonScalarFieldType = Union[None, bool, str, int, float]
