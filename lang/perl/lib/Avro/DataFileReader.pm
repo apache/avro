@@ -40,7 +40,6 @@ use Avro::DataFile;
 use Avro::BinaryDecoder;
 use Avro::Schema;
 use Carp;
-use Compress::Zstd::Decompressor;
 use IO::Uncompress::Bunzip2 ();
 use IO::Uncompress::RawInflate ;
 use Fcntl();
@@ -302,6 +301,14 @@ sub _inflate_bounded {
 ## a high-ratio block is rejected before its full form is materialized.
 sub _zstd_decompress_bounded {
     my ($block_ref, $limit) = @_;
+    # Load the zstandard decompressor lazily so the reader still loads and works
+    # for other codecs when Compress::Zstd::Decompressor is unavailable (e.g. an
+    # older Compress::Zstd distribution that lacks the Decompressor submodule).
+    unless (eval { require Compress::Zstd::Decompressor; 1 }) {
+        Avro::DataFile::Error::UnsupportedCodec->throw(
+            "Cannot read zstandard-compressed block: Compress::Zstd::Decompressor is not available"
+        );
+    }
     my $decompressor = Compress::Zstd::Decompressor->new;
     my $uncompressed = '';
     my $length = bytes::length($$block_ref);
