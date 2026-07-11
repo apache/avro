@@ -87,6 +87,7 @@ in that datum, if there are any.
 import collections
 import datetime
 import decimal
+import os
 import struct
 import warnings
 from typing import IO, Generator, Iterable, List, Mapping, Optional, Sequence, Union
@@ -102,6 +103,52 @@ STRUCT_DOUBLE = struct.Struct("<d")  # big-endian double
 STRUCT_SIGNED_SHORT = struct.Struct(">h")  # big-endian signed short
 STRUCT_SIGNED_INT = struct.Struct(">i")  # big-endian signed int
 STRUCT_SIGNED_LONG = struct.Struct(">q")  # big-endian signed long
+
+# Name of the environment variable used to override the default maximum number
+# of items permitted in a single decoded array or map.
+MAX_COLLECTION_ITEMS_ENV = "AVRO_MAX_COLLECTION_ITEMS"
+
+# Default upper bound on the number of items in a single array or map decoded
+# from a stream. When decoding, the block count of an array or map is read from
+# the (potentially untrusted or truncated) input and drives the allocation of
+# the resulting collection. Reading a collection that declares more items than
+# this limit raises an :class:`avro.errors.AvroCollectionSizeException` instead
+# of attempting a potentially huge allocation. This mirrors the Java SDK's
+# ``org.apache.avro.limits.collectionItems.maxLength`` limit. The default may be
+# overridden with the ``AVRO_MAX_COLLECTION_ITEMS`` environment variable.
+DEFAULT_MAX_COLLECTION_ITEMS = (1 << 31) - 8
+
+
+def _default_max_collection_items() -> int:
+    """Return the default collection item limit, honoring the environment override."""
+    value = os.environ.get(MAX_COLLECTION_ITEMS_ENV)
+    if value is None:
+        return DEFAULT_MAX_COLLECTION_ITEMS
+    try:
+        parsed = int(value)
+    except ValueError:
+        warnings.warn(f"Ignoring invalid {MAX_COLLECTION_ITEMS_ENV} value: {value!r}", avro.errors.AvroWarning)
+        return DEFAULT_MAX_COLLECTION_ITEMS
+    if parsed < 0:
+        warnings.warn(f"Ignoring negative {MAX_COLLECTION_ITEMS_ENV} value: {value!r}", avro.errors.AvroWarning)
+        return DEFAULT_MAX_COLLECTION_ITEMS
+    return parsed
+
+
+def check_max_collection_items(existing: int, items: int, limit: int) -> None:
+    """Guard against unbounded allocation when decoding an array or map.
+
+    :param existing: the number of items already read for the collection.
+    :param items: the number of items in the next block to be read. A negative
+                  value indicates malformed input.
+    :param limit: the maximum total number of items permitted.
+    :raises avro.errors.AvroCollectionSizeException: if the block count is
+        negative or the running total would exceed ``limit``.
+    """
+    if items < 0:
+        raise avro.errors.AvroCollectionSizeException(f"Malformed data. Block count is negative: {items}")
+    if existing + items > limit:
+        raise avro.errors.AvroCollectionSizeException(f"Cannot read collections larger than {limit} items")
 
 ValidationNode = collections.namedtuple("ValidationNode", ["schema", "datum", "name"])
 ValidationNodeGeneratorType = Generator[ValidationNode, None, None]
@@ -613,6 +660,10 @@ class DatumReader:
         """
         self._writers_schema = writers_schema
         self._readers_schema = readers_schema
+        # Maximum number of items permitted in a single decoded array or map.
+        # Guards against unbounded allocation from a large block count read from
+        # untrusted or truncated input. See DEFAULT_MAX_COLLECTION_ITEMS.
+        self.max_collection_items: int = _default_max_collection_items()
 
     @property
     def writers_schema(self) -> Optional[avro.schema.Schema]:
@@ -801,6 +852,7 @@ class DatumReader:
             if block_count < 0:
                 block_count = -block_count
                 decoder.skip_long()
+            check_max_collection_items(len(read_items), block_count, self.max_collection_items)
             for i in range(block_count):
                 read_items.append(self.read_data(writers_schema.items, readers_schema.items, decoder))
             block_count = decoder.read_long()
@@ -838,6 +890,7 @@ class DatumReader:
             if block_count < 0:
                 block_count = -block_count
                 decoder.skip_long()
+            check_max_collection_items(len(read_items), block_count, self.max_collection_items)
             for i in range(block_count):
                 key = decoder.read_utf8()
                 read_items[key] = self.read_data(writers_schema.values, readers_schema.values, decoder)

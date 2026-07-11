@@ -83,6 +83,15 @@ class AvroOutOfScaleException(AvroTypeException):
         return super().__init__(f"The exponent of {datum}, {exponent}, is too large for the schema scale of {scale}")
 
 
+class AvroCollectionSizeException(AvroException):
+    """Raised when an array or map declares more items than the configured maximum.
+
+    This guards against unbounded memory allocation when the block count of an
+    array or map read from a decoder is very large, for example because the
+    input is malformed or truncated.
+    """
+
+
 class SchemaResolutionException(AvroException):
     def __init__(self, fail_msg, writers_schema=None, readers_schema=None, *args):
         writers_message = f"\nWriter's Schema: {_safe_pretty(writers_schema)}" if writers_schema else ""

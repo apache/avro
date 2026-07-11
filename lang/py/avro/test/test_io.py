@@ -28,6 +28,7 @@ import uuid
 import warnings
 from typing import BinaryIO, Collection, Dict, List, Optional, Tuple, Union, cast
 
+import avro.errors
 import avro.io
 import avro.schema
 import avro.timezones
@@ -715,6 +716,75 @@ class TestMisc(unittest.TestCase):
             write_datum(datum_to_write, writers_schema)
 
 
+class TestCollectionSizeLimit(unittest.TestCase):
+    """Decoding arrays and maps must bound the block count read from the input.
+
+    The block count of an array or map is read from a potentially untrusted or
+    truncated stream and drives allocation of the resulting collection. These
+    tests ensure a pathological block count raises an error instead of
+    attempting an unbounded allocation.
+    """
+
+    def _encode_longs(self, *values: int) -> io.BytesIO:
+        buffer = io.BytesIO()
+        encoder = avro.io.BinaryEncoder(buffer)
+        for value in values:
+            encoder.write_long(value)
+        return buffer
+
+    def _decode(self, buffer: io.BytesIO, schema: avro.schema.Schema, max_items: Optional[int] = None) -> object:
+        reader = io.BytesIO(buffer.getvalue())
+        decoder = avro.io.BinaryDecoder(reader)
+        datum_reader = avro.io.DatumReader(schema)
+        if max_items is not None:
+            datum_reader.max_collection_items = max_items
+        return datum_reader.read(decoder)
+
+    def test_array_block_count_exceeds_default_limit(self) -> None:
+        """A tiny input declaring more items than the default limit is rejected."""
+        schema = avro.schema.parse('{"type": "array", "items": "null"}')
+        buffer = self._encode_longs(avro.io.DEFAULT_MAX_COLLECTION_ITEMS + 1)
+        with self.assertRaises(avro.errors.AvroCollectionSizeException):
+            self._decode(buffer, schema)
+
+    def test_map_block_count_exceeds_default_limit(self) -> None:
+        schema = avro.schema.parse('{"type": "map", "values": "null"}')
+        buffer = self._encode_longs(avro.io.DEFAULT_MAX_COLLECTION_ITEMS + 1)
+        with self.assertRaises(avro.errors.AvroCollectionSizeException):
+            self._decode(buffer, schema)
+
+    def test_array_respects_configured_limit(self) -> None:
+        schema = avro.schema.parse('{"type": "array", "items": "null"}')
+        buffer = self._encode_longs(11, 0)  # 11 items in one block, then end-of-array
+        with self.assertRaises(avro.errors.AvroCollectionSizeException):
+            self._decode(buffer, schema, max_items=10)
+
+    def test_map_respects_configured_limit(self) -> None:
+        schema = avro.schema.parse('{"type": "map", "values": "null"}')
+        buffer = self._encode_longs(11, 0)
+        with self.assertRaises(avro.errors.AvroCollectionSizeException):
+            self._decode(buffer, schema, max_items=10)
+
+    def test_array_cumulative_limit_across_blocks(self) -> None:
+        """Two blocks that individually fit but together exceed the limit are rejected."""
+        schema = avro.schema.parse('{"type": "array", "items": "null"}')
+        buffer = self._encode_longs(6, 6, 0)
+        with self.assertRaises(avro.errors.AvroCollectionSizeException):
+            self._decode(buffer, schema, max_items=10)
+
+    def test_negative_block_count_is_bounded(self) -> None:
+        """A negative block count (with block size) uses its absolute value and is bounded."""
+        schema = avro.schema.parse('{"type": "array", "items": "null"}')
+        buffer = self._encode_longs(-11, 0)  # count=-11 -> 11 items, followed by block size 0
+        with self.assertRaises(avro.errors.AvroCollectionSizeException):
+            self._decode(buffer, schema, max_items=10)
+
+    def test_array_within_limit_still_reads(self) -> None:
+        schema = avro.schema.parse('{"type": "array", "items": "null"}')
+        buffer = self._encode_longs(3, 0)  # 3 null items, then end-of-array
+        self.assertEqual([None, None, None], self._decode(buffer, schema, max_items=10))
+
+
 def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) -> unittest.TestSuite:
     """Generate test cases across many test schema."""
     suite = unittest.TestSuite()
@@ -729,6 +799,7 @@ def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) 
     )
     suite.addTests(DefaultValueTestCase(field_type, default) for field_type, default in DEFAULT_VALUE_EXAMPLES)
     suite.addTests(loader.loadTestsFromTestCase(TestIncompatibleSchemaReading))
+    suite.addTests(loader.loadTestsFromTestCase(TestCollectionSizeLimit))
     return suite
 
 
