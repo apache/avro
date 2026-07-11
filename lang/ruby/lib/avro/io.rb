@@ -37,6 +37,13 @@ module Avro
     class BinaryDecoder
       # Read leaf values
 
+      # Reads with a declared length above this many bytes are validated
+      # against the number of bytes actually remaining (when the reader can
+      # report its size) before allocating, to guard against an out-of-memory
+      # attack from a malicious or truncated input. Smaller reads skip the
+      # check to avoid per-value overhead.
+      MAX_UNCHECKED_READ = 1024 * 1024
+
       # reader is an object on which we can call read, seek and tell.
       attr_reader :reader
       def initialize(reader)
@@ -103,8 +110,26 @@ module Avro
       end
 
       def read(len)
-        # Read n bytes
+        # Read n bytes. Reject a declared length that exceeds the bytes
+        # actually remaining before allocating for it, to guard against an
+        # out-of-memory attack from a malicious or truncated input. The check
+        # is only applied to larger reads; smaller reads and stream readers that
+        # cannot report their size fall back to reading directly.
+        if len > MAX_UNCHECKED_READ
+          remaining = bytes_remaining
+          if remaining && len > remaining
+            raise AvroError, "Cannot read #{len} bytes, only #{remaining} remaining"
+          end
+        end
         @reader.read(len)
+      end
+
+      # Number of bytes still available to read, or nil when the reader cannot
+      # report its size. Used to reject a declared length or collection block
+      # count that exceeds the data actually available before allocating for it.
+      def bytes_remaining
+        return nil unless @reader.respond_to?(:size) && @reader.respond_to?(:tell)
+        @reader.size - @reader.tell
       end
 
       def skip_null
@@ -318,6 +343,7 @@ module Avro
             block_count = -block_count
             _block_size = decoder.read_long
           end
+          ensure_collection_available(decoder, block_count, self.class.min_bytes_per_element(writers_schema.items))
           block_count.times do
             read_items << read_data(writers_schema.items,
                                     readers_schema.items,
@@ -337,6 +363,8 @@ module Avro
             block_count = -block_count
             _block_size = decoder.read_long
           end
+          # Map keys are strings (>= 1 byte length prefix) plus the value.
+          ensure_collection_available(decoder, block_count, 1 + self.class.min_bytes_per_element(writers_schema.values))
           block_count.times do
             key = decoder.read_string
             read_items[key] = read_data(writers_schema.values,
@@ -496,6 +524,43 @@ module Avro
       end
 
       private
+      # Minimum number of bytes a single value of the given schema can occupy on
+      # the wire. Used to reject an array/map block count that could not be
+      # backed by the bytes remaining. A type that can encode to zero bytes
+      # (null) returns 0, which disables the check for it (so an array of nulls
+      # is not falsely rejected).
+      def self.min_bytes_per_element(schema, visited = nil)
+        visited ||= {}
+        case schema.type_sym
+        when :null then 0
+        when :float then 4
+        when :double then 8
+        when :fixed then schema.size
+        when :record, :error
+          return 0 if visited[schema.object_id]
+          visited[schema.object_id] = true
+          total = schema.fields.sum { |field| min_bytes_per_element(field.type, visited) }
+          visited.delete(schema.object_id)
+          total
+        else
+          # boolean, int, long, bytes, string, enum, union, array, map: >= 1 byte
+          # (a union encodes at least a 1-byte branch index).
+          1
+        end
+      end
+
+      # Reject a collection (array or map) block whose declared element count
+      # could not be backed by the bytes actually remaining, before iterating.
+      # Skipped when the per-element minimum is zero or when the reader cannot
+      # report how many bytes remain.
+      def ensure_collection_available(decoder, count, min_bytes_per_element)
+        return if count <= 0 || min_bytes_per_element <= 0
+        remaining = decoder.bytes_remaining
+        if remaining && count * min_bytes_per_element > remaining
+          raise AvroError, "Collection claims #{count} elements with at least #{min_bytes_per_element} bytes each, but only #{remaining} bytes are available"
+        end
+      end
+
       def skip_blocks(decoder, &blk)
         block_count = decoder.read_long
         while block_count != 0

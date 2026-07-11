@@ -42,6 +42,70 @@ class TestIO < Test::Unit::TestCase
     check_default('"bytes"', '"foo"', "foo")
   end
 
+  # A bytes/string value declares a length prefix; a malicious or truncated
+  # input can declare far more bytes than actually exist. On a reader that can
+  # report its size, that is rejected before allocating for it.
+  def test_read_bytes_rejects_length_beyond_stream
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_long(100 * 1024 * 1024)
+    reader = StringIO.new(writer.string)
+    decoder = Avro::IO::BinaryDecoder.new(reader)
+    assert_raise(Avro::AvroError) { decoder.read_bytes }
+  end
+
+  def test_read_bytes_within_stream_still_reads
+    payload = 'x' * (2 * 1024 * 1024)
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_bytes(payload)
+    reader = StringIO.new(writer.string)
+    decoder = Avro::IO::BinaryDecoder.new(reader)
+    assert_equal(payload, decoder.read_bytes)
+  end
+
+  # An array/map block declares an element count; a malicious or truncated input
+  # can declare far more elements than the remaining bytes could hold. The count
+  # is validated against the bytes remaining before iterating, using the minimum
+  # on-wire size of the element schema (so 0-byte elements like null are not
+  # falsely rejected).
+  def decode(schema_json, encoded)
+    schema = Avro::Schema.parse(schema_json)
+    reader = Avro::IO::DatumReader.new(schema)
+    reader.read(Avro::IO::BinaryDecoder.new(StringIO.new(encoded)))
+  end
+
+  def test_read_array_rejects_count_beyond_stream
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_long(1_000_000)
+    assert_raise(Avro::AvroError) do
+      decode('{"type":"array","items":"long"}', writer.string)
+    end
+  end
+
+  def test_read_map_rejects_count_beyond_stream
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_long(1_000_000)
+    assert_raise(Avro::AvroError) do
+      decode('{"type":"map","values":"long"}', writer.string)
+    end
+  end
+
+  def test_read_array_of_null_not_falsely_rejected
+    count = 100_000
+    writer = StringIO.new
+    encoder = Avro::IO::BinaryEncoder.new(writer)
+    encoder.write_long(count) # one block of `count` nulls (zero bytes each)
+    encoder.write_long(0)     # end-of-array marker
+    result = decode('{"type":"array","items":"null"}', writer.string)
+    assert_equal([nil] * count, result)
+  end
+
+  def test_read_array_within_stream_still_reads
+    schema = Avro::Schema.parse('{"type":"array","items":"long"}')
+    writer = StringIO.new
+    Avro::IO::DatumWriter.new(schema).write([1, 2, 3], Avro::IO::BinaryEncoder.new(writer))
+    assert_equal([1, 2, 3], decode('{"type":"array","items":"long"}', writer.string))
+  end
+
   def test_int
     check('"int"')
     check_default('"int"', "5", 5)
