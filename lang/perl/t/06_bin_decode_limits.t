@@ -62,13 +62,16 @@ my $err = 'Avro::BinaryDecoder::Error::CollectionSize';
         "map block count above limit is rejected";
 
     # Two blocks of 6 items (zigzag(6) = 0x0c) exceed the limit cumulatively.
-    throws_ok { decode_bytes($array_schema, "\x0c\x0c") } $err,
+    # Well-formed encoding: two blocks of six null items (0 bytes each) followed
+    # by the terminating 0 block count.
+    throws_ok { decode_bytes($array_schema, "\x0c\x0c\x00") } $err,
         "array cumulative block count above limit is rejected";
 
     # Repeated map keys collapse in the hash; the cumulative check must still
-    # count every decoded pair. Two blocks of 6 pairs all keyed "a"
-    # (zigzag(6)=0x0c, key string = 0x02 0x61, null value = no bytes) exceed 10.
-    my $repeated_key_map = "\x0c" . ("\x02\x61" x 6) . "\x0c";
+    # count every decoded pair. Two well-formed blocks of 6 pairs all keyed "a"
+    # (zigzag(6)=0x0c, key string = 0x02 0x61, null value = no bytes) then the
+    # terminating 0 block count exceed the limit of 10.
+    my $repeated_key_map = "\x0c" . ("\x02\x61" x 6) . "\x0c" . ("\x02\x61" x 6) . "\x00";
     throws_ok { decode_bytes($map_schema, $repeated_key_map) } $err,
         "map cumulative pair count with repeated keys is rejected";
 
@@ -84,7 +87,7 @@ my $err = 'Avro::BinaryDecoder::Error::CollectionSize';
 }
 
 # By default the limit is generous enough not to affect ordinary decoding.
-is $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS, (2 ** 31) - 8,
+is $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS, $Avro::BinaryDecoder::DEFAULT_MAX_COLLECTION_ITEMS,
     "default collection item limit restored outside local scope";
 
 done_testing;
