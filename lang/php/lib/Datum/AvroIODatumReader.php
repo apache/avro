@@ -545,10 +545,11 @@ class AvroIODatumReader
     /**
      * Minimum number of bytes a single value of the given schema can occupy on
      * the wire. Used to reject an array/map block count that could not be backed
-     * by the bytes remaining. A type that can encode to zero bytes (null)
-     * returns 0, which disables the collection check for it (so an array of
-     * nulls is not falsely rejected). Types that cannot be resolved cheaply
-     * default to 1, which is safe because the only zero-byte primitive is null.
+     * by the bytes remaining. It returns 0 for any schema that can encode to
+     * zero bytes: the null primitive, but also a record with no fields or whose
+     * fields all encode to zero bytes. A zero return disables the collection
+     * check for that element type (so, e.g., an array of nulls is not falsely
+     * rejected). Types that cannot be resolved cheaply default to 1.
      *
      * @param array<int, bool> $visited
      */
