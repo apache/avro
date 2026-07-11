@@ -404,7 +404,7 @@ namespace Avro.Generic
             ArraySchema rs = (ArraySchema)readerSchema;
             object result = CreateArray(reuse, rs);
             int i = 0;
-            int minBytes = MinBytesPerElement(writerSchema.ItemSchema);
+            long minBytes = MinBytesPerElement(writerSchema.ItemSchema);
             for (long nl = d.ReadArrayStart(); nl != 0; nl = d.ReadArrayNext())
             {
                 // Reject a block whose element count could not be backed by the
@@ -497,7 +497,7 @@ namespace Avro.Generic
             MapSchema rs = (MapSchema)readerSchema;
             object result = CreateMap(reuse, rs);
             // Map keys are strings (>= 1 byte length prefix) plus the value.
-            int minBytes = 1 + MinBytesPerElement(writerSchema.ValueSchema);
+            long minBytes = 1L + MinBytesPerElement(writerSchema.ValueSchema);
             for (long nl = d.ReadMapStart(); nl != 0; nl = d.ReadMapNext())
             {
                 EnsureCollectionAvailable(d, nl, minBytes);
@@ -573,7 +573,7 @@ namespace Avro.Generic
         /// allocating. Skipped when the per-element minimum is zero, or when the
         /// decoder cannot report how many bytes remain.
         /// </summary>
-        private static void EnsureCollectionAvailable(Decoder d, long count, int minBytesPerElement)
+        private static void EnsureCollectionAvailable(Decoder d, long count, long minBytesPerElement)
         {
             if (count <= 0)
             {
