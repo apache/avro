@@ -559,6 +559,11 @@ sub decode_union {
 sub skip_fixed {
     my $class = shift;
     my ($schema, $reader) = @_;
+    # Reject a fixed size that exceeds the bytes actually remaining before
+    # skipping, mirroring skip_bytes: a seek past EOF silently succeeds on many
+    # handles, so without this a truncated input would later read zeros instead
+    # of failing.
+    _ensure_available($reader, $schema->size);
     # Skip the fixed-size payload relative to the current position (SEEK_CUR);
     # whence 0 (SEEK_SET) would incorrectly seek to the absolute offset. A
     # failed seek is treated as fatal.
