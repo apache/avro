@@ -563,10 +563,10 @@ describe('files', function () {
       encoder.end(payload);
     });
 
-    it('clamps an out-of-range limit instead of throwing', function (cb) {
-      // A limit larger than the runtime's maximum buffer length (or otherwise
-      // out of range) must be normalized so it does not make zlib throw
-      // synchronously; a normal block still decodes.
+    it('falls back to the default limit for an out-of-range value', function (cb) {
+      // A non-finite/out-of-range limit is not usable, so normalizeMaxDecompressLength
+      // returns undefined and the decoder falls back to its default limit rather
+      // than making zlib throw synchronously; a normal block still decodes.
       var t = createType('string');
       var payload = 'hello world';
       var out = [];
