@@ -572,6 +572,10 @@ module Avro
       # report how many bytes remain.
       def ensure_collection_available(decoder, count, min_bytes_per_element)
         return if count <= 0 || min_bytes_per_element <= 0
+        # A decoder that implements the read protocol but not #bytes_remaining
+        # (e.g. a custom decoder) cannot report the remaining size; skip the
+        # check for it rather than raising NoMethodError.
+        return unless decoder.respond_to?(:bytes_remaining)
         remaining = decoder.bytes_remaining
         # Compare via integer division rather than multiplying, so a huge count
         # does not create a large intermediate product.
