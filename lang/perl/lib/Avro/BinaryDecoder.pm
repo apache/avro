@@ -345,6 +345,16 @@ sub skip_block {
             # (SEEK_CUR); whence 0 (SEEK_SET) would seek to an absolute (here
             # nonsensical) offset. A failed seek is treated as fatal.
             my $block_size = decode_long($class, undef, undef, $reader);
+            if ($block_size < 0) {
+                # A negative block size would seek the reader backwards,
+                # risking an infinite loop or mis-decoding of a corrupt input.
+                throw Avro::Schema::Error::Parse(
+                    "Invalid negative block size: $block_size");
+            }
+            # Reject a block size that exceeds the bytes actually remaining
+            # before skipping, so a truncated input fails instead of seeking
+            # past EOF.
+            _ensure_available($reader, $block_size);
             unless ($reader->seek($block_size, 1)) {
                 throw Avro::Schema::Error::Parse(
                     "Failed to skip block of $block_size bytes");
