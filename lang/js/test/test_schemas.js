@@ -951,6 +951,74 @@ describe('types', function () {
       assert.deepEqual(t.fromBuffer(buf), {a: 1, b: 2});
     });
 
+    it('bounds a huge block count while skipping', function () {
+      var v1 = createType({
+        name: 'Foo',
+        type: 'record',
+        fields: [
+          {name: 'map', type: {type: 'map', values: 'null'}},
+          {name: 'val', type: 'int'}
+        ]
+      });
+      var v2 = createType({
+        name: 'Foo',
+        type: 'record',
+        fields: [{name: 'val', type: 'int'}]
+      });
+      var buf = Buffer.from([0x80, 0x88, 0xde, 0xbe, 0x01, 0x00, 6]);
+      var resolver = v2.createResolver(v1);
+      assert.throws(function () { v2.fromBuffer(buf, resolver); }, /collection/);
+    });
+
+    it('bounds a huge negative (sized) block count while skipping', function () {
+      var v1 = createType({
+        name: 'Foo',
+        type: 'record',
+        fields: [
+          {name: 'map', type: {type: 'map', values: 'null'}},
+          {name: 'val', type: 'int'}
+        ]
+      });
+      var v2 = createType({
+        name: 'Foo',
+        type: 'record',
+        fields: [{name: 'val', type: 'int'}]
+      });
+      // Block count -200,000,000, a block byte-size of 0, then terminator + val.
+      var buf = Buffer.from([0xff, 0x87, 0xde, 0xbe, 0x01, 0x00, 0x00, 6]);
+      var resolver = v2.createResolver(v1);
+      assert.throws(function () { v2.fromBuffer(buf, resolver); }, /collection/);
+    });
+
+    it('rejects a negative block byte-size while skipping', function () {
+      var v1 = createType({
+        name: 'Foo',
+        type: 'record',
+        fields: [
+          {name: 'map', type: {type: 'map', values: 'int'}},
+          {name: 'val', type: 'int'}
+        ]
+      });
+      var v2 = createType({
+        name: 'Foo',
+        type: 'record',
+        fields: [{name: 'val', type: 'int'}]
+      });
+      // Block count -1 followed by a negative byte-size (zig-zag 1 -> 0x01).
+      var buf = Buffer.from([0x01, 0x01, 0x00, 6]);
+      var resolver = v2.createResolver(v1);
+      assert.throws(function () { v2.fromBuffer(buf, resolver); }, /negative/);
+    });
+
+    it('reads a small map under resolution', function () {
+      var t1 = new types.MapType({type: 'map', values: 'int'});
+      var t2 = createType({type: 'map', values: ['null', 'int']});
+      var buf = t1.toBuffer({a: 1, b: 2});
+      var resolver = t2.createResolver(t1);
+      var result = t2.fromBuffer(buf, resolver);
+      assert.deepEqual(Object.keys(result).sort(), ['a', 'b']);
+    });
+
   });
 
   describe('ArrayType', function () {

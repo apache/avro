@@ -1197,6 +1197,12 @@ MapType.prototype._skip = function (tap) {
       // encoding the block with a negative (byte-sized) count.
       n = -n;
       len = tap.readLong();
+      if (len < 0) {
+        // A negative byte-size would move the read position backwards, which
+        // Tap.isValid() (pos <= buf.length) would not catch, bypassing
+        // truncation detection.
+        throw new Error('negative collection block size');
+      }
       total += n;
       checkCollectionBlock(tap, n, minBytes, total);
       tap.pos += len;
@@ -1356,6 +1362,12 @@ ArrayType.prototype._skip = function (tap) {
       // encoding the block with a negative (byte-sized) count.
       n = -n;
       len = tap.readLong();
+      if (len < 0) {
+        // A negative byte-size would move the read position backwards, which
+        // Tap.isValid() (pos <= buf.length) would not catch, bypassing
+        // truncation detection.
+        throw new Error('negative collection block size');
+      }
       total += n;
       checkCollectionBlock(tap, n, minBytes, total);
       tap.pos += len;
