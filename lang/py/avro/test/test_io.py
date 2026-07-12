@@ -745,6 +745,14 @@ class TestMisc(unittest.TestCase):
             decoder = avro.io.BinaryDecoder(io.BytesIO(encoded))
             self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
 
+    def test_read_long_rejects_overlong_varint(self) -> None:
+        # A 64-bit value uses at most 10 bytes; an 11th continuation byte is
+        # malformed and must be rejected rather than accepted as an arbitrarily
+        # large integer.
+        encoded = b"\x80" * 10 + b"\x01"
+        decoder = avro.io.BinaryDecoder(io.BytesIO(encoded))
+        self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, decoder.read_long)
+
     def test_no_default_value(self) -> None:
         writers_schema = LONG_RECORD_SCHEMA
         datum_to_write = LONG_RECORD_DATUM

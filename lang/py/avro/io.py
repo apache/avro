@@ -286,6 +286,11 @@ class BinaryDecoder:
         n = b & 0x7F
         shift = 7
         while (b & 0x80) != 0:
+            # A 64-bit value needs at most 10 bytes (shifts 0..63); reject an
+            # overlong varint rather than accepting a malformed, arbitrarily
+            # large value.
+            if shift >= 70:
+                raise avro.errors.InvalidAvroBinaryEncoding("Varint is too long")
             b = ord(self.read(1))
             n |= (b & 0x7F) << shift
             shift += 7
