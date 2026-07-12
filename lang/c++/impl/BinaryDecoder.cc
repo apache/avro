@@ -21,6 +21,7 @@
 #include "Zigzag.hh"
 #include <cstdint>
 #include <cstdlib>
+#include <limits>
 #include <memory>
 
 namespace avro {
@@ -212,7 +213,15 @@ size_t BinaryDecoder::doDecodeItemCount() {
             throw Exception("Invalid negative block count: {}", result);
         }
         doDecodeLong();
-        return static_cast<size_t>(-result);
+        result = -result;
+    }
+    // On builds where size_t is narrower than int64_t (e.g. 32-bit), reject a
+    // count that would truncate on the cast -- otherwise a huge block could wrap
+    // to a small one and bypass the downstream structural caps.
+    if constexpr (sizeof(size_t) < sizeof(int64_t)) {
+        if (static_cast<uint64_t>(result) > std::numeric_limits<size_t>::max()) {
+            throw Exception("Block count {} exceeds the maximum supported size", result);
+        }
     }
     return static_cast<size_t>(result);
 }
