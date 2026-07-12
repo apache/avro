@@ -17,6 +17,8 @@
  */
 
 #include "Generic.hh"
+#include <algorithm>
+#include <cstdint>
 #include <cstdlib>
 #include <limits>
 #include <utility>
@@ -46,10 +48,9 @@ static int64_t minBytesPerElement(const NodePtr &node, int depth) {
         case AVRO_FIXED: {
             // fixedSize() is a size_t; clamp to int64_t so a huge fixed size
             // cannot wrap negative.
-            size_t sz = node->fixedSize();
-            return sz > static_cast<size_t>(std::numeric_limits<int64_t>::max())
-                       ? std::numeric_limits<int64_t>::max()
-                       : static_cast<int64_t>(sz);
+            return static_cast<int64_t>(std::min<uint64_t>(
+                node->fixedSize(),
+                static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
         }
         case AVRO_RECORD: {
             if (depth > 64) {
@@ -92,48 +93,54 @@ static int64_t minBytesPerElement(const NodePtr &node, int depth) {
 static constexpr int64_t kDefaultMaxCollectionItems = 10000000;
 
 // Structural cap on the number of elements in any array or map (an overflow /
-// defense-in-depth guard), matching the historical Integer.MAX_VALUE - 8 limit.
-// Non-zero-byte elements are also bounded by the bytes remaining.
+// defense-in-depth guard). It matches the value used by the other Avro SDKs
+// (Integer.MAX_VALUE - 8); non-zero-byte elements are also bounded by the bytes
+// remaining.
 static constexpr int64_t kDefaultMaxCollectionStructural = 2147483639;
 
-// AVRO_MAX_COLLECTION_ITEMS, when a non-negative integer, caps both limits;
-// otherwise zero-byte elements use the tighter default and all collections use
-// the structural default.
-static void collectionLimits(int64_t &zeroByte, int64_t &structural) {
+struct CollectionLimits {
+    int64_t zeroByte;
+    int64_t structural;
+};
+
+// AVRO_MAX_COLLECTION_ITEMS, when a non-negative integer, overrides both limits
+// to that value; otherwise zero-byte elements use the tighter default and all
+// collections use the structural default.
+static CollectionLimits collectionLimits() {
     const char *env = std::getenv("AVRO_MAX_COLLECTION_ITEMS");
     if (env != nullptr && *env != '\0') {
         char *end = nullptr;
         long long value = std::strtoll(env, &end, 10);
         if (*end == '\0' && value >= 0) {
-            zeroByte = structural = static_cast<int64_t>(value);
-            return;
+            return {static_cast<int64_t>(value), static_cast<int64_t>(value)};
         }
     }
-    zeroByte = kDefaultMaxCollectionItems;
-    structural = kDefaultMaxCollectionStructural;
+    return {kDefaultMaxCollectionItems, kDefaultMaxCollectionStructural};
 }
 
-// Reject a collection (array or map) block whose declared element count could
-// not be backed by the bytes actually remaining, before resizing for it.
-// Skipped when the per-element minimum is zero, or when the decoder cannot
-// report how many bytes remain. The comparison divides to avoid overflow.
+// Reject a collection (array or map) block that could drive an unbounded
+// allocation, before resizing for it. A block whose declared element count
+// could not be backed by the bytes actually remaining is rejected (only when
+// the per-element minimum is positive and the decoder can report the bytes
+// remaining); and every collection is bounded by the structural cap, which also
+// covers zero-byte elements and decoders that cannot report the bytes remaining.
+// The comparisons divide/subtract to avoid overflow.
 static void ensureCollectionAvailable(Decoder &d, size_t existing, size_t count, int64_t minBytes) {
-    if (count == 0 || minBytes <= 0) {
+    if (count == 0) {
         return;
     }
-    int64_t remaining = d.bytesRemaining();
-    if (remaining >= 0 &&
-        static_cast<uint64_t>(count) >
-            static_cast<uint64_t>(remaining) / static_cast<uint64_t>(minBytes)) {
-        throw Exception(
-            "Collection claims {} elements with at least {} bytes each, "
-            "but only {} bytes are available",
-            count, minBytes, remaining);
+    if (minBytes > 0) {
+        int64_t remaining = d.bytesRemaining();
+        if (remaining >= 0 &&
+            static_cast<uint64_t>(count) >
+                static_cast<uint64_t>(remaining) / static_cast<uint64_t>(minBytes)) {
+            throw Exception(
+                "Collection claims {} elements with at least {} bytes each, "
+                "but only {} bytes are available",
+                count, minBytes, remaining);
+        }
     }
-    // Structural / overflow guard, also covering decoders that cannot report the
-    // bytes remaining. Compare without adding so existing + count cannot overflow.
-    int64_t zeroByte, structural;
-    collectionLimits(zeroByte, structural);
+    const int64_t structural = collectionLimits().structural;
     const uint64_t limit = static_cast<uint64_t>(structural);
     if (static_cast<uint64_t>(count) > limit ||
         static_cast<uint64_t>(existing) > limit - static_cast<uint64_t>(count)) {
@@ -148,8 +155,7 @@ static void ensureCollectionAvailable(Decoder &d, size_t existing, size_t count,
 // exceeds the configured limit. These elements consume no input, so they cannot
 // be bounded by the bytes remaining; the count is the only signal.
 static void ensureZeroByteCollectionWithinLimit(size_t existing, size_t count) {
-    int64_t zeroByte, structural;
-    collectionLimits(zeroByte, structural);
+    const int64_t zeroByte = collectionLimits().zeroByte;
     const uint64_t limit = static_cast<uint64_t>(zeroByte);
     // Compare without adding, so existing + count cannot overflow.
     if (static_cast<uint64_t>(count) > limit ||

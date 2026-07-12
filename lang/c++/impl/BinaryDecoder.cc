@@ -27,9 +27,15 @@ namespace avro {
 
 using std::make_shared;
 
-// Structural cap on the number of elements to skip in an array or map. Mirrors
-// the read-path limit in Generic.cc; AVRO_MAX_COLLECTION_ITEMS, when a
-// non-negative integer, overrides it.
+// Structural cap on the number of elements to skip in an array or map (an
+// overflow / defense-in-depth guard). Mirrors the read-path limit in Generic.cc
+// and matches the value used by the other Avro SDKs (Integer.MAX_VALUE - 8).
+static constexpr int64_t kDefaultMaxCollectionStructural = 2147483639;
+
+// Returns the structural collection cap. It can be overridden by the
+// AVRO_MAX_COLLECTION_ITEMS environment variable (a non-negative integer),
+// matching the read path and the other SDKs so a single knob configures all of
+// them; an invalid or unset value uses the default.
 static int64_t maxCollectionStructural() {
     const char *env = std::getenv("AVRO_MAX_COLLECTION_ITEMS");
     if (env != nullptr && *env != '\0') {
@@ -39,7 +45,7 @@ static int64_t maxCollectionStructural() {
             return static_cast<int64_t>(value);
         }
     }
-    return 2147483639;
+    return kDefaultMaxCollectionStructural;
 }
 
 class BinaryDecoder : public Decoder {
