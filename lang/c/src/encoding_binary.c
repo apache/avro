@@ -220,10 +220,14 @@ static int read_string(avro_reader_t reader, char **s, int64_t *len)
 			       str_len, available);
 		return EINVAL;
 	}
-	/* Bound the length so the +1 (NUL terminator) cannot overflow the
-	 * size_t allocation size, which could otherwise undersize the buffer
-	 * and lead to an out-of-bounds read/write. */
-	if ((uint64_t) str_len > (uint64_t) (SIZE_MAX - 1)) {
+	/* Bound the length so the +1 (NUL terminator) cannot overflow either
+	 * the size_t allocation size (undersizing the buffer, leading to an
+	 * out-of-bounds read/write) or the int64_t returned in *len. On 64-bit
+	 * platforms SIZE_MAX > INT64_MAX, so the size_t check alone would let
+	 * str_len == INT64_MAX through and make str_len + 1 overflow (undefined
+	 * behavior); the INT64_MAX - 1 bound rejects it. */
+	if ((uint64_t) str_len > (uint64_t) (SIZE_MAX - 1)
+	    || str_len > INT64_MAX - 1) {
 		avro_set_error("String length %" PRId64
 			       " exceeds the maximum allocatable size", str_len);
 		return EINVAL;
