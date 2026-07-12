@@ -313,6 +313,25 @@ static void testSkipArrayRejectsNegativeBlockSize() {
     BOOST_CHECK_THROW(d->skipArray(), Exception);
 }
 
+// A union branch index outside [0, branch count) is malformed and must be
+// rejected with an Avro Exception rather than letting leafAt() throw
+// std::out_of_range.
+static void testReadUnionRejectsOutOfRangeIndex() {
+    ValidSchema s = compileJsonSchemaFromString("[\"null\",\"long\"]");
+    for (int64_t index : {int64_t(5), int64_t(-1)}) {
+        std::unique_ptr<OutputStream> os = memoryOutputStream();
+        EncoderPtr e = binaryEncoder();
+        e->init(*os);
+        e->encodeLong(index); // raw branch index; only 2 branches exist
+        e->flush();
+        InputStreamPtr in = memoryInputStream(*os);
+        DecoderPtr d = binaryDecoder();
+        d->init(*in);
+        GenericDatum datum;
+        BOOST_CHECK_THROW(GenericReader::read(*d, datum, s), Exception);
+    }
+}
+
 } // namespace avro
 
 boost::unit_test::test_suite *
@@ -337,5 +356,6 @@ init_unit_test_suite(int, char *[]) {
     ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfLongRejectedByStructuralCap));
     ts->add(BOOST_TEST_CASE(&avro::testSkipArrayRejectsHugeCount));
     ts->add(BOOST_TEST_CASE(&avro::testSkipArrayRejectsNegativeBlockSize));
+    ts->add(BOOST_TEST_CASE(&avro::testReadUnionRejectsOutOfRangeIndex));
     return ts;
 }
