@@ -106,6 +106,8 @@ int avro_raw_map_get_or_create(avro_raw_map_t *map, const char *key,
 		el = (char *) raw_entry + sizeof(avro_raw_map_entry_t);
 		is_new = 0;
 	} else {
+		char  *key_copy;
+		size_t  key_size;
 		i = map->elements.element_count;
 		avro_raw_map_entry_t  *raw_entry =
 		    (avro_raw_map_entry_t *) avro_raw_array_append(&map->elements);
@@ -114,7 +116,19 @@ int avro_raw_map_get_or_create(avro_raw_map_t *map, const char *key,
 			 * failure; check before dereferencing it. */
 			return -ENOMEM;
 		}
-		raw_entry->key = avro_strdup(key);
+		/* Duplicate the key with a NULL-safe allocation: avro_strdup()
+		 * memcpy()s into the buffer without checking it, so it would
+		 * crash on OOM. Only index the entry once the copy succeeds; on
+		 * failure, roll back the element we just appended so the map is
+		 * not left with a half-initialized (NULL-key) entry. */
+		key_size = strlen(key) + 1;
+		key_copy = avro_str_alloc(key_size);
+		if (!key_copy) {
+			map->elements.element_count--;
+			return -ENOMEM;
+		}
+		memcpy(key_copy, key, key_size);
+		raw_entry->key = key_copy;
 		st_insert((st_table *) map->indices_by_key,
 			  (st_data_t) raw_entry->key, (st_data_t) i);
 		el = ((char *) raw_entry) + sizeof(avro_raw_map_entry_t);

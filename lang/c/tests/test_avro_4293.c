@@ -184,8 +184,9 @@ static int check_accepts_valid(void)
 	return ret;
 }
 
-/* An array of nulls: null elements occupy zero bytes, so a large declared
- * count is legitimate and must not be rejected. */
+/* An array of nulls within the configured limit: null elements occupy zero
+ * bytes, so a moderate declared count is legitimate and must not be rejected by
+ * the available-bytes check (it is instead bounded by the zero-byte item cap). */
 static int check_accepts_null_array(void)
 {
 	avro_schema_t schema = NULL;
