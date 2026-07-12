@@ -603,12 +603,19 @@ module Avro
       DEFAULT_MAX_COLLECTION_STRUCTURAL = 2147483639  # Integer.MAX_VALUE - 8.
 
       def collection_limits
-        env = Integer(ENV['AVRO_MAX_COLLECTION_ITEMS'], exception: false)
-        if env && env >= 0
-          [env, env]
-        else
-          [DEFAULT_MAX_COLLECTION_ITEMS, DEFAULT_MAX_COLLECTION_STRUCTURAL]
-        end
+        # Memoize per reader instance: ensure_collection_available runs once per
+        # block, so parsing the env var every time adds avoidable overhead for
+        # collections split into many blocks. Reading it once per reader still
+        # lets a new reader pick up a changed value.
+        @collection_limits ||=
+          begin
+            env = Integer(ENV['AVRO_MAX_COLLECTION_ITEMS'], exception: false)
+            if env && env >= 0
+              [env, env]
+            else
+              [DEFAULT_MAX_COLLECTION_ITEMS, DEFAULT_MAX_COLLECTION_STRUCTURAL]
+            end
+          end
       end
 
       def ensure_collection_available(decoder, total, count, min_bytes_per_element)
