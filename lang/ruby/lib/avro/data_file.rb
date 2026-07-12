@@ -384,17 +384,21 @@ module Avro
         if declared > limit
           raise DecompressionSizeError, "Decompressed block size exceeds the maximum allowed of #{limit} bytes"
         end
-        crc32 = data.slice(-4..-1).unpack('N').first
-        uncompressed = Snappy.inflate(data.slice(0..-5))
+        # A well-formed block ends with a 4-byte CRC32 trailer. If the buffer is
+        # too short to contain it, don't slice past the start (data[-4..-1] would
+        # be nil and raise on unpack); treat it as a legacy no-checksum block.
+        if data.bytesize >= 4
+          crc32 = data.slice(-4..-1).unpack('N').first
+          uncompressed = Snappy.inflate(data.slice(0..-5))
 
-        if crc32 == Zlib.crc32(uncompressed)
-          uncompressed
-        else
-          # older versions of avro-ruby didn't write the checksum, so if it
-          # doesn't match this must assume that it wasn't there and return
-          # the entire payload uncompressed.
-          Snappy.inflate(data)
+          if crc32 == Zlib.crc32(uncompressed)
+            return uncompressed
+          end
         end
+        # older versions of avro-ruby didn't write the checksum, so if it
+        # doesn't match (or the buffer is too short to hold one) assume it wasn't
+        # there and return the entire payload uncompressed.
+        Snappy.inflate(data)
       rescue Snappy::Error
         # older versions of avro-ruby didn't write the checksum, so removing
         # the last 4 bytes may cause Snappy to fail. recover by assuming the
