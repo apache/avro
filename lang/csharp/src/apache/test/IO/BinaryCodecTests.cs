@@ -642,6 +642,34 @@ namespace Avro.Test
             Assert.Throws<AvroException>(() => d.ReadArrayStart());
         }
 
+        // A union branch index outside [0, branch count) must be rejected with a
+        // clear AvroException rather than an ArgumentOutOfRangeException.
+        [Test]
+        public void TestReadUnionRejectsOutOfRangeIndex()
+        {
+            var schema = Avro.Schema.Parse("[\"null\",\"long\"]");
+            // Branch index 5 (zig-zag long 0x0a) and -1 (0x01); only 2 branches exist.
+            foreach (var data in new[] { new byte[] { 0x0a }, new byte[] { 0x01 } })
+            {
+                var reader = new GenericReader<object>(schema, schema);
+                Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(new MemoryStream(data))));
+            }
+        }
+
+        // An enum symbol index outside [0, symbol count) must be rejected with a
+        // clear AvroException.
+        [Test]
+        public void TestReadEnumRejectsOutOfRangeIndex()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"A\",\"B\"]}");
+            // Symbol index 9 (zig-zag int 0x12) and -1 (0x01); only 2 symbols exist.
+            foreach (var data in new[] { new byte[] { 0x12 }, new byte[] { 0x01 } })
+            {
+                var reader = new GenericReader<object>(schema, schema);
+                Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(new MemoryStream(data))));
+            }
+        }
+
         [Test]
         public void TestReadMapRejectsInt64MinBlockCount()
         {
