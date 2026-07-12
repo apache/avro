@@ -98,6 +98,15 @@ static constexpr int64_t kDefaultMaxCollectionItems = 10000000;
 // remaining.
 static constexpr int64_t kDefaultMaxCollectionStructural = 2147483639;
 
+// Upper bound on how many elements a collection container is grown by in a
+// single step while decoding. The container still grows to hold every element
+// that is actually read; this only prevents resizing to the full (possibly
+// attacker-declared) block count up front, before any element is decoded. That
+// matters most for stream sources, where the bytes-remaining check cannot bound
+// the declared count against the input, so a single up-front resize could
+// allocate a huge container before the truncated stream is detected.
+static constexpr size_t kMaxCollectionPrealloc = 1024;
+
 struct CollectionLimits {
     int64_t zeroByte;
     int64_t structural;
@@ -279,10 +288,17 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
                     ensureZeroByteCollectionWithinLimit(r.size(), m);
                 }
                 ensureCanGrow(r, m);
-                r.resize(r.size() + m);
-                for (; start < r.size(); ++start) {
-                    r[start] = GenericDatum(nn);
-                    read(r[start], d, isResolving);
+                // Grow on demand in bounded steps rather than resizing to the
+                // full block count up front, so a huge declared count on a stream
+                // cannot allocate a giant container before any element is read.
+                for (size_t remaining = m; remaining != 0;) {
+                    size_t step = std::min(remaining, kMaxCollectionPrealloc);
+                    r.resize(r.size() + step);
+                    for (; start < r.size(); ++start) {
+                        r[start] = GenericDatum(nn);
+                        read(r[start], d, isResolving);
+                    }
+                    remaining -= step;
                 }
             }
         } break;
@@ -307,11 +323,17 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
             for (size_t m = d.mapStart(); m != 0; m = d.mapNext()) {
                 ensureCollectionAvailable(d, r.size(), m, minBytes);
                 ensureCanGrow(r, m);
-                r.resize(r.size() + m);
-                for (; start < r.size(); ++start) {
-                    d.decodeString(r[start].first);
-                    r[start].second = GenericDatum(nn);
-                    read(r[start].second, d, isResolving);
+                // Grow on demand in bounded steps rather than resizing to the
+                // full block count up front (see the array case above).
+                for (size_t remaining = m; remaining != 0;) {
+                    size_t step = std::min(remaining, kMaxCollectionPrealloc);
+                    r.resize(r.size() + step);
+                    for (; start < r.size(); ++start) {
+                        d.decodeString(r[start].first);
+                        r[start].second = GenericDatum(nn);
+                        read(r[start].second, d, isResolving);
+                    }
+                    remaining -= step;
                 }
             }
         } break;
