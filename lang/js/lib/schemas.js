@@ -1193,7 +1193,12 @@ MapType.prototype._skip = function (tap) {
   var len, n;
   while ((n = tap.readLong())) {
     if (n < 0) {
+      // Sized block: bound the item count too, so the cap cannot be bypassed by
+      // encoding the block with a negative (byte-sized) count.
+      n = -n;
       len = tap.readLong();
+      total += n;
+      checkCollectionBlock(tap, n, minBytes, total);
       tap.pos += len;
     } else {
       total += n;
@@ -1347,7 +1352,12 @@ ArrayType.prototype._skip = function (tap) {
   var len, n;
   while ((n = tap.readLong())) {
     if (n < 0) {
+      // Sized block: bound the item count too, so the cap cannot be bypassed by
+      // encoding the block with a negative (byte-sized) count.
+      n = -n;
       len = tap.readLong();
+      total += n;
+      checkCollectionBlock(tap, n, minBytes, total);
       tap.pos += len;
     } else {
       total += n;
@@ -2223,6 +2233,19 @@ function getMinBytes(type, seen) {
     mb = 8;
   } else if (type instanceof LogicalType) {
     mb = getMinBytes(type._underlyingType, seen);
+  } else if (type instanceof UnionType) {
+    // A 1-byte branch index plus the smallest branch encoding. A union with a
+    // zero-byte branch (e.g. null) still occupies the index byte, so the
+    // minimum is 1; a union without one (e.g. ['int','long']) is at least 2.
+    var branches = type._types;
+    var branchMin = branches.length ? Infinity : 0;
+    for (var k = 0, bl = branches.length; k < bl; k++) {
+      branchMin = Math.min(branchMin, getMinBytes(branches[k], seen));
+      if (branchMin === 0) {
+        break;
+      }
+    }
+    mb = 1 + branchMin;
   } else if (type instanceof RecordType) {
     seen = seen || [];
     if (~seen.indexOf(type)) {

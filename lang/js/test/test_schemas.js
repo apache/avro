@@ -1030,6 +1030,30 @@ describe('types', function () {
       assert.throws(function () { v2.fromBuffer(buf, resolver); }, /collection/);
     });
 
+    it('bounds a huge negative (sized) block count while skipping', function () {
+      // A negative block count carries a byte-size and is skipped in one step;
+      // the item cap must still apply so it cannot be used to bypass the bound.
+      var v1 = createType({
+        name: 'Foo',
+        type: 'record',
+        fields: [
+          {name: 'array', type: {type: 'array', items: 'null'}},
+          {name: 'val', type: 'int'}
+        ]
+      });
+      var v2 = createType({
+        name: 'Foo',
+        type: 'record',
+        fields: [{name: 'val', type: 'int'}]
+      });
+      // Block count -200,000,000 (zig-zag 0xFF..), a block byte-size of 0, then
+      // the terminator and val.
+      var buf = Buffer.from(
+        [0xff, 0x87, 0xde, 0xbe, 0x01, 0x00, 0x00, 6]);
+      var resolver = v2.createResolver(v1);
+      assert.throws(function () { v2.fromBuffer(buf, resolver); }, /collection/);
+    });
+
     it('bounds a huge block count under resolution', function () {
       var t1 = new types.ArrayType({type: 'array', items: 'null'});
       var t2 = createType({type: 'array', items: ['null', 'long']});
