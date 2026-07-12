@@ -427,13 +427,24 @@ namespace Avro.Generic
                     if (GetArraySize(result) <= i)
                     {
                         int current = GetArraySize(result);
-                        int grown = current + (current >> 1) + 1;
-                        if (grown <= i)
+                        // Grow ~1.5x, computed in long to avoid int overflow, and
+                        // clamp to the structural cap (which is <= the runtime's
+                        // max array length). The validated element count never
+                        // exceeds that cap, so clamping cannot starve a legitimate
+                        // collection while it keeps Array.Resize from being handed
+                        // an over-large (or overflowed/negative) size.
+                        long grown = (long)current + (current >> 1) + 1;
+                        if (grown < i + 1)
                         {
                             grown = i + 1;
                         }
 
-                        ResizeArray(ref result, grown);
+                        if (grown > MaxCollectionStructural)
+                        {
+                            grown = MaxCollectionStructural;
+                        }
+
+                        ResizeArray(ref result, (int)grown);
                     }
 
                     SetArrayElement(result, i, Read(GetArrayElement(result, i), writerSchema.ItemSchema, rs.ItemSchema, d));
