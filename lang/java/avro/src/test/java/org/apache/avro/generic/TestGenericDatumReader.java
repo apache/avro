@@ -567,7 +567,9 @@ public class TestGenericDatumReader {
     // A single block declaring more than Integer.MAX_VALUE - 8 entries.
     byte[] data = encodeVarints((long) Integer.MAX_VALUE, 0L);
     BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
-    assertThrows(RuntimeException.class, () -> GenericDatumReader.skip(schema, decoder));
+    // Integer.MAX_VALUE exceeds MAX_ARRAY_VM_LIMIT, so this hits the VM
+    // structural-limit path (an UnsupportedOperationException).
+    assertThrows(UnsupportedOperationException.class, () -> GenericDatumReader.skip(schema, decoder));
   }
 
   /**
@@ -591,7 +593,7 @@ public class TestGenericDatumReader {
         data2.setFastReaderEnabled(fast);
         GenericDatumReader<Object> r = new GenericDatumReader<>(writer, reader, data2);
         BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
-        assertThrows(RuntimeException.class, () -> r.read(null, decoder), "fastReader=" + fast);
+        assertThrows(SystemLimitException.class, () -> r.read(null, decoder), "fastReader=" + fast);
       }
     } finally {
       System.clearProperty(SystemLimitException.MAX_COLLECTION_LENGTH_PROPERTY);
