@@ -158,6 +158,27 @@ class TestIO < Test::Unit::TestCase
     end
   end
 
+  def test_skip_array_of_null_negative_block_rejects_huge_count
+    # The negative (byte-sized) block form must also be bounded when skipping,
+    # so it cannot bypass the collection cap during projection.
+    writers_schema = Avro::Schema.parse(<<-JSON)
+      {"type":"record","name":"Foo","fields":[
+        {"name":"arr","type":{"type":"array","items":"null"}},
+        {"name":"val","type":"int"}]}
+    JSON
+    readers_schema = Avro::Schema.parse(<<-JSON)
+      {"type":"record","name":"Foo","fields":[{"name":"val","type":"int"}]}
+    JSON
+    writer = StringIO.new
+    encoder = Avro::IO::BinaryEncoder.new(writer)
+    encoder.write_long(-200_000_000) # negative block count
+    encoder.write_long(0)            # block byte-size
+    reader = Avro::IO::DatumReader.new(writers_schema, readers_schema)
+    assert_raise(Avro::IO::CollectionSizeError) do
+      reader.read(Avro::IO::BinaryDecoder.new(StringIO.new(writer.string)))
+    end
+  end
+
   def test_int
     check('"int"')
     check_default('"int"', "5", 5)

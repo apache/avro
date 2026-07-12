@@ -638,9 +638,15 @@ module Avro
         block_count = decoder.read_long
         while block_count != 0
           if block_count < 0
-            # A negative count carries a byte size, so the whole block can be
-            # skipped directly without iterating.
-            decoder.skip(decoder.read_long)
+            # A negative count declares abs(count) items preceded by a block
+            # byte-size. Bound the count too (so it can't bypass the caps), and
+            # reject a negative byte-size (which would seek the reader backwards)
+            # before skipping the whole block by its size.
+            block_count = -block_count
+            block_size = decoder.read_long
+            raise AvroError, "Invalid negative block size: #{block_size}" if block_size < 0
+            total = ensure_collection_available(decoder, total, block_count, min_bytes)
+            decoder.skip(block_size)
           else
             total = ensure_collection_available(decoder, total, block_count, min_bytes)
             block_count.times(&blk)
