@@ -317,7 +317,10 @@ class AvroIODatumReader
                     throw new AvroException('Invalid array block count');
                 }
                 $blockCount = -$blockCount;
-                $decoder->readLong(); // Read (and ignore) block size
+                $blockSize = $decoder->readLong(); // block byte-size
+                if ($blockSize < 0) {
+                    throw new AvroException('Invalid negative array block size');
+                }
             }
             self::ensureCollectionAvailable($decoder, count($items), $blockCount, $minBytes);
             for ($i = 0; $i < $blockCount; $i++) {
@@ -353,8 +356,10 @@ class AvroIODatumReader
                     throw new AvroException('Invalid map block count');
                 }
                 $pair_count = -$pair_count;
-                // Note: we're not doing anything with block_size other than skipping it
-                $decoder->readLong();
+                $blockSize = $decoder->readLong(); // block byte-size
+                if ($blockSize < 0) {
+                    throw new AvroException('Invalid negative map block size');
+                }
             }
 
             // Map keys are strings (>= 1 byte length prefix) plus the value.
