@@ -632,7 +632,12 @@ sub unsigned_varint {
         if ($shift >= 70) {
             throw Avro::Schema::Error::Parse("Varint is too long");
         }
-        $reader->read(my $buf, 1);
+        my $got = $reader->read(my $buf, 1);
+        # A short read (EOF) would otherwise make `ord $buf` == 0 and silently
+        # decode truncated input as a valid 0 byte; treat it as a parse error.
+        if (!$got) {
+            throw Avro::Schema::Error::Parse("Unexpected end of input while reading varint");
+        }
         my $byte = ord $buf;
         my $value = $byte & 0x7F;
         $int |= $value << $shift;
