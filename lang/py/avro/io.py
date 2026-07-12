@@ -1020,12 +1020,17 @@ class DatumReader:
         # Map keys are strings (>= 1 byte length prefix) plus the value.
         min_bytes = 1 + _min_bytes_per_element(writers_schema.values)
         zero_byte_limit, structural_limit = _collection_limits()
+        # Track decoded pairs separately: len(read_items) counts unique keys, so
+        # duplicate keys (later entries overwrite earlier ones) would undercount
+        # and let a multi-block map exceed the cumulative caps.
+        items_read = 0
         block_count = decoder.read_long()
         while block_count != 0:
             if block_count < 0:
                 block_count = -block_count
                 decoder.skip_long()
-            self._ensure_collection_available(decoder, len(read_items), block_count, min_bytes, zero_byte_limit, structural_limit)
+            self._ensure_collection_available(decoder, items_read, block_count, min_bytes, zero_byte_limit, structural_limit)
+            items_read += block_count
             for i in range(block_count):
                 key = decoder.read_utf8()
                 read_items[key] = self.read_data(writers_schema.values, readers_schema.values, decoder)

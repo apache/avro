@@ -955,6 +955,24 @@ class TestDatumReaderCollectionSizeLimit(unittest.TestCase):
                 buf.getvalue(),
             )
 
+    def test_map_duplicate_keys_counted_cumulatively(self) -> None:
+        # Two blocks of 600 pairs that repeat the SAME key: len(read_items) would
+        # be 1, so a separate decoded-pair counter is needed to reject 1200 > 1000.
+        buf = io.BytesIO()
+        enc = avro.io.BinaryEncoder(buf)
+        for _ in range(2):
+            enc.write_long(600)
+            for _ in range(600):
+                enc.write_utf8("k")  # same key; value is null (zero bytes)
+        enc.write_long(0)
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(
+                avro.errors.AvroCollectionSizeException,
+                self._decode,
+                '{"type": "map", "values": "null"}',
+                buf.getvalue(),
+            )
+
     def test_array_of_null_negative_block_count(self) -> None:
         # A negative count encodes abs(count) elements preceded by a block size;
         # after normalization it must still be bounded.
