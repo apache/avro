@@ -84,6 +84,52 @@ EOJ
     is $dec, "a", "Binary_Encodings.Complex_Types.Unions-a";
 }
 
+## union and enum index bounds
+{
+    my $union = Avro::Schema->parse(q(["string","null"]));
+    # Index 2 (zig-zag long 0x04) is out of range for a 2-branch union.
+    open my $reader, '<', \"\x04" or die "Can't open memory file: $!";
+    throws_ok {
+        Avro::BinaryDecoder->decode(
+            writer_schema => $union,
+            reader_schema => $union,
+            reader        => $reader,
+        );
+    } 'Avro::Schema::Error::Parse', "union branch index out of range is rejected";
+
+    # Index -1 (zig-zag long 0x01) must not wrap to a valid branch.
+    open $reader, '<', \"\x01" or die "Can't open memory file: $!";
+    throws_ok {
+        Avro::BinaryDecoder->decode(
+            writer_schema => $union,
+            reader_schema => $union,
+            reader        => $reader,
+        );
+    } 'Avro::Schema::Error::Parse', "negative union branch index is rejected";
+
+    my $enum = Avro::Schema->parse(
+        q({ "type": "enum", "name": "e", "symbols": [ "a", "b" ] }));
+    # Index 9 (zig-zag int 0x12) is out of range for a 2-symbol enum.
+    open $reader, '<', \"\x12" or die "Can't open memory file: $!";
+    throws_ok {
+        Avro::BinaryDecoder->decode(
+            writer_schema => $enum,
+            reader_schema => $enum,
+            reader        => $reader,
+        );
+    } 'Avro::Schema::Error::Parse', "enum symbol index out of range is rejected";
+
+    # Index -1 (zig-zag int 0x01) must not wrap to a valid symbol.
+    open $reader, '<', \"\x01" or die "Can't open memory file: $!";
+    throws_ok {
+        Avro::BinaryDecoder->decode(
+            writer_schema => $enum,
+            reader_schema => $enum,
+            reader        => $reader,
+        );
+    } 'Avro::Schema::Error::Parse', "negative enum symbol index is rejected";
+}
+
 ## enum schema resolution
 {
 

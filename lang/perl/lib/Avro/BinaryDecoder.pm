@@ -371,7 +371,14 @@ sub decode_enum {
     my ($writer_schema, $reader_schema, $reader) = @_;
     my $index = decode_int($class, @_);
 
-    my $w_data = $writer_schema->symbols->[$index];
+    my $symbols = $writer_schema->symbols;
+    ## A negative or out-of-range index is malformed; reject it before indexing
+    ## (Perl's negative indexing would otherwise select the wrong symbol).
+    if ($index < 0 || $index >= scalar @$symbols) {
+        throw Avro::Schema::Error::Parse(
+            "Enum symbol index $index out of range for " . scalar(@$symbols) . " symbols");
+    }
+    my $w_data = $symbols->[$index];
     ## 1.3.2 if the writer's symbol is not present in the reader's enum,
     ## then an error is signalled.
     throw Avro::Schema::Error::Mismatch("enum unknown")
@@ -541,8 +548,11 @@ sub skip_union {
     my $class = shift;
     my ($schema, $reader) = @_;
     my $idx = decode_long($class, undef, undef, $reader);
-    my $union_schema = $schema->schemas->[$idx]
-        or throw Avro::Schema::Error::Parse("union union member");
+    my $schemas = $schema->schemas;
+    if ($idx < 0 || $idx >= scalar @$schemas) {
+        throw Avro::Schema::Error::Parse("union union member");
+    }
+    my $union_schema = $schemas->[$idx];
     $class->skip($union_schema, $reader);
 }
 
@@ -553,7 +563,14 @@ sub decode_union {
     my $class = shift;
     my ($writer_schema, $reader_schema, $reader) = @_;
     my $idx = decode_long($class, @_);
-    my $union_schema = $writer_schema->schemas->[$idx];
+    my $schemas = $writer_schema->schemas;
+    ## A negative or out-of-range branch index is malformed; reject it before
+    ## indexing (skip_union performs the same check).
+    if ($idx < 0 || $idx >= scalar @$schemas) {
+        throw Avro::Schema::Error::Parse(
+            "Union branch index $idx out of range for " . scalar(@$schemas) . " branches");
+    }
+    my $union_schema = $schemas->[$idx];
     ## XXX TODO: schema resolution
     # The first schema in the reader's union that matches the selected writer's
     # union schema is recursively resolved against it. if none match, an error
