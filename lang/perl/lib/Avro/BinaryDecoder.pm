@@ -128,7 +128,10 @@ sub skip_bytes {
         throw Avro::Schema::Error::Parse(
             "Invalid negative bytes/string length: $size");
     }
-    $reader->seek($size, 0);
+    # Skip forward by $size bytes relative to the current position
+    # (SEEK_CUR); whence 0 (SEEK_SET) would incorrectly seek to the
+    # absolute offset $size.
+    $reader->seek($size, 1);
     return;
 }
 
