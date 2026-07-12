@@ -630,6 +630,24 @@ namespace Avro.Test
             Assert.Throws<AvroException>(() => d.ReadMapStart());
         }
 
+        // A string length prefix above int.MaxValue must be rejected as an
+        // unsupported length, not overflow the int cast into a negative length.
+        // A non-seekable stream is used so the check is reached without the
+        // remaining-bytes guard firing first.
+        [Test]
+        public void TestReadStringRejectsLengthAboveInt32()
+        {
+            var backing = new MemoryStream();
+            new BinaryEncoder(backing).WriteLong((long)int.MaxValue + 1);
+            byte[] encoded = backing.ToArray();
+            using (var ns = new NonSeekableStream(new MemoryStream(encoded)))
+            {
+                var d = new BinaryDecoder(ns);
+                var ex = Assert.Throws<AvroException>(() => d.ReadString());
+                StringAssert.Contains("not supported", ex.Message);
+            }
+        }
+
         // Minimal read-only, forward-only stream wrapper reporting CanSeek=false.
         private sealed class NonSeekableStream : Stream
         {

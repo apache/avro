@@ -78,7 +78,11 @@ namespace Avro.IO
         /// <returns>String read from the stream.</returns>
         public string ReadString()
         {
-            int length = ReadInt();
+            // Read the length as a long: the prefix is an Avro long, so a value
+            // above int.MaxValue would overflow ReadInt() to a negative int,
+            // bypass EnsureAvailableBytes and throw a misleading "negative length"
+            // error. Validate the bounds before casting to int.
+            long length = ReadLong();
 
             if (length < 0)
             {
@@ -92,11 +96,13 @@ namespace Avro.IO
                 throw new AvroException("String length is not supported!");
             }
 
+            int intLength = (int)length;
+
             using (var binaryReader = new BinaryReader(stream, Encoding.UTF8, true))
             {
-                var bytes = binaryReader.ReadBytes(length);
+                var bytes = binaryReader.ReadBytes(intLength);
 
-                if (bytes.Length != length)
+                if (bytes.Length != intLength)
                 {
                     throw new AvroException("Could not read as many bytes from stream as expected!");
                 }
