@@ -17,6 +17,7 @@
 
 #include "avro_private.h"
 #include "avro/errors.h"
+#include <inttypes.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -30,6 +31,16 @@ static int skip_array(avro_reader_t reader, const avro_encoding_t * enc,
 	int64_t i;
 	int64_t block_count;
 	int64_t block_size;
+	int64_t skipped = 0;
+	int64_t zero_byte, structural, limit;
+
+	/* Zero-byte elements skip with no per-item input, so bound them tightly;
+	 * other elements consume bytes (bounded by EOF) so only the structural
+	 * cap applies. Skipping allocates nothing, but an unbounded per-item loop
+	 * is a CPU exhaustion. */
+	avro_collection_limits(&zero_byte, &structural);
+	limit = (avro_min_bytes_per_element(writers_schema->items) > 0)
+		    ? structural : zero_byte;
 
 	check_prefix(rval, enc->read_long(reader, &block_count),
 		     "Cannot read array block count: ");
@@ -40,6 +51,13 @@ static int skip_array(avro_reader_t reader, const avro_encoding_t * enc,
 			check_prefix(rval, enc->read_long(reader, &block_size),
 				     "Cannot read array block size: ");
 		}
+
+		if (block_count > limit || skipped > limit - block_count) {
+			avro_set_error("Cannot skip a collection of more than %"
+				       PRId64 " elements", limit);
+			return EINVAL;
+		}
+		skipped += block_count;
 
 		for (i = 0; i < block_count; i++) {
 			check_prefix(rval, avro_skip_data(reader, writers_schema->items),
@@ -57,6 +75,12 @@ static int skip_map(avro_reader_t reader, const avro_encoding_t * enc,
 {
 	int rval;
 	int64_t i, block_count;
+	int64_t skipped = 0;
+	int64_t zero_byte, structural;
+
+	/* Map entries always carry a >= 1 byte key, so the structural cap applies
+	 * (they are never zero-byte). */
+	avro_collection_limits(&zero_byte, &structural);
 
 	check_prefix(rval, enc->read_long(reader, &block_count),
 		     "Cannot read map block count: ");
@@ -67,6 +91,12 @@ static int skip_map(avro_reader_t reader, const avro_encoding_t * enc,
 			check_prefix(rval, enc->read_long(reader, &block_size),
 				     "Cannot read map block size: ");
 		}
+		if (block_count > structural || skipped > structural - block_count) {
+			avro_set_error("Cannot skip a collection of more than %"
+				       PRId64 " elements", structural);
+			return EINVAL;
+		}
+		skipped += block_count;
 		for (i = 0; i < block_count; i++) {
 			check_prefix(rval, enc->skip_string(reader),
 				     "Cannot skip map key: ");

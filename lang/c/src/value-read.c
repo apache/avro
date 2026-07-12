@@ -97,25 +97,96 @@ min_bytes_per_element(avro_schema_t schema, int depth)
 	}
 }
 
+/* Non-static wrapper so the skip path (datum_skip.c) can compute the minimum
+ * on-wire size of a collection's element schema. */
+int64_t
+avro_min_bytes_per_element(avro_schema_t schema)
+{
+	return min_bytes_per_element(schema, 0);
+}
+
 /*
- * Reject a collection (array or map) block whose declared element count could
- * not be backed by the bytes actually remaining, before appending. Skipped when
- * the per-element minimum is zero or when the reader cannot report how many
- * bytes remain. The comparison avoids overflow by dividing.
+ * Maximum number of zero-byte-encoded collection elements (e.g. an array of
+ * nulls) to allocate from a single decode. Such elements consume no input, so
+ * the bytes-remaining check cannot bound their count; without a cap a tiny
+ * payload can declare a huge block count and exhaust memory. Overridable via
+ * the AVRO_MAX_COLLECTION_ITEMS environment variable.
+ */
+#define AVRO_DEFAULT_MAX_COLLECTION_ITEMS  ((int64_t) 10000000)
+
+/*
+ * Structural cap on the number of elements in any array or map (an overflow /
+ * defense-in-depth guard), matching the historical Integer.MAX_VALUE - 8 limit.
+ * Non-zero-byte elements are also bounded by the bytes remaining.
+ */
+#define AVRO_DEFAULT_MAX_COLLECTION_STRUCTURAL  ((int64_t) 2147483639)
+
+/*
+ * Populate the zero-byte and structural collection limits. The
+ * AVRO_MAX_COLLECTION_ITEMS environment variable, when a non-negative integer,
+ * caps both; otherwise the tighter zero-byte default and the structural default
+ * are used. Shared with the skip path (see avro_collection_limits).
+ */
+void
+avro_collection_limits(int64_t *zero_byte, int64_t *structural)
+{
+	const char *env = getenv("AVRO_MAX_COLLECTION_ITEMS");
+	if (env != NULL && *env != '\0') {
+		char *end;
+		long long value = strtoll(env, &end, 10);
+		if (*end == '\0' && value >= 0) {
+			*zero_byte = *structural = (int64_t) value;
+			return;
+		}
+	}
+	*zero_byte = AVRO_DEFAULT_MAX_COLLECTION_ITEMS;
+	*structural = AVRO_DEFAULT_MAX_COLLECTION_STRUCTURAL;
+}
+
+/*
+ * Reject a collection (array or map) block that could not be backed by the
+ * input, before appending.
+ *
+ * For elements with a positive minimum on-wire size, the declared count is
+ * checked against the bytes remaining. For zero-byte elements (e.g. an array of
+ * nulls), which consume no input and so cannot be bounded by the bytes
+ * remaining, the cumulative count is checked against a configurable limit.
  */
 static int
-ensure_collection_available(avro_reader_t reader, int64_t count, int64_t min_bytes)
+ensure_collection_available(avro_reader_t reader, int64_t existing,
+			    int64_t count, int64_t min_bytes)
 {
 	int64_t available;
-	if (count <= 0 || min_bytes <= 0) {
+	int64_t zero_byte, structural;
+	if (count <= 0) {
 		return 0;
 	}
-	available = avro_reader_bytes_available(reader);
-	if (available >= 0 && count > available / min_bytes) {
-		avro_set_error("Collection claims %" PRId64
-			       " elements with at least %" PRId64
-			       " bytes each, but only %" PRId64 " bytes available",
-			       count, min_bytes, available);
+	avro_collection_limits(&zero_byte, &structural);
+	if (min_bytes > 0) {
+		available = avro_reader_bytes_available(reader);
+		if (available >= 0 && count > available / min_bytes) {
+			avro_set_error("Collection claims %" PRId64
+				       " elements with at least %" PRId64
+				       " bytes each, but only %" PRId64 " bytes available",
+				       count, min_bytes, available);
+			return EINVAL;
+		}
+		/* Structural / overflow guard, also covering readers that cannot
+		 * report the bytes remaining. Compare without adding so
+		 * existing + count cannot overflow. */
+		if (count > structural || existing > structural - count) {
+			avro_set_error("Cannot read a collection of more than %" PRId64
+				       " elements; raise AVRO_MAX_COLLECTION_ITEMS "
+				       "if this is legitimate", structural);
+			return EINVAL;
+		}
+		return 0;
+	}
+	/* Compare without adding, so existing + count cannot overflow. */
+	if (count > zero_byte || existing > zero_byte - count) {
+		avro_set_error("Cannot read a collection of more than %" PRId64
+			       " zero-byte elements; raise AVRO_MAX_COLLECTION_ITEMS "
+			       "if this is legitimate", zero_byte);
 		return EINVAL;
 	}
 	return 0;
@@ -147,7 +218,7 @@ read_array_value(avro_reader_t reader, avro_value_t *dest)
 				     "Cannot read array block size: ");
 		}
 
-		check(rval, ensure_collection_available(reader, block_count, min_bytes));
+		check(rval, ensure_collection_available(reader, (int64_t) index, block_count, min_bytes));
 
 		for (i = 0; i < (size_t) block_count; i++, index++) {
 			avro_value_t  child;
@@ -195,7 +266,7 @@ read_map_value(avro_reader_t reader, avro_value_t *dest)
 				     "Cannot read map block size: ");
 		}
 
-		check(rval, ensure_collection_available(reader, block_count, min_bytes));
+		check(rval, ensure_collection_available(reader, (int64_t) index, block_count, min_bytes));
 
 		for (i = 0; i < (size_t) block_count; i++, index++) {
 			char *key;
