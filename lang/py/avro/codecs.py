@@ -185,6 +185,10 @@ class DeflateCodec(Codec):
         uncompressed += decompressor.flush()
         if len(uncompressed) > limit:
             _raise_decompression_too_large(limit)
+        if not decompressor.eof:
+            # The end-of-stream marker was not reached: the block is truncated or
+            # corrupt. zlib.decompress() used to raise for this; preserve that.
+            raise avro.errors.InvalidAvroBinaryEncoding("Truncated or corrupt deflate block")
         return avro.io.BinaryDecoder(io.BytesIO(uncompressed))
 
 
@@ -241,6 +245,10 @@ if has_snappy:
         def decompress(readers_decoder: avro.io.BinaryDecoder) -> avro.io.BinaryDecoder:
             # Compressed data includes a 4-byte CRC32 checksum
             length = readers_decoder.read_long()
+            if length < 4:
+                raise avro.errors.InvalidAvroBinaryEncoding(
+                    f"Invalid snappy block length {length}: must be at least 4 bytes for the trailing CRC32 checksum"
+                )
             data = readers_decoder.read(length - 4)
             limit = _max_decompress_length()
             # The Snappy block header declares the uncompressed length as a
