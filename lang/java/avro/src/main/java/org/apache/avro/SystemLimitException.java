@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
  * <li><tt>org.apache.avro.limits.bytes.maxLength</tt> limits the maximum size
  * of <tt>bytes</tt> types.</li>
  * <li><tt>org.apache.avro.limits.collectionItems.maxLength</tt> limits the
- * maximum number of <tt>map</tt> and <tt>list</tt> items that can be read at
- * once single sequence.</li>
+ * maximum number of <tt>map</tt> and <tt>list</tt> items that can be read in a
+ * single sequence.</li>
  * <li><tt>org.apache.avro.limits.string.maxLength</tt> limits the maximum size
  * of <tt>string</tt> types.</li>
  * <li><tt>org.apache.avro.limits.collectionItems.maxAllocation</tt> limits the

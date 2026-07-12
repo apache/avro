@@ -148,7 +148,10 @@ public class TestSystemLimitException {
     resetLimits();
     assertEquals(1024L, checkMaxCollectionAllocation(0L, 1024L));
     // A pathologically large zero-byte collection is rejected without allocating.
-    assertThrows(SystemLimitException.class, () -> checkMaxCollectionAllocation(0L, (long) Integer.MAX_VALUE - 8));
+    // Use MAX_ARRAY_VM_LIMIT + 1 so it exceeds the cap regardless of heap size
+    // (the default is derived from the heap and then clamped to MAX_ARRAY_VM_LIMIT,
+    // so Integer.MAX_VALUE - 8 alone would not exceed it on a very large heap).
+    assertThrows(SystemLimitException.class, () -> checkMaxCollectionAllocation(0L, (long) MAX_ARRAY_VM_LIMIT + 1L));
   }
 
   @Test
