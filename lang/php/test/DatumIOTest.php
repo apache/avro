@@ -24,6 +24,7 @@ use Apache\Avro\AvroDebug;
 use Apache\Avro\AvroException;
 use Apache\Avro\Datum\AvroIOBinaryDecoder;
 use Apache\Avro\Datum\AvroIOBinaryEncoder;
+use Apache\Avro\Datum\AvroIOCollectionSizeException;
 use Apache\Avro\Datum\AvroIODatumReader;
 use Apache\Avro\Datum\AvroIODatumWriter;
 use Apache\Avro\Datum\Type\AvroDuration;
@@ -321,6 +322,165 @@ class DatumIOTest extends TestCase
         $this->assertEquals([1, 2, 3], $this->decodeWith('{"type":"array","items":"long"}', $io));
     }
 
+    public function test_array_of_null_exceeds_default_limit(): void
+    {
+        // The reported exploit: a ~6 byte payload declaring 200,000,000 nulls.
+        $this->expectException(AvroIOCollectionSizeException::class);
+        $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(200000000));
+    }
+
+    public function test_array_of_null_within_configured_limit_still_reads(): void
+    {
+        putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
+
+        try {
+            $result = $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(1000));
+            $this->assertCount(1000, $result);
+        } finally {
+            putenv('AVRO_MAX_COLLECTION_ITEMS');
+        }
+    }
+
+    public function test_array_of_null_exceeds_configured_limit(): void
+    {
+        putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
+
+        try {
+            $this->expectException(AvroException::class);
+            $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(1001));
+        } finally {
+            putenv('AVRO_MAX_COLLECTION_ITEMS');
+        }
+    }
+
+    public function test_array_of_null_cumulative_across_blocks(): void
+    {
+        $io = new AvroStringIO();
+        $encoder = new AvroIOBinaryEncoder($io);
+        $encoder->writeLong(600);
+        $encoder->writeLong(600);
+        $encoder->writeLong(0);
+        putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
+
+        try {
+            $this->expectException(AvroException::class);
+            $this->decodeWith('{"type":"array","items":"null"}', $io);
+        } finally {
+            putenv('AVRO_MAX_COLLECTION_ITEMS');
+        }
+    }
+
+    public function test_array_of_null_negative_block_count(): void
+    {
+        putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
+
+        try {
+            $this->expectException(AvroException::class);
+            $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(200000, true));
+        } finally {
+            putenv('AVRO_MAX_COLLECTION_ITEMS');
+        }
+    }
+
+    public function test_array_of_zero_length_fixed_exceeds_limit(): void
+    {
+        putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
+
+        try {
+            $this->expectException(AvroException::class);
+            $this->decodeWith('{"type":"array","items":{"type":"fixed","name":"empty","size":0}}', self::zeroByteBlock(2000));
+        } finally {
+            putenv('AVRO_MAX_COLLECTION_ITEMS');
+        }
+    }
+
+    public function test_array_of_all_null_record_exceeds_limit(): void
+    {
+        putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
+
+        try {
+            $this->expectException(AvroException::class);
+            $this->decodeWith(
+                '{"type":"array","items":{"type":"record","name":"R","fields":[{"name":"n","type":"null"}]}}',
+                self::zeroByteBlock(2000)
+            );
+        } finally {
+            putenv('AVRO_MAX_COLLECTION_ITEMS');
+        }
+    }
+
+    public function test_map_of_null_rejected_by_available_bytes(): void
+    {
+        // Map entries always carry a >= 1 byte key, so a huge map<null> is bounded
+        // by the bytes-remaining check.
+        $this->expectException(AvroException::class);
+        $this->decodeWith('{"type":"map","values":"null"}', self::zeroByteBlock(200000000));
+    }
+
+    public function test_invalid_env_override_falls_back_to_default(): void
+    {
+        // An invalid limit is ignored, so the default (10,000,000) still rejects
+        // the 200,000,000 exploit.
+        putenv('AVRO_MAX_COLLECTION_ITEMS=not-a-number');
+
+        try {
+            $this->expectException(AvroException::class);
+            $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(200000000));
+        } finally {
+            putenv('AVRO_MAX_COLLECTION_ITEMS');
+        }
+    }
+
+    public function test_env_override_raises_limit(): void
+    {
+        // Raising the limit above the count lets a large null array decode.
+        putenv('AVRO_MAX_COLLECTION_ITEMS=20000');
+
+        try {
+            $result = $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(15000));
+            $this->assertCount(15000, $result);
+        } finally {
+            putenv('AVRO_MAX_COLLECTION_ITEMS');
+        }
+    }
+
+    public function test_non_zero_collection_bounded_by_structural_cap(): void
+    {
+        // A backed array<long> that passes the bytes check is still rejected once
+        // its count exceeds the (env-lowered) structural cap.
+        $io = new AvroStringIO();
+        $encoder = new AvroIOBinaryEncoder($io);
+        $encoder->writeLong(10);           // block count 10
+        for ($i = 0; $i < 10; $i++) {
+            $encoder->writeLong($i);       // 10 real longs
+        }
+        $encoder->writeLong(0);
+        putenv('AVRO_MAX_COLLECTION_ITEMS=5');
+
+        try {
+            $this->expectException(AvroIOCollectionSizeException::class);
+            $this->decodeWith('{"type":"array","items":"long"}', $io);
+        } finally {
+            putenv('AVRO_MAX_COLLECTION_ITEMS');
+        }
+    }
+
+    public function test_skip_array_of_null_respects_limit(): void
+    {
+        // Skipping a huge zero-byte array (e.g. during projection) is bounded.
+        $schema = AvroSchema::parse('{"type":"array","items":"null"}');
+        $io = self::zeroByteBlock(200000000);
+        $io->seek(0);
+        putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
+
+        try {
+            $this->expectException(AvroIOCollectionSizeException::class);
+            AvroIODatumReader::skipData($schema, new AvroIOBinaryDecoder($io));
+        } finally {
+            putenv('AVRO_MAX_COLLECTION_ITEMS');
+        }
+    }
+
     public static function validDurationLogicalTypes(): array
     {
         return [
@@ -478,6 +638,25 @@ class DatumIOTest extends TestCase
         } else {
             $this->fail(sprintf('expected field record[f]: %s', print_r($record, true)));
         }
+    }
+
+    /**
+     * Builds one array/map block of `$count` zero-byte elements plus an end
+     * marker (a negative count is preceded by a block byte-size).
+     */
+    private static function zeroByteBlock(int $count, bool $negative = false): AvroStringIO
+    {
+        $io = new AvroStringIO();
+        $encoder = new AvroIOBinaryEncoder($io);
+        if ($negative) {
+            $encoder->writeLong(-$count);
+            $encoder->writeLong(0); // block byte-size
+        } else {
+            $encoder->writeLong($count);
+        }
+        $encoder->writeLong(0); // end-of-collection marker
+
+        return $io;
     }
 
     // An array/map block declares an element count; a malicious or truncated

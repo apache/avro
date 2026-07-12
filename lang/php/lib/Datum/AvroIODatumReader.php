@@ -43,6 +43,29 @@ use Apache\Avro\Schema\AvroUnionSchema;
  */
 class AvroIODatumReader
 {
+    /**
+     * Name of the environment variable overriding the maximum number of
+     * zero-byte-encoded collection elements (e.g. an array of nulls) to
+     * allocate from a single decode.
+     */
+    public const MAX_COLLECTION_ITEMS_ENV = 'AVRO_MAX_COLLECTION_ITEMS';
+
+    /**
+     * Default maximum number of zero-byte-encoded collection elements to
+     * allocate. Such elements consume no input, so the bytes-remaining check
+     * cannot bound their count; without a cap a tiny payload can declare a huge
+     * block count and exhaust memory. Overridable with the
+     * {@see self::MAX_COLLECTION_ITEMS_ENV} environment variable.
+     */
+    public const DEFAULT_MAX_COLLECTION_ITEMS = 10000000;
+
+    /**
+     * Structural cap on the number of elements in any array or map (an overflow
+     * / defense-in-depth guard), matching the historical Integer.MAX_VALUE - 8
+     * limit. Non-zero-byte elements are also bounded by the bytes remaining.
+     */
+    public const DEFAULT_MAX_COLLECTION_STRUCTURAL = 2147483639;
+
     public function __construct(
         private ?AvroSchema $writersSchema = null,
         private ?AvroSchema $readersSchema = null
@@ -284,13 +307,14 @@ class AvroIODatumReader
         AvroIOBinaryDecoder $decoder
     ): array {
         $items = [];
+        $minBytes = self::minBytesPerElement($writersSchema->items());
         $blockCount = $decoder->readLong();
         while (0 != $blockCount) {
             if ($blockCount < 0) {
                 $blockCount = -$blockCount;
                 $decoder->readLong(); // Read (and ignore) block size
             }
-            self::ensureCollectionAvailable($decoder, $blockCount, self::minBytesPerElement($writersSchema->items()));
+            self::ensureCollectionAvailable($decoder, count($items), $blockCount, $minBytes);
             for ($i = 0; $i < $blockCount; $i++) {
                 $items[] = $this->readData(
                     $writersSchema->items(),
@@ -313,6 +337,7 @@ class AvroIODatumReader
         AvroIOBinaryDecoder $decoder
     ): array {
         $items = [];
+        $minBytes = 1 + self::minBytesPerElement($writersSchema->values());
         $pair_count = $decoder->readLong();
         while (0 != $pair_count) {
             if ($pair_count < 0) {
@@ -322,7 +347,7 @@ class AvroIODatumReader
             }
 
             // Map keys are strings (>= 1 byte length prefix) plus the value.
-            self::ensureCollectionAvailable($decoder, $pair_count, 1 + self::minBytesPerElement($writersSchema->values()));
+            self::ensureCollectionAvailable($decoder, count($items), $pair_count, $minBytes);
             for ($i = 0; $i < $pair_count; $i++) {
                 $key = $decoder->readString();
                 $items[$key] = $this->readData(
@@ -533,6 +558,34 @@ class AvroIODatumReader
         }
     }
 
+    /**
+     * Minimum on-wire size of a collection element schema. Exposed for the skip
+     * path, which lives in the decoder.
+     */
+    public static function collectionElementMinBytes(AvroSchema $schema): int
+    {
+        return self::minBytesPerElement($schema);
+    }
+
+    /**
+     * Bounds the cumulative number of elements skipped in an array or map, so a
+     * huge block of zero-byte elements cannot loop unboundedly (a CPU
+     * exhaustion) even though skipping allocates nothing.
+     *
+     * @throws AvroIOCollectionSizeException if the limit is exceeded
+     */
+    public static function checkSkipCollectionCount(int $existing, int $count, int $minBytes): void
+    {
+        if ($count <= 0) {
+            return;
+        }
+        [$zeroByteLimit, $structuralLimit] = self::collectionLimits();
+        $limit = $minBytes > 0 ? $structuralLimit : $zeroByteLimit;
+        if ($count > $limit || $existing > $limit - $count) {
+            throw new AvroIOCollectionSizeException($limit);
+        }
+    }
+
     private function readDecimal(string $bytes, int $scale): string
     {
         $mostSignificantBit = ord($bytes[0]) & 0x80;
@@ -596,26 +649,63 @@ class AvroIODatumReader
     }
 
     /**
-     * Rejects a collection (array or map) block whose declared element count
-     * could not be backed by the bytes actually remaining, before iterating.
-     * Skipped when the per-element minimum is zero (e.g. an array of nulls).
+     * Returns the configured collection limits as [zeroByteLimit, structuralLimit].
+     * AVRO_MAX_COLLECTION_ITEMS, when a non-negative integer, caps both.
      *
-     * @throws AvroException if the declared count exceeds the bytes remaining
+     * @return array{int, int}
+     */
+    private static function collectionLimits(): array
+    {
+        $value = getenv(self::MAX_COLLECTION_ITEMS_ENV);
+        if (false !== $value && '' !== $value && preg_match('/^-?\d+$/', $value)) {
+            $parsed = (int) $value;
+            if ($parsed >= 0) {
+                return [$parsed, $parsed];
+            }
+        }
+
+        return [self::DEFAULT_MAX_COLLECTION_ITEMS, self::DEFAULT_MAX_COLLECTION_STRUCTURAL];
+    }
+
+    /**
+     * Rejects a collection (array or map) block that could not be backed by the
+     * input, before iterating.
+     *
+     * For elements with a positive minimum on-wire size, the declared count is
+     * checked against the bytes remaining and a structural cap. For zero-byte
+     * elements (e.g. an array of nulls), which consume no input and so cannot be
+     * bounded by the bytes remaining, the cumulative count is checked against the
+     * tighter zero-byte limit.
+     *
+     * @throws AvroException                 if the bytes-remaining check fails
+     * @throws AvroIOCollectionSizeException if a size limit is exceeded
      */
     private static function ensureCollectionAvailable(
         AvroIOBinaryDecoder $decoder,
+        int $existing,
         int $count,
         int $minBytesPerElement
     ): void {
-        if ($count <= 0 || $minBytesPerElement <= 0) {
+        if ($count <= 0) {
             return;
         }
-        $remaining = $decoder->bytesRemaining();
-        if ($count > intdiv($remaining, $minBytesPerElement)) {
-            throw new AvroException(
-                "Collection claims {$count} elements with at least {$minBytesPerElement} "
-                ."bytes each, but only {$remaining} bytes are available."
-            );
+        [$zeroByteLimit, $structuralLimit] = self::collectionLimits();
+        if ($minBytesPerElement > 0) {
+            $remaining = $decoder->bytesRemaining();
+            if ($count > intdiv($remaining, $minBytesPerElement)) {
+                throw new AvroException(
+                    "Collection claims {$count} elements with at least {$minBytesPerElement} "
+                    ."bytes each, but only {$remaining} bytes are available."
+                );
+            }
+            if ($count > $structuralLimit || $existing > $structuralLimit - $count) {
+                throw new AvroIOCollectionSizeException($structuralLimit);
+            }
+
+            return;
+        }
+        if ($count > $zeroByteLimit || $existing > $zeroByteLimit - $count) {
+            throw new AvroIOCollectionSizeException($zeroByteLimit);
         }
     }
 }

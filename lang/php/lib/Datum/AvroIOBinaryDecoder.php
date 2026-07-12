@@ -273,13 +273,18 @@ class AvroIOBinaryDecoder
 
     public function skipArray(AvroArraySchema $writersSchema, AvroIOBinaryDecoder $decoder): void
     {
+        $minBytes = AvroIODatumReader::collectionElementMinBytes($writersSchema->items());
+        $skipped = 0;
         $blockCount = $decoder->readLong();
         while (0 !== $blockCount) {
             if ($blockCount < 0) {
                 $decoder->skip($this->readLong());
-            }
-            for ($i = 0; $i < $blockCount; $i++) {
-                AvroIODatumReader::skipData($writersSchema->items(), $decoder);
+            } else {
+                AvroIODatumReader::checkSkipCollectionCount($skipped, $blockCount, $minBytes);
+                $skipped += $blockCount;
+                for ($i = 0; $i < $blockCount; $i++) {
+                    AvroIODatumReader::skipData($writersSchema->items(), $decoder);
+                }
             }
             $blockCount = $decoder->readLong();
         }
@@ -287,14 +292,20 @@ class AvroIOBinaryDecoder
 
     public function skipMap(AvroMapSchema $writersSchema, AvroIOBinaryDecoder $decoder): void
     {
+        // Map entries always carry a >= 1 byte key, so the minimum is positive.
+        $minBytes = 1 + AvroIODatumReader::collectionElementMinBytes($writersSchema->values());
+        $skipped = 0;
         $blockCount = $decoder->readLong();
         while (0 !== $blockCount) {
             if ($blockCount < 0) {
                 $decoder->skip($this->readLong());
-            }
-            for ($i = 0; $i < $blockCount; $i++) {
-                $decoder->skipString();
-                AvroIODatumReader::skipData($writersSchema->values(), $decoder);
+            } else {
+                AvroIODatumReader::checkSkipCollectionCount($skipped, $blockCount, $minBytes);
+                $skipped += $blockCount;
+                for ($i = 0; $i < $blockCount; $i++) {
+                    $decoder->skipString();
+                    AvroIODatumReader::skipData($writersSchema->values(), $decoder);
+                }
             }
             $blockCount = $decoder->readLong();
         }
