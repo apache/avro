@@ -90,7 +90,7 @@ import decimal
 import os
 import struct
 import warnings
-from typing import IO, Generator, Iterable, List, Mapping, Optional, Sequence, Set, Tuple, Union
+from typing import IO, Dict, Generator, Iterable, List, Mapping, Optional, Sequence, Set, Tuple, Union
 
 import avro.constants
 import avro.errors
@@ -961,7 +961,7 @@ class DatumReader:
         The actual count in this case
         is the absolute value of the count written.
         """
-        read_items = []
+        read_items: List[object] = []
         min_bytes = _min_bytes_per_element(writers_schema.items)
         zero_byte_limit, structural_limit = _collection_limits()
         block_count = decoder.read_long()
@@ -1006,7 +1006,7 @@ class DatumReader:
         The actual count in this case
         is the absolute value of the count written.
         """
-        read_items = {}
+        read_items: Dict[str, object] = {}
         # Map keys are strings (>= 1 byte length prefix) plus the value.
         min_bytes = 1 + _min_bytes_per_element(writers_schema.values)
         zero_byte_limit, structural_limit = _collection_limits()
