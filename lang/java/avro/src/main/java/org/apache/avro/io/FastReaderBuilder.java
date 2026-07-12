@@ -544,7 +544,7 @@ public class FastReaderBuilder {
       int index = decoder.readEnum();
       if (index < 0 || index >= action.values.length) {
         throw new AvroTypeException(
-            "Enumeration out of range: max is " + action.values.length + " but received " + index);
+            "Enumeration out of range: must be in [0, " + action.values.length + "), but received " + index);
       }
       Object resultObject = action.values[index];
       if (resultObject == null) {

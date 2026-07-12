@@ -297,8 +297,9 @@ public class SystemLimitException extends AvroRuntimeException {
    * Check to ensure that allocating storage for the specified number of
    * zero-byte-encoded array elements remains within the heap-aware limit.
    * <p>
-   * Elements whose schema encodes to zero bytes (e.g. {@code null}, a zero-length
-   * fixed, or a record whose fields all encode to zero bytes) consume no input
+   * Elements whose minimum encoded size is zero (e.g. {@code null}, a zero-length
+   * fixed, a record whose fields are all zero-byte, or a recursive schema whose
+   * cycle is conservatively broken with a 0 minimum) consume no guaranteed input
    * bytes, so the number that may be declared is not bounded by the bytes
    * remaining in the stream. Without a cap, a tiny payload can declare an
    * enormous block count and drive an unbounded backing-array allocation. This
