@@ -517,10 +517,12 @@ namespace Avro.Generic
         /// <summary>
         /// Minimum number of bytes a single value of the given schema can occupy
         /// on the wire. Used to reject an array/map block count that could not be
-        /// backed by the bytes remaining. A type that can encode to zero bytes
-        /// (null) returns 0, which disables the collection check for it (so an
-        /// array of nulls is not falsely rejected). A depth limit breaks
-        /// self-referencing schemas.
+        /// backed by the bytes remaining. A type that encodes to zero bytes
+        /// returns 0 (not only <c>null</c>, but also composites that encode to
+        /// nothing, e.g. a record whose fields are all zero-byte), which disables
+        /// the bytes-remaining check for it (so an array of such elements is not
+        /// falsely rejected; they are instead bounded by the zero-byte item cap).
+        /// A depth limit breaks self-referencing schemas.
         /// </summary>
         private static int MinBytesPerElement(Schema schema, int depth = 0)
         {

@@ -273,7 +273,8 @@ namespace Avro.IO
             {
                 // A .NET array cannot be larger than this; reject with a
                 // consistent AvroException rather than letting new byte[p] throw
-                // an OverflowException/OutOfMemoryException. Matches ReadString().
+                // an OverflowException/OutOfMemoryException, mirroring the
+                // maximum-length guard in ReadString() (the message differs).
                 throw new AvroException($"Length {p} exceeds the maximum supported array length");
             }
 
