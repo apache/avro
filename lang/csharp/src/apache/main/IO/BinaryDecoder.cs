@@ -84,6 +84,14 @@ namespace Avro.IO
                 }
 
                 b = read();
+                // The 10th byte (shift == 63) contributes only bit 63; any higher
+                // payload bit (b & 0x7E) would be silently dropped by << 63, so a
+                // valid encoding must have them clear. Reject otherwise.
+                if (shift == 63 && (b & 0x7E) != 0)
+                {
+                    throw new AvroException("Invalid long encoding");
+                }
+
                 n |= (b & 0x7FUL) << shift;
                 shift += 7;
             }
