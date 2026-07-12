@@ -311,6 +311,11 @@ class AvroIODatumReader
         $blockCount = $decoder->readLong();
         while (0 != $blockCount) {
             if ($blockCount < 0) {
+                // PHP_INT_MIN cannot be negated: -PHP_INT_MIN promotes to a
+                // float, so reject it rather than propagating a non-int count.
+                if (PHP_INT_MIN === $blockCount) {
+                    throw new AvroException('Invalid array block count');
+                }
                 $blockCount = -$blockCount;
                 $decoder->readLong(); // Read (and ignore) block size
             }
@@ -341,6 +346,11 @@ class AvroIODatumReader
         $pair_count = $decoder->readLong();
         while (0 != $pair_count) {
             if ($pair_count < 0) {
+                // PHP_INT_MIN cannot be negated: -PHP_INT_MIN promotes to a
+                // float, so reject it rather than propagating a non-int count.
+                if (PHP_INT_MIN === $pair_count) {
+                    throw new AvroException('Invalid map block count');
+                }
                 $pair_count = -$pair_count;
                 // Note: we're not doing anything with block_size other than skipping it
                 $decoder->readLong();

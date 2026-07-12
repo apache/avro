@@ -329,6 +329,18 @@ class DatumIOTest extends TestCase
         $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(200000000));
     }
 
+    public function test_array_of_null_int64_min_block_count(): void
+    {
+        // PHP_INT_MIN as a block count cannot be negated (-PHP_INT_MIN promotes
+        // to a float), so it must be rejected explicitly. It zig-zag encodes as
+        // the 10-byte varint below, followed by a block byte-size (0).
+        $io = new AvroStringIO(
+            "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x01\x00"
+        );
+        $this->expectException(AvroException::class);
+        $this->decodeWith('{"type":"array","items":"null"}', $io);
+    }
+
     public function test_array_of_null_within_configured_limit_still_reads(): void
     {
         putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
