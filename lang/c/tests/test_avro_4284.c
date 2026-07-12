@@ -101,9 +101,15 @@ check_codec_rejects_oversized(const char *name, const char *payload, int64_t pay
 int main(void)
 {
 #ifdef _WIN32
-	_putenv_s("AVRO_MAX_DECOMPRESS_LENGTH", TEST_LIMIT);
+	if (_putenv_s("AVRO_MAX_DECOMPRESS_LENGTH", TEST_LIMIT) != 0) {
+		fprintf(stderr, "Cannot set AVRO_MAX_DECOMPRESS_LENGTH\n");
+		exit(EXIT_FAILURE);
+	}
 #else
-	setenv("AVRO_MAX_DECOMPRESS_LENGTH", TEST_LIMIT, 1);
+	if (setenv("AVRO_MAX_DECOMPRESS_LENGTH", TEST_LIMIT, 1) != 0) {
+		fprintf(stderr, "Cannot set AVRO_MAX_DECOMPRESS_LENGTH\n");
+		exit(EXIT_FAILURE);
+	}
 #endif
 
 	char *payload = (char *) calloc(1, PAYLOAD_SIZE);

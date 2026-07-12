@@ -370,8 +370,15 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 	}
 
 	if (!c->block_data) {
-		c->block_data = avro_malloc(DEFAULT_BLOCK_SIZE);
-		c->block_size = DEFAULT_BLOCK_SIZE;
+		/* Do not allocate more than the configured decompression cap: if
+		 * max_len is smaller than DEFAULT_BLOCK_SIZE, start at max_len. */
+		size_t init_size = ((int64_t) DEFAULT_BLOCK_SIZE > max_len)
+		    ? (size_t) max_len : (size_t) DEFAULT_BLOCK_SIZE;
+		if (init_size == 0) {
+			init_size = 1;
+		}
+		c->block_data = avro_malloc(init_size);
+		c->block_size = init_size;
 	}
 
 	if (!c->block_data)
@@ -561,8 +568,15 @@ static int decode_lzma(avro_codec_t codec, void * data, int64_t len)
 	lzma_filter* filters = codec_data_lzma_filters(codec->codec_data);
 
 	if (!codec->block_data) {
-		codec->block_data = avro_malloc(DEFAULT_BLOCK_SIZE);
-		codec->block_size = DEFAULT_BLOCK_SIZE;
+		/* Do not allocate more than the configured decompression cap: if
+		 * max_len is smaller than DEFAULT_BLOCK_SIZE, start at max_len. */
+		size_t init_size = ((int64_t) DEFAULT_BLOCK_SIZE > max_len)
+		    ? (size_t) max_len : (size_t) DEFAULT_BLOCK_SIZE;
+		if (init_size == 0) {
+			init_size = 1;
+		}
+		codec->block_data = avro_malloc(init_size);
+		codec->block_size = init_size;
 	}
 
 	if (!codec->block_data) {
