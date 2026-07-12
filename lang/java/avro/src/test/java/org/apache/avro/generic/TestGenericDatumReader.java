@@ -464,6 +464,31 @@ public class TestGenericDatumReader {
   }
 
   /**
+   * A negative block count encodes {@code abs(count)} zero-byte elements preceded
+   * by a block byte-size; the decoder normalizes it to a positive count, which
+   * must still be bounded by the allocation cap on both reader paths (matching
+   * the negative-block-count coverage of the C and Python SDKs).
+   */
+  @Test
+  void fastAndClassicReaderRejectNegativeNullBlockCount() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      for (boolean fast : new boolean[] { true, false }) {
+        GenericDatumReader<Object> reader = arrayReader(Schema.create(Schema.Type.NULL), fast);
+        // -200000 items (zigzag negative), followed by a block byte-size of 0,
+        // then the end-of-array terminator. Normalized to 200000 > 1000.
+        byte[] data = encodeVarints(-200_000L, 0L, 0L);
+        BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+        assertThrows(SystemLimitException.class, () -> reader.read(null, decoder), "fastReader=" + fast);
+      }
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  /**
    * A legitimate array of nulls within the limit still decodes on both reader
    * paths.
    */
