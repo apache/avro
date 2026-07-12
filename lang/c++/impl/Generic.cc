@@ -17,6 +17,7 @@
  */
 
 #include "Generic.hh"
+#include <cstdlib>
 #include <limits>
 #include <utility>
 
@@ -83,11 +84,40 @@ static int64_t minBytesPerElement(const NodePtr &node, int depth) {
     }
 }
 
+// Default maximum number of zero-byte-encoded collection elements (e.g. an
+// array of nulls) to allocate from a single decode. Such elements consume no
+// input, so ensureCollectionAvailable cannot bound their count; without a cap a
+// tiny payload can declare a huge block count and exhaust memory. Overridable
+// via the AVRO_MAX_COLLECTION_ITEMS environment variable.
+static constexpr int64_t kDefaultMaxCollectionItems = 10000000;
+
+// Structural cap on the number of elements in any array or map (an overflow /
+// defense-in-depth guard), matching the historical Integer.MAX_VALUE - 8 limit.
+// Non-zero-byte elements are also bounded by the bytes remaining.
+static constexpr int64_t kDefaultMaxCollectionStructural = 2147483639;
+
+// AVRO_MAX_COLLECTION_ITEMS, when a non-negative integer, caps both limits;
+// otherwise zero-byte elements use the tighter default and all collections use
+// the structural default.
+static void collectionLimits(int64_t &zeroByte, int64_t &structural) {
+    const char *env = std::getenv("AVRO_MAX_COLLECTION_ITEMS");
+    if (env != nullptr && *env != '\0') {
+        char *end = nullptr;
+        long long value = std::strtoll(env, &end, 10);
+        if (*end == '\0' && value >= 0) {
+            zeroByte = structural = static_cast<int64_t>(value);
+            return;
+        }
+    }
+    zeroByte = kDefaultMaxCollectionItems;
+    structural = kDefaultMaxCollectionStructural;
+}
+
 // Reject a collection (array or map) block whose declared element count could
 // not be backed by the bytes actually remaining, before resizing for it.
 // Skipped when the per-element minimum is zero, or when the decoder cannot
 // report how many bytes remain. The comparison divides to avoid overflow.
-static void ensureCollectionAvailable(Decoder &d, size_t count, int64_t minBytes) {
+static void ensureCollectionAvailable(Decoder &d, size_t existing, size_t count, int64_t minBytes) {
     if (count == 0 || minBytes <= 0) {
         return;
     }
@@ -99,6 +129,35 @@ static void ensureCollectionAvailable(Decoder &d, size_t count, int64_t minBytes
             "Collection claims {} elements with at least {} bytes each, "
             "but only {} bytes are available",
             count, minBytes, remaining);
+    }
+    // Structural / overflow guard, also covering decoders that cannot report the
+    // bytes remaining. Compare without adding so existing + count cannot overflow.
+    int64_t zeroByte, structural;
+    collectionLimits(zeroByte, structural);
+    const uint64_t limit = static_cast<uint64_t>(structural);
+    if (static_cast<uint64_t>(count) > limit ||
+        static_cast<uint64_t>(existing) > limit - static_cast<uint64_t>(count)) {
+        throw Exception(
+            "Cannot read a collection of more than {} elements; "
+            "set AVRO_MAX_COLLECTION_ITEMS if this is legitimate",
+            structural);
+    }
+}
+
+// Reject a collection of zero-byte elements (e.g. null) whose cumulative count
+// exceeds the configured limit. These elements consume no input, so they cannot
+// be bounded by the bytes remaining; the count is the only signal.
+static void ensureZeroByteCollectionWithinLimit(size_t existing, size_t count) {
+    int64_t zeroByte, structural;
+    collectionLimits(zeroByte, structural);
+    const uint64_t limit = static_cast<uint64_t>(zeroByte);
+    // Compare without adding, so existing + count cannot overflow.
+    if (static_cast<uint64_t>(count) > limit ||
+        static_cast<uint64_t>(existing) > limit - static_cast<uint64_t>(count)) {
+        throw Exception(
+            "Cannot read a collection of more than {} zero-byte elements; "
+            "set AVRO_MAX_COLLECTION_ITEMS if this is legitimate",
+            zeroByte);
     }
 }
 
@@ -197,9 +256,16 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
             // schema, so minBytesPerElement is a true lower bound. Under
             // resolution the wire (writer) type may be smaller than the datum
             // (reader) type, which would over-estimate and reject valid data.
-            int64_t minBytes = isResolving ? 0 : minBytesPerElement(nn, 0);
+            int64_t trueMin = minBytesPerElement(nn, 0);
+            bool zeroByte = trueMin == 0;
+            int64_t minBytes = isResolving ? 0 : trueMin;
             for (size_t m = d.arrayStart(); m != 0; m = d.arrayNext()) {
-                ensureCollectionAvailable(d, m, minBytes);
+                ensureCollectionAvailable(d, r.size(), m, minBytes);
+                // Zero-byte elements are not bounded by the bytes check, so cap
+                // their cumulative count (r.size() is the count so far).
+                if (zeroByte) {
+                    ensureZeroByteCollectionWithinLimit(r.size(), m);
+                }
                 ensureCanGrow(r, m);
                 r.resize(r.size() + m);
                 for (; start < r.size(); ++start) {
@@ -217,13 +283,15 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
             // Map keys are strings (>= 1 byte length prefix) plus the value.
             // Saturate the +1 so a maxed-out value minimum cannot wrap.
             int64_t valuesMin = minBytesPerElement(nn, 0);
+            // A map entry always includes a >= 1 byte key, so it is never a
+            // zero-byte element; the bytes check alone bounds it.
             int64_t minBytes = isResolving
                                    ? 0
                                    : (valuesMin < std::numeric_limits<int64_t>::max()
                                           ? valuesMin + 1
                                           : valuesMin);
             for (size_t m = d.mapStart(); m != 0; m = d.mapNext()) {
-                ensureCollectionAvailable(d, m, minBytes);
+                ensureCollectionAvailable(d, r.size(), m, minBytes);
                 ensureCanGrow(r, m);
                 r.resize(r.size() + m);
                 for (; start < r.size(); ++start) {

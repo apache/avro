@@ -19,11 +19,27 @@
 #include "Decoder.hh"
 #include "Exception.hh"
 #include "Zigzag.hh"
+#include <cstdlib>
 #include <memory>
 
 namespace avro {
 
 using std::make_shared;
+
+// Structural cap on the number of elements to skip in an array or map. Mirrors
+// the read-path limit in Generic.cc; AVRO_MAX_COLLECTION_ITEMS, when a
+// non-negative integer, overrides it.
+static int64_t maxCollectionStructural() {
+    const char *env = std::getenv("AVRO_MAX_COLLECTION_ITEMS");
+    if (env != nullptr && *env != '\0') {
+        char *end = nullptr;
+        long long value = std::strtoll(env, &end, 10);
+        if (*end == '\0' && value >= 0) {
+            return static_cast<int64_t>(value);
+        }
+    }
+    return 2147483639;
+}
 
 class BinaryDecoder : public Decoder {
     StreamReader in_;
@@ -199,6 +215,18 @@ size_t BinaryDecoder::skipArray() {
             auto n = static_cast<size_t>(doDecodeLong());
             in_.skipBytes(n);
         } else {
+            // Bound the block count: skipping a huge block of zero-byte elements
+            // would otherwise loop unboundedly (a CPU exhaustion) even though it
+            // reads/allocates nothing. The decoder has no element schema here, so
+            // apply the structural cap (AVRO_MAX_COLLECTION_ITEMS, default
+            // Integer.MAX_VALUE - 8).
+            static const int64_t structural = maxCollectionStructural();
+            if (r > structural) {
+                throw Exception(
+                    "Cannot skip a collection of more than {} elements; "
+                    "set AVRO_MAX_COLLECTION_ITEMS if this is legitimate",
+                    structural);
+            }
             return static_cast<size_t>(r);
         }
     }

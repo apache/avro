@@ -24,6 +24,7 @@
 // must be rejected before allocating for it.
 
 #include <cstdint>
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <vector>
@@ -163,6 +164,95 @@ static void testBytesRemainingRightAfterInit() {
     BOOST_CHECK_EQUAL(d->bytesRemaining(), static_cast<int64_t>(sizeof(data)));
 }
 
+// Zero-byte elements (null, a record with only zero-byte fields) consume no
+// input, so ensureCollectionAvailable cannot bound their count. A huge declared
+// block count of such elements is capped against a configurable limit.
+static GenericDatum decodeLongs(const ValidSchema &s, const std::vector<int64_t> &longs) {
+    std::unique_ptr<OutputStream> os = memoryOutputStream();
+    EncoderPtr e = binaryEncoder();
+    e->init(*os);
+    for (int64_t v : longs) {
+        e->encodeLong(v);
+    }
+    e->flush();
+    InputStreamPtr in = memoryInputStream(*os);
+    DecoderPtr d = binaryDecoder();
+    d->init(*in);
+    GenericDatum datum;
+    GenericReader::read(*d, datum, s);
+    return datum;
+}
+
+static void testReadArrayOfNullRejectsCountAboveDefaultLimit() {
+    ValidSchema s = compileJsonSchemaFromString(
+        "{\"type\":\"array\",\"items\":\"null\"}");
+    // The reported exploit: 200,000,000 nulls rejected by the default limit.
+    BOOST_CHECK_THROW(decodeCollectionHeader(s, 200000000, true), Exception);
+}
+
+static void testReadArrayOfAllNullRecordRejectsHugeCount() {
+    ValidSchema s = compileJsonSchemaFromString(
+        "{\"type\":\"array\",\"items\":"
+        "{\"type\":\"record\",\"name\":\"R\",\"fields\":[{\"name\":\"n\",\"type\":\"null\"}]}}");
+    BOOST_CHECK_THROW(decodeCollectionHeader(s, 200000000, true), Exception);
+}
+
+static void testReadArrayOfNullRejectsNegativeCount() {
+    ValidSchema s = compileJsonSchemaFromString(
+        "{\"type\":\"array\",\"items\":\"null\"}");
+    // Negative count (-200M), block byte-size 0, end marker 0: normalized to
+    // 200M and still bounded.
+    BOOST_CHECK_THROW(decodeLongs(s, {-200000000, 0, 0}), Exception);
+}
+
+static void testReadMapOfNullRejectedByAvailableBytes() {
+    ValidSchema s = compileJsonSchemaFromString(
+        "{\"type\":\"map\",\"values\":\"null\"}");
+    // Each map entry carries a >= 1 byte key, so a huge map<null> is bounded by
+    // the bytes-remaining check.
+    BOOST_CHECK_THROW(decodeCollectionHeader(s, 200000000, false), Exception);
+}
+
+static void testReadArrayOfNullRespectsConfiguredLimit() {
+    ValidSchema s = compileJsonSchemaFromString(
+        "{\"type\":\"array\",\"items\":\"null\"}");
+    setenv("AVRO_MAX_COLLECTION_ITEMS", "1000", 1);
+    // Within the limit decodes; over the limit and cumulative are rejected.
+    GenericDatum ok = decodeCollectionHeader(s, 1000, true);
+    BOOST_CHECK_EQUAL(ok.value<GenericArray>().value().size(), 1000u);
+    BOOST_CHECK_THROW(decodeCollectionHeader(s, 1001, true), Exception);
+    BOOST_CHECK_THROW(decodeLongs(s, {600, 600, 0}), Exception);
+    unsetenv("AVRO_MAX_COLLECTION_ITEMS");
+}
+
+// A backed non-zero-byte array that passes the bytes check is still bounded by
+// the structural cap (exercised with a lowered limit).
+static void testReadArrayOfLongRejectedByStructuralCap() {
+    ValidSchema s = compileJsonSchemaFromString(
+        "{\"type\":\"array\",\"items\":\"long\"}");
+    setenv("AVRO_MAX_COLLECTION_ITEMS", "5", 1);
+    // 10 real longs: block count 10, ten 1-byte longs, end marker.
+    std::vector<int64_t> longs = {10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0};
+    BOOST_CHECK_THROW(decodeLongs(s, longs), Exception);
+    unsetenv("AVRO_MAX_COLLECTION_ITEMS");
+}
+
+// Skipping a huge array (via the decoder's skipArray) is bounded by the
+// structural cap.
+static void testSkipArrayRejectsHugeCount() {
+    setenv("AVRO_MAX_COLLECTION_ITEMS", "1000", 1);
+    std::unique_ptr<OutputStream> os = memoryOutputStream();
+    EncoderPtr e = binaryEncoder();
+    e->init(*os);
+    e->encodeLong(2000); // block count 2000, no data needed (skip throws first)
+    e->flush();
+    InputStreamPtr in = memoryInputStream(*os);
+    DecoderPtr d = binaryDecoder();
+    d->init(*in);
+    BOOST_CHECK_THROW(d->skipArray(), Exception);
+    unsetenv("AVRO_MAX_COLLECTION_ITEMS");
+}
+
 } // namespace avro
 
 boost::unit_test::test_suite *
@@ -179,5 +269,12 @@ init_unit_test_suite(int, char *[]) {
     ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfNullNotFalselyRejected));
     ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfDeeplyNestedNullNotFalselyRejected));
     ts->add(BOOST_TEST_CASE(&avro::testBytesRemainingRightAfterInit));
+    ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfNullRejectsCountAboveDefaultLimit));
+    ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfAllNullRecordRejectsHugeCount));
+    ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfNullRejectsNegativeCount));
+    ts->add(BOOST_TEST_CASE(&avro::testReadMapOfNullRejectedByAvailableBytes));
+    ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfNullRespectsConfiguredLimit));
+    ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfLongRejectedByStructuralCap));
+    ts->add(BOOST_TEST_CASE(&avro::testSkipArrayRejectsHugeCount));
     return ts;
 }
