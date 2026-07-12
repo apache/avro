@@ -939,6 +939,18 @@ describe('types', function () {
       assert.strictEqual(t.getName(), undefined);
     });
 
+    it('rejects a huge block count', function () {
+      var t = new types.MapType({type: 'map', values: 'long'});
+      var buf = Buffer.from([0x80, 0x88, 0xde, 0xbe, 0x01, 0x00]);
+      assert.throws(function () { t.fromBuffer(buf); }, /collection/);
+    });
+
+    it('reads a small map', function () {
+      var t = new types.MapType({type: 'map', values: 'int'});
+      var buf = t.toBuffer({a: 1, b: 2});
+      assert.deepEqual(t.fromBuffer(buf), {a: 1, b: 2});
+    });
+
   });
 
   describe('ArrayType', function () {
@@ -969,6 +981,60 @@ describe('types', function () {
       var t = new types.ArrayType({type: 'array', items: 'int'});
       var buf = Buffer.from([1,2,2,0]);
       assert.deepEqual(t.fromBuffer(buf), [1]);
+    });
+
+    it('rejects a huge zero-byte block count', function () {
+      // 6-byte payload declaring a block count of 200,000,000 nulls.
+      var t = new types.ArrayType({type: 'array', items: 'null'});
+      var buf = Buffer.from([0x80, 0x88, 0xde, 0xbe, 0x01, 0x00]);
+      assert.throws(function () { t.fromBuffer(buf); }, /collection/);
+    });
+
+    it('reads a small zero-byte collection', function () {
+      var t = new types.ArrayType({type: 'array', items: 'null'});
+      var buf = Buffer.from([6, 0]); // Block count 3, then terminator.
+      assert.deepEqual(t.fromBuffer(buf), [null, null, null]);
+    });
+
+    it('rejects a block count above the remaining bytes', function () {
+      var t = new types.ArrayType({type: 'array', items: 'long'});
+      var buf = Buffer.from([0x80, 0x88, 0xde, 0xbe, 0x01, 0x00]);
+      assert.throws(function () { t.fromBuffer(buf); }, /collection/);
+    });
+
+    it('bounds a huge zero-byte block count while skipping', function () {
+      var v1 = createType({
+        name: 'Foo',
+        type: 'record',
+        fields: [
+          {name: 'array', type: {type: 'array', items: 'null'}},
+          {name: 'val', type: 'int'}
+        ]
+      });
+      var v2 = createType({
+        name: 'Foo',
+        type: 'record',
+        fields: [{name: 'val', type: 'int'}]
+      });
+      var buf = Buffer.from([0x80, 0x88, 0xde, 0xbe, 0x01, 0x00, 6]);
+      var resolver = v2.createResolver(v1);
+      assert.throws(function () { v2.fromBuffer(buf, resolver); }, /collection/);
+    });
+
+    it('bounds a huge block count under resolution', function () {
+      var t1 = new types.ArrayType({type: 'array', items: 'null'});
+      var t2 = createType({type: 'array', items: ['null', 'long']});
+      var buf = Buffer.from([0x80, 0x88, 0xde, 0xbe, 0x01, 0x00]);
+      var resolver = t2.createResolver(t1);
+      assert.throws(function () { t2.fromBuffer(buf, resolver); }, /collection/);
+    });
+
+    it('reads a small collection under resolution', function () {
+      var t1 = new types.ArrayType({type: 'array', items: 'null'});
+      var t2 = createType({type: 'array', items: ['null', 'long']});
+      var buf = t1.toBuffer([null, null, null, null, null]);
+      var resolver = t2.createResolver(t1);
+      assert.equal(t2.fromBuffer(buf, resolver).length, 5);
     });
 
     it('skip', function () {
