@@ -136,7 +136,14 @@ module Avro
             raise AvroError, "Cannot read #{len} bytes, only #{remaining} remaining"
           end
         end
-        @reader.read(len)
+        result = @reader.read(len)
+        # A truncated or partial read must not silently yield fewer bytes than
+        # requested (which would surface later as confusing corruption); reject it.
+        if len.positive? && (result.nil? || result.bytesize < len)
+          got = result.nil? ? 0 : result.bytesize
+          raise AvroError, "Truncated input: expected #{len} bytes, got #{got}"
+        end
+        result
       end
 
       # Number of bytes still available to read, or nil when the reader cannot
@@ -542,6 +549,10 @@ module Avro
 
       def skip_union(writers_schema, decoder)
         index = decoder.read_long
+        if index < 0 || index >= writers_schema.schemas.size
+          raise AvroError, "Union branch index #{index} out of range " \
+                           "for #{writers_schema.schemas.size} branches"
+        end
         skip_data(writers_schema.schemas[index], decoder)
       end
 
