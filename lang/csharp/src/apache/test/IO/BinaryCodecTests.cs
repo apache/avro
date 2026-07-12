@@ -631,6 +631,27 @@ namespace Avro.Test
             Assert.Throws<AvroException>(() => r.Read(null, new BinaryDecoder(ms)));
         }
 
+        // A collection split across blocks must not let the running total
+        // overflow: block 1 count=1 then block 2 count=long.MaxValue would wrap
+        // the total negative and bypass the caps. A non-seekable stream disables
+        // the bytes-remaining check, so the structural pre-add check must reject it.
+        [Test]
+        public void TestReadArrayRejectsBlockCountOverflow()
+        {
+            var backing = new MemoryStream();
+            var enc = new BinaryEncoder(backing);
+            enc.WriteLong(1);             // block 1: one element
+            enc.WriteLong(42);            // the element
+            enc.WriteLong(long.MaxValue); // block 2: huge count -> would overflow total
+            byte[] encoded = backing.ToArray();
+            using (var ns = new NonSeekableStream(new MemoryStream(encoded)))
+            {
+                var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"long\"}");
+                var reader = new GenericReader<object>(schema, schema);
+                Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ns)));
+            }
+        }
+
         // A block count of long.MinValue cannot be negated; it must be rejected
         // rather than wrapping back to a negative (or huge) count.
         [Test]

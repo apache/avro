@@ -657,16 +657,18 @@ namespace Avro.Generic
                 throw new AvroException($"Invalid negative collection block count: {count}");
             }
 
-            total += count;
-
-            // A structural cap covers all collections, including non-seekable
-            // decoders that cannot report their remaining bytes, and keeps the
-            // running total within the int range the callers cast to.
-            if (total > MaxCollectionStructural)
+            // Reject before adding so an oversized block count cannot overflow
+            // `total` (wrapping it negative and bypassing the caps below). The
+            // running total is always <= MaxCollectionStructural on entry (the
+            // invariant this method maintains) and count >= 0, so the subtraction
+            // cannot underflow or overflow.
+            if (count > MaxCollectionStructural - total)
             {
                 throw new AvroException(
-                    $"Collection size {total} exceeds the maximum allowed size of {MaxCollectionStructural}");
+                    $"Collection block count {count} exceeds the maximum allowed size of {MaxCollectionStructural}");
             }
+
+            total += count;
 
             if (minBytesPerElement <= 0)
             {
