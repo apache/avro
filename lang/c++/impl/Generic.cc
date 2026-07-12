@@ -52,12 +52,17 @@ static int64_t minBytesPerElement(const NodePtr &node, int depth) {
         }
         case AVRO_RECORD: {
             if (depth > 64) {
-                // A cyclic or pathologically deep record. Return 1 (not 0) so the
-                // collection check stays enabled rather than being silently
-                // bypassed; a valid recursive value always encodes to >= 1 byte.
-                // (The depth guard is applied only here, so zero-byte leaf types
-                // such as null still return 0 regardless of nesting depth.)
-                return 1;
+                // Purely a recursion (stack-overflow) safety net for a
+                // pathologically deep schema. A truly cyclic schema never
+                // reaches this: a self-reference is an AVRO_SYMBOLIC node,
+                // handled by the default case below (returning 1 without
+                // following the link), so recursion always terminates. This
+                // guard therefore only trips on a genuinely deep *acyclic*
+                // record, whose true minimum can still be 0 (e.g. a long chain
+                // of records whose only leaves are null). Return 0 rather than
+                // over-estimating, so a valid array/map of such elements is not
+                // falsely rejected; 0 is always a valid lower bound.
+                return 0;
             }
             int64_t total = 0;
             for (size_t i = 0; i < node->leaves(); ++i) {

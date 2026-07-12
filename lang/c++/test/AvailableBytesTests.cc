@@ -132,6 +132,26 @@ static void testReadArrayOfNullNotFalselyRejected() {
     BOOST_CHECK_EQUAL(datum.value<GenericArray>().value().size(), 100000u);
 }
 
+// A deeply but acyclically nested record whose only leaf is null encodes to
+// zero bytes, so the per-element minimum must be 0 and a large array of such
+// records must not be falsely rejected. This exercises the recursion depth
+// guard in minBytesPerElement(), which must yield a conservative lower bound
+// (0) rather than over-estimating for a legitimately deep schema.
+static void testReadArrayOfDeeplyNestedNullNotFalselyRejected() {
+    // Build ~70 nested records: R0 { null f; }, R1 { R0 f; }, ... The nesting
+    // exceeds the depth guard, yet every leaf is null so the true minimum is 0.
+    std::string schema = "\"null\"";
+    for (int i = 0; i < 70; ++i) {
+        schema = "{\"type\":\"record\",\"name\":\"R" + std::to_string(i) +
+                 "\",\"fields\":[{\"name\":\"f\",\"type\":" + schema + "}]}";
+    }
+    ValidSchema s = compileJsonSchemaFromString(
+        ("{\"type\":\"array\",\"items\":" + schema + "}").c_str());
+    // 100,000 zero-byte elements is legitimate and must decode.
+    GenericDatum datum = decodeCollectionHeader(s, 100000, true);
+    BOOST_CHECK_EQUAL(datum.value<GenericArray>().value().size(), 100000u);
+}
+
 } // namespace avro
 
 boost::unit_test::test_suite *
@@ -146,5 +166,6 @@ init_unit_test_suite(int, char *[]) {
     ts->add(BOOST_TEST_CASE(&avro::testReadArrayRejectsOversizedCount));
     ts->add(BOOST_TEST_CASE(&avro::testReadMapRejectsOversizedCount));
     ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfNullNotFalselyRejected));
+    ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfDeeplyNestedNullNotFalselyRejected));
     return ts;
 }
