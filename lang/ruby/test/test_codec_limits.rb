@@ -24,14 +24,15 @@ class TestCodecLimits < Test::Unit::TestCase
   LIMIT = 1024
 
   def with_limit(bytes)
-    previous = ENV['AVRO_MAX_DECOMPRESS_LENGTH']
-    ENV['AVRO_MAX_DECOMPRESS_LENGTH'] = bytes.to_s
+    env = Avro::DataFile::MAX_DECOMPRESS_LENGTH_ENV
+    previous = ENV[env]
+    ENV[env] = bytes.to_s
     yield
   ensure
     if previous.nil?
-      ENV.delete('AVRO_MAX_DECOMPRESS_LENGTH')
+      ENV.delete(env)
     else
-      ENV['AVRO_MAX_DECOMPRESS_LENGTH'] = previous
+      ENV[env] = previous
     end
   end
 
