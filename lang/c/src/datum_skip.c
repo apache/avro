@@ -47,7 +47,11 @@ static int skip_array(avro_reader_t reader, const avro_encoding_t * enc,
 
 	while (block_count != 0) {
 		if (block_count < 0) {
-			block_count = block_count * -1;
+			if (block_count == INT64_MIN) {
+				avro_set_error("Invalid array block count");
+				return EINVAL;
+			}
+			block_count = -block_count;
 			check_prefix(rval, enc->read_long(reader, &block_size),
 				     "Cannot read array block size: ");
 		}
@@ -87,7 +91,11 @@ static int skip_map(avro_reader_t reader, const avro_encoding_t * enc,
 	while (block_count != 0) {
 		int64_t block_size;
 		if (block_count < 0) {
-			block_count = block_count * -1;
+			if (block_count == INT64_MIN) {
+				avro_set_error("Invalid map block count");
+				return EINVAL;
+			}
+			block_count = -block_count;
 			check_prefix(rval, enc->read_long(reader, &block_size),
 				     "Cannot read map block size: ");
 		}
