@@ -579,12 +579,25 @@ namespace Avro.Generic
         // (to a single value capping both) via the AVRO_MAX_COLLECTION_ITEMS
         // environment variable.
         private static readonly long MaxCollectionItems = ReadCollectionLimit(10_000_000L);
-        // The structural cap is additionally clamped to int.MaxValue: the callers
-        // cast the (cumulative) block count to int to size .NET collections, so a
-        // structural limit above int.MaxValue (e.g. from a large env override)
-        // would reintroduce an int-overflow on that cast.
+
+        // The largest array the runtime can allocate. Mirrors
+        // BinaryDecoder.MaxDotNetArrayLength: the default reader grows its backing
+        // array via Array.Resize, which throws (OutOfMemoryException/OverflowException)
+        // above this length rather than a deterministic AvroException.
+#if NETSTANDARD2_0
+        private const int MaxDotNetArrayLength = 0x3FFFFFFF;
+#else
+        private const int MaxDotNetArrayLength = 0x7FFFFFC7;
+#endif
+
+        // The structural cap is additionally clamped to the runtime's maximum
+        // array length: the callers cast the (cumulative) block count to int to
+        // size .NET collections, and a limit above the max array length (e.g. from
+        // a large env override, or int.MaxValue itself) would let a collection
+        // that passes EnsureCollectionAvailable still fault inside Array.Resize
+        // instead of failing deterministically.
         private static readonly long MaxCollectionStructural =
-            Math.Min(ReadCollectionLimit(2147483639L), int.MaxValue);
+            Math.Min(ReadCollectionLimit(2147483639L), MaxDotNetArrayLength);
 
         private static long ReadCollectionLimit(long defaultValue)
         {
