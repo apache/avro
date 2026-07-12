@@ -178,7 +178,7 @@ our $DEFAULT_MAX_COLLECTION_ITEMS = 10_000_000;
 ## Structural cap on the number of elements in any array or map (an
 ## overflow/defense-in-depth guard), matching the historical Integer.MAX_VALUE-8
 ## limit. Non-zero-byte elements are also bounded by the bytes remaining.
-our $DEFAULT_MAX_COLLECTION_STRUCTURAL = (2 ** 31) - 8;
+our $DEFAULT_MAX_COLLECTION_STRUCTURAL = (2 ** 31) - 1 - 8;
 
 ## AVRO_MAX_COLLECTION_ITEMS, when set, caps both limits; otherwise zero-byte
 ## elements use the tighter default and all collections use the structural cap.
@@ -268,6 +268,14 @@ sub _min_bytes_per_element {
 sub _ensure_collection_available {
     my ($reader, $existing, $count, $min_bytes) = @_;
     return if $count <= 0;
+    my $total = $existing + $count;
+    # The structural cap bounds every array/map, including zero-byte element
+    # collections and non-seekable readers where the bytes check cannot run.
+    if ($total > $MAX_COLLECTION_STRUCTURAL) {
+        throw Avro::BinaryDecoder::Error::CollectionSize(
+            "Cannot read a collection of more than $MAX_COLLECTION_STRUCTURAL "
+          . "elements (declared $total)");
+    }
     if ($min_bytes > 0) {
         my $remaining = _bytes_remaining($reader);
         # Compare via integer division rather than multiplying, so $count * $min_bytes
@@ -277,20 +285,13 @@ sub _ensure_collection_available {
                 "Collection claims $count elements with at least $min_bytes bytes each, "
               . "but only $remaining bytes are available");
         }
-        # Structural / overflow guard, also covering non-seekable readers where
-        # the bytes check above cannot run.
-        if ($existing + $count > $MAX_COLLECTION_STRUCTURAL) {
-            throw Avro::BinaryDecoder::Error::CollectionSize(
-                "Cannot read a collection of more than $MAX_COLLECTION_STRUCTURAL "
-              . "elements (declared @{[ $existing + $count ]})");
-        }
     }
     # Zero-byte elements (e.g. null) consume no input, so they cannot be bounded
-    # by the bytes remaining; cap their cumulative count instead.
-    elsif ($existing + $count > $MAX_COLLECTION_ITEMS) {
+    # by the bytes remaining; additionally cap their cumulative count.
+    elsif ($total > $MAX_COLLECTION_ITEMS) {
         throw Avro::BinaryDecoder::Error::CollectionSize(
             "Cannot read a collection of more than $MAX_COLLECTION_ITEMS zero-byte "
-          . "elements (declared @{[ $existing + $count ]}); raise "
+          . "elements (declared $total); raise "
           . "\$Avro::BinaryDecoder::MAX_COLLECTION_ITEMS if this is legitimate");
     }
     return;
@@ -382,8 +383,12 @@ sub skip_block {
     my ($reader, $min_bytes, $block_content) = @_;
     # Zero-byte elements loop with no per-item input, so bound them tightly;
     # other elements consume bytes (bounded by EOF) so only the structural cap
-    # applies.
-    my $limit = $min_bytes > 0 ? $MAX_COLLECTION_STRUCTURAL : $MAX_COLLECTION_ITEMS;
+    # applies. Every collection is capped by the structural limit, so for
+    # zero-byte elements use whichever of the two limits is tighter.
+    my $limit = $MAX_COLLECTION_STRUCTURAL;
+    if ($min_bytes <= 0 && $MAX_COLLECTION_ITEMS < $limit) {
+        $limit = $MAX_COLLECTION_ITEMS;
+    }
     my $block_count = decode_long(__PACKAGE__, undef, undef, $reader);
     my $skipped = 0;
     while ($block_count) {
