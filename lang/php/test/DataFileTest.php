@@ -405,15 +405,15 @@ class DataFileTest extends TestCase
 
         try {
             $dr = AvroDataIO::openFile($data_file);
-            $thrown = false;
 
             try {
                 $dr->data();
+                $this->fail('expected a decompression size exception');
             } catch (AvroDataIODecompressionSizeException $e) {
-                $thrown = true;
+                // expected
+            } finally {
+                $dr->close();
             }
-            $dr->close();
-            $this->assertTrue($thrown, 'expected a decompression size exception');
         } finally {
             if (false === $previous) {
                 putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
@@ -436,9 +436,13 @@ class DataFileTest extends TestCase
 
         try {
             $dr = AvroDataIO::openFile($data_file);
-            $data = $dr->data();
-            $dr->close();
-            $this->assertSame([$payload], $data);
+
+            try {
+                $data = $dr->data();
+                $this->assertSame([$payload], $data);
+            } finally {
+                $dr->close();
+            }
         } finally {
             if (false === $previous) {
                 putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
@@ -514,15 +518,15 @@ class DataFileTest extends TestCase
 
         try {
             $dr = AvroDataIO::openFile($data_file);
-            $thrown = false;
 
             try {
                 $dr->data();
+                $this->fail(sprintf('expected a decompression size exception for %s', $codec));
             } catch (AvroDataIODecompressionSizeException $e) {
-                $thrown = true;
+                // expected
+            } finally {
+                $dr->close();
             }
-            $dr->close();
-            $this->assertTrue($thrown, sprintf('expected a decompression size exception for %s', $codec));
         } finally {
             if (false === $previous) {
                 putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);

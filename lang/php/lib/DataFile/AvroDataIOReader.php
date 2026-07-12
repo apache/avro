@@ -265,7 +265,7 @@ class AvroDataIOReader
         $maxLength = self::maxDecompressLength();
         $context = inflate_init(ZLIB_ENCODING_RAW);
         if (false === $context) {
-            throw new AvroException('gzip uncompression failed.');
+            throw new AvroException('deflate uncompression failed.');
         }
 
         // Inflate in chunks and check the running total after each step so an
@@ -281,7 +281,7 @@ class AvroDataIOReader
             $piece = substr($compressed, $offset, self::INFLATE_CHUNK_SIZE);
             $out = @inflate_add($context, $piece);
             if (false === $out) {
-                throw new AvroException('gzip uncompression failed.');
+                throw new AvroException('deflate uncompression failed.');
             }
             $pieces[] = $out;
             $total += strlen($out);
@@ -290,7 +290,7 @@ class AvroDataIOReader
 
         $out = @inflate_add($context, '', ZLIB_FINISH);
         if (false === $out) {
-            throw new AvroException('gzip uncompression failed.');
+            throw new AvroException('deflate uncompression failed.');
         }
         $pieces[] = $out;
         $total += strlen($out);
