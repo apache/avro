@@ -316,7 +316,16 @@ namespace Avro.IO
         /// <returns>The number of bytes remaining, or -1 if unknown.</returns>
         public long RemainingBytes()
         {
-            return stream.CanSeek ? stream.Length - stream.Position : -1;
+            if (!stream.CanSeek)
+            {
+                return -1;
+            }
+
+            // Clamp to 0: if the stream was externally seeked past its end (or
+            // truncated), Position can exceed Length. Callers should only ever
+            // see -1 (unknown) or a non-negative count.
+            long remaining = stream.Length - stream.Position;
+            return remaining < 0 ? 0 : remaining;
         }
 
         private byte read()

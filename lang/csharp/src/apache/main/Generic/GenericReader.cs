@@ -526,14 +526,6 @@ namespace Avro.Generic
                 return 0;
             }
 
-            if (depth > 64)
-            {
-                // A cyclic or pathologically deep schema. Return 1 (not 0) so the
-                // collection check stays enabled rather than being silently
-                // bypassed; a valid recursive value always encodes to >= 1 byte.
-                return 1;
-            }
-
             switch (schema.Tag)
             {
                 case Schema.Type.Null:
@@ -546,6 +538,16 @@ namespace Avro.Generic
                     return ((FixedSchema)schema).Size;
                 case Schema.Type.Record:
                 case Schema.Type.Error:
+                    if (depth > 64)
+                    {
+                        // A cyclic or pathologically deep record. Return 1 (not
+                        // 0) so the collection check stays enabled; a valid
+                        // recursive value always encodes to >= 1 byte. The depth
+                        // guard is applied only here, so zero-byte leaf types
+                        // such as null still return 0 regardless of depth.
+                        return 1;
+                    }
+
                     // Accumulate in a long and clamp so a deeply nested schema
                     // cannot overflow int into a value <= 0, which would disable
                     // the collection check.
@@ -575,9 +577,17 @@ namespace Avro.Generic
         /// </summary>
         private static void EnsureCollectionAvailable(Decoder d, long count, long minBytesPerElement)
         {
-            if (count <= 0)
+            if (count == 0)
             {
                 return;
+            }
+
+            // A negative count is corrupt/malicious data (it can also arise from
+            // long.MinValue overflow when negating a negative block count), and
+            // the callers cast the block count to int; reject it explicitly.
+            if (count < 0)
+            {
+                throw new AvroException($"Invalid negative collection block count: {count}");
             }
 
             // A .NET collection cannot hold more than int.MaxValue elements and
