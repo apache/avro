@@ -316,6 +316,24 @@ class DatumIOTest extends TestCase
         $this->decodeWith('{"type":"map","values":"long"}', $io);
     }
 
+    public function test_read_union_rejects_out_of_range_index(): void
+    {
+        // Index 5 (zig-zag long) is out of range for a 2-branch union.
+        $io = new AvroStringIO();
+        (new AvroIOBinaryEncoder($io))->writeLong(5);
+        $this->expectException(AvroException::class);
+        $this->decodeWith('["null","long"]', $io);
+    }
+
+    public function test_read_union_rejects_negative_index(): void
+    {
+        // A negative index must not wrap to a valid branch.
+        $io = new AvroStringIO();
+        (new AvroIOBinaryEncoder($io))->writeLong(-1);
+        $this->expectException(AvroException::class);
+        $this->decodeWith('["null","long"]', $io);
+    }
+
     public function test_read_array_of_null_not_falsely_rejected(): void
     {
         $count = 100000;
