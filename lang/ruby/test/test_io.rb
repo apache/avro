@@ -47,14 +47,15 @@ class TestIO < Test::Unit::TestCase
   # report its size, that is rejected before allocating for it.
   def test_read_bytes_rejects_length_beyond_stream
     writer = StringIO.new
-    Avro::IO::BinaryEncoder.new(writer).write_long(100 * 1024 * 1024)
+    declared = Avro::IO::BinaryDecoder::MAX_UNCHECKED_READ + 1
+    Avro::IO::BinaryEncoder.new(writer).write_long(declared)
     reader = StringIO.new(writer.string)
     decoder = Avro::IO::BinaryDecoder.new(reader)
     assert_raise(Avro::AvroError) { decoder.read_bytes }
   end
 
   def test_read_bytes_within_stream_still_reads
-    payload = 'x' * (2 * 1024 * 1024)
+    payload = 'x' * (Avro::IO::BinaryDecoder::MAX_UNCHECKED_READ + 1)
     writer = StringIO.new
     Avro::IO::BinaryEncoder.new(writer).write_bytes(payload)
     reader = StringIO.new(writer.string)
@@ -96,7 +97,9 @@ class TestIO < Test::Unit::TestCase
     encoder.write_long(count) # one block of `count` nulls (zero bytes each)
     encoder.write_long(0)     # end-of-array marker
     result = decode('{"type":"array","items":"null"}', writer.string)
-    assert_equal([nil] * count, result)
+    assert_equal(count, result.length)
+    assert_nil(result.first)
+    assert_nil(result.last)
   end
 
   def test_read_array_within_stream_still_reads
