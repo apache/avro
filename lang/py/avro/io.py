@@ -256,7 +256,7 @@ class BinaryDecoder:
             # or reading it failed, so the reader is never left at EOF.
             try:
                 reader.seek(pos)
-            except (OSError, ValueError):
+            except (OSError, ValueError, AttributeError):
                 pass
 
     def read_null(self) -> None:

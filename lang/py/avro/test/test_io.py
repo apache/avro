@@ -590,10 +590,6 @@ class TestBinaryDecoderAvailableBytes(unittest.TestCase):
         # If reading the end offset fails after seeking, the original position
         # must still be restored (via the finally block).
         class FailingEndStream(io.BytesIO):
-            def __init__(self, data: bytes) -> None:
-                super().__init__(data)
-                self._calls = 0
-
             def seek(self, offset: int, whence: int = os.SEEK_SET) -> int:
                 # Fail only when seeking to the end.
                 if whence == os.SEEK_END:
