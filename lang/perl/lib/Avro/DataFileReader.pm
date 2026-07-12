@@ -217,9 +217,10 @@ sub read_block_header {
     ## happens. When the reader is configured with block_max_size, reject a
     ## block whose declared compressed size exceeds that bound up front.
     my $block_max = $datafile->{block_max_size};
-    if (defined $block_max && $datafile->{block_size} > $block_max) {
+    my $block_size = $datafile->{block_size};
+    if (defined $block_max && $block_size > $block_max) {
         Avro::DataFile::Error::CompressedBlockSize->throw(
-            "Compressed block size $datafile->{block_size} exceeds the configured block_max_size of $block_max bytes"
+            "Compressed block size $block_size exceeds the configured block_max_size of $block_max bytes"
         );
     }
 
