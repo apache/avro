@@ -36,11 +36,12 @@ import org.slf4j.LoggerFactory;
  * <li><tt>org.apache.avro.limits.string.maxLength</tt> limits the maximum size
  * of <tt>string</tt> types.</li>
  * <li><tt>org.apache.avro.limits.collectionItems.maxAllocation</tt> limits the
- * number of <tt>array</tt> elements whose schema encodes to zero bytes (such as
- * <tt>null</tt>, a zero-length <tt>fixed</tt>, or a record whose fields all
- * encode to zero bytes) that may be allocated at once. Unlike other element
- * types, these cannot be bounded by the number of bytes remaining in the
- * stream, so the limit defaults to a fraction of the maximum heap.</li>
+ * number of <tt>array</tt> elements whose minimum encoded size is zero (such as
+ * <tt>null</tt>, a zero-length <tt>fixed</tt>, a record whose fields are all
+ * zero-byte, or a recursive schema whose cycle is conservatively broken with a
+ * 0 minimum) that may be allocated at once. Unlike other element types, these
+ * cannot be bounded by the number of bytes remaining in the stream, so the
+ * limit defaults to a fraction of the maximum heap.</li>
  * </ul>
  *
  * The default is to permit sizes up to {@link #MAX_ARRAY_VM_LIMIT}.
@@ -90,9 +91,10 @@ public class SystemLimitException extends AvroRuntimeException {
       defaultMaxDecompressLength());
 
   /**
-   * System property declaring the maximum number of zero-byte-encoded array
-   * elements (e.g. {@code null}, a zero-length fixed, or a record whose fields
-   * all encode to zero bytes) to allocate at once: {@value}.
+   * System property declaring the maximum number of array elements whose minimum
+   * encoded size is zero (e.g. {@code null}, a zero-length fixed, a record whose
+   * fields are all zero-byte, or a recursive schema conservatively treated as a 0
+   * minimum) to allocate at once: {@value}.
    */
   public static final String MAX_COLLECTION_ALLOCATION_PROPERTY = "org.apache.avro.limits.collectionItems.maxAllocation";
 
@@ -320,8 +322,9 @@ public class SystemLimitException extends AvroRuntimeException {
     long total = existing + items;
     if (total < existing || total > maxCollectionAllocation) {
       throw new SystemLimitException("Cannot allocate " + (total < existing ? "more than Long.MAX_VALUE" : total)
-          + " zero-byte collection elements: exceeds the maximum allowed of " + maxCollectionAllocation
-          + " (configure with the system property " + MAX_COLLECTION_ALLOCATION_PROPERTY + ")");
+          + " collection elements whose minimum encoded size is zero: exceeds the maximum allowed of "
+          + maxCollectionAllocation + " (configure with the system property " + MAX_COLLECTION_ALLOCATION_PROPERTY
+          + ")");
     }
     return total;
   }

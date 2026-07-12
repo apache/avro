@@ -802,10 +802,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       break;
     case ARRAY:
       Schema elementType = schema.getElementType();
-      // Bound the cumulative element count: skipping a huge block of zero-byte
-      // elements (e.g. null) would otherwise loop unboundedly (a CPU
-      // exhaustion) even though it reads nothing. Zero-byte elements use the
-      // heap-aware allocation cap; others the structural collection cap.
+      // Bound the cumulative element count: skipping a huge block of elements
+      // whose minimum encoded size is zero (e.g. null) would otherwise loop
+      // unboundedly (a CPU exhaustion) even though it reads nothing. Such
+      // elements use the heap-aware allocation cap; others the structural
+      // collection cap.
       boolean zeroByteElements = isZeroByteSchema(elementType);
       long arrayTotal = 0;
       for (long l = in.skipArray(); l > 0; l = in.skipArray()) {
