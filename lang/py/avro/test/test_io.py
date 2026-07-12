@@ -886,6 +886,19 @@ class TestDatumReaderCollectionSizeLimit(unittest.TestCase):
             self._array_block(200_000_000),
         )
 
+    def test_array_of_null_int64_min_block_count(self) -> None:
+        # INT64_MIN as a block count is the pathological negation case. Python
+        # integers do not overflow, so negating it yields 2**63, which the cap
+        # rejects. INT64_MIN zig-zag encodes as the 10-byte varint below,
+        # followed by a block byte-size (0) that the negative-block path reads.
+        payload = b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01\x00"
+        self.assertRaises(
+            avro.errors.AvroCollectionSizeException,
+            self._decode,
+            '{"type": "array", "items": "null"}',
+            payload,
+        )
+
     def test_array_of_null_within_configured_limit_still_reads(self) -> None:
         with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
             result = self._decode('{"type": "array", "items": "null"}', self._array_block(1000))
