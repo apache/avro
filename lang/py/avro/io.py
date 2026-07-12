@@ -889,7 +889,7 @@ class DatumReader:
         """
         # read data
         index_of_symbol = decoder.read_int()
-        if index_of_symbol >= len(writers_schema.symbols):
+        if index_of_symbol < 0 or index_of_symbol >= len(writers_schema.symbols):
             raise avro.errors.SchemaResolutionException(
                 f"Can't access enum index {index_of_symbol} for enum with {len(writers_schema.symbols)} symbols", writers_schema, readers_schema
             )
@@ -1057,7 +1057,7 @@ class DatumReader:
         """
         # schema resolution
         index_of_schema = int(decoder.read_long())
-        if index_of_schema >= len(writers_schema.schemas):
+        if index_of_schema < 0 or index_of_schema >= len(writers_schema.schemas):
             raise avro.errors.SchemaResolutionException(
                 f"Can't access branch index {index_of_schema} for union with {len(writers_schema.schemas)} branches", writers_schema, readers_schema
             )
@@ -1068,7 +1068,7 @@ class DatumReader:
 
     def skip_union(self, writers_schema: avro.schema.UnionSchema, decoder: BinaryDecoder) -> None:
         index_of_schema = int(decoder.read_long())
-        if index_of_schema >= len(writers_schema.schemas):
+        if index_of_schema < 0 or index_of_schema >= len(writers_schema.schemas):
             raise avro.errors.SchemaResolutionException(
                 f"Can't access branch index {index_of_schema} for union with {len(writers_schema.schemas)} branches", writers_schema
             )

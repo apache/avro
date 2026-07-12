@@ -726,6 +726,25 @@ class TestMisc(unittest.TestCase):
         datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
         self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
 
+    def test_union_index_out_of_range(self) -> None:
+        # A union branch index that is negative or >= the number of branches is
+        # malformed and must be rejected before indexing (a negative index would
+        # otherwise wrap in Python and silently select the wrong branch).
+        schema = avro.schema.parse(json.dumps(["null", "long"]))
+        datum_reader = avro.io.DatumReader(schema)
+        for encoded in (b"\x0a", b"\x01"):  # zig-zag long 5, and -1
+            decoder = avro.io.BinaryDecoder(io.BytesIO(encoded))
+            self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
+
+    def test_enum_index_out_of_range(self) -> None:
+        # An enum symbol index that is negative or >= the number of symbols is
+        # malformed and must be rejected before indexing.
+        schema = avro.schema.parse(json.dumps({"type": "enum", "name": "E", "symbols": ["A", "B"]}))
+        datum_reader = avro.io.DatumReader(schema)
+        for encoded in (b"\x12", b"\x01"):  # zig-zag int 9, and -1
+            decoder = avro.io.BinaryDecoder(io.BytesIO(encoded))
+            self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
+
     def test_no_default_value(self) -> None:
         writers_schema = LONG_RECORD_SCHEMA
         datum_to_write = LONG_RECORD_DATUM
