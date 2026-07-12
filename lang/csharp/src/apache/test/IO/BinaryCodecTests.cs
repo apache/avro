@@ -577,6 +577,40 @@ namespace Avro.Test
             }
         }
 
+        // A zero-byte element type (null) consumes no input, so the
+        // bytes-remaining check cannot bound its block count; a tiny payload
+        // declaring a huge count must instead be rejected by the item cap
+        // before building the array.
+        [Test]
+        public void TestReadArrayOfNullRejectsHugeCount()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"null\"}");
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong(200_000_000); // ~4 byte payload
+            ms.Position = 0;
+            var reader = new GenericReader<object>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
+        }
+
+        // The skip path (a writer field absent from the reader schema) must be
+        // bounded too, so skipping a huge zero-byte block cannot loop endlessly.
+        [Test]
+        public void TestSkipArrayOfNullRejectsHugeCount()
+        {
+            var writer = Avro.Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"Foo\",\"fields\":[" +
+                "{\"name\":\"arr\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}," +
+                "{\"name\":\"val\",\"type\":\"int\"}]}");
+            var reader = Avro.Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"Foo\",\"fields\":[" +
+                "{\"name\":\"val\",\"type\":\"int\"}]}");
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong(200_000_000); // arr block count; skipped
+            ms.Position = 0;
+            var r = new GenericReader<object>(writer, reader);
+            Assert.Throws<AvroException>(() => r.Read(null, new BinaryDecoder(ms)));
+        }
+
         // Minimal read-only, forward-only stream wrapper reporting CanSeek=false.
         private sealed class NonSeekableStream : Stream
         {

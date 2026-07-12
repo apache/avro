@@ -405,12 +405,14 @@ namespace Avro.Generic
             object result = CreateArray(reuse, rs);
             int i = 0;
             long minBytes = MinBytesPerElement(writerSchema.ItemSchema);
+            long total = 0;
             for (long nl = d.ReadArrayStart(); nl != 0; nl = d.ReadArrayNext())
             {
                 // Reject a block whose element count could not be backed by the
-                // bytes remaining before allocating for it (checked on the raw
-                // long, which also avoids the int cast overflowing).
-                EnsureCollectionAvailable(d, nl, minBytes);
+                // bytes remaining (or, for zero-byte elements, that exceeds the
+                // item cap) before allocating for it. Checked on the raw long,
+                // which also avoids the int cast below overflowing.
+                total = EnsureCollectionAvailable(d, total, nl, minBytes);
                 int n = (int)nl;
                 if (GetArraySize(result) < (i + n)) ResizeArray(ref result, i + n);
                 for (int j = 0; j < n; j++, i++)
@@ -498,9 +500,10 @@ namespace Avro.Generic
             object result = CreateMap(reuse, rs);
             // Map keys are strings (>= 1 byte length prefix) plus the value.
             long minBytes = 1L + MinBytesPerElement(writerSchema.ValueSchema);
+            long total = 0;
             for (long nl = d.ReadMapStart(); nl != 0; nl = d.ReadMapNext())
             {
-                EnsureCollectionAvailable(d, nl, minBytes);
+                total = EnsureCollectionAvailable(d, total, nl, minBytes);
                 int n = (int)nl;
                 for (int j = 0; j < n; j++)
                 {
@@ -569,19 +572,34 @@ namespace Avro.Generic
             }
         }
 
-        /// <summary>
-        /// Rejects a collection (array or map) block whose declared element count
-        /// could not be backed by the bytes actually remaining, before
-        /// allocating. Skipped when the per-element minimum is zero, or when the
-        /// decoder cannot report how many bytes remain.
-        /// </summary>
-        private static void EnsureCollectionAvailable(Decoder d, long count, long minBytesPerElement)
+        // Collection allocation limits, guarding against a block-count DoS. Both
+        // default to the same values as the other Avro SDKs and can be overridden
+        // (to a single value capping both) via the AVRO_MAX_COLLECTION_ITEMS
+        // environment variable.
+        private static readonly long MaxCollectionItems = ReadCollectionLimit(10_000_000L);
+        private static readonly long MaxCollectionStructural = ReadCollectionLimit(2147483639L);
+
+        private static long ReadCollectionLimit(long defaultValue)
         {
-            if (count == 0)
+            string env = Environment.GetEnvironmentVariable("AVRO_MAX_COLLECTION_ITEMS");
+            if (!string.IsNullOrEmpty(env) && long.TryParse(env, out long value) && value >= 0)
             {
-                return;
+                return value;
             }
 
+            return defaultValue;
+        }
+
+        /// <summary>
+        /// Rejects a collection (array or map) block that could drive an unbounded
+        /// allocation, before allocating for it. A block whose declared element
+        /// count could not be backed by the bytes actually remaining is rejected;
+        /// zero-byte element blocks (where the bytes-remaining check does not
+        /// apply) are bounded by a cumulative item cap; and every collection is
+        /// bounded by a structural cap. Returns the running total across blocks.
+        /// </summary>
+        private static long EnsureCollectionAvailable(Decoder d, long total, long count, long minBytesPerElement)
+        {
             // A negative count is corrupt/malicious data (it can also arise from
             // long.MinValue overflow when negating a negative block count), and
             // the callers cast the block count to int; reject it explicitly.
@@ -590,22 +608,28 @@ namespace Avro.Generic
                 throw new AvroException($"Invalid negative collection block count: {count}");
             }
 
-            // A .NET collection cannot hold more than int.MaxValue elements and
-            // the callers cast the block count to int; reject an out-of-range
-            // count independently of the per-element size (which is 0 for e.g.
-            // arrays of null, where the byte check below is skipped).
-            if (count > int.MaxValue)
+            total += count;
+
+            // A structural cap covers all collections, including non-seekable
+            // decoders that cannot report their remaining bytes, and keeps the
+            // running total within the int range the callers cast to.
+            if (total > MaxCollectionStructural)
             {
                 throw new AvroException(
-                    $"Collection block count {count} exceeds the maximum supported size");
+                    $"Collection size {total} exceeds the maximum allowed size of {MaxCollectionStructural}");
             }
 
             if (minBytesPerElement <= 0)
             {
-                return;
+                // Zero-byte elements (e.g. null) consume no input, so the
+                // bytes-remaining check cannot bound them; cap by item count.
+                if (total > MaxCollectionItems)
+                {
+                    throw new AvroException(
+                        $"Collection of zero-byte elements ({total}) exceeds the maximum allowed size of {MaxCollectionItems}");
+                }
             }
-
-            if (d is BinaryDecoder bd)
+            else if (d is BinaryDecoder bd)
             {
                 long remaining = bd.RemainingBytes();
                 if (remaining >= 0 && count > remaining / minBytesPerElement)
@@ -614,6 +638,8 @@ namespace Avro.Generic
                         $"Collection claims {count} elements with at least {minBytesPerElement} bytes each, but only {remaining} bytes are available");
                 }
             }
+
+            return total;
         }
 
         /// <summary>
@@ -776,8 +802,11 @@ namespace Avro.Generic
                 case Schema.Type.Array:
                     {
                         Schema s = (writerSchema as ArraySchema).ItemSchema;
+                        long minBytes = MinBytesPerElement(s);
+                        long total = 0;
                         for (long n = d.ReadArrayStart(); n != 0; n = d.ReadArrayNext())
                         {
+                            total = EnsureCollectionAvailable(d, total, n, minBytes);
                             for (long i = 0; i < n; i++) Skip(s, d);
                         }
                     }
@@ -785,8 +814,11 @@ namespace Avro.Generic
                 case Schema.Type.Map:
                     {
                         Schema s = (writerSchema as MapSchema).ValueSchema;
+                        long minBytes = 1L + MinBytesPerElement(s);
+                        long total = 0;
                         for (long n = d.ReadMapStart(); n != 0; n = d.ReadMapNext())
                         {
+                            total = EnsureCollectionAvailable(d, total, n, minBytes);
                             for (long i = 0; i < n; i++) { d.SkipString(); Skip(s, d); }
                         }
                     }
