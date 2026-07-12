@@ -340,6 +340,14 @@ namespace Avro.IO
             long result = ReadLong();
             if (result < 0)
             {
+                // long.MinValue cannot be negated (it would overflow); reject it
+                // explicitly rather than propagating a wrapped negative or, under
+                // checked arithmetic, throwing an OverflowException.
+                if (result == long.MinValue)
+                {
+                    throw new AvroException("Invalid negative block count: " + result);
+                }
+
                 ReadLong(); // Consume byte-count if present
                 result = -result;
             }

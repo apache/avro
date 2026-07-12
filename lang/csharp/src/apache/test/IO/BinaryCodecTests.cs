@@ -611,6 +611,25 @@ namespace Avro.Test
             Assert.Throws<AvroException>(() => r.Read(null, new BinaryDecoder(ms)));
         }
 
+        // A block count of long.MinValue cannot be negated; it must be rejected
+        // rather than wrapping back to a negative (or huge) count.
+        [Test]
+        public void TestReadArrayRejectsInt64MinBlockCount()
+        {
+            // long.MinValue zig-zag encodes as the 10-byte varint below.
+            var data = new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01 };
+            var d = new BinaryDecoder(new MemoryStream(data));
+            Assert.Throws<AvroException>(() => d.ReadArrayStart());
+        }
+
+        [Test]
+        public void TestReadMapRejectsInt64MinBlockCount()
+        {
+            var data = new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01 };
+            var d = new BinaryDecoder(new MemoryStream(data));
+            Assert.Throws<AvroException>(() => d.ReadMapStart());
+        }
+
         // Minimal read-only, forward-only stream wrapper reporting CanSeek=false.
         private sealed class NonSeekableStream : Stream
         {
