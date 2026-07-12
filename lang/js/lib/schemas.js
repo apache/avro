@@ -802,7 +802,12 @@ UnionType.prototype._read = function (tap) {
 };
 
 UnionType.prototype._skip = function (tap) {
-  this._types[tap.readLong()]._skip(tap);
+  var index = tap.readLong();
+  var type = this._types[index];
+  if (type === undefined) {
+    throw new Error(f('invalid union index: %s', index));
+  }
+  type._skip(tap);
 };
 
 UnionType.prototype._write = function (tap, val) {

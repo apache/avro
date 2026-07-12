@@ -419,6 +419,15 @@ describe('types', function () {
       assert.throws(function () { type.fromBuffer(buf); });
     });
 
+    it('skip invalid index', function () {
+      var type = new types.UnionType(['null', 'int']);
+      var buf = Buffer.alloc(16);
+      var tap = new Tap(buf);
+      tap.writeLong(5); // out of range for a 2-branch union
+      tap.pos = 0;
+      assert.throws(function () { type._skip(tap); }, /invalid union index/);
+    });
+
     it('non wrapped write', function () {
       var type = new types.UnionType(['null', 'int']);
       assert.throws(function () {
