@@ -36,6 +36,10 @@ class InvalidAvroBinaryEncoding(AvroException):
     """For invalid numbers of bytes read."""
 
 
+class AvroCollectionSizeException(AvroException):
+    """Raised when a decoded array or map would exceed the configured item limit."""
+
+
 class SchemaParseException(AvroException):
     """Raised when a schema failed to parse."""
 

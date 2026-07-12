@@ -25,6 +25,7 @@ import itertools
 import json
 import os
 import unittest
+import unittest.mock
 import uuid
 import warnings
 from typing import BinaryIO, Collection, Dict, List, Optional, Tuple, Union, cast
@@ -842,6 +843,165 @@ class TestMisc(unittest.TestCase):
             write_datum(datum_to_write, writers_schema)
 
 
+class TestDatumReaderCollectionSizeLimit(unittest.TestCase):
+    """Elements whose schema encodes to zero bytes (``null``, a zero-length
+    ``fixed``, or a record with only zero-byte fields) consume no input, so the
+    bytes-remaining check cannot bound them. A huge declared block count of such
+    elements is capped so a tiny payload cannot exhaust memory. The limit is
+    configurable via the ``AVRO_MAX_COLLECTION_ITEMS`` environment variable."""
+
+    @staticmethod
+    def _decode(schema_json: str, encoded: bytes) -> object:
+        schema = avro.schema.parse(schema_json)
+        reader = avro.io.DatumReader(schema)
+        with io.BytesIO(encoded) as bio:
+            return reader.read(avro.io.BinaryDecoder(bio))
+
+    @staticmethod
+    def _skip(schema_json: str, encoded: bytes) -> None:
+        schema = avro.schema.parse(schema_json)
+        reader = avro.io.DatumReader(schema)
+        with io.BytesIO(encoded) as bio:
+            reader.skip_data(schema, avro.io.BinaryDecoder(bio))
+
+    @staticmethod
+    def _array_block(count: int, *, negative: bool = False) -> bytes:
+        """One array/map block of ``count`` zero-byte elements + end marker."""
+        buf = io.BytesIO()
+        enc = avro.io.BinaryEncoder(buf)
+        if negative:
+            enc.write_long(-count)  # negative count is followed by a block byte-size
+            enc.write_long(0)
+        else:
+            enc.write_long(count)
+        enc.write_long(0)  # end-of-collection marker
+        return buf.getvalue()
+
+    def test_array_of_null_exceeds_default_limit(self) -> None:
+        # The reported exploit: a ~6 byte payload declaring 200,000,000 nulls.
+        self.assertRaises(
+            avro.errors.AvroCollectionSizeException,
+            self._decode,
+            '{"type": "array", "items": "null"}',
+            self._array_block(200_000_000),
+        )
+
+    def test_array_of_null_within_configured_limit_still_reads(self) -> None:
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            result = self._decode('{"type": "array", "items": "null"}', self._array_block(1000))
+        self.assertEqual(result, [None] * 1000)
+
+    def test_array_of_null_exceeds_configured_limit(self) -> None:
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(
+                avro.errors.AvroCollectionSizeException,
+                self._decode,
+                '{"type": "array", "items": "null"}',
+                self._array_block(1001),
+            )
+
+    def test_array_of_null_cumulative_across_blocks(self) -> None:
+        # Two blocks of 600 nulls each (1200 > 1000) must be rejected on the second.
+        buf = io.BytesIO()
+        enc = avro.io.BinaryEncoder(buf)
+        enc.write_long(600)
+        enc.write_long(600)
+        enc.write_long(0)
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(
+                avro.errors.AvroCollectionSizeException,
+                self._decode,
+                '{"type": "array", "items": "null"}',
+                buf.getvalue(),
+            )
+
+    def test_array_of_null_negative_block_count(self) -> None:
+        # A negative count encodes abs(count) elements preceded by a block size;
+        # after normalization it must still be bounded.
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(
+                avro.errors.AvroCollectionSizeException,
+                self._decode,
+                '{"type": "array", "items": "null"}',
+                self._array_block(200_000, negative=True),
+            )
+
+    def test_array_of_zero_length_fixed_exceeds_limit(self) -> None:
+        schema_json = '{"type": "array", "items": {"type": "fixed", "name": "empty", "size": 0}}'
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(avro.errors.AvroCollectionSizeException, self._decode, schema_json, self._array_block(2000))
+
+    def test_array_of_all_null_record_exceeds_limit(self) -> None:
+        schema_json = '{"type": "array", "items": {"type": "record", "name": "R", "fields": [{"name": "n", "type": "null"}]}}'
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(avro.errors.AvroCollectionSizeException, self._decode, schema_json, self._array_block(2000))
+
+    def test_map_of_null_rejected_by_available_bytes(self) -> None:
+        # Map entries always carry a >= 1 byte key, so a huge map<null> is bounded
+        # by the bytes-remaining check rather than the zero-byte cap.
+        self.assertRaises(
+            avro.errors.InvalidAvroBinaryEncoding,
+            self._decode,
+            '{"type": "map", "values": "null"}',
+            self._array_block(200_000_000),
+        )
+
+    def test_skip_array_of_null_respects_limit(self) -> None:
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(
+                avro.errors.AvroCollectionSizeException,
+                self._skip,
+                '{"type": "array", "items": "null"}',
+                self._array_block(2000),
+            )
+
+    def test_invalid_env_override_falls_back_to_default(self) -> None:
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "not-a-number"}):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                self.assertEqual(avro.io._max_collection_items(), avro.io.DEFAULT_MAX_COLLECTION_ITEMS)
+
+    def test_negative_env_override_falls_back_to_default(self) -> None:
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "-5"}):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                self.assertEqual(avro.io._max_collection_items(), avro.io.DEFAULT_MAX_COLLECTION_ITEMS)
+
+    def test_env_override_is_honored(self) -> None:
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "7"}):
+            self.assertEqual(avro.io._max_collection_items(), 7)
+            result = self._decode('{"type": "array", "items": "null"}', self._array_block(7))
+        self.assertEqual(result, [None] * 7)
+
+    def test_collection_limits_env_caps_both(self) -> None:
+        # When set, AVRO_MAX_COLLECTION_ITEMS caps both the zero-byte and the
+        # structural limit; unset, they differ (tighter zero-byte default).
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1234"}):
+            self.assertEqual(avro.io._collection_limits(), (1234, 1234))
+        os.environ.pop("AVRO_MAX_COLLECTION_ITEMS", None)
+        self.assertEqual(
+            avro.io._collection_limits(),
+            (avro.io.DEFAULT_MAX_COLLECTION_ITEMS, avro.io.DEFAULT_MAX_COLLECTION_STRUCTURAL),
+        )
+
+    def test_non_zero_collection_bounded_by_structural_cap_when_unseekable(self) -> None:
+        # On a non-seekable reader the bytes-remaining check cannot run, so a huge
+        # non-zero-byte collection is bounded by the structural cap instead.
+        class NoTell:
+            def __init__(self, data: bytes) -> None:
+                self._b = io.BytesIO(data)
+
+            def read(self, n: int = -1) -> bytes:
+                return self._b.read(n)
+
+        schema = avro.schema.parse('{"type": "array", "items": "long"}')
+        reader = avro.io.DatumReader(schema)
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            decoder = avro.io.BinaryDecoder(cast(BinaryIO, NoTell(self._array_block(2000))))
+            self.assertIsNone(decoder.bytes_remaining())
+            self.assertRaises(avro.errors.AvroCollectionSizeException, reader.read, decoder)
+
+
 def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) -> unittest.TestSuite:
     """Generate test cases across many test schema."""
     suite = unittest.TestSuite()
@@ -858,6 +1018,7 @@ def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) 
     suite.addTests(loader.loadTestsFromTestCase(TestIncompatibleSchemaReading))
     suite.addTests(loader.loadTestsFromTestCase(TestBinaryDecoderAvailableBytes))
     suite.addTests(loader.loadTestsFromTestCase(TestDatumReaderCollectionAvailableBytes))
+    suite.addTests(loader.loadTestsFromTestCase(TestDatumReaderCollectionSizeLimit))
     return suite
 
 

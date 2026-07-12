@@ -90,7 +90,7 @@ import decimal
 import os
 import struct
 import warnings
-from typing import IO, Generator, Iterable, List, Mapping, Optional, Sequence, Set, Union
+from typing import IO, Generator, Iterable, List, Mapping, Optional, Sequence, Set, Tuple, Union
 
 import avro.constants
 import avro.errors
@@ -639,6 +639,56 @@ class BinaryEncoder:
 #
 # DatumReader/Writer
 #
+#: Environment variable overriding the maximum number of zero-byte-encoded
+#: collection elements (e.g. an array of nulls) to allocate from a single decode.
+MAX_COLLECTION_ITEMS_ENV = "AVRO_MAX_COLLECTION_ITEMS"
+
+#: Default maximum number of zero-byte-encoded collection elements to allocate.
+#: Elements whose schema encodes to zero bytes (``null``, a zero-length ``fixed``,
+#: or a record with only zero-byte fields) consume no input, so the bytes-remaining
+#: check cannot bound their count; without a cap a tiny payload can declare a huge
+#: block count and exhaust memory. A legitimate collection of zero-byte elements is
+#: small, so this default is generous while still rejecting pathological input. It
+#: can be raised (or lowered) with the ``AVRO_MAX_COLLECTION_ITEMS`` environment
+#: variable.
+DEFAULT_MAX_COLLECTION_ITEMS = 10_000_000
+
+#: Default structural cap on the number of elements in any array or map (a
+#: collection larger than this is treated as malformed regardless of element
+#: type). Matches the historical ``Integer.MAX_VALUE - 8`` limit. Elements with a
+#: positive on-wire size are also bounded by the bytes remaining; this cap is an
+#: additional overflow/defense-in-depth guard. ``AVRO_MAX_COLLECTION_ITEMS``, when
+#: set, overrides both this and :data:`DEFAULT_MAX_COLLECTION_ITEMS`.
+DEFAULT_MAX_COLLECTION_STRUCTURAL = (1 << 31) - 8
+
+
+def _collection_limits() -> Tuple[int, int]:
+    """Return ``(zero_byte_limit, structural_limit)``.
+
+    ``AVRO_MAX_COLLECTION_ITEMS``, when set to a non-negative integer, caps both
+    zero-byte-element collections and all other collections at that value.
+    Otherwise zero-byte elements use the tighter :data:`DEFAULT_MAX_COLLECTION_ITEMS`
+    and all collections use :data:`DEFAULT_MAX_COLLECTION_STRUCTURAL`.
+    """
+    value = os.environ.get(MAX_COLLECTION_ITEMS_ENV)
+    if value is None:
+        return DEFAULT_MAX_COLLECTION_ITEMS, DEFAULT_MAX_COLLECTION_STRUCTURAL
+    try:
+        parsed = int(value)
+    except ValueError:
+        warnings.warn(avro.errors.AvroWarning(f"Ignoring invalid {MAX_COLLECTION_ITEMS_ENV} value: {value!r}"))
+        return DEFAULT_MAX_COLLECTION_ITEMS, DEFAULT_MAX_COLLECTION_STRUCTURAL
+    if parsed < 0:
+        warnings.warn(avro.errors.AvroWarning(f"Ignoring negative {MAX_COLLECTION_ITEMS_ENV} value: {value!r}"))
+        return DEFAULT_MAX_COLLECTION_ITEMS, DEFAULT_MAX_COLLECTION_STRUCTURAL
+    return parsed, parsed
+
+
+def _max_collection_items() -> int:
+    """Return the configured zero-byte-element collection limit."""
+    return _collection_limits()[0]
+
+
 def _min_bytes_per_element(schema: avro.schema.Schema, visited: Optional[Set[int]] = None) -> int:
     """
     Return the minimum number of bytes a single value of ``schema`` can occupy
@@ -855,22 +905,45 @@ class DatumReader:
         return decoder.skip_int()
 
     @staticmethod
-    def _ensure_collection_available(decoder: BinaryDecoder, count: int, min_bytes_per_element: int) -> None:
+    def _ensure_collection_available(
+        decoder: BinaryDecoder,
+        existing: int,
+        count: int,
+        min_bytes_per_element: int,
+        zero_byte_limit: int,
+        structural_limit: int,
+    ) -> None:
         """
-        Reject a collection (array or map) block whose declared element count
-        could not be backed by the bytes actually remaining, before iterating.
-        Skipped when the per-element minimum is zero (e.g. an array of nulls) or
-        when the reader cannot report how many bytes remain.
+        Reject a collection (array or map) block that could not be backed by the
+        input, before iterating.
+
+        For elements with a positive minimum on-wire size, the declared count is
+        checked against the bytes actually remaining and against a structural
+        limit (an overflow/defense-in-depth cap). For zero-byte elements (e.g. an
+        array of nulls), which consume no input and so cannot be bounded by the
+        bytes remaining, the cumulative count is checked against the (tighter)
+        zero-byte limit.
         """
-        if count <= 0 or min_bytes_per_element <= 0:
+        if count <= 0:
             return
-        remaining = decoder.bytes_remaining()
-        # Compare via integer division rather than multiplying, so an
-        # attacker-controlled (unbounded) count does not create a huge
-        # intermediate product.
-        if remaining is not None and count > remaining // min_bytes_per_element:
-            raise avro.errors.InvalidAvroBinaryEncoding(
-                f"Collection claims {count} elements with at least {min_bytes_per_element} bytes each, but only {remaining} bytes are available."
+        if min_bytes_per_element > 0:
+            remaining = decoder.bytes_remaining()
+            # Compare via integer division rather than multiplying, so an
+            # attacker-controlled (unbounded) count does not create a huge
+            # intermediate product.
+            if remaining is not None and count > remaining // min_bytes_per_element:
+                raise avro.errors.InvalidAvroBinaryEncoding(
+                    f"Collection claims {count} elements with at least {min_bytes_per_element} bytes each, but only {remaining} bytes are available."
+                )
+            if existing + count > structural_limit:
+                raise avro.errors.AvroCollectionSizeException(
+                    f"Cannot read a collection of more than {structural_limit} elements "
+                    f"(declared {existing + count}); raise the {MAX_COLLECTION_ITEMS_ENV} limit if this is legitimate."
+                )
+        elif existing + count > zero_byte_limit:
+            raise avro.errors.AvroCollectionSizeException(
+                f"Cannot read a collection of more than {zero_byte_limit} zero-byte elements "
+                f"(declared {existing + count}); raise the {MAX_COLLECTION_ITEMS_ENV} limit if this is legitimate."
             )
 
     def read_array(self, writers_schema: avro.schema.ArraySchema, readers_schema: avro.schema.ArraySchema, decoder: BinaryDecoder) -> List[object]:
@@ -890,24 +963,30 @@ class DatumReader:
         """
         read_items = []
         min_bytes = _min_bytes_per_element(writers_schema.items)
+        zero_byte_limit, structural_limit = _collection_limits()
         block_count = decoder.read_long()
         while block_count != 0:
             if block_count < 0:
                 block_count = -block_count
                 decoder.skip_long()
-            self._ensure_collection_available(decoder, block_count, min_bytes)
+            self._ensure_collection_available(decoder, len(read_items), block_count, min_bytes, zero_byte_limit, structural_limit)
             for i in range(block_count):
                 read_items.append(self.read_data(writers_schema.items, readers_schema.items, decoder))
             block_count = decoder.read_long()
         return read_items
 
     def skip_array(self, writers_schema: avro.schema.ArraySchema, decoder: BinaryDecoder) -> None:
+        min_bytes = _min_bytes_per_element(writers_schema.items)
+        zero_byte_limit, structural_limit = _collection_limits()
+        items_skipped = 0
         block_count = decoder.read_long()
         while block_count != 0:
             if block_count < 0:
                 block_size = decoder.read_long()
                 decoder.skip(block_size)
             else:
+                self._ensure_collection_available(decoder, items_skipped, block_count, min_bytes, zero_byte_limit, structural_limit)
+                items_skipped += block_count
                 for i in range(block_count):
                     self.skip_data(writers_schema.items, decoder)
             block_count = decoder.read_long()
@@ -930,12 +1009,13 @@ class DatumReader:
         read_items = {}
         # Map keys are strings (>= 1 byte length prefix) plus the value.
         min_bytes = 1 + _min_bytes_per_element(writers_schema.values)
+        zero_byte_limit, structural_limit = _collection_limits()
         block_count = decoder.read_long()
         while block_count != 0:
             if block_count < 0:
                 block_count = -block_count
                 decoder.skip_long()
-            self._ensure_collection_available(decoder, block_count, min_bytes)
+            self._ensure_collection_available(decoder, len(read_items), block_count, min_bytes, zero_byte_limit, structural_limit)
             for i in range(block_count):
                 key = decoder.read_utf8()
                 read_items[key] = self.read_data(writers_schema.values, readers_schema.values, decoder)
@@ -943,12 +1023,17 @@ class DatumReader:
         return read_items
 
     def skip_map(self, writers_schema: avro.schema.MapSchema, decoder: BinaryDecoder) -> None:
+        min_bytes = 1 + _min_bytes_per_element(writers_schema.values)
+        zero_byte_limit, structural_limit = _collection_limits()
+        items_skipped = 0
         block_count = decoder.read_long()
         while block_count != 0:
             if block_count < 0:
                 block_size = decoder.read_long()
                 decoder.skip(block_size)
             else:
+                self._ensure_collection_available(decoder, items_skipped, block_count, min_bytes, zero_byte_limit, structural_limit)
+                items_skipped += block_count
                 for i in range(block_count):
                     decoder.skip_utf8()
                     self.skip_data(writers_schema.values, decoder)
