@@ -371,9 +371,12 @@ struct StreamReader {
             return -1;
         }
         // end_ - next_ is the data already buffered in this reader; it is added
-        // to what the underlying stream still has. The addition promotes the
-        // pointer difference to int64_t.
-        return (end_ - next_) + streamRemaining;
+        // to what the underlying stream still has. Guard the pointer
+        // subtraction: after init()/reset() and before any data is buffered,
+        // next_ and end_ are both null, and subtracting null pointers is
+        // undefined behavior.
+        int64_t buffered = (next_ != nullptr) ? (end_ - next_) : 0;
+        return buffered + streamRemaining;
     }
 
     /**

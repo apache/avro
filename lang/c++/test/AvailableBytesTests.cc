@@ -152,6 +152,17 @@ static void testReadArrayOfDeeplyNestedNullNotFalselyRejected() {
     BOOST_CHECK_EQUAL(datum.value<GenericArray>().value().size(), 100000u);
 }
 
+// Calling bytesRemaining() immediately after init(), before any data has been
+// buffered, must be well-defined (the underlying StreamReader must not subtract
+// null buffer pointers) and report the whole stream as available.
+static void testBytesRemainingRightAfterInit() {
+    const uint8_t data[] = {0x06, 'a', 'b', 'c'};
+    InputStreamPtr in = memoryInputStream(data, sizeof(data));
+    DecoderPtr d = binaryDecoder();
+    d->init(*in);
+    BOOST_CHECK_EQUAL(d->bytesRemaining(), static_cast<int64_t>(sizeof(data)));
+}
+
 } // namespace avro
 
 boost::unit_test::test_suite *
@@ -167,5 +178,6 @@ init_unit_test_suite(int, char *[]) {
     ts->add(BOOST_TEST_CASE(&avro::testReadMapRejectsOversizedCount));
     ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfNullNotFalselyRejected));
     ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfDeeplyNestedNullNotFalselyRejected));
+    ts->add(BOOST_TEST_CASE(&avro::testBytesRemainingRightAfterInit));
     return ts;
 }
