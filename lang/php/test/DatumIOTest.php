@@ -358,7 +358,7 @@ class DatumIOTest extends TestCase
         putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
 
         try {
-            $this->expectException(AvroException::class);
+            $this->expectException(AvroIOCollectionSizeException::class);
             $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(1001));
         } finally {
             putenv('AVRO_MAX_COLLECTION_ITEMS');
@@ -375,7 +375,7 @@ class DatumIOTest extends TestCase
         putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
 
         try {
-            $this->expectException(AvroException::class);
+            $this->expectException(AvroIOCollectionSizeException::class);
             $this->decodeWith('{"type":"array","items":"null"}', $io);
         } finally {
             putenv('AVRO_MAX_COLLECTION_ITEMS');
@@ -387,8 +387,31 @@ class DatumIOTest extends TestCase
         putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
 
         try {
-            $this->expectException(AvroException::class);
+            $this->expectException(AvroIOCollectionSizeException::class);
             $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(200000, true));
+        } finally {
+            putenv('AVRO_MAX_COLLECTION_ITEMS');
+        }
+    }
+
+    public function test_map_cumulative_limit_not_bypassed_by_duplicate_keys(): void
+    {
+        // Two blocks of 600 entries all reusing the same key: count($items) stays
+        // 1, but the cumulative pairs read (1200) must still exceed the 1000 cap.
+        $io = new AvroStringIO();
+        $encoder = new AvroIOBinaryEncoder($io);
+        foreach ([600, 600] as $blockCount) {
+            $encoder->writeLong($blockCount);
+            for ($i = 0; $i < $blockCount; $i++) {
+                $encoder->writeString('k'); // 1-byte key; null value is 0 bytes
+            }
+        }
+        $encoder->writeLong(0);
+        putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
+
+        try {
+            $this->expectException(AvroIOCollectionSizeException::class);
+            $this->decodeWith('{"type":"map","values":"null"}', $io);
         } finally {
             putenv('AVRO_MAX_COLLECTION_ITEMS');
         }

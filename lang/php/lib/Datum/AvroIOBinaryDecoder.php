@@ -276,7 +276,7 @@ class AvroIOBinaryDecoder
         $minBytes = AvroIODatumReader::collectionElementMinBytes($writersSchema->items());
         $skipped = 0;
         $blockCount = $decoder->readLong();
-        while (0 !== $blockCount) {
+        while (0 != $blockCount) {
             if ($blockCount < 0) {
                 $decoder->skip($this->readLong());
             } else {
@@ -296,7 +296,7 @@ class AvroIOBinaryDecoder
         $minBytes = 1 + AvroIODatumReader::collectionElementMinBytes($writersSchema->values());
         $skipped = 0;
         $blockCount = $decoder->readLong();
-        while (0 !== $blockCount) {
+        while (0 != $blockCount) {
             if ($blockCount < 0) {
                 $decoder->skip($this->readLong());
             } else {

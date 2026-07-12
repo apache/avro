@@ -343,6 +343,7 @@ class AvroIODatumReader
     ): array {
         $items = [];
         $minBytes = 1 + self::minBytesPerElement($writersSchema->values());
+        $read = 0; // Cumulative pairs read; count($items) would undercount duplicate keys.
         $pair_count = $decoder->readLong();
         while (0 != $pair_count) {
             if ($pair_count < 0) {
@@ -357,7 +358,11 @@ class AvroIODatumReader
             }
 
             // Map keys are strings (>= 1 byte length prefix) plus the value.
-            self::ensureCollectionAvailable($decoder, count($items), $pair_count, $minBytes);
+            // Bound against the cumulative pairs read, not count($items): a
+            // stream repeating the same key would otherwise shrink count($items)
+            // and slip past the cumulative cap.
+            self::ensureCollectionAvailable($decoder, $read, $pair_count, $minBytes);
+            $read += $pair_count;
             for ($i = 0; $i < $pair_count; $i++) {
                 $key = $decoder->readString();
                 $items[$key] = $this->readData(
@@ -647,7 +652,7 @@ class AvroIODatumReader
                 $visited[$id] = true;
                 $total = 0;
                 foreach ($schema->fields() as $field) {
-                    $total += self::minBytesPerElement($field, $visited);
+                    $total += self::minBytesPerElement($field->type(), $visited);
                 }
 
                 return $total;
@@ -660,7 +665,8 @@ class AvroIODatumReader
 
     /**
      * Returns the configured collection limits as [zeroByteLimit, structuralLimit].
-     * AVRO_MAX_COLLECTION_ITEMS, when a non-negative integer, caps both.
+     * AVRO_MAX_COLLECTION_ITEMS, when a non-negative integer, overrides both
+     * limits to that value (which may raise or lower them).
      *
      * @return array{int, int}
      */
