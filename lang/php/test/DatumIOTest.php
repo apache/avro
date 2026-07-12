@@ -334,6 +334,17 @@ class DatumIOTest extends TestCase
         $this->decodeWith('["null","long"]', $io);
     }
 
+    public function test_read_long_rejects_overlong_varint(): void
+    {
+        // A 64-bit value uses at most 10 bytes; an 11th continuation byte is a
+        // malformed (overlong) varint and must be rejected.
+        $io = new AvroStringIO(str_repeat("\x80", 10)."\x01");
+        $io->seek(0);
+        $decoder = new AvroIOBinaryDecoder($io);
+        $this->expectException(AvroException::class);
+        $decoder->readLong();
+    }
+
     public function test_read_array_of_null_not_falsely_rejected(): void
     {
         $count = 100000;

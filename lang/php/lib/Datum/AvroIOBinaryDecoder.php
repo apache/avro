@@ -116,6 +116,12 @@ class AvroIOBinaryDecoder
         $byte = ord($this->nextByte());
         $bytes = [$byte];
         while (0 != ($byte & 0x80)) {
+            // A 64-bit value uses at most 10 bytes; reject an overlong varint
+            // rather than reading an unbounded continuation chain and silently
+            // corrupting the value. Bounds both the native and GMP decode paths.
+            if (count($bytes) >= 10) {
+                throw new AvroException('Varint is too long');
+            }
             $byte = ord($this->nextByte());
             $bytes[] = $byte;
         }
