@@ -315,7 +315,7 @@ sub _zstd_decompress_bounded {
     # older Compress::Zstd distribution that lacks the Decompressor submodule).
     unless (eval { require Compress::Zstd::Decompressor; 1 }) {
         Avro::DataFile::Error::UnsupportedCodec->throw(
-            "Cannot read zstandard-compressed block: Compress::Zstd::Decompressor is not available"
+            "Cannot read zstandard-compressed block: Compress::Zstd::Decompressor is not available: $@"
         );
     }
     my $decompressor = Compress::Zstd::Decompressor->new;
@@ -348,7 +348,7 @@ sub _check_decompress_length {
     my ($length, $limit) = @_;
     if ($length > $limit) {
         Avro::DataFile::Error::DecompressionSize->throw(
-            "Decompressed block size exceeds the maximum allowed of $limit bytes"
+            "Decompressed block size $length exceeds the maximum allowed of $limit bytes"
         );
     }
     return;
