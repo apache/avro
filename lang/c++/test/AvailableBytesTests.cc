@@ -41,6 +41,53 @@
 
 namespace avro {
 
+// Portable set/unset of the collection-limit environment variable that restores
+// any previous value: setenv/unsetenv are POSIX-only (MSVC uses _putenv_s, where
+// an empty value unsets), and unconditionally clearing the variable would leak
+// state if it was already set before the test ran.
+namespace {
+const char *const kCollectionItemsEnv = "AVRO_MAX_COLLECTION_ITEMS";
+
+class ScopedCollectionLimit {
+    std::string previous_;
+    bool hadPrevious_;
+
+    static void setEnv(const char *value) {
+#ifdef _WIN32
+        _putenv_s(kCollectionItemsEnv, value);
+#else
+        setenv(kCollectionItemsEnv, value, 1);
+#endif
+    }
+
+    static void unsetEnv() {
+#ifdef _WIN32
+        _putenv_s(kCollectionItemsEnv, "");
+#else
+        unsetenv(kCollectionItemsEnv);
+#endif
+    }
+
+public:
+    explicit ScopedCollectionLimit(const char *value) {
+        const char *prev = std::getenv(kCollectionItemsEnv);
+        hadPrevious_ = prev != nullptr;
+        if (hadPrevious_) {
+            previous_ = prev;
+        }
+        setEnv(value);
+    }
+
+    ~ScopedCollectionLimit() {
+        if (hadPrevious_) {
+            setEnv(previous_.c_str());
+        } else {
+            unsetEnv();
+        }
+    }
+};
+} // namespace
+
 // Reading a bytes value whose declared length far exceeds the tiny backing
 // buffer must throw instead of attempting a huge allocation.
 static void testDecodeBytesRejectsOversizedLength() {
@@ -216,13 +263,12 @@ static void testReadMapOfNullRejectedByAvailableBytes() {
 static void testReadArrayOfNullRespectsConfiguredLimit() {
     ValidSchema s = compileJsonSchemaFromString(
         "{\"type\":\"array\",\"items\":\"null\"}");
-    setenv("AVRO_MAX_COLLECTION_ITEMS", "1000", 1);
+    ScopedCollectionLimit limitGuard("1000");
     // Within the limit decodes; over the limit and cumulative are rejected.
     GenericDatum ok = decodeCollectionHeader(s, 1000, true);
     BOOST_CHECK_EQUAL(ok.value<GenericArray>().value().size(), 1000u);
     BOOST_CHECK_THROW(decodeCollectionHeader(s, 1001, true), Exception);
     BOOST_CHECK_THROW(decodeLongs(s, {600, 600, 0}), Exception);
-    unsetenv("AVRO_MAX_COLLECTION_ITEMS");
 }
 
 // A backed non-zero-byte array that passes the bytes check is still bounded by
@@ -230,17 +276,16 @@ static void testReadArrayOfNullRespectsConfiguredLimit() {
 static void testReadArrayOfLongRejectedByStructuralCap() {
     ValidSchema s = compileJsonSchemaFromString(
         "{\"type\":\"array\",\"items\":\"long\"}");
-    setenv("AVRO_MAX_COLLECTION_ITEMS", "5", 1);
+    ScopedCollectionLimit limitGuard("5");
     // 10 real longs: block count 10, ten 1-byte longs, end marker.
     std::vector<int64_t> longs = {10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0};
     BOOST_CHECK_THROW(decodeLongs(s, longs), Exception);
-    unsetenv("AVRO_MAX_COLLECTION_ITEMS");
 }
 
 // Skipping a huge array (via the decoder's skipArray) is bounded by the
 // structural cap.
 static void testSkipArrayRejectsHugeCount() {
-    setenv("AVRO_MAX_COLLECTION_ITEMS", "1000", 1);
+    ScopedCollectionLimit limitGuard("1000");
     std::unique_ptr<OutputStream> os = memoryOutputStream();
     EncoderPtr e = binaryEncoder();
     e->init(*os);
@@ -250,7 +295,22 @@ static void testSkipArrayRejectsHugeCount() {
     DecoderPtr d = binaryDecoder();
     d->init(*in);
     BOOST_CHECK_THROW(d->skipArray(), Exception);
-    unsetenv("AVRO_MAX_COLLECTION_ITEMS");
+}
+
+static void testSkipArrayRejectsNegativeBlockSize() {
+    // A negative block count is followed by a block byte-size; a negative size
+    // would convert to a huge size_t and drive an unbounded skip, so it must be
+    // rejected.
+    std::unique_ptr<OutputStream> os = memoryOutputStream();
+    EncoderPtr e = binaryEncoder();
+    e->init(*os);
+    e->encodeLong(-3); // negative block count: a byte-size follows
+    e->encodeLong(-1); // negative block byte-size
+    e->flush();
+    InputStreamPtr in = memoryInputStream(*os);
+    DecoderPtr d = binaryDecoder();
+    d->init(*in);
+    BOOST_CHECK_THROW(d->skipArray(), Exception);
 }
 
 } // namespace avro
@@ -276,5 +336,6 @@ init_unit_test_suite(int, char *[]) {
     ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfNullRespectsConfiguredLimit));
     ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfLongRejectedByStructuralCap));
     ts->add(BOOST_TEST_CASE(&avro::testSkipArrayRejectsHugeCount));
+    ts->add(BOOST_TEST_CASE(&avro::testSkipArrayRejectsNegativeBlockSize));
     return ts;
 }

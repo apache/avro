@@ -263,7 +263,13 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
             // resolution the wire (writer) type may be smaller than the datum
             // (reader) type, which would over-estimate and reject valid data.
             int64_t trueMin = minBytesPerElement(nn, 0);
-            bool zeroByte = trueMin == 0;
+            // Under resolution the on-wire (writer) element can be zero bytes
+            // even when the reader element is not (e.g. reader-only fields filled
+            // from defaults), so the bytes check is disabled and we cannot tell
+            // whether an element is zero-byte on the wire. Apply the tighter
+            // zero-byte cap conservatively in that case, so the up-front resize
+            // cannot be driven past it.
+            bool zeroByte = isResolving || trueMin == 0;
             int64_t minBytes = isResolving ? 0 : trueMin;
             for (size_t m = d.arrayStart(); m != 0; m = d.arrayNext()) {
                 ensureCollectionAvailable(d, r.size(), m, minBytes);
@@ -290,9 +296,11 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
             // Saturate the +1 so a maxed-out value minimum cannot wrap.
             int64_t valuesMin = minBytesPerElement(nn, 0);
             // A map entry always includes a >= 1 byte key, so it is never a
-            // zero-byte element; the bytes check alone bounds it.
+            // zero-byte element and even under resolution the count is bounded by
+            // the bytes remaining (each entry consumes at least the key). Use 1
+            // when resolving (the value type may differ), else the key + value.
             int64_t minBytes = isResolving
-                                   ? 0
+                                   ? 1
                                    : (valuesMin < std::numeric_limits<int64_t>::max()
                                           ? valuesMin + 1
                                           : valuesMin);

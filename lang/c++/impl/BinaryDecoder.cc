@@ -225,15 +225,21 @@ size_t BinaryDecoder::skipArray() {
     for (;;) {
         auto r = doDecodeLong();
         if (r < 0) {
-            auto n = static_cast<size_t>(doDecodeLong());
-            in_.skipBytes(n);
+            auto byteSize = doDecodeLong();
+            if (byteSize < 0) {
+                // A negative block byte-size would convert to a huge size_t and
+                // drive an unbounded skip; reject it.
+                throw Exception("Invalid negative block size: {}", byteSize);
+            }
+            in_.skipBytes(static_cast<size_t>(byteSize));
         } else {
             // Bound the block count: skipping a huge block of zero-byte elements
             // would otherwise loop unboundedly (a CPU exhaustion) even though it
             // reads/allocates nothing. The decoder has no element schema here, so
             // apply the structural cap (AVRO_MAX_COLLECTION_ITEMS, default
-            // Integer.MAX_VALUE - 8).
-            static const int64_t structural = maxCollectionStructural();
+            // Integer.MAX_VALUE - 8). Read the limit each call so a runtime
+            // change to the environment variable is honoured, matching Generic.cc.
+            const int64_t structural = maxCollectionStructural();
             if (r > structural) {
                 throw Exception(
                     "Cannot skip a collection of more than {} elements; "
