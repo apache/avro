@@ -489,6 +489,27 @@ public class TestGenericDatumReader {
   }
 
   /**
+   * {@code Long.MIN_VALUE} as a block count is the pathological overflow case:
+   * negating it overflows back to a negative value. It must be handled safely
+   * without allocating -- the decoder normalizes it to an empty collection rather
+   * than a huge one -- on both reader paths. (The C SDK rejects it outright; this
+   * normalization is equally non-exploitable.)
+   */
+  @Test
+  void fastAndClassicReaderHandleMinValueBlockCountSafely() throws Exception {
+    for (boolean fast : new boolean[] { true, false }) {
+      GenericDatumReader<Object> reader = arrayReader(Schema.create(Schema.Type.NULL), fast);
+      // Long.MIN_VALUE items (zigzag), a block byte-size of 0, then the
+      // end-of-array terminator. Negating Long.MIN_VALUE overflows, so this must
+      // not drive an allocation.
+      byte[] data = encodeVarints(Long.MIN_VALUE, 0L, 0L);
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+      Collection<?> result = (Collection<?>) reader.read(null, decoder);
+      assertEquals(0, result.size(), "fastReader=" + fast);
+    }
+  }
+
+  /**
    * A legitimate array of nulls within the limit still decodes on both reader
    * paths.
    */
