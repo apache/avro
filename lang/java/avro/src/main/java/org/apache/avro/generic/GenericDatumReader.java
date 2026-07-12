@@ -509,9 +509,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * reports fewer remaining bytes than required.
    * <p>
    * This check prevents out-of-memory errors from pre-allocating huge backing
-   * arrays when the source data is truncated or malicious.
+   * arrays when the source data is truncated or malicious. It is exposed so the
+   * fast reader ({@code FastReaderBuilder}) can apply the same guard as this
+   * classic reader.
    */
-  private static void ensureAvailableCollectionBytes(Decoder decoder, long count, Schema elementSchema)
+  public static void ensureAvailableCollectionBytes(Decoder decoder, long count, Schema elementSchema)
       throws EOFException {
     if (count <= 0) {
       return;

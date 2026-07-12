@@ -470,22 +470,21 @@ public class FastReaderBuilder {
   @SuppressWarnings("unchecked")
   private FieldReader createArrayReader(Schema readerSchema, Container action) throws IOException {
     FieldReader elementReader = getReaderFor(action.elementAction, null);
+    Schema elementType = readerSchema.getElementType();
 
     // Elements whose schema encodes to zero bytes (null, or a record with only
     // zero-byte fields) consume no input, so the block count cannot be bounded by
     // the bytes remaining in the stream. Cap such collections against a heap-aware
     // limit so a tiny payload cannot declare a huge block count and drive an
     // unbounded backing-array allocation (AVRO-4300).
-    boolean zeroByteElements = GenericDatumReader.isZeroByteSchema(readerSchema.getElementType());
+    boolean zeroByteElements = GenericDatumReader.isZeroByteSchema(elementType);
 
     return reusingReader((reuse, decoder) -> {
       if (reuse instanceof GenericArray) {
         GenericArray<Object> reuseArray = (GenericArray<Object>) reuse;
         long l = decoder.readArrayStart();
         long total = 0;
-        if (zeroByteElements && l > 0) {
-          SystemLimitException.checkMaxCollectionAllocation(total, l);
-        }
+        checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
         reuseArray.clear();
 
         while (l > 0) {
@@ -494,17 +493,13 @@ public class FastReaderBuilder {
           }
           total += l;
           l = decoder.arrayNext();
-          if (zeroByteElements && l > 0) {
-            SystemLimitException.checkMaxCollectionAllocation(total, l);
-          }
+          checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
         }
         return reuseArray;
       } else {
         long l = decoder.readArrayStart();
         long total = 0;
-        if (zeroByteElements && l > 0) {
-          SystemLimitException.checkMaxCollectionAllocation(total, l);
-        }
+        checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
         List<Object> array = (reuse instanceof List) ? (List<Object>) reuse
             : new GenericData.Array<>((int) l, readerSchema);
         array.clear();
@@ -514,13 +509,29 @@ public class FastReaderBuilder {
           }
           total += l;
           l = decoder.arrayNext();
-          if (zeroByteElements && l > 0) {
-            SystemLimitException.checkMaxCollectionAllocation(total, l);
-          }
+          checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
         }
         return array;
       }
     });
+  }
+
+  /**
+   * Validates an array block count before its elements are allocated, applying
+   * the same guards as the classic {@code GenericDatumReader}: the
+   * bytes-remaining check for elements with a positive minimum size, and the
+   * heap-aware allocation cap for zero-byte elements (which the bytes check
+   * cannot bound).
+   */
+  private static void checkArrayBlock(Decoder decoder, Schema elementType, boolean zeroByteElements, long total,
+      long count) throws IOException {
+    if (count <= 0) {
+      return;
+    }
+    GenericDatumReader.ensureAvailableCollectionBytes(decoder, count, elementType);
+    if (zeroByteElements) {
+      SystemLimitException.checkMaxCollectionAllocation(total, count);
+    }
   }
 
   private FieldReader createEnumReader(EnumAdjust action) {

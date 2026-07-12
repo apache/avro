@@ -25,6 +25,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -381,6 +382,65 @@ public class TestGenericDatumReader {
     } finally {
       System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
       org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  private static GenericDatumReader<Object> arrayReader(Schema elementType, boolean fastReader) {
+    Schema schema = Schema.createArray(elementType);
+    GenericData data = new GenericData();
+    data.setFastReaderEnabled(fastReader);
+    return new GenericDatumReader<>(schema, schema, data);
+  }
+
+  /**
+   * The fast reader (the default decode path) must apply the same guards as the
+   * classic reader. A non-zero-byte element array with a huge count and no data
+   * must be rejected by the bytes-remaining check rather than pre-allocating a
+   * huge backing array.
+   */
+  @Test
+  void fastAndClassicReaderRejectHugeNonZeroByteArray() throws Exception {
+    for (boolean fast : new boolean[] { true, false }) {
+      GenericDatumReader<Object> reader = arrayReader(Schema.create(Schema.Type.LONG), fast);
+      byte[] data = encodeVarints(200_000_000L, 0L);
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+      assertThrows(EOFException.class, () -> reader.read(null, decoder), "fastReader=" + fast);
+    }
+  }
+
+  /**
+   * The heap-aware zero-byte allocation cap is enforced on both the fast and the
+   * classic reader path.
+   */
+  @Test
+  void fastAndClassicReaderRejectHugeNullArray() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      for (boolean fast : new boolean[] { true, false }) {
+        GenericDatumReader<Object> reader = arrayReader(Schema.create(Schema.Type.NULL), fast);
+        byte[] data = encodeVarints(200_000L, 0L);
+        BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+        assertThrows(SystemLimitException.class, () -> reader.read(null, decoder), "fastReader=" + fast);
+      }
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  /**
+   * A legitimate array of nulls within the limit still decodes on both reader
+   * paths.
+   */
+  @Test
+  void fastAndClassicReaderDecodeSmallNullArray() throws Exception {
+    for (boolean fast : new boolean[] { true, false }) {
+      GenericDatumReader<Object> reader = arrayReader(Schema.create(Schema.Type.NULL), fast);
+      byte[] data = encodeVarints(1000L, 0L);
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+      Collection<?> result = (Collection<?>) reader.read(null, decoder);
+      assertEquals(1000, result.size(), "fastReader=" + fast);
     }
   }
 }
