@@ -40,6 +40,7 @@ import org.apache.avro.Resolver.Skip;
 import org.apache.avro.Resolver.WriterUnion;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.InstanceSupplier;
@@ -470,21 +471,40 @@ public class FastReaderBuilder {
   private FieldReader createArrayReader(Schema readerSchema, Container action) throws IOException {
     FieldReader elementReader = getReaderFor(action.elementAction, null);
 
+    // Elements whose schema encodes to zero bytes (null, or a record with only
+    // zero-byte fields) consume no input, so the block count cannot be bounded by
+    // the bytes remaining in the stream. Cap such collections against a heap-aware
+    // limit so a tiny payload cannot declare a huge block count and drive an
+    // unbounded backing-array allocation (AVRO-4300).
+    boolean zeroByteElements = GenericDatumReader.isZeroByteSchema(readerSchema.getElementType());
+
     return reusingReader((reuse, decoder) -> {
       if (reuse instanceof GenericArray) {
         GenericArray<Object> reuseArray = (GenericArray<Object>) reuse;
         long l = decoder.readArrayStart();
+        long total = 0;
+        if (zeroByteElements && l > 0) {
+          SystemLimitException.checkMaxCollectionAllocation(total, l);
+        }
         reuseArray.clear();
 
         while (l > 0) {
           for (long i = 0; i < l; i++) {
             reuseArray.add(elementReader.read(reuseArray.peek(), decoder));
           }
+          total += l;
           l = decoder.arrayNext();
+          if (zeroByteElements && l > 0) {
+            SystemLimitException.checkMaxCollectionAllocation(total, l);
+          }
         }
         return reuseArray;
       } else {
         long l = decoder.readArrayStart();
+        long total = 0;
+        if (zeroByteElements && l > 0) {
+          SystemLimitException.checkMaxCollectionAllocation(total, l);
+        }
         List<Object> array = (reuse instanceof List) ? (List<Object>) reuse
             : new GenericData.Array<>((int) l, readerSchema);
         array.clear();
@@ -492,7 +512,11 @@ public class FastReaderBuilder {
           for (long i = 0; i < l; i++) {
             array.add(elementReader.read(null, decoder));
           }
+          total += l;
           l = decoder.arrayNext();
+          if (zeroByteElements && l > 0) {
+            SystemLimitException.checkMaxCollectionAllocation(total, l);
+          }
         }
         return array;
       }

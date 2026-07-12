@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
@@ -302,5 +303,84 @@ public class TestGenericDatumReader {
     byte[] data = encodeVarints(1L, 0L);
     BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
     assertThrows(EOFException.class, () -> reader.read(null, decoder));
+  }
+
+  // --- Zero-byte element collection allocation limit (AVRO-4300) ---
+
+  /**
+   * An array of {@code null} elements encodes each element as 0 bytes, so the
+   * bytes-remaining check cannot bound the block count. A huge count must be
+   * rejected by the heap-aware allocation limit rather than driving an unbounded
+   * backing-array allocation.
+   */
+  @Test
+  void arrayOfNullsRejectsCountAboveAllocationLimit() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      Schema schema = Schema.createArray(Schema.create(Schema.Type.NULL));
+      GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
+
+      // A single block declaring 200,000 null elements: only ~4 payload bytes,
+      // but would allocate a 200,000-slot backing array. Exceeds the limit of
+      // 1000, so it must be rejected before allocating.
+      byte[] data = encodeVarints(200_000L, 0L);
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+      assertThrows(SystemLimitException.class, () -> reader.read(null, decoder));
+
+      // Cumulative growth across multiple blocks is also rejected: two blocks of
+      // 600 nulls each (1200 > 1000) must throw on the second block.
+      byte[] cumulative = encodeVarints(600L, 600L, 0L);
+      BinaryDecoder decoder2 = DecoderFactory.get().binaryDecoder(cumulative, null);
+      assertThrows(SystemLimitException.class, () -> reader.read(null, decoder2));
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  /**
+   * A legitimate array of {@code null} elements within the allocation limit still
+   * decodes correctly, so the guard does not reject valid data.
+   */
+  @Test
+  void arrayOfNullsWithinAllocationLimitStillDecodes() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      Schema schema = Schema.createArray(Schema.create(Schema.Type.NULL));
+      GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
+
+      byte[] data = encodeVarints(1000L, 0L);
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+      GenericData.Array<?> result = (GenericData.Array<?>) reader.read(null, decoder);
+      assertEquals(1000, result.size());
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  /**
+   * An array whose element is a record with only {@code null} fields also encodes
+   * to 0 bytes per element and must be bounded by the allocation limit.
+   */
+  @Test
+  void arrayOfAllNullRecordsRejectsCountAboveAllocationLimit() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      Schema recWithNull = Schema.createRecord("AllNull", null, "test", false);
+      recWithNull.setFields(Collections.singletonList(new Schema.Field("n", Schema.create(Schema.Type.NULL))));
+      Schema schema = Schema.createArray(recWithNull);
+      GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
+
+      byte[] data = encodeVarints(200_000L, 0L);
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+      assertThrows(SystemLimitException.class, () -> reader.read(null, decoder));
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
   }
 }

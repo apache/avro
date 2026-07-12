@@ -37,6 +37,7 @@ import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
@@ -296,6 +297,15 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     long base = 0;
     if (l > 0) {
       ensureAvailableCollectionBytes(in, l, expectedType);
+      // Elements whose schema encodes to zero bytes (null, or a self-referencing
+      // record) consume no input, so ensureAvailableCollectionBytes cannot bound
+      // their count from the bytes remaining. Cap such collections against a
+      // heap-aware limit so a tiny payload cannot declare a huge block count and
+      // drive an unbounded backing-array allocation.
+      boolean zeroByteElements = minBytesPerElement(expectedType) == 0;
+      if (zeroByteElements) {
+        SystemLimitException.checkMaxCollectionAllocation(base, l);
+      }
       LogicalType logicalType = expectedType.getLogicalType();
       Conversion<?> conversion = getData().getConversionFor(logicalType);
       Object array = newArray(old, (int) l, expected);
@@ -311,7 +321,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
           }
         }
         base += l;
-      } while ((l = arrayNext(in, expectedType)) > 0);
+        l = arrayNext(in, expectedType);
+        if (zeroByteElements && l > 0) {
+          SystemLimitException.checkMaxCollectionAllocation(base, l);
+        }
+      } while (l > 0);
       return pruneArray(array);
     } else {
       return pruneArray(newArray(old, 0, expected));
@@ -439,6 +453,20 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    */
   static int minBytesPerElement(Schema schema) {
     return minBytesPerElement(schema, Collections.newSetFromMap(new IdentityHashMap<>()));
+  }
+
+  /**
+   * Whether values of the given schema encode to zero bytes (e.g. {@code null},
+   * zero-length {@code fixed}, or a record whose fields are all zero-byte). Such
+   * elements cannot be bounded by the number of bytes remaining in the stream, so
+   * a collection of them must be bounded by a heap-aware allocation limit
+   * instead.
+   *
+   * @param schema the element (or map value) schema
+   * @return {@code true} if the schema encodes to zero bytes
+   */
+  public static boolean isZeroByteSchema(Schema schema) {
+    return minBytesPerElement(schema) == 0;
   }
 
   private static int minBytesPerElement(Schema schema, Set<Schema> visited) {
