@@ -242,21 +242,21 @@ class BinaryDecoder:
         reader = self.reader
         try:
             pos = reader.tell()
-        except (OSError, ValueError, AttributeError):
+        except (OSError, ValueError, AttributeError, TypeError):
             # Not seekable, or the position could not be determined.
             return None
         try:
             reader.seek(0, os.SEEK_END)
             end = reader.tell()
             return end - pos
-        except (OSError, ValueError, AttributeError):
+        except (OSError, ValueError, AttributeError, TypeError):
             return None
         finally:
             # Always restore the original position, even if seeking to the end
             # or reading it failed, so the reader is never left at EOF.
             try:
                 reader.seek(pos)
-            except (OSError, ValueError, AttributeError):
+            except (OSError, ValueError, AttributeError, TypeError):
                 pass
 
     def read_null(self) -> None:
