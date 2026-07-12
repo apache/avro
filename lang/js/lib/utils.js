@@ -335,10 +335,18 @@ Tap.prototype.readInt = Tap.prototype.readLong = function () {
     // Switch to float arithmetic, otherwise we might overflow.
     f = n;
     fk = 268435456; // 2 ** 28.
+    // A 64-bit value uses at most 10 bytes; the integer loop above consumed 4,
+    // so the float loop may read at most 6 more. Reject an overlong varint
+    // rather than reading an unbounded continuation chain.
+    var m = 0;
     do {
+      if (m === 6) {
+        throw new Error('overlong varint');
+      }
       b = buf[this.pos++];
       f += (b & 0x7f) * fk;
       fk *= 128;
+      m++;
     } while (b & 0x80);
     return (f % 2 ? -(f + 1) : f) / 2;
   }
@@ -348,7 +356,13 @@ Tap.prototype.readInt = Tap.prototype.readLong = function () {
 
 Tap.prototype.skipInt = Tap.prototype.skipLong = function () {
   var buf = this.buf;
-  while (buf[this.pos++] & 0x80) {}
+  var m = 0;
+  while (buf[this.pos++] & 0x80) {
+    // At most 10 bytes for a 64-bit varint; reject an overlong encoding.
+    if (++m === 10) {
+      throw new Error('overlong varint');
+    }
+  }
 };
 
 Tap.prototype.writeInt = Tap.prototype.writeLong = function (n) {
