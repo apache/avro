@@ -382,6 +382,16 @@ sub decode_zero_byte_array {
 }
 
 {
+    ## INT64_MIN as a block count is the pathological negation case. Negating it
+    ## yields 2**63, which the cap rejects. INT64_MIN zig-zag encodes as the
+    ## 10-byte varint below, followed by a block byte-size (0).
+    my $int64_min = "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x01";
+    throws_ok {
+        decode_zero_byte_array('"null"', $int64_min . encode_long(0));
+    } qr/Cannot read a collection|zero-byte|Invalid/, "INT64_MIN array block count rejected";
+}
+
+{
     local $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS = 1000;
     throws_ok {
         decode_zero_byte_array('"null"', encode_long(1001) . encode_long(0));
