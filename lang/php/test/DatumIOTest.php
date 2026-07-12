@@ -422,7 +422,7 @@ class DatumIOTest extends TestCase
         putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
 
         try {
-            $this->expectException(AvroException::class);
+            $this->expectException(AvroIOCollectionSizeException::class);
             $this->decodeWith('{"type":"array","items":{"type":"fixed","name":"empty","size":0}}', self::zeroByteBlock(2000));
         } finally {
             putenv('AVRO_MAX_COLLECTION_ITEMS');
@@ -434,7 +434,7 @@ class DatumIOTest extends TestCase
         putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
 
         try {
-            $this->expectException(AvroException::class);
+            $this->expectException(AvroIOCollectionSizeException::class);
             $this->decodeWith(
                 '{"type":"array","items":{"type":"record","name":"R","fields":[{"name":"n","type":"null"}]}}',
                 self::zeroByteBlock(2000)
@@ -459,7 +459,7 @@ class DatumIOTest extends TestCase
         putenv('AVRO_MAX_COLLECTION_ITEMS=not-a-number');
 
         try {
-            $this->expectException(AvroException::class);
+            $this->expectException(AvroIOCollectionSizeException::class);
             $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(200000000));
         } finally {
             putenv('AVRO_MAX_COLLECTION_ITEMS');
