@@ -108,8 +108,12 @@ static void checkCodecRejectsOversized(Codec codec, const char *name) {
         DataFileReader<std::string> reader(path.c_str(), schema);
         std::string out;
         reader.read(out); // triggers block decompression
-    } catch (const Exception &) {
-        rejected = true;
+    } catch (const Exception &e) {
+        // Assert it failed specifically because of the decompression limit, not
+        // an unrelated I/O or corruption error that would give a false positive.
+        rejected = std::string(e.what()).find("exceeds the maximum allowed") != std::string::npos;
+        BOOST_CHECK_MESSAGE(rejected,
+                            std::string("unexpected exception for ") + name + ": " + e.what());
     }
     std::filesystem::remove(path);
     BOOST_CHECK_MESSAGE(rejected, std::string("codec not bounded: ") + name);
