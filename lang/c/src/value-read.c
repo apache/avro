@@ -53,12 +53,6 @@ min_bytes_per_element(avro_schema_t schema, int depth)
 	if (schema == NULL) {
 		return 0;
 	}
-	if (depth > 64) {
-		/* A cyclic or pathologically deep schema. Return 1 (not 0) so the
-		 * collection check stays enabled rather than being silently
-		 * bypassed; a valid recursive value always encodes to >= 1 byte. */
-		return 1;
-	}
 	switch (avro_typeof(schema)) {
 	case AVRO_NULL:
 		return 0;
@@ -72,6 +66,14 @@ min_bytes_per_element(avro_schema_t schema, int depth)
 		size_t  n = avro_schema_record_size(schema);
 		int64_t  total = 0;
 		size_t  i;
+		if (depth > 64) {
+			/* A cyclic or pathologically deep record. Return 1 (not
+			 * 0) so the collection check stays enabled; a valid
+			 * recursive value always encodes to >= 1 byte. The depth
+			 * guard is applied only here, so zero-byte leaf types
+			 * such as null still return 0 regardless of depth. */
+			return 1;
+		}
 		for (i = 0; i < n; i++) {
 			avro_schema_t  field =
 			    avro_schema_record_field_get_by_index(schema, i);
