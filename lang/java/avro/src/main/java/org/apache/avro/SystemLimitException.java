@@ -38,10 +38,9 @@ import org.slf4j.LoggerFactory;
  * <li><tt>org.apache.avro.limits.collectionItems.maxAllocation</tt> limits the
  * number of <tt>array</tt> elements whose schema encodes to zero bytes (such as
  * <tt>null</tt>, a zero-length <tt>fixed</tt>, or a record whose fields all
- * encode to zero bytes) that may be allocated at once.
- * Unlike other element types, these cannot be bounded by the number of bytes
- * remaining in the stream, so the limit defaults to a fraction of the maximum
- * heap.</li>
+ * encode to zero bytes) that may be allocated at once. Unlike other element
+ * types, these cannot be bounded by the number of bytes remaining in the
+ * stream, so the limit defaults to a fraction of the maximum heap.</li>
  * </ul>
  *
  * The default is to permit sizes up to {@link #MAX_ARRAY_VM_LIMIT}.
@@ -93,8 +92,7 @@ public class SystemLimitException extends AvroRuntimeException {
   /**
    * System property declaring the maximum number of zero-byte-encoded array
    * elements (e.g. {@code null}, a zero-length fixed, or a record whose fields
-   * all encode to zero bytes) to allocate at
-   * once: {@value}.
+   * all encode to zero bytes) to allocate at once: {@value}.
    */
   public static final String MAX_COLLECTION_ALLOCATION_PROPERTY = "org.apache.avro.limits.collectionItems.maxAllocation";
 
@@ -297,12 +295,12 @@ public class SystemLimitException extends AvroRuntimeException {
    * Check to ensure that allocating storage for the specified number of
    * zero-byte-encoded array elements remains within the heap-aware limit.
    * <p>
-   * Elements whose schema encodes to zero bytes (e.g. {@code null}, a
-   * zero-length fixed, or a record whose fields all encode to zero bytes)
-   * consume no input bytes, so the number that may be
-   * declared is not bounded by the bytes remaining in the stream. Without a cap,
-   * a tiny payload can declare an enormous block count and drive an unbounded
-   * backing-array allocation. This limit is derived from the maximum heap (see
+   * Elements whose schema encodes to zero bytes (e.g. {@code null}, a zero-length
+   * fixed, or a record whose fields all encode to zero bytes) consume no input
+   * bytes, so the number that may be declared is not bounded by the bytes
+   * remaining in the stream. Without a cap, a tiny payload can declare an
+   * enormous block count and drive an unbounded backing-array allocation. This
+   * limit is derived from the maximum heap (see
    * {@link #MAX_COLLECTION_ALLOCATION_PROPERTY}).
    *
    * @param existing The number of elements already allocated for the collection.
