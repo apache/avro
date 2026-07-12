@@ -120,6 +120,17 @@ class TestIO < Test::Unit::TestCase
     end
   end
 
+  # INT64_MIN as a block count is the pathological negation case. Ruby integers
+  # do not overflow, so negating it yields 2**63, which the cap rejects. INT64_MIN
+  # zig-zag encodes as the 10-byte varint below, followed by a block byte-size (0)
+  # that the negative-block path reads.
+  def test_read_array_of_null_int64_min_block_count
+    payload = "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x01\x00".b
+    assert_raise(Avro::IO::CollectionSizeError) do
+      decode('{"type":"array","items":"null"}', payload)
+    end
+  end
+
   def test_read_map_rejects_huge_count
     writer = StringIO.new
     Avro::IO::BinaryEncoder.new(writer).write_long(200_000_000)
