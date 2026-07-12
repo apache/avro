@@ -32,6 +32,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.SystemLimitException;
 import org.apache.avro.io.BinaryDecoder;
@@ -490,22 +491,21 @@ public class TestGenericDatumReader {
 
   /**
    * {@code Long.MIN_VALUE} as a block count is the pathological overflow case:
-   * negating it overflows back to a negative value. It must be handled safely
-   * without allocating -- the decoder normalizes it to an empty collection rather
-   * than a huge one -- on both reader paths. (The C SDK rejects it outright; this
-   * normalization is equally non-exploitable.)
+   * negating it overflows back to a negative value. Rather than letting it be
+   * truncated to {@code 0} (which would silently end the collection without
+   * consuming the end marker and desynchronize decoding of following fields), the
+   * decoder rejects it outright as malformed, matching the C SDK.
    */
   @Test
-  void fastAndClassicReaderHandleMinValueBlockCountSafely() throws Exception {
+  void fastAndClassicReaderRejectMinValueBlockCount() throws Exception {
     for (boolean fast : new boolean[] { true, false }) {
       GenericDatumReader<Object> reader = arrayReader(Schema.create(Schema.Type.NULL), fast);
       // Long.MIN_VALUE items (zigzag), a block byte-size of 0, then the
-      // end-of-array terminator. Negating Long.MIN_VALUE overflows, so this must
-      // not drive an allocation.
+      // end-of-array terminator. Negating Long.MIN_VALUE overflows, so it must be
+      // rejected as malformed instead of decoded as an empty array.
       byte[] data = encodeVarints(Long.MIN_VALUE, 0L, 0L);
       BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
-      Collection<?> result = (Collection<?>) reader.read(null, decoder);
-      assertEquals(0, result.size(), "fastReader=" + fast);
+      assertThrows(AvroRuntimeException.class, () -> reader.read(null, decoder), "fastReader=" + fast);
     }
   }
 

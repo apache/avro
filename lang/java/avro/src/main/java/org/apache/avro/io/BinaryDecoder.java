@@ -408,8 +408,16 @@ public class BinaryDecoder extends Decoder {
   protected long doReadItemCount() throws IOException {
     long result = readLong();
     if (result < 0L) {
-      // Consume byte-count if present
+      // A negative block count is followed by a block byte-size; consume it.
       readLong();
+      if (result == Long.MIN_VALUE) {
+        // Long.MIN_VALUE cannot be negated (-Long.MIN_VALUE overflows back to
+        // Long.MIN_VALUE), so it is not a valid block count. Reject it rather
+        // than letting it fall through as a negative "count" that would later be
+        // truncated to 0 and silently terminate the collection without consuming
+        // the end marker, desynchronizing decoding of subsequent fields.
+        throw new AvroRuntimeException("Malformed data. Block count is invalid: " + result);
+      }
       result = -result;
     }
     return result;
