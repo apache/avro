@@ -334,9 +334,12 @@ sub decode_enum {
 }
 
 sub skip_block {
-    my $class = shift;
+    # Called as a plain function by skip_array/skip_map as
+    # skip_block($reader, $coderef); it is not a method, so there is no leading
+    # class argument. decode_long ignores its (shifted) first argument and reads
+    # from the last, so pass __PACKAGE__ for it and $reader last.
     my ($reader, $block_content) = @_;
-    my $block_count = decode_long($class, undef, undef, $reader);
+    my $block_count = decode_long(__PACKAGE__, undef, undef, $reader);
     while ($block_count) {
         if ($block_count < 0) {
             # A negative count is followed by a long block size in bytes, which
@@ -344,7 +347,7 @@ sub skip_block {
             # forward by that many bytes relative to the current position
             # (SEEK_CUR); whence 0 (SEEK_SET) would seek to an absolute (here
             # nonsensical) offset. A failed seek is treated as fatal.
-            my $block_size = decode_long($class, undef, undef, $reader);
+            my $block_size = decode_long(__PACKAGE__, undef, undef, $reader);
             if ($block_size < 0) {
                 # A negative block size would seek the reader backwards,
                 # risking an infinite loop or mis-decoding of a corrupt input.
@@ -365,7 +368,7 @@ sub skip_block {
                 $block_content->();
             }
         }
-        $block_count = decode_long($class, undef, undef, $reader);
+        $block_count = decode_long(__PACKAGE__, undef, undef, $reader);
     }
 }
 

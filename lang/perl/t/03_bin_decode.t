@@ -384,6 +384,39 @@ EOJ
     ok ! exists $dec->{b}, "skipped bytes field absent";
 }
 
+## Skipping writer array/map fields absent from the reader schema exercises
+## skip_block, which is called as a plain function (not a method) by
+## skip_array/skip_map.
+{
+    my $w_schema = Avro::Schema->parse(<<'EOJ');
+      { "type": "record", "name": "test",
+        "fields" : [
+            {"name": "arr", "type": {"type": "array", "items": "long"}},
+            {"name": "map", "type": {"type": "map", "values": "string"}},
+            {"name": "a", "type": "long"} ]}
+EOJ
+    my $r_schema = Avro::Schema->parse(<<'EOJ');
+      { "type": "record", "name": "test",
+        "fields" : [ {"name": "a", "type": "long"} ]}
+EOJ
+    my $data = { arr => [ 1, 2, 3 ], map => { x => "y", z => "w" }, a => 99 };
+    my $enc = '';
+    Avro::BinaryEncoder->encode(
+        schema  => $w_schema,
+        data    => $data,
+        emit_cb => sub { $enc .= ${ $_[0] } },
+    );
+    open my $reader, '<', \$enc or die "Cannot open memory file: $!";
+    my $dec = Avro::BinaryDecoder->decode(
+        writer_schema => $w_schema,
+        reader_schema => $r_schema,
+        reader        => $reader,
+    );
+    is $dec->{a}, 99, "long read correctly after skipping array and map fields";
+    ok ! exists $dec->{arr}, "skipped array field absent";
+    ok ! exists $dec->{map}, "skipped map field absent";
+}
+
 ## A skipped bytes field whose declared length far exceeds the remaining data
 ## must be rejected rather than silently seeking past EOF.
 {
