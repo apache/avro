@@ -516,6 +516,23 @@ class DatumIOTest extends TestCase
         }
     }
 
+    public function test_skip_array_of_null_negative_block_respects_limit(): void
+    {
+        // The negative (byte-sized) block form must also be bounded when skipping,
+        // so it cannot bypass the skip limit.
+        $schema = AvroSchema::parse('{"type":"array","items":"null"}');
+        $io = self::zeroByteBlock(200000000, true);
+        $io->seek(0);
+        putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
+
+        try {
+            $this->expectException(AvroIOCollectionSizeException::class);
+            AvroIODatumReader::skipData($schema, new AvroIOBinaryDecoder($io));
+        } finally {
+            putenv('AVRO_MAX_COLLECTION_ITEMS');
+        }
+    }
+
     public static function validDurationLogicalTypes(): array
     {
         return [

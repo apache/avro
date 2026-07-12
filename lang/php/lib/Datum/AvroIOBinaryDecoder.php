@@ -277,11 +277,24 @@ class AvroIOBinaryDecoder
         $skipped = 0;
         $blockCount = $decoder->readLong();
         while (0 != $blockCount) {
+            $blockSize = null;
             if ($blockCount < 0) {
-                $decoder->skip($this->readLong());
+                if (PHP_INT_MIN == $blockCount) {
+                    throw new AvroException('Invalid array block count');
+                }
+                $blockCount = -$blockCount;
+                $blockSize = $decoder->readLong();
+                if ($blockSize < 0) {
+                    throw new AvroException('Invalid negative array block size');
+                }
+            }
+            // Bound the (normalized) count on both the sized and unsized paths so
+            // a negative block count cannot bypass the skip limit.
+            AvroIODatumReader::checkSkipCollectionCount($skipped, $blockCount, $minBytes);
+            $skipped += $blockCount;
+            if (null !== $blockSize) {
+                $decoder->skip($blockSize);
             } else {
-                AvroIODatumReader::checkSkipCollectionCount($skipped, $blockCount, $minBytes);
-                $skipped += $blockCount;
                 for ($i = 0; $i < $blockCount; $i++) {
                     AvroIODatumReader::skipData($writersSchema->items(), $decoder);
                 }
@@ -297,11 +310,22 @@ class AvroIOBinaryDecoder
         $skipped = 0;
         $blockCount = $decoder->readLong();
         while (0 != $blockCount) {
+            $blockSize = null;
             if ($blockCount < 0) {
-                $decoder->skip($this->readLong());
+                if (PHP_INT_MIN == $blockCount) {
+                    throw new AvroException('Invalid map block count');
+                }
+                $blockCount = -$blockCount;
+                $blockSize = $decoder->readLong();
+                if ($blockSize < 0) {
+                    throw new AvroException('Invalid negative map block size');
+                }
+            }
+            AvroIODatumReader::checkSkipCollectionCount($skipped, $blockCount, $minBytes);
+            $skipped += $blockCount;
+            if (null !== $blockSize) {
+                $decoder->skip($blockSize);
             } else {
-                AvroIODatumReader::checkSkipCollectionCount($skipped, $blockCount, $minBytes);
-                $skipped += $blockCount;
                 for ($i = 0; $i < $blockCount; $i++) {
                     $decoder->skipString();
                     AvroIODatumReader::skipData($writersSchema->values(), $decoder);
