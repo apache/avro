@@ -179,6 +179,34 @@ class TestIO < Test::Unit::TestCase
     end
   end
 
+  def test_skip_negative_block_size_exceeding_remaining_is_rejected
+    # A negative block declares a byte-size; one larger than the bytes remaining
+    # would seek past EOF, so it must be rejected before skipping.
+    writers_schema = Avro::Schema.parse(<<-JSON)
+      {"type":"record","name":"Foo","fields":[
+        {"name":"arr","type":{"type":"array","items":"int"}},
+        {"name":"val","type":"int"}]}
+    JSON
+    readers_schema = Avro::Schema.parse(<<-JSON)
+      {"type":"record","name":"Foo","fields":[{"name":"val","type":"int"}]}
+    JSON
+    writer = StringIO.new
+    encoder = Avro::IO::BinaryEncoder.new(writer)
+    encoder.write_long(-1)        # negative block count: a byte-size follows
+    encoder.write_long(1_000_000) # block byte-size, but no data follows
+    reader = Avro::IO::DatumReader.new(writers_schema, readers_schema)
+    assert_raise(Avro::AvroError) do
+      reader.read(Avro::IO::BinaryDecoder.new(StringIO.new(writer.string)))
+    end
+  end
+
+  def test_read_long_rejects_overlong_varint
+    # An Avro long is at most 10 bytes; a longer continuation chain must be
+    # rejected rather than forcing unbounded Integer growth.
+    decoder = Avro::IO::BinaryDecoder.new(StringIO.new("\x80".b * 10))
+    assert_raise(Avro::AvroError) { decoder.read_long }
+  end
+
   def test_int
     check('"int"')
     check_default('"int"', "5", 5)

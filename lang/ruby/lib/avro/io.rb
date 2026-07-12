@@ -75,8 +75,14 @@ module Avro
         b = byte!
         n = b & 0x7F
         shift = 7
+        # An Avro long is a 64-bit zig-zag varint, at most 10 bytes. Bound the
+        # continuation chain so a malicious input cannot force unbounded Integer
+        # growth (and heavy CPU/memory use) before any caller-side check runs.
+        count = 1
         while (b & 0x80) != 0
+          raise AvroError, "Varint is too long" if count >= 10
           b = byte!
+          count += 1
           n |= (b & 0x7F) << shift
           shift += 7
         end
@@ -641,10 +647,17 @@ module Avro
             # A negative count declares abs(count) items preceded by a block
             # byte-size. Bound the count too (so it can't bypass the caps), and
             # reject a negative byte-size (which would seek the reader backwards)
-            # before skipping the whole block by its size.
+            # or one larger than the bytes remaining (a truncated input that would
+            # otherwise seek past EOF) before skipping the whole block by its size.
             block_count = -block_count
             block_size = decoder.read_long
             raise AvroError, "Invalid negative block size: #{block_size}" if block_size < 0
+            if decoder.respond_to?(:bytes_remaining)
+              remaining = decoder.bytes_remaining
+              if remaining && block_size > remaining
+                raise AvroError, "Cannot skip #{block_size} bytes, only #{remaining} remaining"
+              end
+            end
             total = ensure_collection_available(decoder, total, block_count, min_bytes)
             decoder.skip(block_size)
           else
