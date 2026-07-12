@@ -19,6 +19,7 @@
 #include "Decoder.hh"
 #include "Exception.hh"
 #include "Zigzag.hh"
+#include <cstdint>
 #include <cstdlib>
 #include <memory>
 
@@ -198,8 +199,14 @@ size_t BinaryDecoder::arrayStart() {
 size_t BinaryDecoder::doDecodeItemCount() {
     auto result = doDecodeLong();
     if (result < 0) {
+        // INT64_MIN cannot be negated in int64_t (it would overflow); reject it
+        // rather than propagating 2^63 as an item count that inevitably fails a
+        // huge allocation downstream.
+        if (result == INT64_MIN) {
+            throw Exception("Invalid negative block count: {}", result);
+        }
         doDecodeLong();
-        return static_cast<size_t>(-(result + 1)) + 1;
+        return static_cast<size_t>(-result);
     }
     return static_cast<size_t>(result);
 }
