@@ -981,12 +981,17 @@ class DatumReader:
         items_skipped = 0
         block_count = decoder.read_long()
         while block_count != 0:
+            block_size = None
             if block_count < 0:
+                block_count = -block_count
                 block_size = decoder.read_long()
+            # Bound the (normalized) count on both the sized and unsized paths so
+            # a negative block count cannot bypass the collection limits.
+            self._ensure_collection_available(decoder, items_skipped, block_count, min_bytes, zero_byte_limit, structural_limit)
+            items_skipped += block_count
+            if block_size is not None:
                 decoder.skip(block_size)
             else:
-                self._ensure_collection_available(decoder, items_skipped, block_count, min_bytes, zero_byte_limit, structural_limit)
-                items_skipped += block_count
                 for i in range(block_count):
                     self.skip_data(writers_schema.items, decoder)
             block_count = decoder.read_long()
@@ -1028,12 +1033,17 @@ class DatumReader:
         items_skipped = 0
         block_count = decoder.read_long()
         while block_count != 0:
+            block_size = None
             if block_count < 0:
+                block_count = -block_count
                 block_size = decoder.read_long()
+            # Bound the (normalized) count on both the sized and unsized paths so
+            # a negative block count cannot bypass the collection limits.
+            self._ensure_collection_available(decoder, items_skipped, block_count, min_bytes, zero_byte_limit, structural_limit)
+            items_skipped += block_count
+            if block_size is not None:
                 decoder.skip(block_size)
             else:
-                self._ensure_collection_available(decoder, items_skipped, block_count, min_bytes, zero_byte_limit, structural_limit)
-                items_skipped += block_count
                 for i in range(block_count):
                     decoder.skip_utf8()
                     self.skip_data(writers_schema.values, decoder)

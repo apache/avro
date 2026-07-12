@@ -968,6 +968,17 @@ class TestDatumReaderCollectionSizeLimit(unittest.TestCase):
                 self._array_block(2000),
             )
 
+    def test_skip_array_of_null_negative_block_respects_limit(self) -> None:
+        # A negative (byte-sized) block count must also be bounded when skipping,
+        # so it cannot be used to bypass the collection cap during resolution.
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(
+                avro.errors.AvroCollectionSizeException,
+                self._skip,
+                '{"type": "array", "items": "null"}',
+                self._array_block(2000, negative=True),
+            )
+
     def test_invalid_env_override_falls_back_to_default(self) -> None:
         with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "not-a-number"}):
             with warnings.catch_warnings():
@@ -991,11 +1002,14 @@ class TestDatumReaderCollectionSizeLimit(unittest.TestCase):
         # structural limit; unset, they differ (tighter zero-byte default).
         with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1234"}):
             self.assertEqual(avro.io._collection_limits(), (1234, 1234))
-        os.environ.pop("AVRO_MAX_COLLECTION_ITEMS", None)
-        self.assertEqual(
-            avro.io._collection_limits(),
-            (avro.io.DEFAULT_MAX_COLLECTION_ITEMS, avro.io.DEFAULT_MAX_COLLECTION_STRUCTURAL),
-        )
+        # Assert the unset behavior inside a patch that snapshots os.environ, so
+        # the test never mutates the real process environment.
+        with unittest.mock.patch.dict(os.environ):
+            os.environ.pop("AVRO_MAX_COLLECTION_ITEMS", None)
+            self.assertEqual(
+                avro.io._collection_limits(),
+                (avro.io.DEFAULT_MAX_COLLECTION_ITEMS, avro.io.DEFAULT_MAX_COLLECTION_STRUCTURAL),
+            )
 
     def test_non_zero_collection_bounded_by_structural_cap_when_unseekable(self) -> None:
         # On a non-seekable reader the bytes-remaining check cannot run, so a huge
