@@ -132,7 +132,7 @@ sub skip_bytes {
     # skipping, mirroring decode_bytes: a seek past EOF silently succeeds on
     # many handles, so without this a truncated input would later read zeros
     # instead of failing.
-    _ensure_available($reader, $size);
+    _ensure_available($reader, $size, 1);
     # Skip forward by $size bytes relative to the current position (SEEK_CUR);
     # whence 0 (SEEK_SET) would incorrectly seek to the absolute offset $size.
     # A failed seek means the reader cannot skip and is treated as fatal.
@@ -221,8 +221,12 @@ sub _bytes_remaining {
 }
 
 sub _ensure_available {
-    my ($reader, $size) = @_;
-    return if $size <= _MAX_UNCHECKED_READ;
+    my ($reader, $size, $force) = @_;
+    # Small reads normally skip the check to avoid per-value overhead, since the
+    # decode paths verify the actual read length. The skip paths use seek(),
+    # which can silently succeed past EOF and does not verify anything, so they
+    # pass $force to always validate against the bytes remaining.
+    return if !$force && $size <= _MAX_UNCHECKED_READ;
     my $remaining = _bytes_remaining($reader);
     return unless defined $remaining;
     if ($size > $remaining) {
@@ -408,7 +412,7 @@ sub skip_block {
             # Reject a block size that exceeds the bytes actually remaining
             # before skipping, so a truncated input fails instead of seeking
             # past EOF.
-            _ensure_available($reader, $block_size);
+            _ensure_available($reader, $block_size, 1);
             unless ($reader->seek($block_size, 1)) {
                 throw Avro::Schema::Error::Parse(
                     "Failed to skip block of $block_size bytes");
@@ -563,7 +567,7 @@ sub skip_fixed {
     # skipping, mirroring skip_bytes: a seek past EOF silently succeeds on many
     # handles, so without this a truncated input would later read zeros instead
     # of failing.
-    _ensure_available($reader, $schema->size);
+    _ensure_available($reader, $schema->size, 1);
     # Skip the fixed-size payload relative to the current position (SEEK_CUR);
     # whence 0 (SEEK_SET) would incorrectly seek to the absolute offset. A
     # failed seek is treated as fatal.
