@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 
@@ -36,7 +37,7 @@ namespace Avro.File
         /// Mirrors the Java SDK's decompression limit (AVRO-4247). Overridable with
         /// the AVRO_MAX_DECOMPRESS_LENGTH environment variable.
         /// </summary>
-        public const long DefaultMaxDecompressLength = 200L * 1024 * 1024; // 200 MiB
+        public static readonly long DefaultMaxDecompressLength = 200L * 1024 * 1024; // 200 MiB
 
         /// <summary>
         /// Name of the environment variable used to override the default maximum
@@ -51,7 +52,7 @@ namespace Avro.File
         public static long GetMaxDecompressLength()
         {
             var value = Environment.GetEnvironmentVariable(MaxDecompressLengthEnvVar);
-            if (value != null && long.TryParse(value, out var parsed) && parsed > 0)
+            if (value != null && long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) && parsed > 0)
             {
                 return parsed;
             }
