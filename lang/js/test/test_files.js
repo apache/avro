@@ -567,6 +567,16 @@ describe('files', function () {
       // A non-finite/out-of-range limit is not usable, so normalizeMaxDecompressLength
       // returns undefined and the decoder falls back to its default limit rather
       // than making zlib throw synchronously; a normal block still decodes.
+      // Clear the env override so the fallback default is deterministic.
+      var savedEnv = process.env.AVRO_MAX_DECOMPRESS_LENGTH;
+      delete process.env.AVRO_MAX_DECOMPRESS_LENGTH;
+      var restore = function () {
+        if (savedEnv === undefined) {
+          delete process.env.AVRO_MAX_DECOMPRESS_LENGTH;
+        } else {
+          process.env.AVRO_MAX_DECOMPRESS_LENGTH = savedEnv;
+        }
+      };
       var t = createType('string');
       var payload = 'hello world';
       var out = [];
@@ -574,6 +584,7 @@ describe('files', function () {
       var decoder = new streams.BlockDecoder({maxDecompressLength: Infinity})
         .on('data', function (s) { out.push(s); })
         .on('end', function () {
+          restore();
           assert.deepEqual(out, [payload]);
           cb();
         });
