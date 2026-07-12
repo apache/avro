@@ -996,6 +996,15 @@ describe('types', function () {
       assert.deepEqual(t.fromBuffer(buf), [null, null, null]);
     });
 
+    it('rejects an INT64_MIN block count', function () {
+      // INT64_MIN zig-zags to the 10-byte varint below (then a block byte-size).
+      // Negating it yields ~2^63, which the structural cap rejects.
+      var t = new types.ArrayType({type: 'array', items: 'null'});
+      var buf = Buffer.from(
+        [0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x00]);
+      assert.throws(function () { t.fromBuffer(buf); }, /collection/);
+    });
+
     it('rejects a block count above the remaining bytes', function () {
       var t = new types.ArrayType({type: 'array', items: 'long'});
       var buf = Buffer.from([0x80, 0x88, 0xde, 0xbe, 0x01, 0x00]);
