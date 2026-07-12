@@ -577,7 +577,12 @@ namespace Avro.Generic
         // (to a single value capping both) via the AVRO_MAX_COLLECTION_ITEMS
         // environment variable.
         private static readonly long MaxCollectionItems = ReadCollectionLimit(10_000_000L);
-        private static readonly long MaxCollectionStructural = ReadCollectionLimit(2147483639L);
+        // The structural cap is additionally clamped to int.MaxValue: the callers
+        // cast the (cumulative) block count to int to size .NET collections, so a
+        // structural limit above int.MaxValue (e.g. from a large env override)
+        // would reintroduce an int-overflow on that cast.
+        private static readonly long MaxCollectionStructural =
+            Math.Min(ReadCollectionLimit(2147483639L), int.MaxValue);
 
         private static long ReadCollectionLimit(long defaultValue)
         {

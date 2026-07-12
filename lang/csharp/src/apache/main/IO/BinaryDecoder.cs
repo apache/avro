@@ -278,7 +278,9 @@ namespace Avro.IO
             }
 
             EnsureAvailableBytes(p);
-            byte[] buffer = new byte[p];
+            // p has been bounded to <= MaxDotNetArrayLength above, so the cast to
+            // int (required for array allocation) cannot overflow.
+            byte[] buffer = new byte[(int)p];
             Read(buffer, 0, buffer.Length);
             return buffer;
         }
