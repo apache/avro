@@ -28,19 +28,19 @@ import org.slf4j.LoggerFactory;
  * The following system properties can be set to limit the size of bytes,
  * strings and collection types to be allocated:
  * <ul>
- * <li><tt>org.apache.avro.limits.byte.maxLength</tt></li> limits the maximum
- * size of <tt>byte</tt> types.</li>
- * <li><tt>org.apache.avro.limits.collectionItems.maxLength</tt></li> limits the
+ * <li><tt>org.apache.avro.limits.bytes.maxLength</tt> limits the maximum size
+ * of <tt>bytes</tt> types.</li>
+ * <li><tt>org.apache.avro.limits.collectionItems.maxLength</tt> limits the
  * maximum number of <tt>map</tt> and <tt>list</tt> items that can be read at
  * once single sequence.</li>
- * <li><tt>org.apache.avro.limits.string.maxLength</tt></li> limits the maximum
- * size of <tt>string</tt> types.</li>
- * <li><tt>org.apache.avro.limits.collectionItems.maxAllocation</tt></li> limits
- * the number of <tt>array</tt> elements whose schema encodes to zero bytes
- * (such as <tt>null</tt> or a self-referencing record) that may be allocated at
- * once. Unlike other element types, these cannot be bounded by the number of
- * bytes remaining in the stream, so the limit defaults to a fraction of the
- * maximum heap.</li>
+ * <li><tt>org.apache.avro.limits.string.maxLength</tt> limits the maximum size
+ * of <tt>string</tt> types.</li>
+ * <li><tt>org.apache.avro.limits.collectionItems.maxAllocation</tt> limits the
+ * number of <tt>array</tt> elements whose schema encodes to zero bytes (such as
+ * <tt>null</tt> or a self-referencing record) that may be allocated at once.
+ * Unlike other element types, these cannot be bounded by the number of bytes
+ * remaining in the stream, so the limit defaults to a fraction of the maximum
+ * heap.</li>
  * </ul>
  *
  * The default is to permit sizes up to {@link #MAX_ARRAY_VM_LIMIT}.
@@ -375,5 +375,9 @@ public class SystemLimitException extends AvroRuntimeException {
     maxStringLength = getLimitFromProperty(MAX_STRING_LENGTH_PROPERTY, MAX_ARRAY_VM_LIMIT);
     maxCollectionAllocation = getLongLimitFromProperty(MAX_COLLECTION_ALLOCATION_PROPERTY,
         defaultMaxCollectionAllocation());
+    // A collection cannot hold more than MAX_ARRAY_VM_LIMIT elements, so keep the
+    // zero-byte allocation cap consistent with the other collection limits even
+    // when it is configured (or derived from a very large heap) above that.
+    maxCollectionAllocation = Math.min(maxCollectionAllocation, MAX_ARRAY_VM_LIMIT);
   }
 }
