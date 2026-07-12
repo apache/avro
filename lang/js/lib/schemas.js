@@ -1208,6 +1208,16 @@ MapType.prototype._skip = function (tap) {
         // truncation detection.
         throw new Error('negative collection block size');
       }
+      if (len > tap.buf.length - tap.pos) {
+        // The block claims more bytes than remain; skipping it would jump past
+        // the buffer end and misalign subsequent decoding.
+        throw new Error('collection block size exceeds remaining buffer');
+      }
+      if (minBytes > 0 && n > len / minBytes) {
+        // The declared byte-size is too small to hold n entries at their minimum
+        // on-wire size, so skipping len bytes would land mid-entry.
+        throw new Error('collection block size inconsistent with item count');
+      }
       total += n;
       checkCollectionBlock(tap, n, minBytes, total);
       tap.pos += len;
@@ -1372,6 +1382,16 @@ ArrayType.prototype._skip = function (tap) {
         // Tap.isValid() (pos <= buf.length) would not catch, bypassing
         // truncation detection.
         throw new Error('negative collection block size');
+      }
+      if (len > tap.buf.length - tap.pos) {
+        // The block claims more bytes than remain; skipping it would jump past
+        // the buffer end and misalign subsequent decoding.
+        throw new Error('collection block size exceeds remaining buffer');
+      }
+      if (minBytes > 0 && n > len / minBytes) {
+        // The declared byte-size is too small to hold n items at their minimum
+        // on-wire size, so skipping len bytes would land mid-entry.
+        throw new Error('collection block size inconsistent with item count');
       }
       total += n;
       checkCollectionBlock(tap, n, minBytes, total);
