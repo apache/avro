@@ -21,6 +21,7 @@
 #include "encoding.h"
 #include <stdlib.h>
 #include <limits.h>
+#include <stdint.h>
 #include <errno.h>
 #include <string.h>
 
@@ -143,7 +144,15 @@ static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 			       *len, available);
 		return EINVAL;
 	}
-	*bytes = (char *) avro_malloc(*len + 1);
+	/* Bound the length so the +1 (NUL terminator) cannot overflow the
+	 * size_t allocation size, which could otherwise undersize the buffer
+	 * and lead to an out-of-bounds read/write. */
+	if ((uint64_t) *len > (uint64_t) (SIZE_MAX - 1)) {
+		avro_set_error("Bytes length %" PRId64
+			       " exceeds the maximum allocatable size", *len);
+		return EINVAL;
+	}
+	*bytes = (char *) avro_malloc((size_t) *len + 1);
 	if (!*bytes) {
 		avro_set_error("Cannot allocate buffer for bytes value");
 		return ENOMEM;
@@ -211,8 +220,16 @@ static int read_string(avro_reader_t reader, char **s, int64_t *len)
 			       str_len, available);
 		return EINVAL;
 	}
+	/* Bound the length so the +1 (NUL terminator) cannot overflow the
+	 * size_t allocation size, which could otherwise undersize the buffer
+	 * and lead to an out-of-bounds read/write. */
+	if ((uint64_t) str_len > (uint64_t) (SIZE_MAX - 1)) {
+		avro_set_error("String length %" PRId64
+			       " exceeds the maximum allocatable size", str_len);
+		return EINVAL;
+	}
 	*len = str_len + 1;
-	*s = (char *) avro_malloc(*len);
+	*s = (char *) avro_malloc((size_t) str_len + 1);
 	if (!*s) {
 		avro_set_error("Cannot allocate buffer for string value");
 		return ENOMEM;

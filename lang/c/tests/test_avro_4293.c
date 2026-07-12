@@ -31,6 +31,28 @@
 #include <errno.h>
 #include <avro.h>
 
+/* Portable set/unset of the collection-limit environment variable: MSVC has no
+ * setenv/unsetenv, so use _putenv_s (an empty value unsets the variable). */
+#ifdef _WIN32
+static void set_collection_limit(const char *value)
+{
+	_putenv_s("AVRO_MAX_COLLECTION_ITEMS", value);
+}
+static void unset_collection_limit(void)
+{
+	_putenv_s("AVRO_MAX_COLLECTION_ITEMS", "");
+}
+#else
+static void set_collection_limit(const char *value)
+{
+	setenv("AVRO_MAX_COLLECTION_ITEMS", value, 1);
+}
+static void unset_collection_limit(void)
+{
+	unsetenv("AVRO_MAX_COLLECTION_ITEMS");
+}
+#endif
+
 /* Decodes buf against the given schema and returns the avro_value_read rc.
  * A non-zero rc means the read was rejected. */
 static int try_decode(avro_value_iface_t *iface, const char *buf, size_t buf_size)
@@ -336,6 +358,10 @@ static int check_skip_null_collection_rejected(const char *schema_literal, int64
 	}
 	len = build_null_array(count, 0, buf);
 	reader = avro_reader_memory(buf, len);
+	if (reader == NULL) {
+		avro_schema_decref(schema);
+		return EXIT_FAILURE;
+	}
 	rc = avro_skip_data(reader, schema);
 	avro_reader_free(reader);
 	avro_schema_decref(schema);
@@ -416,35 +442,35 @@ int main(void)
 	}
 
 	/* With a lowered limit, boundary behavior: 1000 accepted, 1001 rejected. */
-	setenv("AVRO_MAX_COLLECTION_ITEMS", "1000", 1);
+	set_collection_limit("1000");
 	if (check_null_array_accepted(1000, "array<null> 1000 within limit") != EXIT_SUCCESS) {
-		unsetenv("AVRO_MAX_COLLECTION_ITEMS");
+		unset_collection_limit();
 		return EXIT_FAILURE;
 	}
 	if (check_null_collection_rejected(array_null, 1001, 0,
 					   "array<null> 1001 over limit") != EXIT_SUCCESS) {
-		unsetenv("AVRO_MAX_COLLECTION_ITEMS");
+		unset_collection_limit();
 		return EXIT_FAILURE;
 	}
 	if (check_null_array_cumulative_rejected(600, "array<null> cumulative 600+600") != EXIT_SUCCESS) {
-		unsetenv("AVRO_MAX_COLLECTION_ITEMS");
+		unset_collection_limit();
 		return EXIT_FAILURE;
 	}
 	/* Skipping a huge zero-byte array is bounded too. */
 	if (check_skip_null_collection_rejected(array_null, 5000,
 						"skip array<null> over limit") != EXIT_SUCCESS) {
-		unsetenv("AVRO_MAX_COLLECTION_ITEMS");
+		unset_collection_limit();
 		return EXIT_FAILURE;
 	}
-	unsetenv("AVRO_MAX_COLLECTION_ITEMS");
+	unset_collection_limit();
 
 	/* A backed non-zero-byte array is bounded by the structural cap. */
-	setenv("AVRO_MAX_COLLECTION_ITEMS", "5", 1);
+	set_collection_limit("5");
 	if (check_structural_cap_rejected("array<long> over structural cap") != EXIT_SUCCESS) {
-		unsetenv("AVRO_MAX_COLLECTION_ITEMS");
+		unset_collection_limit();
 		return EXIT_FAILURE;
 	}
-	unsetenv("AVRO_MAX_COLLECTION_ITEMS");
+	unset_collection_limit();
 
 	/* A huge map<null> is bounded by the available-bytes check (each entry
 	 * carries a >= 1 byte key), rejected with EINVAL as well. */
