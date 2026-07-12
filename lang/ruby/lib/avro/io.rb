@@ -349,6 +349,10 @@ module Avro
 
       def read_enum(writers_schema, readers_schema, decoder)
         index_of_symbol = decoder.read_int
+        if index_of_symbol < 0 || index_of_symbol >= writers_schema.symbols.size
+          raise AvroError, "Enum symbol index #{index_of_symbol} out of range " \
+                           "for #{writers_schema.symbols.size} symbols"
+        end
         read_symbol = writers_schema.symbols[index_of_symbol]
 
         if !readers_schema.symbols.include?(read_symbol) && readers_schema.default
@@ -408,6 +412,10 @@ module Avro
 
       def read_union(writers_schema, readers_schema, decoder)
         index_of_schema = decoder.read_long
+        if index_of_schema < 0 || index_of_schema >= writers_schema.schemas.size
+          raise AvroError, "Union branch index #{index_of_schema} out of range " \
+                           "for #{writers_schema.schemas.size} branches"
+        end
         selected_writers_schema = writers_schema.schemas[index_of_schema]
 
         read_data(selected_writers_schema, readers_schema, decoder)

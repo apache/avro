@@ -179,6 +179,43 @@ class TestIO < Test::Unit::TestCase
     end
   end
 
+  # A union branch index that is negative or beyond the number of branches is
+  # malformed and must be rejected (Ruby's negative indexing would otherwise
+  # silently select the wrong branch).
+  def test_read_union_rejects_out_of_range_index
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_long(5) # only 2 branches exist
+    assert_raise(Avro::AvroError) do
+      decode('["null","long"]', writer.string)
+    end
+  end
+
+  def test_read_union_rejects_negative_index
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_long(-1)
+    assert_raise(Avro::AvroError) do
+      decode('["null","long"]', writer.string)
+    end
+  end
+
+  # An enum symbol index that is negative or beyond the number of symbols is
+  # malformed and must be rejected.
+  def test_read_enum_rejects_out_of_range_index
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_int(9) # only 2 symbols exist
+    assert_raise(Avro::AvroError) do
+      decode('{"type":"enum","name":"E","symbols":["A","B"]}', writer.string)
+    end
+  end
+
+  def test_read_enum_rejects_negative_index
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_int(-1)
+    assert_raise(Avro::AvroError) do
+      decode('{"type":"enum","name":"E","symbols":["A","B"]}', writer.string)
+    end
+  end
+
   def test_skip_negative_block_size_exceeding_remaining_is_rejected
     # A negative block declares a byte-size; one larger than the bytes remaining
     # would seek past EOF, so it must be rejected before skipping.
