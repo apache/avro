@@ -626,6 +626,12 @@ sub unsigned_varint {
     my $more;
     my $shift = 0;
     do {
+        # A 64-bit value uses at most 10 bytes (shifts 0..63); reject an overlong
+        # varint rather than reading an unbounded continuation chain and letting
+        # $shift overflow into a garbage value.
+        if ($shift >= 70) {
+            throw Avro::Schema::Error::Parse("Varint is too long");
+        }
         $reader->read(my $buf, 1);
         my $byte = ord $buf;
         my $value = $byte & 0x7F;

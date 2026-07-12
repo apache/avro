@@ -130,6 +130,22 @@ EOJ
     } 'Avro::Schema::Error::Parse', "negative enum symbol index is rejected";
 }
 
+## overlong varint
+{
+    # A 64-bit value uses at most 10 bytes; an 11th continuation byte is a
+    # malformed overlong varint and must be rejected.
+    my $long = Avro::Schema->parse(q({ "type": "long" }));
+    my $data = ("\x80" x 10) . "\x01";
+    open my $reader, '<', \$data or die "Can't open memory file: $!";
+    throws_ok {
+        Avro::BinaryDecoder->decode(
+            writer_schema => $long,
+            reader_schema => $long,
+            reader        => $reader,
+        );
+    } 'Avro::Schema::Error::Parse', "overlong varint is rejected";
+}
+
 ## enum schema resolution
 {
 
