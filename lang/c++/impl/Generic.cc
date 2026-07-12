@@ -35,12 +35,6 @@ static int64_t minBytesPerElement(const NodePtr &node, int depth) {
     if (!node) {
         return 0;
     }
-    if (depth > 64) {
-        // A cyclic or pathologically deep schema. Return 1 (not 0) so the
-        // collection check stays enabled rather than being silently bypassed;
-        // a valid recursive value always encodes to at least 1 byte.
-        return 1;
-    }
     switch (node->type()) {
         case AVRO_NULL:
             return 0;
@@ -57,6 +51,14 @@ static int64_t minBytesPerElement(const NodePtr &node, int depth) {
                        : static_cast<int64_t>(sz);
         }
         case AVRO_RECORD: {
+            if (depth > 64) {
+                // A cyclic or pathologically deep record. Return 1 (not 0) so the
+                // collection check stays enabled rather than being silently
+                // bypassed; a valid recursive value always encodes to >= 1 byte.
+                // (The depth guard is applied only here, so zero-byte leaf types
+                // such as null still return 0 regardless of nesting depth.)
+                return 1;
+            }
             int64_t total = 0;
             for (size_t i = 0; i < node->leaves(); ++i) {
                 int64_t fieldMin = minBytesPerElement(node->leafAt(i), depth + 1);
