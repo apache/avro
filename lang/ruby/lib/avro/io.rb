@@ -598,8 +598,9 @@ module Avro
       end
 
       def ensure_collection_available(decoder, total, count, min_bytes_per_element)
-        # A negative count is corrupt/malicious data (it can also arise from
-        # overflow when negating a negative block count); reject it explicitly.
+        # A negative count here is corrupt/malicious data (the read/skip callers
+        # already normalized a legitimate negative block count to its absolute
+        # value); reject it explicitly.
         raise CollectionSizeError, "Invalid negative collection block count: #{count}" if count < 0
 
         total += count
