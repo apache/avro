@@ -67,12 +67,13 @@ min_bytes_per_element(avro_schema_t schema, int depth)
 		int64_t  total = 0;
 		size_t  i;
 		if (depth > 64) {
-			/* A cyclic or pathologically deep record. Return 1 (not
-			 * 0) so the collection check stays enabled; a valid
-			 * recursive value always encodes to >= 1 byte. The depth
-			 * guard is applied only here, so zero-byte leaf types
-			 * such as null still return 0 regardless of depth. */
-			return 1;
+			/* Safety net for a pathologically deep (or cyclic)
+			 * schema. Return 0 (a valid conservative lower bound)
+			 * rather than over-estimating: if the true minimum
+			 * cannot be computed, treat the element as possibly
+			 * zero-byte so the tighter zero-byte collection cap is
+			 * applied instead of the much larger structural cap. */
+			return 0;
 		}
 		for (i = 0; i < n; i++) {
 			avro_schema_t  field =
@@ -135,7 +136,18 @@ avro_collection_limits(int64_t *zero_byte, int64_t *structural)
 		char *end;
 		long long value = strtoll(env, &end, 10);
 		if (*end == '\0' && value >= 0) {
-			*zero_byte = *structural = (int64_t) value;
+			/* Clamp to INT64_MAX and to SIZE_MAX: the block count is
+			 * later cast to size_t in the read loop, so a limit above
+			 * SIZE_MAX would permit a count that truncates on cast
+			 * (notably on 32-bit) and weaken the bound. */
+			uint64_t v = (uint64_t) value;
+			if (v > (uint64_t) INT64_MAX) {
+				v = (uint64_t) INT64_MAX;
+			}
+			if (v > (uint64_t) SIZE_MAX) {
+				v = (uint64_t) SIZE_MAX;
+			}
+			*zero_byte = *structural = (int64_t) v;
 			return;
 		}
 	}
