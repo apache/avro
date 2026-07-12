@@ -537,6 +537,43 @@ public class TestGenericDatumReader {
   }
 
   /**
+   * A union branch index outside {@code [0, branch count)} is malformed and must
+   * be rejected on both reader paths rather than throwing a generic
+   * {@code IndexOutOfBoundsException}.
+   */
+  @Test
+  void fastAndClassicReaderRejectOutOfRangeUnionIndex() throws Exception {
+    Schema schema = Schema.createUnion(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.LONG));
+    for (boolean fast : new boolean[] { true, false }) {
+      for (long index : new long[] { 5L, -1L }) {
+        GenericDatumReader<Object> reader = readerFor(schema, fast);
+        byte[] data = encodeVarints(index);
+        BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+        assertThrows(org.apache.avro.AvroTypeException.class, () -> reader.read(null, decoder),
+            "fastReader=" + fast + " index=" + index);
+      }
+    }
+  }
+
+  /**
+   * An enum symbol index outside {@code [0, symbol count)} is malformed and must
+   * be rejected on both reader paths.
+   */
+  @Test
+  void fastAndClassicReaderRejectOutOfRangeEnumIndex() throws Exception {
+    Schema schema = Schema.createEnum("E", null, null, Arrays.asList("A", "B"));
+    for (boolean fast : new boolean[] { true, false }) {
+      for (int index : new int[] { 9, -1 }) {
+        GenericDatumReader<Object> reader = readerFor(schema, fast);
+        byte[] data = encodeVarints(index);
+        BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+        assertThrows(org.apache.avro.AvroTypeException.class, () -> reader.read(null, decoder),
+            "fastReader=" + fast + " index=" + index);
+      }
+    }
+  }
+
+  /**
    * A legitimate array of nulls within the limit still decodes on both reader
    * paths.
    */

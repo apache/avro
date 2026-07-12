@@ -420,6 +420,10 @@ public class FastReaderBuilder {
   private FieldReader createUnionReader(FieldReader[] unionReaders) {
     return reusingReader((reuse, decoder) -> {
       final int selection = decoder.readIndex();
+      if (selection < 0 || selection >= unionReaders.length) {
+        throw new AvroTypeException(
+            "Union branch index out of range: must be in [0, " + unionReaders.length + "), but received " + selection);
+      }
       return unionReaders[selection].read(null, decoder);
     });
 
@@ -538,6 +542,10 @@ public class FastReaderBuilder {
   private FieldReader createEnumReader(EnumAdjust action) {
     return reusingReader((reuse, decoder) -> {
       int index = decoder.readEnum();
+      if (index < 0 || index >= action.values.length) {
+        throw new AvroTypeException(
+            "Enumeration out of range: max is " + action.values.length + " but received " + index);
+      }
       Object resultObject = action.values[index];
       if (resultObject == null) {
         throw new AvroTypeException("No match for " + action.writer.getEnumSymbols().get(index));
