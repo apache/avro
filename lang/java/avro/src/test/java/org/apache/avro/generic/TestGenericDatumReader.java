@@ -20,9 +20,12 @@ package org.apache.avro.generic;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -216,6 +219,30 @@ public class TestGenericDatumReader {
     // No actual element data -- the reader should reject before allocating.
     byte[] data = encodeVarints(10_000_000L, 0L);
     BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+    assertThrows(EOFException.class, () -> reader.read(null, decoder));
+  }
+
+  /**
+   * On a stream source the decoder cannot know how many bytes remain, so the
+   * bytes-available guard is skipped and a large declared array count reaches the
+   * allocation path directly. The initial backing-array capacity must be clamped
+   * so a hostile count cannot drive a huge up-front allocation; a truncated
+   * stream therefore fails with {@link EOFException} (once the declared elements
+   * cannot be read) rather than attempting to preallocate hundreds of millions of
+   * slots.
+   */
+  @Test
+  void arrayHugeCountOnStreamClampsPreallocation() throws Exception {
+    Schema schema = Schema.createArray(Schema.create(Schema.Type.LONG));
+    GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
+
+    // A huge (non-zero-byte) block count followed by no element data. Wrapping in
+    // a BufferedInputStream keeps the source from being a ByteArrayInputStream, so
+    // it cannot report its remaining byte count (remainingBytes() == -1) and the
+    // bytes-available guard is disabled -- exercising the preallocation clamp.
+    byte[] data = encodeVarints(200_000_000L);
+    InputStream stream = new BufferedInputStream(new ByteArrayInputStream(data));
+    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(stream, null);
     assertThrows(EOFException.class, () -> reader.read(null, decoder));
   }
 

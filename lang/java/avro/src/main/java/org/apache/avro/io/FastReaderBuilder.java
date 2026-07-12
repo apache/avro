@@ -502,7 +502,7 @@ public class FastReaderBuilder {
         long total = 0;
         checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
         List<Object> array = (reuse instanceof List) ? (List<Object>) reuse
-            : new GenericData.Array<>((int) l, readerSchema);
+            : new GenericData.Array<>(GenericDatumReader.initialCollectionCapacity(l), readerSchema);
         array.clear();
         while (l > 0) {
           for (long i = 0; i < l; i++) {

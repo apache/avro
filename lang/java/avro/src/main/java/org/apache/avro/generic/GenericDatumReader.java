@@ -116,6 +116,26 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       .of(WeakIdentityHashMap::new);
 
   /**
+   * Upper bound on the initial capacity eagerly allocated for a collection from
+   * its declared block count. The backing array/map grows on demand as elements
+   * are read, so this is only a starting hint: it prevents a large declared count
+   * from driving a huge up-front allocation before any element is decoded. This
+   * matters most for stream sources, where the decoder cannot know how many bytes
+   * remain and so cannot otherwise bound the declared count against the input.
+   */
+  private static final int MAX_COLLECTION_PREALLOC = 1024;
+
+  /**
+   * Clamp a declared collection block count to a safe initial allocation size.
+   *
+   * @param count the declared (already limit-checked) block count
+   * @return {@code count} capped at {@link #MAX_COLLECTION_PREALLOC}
+   */
+  public static int initialCollectionCapacity(long count) {
+    return (int) Math.min(count, MAX_COLLECTION_PREALLOC);
+  }
+
+  /**
    * Gets a resolving decoder for use by this GenericDatumReader. Unstable API.
    * Currently uses a thread local cache to prevent constructing the resolvers too
    * often, because that is very expensive.
@@ -310,7 +330,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       }
       LogicalType logicalType = expectedType.getLogicalType();
       Conversion<?> conversion = getData().getConversionFor(logicalType);
-      Object array = newArray(old, (int) l, expected);
+      Object array = newArray(old, initialCollectionCapacity(l), expected);
       do {
         if (logicalType != null && conversion != null) {
           for (long i = 0; i < l; i++) {
@@ -380,7 +400,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     LogicalType logicalType = eValue.getLogicalType();
     Conversion<?> conversion = getData().getConversionFor(logicalType);
     ensureAvailableMapBytes(in, l, eValue);
-    Object map = newMap(old, (int) l);
+    Object map = newMap(old, initialCollectionCapacity(l));
     if (l > 0) {
       do {
         if (logicalType != null && conversion != null) {
