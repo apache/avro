@@ -508,6 +508,10 @@ sub decode_map {
     # its minimum on-wire size is 2 bytes: a 1-byte length prefix plus at least
     # 1 byte of key data, in addition to the value.
     my $min_bytes = 2 + _min_bytes_per_element($writer_values);
+    # Track the number of decoded entries separately: scalar(keys %hash)
+    # undercounts when duplicate keys overwrite earlier entries, which would let
+    # a multi-block map exceed the cumulative caps without being rejected.
+    my $decoded = 0;
     while ($block_count) {
         my $block_size;
         if ($block_count < 0) {
@@ -515,7 +519,8 @@ sub decode_map {
             $block_size = decode_long($class, @_);
             ## XXX we can skip with $reader_schema?
         }
-        _ensure_collection_available($reader, scalar(keys %hash), $block_count, $min_bytes);
+        _ensure_collection_available($reader, $decoded, $block_count, $min_bytes);
+        $decoded += $block_count;
         for (1..$block_count) {
             my $key = decode_string($class, @_);
             unless (defined $key && length $key) {
