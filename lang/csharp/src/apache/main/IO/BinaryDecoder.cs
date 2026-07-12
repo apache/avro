@@ -76,6 +76,13 @@ namespace Avro.IO
             int shift = 7;
             while ((b & 0x80) != 0)
             {
+                // A 64-bit value uses at most 10 bytes (shifts 0..63); reject an
+                // overlong varint rather than silently wrapping to a wrong value.
+                if (shift >= 70)
+                {
+                    throw new AvroException("Varint is too long");
+                }
+
                 b = read();
                 n |= (b & 0x7FUL) << shift;
                 shift += 7;

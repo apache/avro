@@ -678,6 +678,19 @@ namespace Avro.Test
             Assert.Throws<AvroException>(() => d.ReadMapStart());
         }
 
+        // A 64-bit value uses at most 10 bytes; an 11th continuation byte is a
+        // malformed (overlong) varint and must be rejected rather than silently
+        // wrapping to a wrong value.
+        [Test]
+        public void TestReadLongRejectsOverlongVarint()
+        {
+            var data = new byte[11];
+            for (int i = 0; i < 10; i++) data[i] = 0x80; // 10 continuation bytes
+            data[10] = 0x01;
+            var d = new BinaryDecoder(new MemoryStream(data));
+            Assert.Throws<AvroException>(() => d.ReadLong());
+        }
+
         // A string length prefix above int.MaxValue must be rejected as an
         // unsupported length, not overflow the int cast into a negative length.
         // A non-seekable stream is used so the check is reached without the
