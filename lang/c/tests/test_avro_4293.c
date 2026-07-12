@@ -129,6 +129,45 @@ static int check_rejects_oversized(const char *schema_literal, const char *label
 	return ret;
 }
 
+/* Decodes an enum whose declared symbol index is out of range for the schema.
+ * The index must be rejected before it is stored, rather than accepted as an
+ * out-of-bounds ordinal. */
+static int check_enum_index_rejected(const char *encoded, size_t size, const char *label)
+{
+	const char *schema_literal =
+	    "{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"A\",\"B\"]}";
+	avro_schema_t schema = NULL;
+	avro_value_iface_t *iface = NULL;
+	int rc;
+	int ret = EXIT_FAILURE;
+
+	if (avro_schema_from_json_length(schema_literal, strlen(schema_literal),
+					 &schema) != 0) {
+		fprintf(stderr, "%s: failed to parse schema: %s\n", label, avro_strerror());
+		return EXIT_FAILURE;
+	}
+
+	iface = avro_generic_class_from_schema(schema);
+	if (iface == NULL) {
+		fprintf(stderr, "%s: failed to create iface\n", label);
+		avro_schema_decref(schema);
+		return EXIT_FAILURE;
+	}
+
+	rc = try_decode(iface, encoded, size);
+	if (rc == 0) {
+		fprintf(stderr, "%s: FAIL - out-of-range enum index was accepted\n", label);
+	} else {
+		fprintf(stderr, "%s: out-of-range enum index rejected as expected: %s\n",
+			label, avro_strerror());
+		ret = EXIT_SUCCESS;
+	}
+
+	avro_value_iface_decref(iface);
+	avro_schema_decref(schema);
+	return ret;
+}
+
 static int check_accepts_valid(void)
 {
 	avro_schema_t schema = NULL;
@@ -478,6 +517,23 @@ int main(void)
 	if (check_null_collection_rejected(map_null, 200000000, 0,
 					   "map<null> 200M (available bytes)") != EXIT_SUCCESS) {
 		return EXIT_FAILURE;
+	}
+
+	/* An enum symbol index out of range (>= symbol count, or negative) must be
+	 * rejected rather than stored as an out-of-bounds ordinal. The schema has
+	 * two symbols; index 9 (zig-zag long -> 0x12) and index -1 (-> 0x01) are
+	 * both invalid. */
+	{
+		const char enum_too_large[] = { (char) 0x12 };
+		const char enum_negative[] = { (char) 0x01 };
+		if (check_enum_index_rejected(enum_too_large, sizeof(enum_too_large),
+					      "enum index 9 of 2") != EXIT_SUCCESS) {
+			return EXIT_FAILURE;
+		}
+		if (check_enum_index_rejected(enum_negative, sizeof(enum_negative),
+					      "enum index -1") != EXIT_SUCCESS) {
+			return EXIT_FAILURE;
+		}
 	}
 
 	return EXIT_SUCCESS;

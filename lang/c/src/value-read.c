@@ -527,9 +527,19 @@ read_value(avro_reader_t reader, avro_value_t *dest)
 		case AVRO_ENUM:
 		{
 			int64_t  val;
+			int  symbol_count;
+			avro_schema_t  enum_schema;
 			check_prefix(rval, avro_binary_encoding.
 				     read_long(reader, &val),
 				     "Cannot read enum value: ");
+			enum_schema = avro_value_get_schema(dest);
+			symbol_count =
+			    avro_schema_enum_number_of_symbols(enum_schema);
+			if (val < 0 || val >= symbol_count) {
+				avro_set_error("Invalid enum value: %" PRId64,
+					       val);
+				return EINVAL;
+			}
 			return avro_value_set_enum(dest, val);
 		}
 
