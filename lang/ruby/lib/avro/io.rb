@@ -32,6 +32,10 @@ module Avro
       end
     end
 
+    # Raised when a decoded array or map declares more elements than can be
+    # backed by the input, guarding against an out-of-memory attack.
+    class CollectionSizeError < AvroError; end
+
     # FIXME(jmhodges) move validate to this module?
 
     class BinaryDecoder
@@ -353,13 +357,14 @@ module Avro
       def read_array(writers_schema, readers_schema, decoder)
         read_items = []
         min_bytes = min_bytes_per_element(writers_schema.items)
+        total = 0
         block_count = decoder.read_long
         while block_count != 0
           if block_count < 0
             block_count = -block_count
             _block_size = decoder.read_long
           end
-          ensure_collection_available(decoder, block_count, min_bytes)
+          total = ensure_collection_available(decoder, total, block_count, min_bytes)
           block_count.times do
             read_items << read_data(writers_schema.items,
                                     readers_schema.items,
@@ -375,13 +380,14 @@ module Avro
         read_items = {}
         # Map keys are strings (>= 1 byte length prefix) plus the value.
         min_bytes = 1 + min_bytes_per_element(writers_schema.values)
+        total = 0
         block_count = decoder.read_long
         while block_count != 0
           if block_count < 0
             block_count = -block_count
             _block_size = decoder.read_long
           end
-          ensure_collection_available(decoder, block_count, min_bytes)
+          total = ensure_collection_available(decoder, total, block_count, min_bytes)
           block_count.times do
             key = decoder.read_string
             read_items[key] = read_data(writers_schema.values,
@@ -526,11 +532,14 @@ module Avro
       end
 
       def skip_array(writers_schema, decoder)
-        skip_blocks(decoder) { skip_data(writers_schema.items, decoder) }
+        min_bytes = min_bytes_per_element(writers_schema.items)
+        skip_blocks(decoder, min_bytes) { skip_data(writers_schema.items, decoder) }
       end
 
       def skip_map(writers_schema, decoder)
-        skip_blocks(decoder) {
+        # Map keys are strings (>= 1 byte length prefix) plus the value.
+        min_bytes = 1 + min_bytes_per_element(writers_schema.values)
+        skip_blocks(decoder, min_bytes) {
           decoder.skip_string
           skip_data(writers_schema.values, decoder)
         }
@@ -566,30 +575,73 @@ module Avro
         end
       end
 
-      # Reject a collection (array or map) block whose declared element count
-      # could not be backed by the bytes actually remaining, before iterating.
-      # Skipped when the per-element minimum is zero or when the reader cannot
-      # report how many bytes remain.
-      def ensure_collection_available(decoder, count, min_bytes_per_element)
-        return if count <= 0 || min_bytes_per_element <= 0
-        # A decoder that implements the read protocol but not #bytes_remaining
-        # (e.g. a custom decoder) cannot report the remaining size; skip the
-        # check for it rather than raising NoMethodError.
-        return unless decoder.respond_to?(:bytes_remaining)
-        remaining = decoder.bytes_remaining
-        # Compare via integer division rather than multiplying, so a huge count
-        # does not create a large intermediate product.
-        if remaining && count > remaining / min_bytes_per_element
-          raise AvroError, "Collection claims #{count} elements with at least #{min_bytes_per_element} bytes each, but only #{remaining} bytes are available"
+      # Reject a collection (array or map) block that could drive an unbounded
+      # allocation, before iterating. A block whose declared element count could
+      # not be backed by the bytes actually remaining is rejected; a block of
+      # zero-byte elements (where the bytes-remaining check does not apply) is
+      # bounded by a cumulative item cap; and every collection is bounded by a
+      # structural cap. Returns the running total across blocks.
+      #
+      # Both limits default to the same values as the other Avro SDKs and can be
+      # overridden (to a single value capping both) via the
+      # AVRO_MAX_COLLECTION_ITEMS environment variable.
+      DEFAULT_MAX_COLLECTION_ITEMS = 10_000_000       # Zero-byte element cap.
+      DEFAULT_MAX_COLLECTION_STRUCTURAL = 2147483639  # Integer.MAX_VALUE - 8.
+
+      def collection_limits
+        env = Integer(ENV['AVRO_MAX_COLLECTION_ITEMS'], exception: false)
+        if env && env >= 0
+          [env, env]
+        else
+          [DEFAULT_MAX_COLLECTION_ITEMS, DEFAULT_MAX_COLLECTION_STRUCTURAL]
         end
       end
 
-      def skip_blocks(decoder, &blk)
+      def ensure_collection_available(decoder, total, count, min_bytes_per_element)
+        # A negative count is corrupt/malicious data (it can also arise from
+        # overflow when negating a negative block count); reject it explicitly.
+        raise CollectionSizeError, "Invalid negative collection block count: #{count}" if count < 0
+
+        total += count
+        max_items, max_structural = collection_limits
+
+        # A structural cap covers all collections, including decoders that cannot
+        # report their remaining bytes.
+        if total > max_structural
+          raise CollectionSizeError, "Collection size #{total} exceeds the maximum allowed size of #{max_structural}"
+        end
+
+        if min_bytes_per_element <= 0
+          # Zero-byte elements (e.g. null) consume no input, so the
+          # bytes-remaining check cannot bound them; cap by item count.
+          if total > max_items
+            raise CollectionSizeError, "Collection of zero-byte elements (#{total}) exceeds the maximum allowed size of #{max_items}"
+          end
+        elsif decoder.respond_to?(:bytes_remaining)
+          # A decoder that implements the read protocol but not #bytes_remaining
+          # (e.g. a custom decoder) cannot report the remaining size; skip the
+          # byte check for it rather than raising NoMethodError.
+          remaining = decoder.bytes_remaining
+          # Compare via integer division rather than multiplying, so a huge count
+          # does not create a large intermediate product.
+          if remaining && count > remaining / min_bytes_per_element
+            raise CollectionSizeError, "Collection claims #{count} elements with at least #{min_bytes_per_element} bytes each, but only #{remaining} bytes are available"
+          end
+        end
+
+        total
+      end
+
+      def skip_blocks(decoder, min_bytes = 0, &blk)
+        total = 0
         block_count = decoder.read_long
         while block_count != 0
           if block_count < 0
+            # A negative count carries a byte size, so the whole block can be
+            # skipped directly without iterating.
             decoder.skip(decoder.read_long)
           else
+            total = ensure_collection_available(decoder, total, block_count, min_bytes)
             block_count.times(&blk)
           end
           block_count = decoder.read_long

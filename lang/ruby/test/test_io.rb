@@ -77,7 +77,7 @@ class TestIO < Test::Unit::TestCase
   def test_read_array_rejects_count_beyond_stream
     writer = StringIO.new
     Avro::IO::BinaryEncoder.new(writer).write_long(1_000_000)
-    assert_raise(Avro::AvroError) do
+    assert_raise(Avro::IO::CollectionSizeError) do
       decode('{"type":"array","items":"long"}', writer.string)
     end
   end
@@ -85,7 +85,7 @@ class TestIO < Test::Unit::TestCase
   def test_read_map_rejects_count_beyond_stream
     writer = StringIO.new
     Avro::IO::BinaryEncoder.new(writer).write_long(1_000_000)
-    assert_raise(Avro::AvroError) do
+    assert_raise(Avro::IO::CollectionSizeError) do
       decode('{"type":"map","values":"long"}', writer.string)
     end
   end
@@ -107,6 +107,44 @@ class TestIO < Test::Unit::TestCase
     writer = StringIO.new
     Avro::IO::DatumWriter.new(schema).write([1, 2, 3], Avro::IO::BinaryEncoder.new(writer))
     assert_equal([1, 2, 3], decode('{"type":"array","items":"long"}', writer.string))
+  end
+
+  # A zero-byte element type (null) consumes no input, so the bytes-remaining
+  # check cannot bound its block count; a tiny payload declaring a huge count
+  # must instead be rejected by the item cap before building the array.
+  def test_read_array_of_null_rejects_huge_count
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_long(200_000_000) # ~4 byte payload
+    assert_raise(Avro::IO::CollectionSizeError) do
+      decode('{"type":"array","items":"null"}', writer.string)
+    end
+  end
+
+  def test_read_map_rejects_huge_count
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_long(200_000_000)
+    assert_raise(Avro::IO::CollectionSizeError) do
+      decode('{"type":"map","values":"long"}', writer.string)
+    end
+  end
+
+  # The skip path (a writer field absent from the reader schema) must be bounded
+  # too, so skipping a huge zero-byte block cannot loop endlessly.
+  def test_skip_array_of_null_rejects_huge_count
+    writers_schema = Avro::Schema.parse(<<-JSON)
+      {"type":"record","name":"Foo","fields":[
+        {"name":"arr","type":{"type":"array","items":"null"}},
+        {"name":"val","type":"int"}]}
+    JSON
+    readers_schema = Avro::Schema.parse(<<-JSON)
+      {"type":"record","name":"Foo","fields":[{"name":"val","type":"int"}]}
+    JSON
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_long(200_000_000) # arr block count
+    reader = Avro::IO::DatumReader.new(writers_schema, readers_schema)
+    assert_raise(Avro::IO::CollectionSizeError) do
+      reader.read(Avro::IO::BinaryDecoder.new(StringIO.new(writer.string)))
+    end
   end
 
   def test_int
