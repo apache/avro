@@ -414,9 +414,28 @@ namespace Avro.Generic
                 // which also avoids the int cast below overflowing.
                 total = EnsureCollectionAvailable(d, total, nl, minBytes);
                 int n = (int)nl;
-                if (GetArraySize(result) < (i + n)) ResizeArray(ref result, i + n);
+                // Preallocate only a bounded amount up front, then grow on demand
+                // below. On a non-seekable stream EnsureCollectionAvailable cannot
+                // bound the count, so resizing straight to i+n could allocate a
+                // huge array before any element is read; a truncated stream instead
+                // fails within Read() after a bounded growth. Blocks no larger than
+                // the cap keep the original single-resize fast path.
+                int prealloc = i + Math.Min(n, MaxCollectionPrealloc);
+                if (GetArraySize(result) < prealloc) ResizeArray(ref result, prealloc);
                 for (int j = 0; j < n; j++, i++)
                 {
+                    if (GetArraySize(result) <= i)
+                    {
+                        int current = GetArraySize(result);
+                        int grown = current + (current >> 1) + 1;
+                        if (grown <= i)
+                        {
+                            grown = i + 1;
+                        }
+
+                        ResizeArray(ref result, grown);
+                    }
+
                     SetArrayElement(result, i, Read(GetArrayElement(result, i), writerSchema.ItemSchema, rs.ItemSchema, d));
                 }
             }
@@ -598,6 +617,16 @@ namespace Avro.Generic
         // instead of failing deterministically.
         private static readonly long MaxCollectionStructural =
             Math.Min(ReadCollectionLimit(2147483639L), MaxDotNetArrayLength);
+
+        // Upper bound on how many elements the backing array is grown by in a
+        // single step while decoding. The array still grows to hold every element
+        // actually read; this only avoids resizing to the full (possibly
+        // attacker-declared) block count up front, before any element is read.
+        // That matters most for non-seekable streams, where the bytes-available
+        // check cannot bound the declared count, so a single Array.Resize to the
+        // block count could allocate a huge array before the truncated stream is
+        // detected.
+        private const int MaxCollectionPrealloc = 1024;
 
         private static long ReadCollectionLimit(long defaultValue)
         {

@@ -592,6 +592,26 @@ namespace Avro.Test
             Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
         }
 
+        // A non-zero-byte array on a non-seekable stream cannot have its block
+        // count bounded by the bytes remaining (the length is unknown). The
+        // backing array must therefore be grown on demand rather than
+        // preallocated to the declared count, so a huge count with truncated data
+        // fails with a bounded AvroException instead of attempting a multi-
+        // gigabyte allocation.
+        [Test]
+        public void TestReadArrayHugeCountOnStreamClampsPreallocation()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"long\"}");
+            var backing = new MemoryStream();
+            new BinaryEncoder(backing).WriteLong(200_000_000); // block count; no element data
+            byte[] encoded = backing.ToArray();
+            using (var ns = new NonSeekableStream(new MemoryStream(encoded)))
+            {
+                var reader = new GenericReader<object>(schema, schema);
+                Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ns)));
+            }
+        }
+
         // The skip path (a writer field absent from the reader schema) must be
         // bounded too, so skipping a huge zero-byte block cannot loop endlessly.
         [Test]
