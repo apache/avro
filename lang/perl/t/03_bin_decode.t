@@ -352,4 +352,61 @@ sub encode_long {
     is scalar(@$dec), $count, "array of nulls is not falsely rejected";
 }
 
+## Skipping writer fields absent from the reader schema must advance the reader
+## by the correct relative amount (SEEK_CUR), including fixed and bytes fields.
+{
+    my $w_schema = Avro::Schema->parse(<<'EOJ');
+      { "type": "record", "name": "test",
+        "fields" : [
+            {"name": "f", "type": {"type": "fixed", "name": "fix8", "size": 8}},
+            {"name": "b", "type": "bytes"},
+            {"name": "a", "type": "long"} ]}
+EOJ
+    my $r_schema = Avro::Schema->parse(<<'EOJ');
+      { "type": "record", "name": "test",
+        "fields" : [ {"name": "a", "type": "long"} ]}
+EOJ
+    my $data = { f => "01234567", b => "payload", a => 42 };
+    my $enc = '';
+    Avro::BinaryEncoder->encode(
+        schema  => $w_schema,
+        data    => $data,
+        emit_cb => sub { $enc .= ${ $_[0] } },
+    );
+    open my $reader, '<', \$enc or die "Cannot open memory file: $!";
+    my $dec = Avro::BinaryDecoder->decode(
+        writer_schema => $w_schema,
+        reader_schema => $r_schema,
+        reader        => $reader,
+    );
+    is $dec->{a}, 42, "long read correctly after skipping fixed and bytes fields";
+    ok ! exists $dec->{f}, "skipped fixed field absent";
+    ok ! exists $dec->{b}, "skipped bytes field absent";
+}
+
+## A skipped bytes field whose declared length far exceeds the remaining data
+## must be rejected rather than silently seeking past EOF.
+{
+    my $w_schema = Avro::Schema->parse(<<'EOJ');
+      { "type": "record", "name": "test",
+        "fields" : [
+            {"name": "b", "type": "bytes"},
+            {"name": "a", "type": "long"} ]}
+EOJ
+    my $r_schema = Avro::Schema->parse(<<'EOJ');
+      { "type": "record", "name": "test",
+        "fields" : [ {"name": "a", "type": "long"} ]}
+EOJ
+    # Declare a bytes length of 100 MiB but provide no data for it.
+    my $enc = encode_long(100 * 1024 * 1024);
+    open my $reader, '<', \$enc or die "Cannot open memory file: $!";
+    throws_ok {
+        Avro::BinaryDecoder->decode(
+            writer_schema => $w_schema,
+            reader_schema => $r_schema,
+            reader        => $reader,
+        );
+    } qr/Cannot read/, "oversized skipped bytes length is rejected";
+}
+
 done_testing;

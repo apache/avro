@@ -128,10 +128,17 @@ sub skip_bytes {
         throw Avro::Schema::Error::Parse(
             "Invalid negative bytes/string length: $size");
     }
-    # Skip forward by $size bytes relative to the current position
-    # (SEEK_CUR); whence 0 (SEEK_SET) would incorrectly seek to the
-    # absolute offset $size.
-    $reader->seek($size, 1);
+    # Reject a declared length that exceeds the bytes actually remaining before
+    # skipping, mirroring decode_bytes: a seek past EOF silently succeeds on
+    # many handles, so without this a truncated input would later read zeros
+    # instead of failing.
+    _ensure_available($reader, $size);
+    # Skip forward by $size bytes relative to the current position (SEEK_CUR);
+    # whence 0 (SEEK_SET) would incorrectly seek to the absolute offset $size.
+    # A failed seek means the reader cannot skip and is treated as fatal.
+    unless ($reader->seek($size, 1)) {
+        throw Avro::Schema::Error::Parse("Failed to skip $size bytes");
+    }
     return;
 }
 
@@ -332,8 +339,16 @@ sub skip_block {
     my $block_count = decode_long($class, undef, undef, $reader);
     while ($block_count) {
         if ($block_count < 0) {
-            $reader->seek($block_count, 0);
-            next;
+            # A negative count is followed by a long block size in bytes, which
+            # lets the whole block be skipped without decoding each item. Skip
+            # forward by that many bytes relative to the current position
+            # (SEEK_CUR); whence 0 (SEEK_SET) would seek to an absolute (here
+            # nonsensical) offset. A failed seek is treated as fatal.
+            my $block_size = decode_long($class, undef, undef, $reader);
+            unless ($reader->seek($block_size, 1)) {
+                throw Avro::Schema::Error::Parse(
+                    "Failed to skip block of $block_size bytes");
+            }
         }
         else {
             for (1..$block_count) {
@@ -469,7 +484,13 @@ sub decode_union {
 sub skip_fixed {
     my $class = shift;
     my ($schema, $reader) = @_;
-    $reader->seek($schema->size, 0);
+    # Skip the fixed-size payload relative to the current position (SEEK_CUR);
+    # whence 0 (SEEK_SET) would incorrectly seek to the absolute offset. A
+    # failed seek is treated as fatal.
+    unless ($reader->seek($schema->size, 1)) {
+        throw Avro::Schema::Error::Parse(
+            "Failed to skip " . $schema->size . " bytes");
+    }
 }
 
 ## 1.3.2 Fixed instances are encoded using the number of bytes declared in the
