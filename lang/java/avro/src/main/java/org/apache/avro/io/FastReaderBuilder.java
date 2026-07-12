@@ -472,11 +472,12 @@ public class FastReaderBuilder {
     FieldReader elementReader = getReaderFor(action.elementAction, null);
     Schema elementType = readerSchema.getElementType();
 
-    // Elements whose schema encodes to zero bytes (null, or a record with only
-    // zero-byte fields) consume no input, so the block count cannot be bounded by
-    // the bytes remaining in the stream. Cap such collections against a heap-aware
-    // limit so a tiny payload cannot declare a huge block count and drive an
-    // unbounded backing-array allocation (AVRO-4300).
+    // Elements whose minimum encoded size is zero (null, a record with only
+    // zero-byte fields, or a recursive schema whose cycle is broken with a 0
+    // minimum) consume no guaranteed input, so the block count cannot be bounded
+    // by the bytes remaining in the stream. Cap such collections against a
+    // heap-aware limit so a tiny payload cannot declare a huge block count and
+    // drive an unbounded backing-array allocation (AVRO-4300).
     boolean zeroByteElements = GenericDatumReader.isZeroByteSchema(elementType);
 
     return reusingReader((reuse, decoder) -> {

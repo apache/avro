@@ -297,11 +297,13 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     long base = 0;
     if (l > 0) {
       ensureAvailableCollectionBytes(in, l, expectedType);
-      // Elements whose schema encodes to zero bytes (null, or a self-referencing
-      // record) consume no input, so ensureAvailableCollectionBytes cannot bound
-      // their count from the bytes remaining. Cap such collections against a
-      // heap-aware limit so a tiny payload cannot declare a huge block count and
-      // drive an unbounded backing-array allocation.
+      // Elements whose minimum encoded size is zero (null, a zero-length fixed, a
+      // record whose fields are all zero-byte, or a recursive schema where the
+      // cycle is broken with a 0 minimum) consume no guaranteed input, so
+      // ensureAvailableCollectionBytes cannot bound their count from the bytes
+      // remaining. Cap such collections against a heap-aware limit so a tiny
+      // payload cannot declare a huge block count and drive an unbounded
+      // backing-array allocation.
       boolean zeroByteElements = minBytesPerElement(expectedType) == 0;
       if (zeroByteElements) {
         SystemLimitException.checkMaxCollectionAllocation(base, l);
@@ -456,14 +458,17 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   }
 
   /**
-   * Whether values of the given schema encode to zero bytes (e.g. {@code null},
-   * zero-length {@code fixed}, or a record whose fields are all zero-byte). Such
-   * elements cannot be bounded by the number of bytes remaining in the stream, so
-   * a collection of them must be bounded by a heap-aware allocation limit
-   * instead.
+   * Whether the minimum encoded size of the given schema is zero, i.e.
+   * {@link #minBytesPerElement(Schema)} is {@code 0}. This is true for values
+   * that always encode to zero bytes (e.g. {@code null}, a zero-length
+   * {@code fixed}, or a record whose fields are all zero-byte), and
+   * conservatively for recursive schemas, where the cycle is broken by returning
+   * a 0 minimum. Such elements cannot be bounded by the number of bytes remaining
+   * in the stream, so a collection of them must be bounded by a heap-aware
+   * allocation limit instead.
    *
    * @param schema the element (or map value) schema
-   * @return {@code true} if the schema encodes to zero bytes
+   * @return {@code true} if the schema's minimum encoded size is zero
    */
   public static boolean isZeroByteSchema(Schema schema) {
     return minBytesPerElement(schema) == 0;
