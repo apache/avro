@@ -168,6 +168,31 @@ sub decode_bytes {
 ## through to a direct read.
 use constant _MAX_UNCHECKED_READ => 1024 * 1024;
 
+## Maximum number of zero-byte-encoded collection elements (e.g. an array of
+## nulls) to allocate from a single decode. Such elements consume no input, so
+## the bytes-remaining check cannot bound their count; without a cap a tiny
+## payload can declare a huge block count and exhaust memory. Overridable via the
+## AVRO_MAX_COLLECTION_ITEMS environment variable, or by setting
+## $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS directly.
+our $DEFAULT_MAX_COLLECTION_ITEMS = 10_000_000;
+## Structural cap on the number of elements in any array or map (an
+## overflow/defense-in-depth guard), matching the historical Integer.MAX_VALUE-8
+## limit. Non-zero-byte elements are also bounded by the bytes remaining.
+our $DEFAULT_MAX_COLLECTION_STRUCTURAL = (2 ** 31) - 8;
+
+## AVRO_MAX_COLLECTION_ITEMS, when set, caps both limits; otherwise zero-byte
+## elements use the tighter default and all collections use the structural cap.
+## Both may also be overridden directly (e.g. in tests).
+our $MAX_COLLECTION_ITEMS;
+our $MAX_COLLECTION_STRUCTURAL;
+if ( defined $ENV{AVRO_MAX_COLLECTION_ITEMS} && $ENV{AVRO_MAX_COLLECTION_ITEMS} =~ /\A[0-9]+\z/ ) {
+    $MAX_COLLECTION_ITEMS = $MAX_COLLECTION_STRUCTURAL = $ENV{AVRO_MAX_COLLECTION_ITEMS} + 0;
+}
+else {
+    $MAX_COLLECTION_ITEMS      = $DEFAULT_MAX_COLLECTION_ITEMS;
+    $MAX_COLLECTION_STRUCTURAL = $DEFAULT_MAX_COLLECTION_STRUCTURAL;
+}
+
 ## Number of bytes still available to read, or undef when the reader cannot
 ## report its size. Used to reject a declared length or collection block count
 ## that exceeds the data actually available before allocating for it. Readers
@@ -241,16 +266,32 @@ sub _min_bytes_per_element {
 ## the per-element minimum is zero or when the reader cannot report how many
 ## bytes remain.
 sub _ensure_collection_available {
-    my ($reader, $count, $min_bytes) = @_;
-    return if $count <= 0 || $min_bytes <= 0;
-    my $remaining = _bytes_remaining($reader);
-    return unless defined $remaining;
-    # Compare via integer division rather than multiplying, so $count * $min_bytes
-    # cannot overflow/wrap (notably on 32-bit builds) and defeat the check.
-    if ($count > int($remaining / $min_bytes)) {
-        throw Avro::Schema::Error::Parse(
-            "Collection claims $count elements with at least $min_bytes bytes each, "
-          . "but only $remaining bytes are available");
+    my ($reader, $existing, $count, $min_bytes) = @_;
+    return if $count <= 0;
+    if ($min_bytes > 0) {
+        my $remaining = _bytes_remaining($reader);
+        # Compare via integer division rather than multiplying, so $count * $min_bytes
+        # cannot overflow/wrap (notably on 32-bit builds) and defeat the check.
+        if (defined $remaining && $count > int($remaining / $min_bytes)) {
+            throw Avro::Schema::Error::Parse(
+                "Collection claims $count elements with at least $min_bytes bytes each, "
+              . "but only $remaining bytes are available");
+        }
+        # Structural / overflow guard, also covering non-seekable readers where
+        # the bytes check above cannot run.
+        if ($existing + $count > $MAX_COLLECTION_STRUCTURAL) {
+            throw Avro::BinaryDecoder::Error::CollectionSize(
+                "Cannot read a collection of more than $MAX_COLLECTION_STRUCTURAL "
+              . "elements (declared @{[ $existing + $count ]})");
+        }
+    }
+    # Zero-byte elements (e.g. null) consume no input, so they cannot be bounded
+    # by the bytes remaining; cap their cumulative count instead.
+    elsif ($existing + $count > $MAX_COLLECTION_ITEMS) {
+        throw Avro::BinaryDecoder::Error::CollectionSize(
+            "Cannot read a collection of more than $MAX_COLLECTION_ITEMS zero-byte "
+          . "elements (declared @{[ $existing + $count ]}); raise "
+          . "\$Avro::BinaryDecoder::MAX_COLLECTION_ITEMS if this is legitimate");
     }
     return;
 }
@@ -335,11 +376,16 @@ sub decode_enum {
 
 sub skip_block {
     # Called as a plain function by skip_array/skip_map as
-    # skip_block($reader, $coderef); it is not a method, so there is no leading
-    # class argument. decode_long ignores its (shifted) first argument and reads
-    # from the last, so pass __PACKAGE__ for it and $reader last.
-    my ($reader, $block_content) = @_;
+    # skip_block($reader, $min_bytes, $coderef); it is not a method, so there is
+    # no leading class argument. decode_long ignores its (shifted) first argument
+    # and reads from the last, so pass __PACKAGE__ for it and $reader last.
+    my ($reader, $min_bytes, $block_content) = @_;
+    # Zero-byte elements loop with no per-item input, so bound them tightly;
+    # other elements consume bytes (bounded by EOF) so only the structural cap
+    # applies.
+    my $limit = $min_bytes > 0 ? $MAX_COLLECTION_STRUCTURAL : $MAX_COLLECTION_ITEMS;
     my $block_count = decode_long(__PACKAGE__, undef, undef, $reader);
+    my $skipped = 0;
     while ($block_count) {
         if ($block_count < 0) {
             # A negative count is followed by a long block size in bytes, which
@@ -364,6 +410,15 @@ sub skip_block {
             }
         }
         else {
+            # Bound the cumulative element count: skipping a huge block of
+            # zero-byte elements would otherwise loop unboundedly (a CPU
+            # exhaustion) even though it allocates nothing.
+            if ($skipped + $block_count > $limit) {
+                throw Avro::BinaryDecoder::Error::CollectionSize(
+                    "Cannot skip a collection of more than $limit "
+                  . "elements (declared @{[ $skipped + $block_count ]})");
+            }
+            $skipped += $block_count;
             for (1..$block_count) {
                 $block_content->();
             }
@@ -375,7 +430,8 @@ sub skip_block {
 sub skip_array {
     my $class = shift;
     my ($schema, $reader) = @_;
-    skip_block($reader, sub { $class->skip($schema->items, $reader) });
+    skip_block($reader, _min_bytes_per_element($schema->items),
+        sub { $class->skip($schema->items, $reader) });
 }
 
 ## 1.3.2 Arrays are encoded as a series of blocks. Each block consists of a
@@ -399,7 +455,7 @@ sub decode_array {
             $block_size = decode_long($class, @_);
             ## XXX we can skip with $reader_schema?
         }
-        _ensure_collection_available($reader, $block_count, $min_bytes);
+        _ensure_collection_available($reader, scalar(@array), $block_count, $min_bytes);
         for (1..$block_count) {
             push @array, $class->decode(
                 writer_schema => $writer_items,
@@ -415,7 +471,8 @@ sub decode_array {
 sub skip_map {
     my $class = shift;
     my ($schema, $reader) = @_;
-    skip_block($reader, sub {
+    # Map entries always carry a >= 1 byte key, so pass a positive minimum.
+    skip_block($reader, 1 + _min_bytes_per_element($schema->values), sub {
         skip_string($class, $reader);
         $class->skip($schema->values, $reader);
     });
@@ -449,7 +506,7 @@ sub decode_map {
             $block_size = decode_long($class, @_);
             ## XXX we can skip with $reader_schema?
         }
-        _ensure_collection_available($reader, $block_count, $min_bytes);
+        _ensure_collection_available($reader, scalar(keys %hash), $block_count, $min_bytes);
         for (1..$block_count) {
             my $key = decode_string($class, @_);
             unless (defined $key && length $key) {
@@ -542,5 +599,10 @@ sub unsigned_varint {
     } until (! $more);
     return $int;
 }
+
+package Avro::BinaryDecoder::Error::CollectionSize;
+use parent -norequire, 'Error::Simple';
+
+package Avro::BinaryDecoder;
 
 1;

@@ -352,6 +352,162 @@ sub encode_long {
     is scalar(@$dec), $count, "array of nulls is not falsely rejected";
 }
 
+## Zero-byte elements (null, zero-length fixed, all-null records) consume no
+## input, so the bytes-remaining check cannot bound them. A huge declared block
+## count of such elements is capped instead.
+sub decode_zero_byte_array {
+    my ($items_schema, $enc) = @_;
+    my $schema = Avro::Schema->parse(qq({ "type": "array", "items": $items_schema }));
+    open my $reader, '<', \$enc or die "Can't open memory file: $!";
+    return Avro::BinaryDecoder->decode(
+        writer_schema => $schema,
+        reader_schema => $schema,
+        reader        => $reader,
+    );
+}
+
+{
+    ## The reported exploit: a ~6 byte payload declaring 200,000,000 nulls is
+    ## rejected by the default limit, before allocating.
+    throws_ok {
+        decode_zero_byte_array('"null"', encode_long(200_000_000) . encode_long(0));
+    } qr/more than \d+ zero-byte/, "array of 200M nulls rejected by default limit";
+}
+
+{
+    ## Within a lowered limit, a legitimate small null array still decodes.
+    local $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS = 1000;
+    my $dec = decode_zero_byte_array('"null"', encode_long(1000) . encode_long(0));
+    is scalar(@$dec), 1000, "array of nulls within configured limit still reads";
+}
+
+{
+    local $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS = 1000;
+    throws_ok {
+        decode_zero_byte_array('"null"', encode_long(1001) . encode_long(0));
+    } qr/more than 1000 zero-byte/, "array of nulls over configured limit rejected";
+}
+
+{
+    ## Cumulative across blocks: two blocks of 600 (1200 > 1000).
+    local $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS = 1000;
+    throws_ok {
+        decode_zero_byte_array('"null"', encode_long(600) . encode_long(600) . encode_long(0));
+    } qr/more than 1000 zero-byte/, "cumulative null blocks over limit rejected";
+}
+
+{
+    ## A negative block count (abs value + block byte-size) is normalized and
+    ## must still be bounded.
+    local $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS = 1000;
+    throws_ok {
+        decode_zero_byte_array('"null"', encode_long(-200_000) . encode_long(0));
+    } qr/more than 1000 zero-byte/, "negative null block count rejected";
+}
+
+{
+    ## A record whose only field is null encodes to zero bytes.
+    local $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS = 1000;
+    throws_ok {
+        decode_zero_byte_array('{ "type": "record", "name": "R", "fields": [{"name":"n","type":"null"}] }',
+            encode_long(2000) . encode_long(0));
+    } qr/more than 1000 zero-byte/, "array of all-null records over limit rejected";
+}
+
+{
+    ## A huge map<null> is bounded by the bytes-remaining check (each entry has a
+    ## >= 1 byte key), not the zero-byte cap.
+    my $map_schema = Avro::Schema->parse(q({ "type": "map", "values": "null" }));
+    my $enc = encode_long(200_000_000);
+    open my $reader, '<', \$enc or die "Can't open memory file: $!";
+    throws_ok {
+        Avro::BinaryDecoder->decode(
+            writer_schema => $map_schema,
+            reader_schema => $map_schema,
+            reader        => $reader,
+        );
+    } qr/Collection claims/, "oversized map<null> rejected by available-bytes check";
+}
+
+{
+    ## Skipping a huge array<null> writer field absent from the reader schema is
+    ## bounded (a CPU exhaustion otherwise), via skip_block.
+    local $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS = 1000;
+    my $w_schema = Avro::Schema->parse(<<'EOJ');
+      { "type": "record", "name": "test",
+        "fields" : [
+            {"name": "arr", "type": {"type": "array", "items": "null"}},
+            {"name": "a", "type": "long"} ]}
+EOJ
+    my $r_schema = Avro::Schema->parse(<<'EOJ');
+      { "type": "record", "name": "test",
+        "fields" : [ {"name": "a", "type": "long"} ]}
+EOJ
+    # Hand-crafted: array block of 2000 nulls + end marker, then a = 42.
+    my $enc = encode_long(2000) . encode_long(0) . encode_long(42);
+    open my $reader, '<', \$enc or die "Can't open memory file: $!";
+    throws_ok {
+        Avro::BinaryDecoder->decode(
+            writer_schema => $w_schema,
+            reader_schema => $r_schema,
+            reader        => $reader,
+        );
+    } qr/more than 1000/, "skipping oversized array<null> field is bounded";
+}
+
+{
+    ## The zero-byte cap raises the dedicated exception class.
+    local $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS = 1000;
+    my $err;
+    eval {
+        decode_zero_byte_array('"null"', encode_long(2000) . encode_long(0));
+        1;
+    } or $err = $@;
+    isa_ok $err, 'Avro::BinaryDecoder::Error::CollectionSize',
+        "zero-byte cap throws CollectionSize";
+}
+
+{
+    ## Non-zero-byte collections are bounded by a structural cap in addition to
+    ## the bytes-remaining check. A small backed array<long> that passes the
+    ## bytes check is still rejected once its count exceeds the structural limit.
+    local $Avro::BinaryDecoder::MAX_COLLECTION_STRUCTURAL = 5;
+    my $schema = Avro::Schema->parse(q({ "type": "array", "items": "long" }));
+    my $enc = '';
+    Avro::BinaryEncoder->encode(
+        schema  => $schema,
+        data    => [ 0 .. 9 ],   # 10 real longs, enough bytes to pass the byte check
+        emit_cb => sub { $enc .= ${ $_[0] } },
+    );
+    open my $reader, '<', \$enc or die "Can't open memory file: $!";
+    throws_ok {
+        Avro::BinaryDecoder->decode(
+            writer_schema => $schema,
+            reader_schema => $schema,
+            reader        => $reader,
+        );
+    } qr/more than 5 elements/, "non-zero collection bounded by structural cap";
+}
+
+{
+    ## A backed array<long> within the structural cap still decodes.
+    local $Avro::BinaryDecoder::MAX_COLLECTION_STRUCTURAL = 100;
+    my $schema = Avro::Schema->parse(q({ "type": "array", "items": "long" }));
+    my $enc = '';
+    Avro::BinaryEncoder->encode(
+        schema  => $schema,
+        data    => [ 0 .. 9 ],
+        emit_cb => sub { $enc .= ${ $_[0] } },
+    );
+    open my $reader, '<', \$enc or die "Can't open memory file: $!";
+    my $dec = Avro::BinaryDecoder->decode(
+        writer_schema => $schema,
+        reader_schema => $schema,
+        reader        => $reader,
+    );
+    is_deeply $dec, [ 0 .. 9 ], "backed array within structural cap still reads";
+}
+
 ## Skipping writer fields absent from the reader schema must advance the reader
 ## by the correct relative amount (SEEK_CUR), including fixed and bytes fields.
 {
