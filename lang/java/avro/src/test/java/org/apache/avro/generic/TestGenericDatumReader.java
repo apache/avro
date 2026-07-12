@@ -523,4 +523,79 @@ public class TestGenericDatumReader {
       assertEquals(1000, result.size(), "fastReader=" + fast);
     }
   }
+
+  /**
+   * Skipping a huge zero-byte array (e.g. during schema projection) is bounded by
+   * the heap-aware allocation cap, so it cannot loop unboundedly even though it
+   * reads nothing.
+   */
+  @Test
+  void skipArrayOfNullRejectsHugeCount() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      Schema schema = Schema.createArray(Schema.create(Schema.Type.NULL));
+      byte[] data = encodeVarints(200_000L, 0L);
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+      assertThrows(SystemLimitException.class, () -> GenericDatumReader.skip(schema, decoder));
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  /**
+   * A legitimate small zero-byte array is skipped without error.
+   */
+  @Test
+  void skipSmallNullArraySucceeds() throws Exception {
+    Schema schema = Schema.createArray(Schema.create(Schema.Type.NULL));
+    // 1000 nulls then the end marker, followed by a trailing long we can read to
+    // confirm the skip advanced correctly.
+    byte[] data = encodeVarints(1000L, 0L, 42L);
+    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+    GenericDatumReader.skip(schema, decoder);
+    assertEquals(42L, decoder.readLong());
+  }
+
+  /**
+   * Skipping a huge map is bounded by the structural collection cap.
+   */
+  @Test
+  void skipMapRejectsHugeCount() throws Exception {
+    Schema schema = Schema.createMap(Schema.create(Schema.Type.NULL));
+    // A single block declaring more than Integer.MAX_VALUE - 8 entries.
+    byte[] data = encodeVarints((long) Integer.MAX_VALUE, 0L);
+    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+    assertThrows(RuntimeException.class, () -> GenericDatumReader.skip(schema, decoder));
+  }
+
+  /**
+   * A writer array field that the reader schema omits is skipped during
+   * resolution through the decoder's skipArray; a huge count must be bounded on
+   * both the fast and classic reader paths.
+   */
+  @Test
+  void resolvingSkipOfHugeNullArrayFieldIsBounded() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_LENGTH_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      Schema writer = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"R\",\"fields\":["
+          + "{\"name\":\"arr\",\"type\":{\"type\":\"array\",\"items\":\"null\"}},"
+          + "{\"name\":\"a\",\"type\":\"long\"}]}");
+      Schema reader = new Schema.Parser()
+          .parse("{\"type\":\"record\",\"name\":\"R\",\"fields\":[{\"name\":\"a\",\"type\":\"long\"}]}");
+      byte[] data = encodeVarints(2000L, 0L, 42L);
+      for (boolean fast : new boolean[] { true, false }) {
+        GenericData data2 = new GenericData();
+        data2.setFastReaderEnabled(fast);
+        GenericDatumReader<Object> r = new GenericDatumReader<>(writer, reader, data2);
+        BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+        assertThrows(RuntimeException.class, () -> r.read(null, decoder), "fastReader=" + fast);
+      }
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_LENGTH_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
 }

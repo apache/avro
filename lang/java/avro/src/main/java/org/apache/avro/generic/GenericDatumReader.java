@@ -777,7 +777,19 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       break;
     case ARRAY:
       Schema elementType = schema.getElementType();
+      // Bound the cumulative element count: skipping a huge block of zero-byte
+      // elements (e.g. null) would otherwise loop unboundedly (a CPU
+      // exhaustion) even though it reads nothing. Zero-byte elements use the
+      // heap-aware allocation cap; others the structural collection cap.
+      boolean zeroByteElements = isZeroByteSchema(elementType);
+      long arrayTotal = 0;
       for (long l = in.skipArray(); l > 0; l = in.skipArray()) {
+        if (zeroByteElements) {
+          SystemLimitException.checkMaxCollectionAllocation(arrayTotal, l);
+        } else {
+          SystemLimitException.checkMaxCollectionLength(arrayTotal, l);
+        }
+        arrayTotal += l;
         for (long i = 0; i < l; i++) {
           skip(elementType, in);
         }
@@ -785,7 +797,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       break;
     case MAP:
       Schema value = schema.getValueType();
+      // Map entries always carry a >= 1 byte key, so the structural cap applies.
+      long mapTotal = 0;
       for (long l = in.skipMap(); l > 0; l = in.skipMap()) {
+        SystemLimitException.checkMaxCollectionLength(mapTotal, l);
+        mapTotal += l;
         for (long i = 0; i < l; i++) {
           in.skipString();
           skip(value, in);

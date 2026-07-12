@@ -458,7 +458,7 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public long skipArray() throws IOException {
-    return doSkipItems();
+    return SystemLimitException.checkMaxCollectionLength(doSkipItems());
   }
 
   @Override
@@ -476,7 +476,7 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public long skipMap() throws IOException {
-    return doSkipItems();
+    return SystemLimitException.checkMaxCollectionLength(doSkipItems());
   }
 
   @Override
