@@ -35,6 +35,19 @@ use PHPUnit\Framework\TestCase;
 
 class DatumIOTest extends TestCase
 {
+    /** @var false|string Value of AVRO_MAX_COLLECTION_ITEMS captured before each test. */
+    private string|false $originalMaxCollectionItems = false;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Capture any pre-existing value so tests that override
+        // AVRO_MAX_COLLECTION_ITEMS restore it rather than unconditionally
+        // unsetting it, which would break isolation when the variable is already
+        // set in the environment (CI or a developer shell).
+        $this->originalMaxCollectionItems = getenv('AVRO_MAX_COLLECTION_ITEMS');
+    }
+
     #[DataProvider('data_provider')]
     public function test_datum_round_trip(string $schema_json, mixed $datum, string $binary): void
     {
@@ -349,7 +362,7 @@ class DatumIOTest extends TestCase
             $result = $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(1000));
             $this->assertCount(1000, $result);
         } finally {
-            putenv('AVRO_MAX_COLLECTION_ITEMS');
+            $this->restoreMaxCollectionItems();
         }
     }
 
@@ -361,7 +374,7 @@ class DatumIOTest extends TestCase
             $this->expectException(AvroIOCollectionSizeException::class);
             $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(1001));
         } finally {
-            putenv('AVRO_MAX_COLLECTION_ITEMS');
+            $this->restoreMaxCollectionItems();
         }
     }
 
@@ -378,7 +391,7 @@ class DatumIOTest extends TestCase
             $this->expectException(AvroIOCollectionSizeException::class);
             $this->decodeWith('{"type":"array","items":"null"}', $io);
         } finally {
-            putenv('AVRO_MAX_COLLECTION_ITEMS');
+            $this->restoreMaxCollectionItems();
         }
     }
 
@@ -390,7 +403,7 @@ class DatumIOTest extends TestCase
             $this->expectException(AvroIOCollectionSizeException::class);
             $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(200000, true));
         } finally {
-            putenv('AVRO_MAX_COLLECTION_ITEMS');
+            $this->restoreMaxCollectionItems();
         }
     }
 
@@ -413,7 +426,7 @@ class DatumIOTest extends TestCase
             $this->expectException(AvroIOCollectionSizeException::class);
             $this->decodeWith('{"type":"map","values":"null"}', $io);
         } finally {
-            putenv('AVRO_MAX_COLLECTION_ITEMS');
+            $this->restoreMaxCollectionItems();
         }
     }
 
@@ -425,7 +438,7 @@ class DatumIOTest extends TestCase
             $this->expectException(AvroIOCollectionSizeException::class);
             $this->decodeWith('{"type":"array","items":{"type":"fixed","name":"empty","size":0}}', self::zeroByteBlock(2000));
         } finally {
-            putenv('AVRO_MAX_COLLECTION_ITEMS');
+            $this->restoreMaxCollectionItems();
         }
     }
 
@@ -440,7 +453,7 @@ class DatumIOTest extends TestCase
                 self::zeroByteBlock(2000)
             );
         } finally {
-            putenv('AVRO_MAX_COLLECTION_ITEMS');
+            $this->restoreMaxCollectionItems();
         }
     }
 
@@ -462,7 +475,7 @@ class DatumIOTest extends TestCase
             $this->expectException(AvroIOCollectionSizeException::class);
             $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(200000000));
         } finally {
-            putenv('AVRO_MAX_COLLECTION_ITEMS');
+            $this->restoreMaxCollectionItems();
         }
     }
 
@@ -475,7 +488,7 @@ class DatumIOTest extends TestCase
             $result = $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(15000));
             $this->assertCount(15000, $result);
         } finally {
-            putenv('AVRO_MAX_COLLECTION_ITEMS');
+            $this->restoreMaxCollectionItems();
         }
     }
 
@@ -496,7 +509,7 @@ class DatumIOTest extends TestCase
             $this->expectException(AvroIOCollectionSizeException::class);
             $this->decodeWith('{"type":"array","items":"long"}', $io);
         } finally {
-            putenv('AVRO_MAX_COLLECTION_ITEMS');
+            $this->restoreMaxCollectionItems();
         }
     }
 
@@ -512,7 +525,7 @@ class DatumIOTest extends TestCase
             $this->expectException(AvroIOCollectionSizeException::class);
             AvroIODatumReader::skipData($schema, new AvroIOBinaryDecoder($io));
         } finally {
-            putenv('AVRO_MAX_COLLECTION_ITEMS');
+            $this->restoreMaxCollectionItems();
         }
     }
 
@@ -529,7 +542,7 @@ class DatumIOTest extends TestCase
             $this->expectException(AvroIOCollectionSizeException::class);
             AvroIODatumReader::skipData($schema, new AvroIOBinaryDecoder($io));
         } finally {
-            putenv('AVRO_MAX_COLLECTION_ITEMS');
+            $this->restoreMaxCollectionItems();
         }
     }
 
@@ -689,6 +702,15 @@ class DatumIOTest extends TestCase
             $this->assertEquals($default_value, $record['f']);
         } else {
             $this->fail(sprintf('expected field record[f]: %s', print_r($record, true)));
+        }
+    }
+
+    protected function restoreMaxCollectionItems(): void
+    {
+        if (false === $this->originalMaxCollectionItems) {
+            putenv('AVRO_MAX_COLLECTION_ITEMS');
+        } else {
+            putenv('AVRO_MAX_COLLECTION_ITEMS='.$this->originalMaxCollectionItems);
         }
     }
 
