@@ -2081,10 +2081,12 @@ function Resolver(readerType) {
   // Add all fields here so that all resolvers share the same hidden class.
   this._readerType = readerType;
   this._items = null;
+  this._itemsMinBytes = undefined;
   this._read = null;
   this._size = 0;
   this._symbols = null;
   this._values = null;
+  this._valuesMinBytes = undefined;
 }
 
 Resolver.prototype.inspect = function () { return '<Resolver>'; };
