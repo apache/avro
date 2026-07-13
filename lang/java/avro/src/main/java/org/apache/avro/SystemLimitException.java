@@ -112,8 +112,9 @@ public class SystemLimitException extends AvroRuntimeException {
   private static final long BYTES_PER_COLLECTION_SLOT = 8;
 
   /**
-   * Maximum number of zero-byte-encoded array elements to allocate at once.
-   * Recomputed from the system property (or the heap) by {@link #resetLimits()}.
+   * Maximum number of array elements whose minimum encoded size is zero to
+   * allocate at once. Recomputed from the system property (or the heap) by
+   * {@link #resetLimits()}.
    */
   private static long maxCollectionAllocation = defaultMaxCollectionAllocation();
 
