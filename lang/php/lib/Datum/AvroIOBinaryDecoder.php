@@ -299,6 +299,12 @@ class AvroIOBinaryDecoder
             AvroIODatumReader::checkSkipCollectionCount($skipped, $blockCount, $minBytes);
             $skipped += $blockCount;
             if (null !== $blockSize) {
+                // seek() can move past EOF, so a truncated/oversized block would
+                // otherwise be "skipped" silently, hiding truncation. Reject a
+                // block size larger than the bytes actually remaining.
+                if ($blockSize > $decoder->bytesRemaining()) {
+                    throw new AvroException('Array block size exceeds the remaining input');
+                }
                 $decoder->skip($blockSize);
             } else {
                 for ($i = 0; $i < $blockCount; $i++) {
@@ -330,6 +336,11 @@ class AvroIOBinaryDecoder
             AvroIODatumReader::checkSkipCollectionCount($skipped, $blockCount, $minBytes);
             $skipped += $blockCount;
             if (null !== $blockSize) {
+                // seek() can move past EOF; reject a block size larger than the
+                // bytes remaining so a truncated block isn't silently skipped.
+                if ($blockSize > $decoder->bytesRemaining()) {
+                    throw new AvroException('Map block size exceeds the remaining input');
+                }
                 $decoder->skip($blockSize);
             } else {
                 for ($i = 0; $i < $blockCount; $i++) {
