@@ -1025,7 +1025,12 @@ class DatumReader:
             raise avro.errors.InvalidAvroBinaryEncoding(f"Block size {block_size} exceeds the {remaining} bytes remaining")
         if min_bytes > 0 and block_count > block_size // min_bytes:
             raise avro.errors.InvalidAvroBinaryEncoding(f"Block size {block_size} is too small for {block_count} elements of >= {min_bytes} bytes")
-        decoder.skip(block_size)
+        try:
+            decoder.skip(block_size)
+        except (OSError, ValueError, OverflowError) as e:
+            # The underlying reader can reject the seek (oversized offset, invalid
+            # seek, or other IO error); surface it as an Avro decoding error.
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Cannot skip block of {block_size} bytes: {e}") from e
 
     def skip_array(self, writers_schema: avro.schema.ArraySchema, decoder: BinaryDecoder) -> None:
         min_bytes = _min_bytes_per_element(writers_schema.items)
