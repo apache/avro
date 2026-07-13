@@ -144,10 +144,14 @@ static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 			       *len, available);
 		return EINVAL;
 	}
-	/* Bound the length so the +1 (NUL terminator) cannot overflow the
-	 * size_t allocation size, which could otherwise undersize the buffer
-	 * and lead to an out-of-bounds read/write. */
-	if ((uint64_t) *len > (uint64_t) (SIZE_MAX - 1)) {
+	/* Bound the length so the +1 (NUL terminator) cannot overflow either
+	 * the size_t allocation size here or the int64_t len + 1 computed by the
+	 * AVRO_BYTES caller in value-read.c. On 64-bit platforms SIZE_MAX >
+	 * INT64_MAX, so the size_t check alone would let len == INT64_MAX through
+	 * and make len + 1 overflow (undefined behavior); the INT64_MAX - 1 bound
+	 * rejects it. */
+	if ((uint64_t) *len > (uint64_t) (SIZE_MAX - 1)
+	    || *len > INT64_MAX - 1) {
 		avro_set_error("Bytes length %" PRId64
 			       " exceeds the maximum allocatable size", *len);
 		return EINVAL;
