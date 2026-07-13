@@ -71,7 +71,7 @@ namespace Avro.File
             {
                 throw new AvroRuntimeException(
                     $"Decompressed block size {length} exceeds the maximum allowed of {maxLength} bytes. " +
-                    $"Set the {MaxDecompressLengthEnvVar} environment variable to raise the limit.");
+                    $"For data-file reads, the {MaxDecompressLengthEnvVar} environment variable raises the limit.");
             }
         }
 
