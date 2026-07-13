@@ -588,6 +588,30 @@ describe('files', function () {
       });
     });
 
+    it('releases the write callback on a fatal header error', function (cb) {
+      // A fatal header error destroys the stream; _write must still invoke its
+      // write callback, otherwise upstream writers/pipelines stall mid-write.
+      // _onError is stubbed to only flag the error (not destroy), so this
+      // isolates the _write callback from Node's own destroy machinery: if the
+      // callback were left pending the test would hang and time out.
+      var t = createType('int');
+      var chunks = [];
+      var encoder = new streams.BlockEncoder(t);
+      encoder.on('data', function (chunk) { chunks.push(chunk); });
+      encoder.on('end', function () {
+        var buf = Buffer.concat(chunks);
+        buf[0] = buf[0] ^ 0xff; // corrupt the magic bytes -> fatal header error
+        var decoder = new streams.BlockDecoder();
+        var errored = false;
+        decoder._onError = function () { this._errored = errored = true; };
+        decoder._write(buf, undefined, function () {
+          assert(errored);
+          cb();
+        });
+      });
+      encoder.end(1);
+    });
+
     it('decompression late read', function (cb) {
       var chunks = [];
       var encoder = new streams.BlockEncoder(createType('int'));

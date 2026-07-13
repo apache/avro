@@ -233,9 +233,8 @@ BlockDecoder.prototype._write = function (chunk, encoding, cb) {
   tap.pos = 0;
 
   if (!this._decodeHeader()) {
-    if (this._errored) {
-      return; // Destroyed while decoding the header; leave the write callback.
-    }
+    // Release the write callback even when a fatal header error destroyed the
+    // stream, so upstream writers/pipelines are not left stalled mid-write.
     process.nextTick(cb);
     return;
   }
@@ -255,7 +254,10 @@ BlockDecoder.prototype._writeChunk = function (chunk, encoding, cb) {
   var block;
   while ((block = tryReadBlock(tap))) {
     if (this._errored) {
-      return; // A prior block already failed and destroyed the stream.
+      // A prior block already failed and destroyed the stream; release the
+      // write callback so upstream writers/pipelines are not left stalled.
+      process.nextTick(cb);
+      return;
     }
     if (!this._syncMarker.equals(block.sync)) {
       cb(new Error('invalid sync marker'));
