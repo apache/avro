@@ -263,6 +263,14 @@ size_t BinaryDecoder::skipArray() {
                     "set AVRO_MAX_COLLECTION_ITEMS if this is legitimate",
                     structural);
             }
+            // On builds where size_t is narrower than int64_t (e.g. 32-bit),
+            // reject a count that would truncate on the cast, matching
+            // doDecodeItemCount so a huge block can't wrap to a small one.
+            if constexpr (sizeof(size_t) < sizeof(int64_t)) {
+                if (static_cast<uint64_t>(r) > std::numeric_limits<size_t>::max()) {
+                    throw Exception("Block count {} exceeds the maximum supported size", r);
+                }
+            }
             return static_cast<size_t>(r);
         }
     }
