@@ -178,8 +178,13 @@ module Avro
 
       def skip_long
         b = byte!
+        count = 1
         while (b & 0x80) != 0
+          # A 64-bit varint is at most 10 bytes; reject an overlong continuation
+          # chain so a skipped long can't force scanning unbounded input.
+          raise AvroError, "Varint is too long" if count >= 10
           b = byte!
+          count += 1
         end
       end
 
