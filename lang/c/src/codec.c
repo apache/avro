@@ -600,7 +600,10 @@ static int decode_lzma(avro_codec_t codec, void * data, int64_t len)
 
 		// Reject a block that decompresses to more than the allowed maximum,
 		// to guard against unbounded allocation from a high-ratio block.
-		if ((int64_t) write_pos > max_len) {
+		// Compare in size_t (max_len is >= 0 and clamped to SIZE_MAX) rather
+		// than narrowing write_pos to int64_t, which could wrap negative and
+		// bypass the cap if write_pos ever exceeds INT64_MAX.
+		if (write_pos > (size_t) max_len) {
 			avro_set_error("Decompressed block size exceeds the maximum allowed of %lld bytes",
 				       (long long) max_len);
 			return 1;
