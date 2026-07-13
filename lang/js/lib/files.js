@@ -741,6 +741,8 @@ function loadSchema(schema) {
 module.exports = {
   HEADER_TYPE: HEADER_TYPE, // For tests.
   MAGIC_BYTES: MAGIC_BYTES, // Idem.
+  MAX_DECOMPRESS_LENGTH_CAP: MAX_DECOMPRESS_LENGTH_CAP, // Idem.
+  normalizeMaxDecompressLength: normalizeMaxDecompressLength, // Idem.
   parse: parse,
   createFileDecoder: createFileDecoder,
   createFileEncoder: createFileEncoder,

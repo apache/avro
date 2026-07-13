@@ -615,6 +615,24 @@ describe('files', function () {
       encoder.end(1);
     });
 
+    it('normalizes decompress limits', function () {
+      var cap = files.MAX_DECOMPRESS_LENGTH_CAP;
+      var normalize = files.normalizeMaxDecompressLength;
+      // A finite value above the cap is clamped to the cap (the "> cap" path).
+      assert.equal(normalize(cap + 1), cap);
+      assert.equal(normalize(Number.MAX_VALUE), cap);
+      // A finite value at/below the cap is floored and kept.
+      assert.equal(normalize(1024), 1024);
+      assert.equal(normalize(1024.9), 1024);
+      assert.equal(normalize('2048'), 2048);
+      // Missing / invalid / out-of-range values fall back to undefined.
+      assert.equal(normalize(undefined), undefined);
+      assert.equal(normalize(Infinity), undefined);
+      assert.equal(normalize(0), undefined);
+      assert.equal(normalize(-1), undefined);
+      assert.equal(normalize('nope'), undefined);
+    });
+
     it('caps a custom deflate codec that reuses zlib.inflateRaw', function (cb) {
       // A custom codecs map that reuses the built-in raw inflater must still get
       // the zlib maxOutputLength cap (not just the post-decompress check).
