@@ -305,6 +305,9 @@ class AvroIOBinaryDecoder
                 if ($blockSize > $decoder->bytesRemaining()) {
                     throw new AvroException('Array block size exceeds the remaining input');
                 }
+                if ($minBytes > 0 && $blockCount > intdiv($blockSize, $minBytes)) {
+                    throw new AvroException('Array block size too small for the declared element count');
+                }
                 $decoder->skip($blockSize);
             } else {
                 for ($i = 0; $i < $blockCount; $i++) {
@@ -340,6 +343,9 @@ class AvroIOBinaryDecoder
                 // bytes remaining so a truncated block isn't silently skipped.
                 if ($blockSize > $decoder->bytesRemaining()) {
                     throw new AvroException('Map block size exceeds the remaining input');
+                }
+                if ($minBytes > 0 && $blockCount > intdiv($blockSize, $minBytes)) {
+                    throw new AvroException('Map block size too small for the declared element count');
                 }
                 $decoder->skip($blockSize);
             } else {
