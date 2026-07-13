@@ -404,6 +404,17 @@ sub skip_block {
     my $skipped = 0;
     while ($block_count) {
         if ($block_count < 0) {
+            # A byte-sized (negative-count) block still declares an element
+            # count; bound it cumulatively too, so a huge declared count with a
+            # small or zero block size cannot bypass the cap (e.g. zero-byte
+            # elements whose block size is 0).
+            my $count = -$block_count;
+            if ($skipped + $count > $limit) {
+                throw Avro::BinaryDecoder::Error::CollectionSize(
+                    "Cannot skip a collection of more than $limit "
+                  . "elements (declared @{[ $skipped + $count ]})");
+            }
+            $skipped += $count;
             # A negative count is followed by a long block size in bytes, which
             # lets the whole block be skipped without decoding each item. Skip
             # forward by that many bytes relative to the current position
@@ -469,6 +480,10 @@ sub decode_array {
         if ($block_count < 0) {
             $block_count = -$block_count;
             $block_size = decode_long($class, @_);
+            if ($block_size < 0) {
+                throw Avro::Schema::Error::Parse(
+                    "Invalid negative array block size: $block_size");
+            }
             ## XXX we can skip with $reader_schema?
         }
         _ensure_collection_available($reader, scalar(@array), $block_count, $min_bytes);
@@ -524,6 +539,10 @@ sub decode_map {
         if ($block_count < 0) {
             $block_count = -$block_count;
             $block_size = decode_long($class, @_);
+            if ($block_size < 0) {
+                throw Avro::Schema::Error::Parse(
+                    "Invalid negative map block size: $block_size");
+            }
             ## XXX we can skip with $reader_schema?
         }
         _ensure_collection_available($reader, $decoded, $block_count, $min_bytes);
