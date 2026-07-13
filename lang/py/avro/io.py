@@ -664,7 +664,7 @@ DEFAULT_MAX_COLLECTION_ITEMS = 10_000_000
 #: positive on-wire size are also bounded by the bytes remaining; this cap is an
 #: additional overflow/defense-in-depth guard. ``AVRO_MAX_COLLECTION_ITEMS``, when
 #: set, overrides both this and :data:`DEFAULT_MAX_COLLECTION_ITEMS`.
-DEFAULT_MAX_COLLECTION_STRUCTURAL = (1 << 31) - 8
+DEFAULT_MAX_COLLECTION_STRUCTURAL = (1 << 31) - 1 - 8  # Integer.MAX_VALUE - 8
 
 
 def _collection_limits() -> Tuple[int, int]:
