@@ -208,6 +208,16 @@ sub read_block_header {
     $datafile->{block_size} = Avro::BinaryDecoder->decode_long(
         undef, undef, $fh,
     );
+    ## Both are Avro long (zigzag) values, so a malformed/truncated file can
+    ## yield negatives. A negative block_size would flow into $want and a
+    ## negative-length read; a negative object_count is equally nonsensical.
+    ## Reject both before first use.
+    if ($datafile->{object_count} < 0) {
+        croak "Invalid negative object count: $datafile->{object_count}";
+    }
+    if ($datafile->{block_size} < 0) {
+        croak "Invalid negative block size: $datafile->{block_size}";
+    }
     $datafile->{block_start} = tell $fh;
 
     return if $codec eq 'null';
@@ -245,8 +255,9 @@ sub read_block_header {
     ## a very high compression ratio expanding to far more memory than its
     ## compressed size. The limit is the AVRO_MAX_DECOMPRESS_LENGTH environment
     ## variable, or DEFAULT_MAX_DECOMPRESS_LENGTH. (Note: block_max_size is a
-    ## writer-side flush threshold measured in compressed bytes and is not reused
-    ## here to avoid conflating the two units.)
+    ## writer-side flush threshold measured in compressed bytes; it is used above
+    ## as a compressed-size pre-read guard, but is not reused here for the
+    ## decompressed-size cap, to avoid conflating the two units.)
     my $limit = _max_decompress_length();
 
     ## this is our new reader
