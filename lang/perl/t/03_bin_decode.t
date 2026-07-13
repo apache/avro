@@ -430,7 +430,11 @@ sub decode_zero_byte_array {
 
 {
     ## The reported exploit: a ~6 byte payload declaring 200,000,000 nulls is
-    ## rejected by the default limit, before allocating.
+    ## rejected by the default limit, before allocating. Pin the limit to the
+    ## default so the test is deterministic even if AVRO_MAX_COLLECTION_ITEMS was
+    ## set in the environment when the module was loaded.
+    local $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS =
+        $Avro::BinaryDecoder::DEFAULT_MAX_COLLECTION_ITEMS;
     throws_ok {
         decode_zero_byte_array('"null"', encode_long(200_000_000) . encode_long(0));
     } qr/more than \d+ zero-byte/, "array of 200M nulls rejected by default limit";
