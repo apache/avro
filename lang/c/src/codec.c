@@ -421,7 +421,9 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 		// Reject a block that decompresses to more than the allowed maximum,
 		// to guard against unbounded allocation from a high-ratio block.
 		if ((int64_t) s->total_out > max_len) {
-			inflateEnd(s);
+			// Reset (not end) the stream so the codec stays reusable for
+			// subsequent blocks rather than being permanently torn down.
+			inflateReset(s);
 			avro_set_error("Decompressed block size exceeds the maximum allowed of %lld bytes",
 				       (long long) max_len);
 			return 1;
@@ -449,7 +451,7 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 				new_size = c->block_size * 2;
 			}
 			if (new_size <= c->block_size) {
-				inflateEnd(s);
+				inflateReset(s);
 				avro_set_error("Decompressed block size exceeds the maximum allowed of %lld bytes",
 					       (long long) max_len);
 				return 1;
