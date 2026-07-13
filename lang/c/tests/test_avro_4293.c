@@ -286,7 +286,11 @@ static int check_accepts_null_array(void)
 /* Encode a long as an Avro zig-zag varint into buf; returns the byte count. */
 static size_t encode_long(int64_t n, char *buf)
 {
-	uint64_t z = ((uint64_t) n << 1) ^ (uint64_t) (n >> 63);
+	/* Compute the sign extension portably: right-shifting a negative signed
+	 * value is implementation-defined, so derive the all-ones/zero mask from
+	 * a comparison instead of (n >> 63). */
+	uint64_t sign = (n < 0) ? ~(uint64_t) 0 : (uint64_t) 0;
+	uint64_t z = ((uint64_t) n << 1) ^ sign;
 	size_t i = 0;
 	do {
 		uint8_t b = z & 0x7F;
