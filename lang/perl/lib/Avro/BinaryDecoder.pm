@@ -431,6 +431,14 @@ sub skip_block {
             # before skipping, so a truncated input fails instead of seeking
             # past EOF.
             _ensure_available($reader, $block_size, 1);
+            # Reject a block size too small to contain the declared element
+            # count (at the element's minimum on-wire size), so a malformed
+            # size cannot leave the reader mid-element and misalign decoding.
+            if ($min_bytes > 0 && $count > int($block_size / $min_bytes)) {
+                throw Avro::Schema::Error::Parse(
+                    "Block size $block_size is too small for $count elements "
+                  . "of >= $min_bytes bytes");
+            }
             unless ($reader->seek($block_size, 1)) {
                 throw Avro::Schema::Error::Parse(
                     "Failed to skip block of $block_size bytes");

@@ -26,6 +26,15 @@ use Test::Exception;
 
 use_ok 'Avro::BinaryDecoder';
 
+## BinaryDecoder initializes MAX_COLLECTION_ITEMS / MAX_COLLECTION_STRUCTURAL
+## from AVRO_MAX_COLLECTION_ITEMS at load time. Reset both to their defaults so
+## the whole suite is deterministic regardless of the environment; individual
+## tests still `local`-override them where they exercise a specific limit.
+$Avro::BinaryDecoder::MAX_COLLECTION_ITEMS =
+    $Avro::BinaryDecoder::DEFAULT_MAX_COLLECTION_ITEMS;
+$Avro::BinaryDecoder::MAX_COLLECTION_STRUCTURAL =
+    $Avro::BinaryDecoder::DEFAULT_MAX_COLLECTION_STRUCTURAL;
+
 ## spec examples
 {
     my $enc = "\x06\x66\x6f\x6f";
@@ -132,7 +141,7 @@ EOJ
 
 ## overlong varint
 {
-    # A 64-bit value uses at most 10 bytes; an 11th continuation byte is a
+    # A 64-bit value uses at most 10 bytes; an 11th byte (10 continuation bytes 0x80 then a terminator) is a
     # malformed overlong varint and must be rejected.
     my $long = Avro::Schema->parse(q({ "type": "long" }));
     my $data = ("\x80" x 10) . "\x01";
