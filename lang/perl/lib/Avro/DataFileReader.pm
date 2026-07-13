@@ -234,17 +234,28 @@ sub read_block_header {
         );
     }
 
-    ## we need to read the entire block into memory, to inflate it. Verify the
-    ## exact byte count: a short read (truncated/malformed file) would otherwise
-    ## slip through and surface later as a confusing marker/decompressor error.
+    ## we need to read the entire block into memory, to inflate it. Read in
+    ## bounded chunks (rather than a single read of $want bytes, which would
+    ## pre-extend the buffer to the attacker-controlled block_size before a short
+    ## read is detected) and verify the exact byte count afterward: a short read
+    ## (truncated/malformed file) would otherwise slip through and surface later
+    ## as a confusing marker/decompressor error.
     my $want = $datafile->{block_size} + MARKER_SIZE;
-    my $block;
-    my $nread = read $fh, $block, $want;
-    if (!defined $nread) {
-        croak "Error reading from file: $!";
+    my $block = '';
+    my $chunk_size = 64 * 1024;
+    while (length($block) < $want) {
+        my $need = $want - length($block);
+        $need = $chunk_size if $need > $chunk_size;
+        my $nread = read $fh, my $buf, $need;
+        if (!defined $nread) {
+            croak "Error reading from file: $!";
+        }
+        last if $nread == 0;    # EOF
+        $block .= $buf;
     }
-    if ($nread != $want) {
-        croak "Short read: expected $want bytes for the block, got $nread (truncated file?)";
+    if (length($block) != $want) {
+        croak "Short read: expected $want bytes for the block, got "
+            . length($block) . " (truncated file?)";
     }
 
     ## remove the marker
