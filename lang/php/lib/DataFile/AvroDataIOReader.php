@@ -279,7 +279,7 @@ class AvroDataIOReader
         $length = strlen($compressed);
         for ($offset = 0; $offset < $length; $offset += self::INFLATE_CHUNK_SIZE) {
             $piece = substr($compressed, $offset, self::INFLATE_CHUNK_SIZE);
-            $out = @inflate_add($context, $piece);
+            $out = inflate_add($context, $piece);
             if (false === $out) {
                 throw new AvroException('deflate uncompression failed.');
             }
@@ -288,7 +288,7 @@ class AvroDataIOReader
             self::checkDecompressLength($total, $maxLength);
         }
 
-        $out = @inflate_add($context, '', ZLIB_FINISH);
+        $out = inflate_add($context, '', ZLIB_FINISH);
         if (false === $out) {
             throw new AvroException('deflate uncompression failed.');
         }
