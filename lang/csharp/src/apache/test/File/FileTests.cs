@@ -462,7 +462,7 @@ namespace Avro.Test.File
             try
             {
                 byte[] result = codec.Decompress(compressed, compressed.Length);
-                Assert.AreEqual(payload, result);
+                CollectionAssert.AreEqual(payload, result);
             }
             finally
             {
