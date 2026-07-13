@@ -99,9 +99,10 @@ public class SystemLimitException extends AvroRuntimeException {
   public static final String MAX_COLLECTION_ALLOCATION_PROPERTY = "org.apache.avro.limits.collectionItems.maxAllocation";
 
   /**
-   * Fraction of the maximum heap a single decoded collection of zero-byte
-   * elements may occupy by default. Keeps the backing allocation below the heap
-   * so a small payload declaring a huge block count cannot exhaust the JVM.
+   * Fraction of the maximum heap a single decoded collection of elements whose
+   * minimum encoded size is zero may occupy by default. Keeps the backing
+   * allocation below the heap so a small payload declaring a huge block count
+   * cannot exhaust the JVM.
    */
   private static final long DEFAULT_MAX_COLLECTION_ALLOCATION_HEAP_FRACTION = 4;
 
