@@ -19,6 +19,7 @@ package org.apache.avro.generic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -234,7 +235,19 @@ public class TestGenericDatumReader {
   @Test
   void arrayHugeCountOnStreamClampsPreallocation() throws Exception {
     Schema schema = Schema.createArray(Schema.create(Schema.Type.LONG));
-    GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
+    // Record the largest capacity ever requested from newArray so we can assert
+    // the preallocation is clamped rather than sized to the declared block count.
+    // Without this, a regression that reintroduces new Object[(int) count] could
+    // allocate ~200M slots and still pass (with an EOFException) on a large-heap
+    // JVM, hiding the regression.
+    final int[] maxRequestedCapacity = { 0 };
+    GenericDatumReader<Object> reader = new GenericDatumReader<Object>(schema) {
+      @Override
+      protected Object newArray(Object old, int size, Schema schema) {
+        maxRequestedCapacity[0] = Math.max(maxRequestedCapacity[0], size);
+        return super.newArray(old, size, schema);
+      }
+    };
 
     // A huge (non-zero-byte) block count followed by no element data. Wrapping in
     // a BufferedInputStream keeps the source from being a ByteArrayInputStream, so
@@ -243,7 +256,14 @@ public class TestGenericDatumReader {
     byte[] data = encodeVarints(200_000_000L);
     InputStream stream = new BufferedInputStream(new ByteArrayInputStream(data));
     BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(stream, null);
+    // Confirm the guard-disabling precondition: the decoder cannot report how
+    // many bytes remain, so this really is the unknown-remaining-bytes path.
+    assertEquals(-1, decoder.remainingBytes());
     assertThrows(EOFException.class, () -> reader.read(null, decoder));
+    // The declared count is 200,000,000 but the initial allocation must stay
+    // clamped to GenericDatumReader.initialCollectionCapacity (<= 1024).
+    assertTrue(maxRequestedCapacity[0] <= GenericDatumReader.initialCollectionCapacity(200_000_000L),
+        "preallocation was not clamped: requested capacity " + maxRequestedCapacity[0]);
   }
 
   /**
