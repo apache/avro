@@ -701,10 +701,16 @@ void DataFileReaderBase::readDataBlock() {
                             // At the trigger uncompressed.size() == maxLength and
                             // inflate still has output, so the block is at least
                             // maxLength + 1 bytes. Report that (like the snappy/zstd
-                            // errors) so the message is accurate and consistent.
+                            // errors) so the message is accurate and consistent,
+                            // saturating the +1 so it cannot wrap to 0 when
+                            // uncompressed.size() is at size_t's maximum.
+                            const size_t reported =
+                                uncompressed.size() < std::numeric_limits<size_t>::max()
+                                    ? uncompressed.size() + 1
+                                    : uncompressed.size();
                             throw Exception(
                                 "Decompressed block size {} exceeds the maximum allowed of {} bytes",
-                                uncompressed.size() + 1, maxLength);
+                                reported, maxLength);
                         }
                         // Grow by the remaining capacity (capped at the grow
                         // step) rather than size + step, which could overflow

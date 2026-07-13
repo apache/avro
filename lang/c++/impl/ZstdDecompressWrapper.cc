@@ -21,6 +21,7 @@
 #include "ZstdDecompressWrapper.hh"
 #include "Exception.hh"
 
+#include <limits>
 #include <zstd.h>
 
 namespace avro {
@@ -45,9 +46,16 @@ std::string ZstdDecompressWrapper::decompress(const std::vector<char> &compresse
             }
             // Reject before appending so the buffer never grows past the limit.
             if (out.pos > maxLength - uncompressed.size()) {
+                // Saturate the reported size so the addition cannot wrap when
+                // uncompressed.size() is near size_t's maximum (possible when
+                // AVRO_MAX_DECOMPRESS_LENGTH is configured close to SIZE_MAX).
+                const size_t reported =
+                    out.pos > std::numeric_limits<size_t>::max() - uncompressed.size()
+                        ? std::numeric_limits<size_t>::max()
+                        : uncompressed.size() + out.pos;
                 throw Exception(
                     "Decompressed block size {} exceeds the maximum allowed of {} bytes",
-                    uncompressed.size() + out.pos, maxLength);
+                    reported, maxLength);
             }
             uncompressed.append(tmp.data(), out.pos);
         } while (ret != 0);

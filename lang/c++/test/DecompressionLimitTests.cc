@@ -37,19 +37,23 @@
 
 namespace avro {
 
-static void setDecompressLimit(const char *value) {
+// Return the underlying status (0 on success) rather than asserting inside, so
+// these can be called from DecompressLimitGuard's destructor with a
+// non-throwing check (a throwing BOOST_REQUIRE in a noexcept destructor would
+// terminate the process instead of reporting a clean failure).
+static int setDecompressLimit(const char *value) {
 #ifdef _WIN32
-    BOOST_REQUIRE_EQUAL(_putenv_s("AVRO_MAX_DECOMPRESS_LENGTH", value), 0);
+    return _putenv_s("AVRO_MAX_DECOMPRESS_LENGTH", value);
 #else
-    BOOST_REQUIRE_EQUAL(setenv("AVRO_MAX_DECOMPRESS_LENGTH", value, 1), 0);
+    return setenv("AVRO_MAX_DECOMPRESS_LENGTH", value, 1);
 #endif
 }
 
-static void unsetDecompressLimit() {
+static int unsetDecompressLimit() {
 #ifdef _WIN32
-    BOOST_REQUIRE_EQUAL(_putenv_s("AVRO_MAX_DECOMPRESS_LENGTH", ""), 0);
+    return _putenv_s("AVRO_MAX_DECOMPRESS_LENGTH", "");
 #else
-    BOOST_REQUIRE_EQUAL(unsetenv("AVRO_MAX_DECOMPRESS_LENGTH"), 0);
+    return unsetenv("AVRO_MAX_DECOMPRESS_LENGTH");
 #endif
 }
 
@@ -65,10 +69,12 @@ struct DecompressLimitGuard {
         }
     }
     ~DecompressLimitGuard() {
+        // Use a non-throwing check: this runs in a (noexcept) destructor, where a
+        // throwing BOOST_REQUIRE would terminate the process.
         if (previous) {
-            setDecompressLimit(previous->c_str());
+            BOOST_CHECK_EQUAL(setDecompressLimit(previous->c_str()), 0);
         } else {
-            unsetDecompressLimit();
+            BOOST_CHECK_EQUAL(unsetDecompressLimit(), 0);
         }
     }
 };
@@ -101,7 +107,7 @@ static void checkCodecRejectsOversized(Codec codec, const char *name) {
         writer.close();
     }
 
-    setDecompressLimit("1048576"); // 1 MiB, smaller than the 4 MiB block
+    BOOST_REQUIRE_EQUAL(setDecompressLimit("1048576"), 0); // 1 MiB, smaller than the 4 MiB block
 
     bool rejected = false;
     try {
@@ -151,7 +157,7 @@ static void testWithinLimitStillReads() {
         writer.close();
     }
 
-    setDecompressLimit("1048576");
+    BOOST_REQUIRE_EQUAL(setDecompressLimit("1048576"), 0);
 
     std::string out;
     {
