@@ -39,6 +39,24 @@ namespace Avro.Test
     [TestFixture]
     public class BinaryCodecTests
     {
+        private string _previousMaxCollectionItems;
+
+        // The collection-limit tests assume the default caps. AVRO_MAX_COLLECTION_ITEMS
+        // overrides them, so a value set in the shell/CI could make these tests
+        // flaky (or reject a legitimate array). Clear it for each test and restore
+        // it afterward so the tests are deterministic against the defaults.
+        [SetUp]
+        public void ClearCollectionItemsEnv()
+        {
+            _previousMaxCollectionItems = Environment.GetEnvironmentVariable("AVRO_MAX_COLLECTION_ITEMS");
+            Environment.SetEnvironmentVariable("AVRO_MAX_COLLECTION_ITEMS", null);
+        }
+
+        [TearDown]
+        public void RestoreCollectionItemsEnv()
+        {
+            Environment.SetEnvironmentVariable("AVRO_MAX_COLLECTION_ITEMS", _previousMaxCollectionItems);
+        }
 
         /// <summary>
         /// Writes an avro type T with value t into a stream using the encode method e
