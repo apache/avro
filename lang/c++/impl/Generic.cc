@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
+#include <cerrno>
 #include <limits>
 #include <utility>
 
@@ -119,8 +120,11 @@ static CollectionLimits collectionLimits() {
     const char *env = std::getenv("AVRO_MAX_COLLECTION_ITEMS");
     if (env != nullptr && *env != '\0') {
         char *end = nullptr;
+        errno = 0;
         long long value = std::strtoll(env, &end, 10);
-        if (*end == '\0' && value >= 0) {
+        // Ignore an overflowing value (errno == ERANGE) rather than accepting a
+        // saturated LLONG_MAX, which would effectively disable the caps.
+        if (errno == 0 && *end == '\0' && value >= 0) {
             return {static_cast<int64_t>(value), static_cast<int64_t>(value)};
         }
     }

@@ -21,6 +21,7 @@
 #include "Zigzag.hh"
 #include <cstdint>
 #include <cstdlib>
+#include <cerrno>
 #include <limits>
 #include <memory>
 
@@ -41,8 +42,11 @@ static int64_t maxCollectionStructural() {
     const char *env = std::getenv("AVRO_MAX_COLLECTION_ITEMS");
     if (env != nullptr && *env != '\0') {
         char *end = nullptr;
+        errno = 0;
         long long value = std::strtoll(env, &end, 10);
-        if (*end == '\0' && value >= 0) {
+        // Ignore an overflowing value (errno == ERANGE) rather than accepting a
+        // saturated LLONG_MAX, which would effectively remove the structural cap.
+        if (errno == 0 && *end == '\0' && value >= 0) {
             return static_cast<int64_t>(value);
         }
     }
