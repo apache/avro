@@ -167,6 +167,7 @@ void BinaryDecoder::decodeString(std::string &value) {
 
 void BinaryDecoder::skipString() {
     size_t len = doDecodeLength();
+    checkAvailableBytes(len);
     in_.skipBytes(len);
 }
 
@@ -181,6 +182,7 @@ void BinaryDecoder::decodeBytes(std::vector<uint8_t> &value) {
 
 void BinaryDecoder::skipBytes() {
     size_t len = doDecodeLength();
+    checkAvailableBytes(len);
     in_.skipBytes(len);
 }
 
@@ -212,7 +214,13 @@ size_t BinaryDecoder::doDecodeItemCount() {
         if (result == INT64_MIN) {
             throw Exception("Invalid negative block count: {}", result);
         }
-        doDecodeLong();
+        int64_t blockSize = doDecodeLong();
+        if (blockSize < 0) {
+            // The byte-size that follows a negative block count is a byte count
+            // and must be non-negative; reject malformed input here too (as
+            // skipArray already does) so arrayStart()/mapStart() fail fast.
+            throw Exception("Invalid negative block byte-size: {}", blockSize);
+        }
         result = -result;
     }
     // On builds where size_t is narrower than int64_t (e.g. 32-bit), reject a
