@@ -518,6 +518,52 @@ describe('files', function () {
       encoder.end(1);
     });
 
+    it('surfaces a single error for many failing blocks', function (cb) {
+      // A codec that fails on every block must not emit one 'error' per block
+      // (an error storm); only the first should surface and the stream should be
+      // destroyed.
+      var t = createType('int');
+      var codecs = {
+        'null': function (data, cb) { cb(new Error('ouch')); }
+      };
+      var encoder = new streams.BlockEncoder(t, {codec: 'null', blockSize: 1});
+      var decoder = new streams.BlockDecoder({codecs: codecs});
+      var errorCount = 0;
+      decoder.on('data', function () {}).on('error', function () { errorCount++; });
+      encoder.pipe(decoder);
+      // Write many records; blockSize 1 forces many separate blocks.
+      for (var i = 0; i < 100; i++) { encoder.write(i); }
+      encoder.end();
+      setTimeout(function () {
+        assert.equal(errorCount, 1);
+        assert(decoder.destroyed);
+        cb();
+      }, 100);
+    });
+
+    it('createFileDecoder tears down the source on error', function (cb) {
+      // Write a valid file, then decode it with a codec that always fails; the
+      // underlying file stream must be destroyed (descriptor released) rather
+      // than left reading a file already known to be bad.
+      var t = createType('int');
+      var filePath = tmp.fileSync().name;
+      var encoder = files.createFileEncoder(filePath, t);
+      for (var i = 0; i < 100; i++) { encoder.write(i); }
+      encoder.end();
+      encoder.getDownstream().on('finish', function () {
+        var errorCount = 0;
+        var decoder = files.createFileDecoder(filePath, {
+          codecs: { 'null': function (data, cb) { cb(new Error('ouch')); } }
+        });
+        decoder.on('data', function () {}).on('error', function () { errorCount++; });
+        setTimeout(function () {
+          assert.equal(errorCount, 1);
+          assert(decoder.destroyed);
+          cb();
+        }, 100);
+      });
+    });
+
     it('decompression late read', function (cb) {
       var chunks = [];
       var encoder = new streams.BlockEncoder(createType('int'));
