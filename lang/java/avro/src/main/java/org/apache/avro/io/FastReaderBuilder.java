@@ -533,9 +533,13 @@ public class FastReaderBuilder {
     if (count <= 0) {
       return;
     }
-    GenericDatumReader.ensureAvailableCollectionBytes(decoder, count, elementType);
     if (zeroByteElements) {
+      // The bytes-remaining check cannot bound zero-byte elements (minBytes is
+      // 0, so ensureAvailableCollectionBytes would no-op after recomputing it);
+      // apply the heap-aware allocation cap instead.
       SystemLimitException.checkMaxCollectionAllocation(total, count);
+    } else {
+      GenericDatumReader.ensureAvailableCollectionBytes(decoder, count, elementType);
     }
   }
 

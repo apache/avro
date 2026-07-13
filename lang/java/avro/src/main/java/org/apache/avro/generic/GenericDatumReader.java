@@ -810,10 +810,13 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       boolean zeroByteElements = isZeroByteSchema(elementType);
       long arrayTotal = 0;
       for (long l = in.skipArray(); l > 0; l = in.skipArray()) {
+        // Always enforce the cumulative structural cap, then additionally the
+        // heap-aware allocation cap for zero-byte elements (which the structural
+        // cap alone does not bound tightly), so a huge count split across blocks
+        // cannot drive an unbounded skip loop.
+        SystemLimitException.checkMaxCollectionLength(arrayTotal, l);
         if (zeroByteElements) {
           SystemLimitException.checkMaxCollectionAllocation(arrayTotal, l);
-        } else {
-          SystemLimitException.checkMaxCollectionLength(arrayTotal, l);
         }
         arrayTotal += l;
         for (long i = 0; i < l; i++) {
