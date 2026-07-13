@@ -423,9 +423,10 @@ sub encode_long {
     is scalar(@$dec), $count, "array of nulls is not falsely rejected";
 }
 
-## Zero-byte elements (null, zero-length fixed, all-null records) consume no
-## input, so the bytes-remaining check cannot bound them. A huge declared block
-## count of such elements is capped instead.
+## Zero-byte elements (null, all-null records) consume no input, so the
+## bytes-remaining check cannot bound them. A huge declared block count of such
+## elements is capped instead. (Fixed is not zero-byte here: this SDK's schema
+## parser requires a positive Fixed size.)
 sub decode_zero_byte_array {
     my ($items_schema, $enc) = @_;
     my $schema = Avro::Schema->parse(qq({ "type": "array", "items": $items_schema }));
