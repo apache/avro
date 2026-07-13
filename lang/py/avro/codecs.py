@@ -80,6 +80,18 @@ def _raise_decompression_too_large(limit: int) -> None:
     raise avro.errors.AvroDecompressionSizeException(f"Decompressed block size exceeds the maximum allowed of {limit} bytes")
 
 
+def _decompress_read_ceiling(limit: int) -> int:
+    """Return limit + 1 (one byte past the limit, to detect an over-limit block),
+    but never exceeding sys.maxsize so the value stays a valid Py_ssize_t.
+
+    zlib/bz2 decompress() raise OverflowError for a max_length above Py_ssize_t.
+    When the limit is already sys.maxsize (an oversized env override, clamped by
+    _max_decompress_length), no realistic block can exceed it, so returning
+    sys.maxsize instead of sys.maxsize + 1 is safe.
+    """
+    return limit if limit >= sys.maxsize else limit + 1
+
+
 def _snappy_uncompressed_length(data: bytes) -> "int | None":
     """Return the uncompressed length declared in a raw Snappy block header.
 
@@ -188,17 +200,18 @@ class DeflateCodec(Codec):
         # leaves unconsumed input in unconsumed_tail, and flush() would otherwise
         # emit the remainder unbounded, so drain the tail in a loop and bound the
         # final flush too.
+        ceiling = _decompress_read_ceiling(limit)
         uncompressed = bytearray()
         pending = data
         while True:
-            want = limit + 1 - len(uncompressed)
+            want = ceiling - len(uncompressed)
             uncompressed += decompressor.decompress(pending, want)
             if len(uncompressed) > limit:
                 _raise_decompression_too_large(limit)
             pending = decompressor.unconsumed_tail
             if not pending:
                 break
-        uncompressed += decompressor.flush(limit + 1 - len(uncompressed))
+        uncompressed += decompressor.flush(ceiling - len(uncompressed))
         if len(uncompressed) > limit:
             _raise_decompression_too_large(limit)
         if not decompressor.eof:
@@ -221,13 +234,14 @@ if has_bzip2:
             length = readers_decoder.read_long()
             data = readers_decoder.read(length)
             limit = _max_decompress_length()
+            ceiling = _decompress_read_ceiling(limit)
             uncompressed = bytearray()
             decompressor = bz2.BZ2Decompressor()
             input_data = data
             while True:
                 # Request enough to detect exceeding the limit without allocating
                 # the full (potentially huge) output.
-                want = limit + 1 - len(uncompressed)
+                want = ceiling - len(uncompressed)
                 if want <= 0:
                     want = 1
                 uncompressed += decompressor.decompress(input_data, want)
