@@ -198,7 +198,18 @@ static int decode_snappy(avro_codec_t c, void * data, int64_t len)
                 return 1;
         }
 
-        if (snappy_uncompressed_length((const char*)data, len-4, &outlen) != SNAPPY_OK) {
+        /* Snappy's APIs take the compressed length as a size_t. On platforms
+         * where size_t is narrower than int64_t (e.g. 32-bit), a large len-4
+         * would truncate during conversion and lead to out-of-bounds reads;
+         * reject it and use a single size_t for the payload length. */
+        if ((uint64_t) (len - 4) > (uint64_t) SIZE_MAX) {
+                avro_set_error("Snappy compressed length %lld is out of range",
+                               (long long) (len - 4));
+                return 1;
+        }
+        size_t inlen = (size_t) (len - 4);
+
+        if (snappy_uncompressed_length((const char*)data, inlen, &outlen) != SNAPPY_OK) {
 		avro_set_error("Uncompressed length error in snappy");
 		return 1;
         }
@@ -225,14 +236,14 @@ static int decode_snappy(avro_codec_t c, void * data, int64_t len)
 		return 1;
 	}
 
-        if (snappy_uncompress((const char*)data, len-4, (char*)c->block_data, &outlen) != SNAPPY_OK)
+        if (snappy_uncompress((const char*)data, inlen, (char*)c->block_data, &outlen) != SNAPPY_OK)
         {
                 avro_set_error("Error uncompressing block with Snappy");
 		return 1;
 	}
 
         crc = __bswap_32(crc32(0, (const Bytef *)c->block_data, outlen));
-        if (memcmp(&crc, (char*)data+len-4, 4))
+        if (memcmp(&crc, (char*)data+inlen, 4))
         {
                 avro_set_error("CRC32 check failure uncompressing block with Snappy");
 		return 1;
