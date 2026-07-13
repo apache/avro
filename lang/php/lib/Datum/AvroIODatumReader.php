@@ -644,7 +644,11 @@ class AvroIODatumReader
             case AvroSchema::DOUBLE_TYPE:
                 return 8;
             case AvroSchema::FIXED_SCHEMA:
-                return $schema instanceof AvroFixedSchema ? $schema->size() : 1;
+                // Clamp to >= 0: a malformed fixed schema could have a negative
+                // size (AvroSchema::parse does not reject it), which would make
+                // this negative and cause ensureCollectionAvailable to treat the
+                // element as zero-byte.
+                return $schema instanceof AvroFixedSchema ? max(0, $schema->size()) : 1;
             case AvroSchema::RECORD_SCHEMA:
             case AvroSchema::ERROR_SCHEMA:
                 if (!$schema instanceof AvroRecordSchema) {
