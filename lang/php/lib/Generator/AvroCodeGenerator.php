@@ -403,7 +403,7 @@ class AvroCodeGenerator
     {
         $normalizedPart = preg_replace('/\W+/', '_', $part);
         if (null === $normalizedPart || '' === $normalizedPart) {
-            return 'Generated';
+            throw new AvroCodeGeneratorException("Unable to normalize name part '$part'.");
         }
 
         return ucfirst($normalizedPart);
