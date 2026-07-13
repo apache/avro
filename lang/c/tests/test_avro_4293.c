@@ -53,8 +53,10 @@ static void unset_collection_limit(void)
 }
 #endif
 
-/* Decodes buf against the given schema and returns the avro_value_read rc.
- * A non-zero rc means the read was rejected. */
+/* Decodes buf against the given schema. Returns the avro_value_read rc (0 on a
+ * successful read, non-zero when the read is rejected), or -1 if the test
+ * harness itself fails to set up (avro_generic_value_new / avro_reader_memory).
+ * Callers distinguish "rejected" (> 0) from "harness error" (-1). */
 static int try_decode(avro_value_iface_t *iface, const char *buf, size_t buf_size)
 {
 	int rc;
