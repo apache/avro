@@ -436,15 +436,21 @@ class BinaryDecoder:
 
     def skip_long(self) -> None:
         b = ord(self.read(1))
-        count = 1
+        shift = 7
         while (b & 0x80) != 0:
             # A 64-bit varint is at most 10 bytes; reject an overlong chain so a
             # skipped long can't force scanning unbounded input (read_long caps
             # the same way).
-            if count >= 10:
+            if shift >= 70:
                 raise avro.errors.InvalidAvroBinaryEncoding("Varint is too long")
             b = ord(self.read(1))
-            count += 1
+            # The 10th byte (shift == 63) contributes only bit 63; any higher
+            # payload bit would push the value outside the 64-bit range. Reject
+            # it here too so skip_long enforces the same validity as read_long
+            # (e.g. a malformed negative-block byte-size in read_array/read_map).
+            if shift == 63 and (b & 0x7E) != 0:
+                raise avro.errors.InvalidAvroBinaryEncoding("Varint is too long")
+            shift += 7
 
     def skip_float(self) -> None:
         self.skip(4)
