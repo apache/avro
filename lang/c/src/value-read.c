@@ -540,6 +540,15 @@ read_value(avro_reader_t reader, avro_value_t *dest)
 				     read_long(reader, &val),
 				     "Cannot read enum value: ");
 			enum_schema = avro_value_get_schema(dest);
+			/* A custom value interface could return a NULL or
+			 * non-enum schema, for which
+			 * avro_schema_enum_number_of_symbols returns a negative
+			 * error code that would make the range check below accept
+			 * out-of-range values. Reject that up front. */
+			if (!is_avro_enum(enum_schema)) {
+				avro_set_error("Not an enum schema for enum value");
+				return EINVAL;
+			}
 			symbol_count =
 			    avro_schema_enum_number_of_symbols(enum_schema);
 			if (val < 0 || val >= symbol_count) {
