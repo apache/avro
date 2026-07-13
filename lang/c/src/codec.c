@@ -69,6 +69,12 @@ avro_max_decompress_length(void)
 		errno = 0;
 		long long value = strtoll(env, &end, 10);
 		if (errno == 0 && end != NULL && *end == '\0' && value > 0) {
+			/* Clamp to INT64_MAX before narrowing to int64_t: long
+			 * long may be wider than 64-bit, so a large (but valid)
+			 * value could otherwise overflow/wrap in the cast. */
+			if (value > (long long) INT64_MAX) {
+				value = (long long) INT64_MAX;
+			}
 			int64_t v = (int64_t) value;
 			/* Clamp to what size_t can address so the value is always
 			 * safe to use as an allocation cap. On 32-bit platforms
