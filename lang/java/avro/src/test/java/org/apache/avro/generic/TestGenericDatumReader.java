@@ -425,11 +425,13 @@ public class TestGenericDatumReader {
 
   /**
    * Full matrix: every collection kind must be rejected (never OOM) with a huge
-   * declared block count and no element data, on both the fast (default) and the
-   * classic reader. Zero-byte-element arrays are bounded by the heap-aware
-   * allocation cap (SystemLimitException); every other kind is bounded by the
-   * bytes-remaining check (EOFException). Maps always carry a >=1-byte key so
-   * they fall in the latter group regardless of the value type.
+   * declared block count and effectively no element data (only a trailing {@code
+   * 0L} varint, used as a single element value or a 0-length map key), on both
+   * the fast (default) and the classic reader. Zero-byte-element arrays are
+   * bounded by the heap-aware allocation cap (SystemLimitException); every other
+   * kind is bounded by the bytes-remaining check (EOFException). Maps always
+   * carry a >=1-byte key so they fall in the latter group regardless of the value
+   * type.
    */
   @Test
   void hugeCollectionsRejectedOnBothReaderPaths() throws Exception {
