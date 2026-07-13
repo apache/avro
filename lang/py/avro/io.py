@@ -292,6 +292,11 @@ class BinaryDecoder:
             if shift >= 70:
                 raise avro.errors.InvalidAvroBinaryEncoding("Varint is too long")
             b = ord(self.read(1))
+            # The 10th byte (shift == 63) contributes only bit 63; any higher
+            # payload bit would push the value outside the 64-bit range, so a
+            # valid zig-zag long must have them clear.
+            if shift == 63 and (b & 0x7E) != 0:
+                raise avro.errors.InvalidAvroBinaryEncoding("Varint is too long")
             n |= (b & 0x7F) << shift
             shift += 7
         datum = (n >> 1) ^ -(n & 1)
