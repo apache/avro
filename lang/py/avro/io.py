@@ -665,8 +665,10 @@ class BinaryEncoder:
 #
 # DatumReader/Writer
 #
-#: Environment variable overriding the maximum number of zero-byte-encoded
-#: collection elements (e.g. an array of nulls) to allocate from a single decode.
+#: Environment variable overriding the collection element limits. When set to a
+#: non-negative integer it caps both the number of zero-byte-encoded collection
+#: elements (e.g. an array of nulls) and the structural cap on the total number of
+#: elements in any collection, allocated from a single decode.
 MAX_COLLECTION_ITEMS_ENV = "AVRO_MAX_COLLECTION_ITEMS"
 
 #: Default maximum number of zero-byte-encoded collection elements to allocate.
