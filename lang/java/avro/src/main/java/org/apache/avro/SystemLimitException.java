@@ -188,12 +188,13 @@ public class SystemLimitException extends AvroRuntimeException {
   }
 
   /**
-   * Calculate the default maximum number of zero-byte-encoded array elements to
-   * allocate at once, as a fraction of the maximum heap. Such elements consume no
-   * input bytes, so the usual "bytes remaining" bound does not apply and the
-   * allocation must instead be capped relative to the available memory.
+   * Calculate the default maximum number of array elements whose minimum encoded
+   * size is zero to allocate at once, as a fraction of the maximum heap. Such
+   * elements consume no guaranteed input bytes, so the usual "bytes remaining"
+   * bound does not apply and the allocation must instead be capped relative to
+   * the available memory.
    *
-   * @return the calculated default max zero-byte element count.
+   * @return the calculated default max element count.
    */
   private static long defaultMaxCollectionAllocation() {
     long heapBudget = Math.max(1L, Runtime.getRuntime().maxMemory() / DEFAULT_MAX_COLLECTION_ALLOCATION_HEAP_FRACTION);
