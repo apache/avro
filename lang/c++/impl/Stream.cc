@@ -132,7 +132,10 @@ public:
     }
 
     int64_t remainingBytes() const final {
-        return static_cast<int64_t>(size_ - curLen_);
+        // Subtract in int64_t: if an invariant were ever violated (curLen_ >
+        // size_), doing the subtraction in unsigned size_t would underflow to a
+        // huge value and weaken the available-bytes guard.
+        return static_cast<int64_t>(size_) - static_cast<int64_t>(curLen_);
     }
 };
 

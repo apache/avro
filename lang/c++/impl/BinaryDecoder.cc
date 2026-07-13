@@ -79,6 +79,7 @@ class BinaryDecoder : public Decoder {
     size_t decodeUnionIndex() final;
 
     int64_t doDecodeLong();
+    size_t decodeIndex();
     size_t doDecodeItemCount();
     size_t doDecodeLength();
     void checkAvailableBytes(size_t len);
@@ -202,7 +203,7 @@ void BinaryDecoder::skipFixed(size_t n) {
 }
 
 size_t BinaryDecoder::decodeEnum() {
-    return static_cast<size_t>(doDecodeLong());
+    return decodeIndex();
 }
 
 size_t BinaryDecoder::arrayStart() {
@@ -302,7 +303,7 @@ size_t BinaryDecoder::skipMap() {
 }
 
 size_t BinaryDecoder::decodeUnionIndex() {
-    return static_cast<size_t>(doDecodeLong());
+    return decodeIndex();
 }
 
 int64_t BinaryDecoder::doDecodeLong() {
@@ -319,6 +320,23 @@ int64_t BinaryDecoder::doDecodeLong() {
     } while (u & 0x80);
 
     return decodeZigzag64(encoded);
+}
+
+// Decode an enum ordinal or union branch index. Both are wire longs that the
+// callers cast to size_t; validate the decoded value here so a negative index
+// cannot wrap to a huge size_t and a value beyond size_t (possible where size_t
+// is narrower than int64_t, e.g. 32-bit builds) cannot truncate into a
+// spuriously in-range branch. The concrete bound (against the enum/union size)
+// is still enforced by the caller.
+size_t BinaryDecoder::decodeIndex() {
+    int64_t index = doDecodeLong();
+    if (index < 0) {
+        throw Exception("Invalid negative index: {}", index);
+    }
+    if (static_cast<uint64_t>(index) > std::numeric_limits<size_t>::max()) {
+        throw Exception("Index {} is out of range", index);
+    }
+    return static_cast<size_t>(index);
 }
 
 } // namespace avro
