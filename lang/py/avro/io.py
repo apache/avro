@@ -459,12 +459,28 @@ class BinaryDecoder:
         self.skip(8)
 
     def skip_bytes(self) -> None:
-        self.skip(self.read_long())
+        # The length prefix is attacker-controlled: a negative value would seek
+        # backwards (corrupting the decoder position, e.g. an infinite loop
+        # during schema resolution) and an oversized value past EOF. Validate it
+        # the same way ``read`` does before skipping.
+        n = self.read_long()
+        if n < 0:
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Requested {n} bytes to skip, expected positive integer.")
+        if n > self._MAX_UNCHECKED_READ:
+            remaining = self.bytes_remaining()
+            if remaining is not None and n > remaining:
+                raise avro.errors.InvalidAvroBinaryEncoding(f"Requested {n} bytes to skip, but only {remaining} remain.")
+        self.skip(n)
 
     def skip_utf8(self) -> None:
         self.skip_bytes()
 
     def skip(self, n: int) -> None:
+        # Guard against a negative skip (a backward seek), which would corrupt
+        # the decoder position. Callers pass schema-derived sizes (fixed/float/
+        # double) or already-validated lengths, so this is a defensive backstop.
+        if n < 0:
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Cannot skip a negative number of bytes: {n}")
         self.reader.seek(self.reader.tell() + n)
 
 

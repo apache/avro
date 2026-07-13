@@ -621,6 +621,38 @@ class TestBinaryDecoderAvailableBytes(unittest.TestCase):
         decoder = avro.io.BinaryDecoder(NonSeekable(prefix))  # type: ignore[arg-type]
         self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, decoder.read_bytes)
 
+    def test_skip_bytes_rejects_negative_length(self) -> None:
+        # A negative length prefix on a skipped bytes/string field would seek
+        # backwards; it must be rejected rather than corrupting the position.
+        prefix = self._encode_length_prefix(-5)
+        with io.BytesIO(prefix + b"payload") as bio:
+            decoder = avro.io.BinaryDecoder(bio)
+            self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, decoder.skip_bytes)
+
+    def test_skip_bytes_rejects_length_beyond_stream(self) -> None:
+        # A skipped bytes/string field declaring far more bytes than remain is
+        # rejected on a seekable reader before seeking past EOF.
+        prefix = self._encode_length_prefix(100 * 1024 * 1024)
+        with io.BytesIO(prefix) as bio:
+            decoder = avro.io.BinaryDecoder(bio)
+            self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, decoder.skip_bytes)
+
+    def test_skip_bytes_within_stream_still_skips(self) -> None:
+        # A well-formed skipped value advances the position past its data.
+        buf = io.BytesIO()
+        avro.io.BinaryEncoder(buf).write_bytes(b"hello")
+        trailer = b"AFTER"
+        with io.BytesIO(buf.getvalue() + trailer) as bio:
+            decoder = avro.io.BinaryDecoder(bio)
+            decoder.skip_bytes()
+            self.assertEqual(bio.read(), trailer)
+
+    def test_skip_rejects_negative(self) -> None:
+        # The low-level skip() backstop rejects a negative byte count.
+        with io.BytesIO(b"abcdef") as bio:
+            decoder = avro.io.BinaryDecoder(bio)
+            self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, decoder.skip, -1)
+
 
 class TestDatumReaderCollectionAvailableBytes(unittest.TestCase):
     """An array/map block declares an element count; a malicious or truncated
