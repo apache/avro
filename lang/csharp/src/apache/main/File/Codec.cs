@@ -105,8 +105,18 @@ namespace Avro.File
             int read;
             while ((read = source.Read(buffer, 0, buffer.Length)) > 0)
             {
+                // Pre-add bound check: total is always <= maxLength here and
+                // read > 0, so maxLength - total >= 0 and this cannot overflow.
+                // Rejecting before adding stops total from overflowing and
+                // wrapping past the limit for a very large maxLength.
+                if (read > maxLength - total)
+                {
+                    throw new AvroRuntimeException(
+                        $"Decompressed block size exceeds the maximum allowed of {maxLength} bytes. " +
+                        $"Set the {MaxDecompressLengthEnvVar} environment variable to raise the limit.");
+                }
+
                 total += read;
-                CheckDecompressLength(total, maxLength);
                 destination.Write(buffer, 0, read);
             }
         }
