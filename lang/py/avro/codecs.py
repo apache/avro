@@ -175,14 +175,23 @@ class DeflateCodec(Codec):
         # "raw" (no zlib headers) decompression.  See zlib.h.
         limit = _max_decompress_length()
         decompressor = zlib.decompressobj(-15)
-        # Request at most limit + 1 bytes so that an over-large block is detected
-        # without allocating the whole (potentially huge) output. Accumulate into
-        # a bytearray so the flush() output is appended in place rather than
-        # creating an extra full-size copy of the already-decompressed data.
-        uncompressed = bytearray(decompressor.decompress(data, limit + 1))
-        if len(uncompressed) > limit:
-            _raise_decompression_too_large(limit)
-        uncompressed += decompressor.flush()
+        # Decompress in bounded steps: request at most (limit + 1 - produced)
+        # bytes each call so the accumulated output can never exceed the limit by
+        # more than one byte before being rejected. decompress()'s max_length
+        # leaves unconsumed input in unconsumed_tail, and flush() would otherwise
+        # emit the remainder unbounded, so drain the tail in a loop and bound the
+        # final flush too.
+        uncompressed = bytearray()
+        pending = data
+        while True:
+            want = limit + 1 - len(uncompressed)
+            uncompressed += decompressor.decompress(pending, want)
+            if len(uncompressed) > limit:
+                _raise_decompression_too_large(limit)
+            pending = decompressor.unconsumed_tail
+            if not pending:
+                break
+        uncompressed += decompressor.flush(limit + 1 - len(uncompressed))
         if len(uncompressed) > limit:
             _raise_decompression_too_large(limit)
         if not decompressor.eof:
