@@ -583,6 +583,7 @@ describe('files', function () {
       var encoder = new streams.BlockEncoder(t, {codec: 'deflate'});
       var decoder = new streams.BlockDecoder({maxDecompressLength: Infinity})
         .on('data', function (s) { out.push(s); })
+        .on('error', function (err) { restore(); cb(err); })
         .on('end', function () {
           restore();
           assert.deepEqual(out, [payload]);
