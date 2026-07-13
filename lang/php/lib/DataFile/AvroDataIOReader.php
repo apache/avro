@@ -370,7 +370,11 @@ class AvroDataIOReader
 
         self::checkDecompressLength(strlen($datum), $maxLength);
 
-        if ($crc32 !== crc32($datum)) {
+        // Compare the CRC32 values in a common unsigned representation:
+        // unpack('N') can yield a float (> PHP_INT_MAX) on 32-bit PHP while
+        // crc32() yields a (possibly negative) int, so a strict/int comparison
+        // would report false mismatches for valid data.
+        if (sprintf('%u', $crc32) !== sprintf('%u', crc32($datum))) {
             throw new AvroException('snappy uncompression failed - crc32 mismatch.');
         }
 
