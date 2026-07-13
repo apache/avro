@@ -2252,10 +2252,13 @@ function readArraySize(tap) {
  * Minimum number of bytes a value of the given type can occupy on the wire.
  *
  * Used to bound collection block counts against the bytes actually remaining.
- * Memoized on the type; recursive records are handled with a `seen` guard
- * (a directly self-referential required field cannot encode in finite bytes,
- * and self-references reached through an array/map/union already contribute at
- * least one byte before recursing, so returning 0 on a cycle is safe).
+ * Memoized on the type; recursive records are handled with a `seen` guard that
+ * returns 0 when a cycle is detected. That 0 is a deliberately conservative
+ * lower bound: for a schema whose true minimum can't be determined without
+ * unbounded recursion, under-estimating can only make the bytes-remaining check
+ * more permissive (it never rejects otherwise-valid data), so it is safe for
+ * that check even though it may be smaller than the true minimum for a union
+ * whose only small branch is a recursive record.
  */
 function getMinBytes(type, seen) {
   if (type._minBytes !== undefined) {
