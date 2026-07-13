@@ -1074,8 +1074,31 @@ class TestDatumReaderCollectionSizeLimit(unittest.TestCase):
                 cast(avro.io.BinaryDecoder, FailingSkipDecoder()),
                 10,  # block_size
                 5,  # block_count
-                0,  # min_bytes (zero-byte element, so the lower-bound check is skipped)
+                1,  # min_bytes > 0 so the skip is actually attempted (and fails)
             )
+
+    def test_skip_block_bytes_rejects_positive_size_for_zero_byte_element(self) -> None:
+        # A zero-byte element type (min_bytes == 0) encodes to exactly 0 bytes, so
+        # its sized block must be empty; a positive block size would skip into the
+        # following fields and corrupt decoder alignment.
+        class NoSkipDecoder:
+            def bytes_remaining(self) -> None:
+                return None
+
+            def skip(self, n: int) -> None:
+                if n != 0:  # pragma: no cover - must not be reached
+                    raise AssertionError("skip should not be called with a positive size for a zero-byte block")
+
+        self.assertRaises(
+            avro.errors.InvalidAvroBinaryEncoding,
+            avro.io.DatumReader._skip_block_bytes,
+            cast(avro.io.BinaryDecoder, NoSkipDecoder()),
+            10,  # block_size (must be 0 for a zero-byte element type)
+            5,  # block_count
+            0,  # min_bytes (zero-byte element type)
+        )
+        # A zero-size block for a zero-byte element type is valid and skips nothing.
+        avro.io.DatumReader._skip_block_bytes(cast(avro.io.BinaryDecoder, NoSkipDecoder()), 0, 5, 0)
 
     def test_invalid_env_override_falls_back_to_default(self) -> None:
         with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "not-a-number"}):

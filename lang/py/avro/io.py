@@ -1023,15 +1023,23 @@ class DatumReader:
         backwards and an oversized value past EOF, either corrupting the decoder
         position. Also require that block_size can plausibly hold block_count
         elements at their minimum on-wire size, so a too-small size cannot
-        misalign the decoder. Reject before skipping.
+        misalign the decoder. A zero-byte element type (``null``, a zero-length
+        ``fixed``, or a record of only zero-byte fields) encodes to exactly 0
+        bytes, so its block payload must be empty; a positive size would skip
+        into the following fields. Reject before skipping.
         """
         if block_size < 0:
             raise avro.errors.InvalidAvroBinaryEncoding(f"Invalid negative block size: {block_size}")
         remaining = decoder.bytes_remaining()
         if remaining is not None and block_size > remaining:
             raise avro.errors.InvalidAvroBinaryEncoding(f"Block size {block_size} exceeds the {remaining} bytes remaining")
-        if min_bytes > 0 and block_count > block_size // min_bytes:
-            raise avro.errors.InvalidAvroBinaryEncoding(f"Block size {block_size} is too small for {block_count} elements of >= {min_bytes} bytes")
+        if min_bytes > 0:
+            if block_count > block_size // min_bytes:
+                raise avro.errors.InvalidAvroBinaryEncoding(
+                    f"Block size {block_size} is too small for {block_count} elements of >= {min_bytes} bytes"
+                )
+        elif block_size != 0:
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Block size {block_size} must be 0 for a zero-byte element type")
         try:
             decoder.skip(block_size)
         except (OSError, ValueError, OverflowError, AttributeError, TypeError) as e:
