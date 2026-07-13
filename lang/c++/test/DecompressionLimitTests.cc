@@ -39,17 +39,17 @@ namespace avro {
 
 static void setDecompressLimit(const char *value) {
 #ifdef _WIN32
-    _putenv_s("AVRO_MAX_DECOMPRESS_LENGTH", value);
+    BOOST_REQUIRE_EQUAL(_putenv_s("AVRO_MAX_DECOMPRESS_LENGTH", value), 0);
 #else
-    setenv("AVRO_MAX_DECOMPRESS_LENGTH", value, 1);
+    BOOST_REQUIRE_EQUAL(setenv("AVRO_MAX_DECOMPRESS_LENGTH", value, 1), 0);
 #endif
 }
 
 static void unsetDecompressLimit() {
 #ifdef _WIN32
-    _putenv_s("AVRO_MAX_DECOMPRESS_LENGTH", "");
+    BOOST_REQUIRE_EQUAL(_putenv_s("AVRO_MAX_DECOMPRESS_LENGTH", ""), 0);
 #else
-    unsetenv("AVRO_MAX_DECOMPRESS_LENGTH");
+    BOOST_REQUIRE_EQUAL(unsetenv("AVRO_MAX_DECOMPRESS_LENGTH"), 0);
 #endif
 }
 
@@ -115,7 +115,7 @@ static void checkCodecRejectsOversized(Codec codec, const char *name) {
         BOOST_CHECK_MESSAGE(rejected,
                             std::string("unexpected exception for ") + name + ": " + e.what());
     }
-    std::filesystem::remove(path);
+    BOOST_CHECK(std::filesystem::remove(path));
     BOOST_CHECK_MESSAGE(rejected, std::string("codec not bounded: ") + name);
 }
 
@@ -158,7 +158,7 @@ static void testWithinLimitStillReads() {
         DataFileReader<std::string> reader(path.c_str(), schema);
         BOOST_CHECK(reader.read(out));
     }
-    std::filesystem::remove(path);
+    BOOST_CHECK(std::filesystem::remove(path));
     BOOST_CHECK_EQUAL(out, payload);
 }
 
