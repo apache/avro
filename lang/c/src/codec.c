@@ -398,8 +398,16 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 
 	c->used_size = 0;
 
+	/* zlib's avail_in is a uInt; a compressed length above UINT_MAX would
+	 * truncate and cause incorrect/incomplete decompression. Reject it. */
+	if (len < 0 || len > (int64_t) UINT_MAX) {
+		avro_set_error("Compressed block size %lld is out of range for deflate",
+			       (long long) len);
+		return 1;
+	}
+
 	s->next_in = data;
-	s->avail_in = len;
+	s->avail_in = (uInt) len;
 
 	s->next_out = c->block_data;
 	s->avail_out = c->block_size;
