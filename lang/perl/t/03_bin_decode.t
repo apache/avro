@@ -87,7 +87,7 @@ EOJ
 ## union and enum index bounds
 {
     my $union = Avro::Schema->parse(q(["string","null"]));
-    # Index 2 (zig-zag long 0x04) is out of range for a 2-branch union.
+    # Index 2 (zig-zag int 0x04) is out of range for a 2-branch union.
     open my $reader, '<', \"\x04" or die "Can't open memory file: $!";
     throws_ok {
         Avro::BinaryDecoder->decode(
@@ -97,7 +97,7 @@ EOJ
         );
     } 'Avro::Schema::Error::Parse', "union branch index out of range is rejected";
 
-    # Index -1 (zig-zag long 0x01) must not wrap to a valid branch.
+    # Index -1 (zig-zag int 0x01) must not wrap to a valid branch.
     open $reader, '<', \"\x01" or die "Can't open memory file: $!";
     throws_ok {
         Avro::BinaryDecoder->decode(
