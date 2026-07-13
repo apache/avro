@@ -679,7 +679,16 @@ void DataFileReaderBase::readDataBlock() {
 
             const uint8_t *data;
             size_t len;
-            const size_t maxLength = maxDecompressLength();
+            size_t maxLength = maxDecompressLength();
+            // zlib tracks output in a uLong (z_stream::total_out), which is only
+            // 32-bit on some platforms (e.g. Windows). Cap the working limit to
+            // uLong's range so the buffer-size arithmetic below (which uses
+            // total_out) cannot wrap when a larger AVRO_MAX_DECOMPRESS_LENGTH is
+            // configured.
+            const uLong zlibMax = std::numeric_limits<uLong>::max();
+            if (maxLength > zlibMax) {
+                maxLength = zlibMax;
+            }
             while (ret != Z_STREAM_END && st->next(&data, &len)) {
                 zs.avail_in = static_cast<uInt>(len);
                 zs.next_in = const_cast<Bytef *>(data);
