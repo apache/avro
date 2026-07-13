@@ -1027,22 +1027,25 @@ class TestDatumReaderCollectionSizeLimit(unittest.TestCase):
     def test_skip_block_bytes_wraps_seek_error(self) -> None:
         # A sized (negative-count) skip block seeks by the declared byte size. If
         # the underlying reader rejects the seek, surface it as an Avro decoding
-        # error rather than leaking a raw OSError/ValueError/OverflowError.
-        class FailingSkipDecoder:
-            def bytes_remaining(self) -> None:
-                return None
+        # error rather than leaking a raw OSError/ValueError/OverflowError, or an
+        # AttributeError/TypeError from a reader lacking seek()/tell().
+        for exc in (OSError, ValueError, OverflowError, AttributeError, TypeError):
 
-            def skip(self, n: int) -> None:
-                raise OSError("seek not allowed")
+            class FailingSkipDecoder:
+                def bytes_remaining(self) -> None:
+                    return None
 
-        self.assertRaises(
-            avro.errors.InvalidAvroBinaryEncoding,
-            avro.io.DatumReader._skip_block_bytes,
-            cast(avro.io.BinaryDecoder, FailingSkipDecoder()),
-            10,  # block_size
-            5,  # block_count
-            0,  # min_bytes (zero-byte element, so the lower-bound check is skipped)
-        )
+                def skip(self, n: int, _exc: type = exc) -> None:
+                    raise _exc("cannot skip")
+
+            self.assertRaises(
+                avro.errors.InvalidAvroBinaryEncoding,
+                avro.io.DatumReader._skip_block_bytes,
+                cast(avro.io.BinaryDecoder, FailingSkipDecoder()),
+                10,  # block_size
+                5,  # block_count
+                0,  # min_bytes (zero-byte element, so the lower-bound check is skipped)
+            )
 
     def test_invalid_env_override_falls_back_to_default(self) -> None:
         with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "not-a-number"}):
