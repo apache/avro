@@ -248,6 +248,15 @@ size_t BinaryDecoder::skipArray() {
                 // drive an unbounded skip; reject it.
                 throw Exception("Invalid negative block size: {}", byteSize);
             }
+            // Reject a byte-size that would truncate on the cast (32-bit builds)
+            // and one that exceeds the bytes remaining, so a truncated block is
+            // not silently skipped past EOF by the memory-backed skip().
+            if constexpr (sizeof(size_t) < sizeof(int64_t)) {
+                if (static_cast<uint64_t>(byteSize) > std::numeric_limits<size_t>::max()) {
+                    throw Exception("Block size {} exceeds the maximum supported size", byteSize);
+                }
+            }
+            checkAvailableBytes(static_cast<size_t>(byteSize));
             in_.skipBytes(static_cast<size_t>(byteSize));
         } else {
             // Bound the block count: skipping a huge block of zero-byte elements
