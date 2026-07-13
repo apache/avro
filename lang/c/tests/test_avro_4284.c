@@ -47,8 +47,17 @@ check_codec_rejects_oversized(const char *name, const char *payload, int64_t pay
 	memset(&codec, 0, sizeof(codec));
 
 	if (avro_codec(&codec, name) != 0) {
-		fprintf(stderr, "  codec %s not available, skipping\n", name);
-		return 0;
+		/* A codec that is not compiled in reports "Unknown codec ...";
+		 * only skip in that case. Any other failure (e.g. a compiled-in
+		 * codec whose initialization failed) is a real regression and
+		 * must fail the test rather than be silently skipped. */
+		const char *err = avro_strerror();
+		if (err != NULL && strstr(err, "Unknown codec") != NULL) {
+			fprintf(stderr, "  codec %s not available, skipping\n", name);
+			return 0;
+		}
+		fprintf(stderr, "  codec %s: initialization failed: %s\n", name, err);
+		return 1;
 	}
 
 	if (avro_codec_encode(&codec, (void *) payload, payload_len) != 0) {
