@@ -384,12 +384,13 @@ module Avro
         if declared > limit
           raise DecompressionSizeError, "Decompressed block size exceeds the maximum allowed of #{limit} bytes"
         end
-        # A well-formed block ends with a 4-byte CRC32 trailer. If the buffer is
-        # too short to contain it, don't slice past the start (data[-4..-1] would
-        # be nil and raise on unpack); treat it as a legacy no-checksum block.
-        if data.bytesize >= 4
-          crc32 = data.slice(-4..-1).unpack('N').first
-          uncompressed = Snappy.inflate(data.slice(0..-5))
+        # A well-formed block ends with a 4-byte CRC32 trailer, so it needs at
+        # least one body byte plus the 4-byte trailer. Require > 4 bytes and use
+        # byteslice so the body slice is always a string (data.slice(0..-5) is
+        # nil for a 4-byte buffer, which would raise in Snappy.inflate).
+        if data.bytesize > 4
+          crc32 = data.byteslice(-4, 4).unpack('N').first
+          uncompressed = Snappy.inflate(data.byteslice(0, data.bytesize - 4))
 
           if crc32 == Zlib.crc32(uncompressed)
             return uncompressed
