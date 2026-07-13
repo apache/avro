@@ -728,8 +728,15 @@ def _min_bytes_per_element(schema: avro.schema.Schema, visited: Optional[Set[int
             total += _min_bytes_per_element(field.type, visited)
         visited.discard(id(schema))
         return total
-    # boolean, int, long, bytes, string, enum, union, array, map: all >= 1 byte
-    # (a union encodes at least a 1-byte branch index).
+    if schema_type == "union":
+        # A union encodes a >= 1 byte branch index plus the selected branch's
+        # payload, so its minimum is 1 + the smallest branch minimum (which is
+        # 1 when any branch is null / zero-byte).
+        branches = getattr(schema, "schemas", [])
+        if not branches:
+            return 1
+        return 1 + min(_min_bytes_per_element(branch, visited) for branch in branches)
+    # boolean, int, long, bytes, string, enum, array, map: all >= 1 byte.
     return 1
 
 
