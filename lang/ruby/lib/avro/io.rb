@@ -83,6 +83,9 @@ module Avro
           raise AvroError, "Varint is too long" if count >= 10
           b = byte!
           count += 1
+          # The 10th byte (count == 10) contributes only bit 63; any higher
+          # payload bit would push the value outside the 64-bit range.
+          raise AvroError, "Varint is too long" if count == 10 && (b & 0x7E) != 0
           n |= (b & 0x7F) << shift
           shift += 7
         end
