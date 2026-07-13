@@ -30,6 +30,7 @@ import abc
 import binascii
 import io
 import os
+import sys
 import struct
 import zlib
 from typing import Dict, Tuple, Type
@@ -66,7 +67,13 @@ def _max_decompress_length() -> int:
         parsed = int(value)
     except ValueError:
         return DEFAULT_MAX_DECOMPRESS_LENGTH
-    return parsed if parsed > 0 else DEFAULT_MAX_DECOMPRESS_LENGTH
+    if parsed <= 0:
+        return DEFAULT_MAX_DECOMPRESS_LENGTH
+    # Clamp to sys.maxsize so the value stays a valid Py_ssize_t: it is passed as
+    # the max_length to zlib/bz2 decompress(), which raise OverflowError for a
+    # value that does not fit. sys.maxsize is already far larger than any real
+    # block, so clamping only affects absurd overrides.
+    return min(parsed, sys.maxsize)
 
 
 def _raise_decompression_too_large(limit: int) -> None:
