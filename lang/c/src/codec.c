@@ -68,22 +68,25 @@ avro_max_decompress_length(void)
 		char *end = NULL;
 		errno = 0;
 		long long value = strtoll(env, &end, 10);
-		if (errno == 0 && end != NULL && *end == '\0' && value > 0) {
-			/* Clamp to INT64_MAX before narrowing to int64_t: long
-			 * long may be wider than 64-bit, so a large (but valid)
-			 * value could otherwise overflow/wrap in the cast. */
-			if (value > (long long) INT64_MAX) {
-				value = (long long) INT64_MAX;
+		if (end != NULL && *end == '\0') {
+			/* The largest value usable as an allocation cap: the
+			 * smaller of INT64_MAX and SIZE_MAX. */
+			int64_t max_cap = ((uint64_t) SIZE_MAX < (uint64_t) INT64_MAX)
+			    ? (int64_t) SIZE_MAX : INT64_MAX;
+			/* strtoll returns LLONG_MAX and sets ERANGE on positive
+			 * overflow. A value above the representable range is still
+			 * a request for a very large "max", so clamp to the
+			 * maximum rather than falling back to the (smaller)
+			 * default. */
+			if (errno == ERANGE && value == LLONG_MAX) {
+				return max_cap;
 			}
-			int64_t v = (int64_t) value;
-			/* Clamp to what size_t can address so the value is always
-			 * safe to use as an allocation cap. On 32-bit platforms
-			 * size_t is narrower than int64_t, and an unclamped value
-			 * would truncate when passed to avro_malloc/avro_realloc. */
-			if ((uint64_t) v > (uint64_t) SIZE_MAX) {
-				return (int64_t) SIZE_MAX;
+			if (errno == 0 && value > 0) {
+				if (value > (long long) max_cap) {
+					return max_cap;
+				}
+				return (int64_t) value;
 			}
-			return v;
 		}
 	}
 	return AVRO_DEFAULT_MAX_DECOMPRESS_LENGTH;
