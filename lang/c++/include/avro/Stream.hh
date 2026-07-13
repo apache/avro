@@ -371,10 +371,12 @@ struct StreamReader {
             return -1;
         }
         // Bytes already buffered in this reader, added to what the underlying
-        // stream still has. When next_ and end_ are both null (right after
-        // init()/reset(), before any data is buffered), the subtraction is
-        // well-defined and yields 0.
-        int64_t buffered = end_ - next_;
+        // stream still has. next_ and end_ can both be null right after
+        // init()/reset() (before any data is buffered); subtracting two null
+        // pointers is undefined behavior, so treat equal pointers (including the
+        // both-null case) as zero buffered and only subtract real buffer
+        // pointers. Pointer equality, unlike subtraction, is well-defined here.
+        int64_t buffered = (next_ == end_) ? 0 : (end_ - next_);
         return buffered + streamRemaining;
     }
 
