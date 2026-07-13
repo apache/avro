@@ -248,7 +248,10 @@ class BinaryDecoder:
         try:
             reader.seek(0, os.SEEK_END)
             end = reader.tell()
-            return end - pos
+            # Clamp to 0: a stream positioned past its end (seekable file-like
+            # objects allow seeking beyond EOF) would otherwise report a negative
+            # "remaining", violating the non-negative contract.
+            return max(0, end - pos)
         except (OSError, ValueError, AttributeError, TypeError):
             return None
         finally:
