@@ -73,6 +73,18 @@ class TestDecompressionSizeLimit(unittest.TestCase):
     def test_deflate_within_limit(self) -> None:
         self._assert_within_limit_ok(avro.codecs.DeflateCodec)
 
+    def test_deflate_truncated_block_rejected(self) -> None:
+        """A truncated deflate block must be rejected rather than silently accepted."""
+        compressed, _ = avro.codecs.DeflateCodec.compress(b"the quick brown fox " * 10)
+        truncated = compressed[:-4]  # drop the tail so the end-of-stream marker is never reached
+        buffer = io.BytesIO()
+        encoder = avro.io.BinaryEncoder(buffer)
+        encoder.write_long(len(truncated))
+        buffer.write(truncated)
+        decoder = avro.io.BinaryDecoder(io.BytesIO(buffer.getvalue()))
+        with self.assertRaises(avro.errors.InvalidAvroBinaryEncoding):
+            avro.codecs.DeflateCodec.decompress(decoder)
+
     @unittest.skipUnless(avro.codecs.has_bzip2, "bzip2 not available")
     def test_bzip2_over_limit(self) -> None:
         self._assert_over_limit_rejected(avro.codecs.BZip2Codec)
