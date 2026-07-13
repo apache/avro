@@ -335,6 +335,8 @@ module Avro
 
       def codec_name; 'deflate'; end
 
+      DEFLATE_DECOMPRESS_CHUNK_SIZE = 16 * 1024
+
       def decompress(compressed)
         # Passing a negative number to Inflate puts it into "raw" RFC1951 mode
         # (without the RFC1950 header & checksum). See the docs for
@@ -342,15 +344,25 @@ module Avro
         zstream = Zlib::Inflate.new(-Zlib::MAX_WBITS)
         limit = DataFile.max_decompress_length
         data = "".b
-        # Inflate in chunks so an over-large (or malicious) block is rejected
-        # before its full decompressed form is materialized in memory.
         append = lambda do |chunk|
           if data.bytesize + chunk.bytesize > limit
             raise DecompressionSizeError, "Decompressed block size exceeds the maximum allowed of #{limit} bytes"
           end
           data << chunk
         end
-        zstream.inflate(compressed, &append)
+        # Feed the compressed input in chunks and check the accumulated output
+        # after each call, so an over-large (or malicious) block is rejected
+        # before its full decompressed form is materialized. (The block form of
+        # Zlib::Inflate#inflate that yields output chunks is Ruby 3.1+, but this
+        # gem supports 2.7, so bound via input chunks instead; a chunk's output
+        # is bounded by chunk_size * the deflate ratio, so the peak overshoot
+        # before the check fires is bounded too.)
+        offset = 0
+        size = compressed.bytesize
+        while offset < size
+          append.call(zstream.inflate(compressed.byteslice(offset, DEFLATE_DECOMPRESS_CHUNK_SIZE)))
+          offset += DEFLATE_DECOMPRESS_CHUNK_SIZE
+        end
         remaining = zstream.finish
         append.call(remaining) unless remaining.empty?
         data
