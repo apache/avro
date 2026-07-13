@@ -598,6 +598,22 @@ class TestMisc(unittest.TestCase):
         datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
         self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
 
+    def test_negative_enum_index(self) -> None:
+        # A negative zigzag-encoded index (0x01 -> -1) must be rejected rather than
+        # silently wrapping to symbols[-1] via Python negative indexing.
+        writers_schema = avro.schema.parse(json.dumps({"type": "enum", "name": "Test", "symbols": ["FOO", "BAR"]}))
+        decoder = avro.io.BinaryDecoder(io.BytesIO(b"\x01"))
+        datum_reader = avro.io.DatumReader(writers_schema, writers_schema)
+        self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
+
+    def test_negative_union_index(self) -> None:
+        # A negative branch index must be rejected rather than selecting schemas[-1]
+        # and decoding the payload with the wrong branch schema.
+        writers_schema = avro.schema.parse(json.dumps(["null", "string", "long"]))
+        decoder = avro.io.BinaryDecoder(io.BytesIO(b"\x01\x08"))
+        datum_reader = avro.io.DatumReader(writers_schema, writers_schema)
+        self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
+
     def test_no_default_value(self) -> None:
         writers_schema = LONG_RECORD_SCHEMA
         datum_to_write = LONG_RECORD_DATUM
