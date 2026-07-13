@@ -419,8 +419,11 @@ namespace Avro.Generic
                 // bound the count, so resizing straight to i+n could allocate a
                 // huge array before any element is read; a truncated stream instead
                 // fails within Read() after a bounded growth. Blocks no larger than
-                // the cap keep the original single-resize fast path.
-                int prealloc = i + Math.Min(n, MaxCollectionPrealloc);
+                // the cap keep the original single-resize fast path. Compute in
+                // long and clamp so a large i near the structural cap cannot
+                // overflow the int sum.
+                long preallocLong = Math.Min((long)i + Math.Min(n, MaxCollectionPrealloc), MaxCollectionStructural);
+                int prealloc = (int)preallocLong;
                 if (GetArraySize(result) < prealloc) ResizeArray(ref result, prealloc);
                 for (int j = 0; j < n; j++, i++)
                 {
@@ -676,7 +679,7 @@ namespace Avro.Generic
             if (count > MaxCollectionStructural - total)
             {
                 throw new AvroException(
-                    $"Collection block count {count} exceeds the maximum allowed size of {MaxCollectionStructural}");
+                    $"Collection size {total} + {count} exceeds the maximum allowed size of {MaxCollectionStructural}");
             }
 
             total += count;
