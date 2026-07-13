@@ -592,7 +592,7 @@ namespace Avro.Test
         {
             var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"null\"}");
             var ms = new MemoryStream();
-            new BinaryEncoder(ms).WriteLong(200_000_000); // ~4 byte payload
+            new BinaryEncoder(ms).WriteLong(10_000_001); // just over the zero-byte item cap; bounded if the guard regresses
             ms.Position = 0;
             var reader = new GenericReader<object>(schema, schema);
             Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
@@ -631,7 +631,7 @@ namespace Avro.Test
                 "{\"type\":\"record\",\"name\":\"Foo\",\"fields\":[" +
                 "{\"name\":\"val\",\"type\":\"int\"}]}");
             var ms = new MemoryStream();
-            new BinaryEncoder(ms).WriteLong(200_000_000); // arr block count; skipped
+            new BinaryEncoder(ms).WriteLong(10_000_001); // just over the zero-byte item cap; bounded if the guard regresses
             ms.Position = 0;
             var r = new GenericReader<object>(writer, reader);
             Assert.Throws<AvroException>(() => r.Read(null, new BinaryDecoder(ms)));
