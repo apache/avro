@@ -336,9 +336,12 @@ sub _zstd_decompress_bounded {
     # Load the zstandard decompressor lazily so the reader still loads and works
     # for other codecs when Compress::Zstd::Decompressor is unavailable (e.g. an
     # older Compress::Zstd distribution that lacks the Decompressor submodule).
-    unless (eval { require Compress::Zstd::Decompressor; 1 }) {
+    # Localize $@ so probing for the module cannot clobber a caller's $@, and
+    # capture the require error before building the message.
+    my $require_error;
+    unless (do { local $@; my $ok = eval { require Compress::Zstd::Decompressor; 1 }; $require_error = $@; $ok }) {
         Avro::DataFile::Error::UnsupportedCodec->throw(
-            "Cannot read zstandard-compressed block: Compress::Zstd::Decompressor is not available: $@"
+            "Cannot read zstandard-compressed block: Compress::Zstd::Decompressor is not available: $require_error"
         );
     }
     my $decompressor = Compress::Zstd::Decompressor->new;
