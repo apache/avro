@@ -996,12 +996,14 @@ class DatumReader:
         return read_items
 
     @staticmethod
-    def _skip_block_bytes(decoder: BinaryDecoder, block_size: int) -> None:
+    def _skip_block_bytes(decoder: BinaryDecoder, block_size: int, block_count: int, min_bytes: int) -> None:
         """Skip a sized-block's byte count, rejecting malformed sizes.
 
         The block_size is attacker-controlled: a negative value would seek
         backwards and an oversized value past EOF, either corrupting the decoder
-        position. Reject both before skipping.
+        position. Also require that block_size can plausibly hold block_count
+        elements at their minimum on-wire size, so a too-small size cannot
+        misalign the decoder. Reject before skipping.
         """
         if block_size < 0:
             raise avro.errors.InvalidAvroBinaryEncoding(f"Invalid negative block size: {block_size}")
@@ -1009,6 +1011,10 @@ class DatumReader:
         if remaining is not None and block_size > remaining:
             raise avro.errors.InvalidAvroBinaryEncoding(
                 f"Block size {block_size} exceeds the {remaining} bytes remaining"
+            )
+        if min_bytes > 0 and block_count > block_size // min_bytes:
+            raise avro.errors.InvalidAvroBinaryEncoding(
+                f"Block size {block_size} is too small for {block_count} elements of >= {min_bytes} bytes"
             )
         decoder.skip(block_size)
 
@@ -1027,7 +1033,7 @@ class DatumReader:
             self._ensure_collection_available(decoder, items_skipped, block_count, min_bytes, zero_byte_limit, structural_limit)
             items_skipped += block_count
             if block_size is not None:
-                self._skip_block_bytes(decoder, block_size)
+                self._skip_block_bytes(decoder, block_size, block_count, min_bytes)
             else:
                 for i in range(block_count):
                     self.skip_data(writers_schema.items, decoder)
@@ -1084,7 +1090,7 @@ class DatumReader:
             self._ensure_collection_available(decoder, items_skipped, block_count, min_bytes, zero_byte_limit, structural_limit)
             items_skipped += block_count
             if block_size is not None:
-                self._skip_block_bytes(decoder, block_size)
+                self._skip_block_bytes(decoder, block_size, block_count, min_bytes)
             else:
                 for i in range(block_count):
                     decoder.skip_utf8()
