@@ -601,6 +601,15 @@ static int decode_lzma(avro_codec_t codec, void * data, int64_t len)
 		return 1;
 	}
 
+	/* len is the compressed input size, passed to liblzma as a size_t. A
+	 * negative value would convert to a huge size_t, and a value above
+	 * SIZE_MAX would truncate; reject both. */
+	if (len < 0 || (uint64_t) len > (uint64_t) SIZE_MAX) {
+		avro_set_error("Compressed block size %lld is out of range for lzma",
+			       (long long) len);
+		return 1;
+	}
+
 	do
 	{
 		ret = lzma_raw_buffer_decode(filters, NULL, data,
