@@ -1022,13 +1022,9 @@ class DatumReader:
             raise avro.errors.InvalidAvroBinaryEncoding(f"Invalid negative block size: {block_size}")
         remaining = decoder.bytes_remaining()
         if remaining is not None and block_size > remaining:
-            raise avro.errors.InvalidAvroBinaryEncoding(
-                f"Block size {block_size} exceeds the {remaining} bytes remaining"
-            )
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Block size {block_size} exceeds the {remaining} bytes remaining")
         if min_bytes > 0 and block_count > block_size // min_bytes:
-            raise avro.errors.InvalidAvroBinaryEncoding(
-                f"Block size {block_size} is too small for {block_count} elements of >= {min_bytes} bytes"
-            )
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Block size {block_size} is too small for {block_count} elements of >= {min_bytes} bytes")
         decoder.skip(block_size)
 
     def skip_array(self, writers_schema: avro.schema.ArraySchema, decoder: BinaryDecoder) -> None:
