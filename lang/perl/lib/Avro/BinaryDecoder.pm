@@ -569,7 +569,8 @@ sub skip_union {
     my $idx = decode_long($class, undef, undef, $reader);
     my $schemas = $schema->schemas;
     if ($idx < 0 || $idx >= scalar @$schemas) {
-        throw Avro::Schema::Error::Parse("union union member");
+        throw Avro::Schema::Error::Parse(
+            "Union branch index $idx out of range for " . scalar(@$schemas) . " branches");
     }
     my $union_schema = $schemas->[$idx];
     $class->skip($union_schema, $reader);
