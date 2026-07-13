@@ -409,7 +409,7 @@ public class BinaryDecoder extends Decoder {
     long result = readLong();
     if (result < 0L) {
       // A negative block count is followed by a block byte-size; consume it.
-      readLong();
+      final long bytecount = readLong();
       if (result == Long.MIN_VALUE) {
         // Long.MIN_VALUE cannot be negated (-Long.MIN_VALUE overflows back to
         // Long.MIN_VALUE), so it is not a valid block count. Reject it rather
@@ -417,6 +417,11 @@ public class BinaryDecoder extends Decoder {
         // truncated to 0 and silently terminate the collection without consuming
         // the end marker, desynchronizing decoding of subsequent fields.
         throw new AvroRuntimeException("Malformed data. Block count is invalid: " + result);
+      }
+      if (bytecount < 0L) {
+        // The block byte-size is a byte count and must be non-negative, matching
+        // doSkipItems().
+        throw new AvroRuntimeException("Malformed data. Block byte-size is negative: " + bytecount);
       }
       result = -result;
     }
