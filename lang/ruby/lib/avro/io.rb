@@ -188,6 +188,9 @@ module Avro
           raise AvroError, "Varint is too long" if count >= 10
           b = byte!
           count += 1
+          # The 10th byte contributes only bit 63; reject out-of-64-bit-range
+          # encodings here too so skipping is consistent with read_long.
+          raise AvroError, "Varint is too long" if count == 10 && (b & 0x7E) != 0
         end
       end
 
@@ -387,7 +390,8 @@ module Avro
         while block_count != 0
           if block_count < 0
             block_count = -block_count
-            _block_size = decoder.read_long
+            block_size = decoder.read_long
+            raise AvroError, "Invalid negative block size: #{block_size}" if block_size < 0
           end
           total = ensure_collection_available(decoder, total, block_count, min_bytes)
           block_count.times do
@@ -410,7 +414,8 @@ module Avro
         while block_count != 0
           if block_count < 0
             block_count = -block_count
-            _block_size = decoder.read_long
+            block_size = decoder.read_long
+            raise AvroError, "Invalid negative block size: #{block_size}" if block_size < 0
           end
           total = ensure_collection_available(decoder, total, block_count, min_bytes)
           block_count.times do
