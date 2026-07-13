@@ -28,6 +28,14 @@
 #include <sstream>
 #include <string>
 
+#ifdef _WIN32
+#include <process.h>
+#define AVRO_TEST_GETPID _getpid
+#else
+#include <unistd.h>
+#define AVRO_TEST_GETPID getpid
+#endif
+
 #include <boost/test/included/unit_test.hpp>
 
 #include "Compiler.hh"
@@ -87,7 +95,12 @@ static ValidSchema stringSchema() {
 }
 
 static std::string tempFile(const char *name) {
-    return (std::filesystem::temp_directory_path() / name).string();
+    // Include the process id so concurrent test runs (or a stale file left by a
+    // previously crashed run) do not contend for the same path in the shared
+    // system temp directory.
+    std::ostringstream unique;
+    unique << "avro_" << AVRO_TEST_GETPID() << "_" << name;
+    return (std::filesystem::temp_directory_path() / unique.str()).string();
 }
 
 // Write a single, highly compressible value with the given codec, then read it
