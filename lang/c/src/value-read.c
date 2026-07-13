@@ -166,14 +166,13 @@ avro_collection_limits(int64_t *zero_byte, int64_t *structural)
  */
 static int
 ensure_collection_available(avro_reader_t reader, int64_t existing,
-			    int64_t count, int64_t min_bytes)
+			    int64_t count, int64_t min_bytes,
+			    int64_t zero_byte, int64_t structural)
 {
 	int64_t available;
-	int64_t zero_byte, structural;
 	if (count <= 0) {
 		return 0;
 	}
-	avro_collection_limits(&zero_byte, &structural);
 	if (min_bytes > 0) {
 		available = avro_reader_bytes_available(reader);
 		if (available >= 0 && count > available / min_bytes) {
@@ -213,10 +212,15 @@ read_array_value(avro_reader_t reader, avro_value_t *dest)
 	int64_t  block_count;
 	int64_t  block_size;
 	int64_t  min_bytes;
+	int64_t  zero_byte, structural;
 	avro_schema_t  array_schema = avro_value_get_schema(dest);
 
 	min_bytes = min_bytes_per_element(
 	    array_schema ? avro_schema_array_items(array_schema) : NULL, 0);
+	/* Read the limits once per decode rather than per block, so a
+	 * many-block array does not re-parse AVRO_MAX_COLLECTION_ITEMS each
+	 * time (and the effective limit is stable across the decode). */
+	avro_collection_limits(&zero_byte, &structural);
 
 	check_prefix(rval, avro_binary_encoding.
 		     read_long(reader, &block_count),
@@ -236,7 +240,7 @@ read_array_value(avro_reader_t reader, avro_value_t *dest)
 				     "Cannot read array block size: ");
 		}
 
-		check(rval, ensure_collection_available(reader, (int64_t) index, block_count, min_bytes));
+		check(rval, ensure_collection_available(reader, (int64_t) index, block_count, min_bytes, zero_byte, structural));
 
 		for (i = 0; i < (size_t) block_count; i++, index++) {
 			avro_value_t  child;
@@ -263,6 +267,7 @@ read_map_value(avro_reader_t reader, avro_value_t *dest)
 	int64_t  block_count;
 	int64_t  block_size;
 	int64_t  min_bytes;
+	int64_t  zero_byte, structural;
 	avro_schema_t  map_schema = avro_value_get_schema(dest);
 
 	/* Map keys are strings (>= 1 byte length prefix) plus the value.
@@ -272,6 +277,8 @@ read_map_value(avro_reader_t reader, avro_value_t *dest)
 	if (min_bytes < INT64_MAX) {
 		min_bytes += 1;
 	}
+	/* Read the limits once per decode (see read_array_value). */
+	avro_collection_limits(&zero_byte, &structural);
 
 	check_prefix(rval, avro_binary_encoding.read_long(reader, &block_count),
 		     "Cannot read map block count: ");
@@ -290,7 +297,7 @@ read_map_value(avro_reader_t reader, avro_value_t *dest)
 				     "Cannot read map block size: ");
 		}
 
-		check(rval, ensure_collection_available(reader, (int64_t) index, block_count, min_bytes));
+		check(rval, ensure_collection_available(reader, (int64_t) index, block_count, min_bytes, zero_byte, structural));
 
 		for (i = 0; i < (size_t) block_count; i++, index++) {
 			char *key;
