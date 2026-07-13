@@ -444,7 +444,17 @@ public class BinaryDecoder extends Decoder {
   private long doSkipItems() throws IOException {
     long result = readLong();
     while (result < 0L) {
+      if (result == Long.MIN_VALUE) {
+        // Consistent with doReadItemCount: Long.MIN_VALUE is not a valid block
+        // count (it cannot be negated), so reject it rather than treating it as
+        // a byte-sized block and continuing to skip.
+        readLong();
+        throw new AvroRuntimeException("Malformed data. Block count is invalid: " + result);
+      }
       final long bytecount = readLong();
+      if (bytecount < 0L) {
+        throw new AvroRuntimeException("Malformed data. Block byte-size is negative: " + bytecount);
+      }
       doSkipBytes(bytecount);
       result = readLong();
     }
