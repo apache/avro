@@ -685,19 +685,24 @@ void DataFileReaderBase::readDataBlock() {
                 zs.next_in = const_cast<Bytef *>(data);
                 do {
                     if (zs.total_out == uncompressed.size()) {
-                        // Reject a block that decompresses to more than the
+                        // Reject a block that would decompress to more than the
                         // allowed maximum, before growing the buffer further.
                         if (uncompressed.size() >= maxLength) {
                             (void) inflateEnd(&zs);
+                            // At the trigger uncompressed.size() == maxLength and
+                            // inflate still has output, so the block is at least
+                            // maxLength + 1 bytes. Report that (like the snappy/zstd
+                            // errors) so the message is accurate and consistent.
                             throw Exception(
-                                "Decompressed block size exceeds the maximum allowed of {} bytes",
-                                maxLength);
+                                "Decompressed block size {} exceeds the maximum allowed of {} bytes",
+                                uncompressed.size() + 1, maxLength);
                         }
-                        size_t newSize = uncompressed.size() + zlibBufGrowSize;
-                        if (newSize > maxLength) {
-                            newSize = maxLength;
-                        }
-                        uncompressed.resize(newSize);
+                        // Grow by the remaining capacity (capped at the grow
+                        // step) rather than size + step, which could overflow
+                        // size_t when maxLength is near SIZE_MAX.
+                        size_t remaining = maxLength - uncompressed.size();
+                        size_t grow = remaining < zlibBufGrowSize ? remaining : zlibBufGrowSize;
+                        uncompressed.resize(uncompressed.size() + grow);
                     }
                     zs.avail_out = static_cast<uInt>(uncompressed.size() - zs.total_out);
                     zs.next_out = reinterpret_cast<Bytef *>(uncompressed.data() + zs.total_out);
