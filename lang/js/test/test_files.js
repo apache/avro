@@ -529,16 +529,21 @@ describe('files', function () {
       var encoder = new streams.BlockEncoder(t, {codec: 'null', blockSize: 1});
       var decoder = new streams.BlockDecoder({codecs: codecs});
       var errorCount = 0;
-      decoder.on('data', function () {}).on('error', function () { errorCount++; });
+      // Finish deterministically when the decoder is actually destroyed ('close')
+      // rather than after a fixed delay: the failing codec can call back
+      // synchronously, so a timeout is both slower and race-prone.
+      decoder
+        .on('data', function () {})
+        .on('error', function () { errorCount++; })
+        .on('close', function () {
+          assert.equal(errorCount, 1);
+          assert(decoder.destroyed);
+          cb();
+        });
       encoder.pipe(decoder);
       // Write many records; blockSize 1 forces many separate blocks.
       for (var i = 0; i < 100; i++) { encoder.write(i); }
       encoder.end();
-      setTimeout(function () {
-        assert.equal(errorCount, 1);
-        assert(decoder.destroyed);
-        cb();
-      }, 100);
     });
 
     it('createFileDecoder tears down the source on error', function (cb) {
@@ -552,15 +557,34 @@ describe('files', function () {
       encoder.end();
       encoder.getDownstream().on('finish', function () {
         var errorCount = 0;
-        var decoder = files.createFileDecoder(filePath, {
-          codecs: { 'null': function (data, cb) { cb(new Error('ouch')); } }
-        });
-        decoder.on('data', function () {}).on('error', function () { errorCount++; });
-        setTimeout(function () {
+        // Capture the source ReadStream that createFileDecoder opens so we can
+        // assert it is torn down (its descriptor released), not just the decoder.
+        var origCreateReadStream = fs.createReadStream;
+        var src;
+        fs.createReadStream = function () {
+          src = origCreateReadStream.apply(fs, arguments);
+          return src;
+        };
+        var decoder;
+        try {
+          decoder = files.createFileDecoder(filePath, {
+            codecs: { 'null': function (data, cb) { cb(new Error('ouch')); } }
+          });
+        } finally {
+          fs.createReadStream = origCreateReadStream;
+        }
+        decoder
+          .on('data', function () {})
+          .on('error', function () { errorCount++; });
+        // Finish when the source stream is actually closed (descriptor released),
+        // which is the teardown this test verifies; by then the decoder has been
+        // destroyed and the single error surfaced.
+        src.on('close', function () {
           assert.equal(errorCount, 1);
           assert(decoder.destroyed);
+          assert(src.destroyed);
           cb();
-        }, 100);
+        });
       });
     });
 
