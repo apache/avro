@@ -112,8 +112,9 @@ namespace Avro.File
                 if (read > maxLength - total)
                 {
                     throw new AvroRuntimeException(
-                        $"Decompressed block size exceeds the maximum allowed of {maxLength} bytes. " +
-                        $"Set the {MaxDecompressLengthEnvVar} environment variable to raise the limit.");
+                        $"Decompressed block size exceeds the maximum allowed of {maxLength} bytes " +
+                        $"(at least {total} bytes already decompressed). " +
+                        $"For data-file reads, the {MaxDecompressLengthEnvVar} environment variable raises the limit.");
                 }
 
                 total += read;

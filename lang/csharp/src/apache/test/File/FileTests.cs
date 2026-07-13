@@ -434,11 +434,11 @@ namespace Avro.Test.File
         public void TestDeflateDecompressionLimit()
         {
             var codec = new DeflateCodec();
-            byte[] big = new byte[4 * 1024 * 1024]; // 4 MiB of zeros, compresses tiny
+            byte[] big = new byte[128 * 1024]; // 128 KiB of zeros, compresses tiny
             byte[] compressed = codec.Compress(big);
 
             var previous = Environment.GetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar);
-            Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, "1048576"); // 1 MiB
+            Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, "65536"); // 64 KiB
             try
             {
                 Assert.Throws<AvroRuntimeException>(
@@ -458,7 +458,7 @@ namespace Avro.Test.File
             byte[] compressed = codec.Compress(payload);
 
             var previous = Environment.GetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar);
-            Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, "1048576"); // 1 MiB
+            Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, "65536"); // 64 KiB
             try
             {
                 byte[] result = codec.Decompress(compressed, compressed.Length);
@@ -497,7 +497,7 @@ namespace Avro.Test.File
             var recordSchema = schema as RecordSchema;
 
             // A single record whose string field is larger than the limit below.
-            string big = new string('a', 2 * 1024 * 1024); // 2 MiB
+            string big = new string('a', 128 * 1024); // 128 KiB
 
             MemoryStream outStream = new MemoryStream();
             using (var writer = DataFileWriter<GenericRecord>.OpenWriter(
@@ -509,7 +509,7 @@ namespace Avro.Test.File
             MemoryStream inStream = new MemoryStream(outStream.ToArray());
 
             var previous = Environment.GetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar);
-            Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, "1048576"); // 1 MiB
+            Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, "65536"); // 64 KiB
             try
             {
                 Assert.Throws<AvroRuntimeException>(() =>
