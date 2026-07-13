@@ -985,6 +985,23 @@ class DatumReader:
             block_count = decoder.read_long()
         return read_items
 
+    @staticmethod
+    def _skip_block_bytes(decoder: BinaryDecoder, block_size: int) -> None:
+        """Skip a sized-block's byte count, rejecting malformed sizes.
+
+        The block_size is attacker-controlled: a negative value would seek
+        backwards and an oversized value past EOF, either corrupting the decoder
+        position. Reject both before skipping.
+        """
+        if block_size < 0:
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Invalid negative block size: {block_size}")
+        remaining = decoder.bytes_remaining()
+        if remaining is not None and block_size > remaining:
+            raise avro.errors.InvalidAvroBinaryEncoding(
+                f"Block size {block_size} exceeds the {remaining} bytes remaining"
+            )
+        decoder.skip(block_size)
+
     def skip_array(self, writers_schema: avro.schema.ArraySchema, decoder: BinaryDecoder) -> None:
         min_bytes = _min_bytes_per_element(writers_schema.items)
         zero_byte_limit, structural_limit = _collection_limits()
@@ -1000,7 +1017,7 @@ class DatumReader:
             self._ensure_collection_available(decoder, items_skipped, block_count, min_bytes, zero_byte_limit, structural_limit)
             items_skipped += block_count
             if block_size is not None:
-                decoder.skip(block_size)
+                self._skip_block_bytes(decoder, block_size)
             else:
                 for i in range(block_count):
                     self.skip_data(writers_schema.items, decoder)
@@ -1057,7 +1074,7 @@ class DatumReader:
             self._ensure_collection_available(decoder, items_skipped, block_count, min_bytes, zero_byte_limit, structural_limit)
             items_skipped += block_count
             if block_size is not None:
-                decoder.skip(block_size)
+                self._skip_block_bytes(decoder, block_size)
             else:
                 for i in range(block_count):
                     decoder.skip_utf8()
