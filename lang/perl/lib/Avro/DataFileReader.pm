@@ -243,8 +243,8 @@ sub read_block_header {
     my $want = $datafile->{block_size} + MARKER_SIZE;
     my $block = '';
     my $chunk_size = 64 * 1024;
-    while (length($block) < $want) {
-        my $need = $want - length($block);
+    while (bytes::length($block) < $want) {
+        my $need = $want - bytes::length($block);
         $need = $chunk_size if $need > $chunk_size;
         my $nread = read $fh, my $buf, $need;
         if (!defined $nread) {
@@ -253,9 +253,9 @@ sub read_block_header {
         last if $nread == 0;    # EOF
         $block .= $buf;
     }
-    if (length($block) != $want) {
+    if (bytes::length($block) != $want) {
         croak "Short read: expected $want bytes for the block, got "
-            . length($block) . " (truncated file?)";
+            . bytes::length($block) . " (truncated file?)";
     }
 
     ## remove the marker
@@ -345,9 +345,16 @@ sub _zstd_decompress_bounded {
     my $uncompressed = '';
     my $length = bytes::length($$block_ref);
     my $offset = 0;
+    # Feed the compressed input in small pieces. Compress::Zstd's streaming
+    # decompress() has no max-output parameter, so a single call materializes all
+    # output produced from the input it is handed; keeping each fed piece small
+    # bounds the transient $out (roughly one zstd internal block, ~128 KiB) so a
+    # highly-compressible frame cannot balloon a single call's output to
+    # gigabytes before the size check below runs.
+    my $piece_size = 16 * 1024;
     while ($offset < $length) {
-        my $piece = substr($$block_ref, $offset, 65536);
-        $offset += 65536;
+        my $piece = substr($$block_ref, $offset, $piece_size);
+        $offset += $piece_size;
         my $out = $decompressor->decompress($piece);
         # The streaming decompressor croaks on a corrupt frame and otherwise
         # emits all output produced while consuming the input it is given (there
