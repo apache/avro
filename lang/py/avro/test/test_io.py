@@ -677,6 +677,36 @@ class TestDatumReaderCollectionAvailableBytes(unittest.TestCase):
         writer.write([1, 2, 3], avro.io.BinaryEncoder(buf))
         self.assertEqual(self._decode(schema_json, buf.getvalue()), [1, 2, 3])
 
+    def test_recursive_record_min_bytes_is_non_zero(self) -> None:
+        # A recursive record reference is not a zero-byte value: returning 0 for
+        # it would wrongly treat recursive records as zero-byte elements and
+        # weaken the bytes-remaining precheck. The minimum must stay >= 1.
+        schema = avro.schema.parse(
+            json.dumps(
+                {
+                    "type": "record",
+                    "name": "Node",
+                    "fields": [{"name": "next", "type": ["null", "Node"]}],
+                }
+            )
+        )
+        self.assertGreaterEqual(avro.io._min_bytes_per_element(schema), 1)
+        # A union that includes the recursive record must not be underestimated
+        # below the >= 1 byte branch index either.
+        union = avro.schema.parse(
+            json.dumps(
+                [
+                    "null",
+                    {
+                        "type": "record",
+                        "name": "Node",
+                        "fields": [{"name": "next", "type": ["null", "Node"]}],
+                    },
+                ]
+            )
+        )
+        self.assertGreaterEqual(avro.io._min_bytes_per_element(union), 1)
+
 
 class TestMisc(unittest.TestCase):
     def test_decimal_bytes_small_scale(self) -> None:

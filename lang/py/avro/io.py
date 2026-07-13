@@ -738,8 +738,13 @@ def _min_bytes_per_element(schema: avro.schema.Schema, visited: Optional[Set[int
         return getattr(schema, "size", 1)
     if schema_type in ("record", "error"):
         # Guard against self-referencing records (recursion would not terminate).
+        # A recursive reference is not a zero-byte value: any finite recursive
+        # value must terminate through a union (>= 1 byte branch index) or an
+        # empty array/map (>= 1 byte block count), so 1 is a safe conservative
+        # lower bound. Returning 0 here would wrongly treat recursive records as
+        # zero-byte elements and weaken the bytes-remaining precheck.
         if id(schema) in visited:
-            return 0
+            return 1
         visited.add(id(schema))
         total = 0
         for field in getattr(schema, "fields", []):
