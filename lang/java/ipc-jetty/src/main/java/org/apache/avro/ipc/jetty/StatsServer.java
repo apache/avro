@@ -21,13 +21,14 @@ package org.apache.avro.ipc.jetty;
 import org.apache.avro.ipc.stats.StatsPlugin;
 import org.apache.avro.ipc.stats.StatsServlet;
 
+import org.eclipse.jetty.ee9.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee9.servlet.ServletHolder;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.ResourceFactory;
 
 /* This is a server that displays live information from a StatsPlugin.
  *
@@ -54,20 +55,23 @@ public class StatsServer {
     ServletHolder servletHolder = new ServletHolder(new StatsServlet(plugin));
     servletContext.addServlet(servletHolder, "/");
 
-    HandlerList handlers = new HandlerList(servletContext);
+    Handler.Sequence handlers = new Handler.Sequence();
 
-    Resource classPathResource = Resource.newClassPathResource("/org/apache/avro/ipc/stats/static");
-    if (classPathResource.exists() && classPathResource.isDirectory()) {
+    ResourceFactory resourceFactory = ResourceFactory.of(httpServer);
+    Resource classPathResource = resourceFactory.newResource("/org/apache/avro/ipc/stats/static");
+    if (classPathResource != null && classPathResource.exists() && classPathResource.isDirectory()) {
       ResourceHandler resourceHandler = new ResourceHandler();
       resourceHandler.setBaseResource(classPathResource);
-      resourceHandler.setDirectoriesListed(false); // Optional: prevent directory listing
+      resourceHandler.setDirAllowed(false); // Optional: prevent directory listing
 
       ContextHandler staticContext = new ContextHandler();
       staticContext.setContextPath("/static");
       staticContext.setHandler(resourceHandler);
 
-      handlers.prependHandler(staticContext);
+      handlers.addHandler(staticContext);
     }
+
+    handlers.addHandler(servletContext);
 
     httpServer.setHandler(handlers);
 
