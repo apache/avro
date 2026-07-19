@@ -324,7 +324,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       // remaining. Cap such collections against a heap-aware limit so a tiny
       // payload cannot declare a huge block count and drive an unbounded
       // backing-array allocation.
-      boolean zeroByteElements = minBytesPerElement(expectedType) == 0;
+      boolean zeroByteElements = isZeroByteSchema(expectedType);
       if (zeroByteElements) {
         SystemLimitException.checkMaxCollectionAllocation(base, l);
       }
