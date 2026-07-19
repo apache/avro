@@ -199,7 +199,7 @@ public class AvroDatumConverterFactory extends Configured {
     /** {@inheritDoc} */
     @Override
     public ByteBuffer convert(BytesWritable input) {
-      return ByteBuffer.wrap(input.getBytes());
+      return ByteBuffer.wrap(input.getBytes(), 0, input.getLength());
     }
 
     /** {@inheritDoc} */
