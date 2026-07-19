@@ -109,6 +109,14 @@ namespace Avro.Test
         [TestCase("{\"type\": \"fixed\", \"name\": \"Missing size\"}", typeof(SchemaParseException))]
         [TestCase("{\"type\": \"fixed\", \"size\": 314}",
             typeof(SchemaParseException), Description = "No name")]
+
+        // Names outside the Avro name grammar
+        [TestCase("{\"type\":\"record\",\"name\":\"Bad Name\",\"fields\":[]}",
+            typeof(SchemaParseException), Description = "Record name with a space")]
+        [TestCase("{\"type\":\"record\",\"name\":\"R\",\"fields\":[{\"name\":\"in valid\",\"type\":\"long\"}]}",
+            typeof(SchemaParseException), Description = "Field name with a space")]
+        [TestCase("{\"type\":\"record\",\"name\":\"R\",\"fields\":[{\"name\":\"x; int y\",\"type\":\"long\"}]}",
+            typeof(SchemaParseException), Description = "Field name attempting identifier injection")]
         public void TestBasic(string s, Type expectedExceptionType = null)
         {
             if (expectedExceptionType != null)

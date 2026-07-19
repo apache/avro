@@ -25,6 +25,35 @@ namespace Avro
     /// </summary>
     public class SchemaName
     {
+        /// <summary>
+        /// Validates that a simple (unqualified) name conforms to the Avro name
+        /// grammar: a non-empty string whose first character is a letter or '_'
+        /// and whose remaining characters are letters, digits or '_'. Letters and
+        /// digits are recognized in a Unicode-aware way, matching the default
+        /// behavior of the Java SDK (and the C# SDK's existing support for
+        /// non-ASCII field names). Throws <see cref="SchemaParseException"/> when
+        /// the name is invalid.
+        /// </summary>
+        /// <param name="name">the simple name to validate</param>
+        /// <param name="what">description of the kind of name, used in error messages</param>
+        internal static void ValidateName(string name, string what)
+        {
+            if (string.IsNullOrEmpty(name)
+                || !(char.IsLetter(name[0]) || name[0] == '_'))
+            {
+                throw new SchemaParseException($"Invalid {what} name: {name}");
+            }
+
+            for (int i = 1; i < name.Length; i++)
+            {
+                char c = name[i];
+                if (!(char.IsLetterOrDigit(c) || c == '_'))
+                {
+                    throw new SchemaParseException($"Invalid {what} name: {name}");
+                }
+            }
+        }
+
         // cache the full name, so it won't allocate new strings on each call
         private String fullName;
         
@@ -88,6 +117,16 @@ namespace Avro
 
             Documentation = documentation;
             fullName = string.IsNullOrEmpty(Namespace) ? Name : Namespace + "." + Name;
+
+            // Validate the simple name only. Namespaces are intentionally not
+            // validated here: the code generator's namespace-mapping feature
+            // rewrites schema namespaces to C#-specific values (for example
+            // "@return" for reserved words) and re-parses the schema, so a
+            // namespace component may legitimately not match the Avro name grammar.
+            if (Name != null)
+            {
+                ValidateName(Name, "schema");
+            }
         }
 
         /// <summary>
