@@ -141,7 +141,7 @@ jobs:
         run: uv sync --frozen
 
       - name: "Setup C# for Generating Interop Data"
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             6.0.x
