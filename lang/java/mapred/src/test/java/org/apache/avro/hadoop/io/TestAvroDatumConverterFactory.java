@@ -90,6 +90,21 @@ public class TestAvroDatumConverterFactory {
   }
 
   @Test
+  void convertBytesWritableRespectsLogicalLength() {
+    AvroDatumConverter<BytesWritable, ByteBuffer> converter = mFactory.create(BytesWritable.class);
+    byte[] backing = new byte[] { 1, 2, 3, 4, 5 };
+    BytesWritable writable = new BytesWritable(backing);
+    writable.setSize(3);
+
+    ByteBuffer bytes = converter.convert(writable);
+
+    assertEquals(3, bytes.remaining());
+    assertEquals(1, bytes.get(0));
+    assertEquals(2, bytes.get(1));
+    assertEquals(3, bytes.get(2));
+  }
+
+  @Test
   void convertByteWritable() {
     AvroDatumConverter<ByteWritable, GenericFixed> converter = mFactory.create(ByteWritable.class);
     assertEquals(42, converter.convert(new ByteWritable((byte) 42)).bytes()[0]);
