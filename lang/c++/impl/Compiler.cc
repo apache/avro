@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <cctype>
 #include <cstring>
 #include <sstream>
 #include <unordered_set>
@@ -130,6 +131,21 @@ string getStringField(const Entity &e, const Object &m,
     auto it = findField(e, m, fieldName);
     ensureType<string>(it->second, fieldName);
     return it->second.stringValue();
+}
+
+// Validates that a record field name or enum symbol conforms to the Avro name
+// grammar (a non-empty sequence of [A-Za-z0-9_], as already enforced for named
+// type simple names by Name::check()). This prevents out-of-spec strings from
+// being emitted verbatim as identifiers by the C++ code generator.
+static void validateSimpleName(const string &name, const char *what) {
+    if (name.empty()) {
+        throw Exception("Empty {} name", what);
+    }
+    for (const char c : name) {
+        if (!std::isalnum(static_cast<unsigned char>(c)) && c != '_') {
+            throw Exception("Invalid {} name: {}", what, name);
+        }
+    }
 }
 
 const Array &getArrayField(const Entity &e, const Object &m,
@@ -309,6 +325,7 @@ static void getCustomAttributes(const Object &m, CustomAttributes &customAttribu
 static Field makeField(const Entity &e, SymbolTable &st, const string &ns) {
     const Object &m = e.objectValue();
     string n = getStringField(e, m, "name");
+    validateSimpleName(n, "field");
     vector<string> aliases;
     string aliasesName = "aliases";
     if (containsField(m, aliasesName)) {
@@ -427,6 +444,7 @@ static NodePtr makeEnumNode(const Entity &e,
         if (it.type() != json::EntityType::String) {
             throw Exception("Enum symbol not a string: {}", it.toString());
         }
+        validateSimpleName(it.stringValue(), "enum symbol");
         symbols.add(it.stringValue());
     }
     NodePtr node = NodePtr(new NodeEnum(asSingleAttribute(name), symbols));
