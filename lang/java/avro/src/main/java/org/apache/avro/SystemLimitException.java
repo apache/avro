@@ -28,13 +28,20 @@ import org.slf4j.LoggerFactory;
  * The following system properties can be set to limit the size of bytes,
  * strings and collection types to be allocated:
  * <ul>
- * <li><tt>org.apache.avro.limits.byte.maxLength</tt></li> limits the maximum
- * size of <tt>byte</tt> types.</li>
- * <li><tt>org.apache.avro.limits.collectionItems.maxLength</tt></li> limits the
- * maximum number of <tt>map</tt> and <tt>list</tt> items that can be read at
- * once single sequence.</li>
- * <li><tt>org.apache.avro.limits.string.maxLength</tt></li> limits the maximum
- * size of <tt>string</tt> types.</li>
+ * <li><tt>org.apache.avro.limits.bytes.maxLength</tt> limits the maximum size
+ * of <tt>bytes</tt> types.</li>
+ * <li><tt>org.apache.avro.limits.collectionItems.maxLength</tt> limits the
+ * maximum number of <tt>map</tt> and <tt>list</tt> items that can be read in a
+ * single sequence.</li>
+ * <li><tt>org.apache.avro.limits.string.maxLength</tt> limits the maximum size
+ * of <tt>string</tt> types.</li>
+ * <li><tt>org.apache.avro.limits.collectionItems.maxAllocation</tt> limits the
+ * number of <tt>array</tt> elements whose minimum encoded size is zero (such as
+ * <tt>null</tt>, a zero-length <tt>fixed</tt>, a record whose fields are all
+ * zero-byte, or a recursive schema whose cycle is conservatively broken with a
+ * 0 minimum) that may be allocated at once. Unlike other element types, these
+ * cannot be bounded by the number of bytes remaining in the stream, so the
+ * limit defaults to a fraction of the maximum heap.</li>
  * </ul>
  *
  * The default is to permit sizes up to {@link #MAX_ARRAY_VM_LIMIT}.
@@ -82,6 +89,35 @@ public class SystemLimitException extends AvroRuntimeException {
    */
   public static final long MAX_DECOMPRESS_LENGTH = getLongLimitFromProperty(MAX_DECOMPRESS_LENGTH_PROPERTY,
       defaultMaxDecompressLength());
+
+  /**
+   * System property declaring the maximum number of array elements whose minimum
+   * encoded size is zero (e.g. {@code null}, a zero-length fixed, a record whose
+   * fields are all zero-byte, or a recursive schema conservatively treated as a 0
+   * minimum) to allocate at once: {@value}.
+   */
+  public static final String MAX_COLLECTION_ALLOCATION_PROPERTY = "org.apache.avro.limits.collectionItems.maxAllocation";
+
+  /**
+   * Fraction of the maximum heap a single decoded collection of elements whose
+   * minimum encoded size is zero may occupy by default. Keeps the backing
+   * allocation below the heap so a small payload declaring a huge block count
+   * cannot exhaust the JVM.
+   */
+  private static final long DEFAULT_MAX_COLLECTION_ALLOCATION_HEAP_FRACTION = 4;
+
+  /**
+   * Estimated bytes retained per pre-allocated collection slot (a single object
+   * reference), used to translate the heap budget into an element count.
+   */
+  private static final long BYTES_PER_COLLECTION_SLOT = 8;
+
+  /**
+   * Maximum number of array elements whose minimum encoded size is zero to
+   * allocate at once. Recomputed from the system property (or the heap) by
+   * {@link #resetLimits()}.
+   */
+  private static long maxCollectionAllocation = defaultMaxCollectionAllocation();
 
   static {
     resetLimits();
@@ -151,6 +187,20 @@ public class SystemLimitException extends AvroRuntimeException {
   private static long defaultMaxDecompressLength() {
     return Math.min(DEFAULT_MAX_DECOMPRESS_LENGTH,
         Math.max(1L, Runtime.getRuntime().maxMemory() / DEFAULT_MAX_DECOMPRESS_HEAP_FRACTION));
+  }
+
+  /**
+   * Calculate the default maximum number of array elements whose minimum encoded
+   * size is zero to allocate at once, as a fraction of the maximum heap. Such
+   * elements consume no guaranteed input bytes, so the usual "bytes remaining"
+   * bound does not apply and the allocation must instead be capped relative to
+   * the available memory.
+   *
+   * @return the calculated default max element count.
+   */
+  private static long defaultMaxCollectionAllocation() {
+    long heapBudget = Math.max(1L, Runtime.getRuntime().maxMemory() / DEFAULT_MAX_COLLECTION_ALLOCATION_HEAP_FRACTION);
+    return Math.max(1L, heapBudget / BYTES_PER_COLLECTION_SLOT);
   }
 
   /**
@@ -247,6 +297,44 @@ public class SystemLimitException extends AvroRuntimeException {
   }
 
   /**
+   * Check to ensure that allocating storage for the specified number of array
+   * elements whose minimum encoded size is zero remains within the heap-aware
+   * limit.
+   * <p>
+   * Elements whose minimum encoded size is zero (e.g. {@code null}, a zero-length
+   * fixed, a record whose fields are all zero-byte, or a recursive schema whose
+   * cycle is conservatively broken with a 0 minimum) consume no guaranteed input
+   * bytes, so the number that may be declared is not bounded by the bytes
+   * remaining in the stream. Without a cap, a tiny payload can declare an
+   * enormous block count and drive an unbounded backing-array allocation. This
+   * limit is derived from the maximum heap (see
+   * {@link #MAX_COLLECTION_ALLOCATION_PROPERTY}).
+   *
+   * @param existing The number of elements already allocated for the collection.
+   * @param items    The next number of elements to allocate.
+   * @return The cumulative element count if and only if it is within the limit.
+   * @throws SystemLimitException if the cumulative allocation would exceed the
+   *                              limit.
+   * @throws AvroRuntimeException if either argument is negative.
+   */
+  public static long checkMaxCollectionAllocation(long existing, long items) {
+    if (existing < 0) {
+      throw new AvroRuntimeException("Malformed data. Length is negative: " + existing);
+    }
+    if (items < 0) {
+      throw new AvroRuntimeException("Malformed data. Length is negative: " + items);
+    }
+    long total = existing + items;
+    if (total < existing || total > maxCollectionAllocation) {
+      throw new SystemLimitException("Cannot allocate " + (total < existing ? "more than Long.MAX_VALUE" : total)
+          + " collection elements whose minimum encoded size is zero: exceeds the maximum allowed of "
+          + maxCollectionAllocation + " (configure with the system property " + MAX_COLLECTION_ALLOCATION_PROPERTY
+          + ")");
+    }
+    return total;
+  }
+
+  /**
    * Check to ensure that reading the string size is within the specified limits.
    *
    * @param length The proposed size of the string to read
@@ -294,5 +382,11 @@ public class SystemLimitException extends AvroRuntimeException {
     maxBytesLength = getLimitFromProperty(MAX_BYTES_LENGTH_PROPERTY, MAX_ARRAY_VM_LIMIT);
     maxCollectionLength = getLimitFromProperty(MAX_COLLECTION_LENGTH_PROPERTY, MAX_ARRAY_VM_LIMIT);
     maxStringLength = getLimitFromProperty(MAX_STRING_LENGTH_PROPERTY, MAX_ARRAY_VM_LIMIT);
+    maxCollectionAllocation = getLongLimitFromProperty(MAX_COLLECTION_ALLOCATION_PROPERTY,
+        defaultMaxCollectionAllocation());
+    // A collection cannot hold more than MAX_ARRAY_VM_LIMIT elements, so keep the
+    // zero-byte allocation cap consistent with the other collection limits even
+    // when it is configured (or derived from a very large heap) above that.
+    maxCollectionAllocation = Math.min(maxCollectionAllocation, MAX_ARRAY_VM_LIMIT);
   }
 }

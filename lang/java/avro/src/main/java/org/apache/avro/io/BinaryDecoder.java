@@ -408,8 +408,21 @@ public class BinaryDecoder extends Decoder {
   protected long doReadItemCount() throws IOException {
     long result = readLong();
     if (result < 0L) {
-      // Consume byte-count if present
-      readLong();
+      if (result == Long.MIN_VALUE) {
+        // Long.MIN_VALUE cannot be negated (-Long.MIN_VALUE overflows back to
+        // Long.MIN_VALUE), so it is not a valid block count. Reject it rather
+        // than letting it fall through as a negative "count" that would later be
+        // truncated to 0 and silently terminate the collection without consuming
+        // the end marker, desynchronizing decoding of subsequent fields.
+        throw new AvroRuntimeException("Malformed data. Block count is invalid: " + result);
+      }
+      // A negative block count is followed by a block byte-size; consume it.
+      final long bytecount = readLong();
+      if (bytecount < 0L) {
+        // The block byte-size is a byte count and must be non-negative, matching
+        // doSkipItems().
+        throw new AvroRuntimeException("Malformed data. Block byte-size is negative: " + bytecount);
+      }
       result = -result;
     }
     return result;
@@ -436,7 +449,16 @@ public class BinaryDecoder extends Decoder {
   private long doSkipItems() throws IOException {
     long result = readLong();
     while (result < 0L) {
+      if (result == Long.MIN_VALUE) {
+        // Consistent with doReadItemCount: Long.MIN_VALUE is not a valid block
+        // count (it cannot be negated), so reject it rather than treating it as
+        // a byte-sized block and continuing to skip.
+        throw new AvroRuntimeException("Malformed data. Block count is invalid: " + result);
+      }
       final long bytecount = readLong();
+      if (bytecount < 0L) {
+        throw new AvroRuntimeException("Malformed data. Block byte-size is negative: " + bytecount);
+      }
       doSkipBytes(bytecount);
       result = readLong();
     }
@@ -458,7 +480,7 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public long skipArray() throws IOException {
-    return doSkipItems();
+    return SystemLimitException.checkMaxCollectionLength(doSkipItems());
   }
 
   @Override
@@ -476,7 +498,7 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public long skipMap() throws IOException {
-    return doSkipItems();
+    return SystemLimitException.checkMaxCollectionLength(doSkipItems());
   }
 
   @Override

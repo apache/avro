@@ -19,19 +19,26 @@ package org.apache.avro.generic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
@@ -217,6 +224,49 @@ public class TestGenericDatumReader {
   }
 
   /**
+   * On a stream source the decoder cannot know how many bytes remain, so the
+   * bytes-available guard is skipped and a large declared array count reaches the
+   * allocation path directly. The initial backing-array capacity must be clamped
+   * so a hostile count cannot drive a huge up-front allocation; a truncated
+   * stream therefore fails with {@link EOFException} (once the declared elements
+   * cannot be read) rather than attempting to preallocate hundreds of millions of
+   * slots.
+   */
+  @Test
+  void arrayHugeCountOnStreamClampsPreallocation() throws Exception {
+    Schema schema = Schema.createArray(Schema.create(Schema.Type.LONG));
+    // Record the largest capacity ever requested from newArray so we can assert
+    // the preallocation is clamped rather than sized to the declared block count.
+    // Without this, a regression that reintroduces new Object[(int) count] could
+    // allocate ~200M slots and still pass (with an EOFException) on a large-heap
+    // JVM, hiding the regression.
+    final int[] maxRequestedCapacity = { 0 };
+    GenericDatumReader<Object> reader = new GenericDatumReader<Object>(schema) {
+      @Override
+      protected Object newArray(Object old, int size, Schema schema) {
+        maxRequestedCapacity[0] = Math.max(maxRequestedCapacity[0], size);
+        return super.newArray(old, size, schema);
+      }
+    };
+
+    // A huge (non-zero-byte) block count followed by no element data. Wrapping in
+    // a BufferedInputStream keeps the source from being a ByteArrayInputStream, so
+    // it cannot report its remaining byte count (remainingBytes() == -1) and the
+    // bytes-available guard is disabled -- exercising the preallocation clamp.
+    byte[] data = encodeVarints(200_000_000L);
+    InputStream stream = new BufferedInputStream(new ByteArrayInputStream(data));
+    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(stream, null);
+    // Confirm the guard-disabling precondition: the decoder cannot report how
+    // many bytes remain, so this really is the unknown-remaining-bytes path.
+    assertEquals(-1, decoder.remainingBytes());
+    assertThrows(EOFException.class, () -> reader.read(null, decoder));
+    // The declared count is 200,000,000 but the initial allocation must stay
+    // clamped to GenericDatumReader.initialCollectionCapacity (<= 1024).
+    assertTrue(maxRequestedCapacity[0] <= GenericDatumReader.initialCollectionCapacity(200_000_000L),
+        "preallocation was not clamped: requested capacity " + maxRequestedCapacity[0]);
+  }
+
+  /**
    * Verify that reading an array of nulls with a large count SUCCEEDS because
    * null elements are 0 bytes each, so the byte check is correctly skipped.
    */
@@ -302,5 +352,338 @@ public class TestGenericDatumReader {
     byte[] data = encodeVarints(1L, 0L);
     BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
     assertThrows(EOFException.class, () -> reader.read(null, decoder));
+  }
+
+  // --- Zero-byte element collection allocation limit (AVRO-4300) ---
+
+  /**
+   * An array of {@code null} elements encodes each element as 0 bytes, so the
+   * bytes-remaining check cannot bound the block count. A huge count must be
+   * rejected by the heap-aware allocation limit rather than driving an unbounded
+   * backing-array allocation.
+   */
+  @Test
+  void arrayOfNullsRejectsCountAboveAllocationLimit() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      Schema schema = Schema.createArray(Schema.create(Schema.Type.NULL));
+      GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
+
+      // A single block declaring 200,000 null elements: only ~4 payload bytes,
+      // but would allocate a 200,000-slot backing array. Exceeds the limit of
+      // 1000, so it must be rejected before allocating.
+      byte[] data = encodeVarints(200_000L, 0L);
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+      assertThrows(SystemLimitException.class, () -> reader.read(null, decoder));
+
+      // Cumulative growth across multiple blocks is also rejected: two blocks of
+      // 600 nulls each (1200 > 1000) must throw on the second block.
+      byte[] cumulative = encodeVarints(600L, 600L, 0L);
+      BinaryDecoder decoder2 = DecoderFactory.get().binaryDecoder(cumulative, null);
+      assertThrows(SystemLimitException.class, () -> reader.read(null, decoder2));
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  /**
+   * A legitimate array of {@code null} elements within the allocation limit still
+   * decodes correctly, so the guard does not reject valid data.
+   */
+  @Test
+  void arrayOfNullsWithinAllocationLimitStillDecodes() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      Schema schema = Schema.createArray(Schema.create(Schema.Type.NULL));
+      GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
+
+      byte[] data = encodeVarints(1000L, 0L);
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+      GenericData.Array<?> result = (GenericData.Array<?>) reader.read(null, decoder);
+      assertEquals(1000, result.size());
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  /**
+   * An array whose element is a record with only {@code null} fields also encodes
+   * to 0 bytes per element and must be bounded by the allocation limit.
+   */
+  @Test
+  void arrayOfAllNullRecordsRejectsCountAboveAllocationLimit() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      Schema recWithNull = Schema.createRecord("AllNull", null, "test", false);
+      recWithNull.setFields(Collections.singletonList(new Schema.Field("n", Schema.create(Schema.Type.NULL))));
+      Schema schema = Schema.createArray(recWithNull);
+      GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
+
+      byte[] data = encodeVarints(200_000L, 0L);
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+      assertThrows(SystemLimitException.class, () -> reader.read(null, decoder));
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  private static GenericDatumReader<Object> arrayReader(Schema elementType, boolean fastReader) {
+    return readerFor(Schema.createArray(elementType), fastReader);
+  }
+
+  private static GenericDatumReader<Object> readerFor(Schema schema, boolean fastReader) {
+    GenericData data = new GenericData();
+    data.setFastReaderEnabled(fastReader);
+    return new GenericDatumReader<>(schema, schema, data);
+  }
+
+  /**
+   * Full matrix: every collection kind must be rejected (never OOM) with a huge
+   * declared block count and effectively no element data (only a trailing {@code
+   * 0L} varint, used as a single element value or a 0-length map key), on both
+   * the fast (default) and the classic reader. Zero-byte-element arrays are
+   * bounded by the heap-aware allocation cap (SystemLimitException); every other
+   * kind is bounded by the bytes-remaining check (EOFException). Maps always
+   * carry a >=1-byte key so they fall in the latter group regardless of the value
+   * type.
+   */
+  @Test
+  void hugeCollectionsRejectedOnBothReaderPaths() throws Exception {
+    // element/value type -> expected exception when the count is huge and no data
+    Schema nullType = Schema.create(Schema.Type.NULL);
+    Schema longType = Schema.create(Schema.Type.LONG);
+    Schema intType = Schema.create(Schema.Type.INT);
+
+    // (schema, expected exception). array<null> is the only zero-byte case here.
+    Object[][] cases = { { Schema.createArray(nullType), SystemLimitException.class },
+        { Schema.createArray(longType), EOFException.class }, { Schema.createArray(intType), EOFException.class },
+        { Schema.createMap(nullType), EOFException.class }, { Schema.createMap(longType), EOFException.class }, };
+
+    // Small allocation limit so the zero-byte array<null> case is rejected
+    // deterministically regardless of the test JVM heap size.
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      for (Object[] c : cases) {
+        Schema schema = (Schema) c[0];
+        @SuppressWarnings("unchecked")
+        Class<? extends Throwable> expected = (Class<? extends Throwable>) c[1];
+        for (boolean fast : new boolean[] { true, false }) {
+          GenericDatumReader<Object> reader = readerFor(schema, fast);
+          byte[] data = encodeVarints(200_000_000L, 0L);
+          BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+          assertThrows(expected, () -> reader.read(null, decoder), () -> schema + " fast=" + fast);
+        }
+      }
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  /**
+   * The fast reader (the default decode path) must apply the same guards as the
+   * classic reader. A non-zero-byte element array with a huge count and no data
+   * must be rejected by the bytes-remaining check rather than pre-allocating a
+   * huge backing array. Also verifies the cumulative allocation cap across
+   * multiple blocks for the zero-byte case, which the single-block matrix does
+   * not exercise.
+   */
+  @Test
+  void fastAndClassicReaderRejectCumulativeNullBlocks() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      for (boolean fast : new boolean[] { true, false }) {
+        GenericDatumReader<Object> reader = arrayReader(Schema.create(Schema.Type.NULL), fast);
+        // Two blocks of 600 nulls each (1200 > 1000) must throw on the second.
+        byte[] data = encodeVarints(600L, 600L, 0L);
+        BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+        assertThrows(SystemLimitException.class, () -> reader.read(null, decoder), "fastReader=" + fast);
+      }
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  /**
+   * A negative block count encodes {@code abs(count)} zero-byte elements preceded
+   * by a block byte-size; the decoder normalizes it to a positive count, which
+   * must still be bounded by the allocation cap on both reader paths (matching
+   * the negative-block-count coverage of the C and Python SDKs).
+   */
+  @Test
+  void fastAndClassicReaderRejectNegativeNullBlockCount() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      for (boolean fast : new boolean[] { true, false }) {
+        GenericDatumReader<Object> reader = arrayReader(Schema.create(Schema.Type.NULL), fast);
+        // -200000 items (zigzag negative), followed by a block byte-size of 0,
+        // then the end-of-array terminator. Normalized to 200000 > 1000.
+        byte[] data = encodeVarints(-200_000L, 0L, 0L);
+        BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+        assertThrows(SystemLimitException.class, () -> reader.read(null, decoder), "fastReader=" + fast);
+      }
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  /**
+   * {@code Long.MIN_VALUE} as a block count is the pathological overflow case:
+   * negating it overflows back to a negative value. Rather than letting it be
+   * truncated to {@code 0} (which would silently end the collection without
+   * consuming the end marker and desynchronize decoding of following fields), the
+   * decoder rejects it outright as malformed, matching the C SDK.
+   */
+  @Test
+  void fastAndClassicReaderRejectMinValueBlockCount() throws Exception {
+    for (boolean fast : new boolean[] { true, false }) {
+      GenericDatumReader<Object> reader = arrayReader(Schema.create(Schema.Type.NULL), fast);
+      // Long.MIN_VALUE items (zigzag), a block byte-size of 0, then the
+      // end-of-array terminator. Negating Long.MIN_VALUE overflows, so it must be
+      // rejected as malformed instead of decoded as an empty array.
+      byte[] data = encodeVarints(Long.MIN_VALUE, 0L, 0L);
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+      assertThrows(AvroRuntimeException.class, () -> reader.read(null, decoder), "fastReader=" + fast);
+    }
+  }
+
+  /**
+   * A union branch index outside {@code [0, branch count)} is malformed and must
+   * be rejected on both reader paths rather than throwing a generic
+   * {@code IndexOutOfBoundsException}.
+   */
+  @Test
+  void fastAndClassicReaderRejectOutOfRangeUnionIndex() throws Exception {
+    Schema schema = Schema.createUnion(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.LONG));
+    for (boolean fast : new boolean[] { true, false }) {
+      for (long index : new long[] { 5L, -1L }) {
+        GenericDatumReader<Object> reader = readerFor(schema, fast);
+        byte[] data = encodeVarints(index);
+        BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+        assertThrows(org.apache.avro.AvroTypeException.class, () -> reader.read(null, decoder),
+            "fastReader=" + fast + " index=" + index);
+      }
+    }
+  }
+
+  /**
+   * An enum symbol index outside {@code [0, symbol count)} is malformed and must
+   * be rejected on both reader paths.
+   */
+  @Test
+  void fastAndClassicReaderRejectOutOfRangeEnumIndex() throws Exception {
+    Schema schema = Schema.createEnum("E", null, null, Arrays.asList("A", "B"));
+    for (boolean fast : new boolean[] { true, false }) {
+      for (int index : new int[] { 9, -1 }) {
+        GenericDatumReader<Object> reader = readerFor(schema, fast);
+        byte[] data = encodeVarints(index);
+        BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+        assertThrows(org.apache.avro.AvroTypeException.class, () -> reader.read(null, decoder),
+            "fastReader=" + fast + " index=" + index);
+      }
+    }
+  }
+
+  /**
+   * A legitimate array of nulls within the limit still decodes on both reader
+   * paths.
+   */
+  @Test
+  void fastAndClassicReaderDecodeSmallNullArray() throws Exception {
+    for (boolean fast : new boolean[] { true, false }) {
+      GenericDatumReader<Object> reader = arrayReader(Schema.create(Schema.Type.NULL), fast);
+      byte[] data = encodeVarints(1000L, 0L);
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+      Collection<?> result = (Collection<?>) reader.read(null, decoder);
+      assertEquals(1000, result.size(), "fastReader=" + fast);
+    }
+  }
+
+  /**
+   * Skipping a huge zero-byte array (e.g. during schema projection) is bounded by
+   * the heap-aware allocation cap, so it cannot loop unboundedly even though it
+   * reads nothing.
+   */
+  @Test
+  void skipArrayOfNullRejectsHugeCount() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      Schema schema = Schema.createArray(Schema.create(Schema.Type.NULL));
+      byte[] data = encodeVarints(200_000L, 0L);
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+      assertThrows(SystemLimitException.class, () -> GenericDatumReader.skip(schema, decoder));
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  /**
+   * A legitimate small zero-byte array is skipped without error.
+   */
+  @Test
+  void skipSmallNullArraySucceeds() throws Exception {
+    Schema schema = Schema.createArray(Schema.create(Schema.Type.NULL));
+    // 1000 nulls then the end marker, followed by a trailing long we can read to
+    // confirm the skip advanced correctly.
+    byte[] data = encodeVarints(1000L, 0L, 42L);
+    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+    GenericDatumReader.skip(schema, decoder);
+    assertEquals(42L, decoder.readLong());
+  }
+
+  /**
+   * Skipping a huge map is bounded by the structural collection cap.
+   */
+  @Test
+  void skipMapRejectsHugeCount() throws Exception {
+    Schema schema = Schema.createMap(Schema.create(Schema.Type.NULL));
+    // A single block declaring more than Integer.MAX_VALUE - 8 entries.
+    byte[] data = encodeVarints((long) Integer.MAX_VALUE, 0L);
+    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+    // Integer.MAX_VALUE exceeds MAX_ARRAY_VM_LIMIT, so this hits the VM
+    // structural-limit path (an UnsupportedOperationException).
+    assertThrows(UnsupportedOperationException.class, () -> GenericDatumReader.skip(schema, decoder));
+  }
+
+  /**
+   * A writer array field that the reader schema omits is skipped during
+   * resolution through the decoder's skipArray; a huge count must be bounded on
+   * both the fast and classic reader paths.
+   */
+  @Test
+  void resolvingSkipOfHugeNullArrayFieldIsBounded() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_LENGTH_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      Schema writer = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"R\",\"fields\":["
+          + "{\"name\":\"arr\",\"type\":{\"type\":\"array\",\"items\":\"null\"}},"
+          + "{\"name\":\"a\",\"type\":\"long\"}]}");
+      Schema reader = new Schema.Parser()
+          .parse("{\"type\":\"record\",\"name\":\"R\",\"fields\":[{\"name\":\"a\",\"type\":\"long\"}]}");
+      byte[] data = encodeVarints(2000L, 0L, 42L);
+      for (boolean fast : new boolean[] { true, false }) {
+        GenericData data2 = new GenericData();
+        data2.setFastReaderEnabled(fast);
+        GenericDatumReader<Object> r = new GenericDatumReader<>(writer, reader, data2);
+        BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+        assertThrows(SystemLimitException.class, () -> r.read(null, decoder), "fastReader=" + fast);
+      }
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_LENGTH_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
   }
 }

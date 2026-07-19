@@ -37,6 +37,7 @@ import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
@@ -113,6 +114,26 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   private static final ThreadLocal<Map<Schema, Map<Schema, ResolvingDecoder>>> RESOLVER_CACHE = ThreadLocalWithInitial
       .of(WeakIdentityHashMap::new);
+
+  /**
+   * Upper bound on the initial capacity eagerly allocated for a collection from
+   * its declared block count. The backing array/map grows on demand as elements
+   * are read, so this is only a starting hint: it prevents a large declared count
+   * from driving a huge up-front allocation before any element is decoded. This
+   * matters most for stream sources, where the decoder cannot know how many bytes
+   * remain and so cannot otherwise bound the declared count against the input.
+   */
+  private static final int MAX_COLLECTION_PREALLOC = 1024;
+
+  /**
+   * Clamp a declared collection block count to a safe initial allocation size.
+   *
+   * @param count the declared (already limit-checked) block count
+   * @return {@code count} capped at {@link #MAX_COLLECTION_PREALLOC}
+   */
+  public static int initialCollectionCapacity(long count) {
+    return (int) Math.min(count, MAX_COLLECTION_PREALLOC);
+  }
 
   /**
    * Gets a resolving decoder for use by this GenericDatumReader. Unstable API.
@@ -296,9 +317,20 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     long base = 0;
     if (l > 0) {
       ensureAvailableCollectionBytes(in, l, expectedType);
+      // Elements whose minimum encoded size is zero (null, a zero-length fixed, a
+      // record whose fields are all zero-byte, or a recursive schema where the
+      // cycle is broken with a 0 minimum) consume no guaranteed input, so
+      // ensureAvailableCollectionBytes cannot bound their count from the bytes
+      // remaining. Cap such collections against a heap-aware limit so a tiny
+      // payload cannot declare a huge block count and drive an unbounded
+      // backing-array allocation.
+      boolean zeroByteElements = isZeroByteSchema(expectedType);
+      if (zeroByteElements) {
+        SystemLimitException.checkMaxCollectionAllocation(base, l);
+      }
       LogicalType logicalType = expectedType.getLogicalType();
       Conversion<?> conversion = getData().getConversionFor(logicalType);
-      Object array = newArray(old, (int) l, expected);
+      Object array = newArray(old, initialCollectionCapacity(l), expected);
       do {
         if (logicalType != null && conversion != null) {
           for (long i = 0; i < l; i++) {
@@ -311,7 +343,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
           }
         }
         base += l;
-      } while ((l = arrayNext(in, expectedType)) > 0);
+        l = arrayNext(in, expectedType);
+        if (zeroByteElements && l > 0) {
+          SystemLimitException.checkMaxCollectionAllocation(base, l);
+        }
+      } while (l > 0);
       return pruneArray(array);
     } else {
       return pruneArray(newArray(old, 0, expected));
@@ -364,7 +400,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     LogicalType logicalType = eValue.getLogicalType();
     Conversion<?> conversion = getData().getConversionFor(logicalType);
     ensureAvailableMapBytes(in, l, eValue);
-    Object map = newMap(old, (int) l);
+    Object map = newMap(old, initialCollectionCapacity(l));
     if (l > 0) {
       do {
         if (logicalType != null && conversion != null) {
@@ -441,6 +477,23 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     return minBytesPerElement(schema, Collections.newSetFromMap(new IdentityHashMap<>()));
   }
 
+  /**
+   * Whether the minimum encoded size of the given schema is zero, i.e.
+   * {@link #minBytesPerElement(Schema)} is {@code 0}. This is true for values
+   * that always encode to zero bytes (e.g. {@code null}, a zero-length
+   * {@code fixed}, or a record whose fields are all zero-byte), and
+   * conservatively for recursive schemas, where the cycle is broken by returning
+   * a 0 minimum. Such elements cannot be bounded by the number of bytes remaining
+   * in the stream, so a collection of them must be bounded by a heap-aware
+   * allocation limit instead.
+   *
+   * @param schema the element (or map value) schema
+   * @return {@code true} if the schema's minimum encoded size is zero
+   */
+  public static boolean isZeroByteSchema(Schema schema) {
+    return minBytesPerElement(schema) == 0;
+  }
+
   private static int minBytesPerElement(Schema schema, Set<Schema> visited) {
     switch (schema.getType()) {
     case NULL:
@@ -481,9 +534,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * reports fewer remaining bytes than required.
    * <p>
    * This check prevents out-of-memory errors from pre-allocating huge backing
-   * arrays when the source data is truncated or malicious.
+   * arrays when the source data is truncated or malicious. It is exposed so the
+   * fast reader ({@code FastReaderBuilder}) can apply the same guard as this
+   * classic reader.
    */
-  private static void ensureAvailableCollectionBytes(Decoder decoder, long count, Schema elementSchema)
+  public static void ensureAvailableCollectionBytes(Decoder decoder, long count, Schema elementSchema)
       throws EOFException {
     if (count <= 0) {
       return;
@@ -747,7 +802,23 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       break;
     case ARRAY:
       Schema elementType = schema.getElementType();
+      // Bound the cumulative element count: skipping a huge block of elements
+      // whose minimum encoded size is zero (e.g. null) would otherwise loop
+      // unboundedly (a CPU exhaustion) even though it reads nothing. Such
+      // elements use the heap-aware allocation cap; others the structural
+      // collection cap.
+      boolean zeroByteElements = isZeroByteSchema(elementType);
+      long arrayTotal = 0;
       for (long l = in.skipArray(); l > 0; l = in.skipArray()) {
+        // Always enforce the cumulative structural cap, then additionally the
+        // heap-aware allocation cap for zero-byte elements (which the structural
+        // cap alone does not bound tightly), so a huge count split across blocks
+        // cannot drive an unbounded skip loop.
+        SystemLimitException.checkMaxCollectionLength(arrayTotal, l);
+        if (zeroByteElements) {
+          SystemLimitException.checkMaxCollectionAllocation(arrayTotal, l);
+        }
+        arrayTotal += l;
         for (long i = 0; i < l; i++) {
           skip(elementType, in);
         }
@@ -755,7 +826,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       break;
     case MAP:
       Schema value = schema.getValueType();
+      // Map entries always carry a >= 1 byte key, so the structural cap applies.
+      long mapTotal = 0;
       for (long l = in.skipMap(); l > 0; l = in.skipMap()) {
+        SystemLimitException.checkMaxCollectionLength(mapTotal, l);
+        mapTotal += l;
         for (long i = 0; i < l; i++) {
           in.skipString();
           skip(value, in);

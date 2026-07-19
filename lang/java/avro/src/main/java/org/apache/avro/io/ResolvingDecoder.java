@@ -260,7 +260,18 @@ public class ResolvingDecoder extends ValidatingDecoder {
     Symbol.EnumAdjustAction top = (Symbol.EnumAdjustAction) parser.popSymbol();
     int n = in.readEnum();
     if (top.noAdjustments) {
+      // n is used directly as an index into the reader enum's symbols, so it
+      // must fall within the reader symbol count.
+      if (n < 0 || n >= top.size) {
+        throw new AvroTypeException("Enumeration out of range: must be in [0, " + top.size + "), but received " + n);
+      }
       return n;
+    }
+    // Otherwise n indexes the writer-to-reader adjustment table; reject an index
+    // outside it rather than letting the array access throw.
+    if (n < 0 || n >= top.adjustments.length) {
+      throw new AvroTypeException(
+          "Enumeration out of range: must be in [0, " + top.adjustments.length + "), but received " + n);
     }
     Object o = top.adjustments[n];
     if (o instanceof Integer) {
