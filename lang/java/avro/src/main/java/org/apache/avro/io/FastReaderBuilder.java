@@ -40,6 +40,7 @@ import org.apache.avro.Resolver.Skip;
 import org.apache.avro.Resolver.WriterUnion;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.InstanceSupplier;
@@ -419,6 +420,10 @@ public class FastReaderBuilder {
   private FieldReader createUnionReader(FieldReader[] unionReaders) {
     return reusingReader((reuse, decoder) -> {
       final int selection = decoder.readIndex();
+      if (selection < 0 || selection >= unionReaders.length) {
+        throw new AvroTypeException(
+            "Union branch index out of range: must be in [0, " + unionReaders.length + "), but received " + selection);
+      }
       return unionReaders[selection].read(null, decoder);
     });
 
@@ -469,39 +474,76 @@ public class FastReaderBuilder {
   @SuppressWarnings("unchecked")
   private FieldReader createArrayReader(Schema readerSchema, Container action) throws IOException {
     FieldReader elementReader = getReaderFor(action.elementAction, null);
+    Schema elementType = readerSchema.getElementType();
+
+    boolean zeroByteElements = GenericDatumReader.isZeroByteSchema(elementType);
 
     return reusingReader((reuse, decoder) -> {
       if (reuse instanceof GenericArray) {
         GenericArray<Object> reuseArray = (GenericArray<Object>) reuse;
         long l = decoder.readArrayStart();
+        long total = 0;
+        checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
         reuseArray.clear();
 
         while (l > 0) {
           for (long i = 0; i < l; i++) {
             reuseArray.add(elementReader.read(reuseArray.peek(), decoder));
           }
+          total += l;
           l = decoder.arrayNext();
+          checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
         }
         return reuseArray;
       } else {
         long l = decoder.readArrayStart();
+        long total = 0;
+        checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
         List<Object> array = (reuse instanceof List) ? (List<Object>) reuse
-            : new GenericData.Array<>((int) l, readerSchema);
+            : new GenericData.Array<>(GenericDatumReader.initialCollectionCapacity(l), readerSchema);
         array.clear();
         while (l > 0) {
           for (long i = 0; i < l; i++) {
             array.add(elementReader.read(null, decoder));
           }
+          total += l;
           l = decoder.arrayNext();
+          checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
         }
         return array;
       }
     });
   }
 
+  /**
+   * Validates an array block count before its elements are allocated, applying
+   * the same guards as the classic {@code GenericDatumReader}: the
+   * bytes-remaining check for elements with a positive minimum size, and the
+   * heap-aware allocation cap for zero-byte elements (which the bytes check
+   * cannot bound).
+   */
+  private static void checkArrayBlock(Decoder decoder, Schema elementType, boolean zeroByteElements, long total,
+      long count) throws IOException {
+    if (count <= 0) {
+      return;
+    }
+    if (zeroByteElements) {
+      // The bytes-remaining check cannot bound zero-byte elements (minBytes is
+      // 0, so ensureAvailableCollectionBytes would no-op after recomputing it);
+      // apply the heap-aware allocation cap instead.
+      SystemLimitException.checkMaxCollectionAllocation(total, count);
+    } else {
+      GenericDatumReader.ensureAvailableCollectionBytes(decoder, count, elementType);
+    }
+  }
+
   private FieldReader createEnumReader(EnumAdjust action) {
     return reusingReader((reuse, decoder) -> {
       int index = decoder.readEnum();
+      if (index < 0 || index >= action.values.length) {
+        throw new AvroTypeException(
+            "Enumeration out of range: must be in [0, " + action.values.length + "), but received " + index);
+      }
       Object resultObject = action.values[index];
       if (resultObject == null) {
         throw new AvroTypeException("No match for " + action.writer.getEnumSymbols().get(index));
