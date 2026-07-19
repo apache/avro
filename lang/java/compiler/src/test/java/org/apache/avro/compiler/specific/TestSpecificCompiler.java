@@ -1031,6 +1031,52 @@ public class TestSpecificCompiler {
     }
   }
 
+  @Test
+  void unicodeEscapesInDocsAreNeutralized() {
+    // The Java compiler decodes Unicode escapes (\ uXXXX) across the whole source
+    // file, including inside comments, before comments are recognized (JLS 3.3).
+    // A doc value carrying the literal text "\ u002a\ u002f" therefore decodes to
+    // "*/" at compile time and could close the generated Javadoc comment early,
+    // enabling arbitrary code injection. Since a Unicode escape always requires a
+    // literal backslash, escapeForJavadoc neutralizes every backslash, which
+    // covers all escape variants at once.
+    String[] maliciousDocs = { //
+        "\\u002a\\u002f static { System.exit(1); } \\u002f\\u002a", // basic form
+        "\\uuuu002a\\uuuu002f System.exit(1);", // multiple 'u's are legal (JLS 3.3)
+        "\\u005cu002a\\u005cu002f System.exit(1);", // escape that would decode to a backslash
+        "\\U002A\\u002F", // uppercase hex / uppercase-U decoy
+        "prefix\\\\u002a\\\\u002f even-backslash-run", // even run of backslashes
+        "literal */ static { System.exit(1); } /* comment close" // no escape at all
+    };
+
+    for (String maliciousDoc : maliciousDocs) {
+      // Unit-level check on the escaping utility itself.
+      String escaped = SpecificCompiler.escapeForJavadoc(maliciousDoc);
+      assertFalse(escaped.contains("\\"), "Backslashes must be neutralized: " + escaped);
+      assertFalse(escaped.contains("*/"), "Comment terminator must be neutralized: " + escaped);
+
+      // End-to-end check: no raw backslash may reach the generated source's doc
+      // comments. A Java Unicode escape always requires a literal backslash, so the
+      // absence of backslashes in every comment line proves no \ uXXXX sequence can
+      // be reconstituted by the compiler to close the comment.
+      Schema schema = SchemaBuilder.record("EvilRecord").namespace("org.apache.avro.codegentest.testdata")
+          .doc(maliciousDoc).fields().name("field").doc(maliciousDoc).type().stringType().noDefault().endRecord();
+      Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(schema).compile();
+      assertEquals(1, outputs.size());
+      for (SpecificCompiler.OutputFile outputFile : outputs) {
+        // Inspect only Javadoc/comment lines. The schema string literal (emitted via
+        // escapeForJavaString, which doubles backslashes and is therefore immune) is
+        // on a code line and is intentionally excluded.
+        for (String line : outputFile.contents.split("\n")) {
+          String trimmed = line.trim();
+          if (trimmed.startsWith("/**") || trimmed.startsWith("*")) {
+            assertFalse(line.contains("\\"), "Raw backslash reached doc comment: " + line);
+          }
+        }
+      }
+    }
+  }
+
   private int countOccurrences(Pattern pattern, String textToSearch) {
     int count = 0;
     for (Matcher matcher = pattern.matcher(textToSearch); matcher.find();) {
