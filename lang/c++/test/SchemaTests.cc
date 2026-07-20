@@ -237,10 +237,14 @@ const char *basicSchemaErrors[] = {
     R"({"type": "enum", "name": "Status", "symbols" : ["Ok", "Not Ok"]})",
     // Enum symbol attempting identifier injection
     R"({"type": "enum", "name": "Status", "symbols" : ["Ok", "A, B_c = 5"]})",
+    // Empty enum symbol
+    R"({"type": "enum", "name": "Status", "symbols" : ["Ok", ""]})",
     // Field name containing a space
     R"({"type":"record","name":"R","fields":[{"name":"in valid","type":"long"}]})",
     // Field name attempting identifier/code injection
-    R"({"type":"record","name":"R","fields":[{"name":"x; int y","type":"long"}]})"
+    R"({"type":"record","name":"R","fields":[{"name":"x; int y","type":"long"}]})",
+    // Empty field name
+    R"({"type":"record","name":"R","fields":[{"name":"","type":"long"}]})"
 
 };
 
