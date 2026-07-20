@@ -1046,7 +1046,8 @@ public class TestSpecificCompiler {
         "\\u005cu002a\\u005cu002f System.exit(1);", // escape that would decode to a backslash
         "\\U002A\\u002F", // uppercase hex / uppercase-U decoy
         "prefix\\\\u002a\\\\u002f even-backslash-run", // even run of backslashes
-        "literal */ static { System.exit(1); } /* comment close" // no escape at all
+        "literal */ static { System.exit(1); } /* comment close", // no escape at all
+        "first line\\u002a\\u002f\nsecond line \\u002f\\u002a end" // spans multiple physical lines
     };
 
     for (String maliciousDoc : maliciousDocs) {
@@ -1055,26 +1056,49 @@ public class TestSpecificCompiler {
       assertFalse(escaped.contains("\\"), "Backslashes must be neutralized: " + escaped);
       assertFalse(escaped.contains("*/"), "Comment terminator must be neutralized: " + escaped);
 
-      // End-to-end check: no raw backslash may reach the generated source's doc
-      // comments. A Java Unicode escape always requires a literal backslash, so the
-      // absence of backslashes in every comment line proves no \ uXXXX sequence can
-      // be reconstituted by the compiler to close the comment.
+      // End-to-end check: no raw backslash may reach the generated source outside of
+      // string literals. A Java Unicode escape always requires a literal backslash,
+      // so the absence of backslashes everywhere except string literals proves no
+      // \ uXXXX sequence can be reconstituted by the compiler to close a comment.
       Schema schema = SchemaBuilder.record("EvilRecord").namespace("org.apache.avro.codegentest.testdata")
           .doc(maliciousDoc).fields().name("field").doc(maliciousDoc).type().stringType().noDefault().endRecord();
       Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(schema).compile();
       assertEquals(1, outputs.size());
       for (SpecificCompiler.OutputFile outputFile : outputs) {
-        // Inspect only Javadoc/comment lines. The schema string literal (emitted via
-        // escapeForJavaString, which doubles backslashes and is therefore immune) is
-        // on a code line and is intentionally excluded.
-        for (String line : outputFile.contents.split("\n")) {
-          String trimmed = line.trim();
-          if (trimmed.startsWith("/**") || trimmed.startsWith("*")) {
-            assertFalse(line.contains("\\"), "Raw backslash reached doc comment: " + line);
-          }
-        }
+        // Remove Java string literals (the schema is embedded via escapeForJavaString,
+        // which doubles backslashes and is therefore immune) so that the remaining
+        // text is code and comments only. This checks every line of every Javadoc
+        // block, including the middle lines of a multi-line doc comment.
+        String withoutStringLiterals = removeJavaStringLiterals(outputFile.contents);
+        assertFalse(withoutStringLiterals.contains("\\"),
+            "Raw backslash reached generated code/comments: " + outputFile.path);
       }
     }
+  }
+
+  /**
+   * Returns the given Java source with the content of all double-quoted string
+   * literals removed, so tests can assert on code and comments without matching
+   * the (legitimately backslash-containing) embedded schema string literal.
+   */
+  private String removeJavaStringLiterals(String source) {
+    StringBuilder out = new StringBuilder(source.length());
+    boolean inString = false;
+    for (int i = 0; i < source.length(); i++) {
+      char c = source.charAt(i);
+      if (inString) {
+        if (c == '\\') {
+          i++; // skip the escaped character (e.g. \" or \\)
+        } else if (c == '"') {
+          inString = false;
+        }
+      } else if (c == '"') {
+        inString = true;
+      } else {
+        out.append(c);
+      }
+    }
+    return out.toString();
   }
 
   private int countOccurrences(Pattern pattern, String textToSearch) {
