@@ -21,11 +21,12 @@
 #include "ZstdDecompressWrapper.hh"
 #include "Exception.hh"
 
+#include <limits>
 #include <zstd.h>
 
 namespace avro {
 
-std::string ZstdDecompressWrapper::decompress(const std::vector<char> &compressed) {
+std::string ZstdDecompressWrapper::decompress(const std::vector<char> &compressed, size_t maxLength) {
     std::string uncompressed;
     // Get the decompressed size
     size_t decompressed_size = ZSTD_getFrameContentSize(compressed.data(), compressed.size());
@@ -43,9 +44,28 @@ std::string ZstdDecompressWrapper::decompress(const std::vector<char> &compresse
             if (ZSTD_isError(ret)) {
                 throw Exception("ZSTD decompression error: {}", ZSTD_getErrorName(ret));
             }
+            // Reject before appending so the buffer never grows past the limit.
+            if (out.pos > maxLength - uncompressed.size()) {
+                // Saturate the reported size so the addition cannot wrap when
+                // uncompressed.size() is near size_t's maximum (possible when
+                // AVRO_MAX_DECOMPRESS_LENGTH is configured close to SIZE_MAX).
+                const size_t reported =
+                    out.pos > std::numeric_limits<size_t>::max() - uncompressed.size()
+                        ? std::numeric_limits<size_t>::max()
+                        : uncompressed.size() + out.pos;
+                throw Exception(
+                    "Decompressed block size {} exceeds the maximum allowed of {} bytes",
+                    reported, maxLength);
+            }
             uncompressed.append(tmp.data(), out.pos);
         } while (ret != 0);
     } else {
+        // The frame declares its decompressed size; reject it before allocating.
+        if (decompressed_size > maxLength) {
+            throw Exception(
+                "Decompressed block size {} exceeds the maximum allowed of {} bytes",
+                decompressed_size, maxLength);
+        }
         // Batch decompress the data
         uncompressed.resize(decompressed_size);
         size_t result = ZSTD_decompress(
