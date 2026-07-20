@@ -107,6 +107,10 @@ static bool isAsciiAlnum(char c) {
     return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
 
+static bool isAsciiLetter(char c) {
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
 static bool invalidChar1(char c) {
     return !isAsciiAlnum(c) && c != '_' && c != '.' && c != '$';
 }
@@ -119,7 +123,9 @@ void Name::check() const {
     if (!ns_.empty() && (ns_[0] == '.' || ns_[ns_.size() - 1] == '.' || std::find_if(ns_.begin(), ns_.end(), invalidChar1) != ns_.end())) {
         throw Exception("Invalid namespace: " + ns_);
     }
-    if (simpleName_.empty()
+    // A simple name must be non-empty, start with [A-Za-z_], and otherwise
+    // contain only [A-Za-z0-9_].
+    if (simpleName_.empty() || !(isAsciiLetter(simpleName_[0]) || simpleName_[0] == '_')
         || std::find_if(simpleName_.begin(), simpleName_.end(), invalidChar2) != simpleName_.end()) {
         throw Exception("Invalid name: " + simpleName_);
     }

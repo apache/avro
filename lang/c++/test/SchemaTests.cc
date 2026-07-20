@@ -244,7 +244,13 @@ const char *basicSchemaErrors[] = {
     // Field name attempting identifier/code injection
     R"({"type":"record","name":"R","fields":[{"name":"x; int y","type":"long"}]})",
     // Empty field name
-    R"({"type":"record","name":"R","fields":[{"name":"","type":"long"}]})"
+    R"({"type":"record","name":"R","fields":[{"name":"","type":"long"}]})",
+    // Field name starting with a digit
+    R"({"type":"record","name":"R","fields":[{"name":"1abc","type":"long"}]})",
+    // Enum symbol starting with a digit
+    R"({"type": "enum", "name": "Status", "symbols" : ["Ok", "1abc"]})",
+    // Type name starting with a digit
+    R"({"type":"record","name":"1Bad","fields":[]})"
 
 };
 
