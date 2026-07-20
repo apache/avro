@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#include <cctype>
 #include <cstring>
 #include <sstream>
 #include <unordered_set>
@@ -136,13 +135,16 @@ string getStringField(const Entity &e, const Object &m,
 // Validates that a record field name or enum symbol conforms to the Avro name
 // grammar (a non-empty sequence of [A-Za-z0-9_], as already enforced for named
 // type simple names by Name::check()). This prevents out-of-spec strings from
-// being emitted verbatim as identifiers by the C++ code generator.
+// being emitted verbatim as identifiers by the C++ code generator. The character
+// checks are restricted to ASCII on purpose (rather than std::isalnum, which is
+// locale-dependent) so the accepted grammar does not vary with the locale.
 static void validateSimpleName(const string &name, const char *what) {
     if (name.empty()) {
         throw Exception("Empty {} name", what);
     }
     for (const char c : name) {
-        if (!std::isalnum(static_cast<unsigned char>(c)) && c != '_') {
+        const bool isAsciiAlnum = (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+        if (!isAsciiAlnum && c != '_') {
             throw Exception("Invalid {} name: {}", what, name);
         }
     }
