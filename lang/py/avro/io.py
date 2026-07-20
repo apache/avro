@@ -199,11 +199,11 @@ class BinaryDecoder:
 
     _reader: IO[bytes]
 
-    #: Reads with a declared length above this many bytes are validated against
-    #: the number of bytes actually remaining (when the reader is seekable)
-    #: before allocating, to guard against an out-of-memory attack from a
-    #: malicious or truncated input. Smaller reads skip the check to avoid
-    #: per-value overhead, since they cannot cause a meaningful over-allocation.
+    # Reads with a declared length above this many bytes are validated against
+    # the number of bytes actually remaining (when the reader is seekable)
+    # before allocating, to guard against an out-of-memory attack from a
+    # malicious or truncated input. Smaller reads skip the check to avoid
+    # per-value overhead, since they cannot cause a meaningful over-allocation.
     _MAX_UNCHECKED_READ = 1024 * 1024
 
     def __init__(self, reader: IO[bytes]) -> None:
@@ -681,28 +681,29 @@ class BinaryEncoder:
 #
 # DatumReader/Writer
 #
-#: Environment variable overriding the collection element limits. When set to a
-#: non-negative integer it caps both the number of zero-byte-encoded collection
-#: elements (e.g. an array of nulls) and the structural cap on the total number of
-#: elements in any collection, allocated from a single decode.
+
+# Environment variable overriding the collection element limits. When set to a
+# non-negative integer it caps both the number of zero-byte-encoded collection
+# elements (e.g. an array of nulls) and the structural cap on the total number of
+# elements in any collection, allocated from a single decode.
 MAX_COLLECTION_ITEMS_ENV = "AVRO_MAX_COLLECTION_ITEMS"
 
-#: Default maximum number of zero-byte-encoded collection elements to allocate.
-#: Elements whose schema encodes to zero bytes (``null``, a zero-length ``fixed``,
-#: or a record with only zero-byte fields) consume no input, so the bytes-remaining
-#: check cannot bound their count; without a cap a tiny payload can declare a huge
-#: block count and exhaust memory. A legitimate collection of zero-byte elements is
-#: small, so this default is generous while still rejecting pathological input. It
-#: can be raised (or lowered) with the ``AVRO_MAX_COLLECTION_ITEMS`` environment
-#: variable.
+# Default maximum number of zero-byte-encoded collection elements to allocate.
+# Elements whose schema encodes to zero bytes (``null``, a zero-length ``fixed``,
+# or a record with only zero-byte fields) consume no input, so the bytes-remaining
+# check cannot bound their count; without a cap a tiny payload can declare a huge
+# block count and exhaust memory. A legitimate collection of zero-byte elements is
+# small, so this default is generous while still rejecting pathological input. It
+# can be raised (or lowered) with the ``AVRO_MAX_COLLECTION_ITEMS`` environment
+# variable.
 DEFAULT_MAX_COLLECTION_ITEMS = 10_000_000
 
-#: Default structural cap on the number of elements in any array or map (a
-#: collection larger than this is treated as malformed regardless of element
-#: type). Matches the historical ``Integer.MAX_VALUE - 8`` limit. Elements with a
-#: positive on-wire size are also bounded by the bytes remaining; this cap is an
-#: additional overflow/defense-in-depth guard. ``AVRO_MAX_COLLECTION_ITEMS``, when
-#: set, overrides both this and :data:`DEFAULT_MAX_COLLECTION_ITEMS`.
+# Default structural cap on the number of elements in any array or map (a
+# collection larger than this is treated as malformed regardless of element
+# type). Matches the historical ``Integer.MAX_VALUE - 8`` limit. Elements with a
+# positive on-wire size are also bounded by the bytes remaining; this cap is an
+# additional overflow/defense-in-depth guard. ``AVRO_MAX_COLLECTION_ITEMS``, when
+# set, overrides both this and ``DEFAULT_MAX_COLLECTION_ITEMS``.
 DEFAULT_MAX_COLLECTION_STRUCTURAL = (1 << 31) - 1 - 8  # Integer.MAX_VALUE - 8
 
 
