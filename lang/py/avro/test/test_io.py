@@ -701,6 +701,21 @@ class TestDatumReaderCollectionAvailableBytes(unittest.TestCase):
         result = self._decode('{"type": "array", "items": "null"}', buf.getvalue())
         self.assertEqual(result, [None] * count)
 
+    def test_small_truncated_array_still_rejected(self) -> None:
+        # A block count at or below _MAX_UNCHECKED_COLLECTION skips the
+        # bytes_remaining() pre-check (a perf optimization), but the elements
+        # still have to be read: a truncated small collection must not slip
+        # through. Here 10 longs are declared with no element bytes following.
+        self.assertLessEqual(10, avro.io._MAX_UNCHECKED_COLLECTION)
+        buf = io.BytesIO()
+        avro.io.BinaryEncoder(buf).write_long(10)
+        self.assertRaises(
+            avro.errors.InvalidAvroBinaryEncoding,
+            self._decode,
+            '{"type": "array", "items": "long"}',
+            buf.getvalue(),
+        )
+
     def test_array_within_stream_still_reads(self) -> None:
         schema_json = '{"type": "array", "items": "long"}'
         schema = avro.schema.parse(schema_json)

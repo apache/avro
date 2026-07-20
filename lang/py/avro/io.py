@@ -704,14 +704,27 @@ DEFAULT_MAX_COLLECTION_ITEMS = 10_000_000
 # set, overrides both this and ``DEFAULT_MAX_COLLECTION_ITEMS``.
 DEFAULT_MAX_COLLECTION_STRUCTURAL = (1 << 31) - 1 - 8  # Integer.MAX_VALUE - 8
 
+# Block counts at or below this are not checked against the bytes remaining. A
+# collection element with a positive on-wire size must be backed by real bytes,
+# so a small block cannot over-allocate meaningfully; skipping the check avoids a
+# per-block ``bytes_remaining()`` seek (tell + seek-to-end + seek-back), which is
+# not free on a real file object. Mirrors ``BinaryDecoder._MAX_UNCHECKED_READ``.
+# The structural cap below is always enforced (no seek), and zero-byte elements
+# keep their own cumulative cap.
+_MAX_UNCHECKED_COLLECTION = 1024
+
 
 def _collection_limits() -> Tuple[int, int]:
     """Return ``(zero_byte_limit, structural_limit)``.
 
-    ``AVRO_MAX_COLLECTION_ITEMS``, when set to a non-negative integer, caps both
-    zero-byte-element collections and all other collections at that value.
-    Otherwise zero-byte elements use the tighter :data:`DEFAULT_MAX_COLLECTION_ITEMS`
-    and all collections use :data:`DEFAULT_MAX_COLLECTION_STRUCTURAL`.
+    ``AVRO_MAX_COLLECTION_ITEMS``, when set to a non-negative integer, pins *both*
+    limits to that single value. The coupling runs in both directions: raising it
+    to lift the zero-byte-element limit also lowers the structural cap from
+    ``DEFAULT_MAX_COLLECTION_STRUCTURAL`` (~2.1 billion) to that same value, and
+    lowering it tightens both. Set it above ``DEFAULT_MAX_COLLECTION_STRUCTURAL``
+    if you need to raise the zero-byte limit without reducing the structural cap.
+    When unset, zero-byte elements use the tighter ``DEFAULT_MAX_COLLECTION_ITEMS``
+    and all collections use ``DEFAULT_MAX_COLLECTION_STRUCTURAL``.
     """
     value = os.environ.get(MAX_COLLECTION_ITEMS_ENV)
     if value is None:
@@ -982,14 +995,20 @@ class DatumReader:
         if count <= 0:
             return
         if min_bytes_per_element > 0:
-            remaining = decoder.bytes_remaining()
-            # Compare via integer division rather than multiplying, so an
-            # attacker-controlled (unbounded) count does not create a huge
-            # intermediate product.
-            if remaining is not None and count > remaining // min_bytes_per_element:
-                raise avro.errors.InvalidAvroBinaryEncoding(
-                    f"Collection claims {count} elements with at least {min_bytes_per_element} bytes each, but only {remaining} bytes are available."
-                )
+            # Only pay for the bytes_remaining() seek on a large block: a small
+            # block of positive-size elements must be backed by real bytes on the
+            # wire and so cannot over-allocate meaningfully (see
+            # _MAX_UNCHECKED_COLLECTION). The structural cap below is always
+            # enforced without a seek.
+            if count > _MAX_UNCHECKED_COLLECTION:
+                remaining = decoder.bytes_remaining()
+                # Compare via integer division rather than multiplying, so an
+                # attacker-controlled (unbounded) count does not create a huge
+                # intermediate product.
+                if remaining is not None and count > remaining // min_bytes_per_element:
+                    raise avro.errors.InvalidAvroBinaryEncoding(
+                        f"Collection claims {count} elements with at least {min_bytes_per_element} bytes each, but only {remaining} bytes are available."
+                    )
             if existing + count > structural_limit:
                 raise avro.errors.AvroCollectionSizeException(
                     f"Cannot read a collection of more than {structural_limit} elements "
