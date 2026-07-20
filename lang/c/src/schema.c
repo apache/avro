@@ -325,6 +325,11 @@ avro_schema_t avro_schema_fixed_ns(const char *name, const char *space,
 		return NULL;
 	}
 
+	if (size < 0) {
+		avro_set_error("Invalid size for fixed schema");
+		return NULL;
+	}
+
 	struct avro_fixed_schema_t *fixed =
 	    (struct avro_fixed_schema_t *) avro_new(struct avro_fixed_schema_t);
 	if (!fixed) {
