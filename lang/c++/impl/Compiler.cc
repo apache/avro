@@ -133,11 +133,11 @@ string getStringField(const Entity &e, const Object &m,
 }
 
 // Validates that a record field name or enum symbol conforms to the Avro name
-// grammar (a non-empty sequence of [A-Za-z0-9_], as already enforced for named
-// type simple names by Name::check()). This prevents out-of-spec strings from
-// being emitted verbatim as identifiers by the C++ code generator. The character
-// checks are restricted to ASCII on purpose (rather than std::isalnum, which is
-// locale-dependent) so the accepted grammar does not vary with the locale.
+// grammar (a non-empty sequence of [A-Za-z0-9_], as also enforced for named type
+// simple names by Name::check()). This prevents out-of-spec strings from being
+// emitted verbatim as identifiers by the C++ code generator. The character checks
+// are restricted to ASCII (rather than the locale-dependent std::isalnum), which
+// is consistent with the locale-independent checks used by Name::check().
 static void validateSimpleName(const string &name, const char *what) {
     if (name.empty()) {
         throw Exception("Empty {} name", what);
