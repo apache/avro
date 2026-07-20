@@ -24,6 +24,7 @@
 var protocols = require('./protocols'),
     schemas = require('./schemas'),
     utils = require('./utils'),
+    buffer = require('buffer'),
     fs = require('fs'),
     stream = require('stream'),
     util = require('util'),
@@ -57,6 +58,41 @@ var LONG_TYPE = schemas.createType('long');
 
 // First 4 bytes of an Avro object container file.
 var MAGIC_BYTES = Buffer.from('Obj\x01');
+
+// Default upper bound, in bytes, on the size a single data-file block may
+// decompress to. A block with a very high compression ratio (or a malformed
+// block) can otherwise expand to far more memory than its compressed size.
+// Mirrors the Java SDK's decompression limit (AVRO-4247). Overridable per
+// decoder via the `maxDecompressLength` option, or globally with the
+// `AVRO_MAX_DECOMPRESS_LENGTH` environment variable.
+var DEFAULT_MAX_DECOMPRESS_LENGTH = 200 * 1024 * 1024; // 200 MiB
+
+// Largest value safe to pass as zlib's `maxOutputLength`. A value above the
+// runtime's maximum buffer length (or a non-finite / non-integer one) can make
+// `zlib.inflateRaw` throw synchronously, so every configured limit is
+// normalized to a positive integer bounded by this cap before use.
+var MAX_DECOMPRESS_LENGTH_CAP =
+  (buffer.constants && buffer.constants.MAX_LENGTH) || 0x7fffffff;
+
+// Normalize a user- or environment-supplied limit to a positive, finite
+// integer bounded by MAX_DECOMPRESS_LENGTH_CAP. Returns undefined when the
+// input is missing or invalid, so callers can fall back to a default.
+function normalizeMaxDecompressLength(value) {
+  var parsed = typeof value === 'number' ? value : parseInt(value, 10);
+  if (!isFinite(parsed) || parsed <= 0) {
+    return undefined;
+  }
+  parsed = Math.floor(parsed);
+  if (parsed > MAX_DECOMPRESS_LENGTH_CAP) {
+    return MAX_DECOMPRESS_LENGTH_CAP;
+  }
+  return parsed;
+}
+
+function getDefaultMaxDecompressLength() {
+  var normalized = normalizeMaxDecompressLength(process.env.AVRO_MAX_DECOMPRESS_LENGTH);
+  return normalized === undefined ? DEFAULT_MAX_DECOMPRESS_LENGTH : normalized;
+}
 
 // Convenience.
 var f = util.format;
@@ -145,6 +181,9 @@ function BlockDecoder(opts) {
   this._type = null;
   this._codecs = opts.codecs;
   this._parseOpts = opts.parseOpts || {};
+  var normalizedMax = normalizeMaxDecompressLength(opts.maxDecompressLength);
+  this._maxDecompressLength = normalizedMax === undefined ?
+    getDefaultMaxDecompressLength() : normalizedMax;
   this._tap = new Tap(Buffer.alloc(0));
   this._blockTap = new Tap(Buffer.alloc(0));
   this._syncMarker = null;
@@ -187,11 +226,40 @@ BlockDecoder.prototype._decodeHeader = function () {
   }
 
   var codec = (header.meta['avro.codec'] || 'null').toString();
-  this._decompress = (this._codecs || BlockDecoder.getDefaultCodecs())[codec];
-  if (!this._decompress) {
+  var decompress = (this._codecs || BlockDecoder.getDefaultCodecs())[codec];
+  if (!decompress) {
     this.emit('error', new Error(f('unknown codec: %s', codec)));
     return;
   }
+
+  // Bound the decompressed size of each block to guard against a block with a
+  // very high compression ratio (or a malformed block) expanding to far more
+  // memory than its compressed size. Whenever the resolved codec is Node's raw
+  // inflater -- the built-in default or a custom codecs map that reuses it --
+  // the limit is passed to zlib so the allocation itself is capped; every
+  // codec's output is additionally checked as a safeguard.
+  var maxLength = this._maxDecompressLength;
+  if (decompress === zlib.inflateRaw) {
+    decompress = function (buf, cb) {
+      zlib.inflateRaw(buf, {maxOutputLength: maxLength}, cb);
+    };
+  }
+  this._decompress = function (buf, cb) {
+    decompress(buf, function (err, data) {
+      if (err) {
+        cb(err);
+        return;
+      }
+      if (data && data.length > maxLength) {
+        cb(new Error(f(
+          'decompressed block size exceeds the maximum allowed of %d bytes',
+          maxLength
+        )));
+        return;
+      }
+      cb(null, data);
+    });
+  };
 
   try {
     var schema = JSON.parse(header.meta['avro.schema'].toString());
@@ -247,11 +315,21 @@ BlockDecoder.prototype._createBlockCallback = function () {
   this._pending++;
 
   return function (err, data) {
+    // Always account for this block's completion, even on error, so a failed
+    // decompression (e.g. the size safeguard firing) cannot leave `_pending`
+    // permanently above zero and hang the stream at finish.
+    self._pending--;
     if (err) {
       self.emit('error', err);
+      // If the writable side already finished and this was the last pending
+      // block, end the readable side too so a consumer waiting on the queue is
+      // not left hanging after the error.
+      if (self._needPush && self._finished && !self._pending) {
+        self._needPush = false;
+        self.push(null);
+      }
       return;
     }
-    self._pending--;
     self._queue.push(new BlockData(index, data));
     if (self._needPush) {
       self._needPush = false;
@@ -663,6 +741,8 @@ function loadSchema(schema) {
 module.exports = {
   HEADER_TYPE: HEADER_TYPE, // For tests.
   MAGIC_BYTES: MAGIC_BYTES, // Idem.
+  MAX_DECOMPRESS_LENGTH_CAP: MAX_DECOMPRESS_LENGTH_CAP, // Idem.
+  normalizeMaxDecompressLength: normalizeMaxDecompressLength, // Idem.
   parse: parse,
   createFileDecoder: createFileDecoder,
   createFileEncoder: createFileEncoder,
