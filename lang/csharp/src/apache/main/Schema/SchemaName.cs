@@ -17,6 +17,8 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 
 namespace Avro
 {
@@ -41,7 +43,7 @@ namespace Avro
             if (string.IsNullOrEmpty(name)
                 || !(char.IsLetter(name[0]) || name[0] == '_'))
             {
-                throw new SchemaParseException($"Invalid {what} name: {name}");
+                throw new SchemaParseException($"Invalid {what} name: {Quote(name)}");
             }
 
             for (int i = 1; i < name.Length; i++)
@@ -49,9 +51,50 @@ namespace Avro
                 char c = name[i];
                 if (!(char.IsLetterOrDigit(c) || c == '_'))
                 {
-                    throw new SchemaParseException($"Invalid {what} name: {name}");
+                    throw new SchemaParseException($"Invalid {what} name: {Quote(name)}");
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns a quoted representation of the given value with control
+        /// characters escaped, so that an invalid name embedded in an error
+        /// message cannot inject newlines or other control characters.
+        /// </summary>
+        private static string Quote(string value)
+        {
+            if (value == null)
+            {
+                return "null";
+            }
+
+            var sb = new StringBuilder(value.Length + 2);
+            sb.Append('"');
+            foreach (char c in value)
+            {
+                switch (c)
+                {
+                    case '"': sb.Append("\\\""); break;
+                    case '\\': sb.Append("\\\\"); break;
+                    case '\r': sb.Append("\\r"); break;
+                    case '\n': sb.Append("\\n"); break;
+                    case '\t': sb.Append("\\t"); break;
+                    default:
+                        if (char.IsControl(c))
+                        {
+                            sb.AppendFormat(CultureInfo.InvariantCulture, "\\u{0:x4}", (int)c);
+                        }
+                        else
+                        {
+                            sb.Append(c);
+                        }
+
+                        break;
+                }
+            }
+
+            sb.Append('"');
+            return sb.ToString();
         }
 
         // cache the full name, so it won't allocate new strings on each call

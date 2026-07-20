@@ -117,6 +117,8 @@ namespace Avro.Test
             typeof(SchemaParseException), Description = "Field name with a space")]
         [TestCase("{\"type\":\"record\",\"name\":\"R\",\"fields\":[{\"name\":\"x; int y\",\"type\":\"long\"}]}",
             typeof(SchemaParseException), Description = "Field name attempting identifier injection")]
+        [TestCase("{\"type\":\"record\",\"name\":\"R\",\"fields\":[{\"name\":\"valid\",\"aliases\":[\"bad alias\"],\"type\":\"long\"}]}",
+            typeof(SchemaParseException), Description = "Field alias with a space")]
         public void TestBasic(string s, Type expectedExceptionType = null)
         {
             if (expectedExceptionType != null)
