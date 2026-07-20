@@ -446,8 +446,9 @@ static NodePtr makeEnumNode(const Entity &e,
         if (it.type() != json::EntityType::String) {
             throw Exception("Enum symbol not a string: {}", it.toString());
         }
-        validateSimpleName(it.stringValue(), "enum symbol");
-        symbols.add(it.stringValue());
+        const string &symbol = it.stringValue();
+        validateSimpleName(symbol, "enum symbol");
+        symbols.add(symbol);
     }
     NodePtr node = NodePtr(new NodeEnum(asSingleAttribute(name), symbols));
     if (containsField(m, "doc")) {
