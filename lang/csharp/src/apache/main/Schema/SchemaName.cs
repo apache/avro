@@ -31,7 +31,8 @@ namespace Avro
         /// Validates that a simple (unqualified) name conforms to the Avro name
         /// grammar: a non-empty string whose first character is a letter or '_'
         /// and whose remaining characters are letters, digits or '_'. Letters and
-        /// digits are recognized in a Unicode-aware way, matching the default
+        /// digits are recognized in a Unicode-aware way (including supplementary
+        /// characters represented by surrogate pairs), matching the default
         /// behavior of the Java SDK (and the C# SDK's existing support for
         /// non-ASCII field names). Throws <see cref="SchemaParseException"/> when
         /// the name is invalid.
@@ -41,15 +42,21 @@ namespace Avro
         internal static void ValidateName(string name, string what)
         {
             if (string.IsNullOrEmpty(name)
-                || !(char.IsLetter(name[0]) || name[0] == '_'))
+                || !(name[0] == '_' || char.IsLetter(name, 0)))
             {
                 throw new SchemaParseException($"Invalid {what} name: {Quote(name)}");
             }
 
-            for (int i = 1; i < name.Length; i++)
+            // Iterate by Unicode scalar value so supplementary-plane letters and
+            // digits (encoded as surrogate pairs) are handled correctly.
+            int i = char.IsSurrogatePair(name, 0) ? 2 : 1;
+            while (i < name.Length)
             {
-                char c = name[i];
-                if (!(char.IsLetterOrDigit(c) || c == '_'))
+                if (name[i] == '_' || char.IsLetterOrDigit(name, i))
+                {
+                    i += char.IsSurrogatePair(name, i) ? 2 : 1;
+                }
+                else
                 {
                     throw new SchemaParseException($"Invalid {what} name: {Quote(name)}");
                 }

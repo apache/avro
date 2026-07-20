@@ -388,6 +388,17 @@ namespace Avro.Test
 
             Field f = recordSchema.Fields[0];
             Assert.AreEqual("歳以上", f.Name);
+
+            // A supplementary-plane letter (U+20000, encoded as a surrogate pair)
+            // is a valid name character and must be accepted.
+            const string astralName = "\U00020000field";
+            var astralFields = new List<Field>
+                {
+                    new Field(PrimitiveSchema.Create(Schema.Type.Long), astralName, null, 0, null, null,
+                        Field.SortOrder.ignore, null)
+                };
+            var astralRecord = RecordSchema.Create("AstralRecord", astralFields);
+            Assert.AreEqual(astralName, astralRecord.Fields[0].Name);
         }
 
         [TestCase]
