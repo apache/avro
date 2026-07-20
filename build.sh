@@ -39,8 +39,9 @@ change_java_version() {
 
 # ===========================================================================
 
-# This might not have been sourced if the entrypoint is not bash
+# These might not have been sourced if the entrypoint is not bash
 [[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
+[[ -f "$HOME/.local/bin/env" ]] && . "$HOME/.local/bin/env"
 
 set -xe
 cd "${0%/*}"
