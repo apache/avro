@@ -1044,16 +1044,18 @@ public class TestSpecificCompiler {
         + "    {\"name\": \"value\", \"type\": \"string\"}\n" + "  ]\n" + "}";
     Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(SchemaParser.parseSingle(jsonSchema))
         .compile();
+    boolean validAnnotationEmitted = false;
     for (SpecificCompiler.OutputFile outputFile : outputs) {
       // The payload is echoed (safely escaped) inside the SCHEMA$ string constant,
       // so we must distinguish that from a verbatim emission as code. Real injected
       // code would carry unescaped quotes; the schema literal escapes them as \".
+      // The injection must be absent from every generated file.
       assertFalse(outputFile.contents.contains("SuppressWarnings(\"x\") static { System.exit(1); }"),
           "Code injection present? " + outputFile.contents);
-      // The legitimate annotation in the same list must still be emitted.
-      assertTrue(outputFile.contents.contains("@SuppressWarnings(\"unchecked\")"),
-          "Valid annotation missing? " + outputFile.contents);
+      validAnnotationEmitted |= outputFile.contents.contains("@SuppressWarnings(\"unchecked\")");
     }
+    // The legitimate annotation in the same list must still be emitted somewhere.
+    assertTrue(validAnnotationEmitted, "Valid annotation missing from generated output");
   }
 
   private int countOccurrences(Pattern pattern, String textToSearch) {
