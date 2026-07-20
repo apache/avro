@@ -28,17 +28,22 @@ use Object::Tiny qw{
 
 use constant MARKER_SIZE => 16;
 
-# TODO: refuse to read a block more than block_max_size, instead
-# do partial reads
+# A data-file block is decompressed according to the file's codec. A block with
+# a very high compression ratio (or a malformed block) can expand to far more
+# memory than its compressed size. To guard against unbounded allocation, the
+# decompressed size of a single block is capped. This mirrors the Java SDK's
+# decompression limit (AVRO-4247). The default can be overridden with the
+# AVRO_MAX_DECOMPRESS_LENGTH environment variable.
+use constant DEFAULT_MAX_DECOMPRESS_LENGTH => 200 * 1024 * 1024; # 200 MiB
 
 use Avro::DataFile;
 use Avro::BinaryDecoder;
 use Avro::Schema;
 use Carp;
-use Compress::Zstd;
-use IO::Uncompress::Bunzip2 qw(bunzip2);
+use IO::Uncompress::Bunzip2 ();
 use IO::Uncompress::RawInflate ;
 use Fcntl();
+use bytes ();
 
 our $VERSION = '++MODULE_VERSION++';
 
@@ -203,34 +208,191 @@ sub read_block_header {
     $datafile->{block_size} = Avro::BinaryDecoder->decode_long(
         undef, undef, $fh,
     );
+    ## Both are Avro long (zigzag) values, so a malformed/truncated file can
+    ## yield negatives. A negative block_size would flow into $want and a
+    ## negative-length read; a negative object_count is equally nonsensical.
+    ## Reject both before first use.
+    if ($datafile->{object_count} < 0) {
+        croak "Invalid negative object count: $datafile->{object_count}";
+    }
+    if ($datafile->{block_size} < 0) {
+        croak "Invalid negative block size: $datafile->{block_size}";
+    }
     $datafile->{block_start} = tell $fh;
 
     return if $codec eq 'null';
 
-    ## we need to read the entire block into memory, to inflate it
-    my $nread = read $fh, my $block, $datafile->{block_size} + MARKER_SIZE
-        or croak "Error reading from file: $!";
+    ## Guard against an attacker-controlled block_size triggering a huge
+    ## allocation for the compressed block itself, before any decompression
+    ## happens. When the reader is configured with block_max_size, reject a
+    ## block whose declared compressed size exceeds that bound up front.
+    my $block_max = $datafile->{block_max_size};
+    my $block_size = $datafile->{block_size};
+    if (defined $block_max && $block_size > $block_max) {
+        Avro::DataFile::Error::CompressedBlockSize->throw(
+            "Compressed block size $block_size exceeds the configured block_max_size of $block_max bytes"
+        );
+    }
+
+    ## we need to read the entire block into memory, to inflate it. Read in
+    ## bounded chunks (rather than a single read of $want bytes, which would
+    ## pre-extend the buffer to the attacker-controlled block_size before a short
+    ## read is detected) and verify the exact byte count afterward: a short read
+    ## (truncated/malformed file) would otherwise slip through and surface later
+    ## as a confusing marker/decompressor error.
+    my $want = $datafile->{block_size} + MARKER_SIZE;
+    my $block = '';
+    my $chunk_size = 64 * 1024;
+    while (bytes::length($block) < $want) {
+        my $need = $want - bytes::length($block);
+        $need = $chunk_size if $need > $chunk_size;
+        my $nread = read $fh, my $buf, $need;
+        if (!defined $nread) {
+            croak "Error reading from file: $!";
+        }
+        last if $nread == 0;    # EOF
+        $block .= $buf;
+    }
+    if (bytes::length($block) != $want) {
+        croak "Short read: expected $want bytes for the block, got "
+            . bytes::length($block) . " (truncated file?)";
+    }
 
     ## remove the marker
     my $marker = substr $block, -(MARKER_SIZE), MARKER_SIZE, '';
     $datafile->{block_marker} = $marker;
 
+    ## The decompressed size of a block is capped to guard against a block with
+    ## a very high compression ratio expanding to far more memory than its
+    ## compressed size. The limit is the AVRO_MAX_DECOMPRESS_LENGTH environment
+    ## variable, or DEFAULT_MAX_DECOMPRESS_LENGTH. (Note: block_max_size is a
+    ## writer-side flush threshold measured in compressed bytes; it is used above
+    ## as a compressed-size pre-read guard, but is not reused here for the
+    ## decompressed-size cap, to avoid conflating the two units.)
+    my $limit = _max_decompress_length();
+
     ## this is our new reader
     $datafile->{reader} = do {
         if ($codec eq 'deflate') {
-            IO::Uncompress::RawInflate->new(\$block);
+            my $z = IO::Uncompress::RawInflate->new(\$block)
+                or croak "Error inflating block: $IO::Uncompress::RawInflate::RawInflateError";
+            my $uncompressed = _inflate_bounded($z, $limit);
+            _open_decompressed(\$uncompressed);
         }
         elsif ($codec eq 'bzip2') {
-            my $uncompressed;
-            bunzip2 \$block => \$uncompressed;
-            do { open $fh, '<', \$uncompressed; $fh };
+            my $z = IO::Uncompress::Bunzip2->new(\$block)
+                or croak "Error decompressing bzip2 block: $IO::Uncompress::Bunzip2::Bunzip2Error";
+            my $uncompressed = _inflate_bounded($z, $limit);
+            _open_decompressed(\$uncompressed);
         }
         elsif ($codec eq 'zstandard') {
-            do { open $fh, '<', \(decompress(\$block)); $fh };
+            my $uncompressed = _zstd_decompress_bounded(\$block, $limit);
+            _open_decompressed(\$uncompressed);
         }
     };
 
     return;
+}
+
+## Open an in-memory read handle over the decompressed block, surfacing any
+## failure via croak rather than leaving $datafile->{reader} undefined (which
+## would fail later with a less clear error). The handle keeps a reference to
+## the scalar, so the caller's buffer stays alive for the lifetime of the read.
+sub _open_decompressed {
+    my ($uncompressed_ref) = @_;
+    open my $fh, '<', $uncompressed_ref
+        or croak "Error opening decompressed block for reading: $!";
+    return $fh;
+}
+
+## Read from a streaming decompressor in chunks, rejecting the block as soon as
+## its decompressed size would exceed $limit so an over-large (or malicious)
+## block is not fully materialized in memory. Each read is sized to the
+## remaining budget (capped at 64 KiB) so the buffer overshoots $limit by at
+## most one byte before the check fires.
+sub _inflate_bounded {
+    my ($z, $limit) = @_;
+    my $uncompressed = '';
+    my $chunk;
+    my $status;
+    while (1) {
+        my $budget = $limit - bytes::length($uncompressed) + 1;
+        my $to_read = $budget < 65536 ? $budget : 65536;
+        $status = $z->read($chunk, $to_read);
+        last unless defined $status && $status > 0;
+        $uncompressed .= $chunk;
+        _check_decompress_length(bytes::length($uncompressed), $limit);
+    }
+    if (!defined $status || $status < 0) {
+        croak "Error decompressing block: " . $z->error;
+    }
+    return $uncompressed;
+}
+
+## Streaming zstandard decompression, bounded the same way as _inflate_bounded so
+## a high-ratio block is rejected before its full form is materialized.
+sub _zstd_decompress_bounded {
+    my ($block_ref, $limit) = @_;
+    # Load the zstandard decompressor lazily so the reader still loads and works
+    # for other codecs when Compress::Zstd::Decompressor is unavailable (e.g. an
+    # older Compress::Zstd distribution that lacks the Decompressor submodule).
+    # Localize $@ so probing for the module cannot clobber a caller's $@, and
+    # capture the require error before building the message.
+    my $require_error;
+    unless (do { local $@; my $ok = eval { require Compress::Zstd::Decompressor; 1 }; $require_error = $@; $ok }) {
+        Avro::DataFile::Error::UnsupportedCodec->throw(
+            "Cannot read zstandard-compressed block: Compress::Zstd::Decompressor is not available: $require_error"
+        );
+    }
+    my $decompressor = Compress::Zstd::Decompressor->new;
+    my $uncompressed = '';
+    my $length = bytes::length($$block_ref);
+    my $offset = 0;
+    # Feed the compressed input in small pieces. Compress::Zstd's streaming
+    # decompress() has no max-output parameter, so a single call materializes all
+    # output produced from the input it is handed; keeping each fed piece small
+    # bounds the transient $out (roughly one zstd internal block, ~128 KiB) so a
+    # highly-compressible frame cannot balloon a single call's output to
+    # gigabytes before the size check below runs.
+    my $piece_size = 16 * 1024;
+    while ($offset < $length) {
+        my $piece = substr($$block_ref, $offset, $piece_size);
+        $offset += $piece_size;
+        my $out = $decompressor->decompress($piece);
+        # The streaming decompressor croaks on a corrupt frame and otherwise
+        # emits all output produced while consuming the input it is given (there
+        # is no separate flush step in this API). Treat an undefined return as a
+        # failure and fail closed, rather than silently skipping it, so a
+        # malformed block cannot masquerade as a short, within-limit result.
+        unless (defined $out) {
+            croak "Error decompressing zstandard block";
+        }
+        # Check the prospective total before growing $uncompressed so a single
+        # large decompressed chunk cannot transiently balloon memory past the
+        # limit (or double peak memory from string reallocation).
+        _check_decompress_length(
+            bytes::length($uncompressed) + bytes::length($out), $limit);
+        $uncompressed .= $out;
+    }
+    return $uncompressed;
+}
+
+sub _check_decompress_length {
+    my ($length, $limit) = @_;
+    if ($length > $limit) {
+        Avro::DataFile::Error::DecompressionSize->throw(
+            "Decompressed block size $length exceeds the maximum allowed of $limit bytes"
+        );
+    }
+    return;
+}
+
+sub _max_decompress_length {
+    my $value = $ENV{AVRO_MAX_DECOMPRESS_LENGTH};
+    if (defined $value && $value =~ /\A[0-9]+\z/ && $value > 0) {
+        return $value + 0;
+    }
+    return DEFAULT_MAX_DECOMPRESS_LENGTH;
 }
 
 sub verify_marker {
@@ -306,6 +468,16 @@ sub eof {
 }
 
 package Avro::DataFile::Error::UnsupportedCodec;
+use parent 'Error::Simple';
+
+package Avro::DataFile::Error::DecompressionSize;
+use parent 'Error::Simple';
+
+## Raised when a block's declared *compressed* size exceeds the reader's
+## configured block_max_size, before the block is read into memory. Kept
+## distinct from DecompressionSize (which is about the *decompressed* size cap)
+## so callers can tell the two conditions apart.
+package Avro::DataFile::Error::CompressedBlockSize;
 use parent 'Error::Simple';
 
 1;
