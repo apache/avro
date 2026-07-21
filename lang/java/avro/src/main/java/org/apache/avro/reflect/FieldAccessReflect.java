@@ -18,6 +18,7 @@
 package org.apache.avro.reflect;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 
@@ -27,11 +28,12 @@ import java.lang.reflect.Field;
 class FieldAccessReflect extends FieldAccess {
 
   @Override
-  protected FieldAccessor getAccessor(Field field) {
+  protected FieldAccessor getAccessor(Field field, Schema schema) {
     AvroEncode enc = ReflectionUtil.getAvroEncode(field);
     if (enc != null)
       try {
-        return new ReflectionBasesAccessorCustomEncoded(field, enc.using().getDeclaredConstructor().newInstance());
+        var customEncoding = enc.using().getDeclaredConstructor().newInstance();
+        return new ReflectionBasesAccessorCustomEncoded(field, customEncoding.withSchema(schema));
       } catch (Exception e) {
         throw new AvroRuntimeException("Could not instantiate custom Encoding");
       }
