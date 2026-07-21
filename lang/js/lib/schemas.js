@@ -65,6 +65,26 @@ var PATH = [];
 // Currently active logical type, used for name redirection.
 var LOGICAL_TYPE = null;
 
+// Collection allocation limits, guarding against a block-count DoS.
+//
+// An `array` or `map` block is encoded as an item count followed by that many
+// items. A malicious or truncated input can declare a very large count while
+// carrying little or no data. Elements that encode to zero bytes (e.g. `null`)
+// consume no input, so the block count cannot be bounded by the bytes actually
+// remaining in the buffer alone; such a block is capped by item count instead.
+// Both limits can be overridden (to the same value) via the
+// `AVRO_MAX_COLLECTION_ITEMS` environment variable.
+var MAX_COLLECTION_ITEMS = 10000000; // Zero-byte element cap.
+var MAX_COLLECTION_STRUCTURAL = 2147483639; // Integer.MAX_VALUE - 8.
+if (typeof process !== 'undefined' && process.env &&
+    process.env.AVRO_MAX_COLLECTION_ITEMS) {
+  var envItems = parseInt(process.env.AVRO_MAX_COLLECTION_ITEMS, 10);
+  if (envItems >= 0) {
+    MAX_COLLECTION_ITEMS = envItems;
+    MAX_COLLECTION_STRUCTURAL = envItems;
+  }
+}
+
 
 /**
  * Schema parsing entry point.
@@ -782,7 +802,12 @@ UnionType.prototype._read = function (tap) {
 };
 
 UnionType.prototype._skip = function (tap) {
-  this._types[tap.readLong()]._skip(tap);
+  var index = tap.readLong();
+  var type = this._types[index];
+  if (type === undefined) {
+    throw new Error(f('invalid union index: %s', index));
+  }
+  type._skip(tap);
 };
 
 UnionType.prototype._write = function (tap, val) {
@@ -1149,9 +1174,15 @@ MapType.prototype._check = function (val, cb) {
 
 MapType.prototype._read = function (tap) {
   var values = this._values;
+  var minBytes = this._valuesMinBytes !== undefined ?
+    this._valuesMinBytes :
+    1 + getMinBytes(values); // Each entry carries a >=1-byte key.
   var val = {};
+  var total = 0;
   var n;
   while ((n = readArraySize(tap))) {
+    total += n;
+    checkCollectionBlock(tap, n, minBytes, total);
     while (n--) {
       var key = tap.readString();
       val[key] = values._read(tap);
@@ -1162,12 +1193,37 @@ MapType.prototype._read = function (tap) {
 
 MapType.prototype._skip = function (tap) {
   var values = this._values;
+  var minBytes = 1 + getMinBytes(values); // Each entry carries a >=1-byte key.
+  var total = 0;
   var len, n;
   while ((n = tap.readLong())) {
     if (n < 0) {
+      // Sized block: bound the item count too, so the cap cannot be bypassed by
+      // encoding the block with a negative (byte-sized) count.
+      n = -n;
       len = tap.readLong();
+      if (len < 0) {
+        // A negative byte-size would move the read position backwards, which
+        // Tap.isValid() (pos <= buf.length) would not catch, bypassing
+        // truncation detection.
+        throw new Error('negative collection block size');
+      }
+      if (len > tap.buf.length - tap.pos) {
+        // The block claims more bytes than remain; skipping it would jump past
+        // the buffer end and misalign subsequent decoding.
+        throw new Error('collection block size exceeds remaining buffer');
+      }
+      if (minBytes > 0 && n > len / minBytes) {
+        // The declared byte-size is too small to hold n entries at their minimum
+        // on-wire size, so skipping len bytes would land mid-entry.
+        throw new Error('collection block size inconsistent with item count');
+      }
+      total += n;
+      checkCollectionBlock(tap, n, minBytes, total);
       tap.pos += len;
     } else {
+      total += n;
+      checkCollectionBlock(tap, n, minBytes, total);
       while (n--) {
         tap.skipString();
         values._skip(tap);
@@ -1203,6 +1259,8 @@ MapType.prototype._match = function () {
 MapType.prototype._updateResolver = function (resolver, type, opts) {
   if (type instanceof MapType) {
     resolver._values = this._values.createResolver(type._values, opts);
+    // Bound the block count using the writer's entry size (see ArrayType).
+    resolver._valuesMinBytes = 1 + getMinBytes(type._values);
     resolver._read = this._read;
   }
 };
@@ -1288,13 +1346,19 @@ ArrayType.prototype._check = function (val, cb) {
 
 ArrayType.prototype._read = function (tap) {
   var items = this._items;
+  var minBytes = this._itemsMinBytes !== undefined ?
+    this._itemsMinBytes :
+    getMinBytes(items);
   var val = [];
+  var total = 0;
   var n;
   while ((n = tap.readLong())) {
     if (n < 0) {
       n = -n;
       tap.skipLong(); // Skip size.
     }
+    total += n;
+    checkCollectionBlock(tap, n, minBytes, total);
     while (n--) {
       val.push(items._read(tap));
     }
@@ -1303,14 +1367,40 @@ ArrayType.prototype._read = function (tap) {
 };
 
 ArrayType.prototype._skip = function (tap) {
+  var items = this._items;
+  var minBytes = getMinBytes(items);
+  var total = 0;
   var len, n;
   while ((n = tap.readLong())) {
     if (n < 0) {
+      // Sized block: bound the item count too, so the cap cannot be bypassed by
+      // encoding the block with a negative (byte-sized) count.
+      n = -n;
       len = tap.readLong();
+      if (len < 0) {
+        // A negative byte-size would move the read position backwards, which
+        // Tap.isValid() (pos <= buf.length) would not catch, bypassing
+        // truncation detection.
+        throw new Error('negative collection block size');
+      }
+      if (len > tap.buf.length - tap.pos) {
+        // The block claims more bytes than remain; skipping it would jump past
+        // the buffer end and misalign subsequent decoding.
+        throw new Error('collection block size exceeds remaining buffer');
+      }
+      if (minBytes > 0 && n > len / minBytes) {
+        // The declared byte-size is too small to hold n items at their minimum
+        // on-wire size, so skipping len bytes would land mid-entry.
+        throw new Error('collection block size inconsistent with item count');
+      }
+      total += n;
+      checkCollectionBlock(tap, n, minBytes, total);
       tap.pos += len;
     } else {
+      total += n;
+      checkCollectionBlock(tap, n, minBytes, total);
       while (n--) {
-        this._items._skip(tap);
+        items._skip(tap);
       }
     }
   }
@@ -1354,6 +1444,9 @@ ArrayType.prototype._match = function (tap1, tap2) {
 ArrayType.prototype._updateResolver = function (resolver, type, opts) {
   if (type instanceof ArrayType) {
     resolver._items = this._items.createResolver(type._items, opts);
+    // Bound the block count using the writer's element size, which is what is
+    // actually on the wire (the reader/resolved type may be larger).
+    resolver._itemsMinBytes = getMinBytes(type._items);
     resolver._read = this._read;
   }
 };
@@ -1988,10 +2081,12 @@ function Resolver(readerType) {
   // Add all fields here so that all resolvers share the same hidden class.
   this._readerType = readerType;
   this._items = null;
+  this._itemsMinBytes = undefined;
   this._read = null;
   this._size = 0;
   this._symbols = null;
   this._values = null;
+  this._valuesMinBytes = undefined;
 }
 
 Resolver.prototype.inspect = function () { return '<Resolver>'; };
@@ -2151,6 +2246,90 @@ function readArraySize(tap) {
     tap.skipLong(); // Skip size.
   }
   return n;
+}
+
+/**
+ * Minimum number of bytes a value of the given type can occupy on the wire.
+ *
+ * Used to bound collection block counts against the bytes actually remaining.
+ * Memoized on the type; recursive records are handled with a `seen` guard that
+ * returns 0 when a cycle is detected. That 0 is a deliberately conservative
+ * lower bound: for a schema whose true minimum can't be determined without
+ * unbounded recursion, under-estimating can only make the bytes-remaining check
+ * more permissive (it never rejects otherwise-valid data), so it is safe for
+ * that check even though it may be smaller than the true minimum for a union
+ * whose only small branch is a recursive record.
+ */
+function getMinBytes(type, seen) {
+  if (type._minBytes !== undefined) {
+    return type._minBytes;
+  }
+  var mb;
+  if (type instanceof NullType) {
+    mb = 0;
+  } else if (type instanceof FixedType) {
+    mb = type._size;
+  } else if (type instanceof FloatType) {
+    mb = 4;
+  } else if (type instanceof DoubleType) {
+    mb = 8;
+  } else if (type instanceof LogicalType) {
+    mb = getMinBytes(type._underlyingType, seen);
+  } else if (type instanceof UnionType) {
+    // A 1-byte branch index plus the smallest branch encoding. A union with a
+    // zero-byte branch (e.g. null) still occupies the index byte, so the
+    // minimum is 1; a union without one (e.g. ['int','long']) is at least 2.
+    var branches = type._types;
+    var branchMin = branches.length ? Infinity : 0;
+    for (var k = 0, bl = branches.length; k < bl; k++) {
+      branchMin = Math.min(branchMin, getMinBytes(branches[k], seen));
+      if (branchMin === 0) {
+        break;
+      }
+    }
+    mb = 1 + branchMin;
+  } else if (type instanceof RecordType) {
+    seen = seen || [];
+    if (~seen.indexOf(type)) {
+      return 0; // Cycle; see note above.
+    }
+    seen.push(type);
+    mb = 0;
+    var fields = type._fields;
+    for (var i = 0, l = fields.length; i < l; i++) {
+      mb += getMinBytes(fields[i]._type, seen);
+    }
+    seen.pop();
+  } else {
+    // Booleans, ints, longs, strings, bytes, enums (index), unions (index),
+    // and arrays/maps (empty block terminator) all occupy at least one byte.
+    mb = 1;
+  }
+  type._minBytes = mb;
+  return mb;
+}
+
+/**
+ * Reject a collection block whose declared item count cannot be backed by the
+ * input, guarding against unbounded allocation from a tiny payload.
+ *
+ * `total` is the cumulative item count across all blocks read so far (including
+ * the current one). Elements with a positive on-wire minimum are bounded by the
+ * bytes remaining in the buffer; zero-byte elements are bounded by the item
+ * cap; and every collection is bounded by the structural cap.
+ */
+function checkCollectionBlock(tap, n, minBytes, total) {
+  if (total > MAX_COLLECTION_STRUCTURAL) {
+    throw new Error('collection size exceeds maximum allowed');
+  }
+  if (minBytes > 0) {
+    // Divide (rather than multiply) to avoid any overflow on large counts.
+    if (n > (tap.buf.length - tap.pos) / minBytes) {
+      throw new Error('collection size exceeds remaining buffer');
+    }
+  } else if (total > MAX_COLLECTION_ITEMS) {
+    throw new Error('collection of zero-byte items exceeds maximum allowed');
+  }
 }
 
 /**
