@@ -56,6 +56,9 @@ zstandard = ["zstandard"]
 [tool.ruff]
 line-length = 150
 
+[tool.setuptools.packages.find]
+include = ["avro*"]
+
 [tool.setuptools.package-data]
 "avro" = [
   "HandshakeRequest.avsc", "HandshakeResponse.avsc", "LICENSE.txt",
