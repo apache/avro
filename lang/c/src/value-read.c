@@ -18,11 +18,13 @@
 #include <avro/platform.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "avro/allocation.h"
 #include "avro/basics.h"
 #include "avro/data.h"
 #include "avro/io.h"
+#include "avro/schema.h"
 #include "avro/value.h"
 #include "avro_private.h"
 #include "encoding.h"
@@ -38,6 +40,169 @@ static int
 read_value(avro_reader_t reader, avro_value_t *dest);
 
 
+/*
+ * Minimum number of bytes a single value of the given schema can occupy on the
+ * wire. Used to reject an array/map block count that could not be backed by the
+ * bytes remaining. A type that can encode to zero bytes (null) returns 0, which
+ * disables the collection check for it (so an array of nulls is not falsely
+ * rejected). A recursion guard breaks self-referencing schemas.
+ */
+static int64_t
+min_bytes_per_element(avro_schema_t schema, int depth)
+{
+	if (schema == NULL) {
+		return 0;
+	}
+	switch (avro_typeof(schema)) {
+	case AVRO_NULL:
+		return 0;
+	case AVRO_FLOAT:
+		return 4;
+	case AVRO_DOUBLE:
+		return 8;
+	case AVRO_FIXED:
+		return avro_schema_fixed_size(schema);
+	case AVRO_RECORD: {
+		size_t  n = avro_schema_record_size(schema);
+		int64_t  total = 0;
+		size_t  i;
+		if (depth > 64) {
+			/* Safety net for a pathologically deep (or cyclic)
+			 * schema. Return 0 (a valid conservative lower bound)
+			 * rather than over-estimating: if the true minimum
+			 * cannot be computed, treat the element as possibly
+			 * zero-byte so the tighter zero-byte collection cap is
+			 * applied instead of the much larger structural cap. */
+			return 0;
+		}
+		for (i = 0; i < n; i++) {
+			avro_schema_t  field =
+			    avro_schema_record_field_get_by_index(schema, i);
+			int64_t  field_min = min_bytes_per_element(field, depth + 1);
+			/* Saturate rather than overflow: a wrapped (negative)
+			 * total would disable the collection check. */
+			if (field_min > INT64_MAX - total) {
+				return INT64_MAX;
+			}
+			total += field_min;
+		}
+		return total;
+	}
+	case AVRO_LINK:
+		return min_bytes_per_element(avro_schema_link_target(schema),
+					     depth + 1);
+	default:
+		/* boolean, int, long, bytes, string, enum, union, array, map:
+		 * all encode to at least one byte. */
+		return 1;
+	}
+}
+
+/* Non-static wrapper so the skip path (datum_skip.c) can compute the minimum
+ * on-wire size of a collection's element schema. */
+int64_t
+avro_min_bytes_per_element(avro_schema_t schema)
+{
+	return min_bytes_per_element(schema, 0);
+}
+
+/*
+ * Maximum number of zero-byte-encoded collection elements (e.g. an array of
+ * nulls) to allocate from a single decode. Such elements consume no input, so
+ * the bytes-remaining check cannot bound their count; without a cap a tiny
+ * payload can declare a huge block count and exhaust memory. Overridable via
+ * the AVRO_MAX_COLLECTION_ITEMS environment variable.
+ */
+#define AVRO_DEFAULT_MAX_COLLECTION_ITEMS  ((int64_t) 10000000)
+
+/*
+ * Structural cap on the number of elements in any array or map (an overflow /
+ * defense-in-depth guard), matching the historical Integer.MAX_VALUE - 8 limit.
+ * Non-zero-byte elements are also bounded by the bytes remaining.
+ */
+#define AVRO_DEFAULT_MAX_COLLECTION_STRUCTURAL  ((int64_t) 2147483639)
+
+/*
+ * Populate the zero-byte and structural collection limits. The
+ * AVRO_MAX_COLLECTION_ITEMS environment variable, when a non-negative integer,
+ * caps both; otherwise the tighter zero-byte default and the structural default
+ * are used. Shared with the skip path (see avro_collection_limits).
+ */
+void
+avro_collection_limits(int64_t *zero_byte, int64_t *structural)
+{
+	const char *env = getenv("AVRO_MAX_COLLECTION_ITEMS");
+	if (env != NULL && *env != '\0') {
+		char *end;
+		long long value = strtoll(env, &end, 10);
+		if (*end == '\0' && value >= 0) {
+			/* Clamp to INT64_MAX and to SIZE_MAX: the block count is
+			 * later cast to size_t in the read loop, so a limit above
+			 * SIZE_MAX would permit a count that truncates on cast
+			 * (notably on 32-bit) and weaken the bound. */
+			uint64_t v = (uint64_t) value;
+			if (v > (uint64_t) INT64_MAX) {
+				v = (uint64_t) INT64_MAX;
+			}
+			if (v > (uint64_t) SIZE_MAX) {
+				v = (uint64_t) SIZE_MAX;
+			}
+			*zero_byte = *structural = (int64_t) v;
+			return;
+		}
+	}
+	*zero_byte = AVRO_DEFAULT_MAX_COLLECTION_ITEMS;
+	*structural = AVRO_DEFAULT_MAX_COLLECTION_STRUCTURAL;
+}
+
+/*
+ * Reject a collection (array or map) block that could not be backed by the
+ * input, before appending.
+ *
+ * For elements with a positive minimum on-wire size, the declared count is
+ * checked against the bytes remaining. For zero-byte elements (e.g. an array of
+ * nulls), which consume no input and so cannot be bounded by the bytes
+ * remaining, the cumulative count is checked against a configurable limit.
+ */
+static int
+ensure_collection_available(avro_reader_t reader, int64_t existing,
+			    int64_t count, int64_t min_bytes,
+			    int64_t zero_byte, int64_t structural)
+{
+	int64_t available;
+	if (count <= 0) {
+		return 0;
+	}
+	if (min_bytes > 0) {
+		available = avro_reader_bytes_available(reader);
+		if (available >= 0 && count > available / min_bytes) {
+			avro_set_error("Collection claims %" PRId64
+				       " elements with at least %" PRId64
+				       " bytes each, but only %" PRId64 " bytes available",
+				       count, min_bytes, available);
+			return EINVAL;
+		}
+		/* Structural / overflow guard, also covering readers that cannot
+		 * report the bytes remaining. Compare without adding so
+		 * existing + count cannot overflow. */
+		if (count > structural || existing > structural - count) {
+			avro_set_error("Cannot read a collection of more than %" PRId64
+				       " elements; raise AVRO_MAX_COLLECTION_ITEMS "
+				       "if this is legitimate", structural);
+			return EINVAL;
+		}
+		return 0;
+	}
+	/* Compare without adding, so existing + count cannot overflow. */
+	if (count > zero_byte || existing > zero_byte - count) {
+		avro_set_error("Cannot read a collection of more than %" PRId64
+			       " zero-byte elements; raise AVRO_MAX_COLLECTION_ITEMS "
+			       "if this is legitimate", zero_byte);
+		return EINVAL;
+	}
+	return 0;
+}
+
 static int
 read_array_value(avro_reader_t reader, avro_value_t *dest)
 {
@@ -46,6 +211,16 @@ read_array_value(avro_reader_t reader, avro_value_t *dest)
 	size_t  index = 0;  /* index within the entire array */
 	int64_t  block_count;
 	int64_t  block_size;
+	int64_t  min_bytes;
+	int64_t  zero_byte, structural;
+	avro_schema_t  array_schema = avro_value_get_schema(dest);
+
+	min_bytes = min_bytes_per_element(
+	    array_schema ? avro_schema_array_items(array_schema) : NULL, 0);
+	/* Read the limits once per decode rather than per block, so a
+	 * many-block array does not re-parse AVRO_MAX_COLLECTION_ITEMS each
+	 * time (and the effective limit is stable across the decode). */
+	avro_collection_limits(&zero_byte, &structural);
 
 	check_prefix(rval, avro_binary_encoding.
 		     read_long(reader, &block_count),
@@ -53,11 +228,19 @@ read_array_value(avro_reader_t reader, avro_value_t *dest)
 
 	while (block_count != 0) {
 		if (block_count < 0) {
-			block_count = block_count * -1;
+			/* Reject INT64_MIN: its negation is not
+			 * representable in int64_t (CWE-190). */
+			if (block_count == INT64_MIN) {
+				avro_set_error("Invalid array block count");
+				return EINVAL;
+			}
+			block_count = -block_count;
 			check_prefix(rval, avro_binary_encoding.
 				     read_long(reader, &block_size),
 				     "Cannot read array block size: ");
 		}
+
+		check(rval, ensure_collection_available(reader, (int64_t) index, block_count, min_bytes, zero_byte, structural));
 
 		for (i = 0; i < (size_t) block_count; i++, index++) {
 			avro_value_t  child;
@@ -83,17 +266,38 @@ read_map_value(avro_reader_t reader, avro_value_t *dest)
 	size_t  index = 0;  /* index within the entire array */
 	int64_t  block_count;
 	int64_t  block_size;
+	int64_t  min_bytes;
+	int64_t  zero_byte, structural;
+	avro_schema_t  map_schema = avro_value_get_schema(dest);
+
+	/* Map keys are strings (>= 1 byte length prefix) plus the value.
+	 * Saturate the +1 so a maxed-out value minimum cannot wrap. */
+	min_bytes = min_bytes_per_element(
+	    map_schema ? avro_schema_map_values(map_schema) : NULL, 0);
+	if (min_bytes < INT64_MAX) {
+		min_bytes += 1;
+	}
+	/* Read the limits once per decode (see read_array_value). */
+	avro_collection_limits(&zero_byte, &structural);
 
 	check_prefix(rval, avro_binary_encoding.read_long(reader, &block_count),
 		     "Cannot read map block count: ");
 
 	while (block_count != 0) {
 		if (block_count < 0) {
-			block_count = block_count * -1;
+			/* Reject INT64_MIN: its negation is not
+			 * representable in int64_t (CWE-190). */
+			if (block_count == INT64_MIN) {
+				avro_set_error("Invalid map block count");
+				return EINVAL;
+			}
+			block_count = -block_count;
 			check_prefix(rval, avro_binary_encoding.
 				     read_long(reader, &block_size),
 				     "Cannot read map block size: ");
 		}
+
+		check(rval, ensure_collection_available(reader, (int64_t) index, block_count, min_bytes, zero_byte, structural));
 
 		for (i = 0; i < (size_t) block_count; i++, index++) {
 			char *key;
@@ -330,9 +534,28 @@ read_value(avro_reader_t reader, avro_value_t *dest)
 		case AVRO_ENUM:
 		{
 			int64_t  val;
+			int  symbol_count;
+			avro_schema_t  enum_schema;
 			check_prefix(rval, avro_binary_encoding.
 				     read_long(reader, &val),
 				     "Cannot read enum value: ");
+			enum_schema = avro_value_get_schema(dest);
+			/* A custom value interface could return a NULL or
+			 * non-enum schema, for which
+			 * avro_schema_enum_number_of_symbols returns a negative
+			 * error code that would make the range check below accept
+			 * out-of-range values. Reject that up front. */
+			if (!is_avro_enum(enum_schema)) {
+				avro_set_error("Not an enum schema for enum value");
+				return EINVAL;
+			}
+			symbol_count =
+			    avro_schema_enum_number_of_symbols(enum_schema);
+			if (val < 0 || val >= symbol_count) {
+				avro_set_error("Invalid enum value: %" PRId64,
+					       val);
+				return EINVAL;
+			}
 			return avro_value_set_enum(dest, val);
 		}
 

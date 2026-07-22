@@ -27,6 +27,7 @@ extern "C" {
 
 #include "avro/errors.h"
 #include "avro/platform.h"
+#include "avro/schema.h"
 
 #ifdef HAVE_CONFIG_H
 /* This is only true for now in the autotools build */
@@ -94,6 +95,10 @@ extern "C" {
 
 #define nullstrcmp(s1, s2) \
     (((s1) && (s2)) ? strcmp(s1, s2) : ((s1) || (s2)))
+
+/* Collection allocation limits, shared between the read and skip paths. */
+int64_t avro_min_bytes_per_element(avro_schema_t schema);
+void avro_collection_limits(int64_t *zero_byte, int64_t *structural);
 
 CLOSE_EXTERN
 #endif
