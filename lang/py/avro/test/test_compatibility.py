@@ -198,6 +198,17 @@ A_DINT_RECORD1 = parse(
         }
     )
 )
+A_DINT_OPTIONAL_RECORD1 = parse(
+    json.dumps(
+        {
+            "type": SchemaType.RECORD,
+            "name": "Record1",
+            "fields": [
+                {"name": "a", "type": [SchemaType.NULL, SchemaType.INT], "default": None},
+            ],
+        }
+    )
+)
 A_INT_B_DINT_RECORD1 = parse(
     json.dumps(
         {
@@ -1041,19 +1052,19 @@ class TestCompatibility(unittest.TestCase):
                 FLOAT_SCHEMA,
                 INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA,
                 "reader type: float not compatible with writer type: double",
-                "/",
+                "/3",
             ),
             (
                 LONG_SCHEMA,
                 INT_FLOAT_UNION_SCHEMA,
                 "reader type: long not compatible with writer type: float",
-                "/",
+                "/1",
             ),
             (
                 INT_SCHEMA,
                 INT_FLOAT_UNION_SCHEMA,
                 "reader type: int not compatible with writer type: float",
-                "/",
+                "/1",
             ),
             # (INT_LIST_RECORD, LONG_LIST_RECORD, "reader type: int not compatible with writer type: long", "/fields/0/type"),
             (
@@ -1062,6 +1073,18 @@ class TestCompatibility(unittest.TestCase):
                 "reader type: null not compatible with writer type: int",
                 "/",
             ),
+            (
+                INT_SCHEMA,
+                INT_STRING_UNION_SCHEMA,
+                "reader type: int not compatible with writer type: string",
+                "/1"
+            ),
+            (
+                A_DINT_RECORD1,
+                A_DINT_OPTIONAL_RECORD1,
+                "reader type: int not compatible with writer type: null",
+                "/fields/0/type/0"
+            )
         ]
         for reader, writer, message, location in incompatible_pairs:
             result = ReaderWriterCompatibilityChecker().get_compatibility(reader, writer)
