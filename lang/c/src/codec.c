@@ -142,6 +142,11 @@ static int decode_snappy(avro_codec_t c, void * data, int64_t len)
         uint32_t crc;
         size_t outlen;
 
+        if (len < 4 || (uint64_t)len > SIZE_MAX) {
+        	avro_set_error("Snappy block is too small to contain a CRC32 checksum");
+        	return 1;
+        }
+
         if (snappy_uncompressed_length((const char*)data, len-4, &outlen) != SNAPPY_OK) {
 		avro_set_error("Uncompressed length error in snappy");
 		return 1;
