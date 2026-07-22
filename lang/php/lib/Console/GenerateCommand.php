@@ -87,7 +87,14 @@ class GenerateCommand extends Command
             return Command::FAILURE;
         }
 
-        $outputDir = rtrim((string) realpath($outputDir), '/');
+        $outputDir = realpath($outputDir);
+        if (false === $outputDir) {
+            $io->error('Could not resolve output directory realpath.');
+
+            return Command::FAILURE;
+        }
+
+        $outputDir = rtrim($outputDir, '/');
         $files = [];
         if (null !== $file) {
             $files[] = $file;
