@@ -1054,7 +1054,13 @@ public class SpecificCompiler {
   private static final String PATTERN_IDENTIFIER_PART = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
   private static final String PATTERN_IDENTIFIER = String.format("(?:%s(?:\\.%s)*)", PATTERN_IDENTIFIER_PART,
       PATTERN_IDENTIFIER_PART);
-  private static final String PATTERN_STRING = "\"(?:\\\\[\\\\\"ntfb]|(?<!\\\\).)*\"";
+  // A string literal is a quote, a body of escape sequences or characters that
+  // are not a quote, backslash or line terminator, and a closing quote. The body
+  // must not be able to contain an unescaped quote, otherwise a single literal
+  // could span past the intended closing quote and swallow surrounding tokens.
+  // Line terminators (CR, LF, NEL, LS, PS) are excluded so a value cannot break
+  // across lines in the generated source.
+  private static final String PATTERN_STRING = "\"(?:\\\\[\\\\\"ntfb]|[^\"\\\\\\r\\n\\x85\\x{2028}\\x{2029}])*\"";
   private static final String PATTERN_NUMBER = "(?:\\((?:byte|char|short|int|long|float|double)\\))?[x0-9_.]*[fl]?";
   private static final String PATTERN_LITERAL_VALUE = String.format("(?:%s|%s|true|false)", PATTERN_STRING,
       PATTERN_NUMBER);
