@@ -17,6 +17,11 @@
  */
 
 #include "Generic.hh"
+#include <algorithm>
+#include <cstdint>
+#include <cstdlib>
+#include <cerrno>
+#include <limits>
 #include <utility>
 
 namespace avro {
@@ -24,6 +29,167 @@ namespace avro {
 using std::ostringstream;
 using std::string;
 using std::vector;
+
+// Minimum number of bytes a single value of the given schema node can occupy on
+// the wire. Used to reject an array/map block count that could not be backed by
+// the bytes remaining. A type that can encode to zero bytes (null) returns 0,
+// which disables the collection check for it (so an array of nulls is not
+// falsely rejected). A depth limit breaks self-referencing (symbolic) schemas.
+static int64_t minBytesPerElement(const NodePtr &node, int depth) {
+    if (!node) {
+        return 0;
+    }
+    switch (node->type()) {
+        case AVRO_NULL:
+            return 0;
+        case AVRO_FLOAT:
+            return 4;
+        case AVRO_DOUBLE:
+            return 8;
+        case AVRO_FIXED: {
+            // fixedSize() is a size_t; clamp to int64_t so a huge fixed size
+            // cannot wrap negative.
+            return static_cast<int64_t>(std::min<uint64_t>(
+                node->fixedSize(),
+                static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
+        }
+        case AVRO_RECORD: {
+            if (depth > 64) {
+                // Purely a recursion (stack-overflow) safety net for a
+                // pathologically deep schema. A truly cyclic schema never
+                // reaches this: a self-reference is an AVRO_SYMBOLIC node,
+                // handled by the default case below (returning 1 without
+                // following the link), so recursion always terminates. This
+                // guard therefore only trips on a genuinely deep *acyclic*
+                // record, whose true minimum can still be 0 (e.g. a long chain
+                // of records whose only leaves are null). Return 0 rather than
+                // over-estimating, so a valid array/map of such elements is not
+                // falsely rejected; 0 is always a valid lower bound.
+                return 0;
+            }
+            int64_t total = 0;
+            for (size_t i = 0; i < node->leaves(); ++i) {
+                int64_t fieldMin = minBytesPerElement(node->leafAt(i), depth + 1);
+                // Saturate rather than overflow: a wrapped (negative) total
+                // would disable the collection check.
+                if (fieldMin > std::numeric_limits<int64_t>::max() - total) {
+                    return std::numeric_limits<int64_t>::max();
+                }
+                total += fieldMin;
+            }
+            return total;
+        }
+        default:
+            // boolean, int, long, bytes, string, enum, union, array, map and
+            // symbolic references all encode to at least one byte.
+            return 1;
+    }
+}
+
+// Default maximum number of zero-byte-encoded collection elements (e.g. an
+// array of nulls) to allocate from a single decode. Such elements consume no
+// input, so ensureCollectionAvailable cannot bound their count; without a cap a
+// tiny payload can declare a huge block count and exhaust memory. Overridable
+// via the AVRO_MAX_COLLECTION_ITEMS environment variable.
+static constexpr int64_t kDefaultMaxCollectionItems = 10000000;
+
+// Structural cap on the number of elements in any array or map (an overflow /
+// defense-in-depth guard). It matches the value used by the other Avro SDKs
+// (Integer.MAX_VALUE - 8); non-zero-byte elements are also bounded by the bytes
+// remaining.
+static constexpr int64_t kDefaultMaxCollectionStructural = 2147483639;
+
+// Upper bound on how many elements a collection container is grown by in a
+// single step while decoding. The container still grows to hold every element
+// that is actually read; this only prevents resizing to the full (possibly
+// attacker-declared) block count up front, before any element is decoded. That
+// matters most for stream sources, where the bytes-remaining check cannot bound
+// the declared count against the input, so a single up-front resize could
+// allocate a huge container before the truncated stream is detected.
+static constexpr size_t kMaxCollectionPrealloc = 1024;
+
+struct CollectionLimits {
+    int64_t zeroByte;
+    int64_t structural;
+};
+
+// AVRO_MAX_COLLECTION_ITEMS, when a non-negative integer, overrides both limits
+// to that value; otherwise zero-byte elements use the tighter default and all
+// collections use the structural default.
+static CollectionLimits collectionLimits() {
+    const char *env = std::getenv("AVRO_MAX_COLLECTION_ITEMS");
+    if (env != nullptr && *env != '\0') {
+        char *end = nullptr;
+        errno = 0;
+        long long value = std::strtoll(env, &end, 10);
+        // Ignore an overflowing value (errno == ERANGE) rather than accepting a
+        // saturated LLONG_MAX, which would effectively disable the caps.
+        if (errno == 0 && *end == '\0' && value >= 0) {
+            return {static_cast<int64_t>(value), static_cast<int64_t>(value)};
+        }
+    }
+    return {kDefaultMaxCollectionItems, kDefaultMaxCollectionStructural};
+}
+
+// Reject a collection (array or map) block that could drive an unbounded
+// allocation, before resizing for it. A block whose declared element count
+// could not be backed by the bytes actually remaining is rejected (only when
+// the per-element minimum is positive and the decoder can report the bytes
+// remaining); and every collection is bounded by the structural cap, which also
+// covers zero-byte elements and decoders that cannot report the bytes remaining.
+// The comparisons divide/subtract to avoid overflow.
+static void ensureCollectionAvailable(Decoder &d, size_t existing, size_t count, int64_t minBytes) {
+    if (count == 0) {
+        return;
+    }
+    if (minBytes > 0) {
+        int64_t remaining = d.bytesRemaining();
+        if (remaining >= 0 &&
+            static_cast<uint64_t>(count) >
+                static_cast<uint64_t>(remaining) / static_cast<uint64_t>(minBytes)) {
+            throw Exception(
+                "Collection claims {} elements with at least {} bytes each, "
+                "but only {} bytes are available",
+                count, minBytes, remaining);
+        }
+    }
+    const int64_t structural = collectionLimits().structural;
+    const uint64_t limit = static_cast<uint64_t>(structural);
+    if (static_cast<uint64_t>(count) > limit ||
+        static_cast<uint64_t>(existing) > limit - static_cast<uint64_t>(count)) {
+        throw Exception(
+            "Cannot read a collection of more than {} elements; "
+            "set AVRO_MAX_COLLECTION_ITEMS if this is legitimate",
+            structural);
+    }
+}
+
+// Reject a collection of zero-byte elements (e.g. null) whose cumulative count
+// exceeds the configured limit. These elements consume no input, so they cannot
+// be bounded by the bytes remaining; the count is the only signal.
+static void ensureZeroByteCollectionWithinLimit(size_t existing, size_t count) {
+    const int64_t zeroByte = collectionLimits().zeroByte;
+    const uint64_t limit = static_cast<uint64_t>(zeroByte);
+    // Compare without adding, so existing + count cannot overflow.
+    if (static_cast<uint64_t>(count) > limit ||
+        static_cast<uint64_t>(existing) > limit - static_cast<uint64_t>(count)) {
+        throw Exception(
+            "Cannot read a collection of more than {} zero-byte elements; "
+            "set AVRO_MAX_COLLECTION_ITEMS if this is legitimate",
+            zeroByte);
+    }
+}
+
+// Guard against size_t overflow / an over-large request when growing a
+// collection container by `count` elements before calling resize().
+template<typename Container>
+static void ensureCanGrow(const Container &c, size_t count) {
+    if (count > c.max_size() - c.size()) {
+        throw Exception(
+            "Collection block count {} exceeds the maximum container size",
+            count);
+    }
+}
 
 typedef vector<uint8_t> bytes;
 
@@ -105,11 +271,38 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
             const NodePtr &nn = v.schema()->leafAt(0);
             r.resize(0);
             size_t start = 0;
+            // Only when not resolving: the datum schema then matches the wire
+            // schema, so minBytesPerElement is a true lower bound. Under
+            // resolution the wire (writer) type may be smaller than the datum
+            // (reader) type, which would over-estimate and reject valid data.
+            int64_t trueMin = minBytesPerElement(nn, 0);
+            // Under resolution the on-wire (writer) element can be zero bytes
+            // even when the reader element is not (e.g. reader-only fields filled
+            // from defaults), so the bytes check is disabled and we cannot tell
+            // whether an element is zero-byte on the wire. Apply the tighter
+            // zero-byte cap conservatively in that case, so the up-front resize
+            // cannot be driven past it.
+            bool zeroByte = isResolving || trueMin == 0;
+            int64_t minBytes = isResolving ? 0 : trueMin;
             for (size_t m = d.arrayStart(); m != 0; m = d.arrayNext()) {
-                r.resize(r.size() + m);
-                for (; start < r.size(); ++start) {
-                    r[start] = GenericDatum(nn);
-                    read(r[start], d, isResolving);
+                ensureCollectionAvailable(d, r.size(), m, minBytes);
+                // Zero-byte elements are not bounded by the bytes check, so cap
+                // their cumulative count (r.size() is the count so far).
+                if (zeroByte) {
+                    ensureZeroByteCollectionWithinLimit(r.size(), m);
+                }
+                ensureCanGrow(r, m);
+                // Grow on demand in bounded steps rather than resizing to the
+                // full block count up front, so a huge declared count on a stream
+                // cannot allocate a giant container before any element is read.
+                for (size_t remaining = m; remaining != 0;) {
+                    size_t step = std::min(remaining, kMaxCollectionPrealloc);
+                    r.resize(r.size() + step);
+                    for (; start < r.size(); ++start) {
+                        r[start] = GenericDatum(nn);
+                        read(r[start], d, isResolving);
+                    }
+                    remaining -= step;
                 }
             }
         } break;
@@ -119,12 +312,32 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
             const NodePtr &nn = v.schema()->leafAt(1);
             r.resize(0);
             size_t start = 0;
+            // Map keys are strings (>= 1 byte length prefix) plus the value.
+            // Saturate the +1 so a maxed-out value minimum cannot wrap.
+            int64_t valuesMin = minBytesPerElement(nn, 0);
+            // A map entry always includes a >= 1 byte key, so it is never a
+            // zero-byte element and even under resolution the count is bounded by
+            // the bytes remaining (each entry consumes at least the key). Use 1
+            // when resolving (the value type may differ), else the key + value.
+            int64_t minBytes = isResolving
+                                   ? 1
+                                   : (valuesMin < std::numeric_limits<int64_t>::max()
+                                          ? valuesMin + 1
+                                          : valuesMin);
             for (size_t m = d.mapStart(); m != 0; m = d.mapNext()) {
-                r.resize(r.size() + m);
-                for (; start < r.size(); ++start) {
-                    d.decodeString(r[start].first);
-                    r[start].second = GenericDatum(nn);
-                    read(r[start].second, d, isResolving);
+                ensureCollectionAvailable(d, r.size(), m, minBytes);
+                ensureCanGrow(r, m);
+                // Grow on demand in bounded steps rather than resizing to the
+                // full block count up front (see the array case above).
+                for (size_t remaining = m; remaining != 0;) {
+                    size_t step = std::min(remaining, kMaxCollectionPrealloc);
+                    r.resize(r.size() + step);
+                    for (; start < r.size(); ++start) {
+                        d.decodeString(r[start].first);
+                        r[start].second = GenericDatum(nn);
+                        read(r[start].second, d, isResolving);
+                    }
+                    remaining -= step;
                 }
             }
         } break;

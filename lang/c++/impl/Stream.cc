@@ -84,6 +84,17 @@ public:
     size_t byteCount() const final {
         return cur_ * chunkSize_ + curLen_;
     }
+
+    int64_t remainingBytes() const final {
+        // Total capacity across all chunks: full chunks plus the (partial)
+        // last chunk, minus what has already been consumed. Widen to int64_t
+        // before multiplying so the arithmetic cannot overflow size_t.
+        int64_t total = (size_ == 0)
+                            ? 0
+                            : static_cast<int64_t>(size_ - 1) * static_cast<int64_t>(chunkSize_) + static_cast<int64_t>(available_);
+        int64_t consumed = static_cast<int64_t>(cur_) * static_cast<int64_t>(chunkSize_) + static_cast<int64_t>(curLen_);
+        return total - consumed;
+    }
 };
 
 class MemoryInputStream2 : public InputStream {
@@ -118,6 +129,13 @@ public:
 
     size_t byteCount() const final {
         return curLen_;
+    }
+
+    int64_t remainingBytes() const final {
+        // Subtract in int64_t: if an invariant were ever violated (curLen_ >
+        // size_), doing the subtraction in unsigned size_t would underflow to a
+        // huge value and weaken the available-bytes guard.
+        return static_cast<int64_t>(size_) - static_cast<int64_t>(curLen_);
     }
 };
 
