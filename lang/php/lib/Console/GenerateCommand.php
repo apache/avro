@@ -76,12 +76,12 @@ class GenerateCommand extends Command
         }
 
         if (null === $namespace || '' === $namespace) {
-            $io->error('PHP namespace is required (--namespace / -ns).');
+            $io->error('PHP namespace is required (--namespace / -N).');
 
             return Command::FAILURE;
         }
 
-        if (!is_dir($outputDir) && !mkdir($outputDir, 0744, true) && !is_dir($outputDir)) {
+        if (!is_dir($outputDir) && !mkdir($outputDir, 0755, true) && !is_dir($outputDir)) {
             $io->error(sprintf('Could not create output directory "%s".', $outputDir));
 
             return Command::FAILURE;
