@@ -109,6 +109,16 @@ namespace Avro.Test
         [TestCase("{\"type\": \"fixed\", \"name\": \"Missing size\"}", typeof(SchemaParseException))]
         [TestCase("{\"type\": \"fixed\", \"size\": 314}",
             typeof(SchemaParseException), Description = "No name")]
+
+        // Names outside the Avro name grammar
+        [TestCase("{\"type\":\"record\",\"name\":\"Bad Name\",\"fields\":[]}",
+            typeof(SchemaParseException), Description = "Record name with a space")]
+        [TestCase("{\"type\":\"record\",\"name\":\"R\",\"fields\":[{\"name\":\"in valid\",\"type\":\"long\"}]}",
+            typeof(SchemaParseException), Description = "Field name with a space")]
+        [TestCase("{\"type\":\"record\",\"name\":\"R\",\"fields\":[{\"name\":\"x; int y\",\"type\":\"long\"}]}",
+            typeof(SchemaParseException), Description = "Field name attempting identifier injection")]
+        [TestCase("{\"type\":\"record\",\"name\":\"R\",\"fields\":[{\"name\":\"valid\",\"aliases\":[\"bad alias\"],\"type\":\"long\"}]}",
+            typeof(SchemaParseException), Description = "Field alias with a space")]
         public void TestBasic(string s, Type expectedExceptionType = null)
         {
             if (expectedExceptionType != null)
@@ -378,6 +388,17 @@ namespace Avro.Test
 
             Field f = recordSchema.Fields[0];
             Assert.AreEqual("歳以上", f.Name);
+
+            // A supplementary-plane letter (U+20000, encoded as a surrogate pair)
+            // is a valid name character and must be accepted.
+            const string astralName = "\U00020000field";
+            var astralFields = new List<Field>
+                {
+                    new Field(PrimitiveSchema.Create(Schema.Type.Long), astralName, null, 0, null, null,
+                        Field.SortOrder.ignore, null)
+                };
+            var astralRecord = RecordSchema.Create("AstralRecord", astralFields);
+            Assert.AreEqual(astralName, astralRecord.Fields[0].Name);
         }
 
         [TestCase]

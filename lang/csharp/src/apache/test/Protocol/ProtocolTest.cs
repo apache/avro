@@ -181,6 +181,23 @@ namespace Avro.Test
             Assert.AreEqual(json,json2);
         }
 
+        [TestCase(@"{
+  ""protocol"": ""P"",
+  ""namespace"": ""com.acme"",
+  ""types"": [],
+  ""messages"": { ""bad name"": { ""request"": [], ""response"": ""null"" } }
+}", TestName = "MessageNameWithSpace")]
+        [TestCase(@"{
+  ""protocol"": ""P"",
+  ""namespace"": ""com.acme"",
+  ""types"": [],
+  ""messages"": { ""x; int y"": { ""request"": [], ""response"": ""null"" } }
+}", TestName = "MessageNameInjection")]
+        public static void TestInvalidMessageName(string str)
+        {
+            Assert.Throws<ProtocolParseException>(() => Protocol.Parse(str));
+        }
+
         // Protocols match
         [TestCase(
 @"{
