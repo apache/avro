@@ -17,6 +17,8 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 
 namespace Avro
 {
@@ -25,6 +27,83 @@ namespace Avro
     /// </summary>
     public class SchemaName
     {
+        /// <summary>
+        /// Validates that a simple (unqualified) name conforms to the Avro name
+        /// grammar: a non-empty string whose first character is a letter or '_'
+        /// and whose remaining characters are letters, digits or '_'. Letters and
+        /// digits are recognized in a Unicode-aware way (including supplementary
+        /// characters represented by surrogate pairs), matching the default
+        /// behavior of the Java SDK (and the C# SDK's existing support for
+        /// non-ASCII field names). Throws <see cref="SchemaParseException"/> when
+        /// the name is invalid.
+        /// </summary>
+        /// <param name="name">the simple name to validate</param>
+        /// <param name="what">description of the kind of name, used in error messages</param>
+        internal static void ValidateName(string name, string what)
+        {
+            if (string.IsNullOrEmpty(name)
+                || !(name[0] == '_' || char.IsLetter(name, 0)))
+            {
+                throw new SchemaParseException($"Invalid {what} name: {Quote(name)}");
+            }
+
+            // Iterate by Unicode scalar value so supplementary-plane letters and
+            // digits (encoded as surrogate pairs) are handled correctly.
+            int i = char.IsSurrogatePair(name, 0) ? 2 : 1;
+            while (i < name.Length)
+            {
+                if (name[i] == '_' || char.IsLetterOrDigit(name, i))
+                {
+                    i += char.IsSurrogatePair(name, i) ? 2 : 1;
+                }
+                else
+                {
+                    throw new SchemaParseException($"Invalid {what} name: {Quote(name)}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns a quoted representation of the given value with control
+        /// characters escaped, so that an invalid name embedded in an error
+        /// message cannot inject newlines or other control characters.
+        /// </summary>
+        private static string Quote(string value)
+        {
+            if (value == null)
+            {
+                return "null";
+            }
+
+            var sb = new StringBuilder(value.Length + 2);
+            sb.Append('"');
+            foreach (char c in value)
+            {
+                switch (c)
+                {
+                    case '"': sb.Append("\\\""); break;
+                    case '\\': sb.Append("\\\\"); break;
+                    case '\r': sb.Append("\\r"); break;
+                    case '\n': sb.Append("\\n"); break;
+                    case '\t': sb.Append("\\t"); break;
+                    default:
+                        if (char.IsControl(c))
+                        {
+                            sb.AppendFormat(CultureInfo.InvariantCulture, "\\u{0:x4}", (int)c);
+                        }
+                        else
+                        {
+                            sb.Append(c);
+                        }
+
+                        break;
+                }
+            }
+
+            sb.Append('"');
+            return sb.ToString();
+        }
+
         // cache the full name, so it won't allocate new strings on each call
         private String fullName;
         
@@ -88,6 +167,16 @@ namespace Avro
 
             Documentation = documentation;
             fullName = string.IsNullOrEmpty(Namespace) ? Name : Namespace + "." + Name;
+
+            // Validate the simple name only. Namespaces are intentionally not
+            // validated here: the code generator's namespace-mapping feature
+            // rewrites schema namespaces to C#-specific values (for example
+            // "@return" for reserved words) and re-parses the schema, so a
+            // namespace component may legitimately not match the Avro name grammar.
+            if (Name != null)
+            {
+                ValidateName(Name, "schema");
+            }
         }
 
         /// <summary>
