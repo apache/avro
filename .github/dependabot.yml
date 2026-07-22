@@ -32,7 +32,7 @@ updates:
       interval: "weekly"
       day: "sunday"
     ignore:
-      # Jetty >= 10 requires JDK 11
+      # Jetty >= 10 uses the Jakarta Servlet API; upgrading requires a javax -> jakarta migration
       - dependency-name: "org.eclipse.jetty:jetty-server"
         versions:
           - ">= 10.0.0"
