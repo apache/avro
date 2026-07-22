@@ -23,7 +23,9 @@ import decimal
 import io
 import itertools
 import json
+import os
 import unittest
+import unittest.mock
 import uuid
 import warnings
 from typing import BinaryIO, Collection, Dict, List, Optional, Tuple, Union, cast
@@ -550,6 +552,209 @@ class TestIncompatibleSchemaReading(unittest.TestCase):
             )
 
 
+class TestBinaryDecoderAvailableBytes(unittest.TestCase):
+    """A bytes/string value declares a length prefix; a malicious or truncated
+    input can declare far more bytes than actually exist. On a seekable reader
+    that is rejected before allocating for it."""
+
+    @staticmethod
+    def _encode_length_prefix(length: int) -> bytes:
+        buf = io.BytesIO()
+        avro.io.BinaryEncoder(buf).write_long(length)
+        return buf.getvalue()
+
+    def test_read_rejects_length_beyond_stream(self) -> None:
+        # Declares 100 MiB but provides no data.
+        prefix = self._encode_length_prefix(100 * 1024 * 1024)
+        with io.BytesIO(prefix) as bio:
+            decoder = avro.io.BinaryDecoder(bio)
+            self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, decoder.read_bytes)
+
+    def test_read_within_stream_still_reads(self) -> None:
+        # A well-formed large value whose data is actually present still reads.
+        payload = b"x" * (2 * 1024 * 1024)
+        buf = io.BytesIO()
+        avro.io.BinaryEncoder(buf).write_bytes(payload)
+        with io.BytesIO(buf.getvalue()) as bio:
+            decoder = avro.io.BinaryDecoder(bio)
+            self.assertEqual(decoder.read_bytes(), payload)
+
+    def test_bytes_remaining_restores_position(self) -> None:
+        # bytes_remaining() must leave the reader position unchanged.
+        with io.BytesIO(b"abcdefghij") as bio:
+            bio.seek(3)
+            decoder = avro.io.BinaryDecoder(bio)
+            self.assertEqual(decoder.bytes_remaining(), 7)
+            self.assertEqual(bio.tell(), 3)
+
+    def test_bytes_remaining_restores_position_on_error(self) -> None:
+        # If reading the end offset fails after seeking, the original position
+        # must still be restored (via the finally block).
+        class FailingEndStream(io.BytesIO):
+            def seek(self, offset: int, whence: int = os.SEEK_SET) -> int:
+                # Fail only when seeking to the end.
+                if whence == os.SEEK_END:
+                    raise OSError("cannot seek to end")
+                return super().seek(offset, whence)
+
+        stream = FailingEndStream(b"abcdefghij")
+        stream.seek(4)
+        decoder = avro.io.BinaryDecoder(stream)
+        self.assertIsNone(decoder.bytes_remaining())
+        self.assertEqual(stream.tell(), 4)
+
+    def test_read_non_seekable_falls_back(self) -> None:
+        # A non-seekable reader skips the pre-check, but the post-read length
+        # check still rejects a truncated oversized value.
+        prefix = self._encode_length_prefix(100 * 1024 * 1024)
+
+        class NonSeekable:
+            def __init__(self, data: bytes) -> None:
+                self._bio = io.BytesIO(data)
+
+            def read(self, n: int = -1) -> bytes:
+                return self._bio.read(n)
+
+            def seekable(self) -> bool:
+                return False
+
+        decoder = avro.io.BinaryDecoder(NonSeekable(prefix))  # type: ignore[arg-type]
+        self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, decoder.read_bytes)
+
+    def test_skip_bytes_rejects_negative_length(self) -> None:
+        # A negative length prefix on a skipped bytes/string field would seek
+        # backwards; it must be rejected rather than corrupting the position.
+        prefix = self._encode_length_prefix(-5)
+        with io.BytesIO(prefix + b"payload") as bio:
+            decoder = avro.io.BinaryDecoder(bio)
+            self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, decoder.skip_bytes)
+
+    def test_skip_bytes_rejects_length_beyond_stream(self) -> None:
+        # A skipped bytes/string field declaring far more bytes than remain is
+        # rejected on a seekable reader before seeking past EOF.
+        prefix = self._encode_length_prefix(100 * 1024 * 1024)
+        with io.BytesIO(prefix) as bio:
+            decoder = avro.io.BinaryDecoder(bio)
+            self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, decoder.skip_bytes)
+
+    def test_skip_bytes_within_stream_still_skips(self) -> None:
+        # A well-formed skipped value advances the position past its data.
+        buf = io.BytesIO()
+        avro.io.BinaryEncoder(buf).write_bytes(b"hello")
+        trailer = b"AFTER"
+        with io.BytesIO(buf.getvalue() + trailer) as bio:
+            decoder = avro.io.BinaryDecoder(bio)
+            decoder.skip_bytes()
+            self.assertEqual(bio.read(), trailer)
+
+    def test_skip_rejects_negative(self) -> None:
+        # The low-level skip() backstop rejects a negative byte count.
+        with io.BytesIO(b"abcdef") as bio:
+            decoder = avro.io.BinaryDecoder(bio)
+            self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, decoder.skip, -1)
+
+
+class TestDatumReaderCollectionAvailableBytes(unittest.TestCase):
+    """An array/map block declares an element count; a malicious or truncated
+    input can declare far more elements than the remaining bytes could hold.
+    The count is validated against the bytes remaining before iterating, using
+    the minimum on-wire size of the element schema (so 0-byte elements such as
+    ``null`` are not falsely rejected)."""
+
+    @staticmethod
+    def _decode(schema_json: str, encoded: bytes) -> object:
+        schema = avro.schema.parse(schema_json)
+        reader = avro.io.DatumReader(schema)
+        with io.BytesIO(encoded) as bio:
+            return reader.read(avro.io.BinaryDecoder(bio))
+
+    def test_array_rejects_count_beyond_stream(self) -> None:
+        # A long array block count (1,000,000 long elements) with no element
+        # data following it.
+        buf = io.BytesIO()
+        avro.io.BinaryEncoder(buf).write_long(1_000_000)
+        self.assertRaises(
+            avro.errors.InvalidAvroBinaryEncoding,
+            self._decode,
+            '{"type": "array", "items": "long"}',
+            buf.getvalue(),
+        )
+
+    def test_map_rejects_count_beyond_stream(self) -> None:
+        buf = io.BytesIO()
+        avro.io.BinaryEncoder(buf).write_long(1_000_000)
+        self.assertRaises(
+            avro.errors.InvalidAvroBinaryEncoding,
+            self._decode,
+            '{"type": "map", "values": "long"}',
+            buf.getvalue(),
+        )
+
+    def test_array_of_null_not_falsely_rejected(self) -> None:
+        # null elements occupy zero bytes, so a large count is legitimate and
+        # must not be rejected.
+        count = 100_000
+        buf = io.BytesIO()
+        enc = avro.io.BinaryEncoder(buf)
+        enc.write_long(count)  # one block of `count` nulls
+        enc.write_long(0)  # end-of-array marker
+        result = self._decode('{"type": "array", "items": "null"}', buf.getvalue())
+        self.assertEqual(result, [None] * count)
+
+    def test_small_truncated_array_still_rejected(self) -> None:
+        # A block count at or below _MAX_UNCHECKED_COLLECTION skips the
+        # bytes_remaining() pre-check (a perf optimization), but the elements
+        # still have to be read: a truncated small collection must not slip
+        # through. Here 10 longs are declared with no element bytes following.
+        self.assertLessEqual(10, avro.io._MAX_UNCHECKED_COLLECTION)
+        buf = io.BytesIO()
+        avro.io.BinaryEncoder(buf).write_long(10)
+        self.assertRaises(
+            avro.errors.InvalidAvroBinaryEncoding,
+            self._decode,
+            '{"type": "array", "items": "long"}',
+            buf.getvalue(),
+        )
+
+    def test_array_within_stream_still_reads(self) -> None:
+        schema_json = '{"type": "array", "items": "long"}'
+        schema = avro.schema.parse(schema_json)
+        buf = io.BytesIO()
+        writer = avro.io.DatumWriter(schema)
+        writer.write([1, 2, 3], avro.io.BinaryEncoder(buf))
+        self.assertEqual(self._decode(schema_json, buf.getvalue()), [1, 2, 3])
+
+    def test_recursive_record_min_bytes_is_non_zero(self) -> None:
+        # A recursive record reference is not a zero-byte value: returning 0 for
+        # it would wrongly treat recursive records as zero-byte elements and
+        # weaken the bytes-remaining precheck. The minimum must stay >= 1.
+        schema = avro.schema.parse(
+            json.dumps(
+                {
+                    "type": "record",
+                    "name": "Node",
+                    "fields": [{"name": "next", "type": ["null", "Node"]}],
+                }
+            )
+        )
+        self.assertGreaterEqual(avro.io._min_bytes_per_element(schema), 1)
+        # A union that includes the recursive record must not be underestimated
+        # below the >= 1 byte branch index either.
+        union = avro.schema.parse(
+            json.dumps(
+                [
+                    "null",
+                    {
+                        "type": "record",
+                        "name": "Node",
+                        "fields": [{"name": "next", "type": ["null", "Node"]}],
+                    },
+                ]
+            )
+        )
+        self.assertGreaterEqual(avro.io._min_bytes_per_element(union), 1)
+
+
 class TestMisc(unittest.TestCase):
     def test_decimal_bytes_small_scale(self) -> None:
         """Avro should raise an AvroTypeException when attempting to write a decimal with a larger exponent than the schema's scale."""
@@ -597,6 +802,33 @@ class TestMisc(unittest.TestCase):
         decoder = avro.io.BinaryDecoder(reader)
         datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
         self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
+
+    def test_union_index_out_of_range(self) -> None:
+        # A union branch index that is negative or >= the number of branches is
+        # malformed and must be rejected before indexing (a negative index would
+        # otherwise wrap in Python and silently select the wrong branch).
+        schema = avro.schema.parse(json.dumps(["null", "long"]))
+        datum_reader = avro.io.DatumReader(schema)
+        for encoded in (b"\x0a", b"\x01"):  # zig-zag long 5, and -1
+            decoder = avro.io.BinaryDecoder(io.BytesIO(encoded))
+            self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
+
+    def test_enum_index_out_of_range(self) -> None:
+        # An enum symbol index that is negative or >= the number of symbols is
+        # malformed and must be rejected before indexing.
+        schema = avro.schema.parse(json.dumps({"type": "enum", "name": "E", "symbols": ["A", "B"]}))
+        datum_reader = avro.io.DatumReader(schema)
+        for encoded in (b"\x12", b"\x01"):  # zig-zag int 9, and -1
+            decoder = avro.io.BinaryDecoder(io.BytesIO(encoded))
+            self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
+
+    def test_read_long_rejects_overlong_varint(self) -> None:
+        # A 64-bit value uses at most 10 bytes; an 11th continuation byte is
+        # malformed and must be rejected rather than accepted as an arbitrarily
+        # large integer.
+        encoded = b"\x80" * 10 + b"\x01"
+        decoder = avro.io.BinaryDecoder(io.BytesIO(encoded))
+        self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, decoder.read_long)
 
     def test_no_default_value(self) -> None:
         writers_schema = LONG_RECORD_SCHEMA
@@ -715,6 +947,256 @@ class TestMisc(unittest.TestCase):
             write_datum(datum_to_write, writers_schema)
 
 
+class TestDatumReaderCollectionSizeLimit(unittest.TestCase):
+    """Elements whose schema encodes to zero bytes (``null``, a zero-length
+    ``fixed``, or a record with only zero-byte fields) consume no input, so the
+    bytes-remaining check cannot bound them. A huge declared block count of such
+    elements is capped so a tiny payload cannot exhaust memory. The limit is
+    configurable via the ``AVRO_MAX_COLLECTION_ITEMS`` environment variable."""
+
+    @staticmethod
+    def _decode(schema_json: str, encoded: bytes) -> object:
+        schema = avro.schema.parse(schema_json)
+        reader = avro.io.DatumReader(schema)
+        with io.BytesIO(encoded) as bio:
+            return reader.read(avro.io.BinaryDecoder(bio))
+
+    @staticmethod
+    def _skip(schema_json: str, encoded: bytes) -> None:
+        schema = avro.schema.parse(schema_json)
+        reader = avro.io.DatumReader(schema)
+        with io.BytesIO(encoded) as bio:
+            reader.skip_data(schema, avro.io.BinaryDecoder(bio))
+
+    @staticmethod
+    def _array_block(count: int, *, negative: bool = False) -> bytes:
+        """One array/map block of ``count`` zero-byte elements + end marker."""
+        buf = io.BytesIO()
+        enc = avro.io.BinaryEncoder(buf)
+        if negative:
+            enc.write_long(-count)  # negative count is followed by a block byte-size
+            enc.write_long(0)
+        else:
+            enc.write_long(count)
+        enc.write_long(0)  # end-of-collection marker
+        return buf.getvalue()
+
+    def test_array_of_null_exceeds_default_limit(self) -> None:
+        # The reported exploit: a ~6 byte payload declaring 200,000,000 nulls.
+        self.assertRaises(
+            avro.errors.AvroCollectionSizeException,
+            self._decode,
+            '{"type": "array", "items": "null"}',
+            self._array_block(200_000_000),
+        )
+
+    def test_array_of_null_int64_min_block_count(self) -> None:
+        # INT64_MIN as a block count is the pathological negation case. Python
+        # integers do not overflow, so negating it yields 2**63, which the cap
+        # rejects. INT64_MIN zig-zag encodes as the 10-byte varint below,
+        # followed by a block byte-size (0) that the negative-block path reads.
+        payload = b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01\x00"
+        self.assertRaises(
+            avro.errors.AvroCollectionSizeException,
+            self._decode,
+            '{"type": "array", "items": "null"}',
+            payload,
+        )
+
+    def test_array_of_null_within_configured_limit_still_reads(self) -> None:
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            result = self._decode('{"type": "array", "items": "null"}', self._array_block(1000))
+        self.assertEqual(result, [None] * 1000)
+
+    def test_array_of_null_exceeds_configured_limit(self) -> None:
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(
+                avro.errors.AvroCollectionSizeException,
+                self._decode,
+                '{"type": "array", "items": "null"}',
+                self._array_block(1001),
+            )
+
+    def test_array_of_null_cumulative_across_blocks(self) -> None:
+        # Two blocks of 600 nulls each (1200 > 1000) must be rejected on the second.
+        buf = io.BytesIO()
+        enc = avro.io.BinaryEncoder(buf)
+        enc.write_long(600)
+        enc.write_long(600)
+        enc.write_long(0)
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(
+                avro.errors.AvroCollectionSizeException,
+                self._decode,
+                '{"type": "array", "items": "null"}',
+                buf.getvalue(),
+            )
+
+    def test_map_duplicate_keys_counted_cumulatively(self) -> None:
+        # Two blocks of 600 pairs that repeat the SAME key: len(read_items) would
+        # be 1, so a separate decoded-pair counter is needed to reject 1200 > 1000.
+        buf = io.BytesIO()
+        enc = avro.io.BinaryEncoder(buf)
+        for _ in range(2):
+            enc.write_long(600)
+            for _ in range(600):
+                enc.write_utf8("k")  # same key; value is null (zero bytes)
+        enc.write_long(0)
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(
+                avro.errors.AvroCollectionSizeException,
+                self._decode,
+                '{"type": "map", "values": "null"}',
+                buf.getvalue(),
+            )
+
+    def test_array_of_null_negative_block_count(self) -> None:
+        # A negative count encodes abs(count) elements preceded by a block size;
+        # after normalization it must still be bounded.
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(
+                avro.errors.AvroCollectionSizeException,
+                self._decode,
+                '{"type": "array", "items": "null"}',
+                self._array_block(200_000, negative=True),
+            )
+
+    def test_array_of_zero_length_fixed_exceeds_limit(self) -> None:
+        schema_json = '{"type": "array", "items": {"type": "fixed", "name": "empty", "size": 0}}'
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(avro.errors.AvroCollectionSizeException, self._decode, schema_json, self._array_block(2000))
+
+    def test_array_of_all_null_record_exceeds_limit(self) -> None:
+        schema_json = '{"type": "array", "items": {"type": "record", "name": "R", "fields": [{"name": "n", "type": "null"}]}}'
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(avro.errors.AvroCollectionSizeException, self._decode, schema_json, self._array_block(2000))
+
+    def test_map_of_null_rejected_by_available_bytes(self) -> None:
+        # Map entries always carry a >= 1 byte key, so a huge map<null> is bounded
+        # by the bytes-remaining check rather than the zero-byte cap.
+        self.assertRaises(
+            avro.errors.InvalidAvroBinaryEncoding,
+            self._decode,
+            '{"type": "map", "values": "null"}',
+            self._array_block(200_000_000),
+        )
+
+    def test_skip_array_of_null_respects_limit(self) -> None:
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(
+                avro.errors.AvroCollectionSizeException,
+                self._skip,
+                '{"type": "array", "items": "null"}',
+                self._array_block(2000),
+            )
+
+    def test_skip_array_of_null_negative_block_respects_limit(self) -> None:
+        # A negative (byte-sized) block count must also be bounded when skipping,
+        # so it cannot be used to bypass the collection cap during resolution.
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(
+                avro.errors.AvroCollectionSizeException,
+                self._skip,
+                '{"type": "array", "items": "null"}',
+                self._array_block(2000, negative=True),
+            )
+
+    def test_skip_block_bytes_wraps_seek_error(self) -> None:
+        # A sized (negative-count) skip block seeks by the declared byte size. If
+        # the underlying reader rejects the seek, surface it as an Avro decoding
+        # error rather than leaking a raw OSError/ValueError/OverflowError, or an
+        # AttributeError/TypeError from a reader lacking seek()/tell().
+        for exc in (OSError, ValueError, OverflowError, AttributeError, TypeError):
+
+            class FailingSkipDecoder:
+                def bytes_remaining(self) -> None:
+                    return None
+
+                def skip(self, n: int, _exc: type = exc) -> None:
+                    raise _exc("cannot skip")
+
+            self.assertRaises(
+                avro.errors.InvalidAvroBinaryEncoding,
+                avro.io.DatumReader._skip_block_bytes,
+                cast(avro.io.BinaryDecoder, FailingSkipDecoder()),
+                10,  # block_size
+                5,  # block_count
+                1,  # min_bytes > 0 so the skip is actually attempted (and fails)
+            )
+
+    def test_skip_block_bytes_rejects_positive_size_for_zero_byte_element(self) -> None:
+        # A zero-byte element type (min_bytes == 0) encodes to exactly 0 bytes, so
+        # its sized block must be empty; a positive block size would skip into the
+        # following fields and corrupt decoder alignment.
+        class NoSkipDecoder:
+            def bytes_remaining(self) -> None:
+                return None
+
+            def skip(self, n: int) -> None:
+                if n != 0:  # pragma: no cover - must not be reached
+                    raise AssertionError("skip should not be called with a positive size for a zero-byte block")
+
+        self.assertRaises(
+            avro.errors.InvalidAvroBinaryEncoding,
+            avro.io.DatumReader._skip_block_bytes,
+            cast(avro.io.BinaryDecoder, NoSkipDecoder()),
+            10,  # block_size (must be 0 for a zero-byte element type)
+            5,  # block_count
+            0,  # min_bytes (zero-byte element type)
+        )
+        # A zero-size block for a zero-byte element type is valid and skips nothing.
+        avro.io.DatumReader._skip_block_bytes(cast(avro.io.BinaryDecoder, NoSkipDecoder()), 0, 5, 0)
+
+    def test_invalid_env_override_falls_back_to_default(self) -> None:
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "not-a-number"}):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                self.assertEqual(avro.io._max_collection_items(), avro.io.DEFAULT_MAX_COLLECTION_ITEMS)
+
+    def test_negative_env_override_falls_back_to_default(self) -> None:
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "-5"}):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                self.assertEqual(avro.io._max_collection_items(), avro.io.DEFAULT_MAX_COLLECTION_ITEMS)
+
+    def test_env_override_is_honored(self) -> None:
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "7"}):
+            self.assertEqual(avro.io._max_collection_items(), 7)
+            result = self._decode('{"type": "array", "items": "null"}', self._array_block(7))
+        self.assertEqual(result, [None] * 7)
+
+    def test_collection_limits_env_caps_both(self) -> None:
+        # When set, AVRO_MAX_COLLECTION_ITEMS caps both the zero-byte and the
+        # structural limit; unset, they differ (tighter zero-byte default).
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1234"}):
+            self.assertEqual(avro.io._collection_limits(), (1234, 1234))
+        # Assert the unset behavior inside a patch that snapshots os.environ, so
+        # the test never mutates the real process environment.
+        with unittest.mock.patch.dict(os.environ):
+            os.environ.pop("AVRO_MAX_COLLECTION_ITEMS", None)
+            self.assertEqual(
+                avro.io._collection_limits(),
+                (avro.io.DEFAULT_MAX_COLLECTION_ITEMS, avro.io.DEFAULT_MAX_COLLECTION_STRUCTURAL),
+            )
+
+    def test_non_zero_collection_bounded_by_structural_cap_when_unseekable(self) -> None:
+        # On a non-seekable reader the bytes-remaining check cannot run, so a huge
+        # non-zero-byte collection is bounded by the structural cap instead.
+        class NoTell:
+            def __init__(self, data: bytes) -> None:
+                self._b = io.BytesIO(data)
+
+            def read(self, n: int = -1) -> bytes:
+                return self._b.read(n)
+
+        schema = avro.schema.parse('{"type": "array", "items": "long"}')
+        reader = avro.io.DatumReader(schema)
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            decoder = avro.io.BinaryDecoder(cast(BinaryIO, NoTell(self._array_block(2000))))
+            self.assertIsNone(decoder.bytes_remaining())
+            self.assertRaises(avro.errors.AvroCollectionSizeException, reader.read, decoder)
+
+
 def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) -> unittest.TestSuite:
     """Generate test cases across many test schema."""
     suite = unittest.TestSuite()
@@ -729,6 +1211,9 @@ def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) 
     )
     suite.addTests(DefaultValueTestCase(field_type, default) for field_type, default in DEFAULT_VALUE_EXAMPLES)
     suite.addTests(loader.loadTestsFromTestCase(TestIncompatibleSchemaReading))
+    suite.addTests(loader.loadTestsFromTestCase(TestBinaryDecoderAvailableBytes))
+    suite.addTests(loader.loadTestsFromTestCase(TestDatumReaderCollectionAvailableBytes))
+    suite.addTests(loader.loadTestsFromTestCase(TestDatumReaderCollectionSizeLimit))
     return suite
 
 

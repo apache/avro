@@ -87,9 +87,10 @@ in that datum, if there are any.
 import collections
 import datetime
 import decimal
+import os
 import struct
 import warnings
-from typing import IO, Generator, Iterable, List, Mapping, Optional, Sequence, Union
+from typing import IO, Dict, Generator, Iterable, List, Mapping, Optional, Sequence, Set, Tuple, Union
 
 import avro.constants
 import avro.errors
@@ -198,6 +199,13 @@ class BinaryDecoder:
 
     _reader: IO[bytes]
 
+    # Reads with a declared length above this many bytes are validated against
+    # the number of bytes actually remaining (when the reader is seekable)
+    # before allocating, to guard against an out-of-memory attack from a
+    # malicious or truncated input. Smaller reads skip the check to avoid
+    # per-value overhead, since they cannot cause a meaningful over-allocation.
+    _MAX_UNCHECKED_READ = 1024 * 1024
+
     def __init__(self, reader: IO[bytes]) -> None:
         """
         reader is a Python object on which we can call read, seek, and tell.
@@ -214,10 +222,45 @@ class BinaryDecoder:
         """
         if n < 0:
             raise avro.errors.InvalidAvroBinaryEncoding(f"Requested {n} bytes to read, expected positive integer.")
+        if n > self._MAX_UNCHECKED_READ:
+            remaining = self.bytes_remaining()
+            if remaining is not None and n > remaining:
+                raise avro.errors.InvalidAvroBinaryEncoding(f"Requested {n} bytes to read, but only {remaining} remain.")
         read_bytes = self.reader.read(n)
         if len(read_bytes) != n:
             raise avro.errors.InvalidAvroBinaryEncoding(f"Read {len(read_bytes)} bytes, expected {n} bytes")
         return read_bytes
+
+    def bytes_remaining(self) -> Optional[int]:
+        """
+        Return the number of bytes still available to read, or ``None`` when
+        that count is not known (a non-seekable reader, or one whose position
+        cannot be obtained). Used to reject a declared length or collection
+        block count that exceeds the data actually available before allocating
+        for it.
+        """
+        reader = self.reader
+        try:
+            pos = reader.tell()
+        except (OSError, ValueError, AttributeError, TypeError):
+            # Not seekable, or the position could not be determined.
+            return None
+        try:
+            reader.seek(0, os.SEEK_END)
+            end = reader.tell()
+            # Clamp to 0: a stream positioned past its end (seekable file-like
+            # objects allow seeking beyond EOF) would otherwise report a negative
+            # "remaining", violating the non-negative contract.
+            return max(0, end - pos)
+        except (OSError, ValueError, AttributeError, TypeError):
+            return None
+        finally:
+            # Always restore the original position, even if seeking to the end
+            # or reading it failed, so the reader is never left at EOF.
+            try:
+                reader.seek(pos)
+            except (OSError, ValueError, AttributeError, TypeError):
+                pass
 
     def read_null(self) -> None:
         """
@@ -246,7 +289,17 @@ class BinaryDecoder:
         n = b & 0x7F
         shift = 7
         while (b & 0x80) != 0:
+            # A 64-bit value needs at most 10 bytes (shifts 0..63); reject an
+            # overlong varint rather than accepting a malformed, arbitrarily
+            # large value.
+            if shift >= 70:
+                raise avro.errors.InvalidAvroBinaryEncoding("Varint is too long")
             b = ord(self.read(1))
+            # The 10th byte (shift == 63) contributes only bit 63; any higher
+            # payload bit would push the value outside the 64-bit range, so a
+            # valid zig-zag long must have them clear.
+            if shift == 63 and (b & 0x7E) != 0:
+                raise avro.errors.InvalidAvroBinaryEncoding("Varint is too long")
             n |= (b & 0x7F) << shift
             shift += 7
         datum = (n >> 1) ^ -(n & 1)
@@ -383,8 +436,21 @@ class BinaryDecoder:
 
     def skip_long(self) -> None:
         b = ord(self.read(1))
+        shift = 7
         while (b & 0x80) != 0:
+            # A 64-bit varint is at most 10 bytes; reject an overlong chain so a
+            # skipped long can't force scanning unbounded input (read_long caps
+            # the same way).
+            if shift >= 70:
+                raise avro.errors.InvalidAvroBinaryEncoding("Varint is too long")
             b = ord(self.read(1))
+            # The 10th byte (shift == 63) contributes only bit 63; any higher
+            # payload bit would push the value outside the 64-bit range. Reject
+            # it here too so skip_long enforces the same validity as read_long
+            # (e.g. a malformed negative-block byte-size in read_array/read_map).
+            if shift == 63 and (b & 0x7E) != 0:
+                raise avro.errors.InvalidAvroBinaryEncoding("Varint is too long")
+            shift += 7
 
     def skip_float(self) -> None:
         self.skip(4)
@@ -393,12 +459,26 @@ class BinaryDecoder:
         self.skip(8)
 
     def skip_bytes(self) -> None:
-        self.skip(self.read_long())
+        # The length prefix is attacker-controlled: an oversized value would seek
+        # past EOF (a negative one is rejected by ``skip`` below, which is the
+        # single place that guards backward seeks). Validate an oversized length
+        # against the bytes remaining the same way ``read`` does before skipping.
+        n = self.read_long()
+        if n > self._MAX_UNCHECKED_READ:
+            remaining = self.bytes_remaining()
+            if remaining is not None and n > remaining:
+                raise avro.errors.InvalidAvroBinaryEncoding(f"Requested {n} bytes to skip, but only {remaining} remain.")
+        self.skip(n)
 
     def skip_utf8(self) -> None:
         self.skip_bytes()
 
     def skip(self, n: int) -> None:
+        # Guard against a negative skip (a backward seek), which would corrupt
+        # the decoder position. Callers pass schema-derived sizes (fixed/float/
+        # double) or already-validated lengths, so this is a defensive backstop.
+        if n < 0:
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Cannot skip a negative number of bytes: {n}")
         self.reader.seek(self.reader.tell() + n)
 
 
@@ -599,6 +679,118 @@ class BinaryEncoder:
 #
 # DatumReader/Writer
 #
+
+# Environment variable overriding the collection element limits. When set to a
+# non-negative integer it caps both the number of zero-byte-encoded collection
+# elements (e.g. an array of nulls) and the structural cap on the total number of
+# elements in any collection, allocated from a single decode.
+MAX_COLLECTION_ITEMS_ENV = "AVRO_MAX_COLLECTION_ITEMS"
+
+# Default maximum number of zero-byte-encoded collection elements to allocate.
+# Elements whose schema encodes to zero bytes (``null``, a zero-length ``fixed``,
+# or a record with only zero-byte fields) consume no input, so the bytes-remaining
+# check cannot bound their count; without a cap a tiny payload can declare a huge
+# block count and exhaust memory. A legitimate collection of zero-byte elements is
+# small, so this default is generous while still rejecting pathological input. It
+# can be raised (or lowered) with the ``AVRO_MAX_COLLECTION_ITEMS`` environment
+# variable.
+DEFAULT_MAX_COLLECTION_ITEMS = 10_000_000
+
+# Default structural cap on the number of elements in any array or map (a
+# collection larger than this is treated as malformed regardless of element
+# type). Matches the historical ``Integer.MAX_VALUE - 8`` limit. Elements with a
+# positive on-wire size are also bounded by the bytes remaining; this cap is an
+# additional overflow/defense-in-depth guard. ``AVRO_MAX_COLLECTION_ITEMS``, when
+# set, overrides both this and ``DEFAULT_MAX_COLLECTION_ITEMS``.
+DEFAULT_MAX_COLLECTION_STRUCTURAL = (1 << 31) - 1 - 8  # Integer.MAX_VALUE - 8
+
+# Block counts at or below this are not checked against the bytes remaining. A
+# collection element with a positive on-wire size must be backed by real bytes,
+# so a small block cannot over-allocate meaningfully; skipping the check avoids a
+# per-block ``bytes_remaining()`` seek (tell + seek-to-end + seek-back), which is
+# not free on a real file object. Mirrors ``BinaryDecoder._MAX_UNCHECKED_READ``.
+# The structural cap below is always enforced (no seek), and zero-byte elements
+# keep their own cumulative cap.
+_MAX_UNCHECKED_COLLECTION = 1024
+
+
+def _collection_limits() -> Tuple[int, int]:
+    """Return ``(zero_byte_limit, structural_limit)``.
+
+    ``AVRO_MAX_COLLECTION_ITEMS``, when set to a non-negative integer, pins *both*
+    limits to that single value. The coupling runs in both directions: raising it
+    to lift the zero-byte-element limit also lowers the structural cap from
+    ``DEFAULT_MAX_COLLECTION_STRUCTURAL`` (~2.1 billion) to that same value, and
+    lowering it tightens both. Set it above ``DEFAULT_MAX_COLLECTION_STRUCTURAL``
+    if you need to raise the zero-byte limit without reducing the structural cap.
+    When unset, zero-byte elements use the tighter ``DEFAULT_MAX_COLLECTION_ITEMS``
+    and all collections use ``DEFAULT_MAX_COLLECTION_STRUCTURAL``.
+    """
+    value = os.environ.get(MAX_COLLECTION_ITEMS_ENV)
+    if value is None:
+        return DEFAULT_MAX_COLLECTION_ITEMS, DEFAULT_MAX_COLLECTION_STRUCTURAL
+    try:
+        parsed = int(value)
+    except ValueError:
+        warnings.warn(avro.errors.AvroWarning(f"Ignoring invalid {MAX_COLLECTION_ITEMS_ENV} value: {value!r}"))
+        return DEFAULT_MAX_COLLECTION_ITEMS, DEFAULT_MAX_COLLECTION_STRUCTURAL
+    if parsed < 0:
+        warnings.warn(avro.errors.AvroWarning(f"Ignoring negative {MAX_COLLECTION_ITEMS_ENV} value: {value!r}"))
+        return DEFAULT_MAX_COLLECTION_ITEMS, DEFAULT_MAX_COLLECTION_STRUCTURAL
+    return parsed, parsed
+
+
+def _max_collection_items() -> int:
+    """Return the configured zero-byte-element collection limit."""
+    return _collection_limits()[0]
+
+
+def _min_bytes_per_element(schema: avro.schema.Schema, visited: Optional[Set[int]] = None) -> int:
+    """
+    Return the minimum number of bytes a single value of ``schema`` can occupy
+    on the wire. Used to reject an array/map block count that could not possibly
+    be backed by the bytes remaining. A type that can encode to zero bytes
+    (``null``) returns 0, which disables the collection check for it (avoiding a
+    false positive on, e.g., an array of nulls).
+    """
+    if visited is None:
+        visited = set()
+    schema_type = schema.type
+    if schema_type == "null":
+        return 0
+    if schema_type == "float":
+        return 4
+    if schema_type == "double":
+        return 8
+    if schema_type == "fixed":
+        return getattr(schema, "size", 1)
+    if schema_type in ("record", "error"):
+        # Guard against self-referencing records (recursion would not terminate).
+        # A recursive reference is not a zero-byte value: any finite recursive
+        # value must terminate through a union (>= 1 byte branch index) or an
+        # empty array/map (>= 1 byte block count), so 1 is a safe conservative
+        # lower bound. Returning 0 here would wrongly treat recursive records as
+        # zero-byte elements and weaken the bytes-remaining precheck.
+        if id(schema) in visited:
+            return 1
+        visited.add(id(schema))
+        total = 0
+        for field in getattr(schema, "fields", []):
+            total += _min_bytes_per_element(field.type, visited)
+        visited.discard(id(schema))
+        return total
+    if schema_type == "union":
+        # A union encodes a >= 1 byte branch index plus the selected branch's
+        # payload, so its minimum is 1 + the smallest branch minimum (which is
+        # 1 when any branch is null / zero-byte).
+        branches = getattr(schema, "schemas", [])
+        if not branches:
+            return 1
+        return 1 + min(_min_bytes_per_element(branch, visited) for branch in branches)
+    # boolean, int, long, bytes, string, enum, array, map: all >= 1 byte.
+    return 1
+
+
 class DatumReader:
     """Deserialize Avro-encoded data into a Python data structure."""
 
@@ -765,7 +957,7 @@ class DatumReader:
         """
         # read data
         index_of_symbol = decoder.read_int()
-        if index_of_symbol >= len(writers_schema.symbols):
+        if index_of_symbol < 0 or index_of_symbol >= len(writers_schema.symbols):
             raise avro.errors.SchemaResolutionException(
                 f"Can't access enum index {index_of_symbol} for enum with {len(writers_schema.symbols)} symbols", writers_schema, readers_schema
             )
@@ -779,6 +971,54 @@ class DatumReader:
 
     def skip_enum(self, writers_schema: avro.schema.EnumSchema, decoder: BinaryDecoder) -> None:
         return decoder.skip_int()
+
+    @staticmethod
+    def _ensure_collection_available(
+        decoder: BinaryDecoder,
+        existing: int,
+        count: int,
+        min_bytes_per_element: int,
+        zero_byte_limit: int,
+        structural_limit: int,
+    ) -> None:
+        """
+        Reject a collection (array or map) block that could not be backed by the
+        input, before iterating.
+
+        For elements with a positive minimum on-wire size, the declared count is
+        checked against the bytes actually remaining and against a structural
+        limit (an overflow/defense-in-depth cap). For zero-byte elements (e.g. an
+        array of nulls), which consume no input and so cannot be bounded by the
+        bytes remaining, the cumulative count is checked against the (tighter)
+        zero-byte limit.
+        """
+        if count <= 0:
+            return
+        if min_bytes_per_element > 0:
+            # Only pay for the bytes_remaining() seek on a large block: a small
+            # block of positive-size elements must be backed by real bytes on the
+            # wire and so cannot over-allocate meaningfully (see
+            # _MAX_UNCHECKED_COLLECTION). The structural cap below is always
+            # enforced without a seek.
+            if count > _MAX_UNCHECKED_COLLECTION:
+                remaining = decoder.bytes_remaining()
+                # Compare via integer division rather than multiplying, so an
+                # attacker-controlled (unbounded) count does not create a huge
+                # intermediate product.
+                if remaining is not None and count > remaining // min_bytes_per_element:
+                    raise avro.errors.InvalidAvroBinaryEncoding(
+                        f"Collection claims {count} elements with at least {min_bytes_per_element} bytes each, but only {remaining} bytes are available."
+                    )
+            if existing + count > structural_limit:
+                raise avro.errors.AvroCollectionSizeException(
+                    f"Cannot read a collection of more than {structural_limit} elements "
+                    f"(declared {existing + count}); raise the {MAX_COLLECTION_ITEMS_ENV} limit if this is legitimate."
+                )
+        elif existing + count > zero_byte_limit:
+            raise avro.errors.AvroCollectionSizeException(
+                f"Cannot read a collection of more than {zero_byte_limit} zero-byte elements "
+                f"(declared {existing + count}); raise the {MAX_COLLECTION_ITEMS_ENV} limit if this is legitimate."
+            )
 
     def read_array(self, writers_schema: avro.schema.ArraySchema, readers_schema: avro.schema.ArraySchema, decoder: BinaryDecoder) -> List[object]:
         """
@@ -795,23 +1035,69 @@ class DatumReader:
         The actual count in this case
         is the absolute value of the count written.
         """
-        read_items = []
+        read_items: List[object] = []
+        min_bytes = _min_bytes_per_element(writers_schema.items)
+        zero_byte_limit, structural_limit = _collection_limits()
         block_count = decoder.read_long()
         while block_count != 0:
             if block_count < 0:
                 block_count = -block_count
                 decoder.skip_long()
+            self._ensure_collection_available(decoder, len(read_items), block_count, min_bytes, zero_byte_limit, structural_limit)
             for i in range(block_count):
                 read_items.append(self.read_data(writers_schema.items, readers_schema.items, decoder))
             block_count = decoder.read_long()
         return read_items
 
+    @staticmethod
+    def _skip_block_bytes(decoder: BinaryDecoder, block_size: int, block_count: int, min_bytes: int) -> None:
+        """Skip a sized-block's byte count, rejecting malformed sizes.
+
+        The block_size is attacker-controlled: a negative value would seek
+        backwards and an oversized value past EOF, either corrupting the decoder
+        position. Also require that block_size can plausibly hold block_count
+        elements at their minimum on-wire size, so a too-small size cannot
+        misalign the decoder. A zero-byte element type (``null``, a zero-length
+        ``fixed``, or a record of only zero-byte fields) encodes to exactly 0
+        bytes, so its block payload must be empty; a positive size would skip
+        into the following fields. Reject before skipping.
+        """
+        if block_size < 0:
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Invalid negative block size: {block_size}")
+        remaining = decoder.bytes_remaining()
+        if remaining is not None and block_size > remaining:
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Block size {block_size} exceeds the {remaining} bytes remaining")
+        if min_bytes > 0:
+            if block_count > block_size // min_bytes:
+                raise avro.errors.InvalidAvroBinaryEncoding(
+                    f"Block size {block_size} is too small for {block_count} elements of >= {min_bytes} bytes"
+                )
+        elif block_size != 0:
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Block size {block_size} must be 0 for a zero-byte element type")
+        try:
+            decoder.skip(block_size)
+        except (OSError, ValueError, OverflowError, AttributeError, TypeError) as e:
+            # The underlying reader can reject the seek (oversized offset, invalid
+            # seek, or other IO error), or lack seek()/tell() entirely; surface it
+            # as an Avro decoding error rather than leaking a non-Avro exception.
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Cannot skip block of {block_size} bytes: {e}") from e
+
     def skip_array(self, writers_schema: avro.schema.ArraySchema, decoder: BinaryDecoder) -> None:
+        min_bytes = _min_bytes_per_element(writers_schema.items)
+        zero_byte_limit, structural_limit = _collection_limits()
+        items_skipped = 0
         block_count = decoder.read_long()
         while block_count != 0:
+            block_size = None
             if block_count < 0:
+                block_count = -block_count
                 block_size = decoder.read_long()
-                decoder.skip(block_size)
+            # Bound the (normalized) count on both the sized and unsized paths so
+            # a negative block count cannot bypass the collection limits.
+            self._ensure_collection_available(decoder, items_skipped, block_count, min_bytes, zero_byte_limit, structural_limit)
+            items_skipped += block_count
+            if block_size is not None:
+                self._skip_block_bytes(decoder, block_size, block_count, min_bytes)
             else:
                 for i in range(block_count):
                     self.skip_data(writers_schema.items, decoder)
@@ -832,12 +1118,21 @@ class DatumReader:
         The actual count in this case
         is the absolute value of the count written.
         """
-        read_items = {}
+        read_items: Dict[str, object] = {}
+        # Map keys are strings (>= 1 byte length prefix) plus the value.
+        min_bytes = 1 + _min_bytes_per_element(writers_schema.values)
+        zero_byte_limit, structural_limit = _collection_limits()
+        # Track decoded pairs separately: len(read_items) counts unique keys, so
+        # duplicate keys (later entries overwrite earlier ones) would undercount
+        # and let a multi-block map exceed the cumulative caps.
+        items_read = 0
         block_count = decoder.read_long()
         while block_count != 0:
             if block_count < 0:
                 block_count = -block_count
                 decoder.skip_long()
+            self._ensure_collection_available(decoder, items_read, block_count, min_bytes, zero_byte_limit, structural_limit)
+            items_read += block_count
             for i in range(block_count):
                 key = decoder.read_utf8()
                 read_items[key] = self.read_data(writers_schema.values, readers_schema.values, decoder)
@@ -845,11 +1140,21 @@ class DatumReader:
         return read_items
 
     def skip_map(self, writers_schema: avro.schema.MapSchema, decoder: BinaryDecoder) -> None:
+        min_bytes = 1 + _min_bytes_per_element(writers_schema.values)
+        zero_byte_limit, structural_limit = _collection_limits()
+        items_skipped = 0
         block_count = decoder.read_long()
         while block_count != 0:
+            block_size = None
             if block_count < 0:
+                block_count = -block_count
                 block_size = decoder.read_long()
-                decoder.skip(block_size)
+            # Bound the (normalized) count on both the sized and unsized paths so
+            # a negative block count cannot bypass the collection limits.
+            self._ensure_collection_available(decoder, items_skipped, block_count, min_bytes, zero_byte_limit, structural_limit)
+            items_skipped += block_count
+            if block_size is not None:
+                self._skip_block_bytes(decoder, block_size, block_count, min_bytes)
             else:
                 for i in range(block_count):
                     decoder.skip_utf8()
@@ -864,7 +1169,7 @@ class DatumReader:
         """
         # schema resolution
         index_of_schema = int(decoder.read_long())
-        if index_of_schema >= len(writers_schema.schemas):
+        if index_of_schema < 0 or index_of_schema >= len(writers_schema.schemas):
             raise avro.errors.SchemaResolutionException(
                 f"Can't access branch index {index_of_schema} for union with {len(writers_schema.schemas)} branches", writers_schema, readers_schema
             )
@@ -875,7 +1180,7 @@ class DatumReader:
 
     def skip_union(self, writers_schema: avro.schema.UnionSchema, decoder: BinaryDecoder) -> None:
         index_of_schema = int(decoder.read_long())
-        if index_of_schema >= len(writers_schema.schemas):
+        if index_of_schema < 0 or index_of_schema >= len(writers_schema.schemas):
             raise avro.errors.SchemaResolutionException(
                 f"Can't access branch index {index_of_schema} for union with {len(writers_schema.schemas)} branches", writers_schema
             )

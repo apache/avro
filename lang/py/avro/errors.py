@@ -36,6 +36,15 @@ class InvalidAvroBinaryEncoding(AvroException):
     """For invalid numbers of bytes read."""
 
 
+class AvroCollectionSizeException(AvroException):
+    """Raised when a decoded array or map would exceed a collection size limit.
+
+    This covers both the zero-byte-element cap (the cumulative number of
+    zero-byte elements such as ``null``) and the structural cap on the total
+    number of elements in any collection.
+    """
+
+
 class SchemaParseException(AvroException):
     """Raised when a schema failed to parse."""
 
