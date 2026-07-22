@@ -39,6 +39,14 @@ use Apache\Avro\Schema\AvroUnionSchema;
 class AvroIOBinaryDecoder
 {
     /**
+     * Reads with a declared length above this many bytes are validated against
+     * the number of bytes actually remaining before allocating, to guard
+     * against an out-of-memory attack from a malicious or truncated input.
+     * Smaller reads skip the check to avoid per-value overhead.
+     */
+    private const MAX_UNCHECKED_READ = 1048576; // 1 MiB
+
+    /**
      * @param AvroIO $io object from which to read.
      */
     public function __construct(
@@ -65,7 +73,37 @@ class AvroIOBinaryDecoder
      */
     public function read(int $len): string
     {
+        if ($len < 0) {
+            // AvroStringIO::read() accepts a negative length and moves the
+            // pointer backwards; reject it before delegating.
+            throw new AvroException("Cannot read a negative number of bytes: {$len}");
+        }
+        if ($len > self::MAX_UNCHECKED_READ) {
+            $remaining = $this->bytesRemaining();
+            if ($len > $remaining) {
+                throw new AvroException("Cannot read {$len} bytes, only {$remaining} remaining.");
+            }
+        }
+
         return $this->io->read($len);
+    }
+
+    /**
+     * Number of bytes still available to read, determined by seeking to the end
+     * and restoring the position (which both the string and file IO
+     * implementations support). Used to reject a declared length or collection
+     * block count that exceeds the data actually available before allocating.
+     */
+    public function bytesRemaining(): int
+    {
+        $current = $this->io->tell();
+        $this->io->seek(0, AvroIO::SEEK_END);
+        $end = $this->io->tell();
+        $this->io->seek($current, AvroIO::SEEK_SET);
+
+        // Clamp to 0: AvroStringIO::seek() allows seeking past EOF, which would
+        // otherwise yield a confusing negative "remaining" count.
+        return max(0, $end - $current);
     }
 
     public function readInt(): int
@@ -78,6 +116,12 @@ class AvroIOBinaryDecoder
         $byte = ord($this->nextByte());
         $bytes = [$byte];
         while (0 != ($byte & 0x80)) {
+            // A 64-bit value uses at most 10 bytes; reject an overlong varint
+            // rather than reading an unbounded continuation chain and silently
+            // corrupting the value. Bounds both the native and GMP decode paths.
+            if (count($bytes) >= 10) {
+                throw new AvroException('Varint is too long');
+            }
             $byte = ord($this->nextByte());
             $bytes[] = $byte;
         }
@@ -235,13 +279,40 @@ class AvroIOBinaryDecoder
 
     public function skipArray(AvroArraySchema $writersSchema, AvroIOBinaryDecoder $decoder): void
     {
+        $minBytes = AvroIODatumReader::collectionElementMinBytes($writersSchema->items());
+        $skipped = 0;
         $blockCount = $decoder->readLong();
-        while (0 !== $blockCount) {
+        while (0 != $blockCount) {
+            $blockSize = null;
             if ($blockCount < 0) {
-                $decoder->skip($this->readLong());
+                if (PHP_INT_MIN == $blockCount) {
+                    throw new AvroException('Invalid array block count');
+                }
+                $blockCount = -$blockCount;
+                $blockSize = $decoder->readLong();
+                if ($blockSize < 0) {
+                    throw new AvroException('Invalid negative array block size');
+                }
             }
-            for ($i = 0; $i < $blockCount; $i++) {
-                AvroIODatumReader::skipData($writersSchema->items(), $decoder);
+            // Bound the (normalized) count on both the sized and unsized paths so
+            // a negative block count cannot bypass the skip limit.
+            AvroIODatumReader::checkSkipCollectionCount($skipped, $blockCount, $minBytes);
+            $skipped += $blockCount;
+            if (null !== $blockSize) {
+                // seek() can move past EOF, so a truncated/oversized block would
+                // otherwise be "skipped" silently, hiding truncation. Reject a
+                // block size larger than the bytes actually remaining.
+                if ($blockSize > $decoder->bytesRemaining()) {
+                    throw new AvroException('Array block size exceeds the remaining input');
+                }
+                if ($minBytes > 0 && $blockCount > intdiv($blockSize, $minBytes)) {
+                    throw new AvroException('Array block size too small for the declared element count');
+                }
+                $decoder->skip($blockSize);
+            } else {
+                for ($i = 0; $i < $blockCount; $i++) {
+                    AvroIODatumReader::skipData($writersSchema->items(), $decoder);
+                }
             }
             $blockCount = $decoder->readLong();
         }
@@ -249,14 +320,39 @@ class AvroIOBinaryDecoder
 
     public function skipMap(AvroMapSchema $writersSchema, AvroIOBinaryDecoder $decoder): void
     {
+        // Map entries always carry a >= 1 byte key, so the minimum is positive.
+        $minBytes = 1 + AvroIODatumReader::collectionElementMinBytes($writersSchema->values());
+        $skipped = 0;
         $blockCount = $decoder->readLong();
-        while (0 !== $blockCount) {
+        while (0 != $blockCount) {
+            $blockSize = null;
             if ($blockCount < 0) {
-                $decoder->skip($this->readLong());
+                if (PHP_INT_MIN == $blockCount) {
+                    throw new AvroException('Invalid map block count');
+                }
+                $blockCount = -$blockCount;
+                $blockSize = $decoder->readLong();
+                if ($blockSize < 0) {
+                    throw new AvroException('Invalid negative map block size');
+                }
             }
-            for ($i = 0; $i < $blockCount; $i++) {
-                $decoder->skipString();
-                AvroIODatumReader::skipData($writersSchema->values(), $decoder);
+            AvroIODatumReader::checkSkipCollectionCount($skipped, $blockCount, $minBytes);
+            $skipped += $blockCount;
+            if (null !== $blockSize) {
+                // seek() can move past EOF; reject a block size larger than the
+                // bytes remaining so a truncated block isn't silently skipped.
+                if ($blockSize > $decoder->bytesRemaining()) {
+                    throw new AvroException('Map block size exceeds the remaining input');
+                }
+                if ($minBytes > 0 && $blockCount > intdiv($blockSize, $minBytes)) {
+                    throw new AvroException('Map block size too small for the declared element count');
+                }
+                $decoder->skip($blockSize);
+            } else {
+                for ($i = 0; $i < $blockCount; $i++) {
+                    $decoder->skipString();
+                    AvroIODatumReader::skipData($writersSchema->values(), $decoder);
+                }
             }
             $blockCount = $decoder->readLong();
         }
