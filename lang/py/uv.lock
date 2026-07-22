@@ -52,7 +52,7 @@ provides-extras = ["snappy", "zstandard"]
 [package.metadata.requires-dev]
 dev = [
     { name = "coverage", specifier = ">=7.13.4" },
-    { name = "mypy", specifier = "<2.1.0" },
+    { name = "mypy", specifier = "<2.2.0" },
     { name = "python-snappy", specifier = ">=0.7.3" },
     { name = "ruff", specifier = ">=0.15.1" },
     { name = "setuptools", specifier = ">=82.0.0" },
