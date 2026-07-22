@@ -404,11 +404,52 @@ namespace Avro.Generic
             ArraySchema rs = (ArraySchema)readerSchema;
             object result = CreateArray(reuse, rs);
             int i = 0;
-            for (int n = (int)d.ReadArrayStart(); n != 0; n = (int)d.ReadArrayNext())
+            long minBytes = MinBytesPerElement(writerSchema.ItemSchema);
+            long total = 0;
+            for (long nl = d.ReadArrayStart(); nl != 0; nl = d.ReadArrayNext())
             {
-                if (GetArraySize(result) < (i + n)) ResizeArray(ref result, i + n);
+                // Reject a block whose element count could not be backed by the
+                // bytes remaining (or, for zero-byte elements, that exceeds the
+                // item cap) before allocating for it. Checked on the raw long,
+                // which also avoids the int cast below overflowing.
+                total = EnsureCollectionAvailable(d, total, nl, minBytes);
+                int n = (int)nl;
+                // Preallocate only a bounded amount up front, then grow on demand
+                // below. On a non-seekable stream EnsureCollectionAvailable cannot
+                // bound the count, so resizing straight to i+n could allocate a
+                // huge array before any element is read; a truncated stream instead
+                // fails within Read() after a bounded growth. Blocks no larger than
+                // the cap keep the original single-resize fast path. Compute in
+                // long and clamp so a large i near the structural cap cannot
+                // overflow the int sum.
+                long preallocLong = Math.Min((long)i + Math.Min(n, MaxCollectionPrealloc), MaxCollectionStructural);
+                int prealloc = (int)preallocLong;
+                if (GetArraySize(result) < prealloc) ResizeArray(ref result, prealloc);
                 for (int j = 0; j < n; j++, i++)
                 {
+                    if (GetArraySize(result) <= i)
+                    {
+                        int current = GetArraySize(result);
+                        // Grow ~1.5x, computed in long to avoid int overflow, and
+                        // clamp to the structural cap (which is <= the runtime's
+                        // max array length). The validated element count never
+                        // exceeds that cap, so clamping cannot starve a legitimate
+                        // collection while it keeps Array.Resize from being handed
+                        // an over-large (or overflowed/negative) size.
+                        long grown = (long)current + (current >> 1) + 1;
+                        if (grown < i + 1)
+                        {
+                            grown = i + 1;
+                        }
+
+                        if (grown > MaxCollectionStructural)
+                        {
+                            grown = MaxCollectionStructural;
+                        }
+
+                        ResizeArray(ref result, (int)grown);
+                    }
+
                     SetArrayElement(result, i, Read(GetArrayElement(result, i), writerSchema.ItemSchema, rs.ItemSchema, d));
                 }
             }
@@ -490,8 +531,13 @@ namespace Avro.Generic
         {
             MapSchema rs = (MapSchema)readerSchema;
             object result = CreateMap(reuse, rs);
-            for (int n = (int)d.ReadMapStart(); n != 0; n = (int)d.ReadMapNext())
+            // Map keys are strings (>= 1 byte length prefix) plus the value.
+            long minBytes = 1L + MinBytesPerElement(writerSchema.ValueSchema);
+            long total = 0;
+            for (long nl = d.ReadMapStart(); nl != 0; nl = d.ReadMapNext())
             {
+                total = EnsureCollectionAvailable(d, total, nl, minBytes);
+                int n = (int)nl;
                 for (int j = 0; j < n; j++)
                 {
                     string k = d.ReadString();
@@ -499,6 +545,166 @@ namespace Avro.Generic
                 }
             }
             return result;
+        }
+
+        /// <summary>
+        /// Minimum number of bytes a single value of the given schema can occupy
+        /// on the wire. Used to reject an array/map block count that could not be
+        /// backed by the bytes remaining. A type that encodes to zero bytes
+        /// returns 0 (not only <c>null</c>, but also composites that encode to
+        /// nothing, e.g. a record whose fields are all zero-byte), which disables
+        /// the bytes-remaining check for it (so an array of such elements is not
+        /// falsely rejected; they are instead bounded by the zero-byte item cap).
+        /// A depth limit breaks self-referencing schemas.
+        /// </summary>
+        private static int MinBytesPerElement(Schema schema, int depth = 0)
+        {
+            if (schema == null)
+            {
+                return 0;
+            }
+
+            switch (schema.Tag)
+            {
+                case Schema.Type.Null:
+                    return 0;
+                case Schema.Type.Float:
+                    return 4;
+                case Schema.Type.Double:
+                    return 8;
+                case Schema.Type.Fixed:
+                    return ((FixedSchema)schema).Size;
+                case Schema.Type.Record:
+                case Schema.Type.Error:
+                    if (depth > 64)
+                    {
+                        // A cyclic or pathologically deep record. Return 1 (not
+                        // 0) so the collection check stays enabled; a valid
+                        // recursive value always encodes to >= 1 byte. The depth
+                        // guard is applied only here, so zero-byte leaf types
+                        // such as null still return 0 regardless of depth.
+                        return 1;
+                    }
+
+                    // Accumulate in a long and clamp so a deeply nested schema
+                    // cannot overflow int into a value <= 0, which would disable
+                    // the collection check.
+                    long total = 0;
+                    foreach (Field f in (RecordSchema)schema)
+                    {
+                        total += MinBytesPerElement(f.Schema, depth + 1);
+                        if (total >= int.MaxValue)
+                        {
+                            return int.MaxValue;
+                        }
+                    }
+
+                    return (int)total;
+                default:
+                    // boolean, int, long, bytes, string, enum, union, array, map:
+                    // all encode to at least one byte.
+                    return 1;
+            }
+        }
+
+        // Collection allocation limits, guarding against a block-count DoS. Both
+        // default to the same values as the other Avro SDKs and can be overridden
+        // (to a single value capping both) via the AVRO_MAX_COLLECTION_ITEMS
+        // environment variable.
+        private static readonly long MaxCollectionItems = ReadCollectionLimit(10_000_000L);
+
+        // The largest array the runtime can allocate. Mirrors
+        // BinaryDecoder.MaxDotNetArrayLength: the default reader grows its backing
+        // array via Array.Resize, which throws (OutOfMemoryException/OverflowException)
+        // above this length rather than a deterministic AvroException.
+#if NETSTANDARD2_0
+        private const int MaxDotNetArrayLength = 0x3FFFFFFF;
+#else
+        private const int MaxDotNetArrayLength = 0x7FFFFFC7;
+#endif
+
+        // The structural cap is additionally clamped to the runtime's maximum
+        // array length: the callers cast the (cumulative) block count to int to
+        // size .NET collections, and a limit above the max array length (e.g. from
+        // a large env override, or int.MaxValue itself) would let a collection
+        // that passes EnsureCollectionAvailable still fault inside Array.Resize
+        // instead of failing deterministically.
+        private static readonly long MaxCollectionStructural =
+            Math.Min(ReadCollectionLimit(2147483639L), MaxDotNetArrayLength);
+
+        // Upper bound on how many elements the backing array is grown by in a
+        // single step while decoding. The array still grows to hold every element
+        // actually read; this only avoids resizing to the full (possibly
+        // attacker-declared) block count up front, before any element is read.
+        // That matters most for non-seekable streams, where the bytes-available
+        // check cannot bound the declared count, so a single Array.Resize to the
+        // block count could allocate a huge array before the truncated stream is
+        // detected.
+        private const int MaxCollectionPrealloc = 1024;
+
+        private static long ReadCollectionLimit(long defaultValue)
+        {
+            string env = Environment.GetEnvironmentVariable("AVRO_MAX_COLLECTION_ITEMS");
+            if (!string.IsNullOrEmpty(env) && long.TryParse(env, out long value) && value >= 0)
+            {
+                return value;
+            }
+
+            return defaultValue;
+        }
+
+        /// <summary>
+        /// Rejects a collection (array or map) block that could drive an unbounded
+        /// allocation, before allocating for it. A block whose declared element
+        /// count could not be backed by the bytes actually remaining is rejected;
+        /// zero-byte element blocks (where the bytes-remaining check does not
+        /// apply) are bounded by a cumulative item cap; and every collection is
+        /// bounded by a structural cap. Returns the running total across blocks.
+        /// </summary>
+        private static long EnsureCollectionAvailable(Decoder d, long total, long count, long minBytesPerElement)
+        {
+            // A negative count is corrupt/malicious data (it can also arise from
+            // long.MinValue overflow when negating a negative block count), and
+            // the callers cast the block count to int; reject it explicitly.
+            if (count < 0)
+            {
+                throw new AvroException($"Invalid negative collection block count: {count}");
+            }
+
+            // Reject before adding so an oversized block count cannot overflow
+            // `total` (wrapping it negative and bypassing the caps below). The
+            // running total is always <= MaxCollectionStructural on entry (the
+            // invariant this method maintains) and count >= 0, so the subtraction
+            // cannot underflow or overflow.
+            if (count > MaxCollectionStructural - total)
+            {
+                throw new AvroException(
+                    $"Collection size {total} + {count} exceeds the maximum allowed size of {MaxCollectionStructural}");
+            }
+
+            total += count;
+
+            if (minBytesPerElement <= 0)
+            {
+                // Zero-byte elements (e.g. null) consume no input, so the
+                // bytes-remaining check cannot bound them; cap by item count.
+                if (total > MaxCollectionItems)
+                {
+                    throw new AvroException(
+                        $"Collection of zero-byte elements ({total}) exceeds the maximum allowed size of {MaxCollectionItems}");
+                }
+            }
+            else if (d is BinaryDecoder bd)
+            {
+                long remaining = bd.RemainingBytes();
+                if (remaining >= 0 && count > remaining / minBytesPerElement)
+                {
+                    throw new AvroException(
+                        $"Collection claims {count} elements with at least {minBytesPerElement} bytes each, but only {remaining} bytes are available");
+                }
+            }
+
+            return total;
         }
 
         /// <summary>
@@ -661,8 +867,11 @@ namespace Avro.Generic
                 case Schema.Type.Array:
                     {
                         Schema s = (writerSchema as ArraySchema).ItemSchema;
+                        long minBytes = MinBytesPerElement(s);
+                        long total = 0;
                         for (long n = d.ReadArrayStart(); n != 0; n = d.ReadArrayNext())
                         {
+                            total = EnsureCollectionAvailable(d, total, n, minBytes);
                             for (long i = 0; i < n; i++) Skip(s, d);
                         }
                     }
@@ -670,8 +879,11 @@ namespace Avro.Generic
                 case Schema.Type.Map:
                     {
                         Schema s = (writerSchema as MapSchema).ValueSchema;
+                        long minBytes = 1L + MinBytesPerElement(s);
+                        long total = 0;
                         for (long n = d.ReadMapStart(); n != 0; n = d.ReadMapNext())
                         {
+                            total = EnsureCollectionAvailable(d, total, n, minBytes);
                             for (long i = 0; i < n; i++) { d.SkipString(); Skip(s, d); }
                         }
                     }

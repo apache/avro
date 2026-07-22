@@ -76,7 +76,22 @@ namespace Avro.IO
             int shift = 7;
             while ((b & 0x80) != 0)
             {
+                // A 64-bit value uses at most 10 bytes (shifts 0..63); reject an
+                // overlong varint rather than silently wrapping to a wrong value.
+                if (shift >= 70)
+                {
+                    throw new AvroException("Varint is too long");
+                }
+
                 b = read();
+                // The 10th byte (shift == 63) contributes only bit 63; any higher
+                // payload bit (b & 0x7E) would be silently dropped by << 63, so a
+                // valid encoding must have them clear. Reject otherwise.
+                if (shift == 63 && (b & 0x7E) != 0)
+                {
+                    throw new AvroException("Invalid long encoding");
+                }
+
                 n |= (b & 0x7FUL) << shift;
                 shift += 7;
             }
@@ -264,9 +279,71 @@ namespace Avro.IO
         // Read p bytes into a new byte buffer
         private byte[] read(long p)
         {
-            byte[] buffer = new byte[p];
+            if (p < 0)
+            {
+                throw new AvroException($"Can not read a negative number of bytes: {p}");
+            }
+
+            if (p > MaxDotNetArrayLength)
+            {
+                // A .NET array cannot be larger than this; reject with a
+                // consistent AvroException rather than letting new byte[p] throw
+                // an OverflowException/OutOfMemoryException, mirroring the
+                // maximum-length guard in ReadString() (the message differs).
+                throw new AvroException($"Length {p} exceeds the maximum supported array length");
+            }
+
+            EnsureAvailableBytes(p);
+            // p has been bounded to <= MaxDotNetArrayLength above, so the cast to
+            // int (required for array allocation) cannot overflow.
+            byte[] buffer = new byte[(int)p];
             Read(buffer, 0, buffer.Length);
             return buffer;
+        }
+
+        /// <summary>
+        /// When the underlying stream can report its length, verifies that at
+        /// least <paramref name="length"/> bytes remain before the caller
+        /// allocates a buffer of that size. This guards against an
+        /// out-of-memory attack from a malicious or truncated input that
+        /// declares a huge length prefix but carries little actual data. The
+        /// check is skipped for non-seekable streams, whose remaining length is
+        /// unknown.
+        /// </summary>
+        /// <param name="length">Number of bytes about to be read.</param>
+        internal void EnsureAvailableBytes(long length)
+        {
+            if (length > 0)
+            {
+                long remaining = RemainingBytes();
+                if (remaining >= 0 && length > remaining)
+                {
+                    throw new AvroException(
+                        $"Cannot read {length} bytes, only {remaining} bytes remaining in the stream");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the number of bytes still available to read from the
+        /// underlying stream when it is seekable, or -1 when that count is not
+        /// known (a non-seekable stream). Used to reject a declared length or a
+        /// collection block count that exceeds the data actually available
+        /// before allocating for it.
+        /// </summary>
+        /// <returns>The number of bytes remaining, or -1 if unknown.</returns>
+        public long RemainingBytes()
+        {
+            if (!stream.CanSeek)
+            {
+                return -1;
+            }
+
+            // Clamp to 0: if the stream was externally seeked past its end (or
+            // truncated), Position can exceed Length. Callers should only ever
+            // see -1 (unknown) or a non-negative count.
+            long remaining = stream.Length - stream.Position;
+            return remaining < 0 ? 0 : remaining;
         }
 
         private byte read()
@@ -281,6 +358,14 @@ namespace Avro.IO
             long result = ReadLong();
             if (result < 0)
             {
+                // long.MinValue cannot be negated (it would overflow); reject it
+                // explicitly rather than propagating a wrapped negative or, under
+                // checked arithmetic, throwing an OverflowException.
+                if (result == long.MinValue)
+                {
+                    throw new AvroException("Invalid negative block count: " + result);
+                }
+
                 ReadLong(); // Consume byte-count if present
                 result = -result;
             }

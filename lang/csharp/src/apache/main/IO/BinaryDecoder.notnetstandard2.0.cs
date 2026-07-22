@@ -66,22 +66,35 @@ namespace Avro.IO
         /// <returns>String read from the stream.</returns>
         public string ReadString()
         {
-            int length = ReadInt();
+            // Read the length as a long: the prefix is an Avro long, so a value
+            // above int.MaxValue would overflow ReadInt() to a negative int,
+            // bypass EnsureAvailableBytes and throw a misleading "negative length"
+            // error. Validate the bounds before casting to int.
+            long length = ReadLong();
 
             if (length < 0)
             {
                 throw new AvroException("Can not deserialize a string with negative length!");
             }
 
-            if (length <= MaxFastReadLength)
+            EnsureAvailableBytes(length);
+
+            if (length > MaxDotNetArrayLength)
+            {
+                throw new AvroException("String length is not supported!");
+            }
+
+            int intLength = (int)length;
+
+            if (intLength <= MaxFastReadLength)
             {
                 byte[] bufferArray = null;
 
                 try
                 {
-                    Span<byte> buffer = length <= StackallocThreshold ?
-                        stackalloc byte[length] :
-                        (bufferArray = ArrayPool<byte>.Shared.Rent(length)).AsSpan(0, length);
+                    Span<byte> buffer = intLength <= StackallocThreshold ?
+                        stackalloc byte[intLength] :
+                        (bufferArray = ArrayPool<byte>.Shared.Rent(intLength)).AsSpan(0, intLength);
 
                     Read(buffer);
 
@@ -97,16 +110,11 @@ namespace Avro.IO
             }
             else
             {
-                if (length > MaxDotNetArrayLength)
-                {
-                    throw new AvroException("String length is not supported!");
-                }
-
                 using (var binaryReader = new BinaryReader(stream, Encoding.UTF8, true))
                 {
-                    var bytes = binaryReader.ReadBytes(length);
+                    var bytes = binaryReader.ReadBytes(intLength);
 
-                    if (bytes.Length != length)
+                    if (bytes.Length != intLength)
                     {
                         throw new AvroException("Could not read as many bytes from stream as expected!");
                     }
