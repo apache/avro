@@ -1109,10 +1109,20 @@ public class SpecificCompiler {
   }
 
   /**
-   * Utility for template use. Escapes comment end with HTML entities.
+   * Utility for template use. Escapes content emitted into a Javadoc comment.
+   *
+   * <p>
+   * As well as escaping the comment terminator ({@code *}{@code /}) and HTML
+   * metacharacters, this neutralizes backslashes. This is required because the
+   * Java compiler translates Unicode escapes (of the form {@code \}{@code uXXXX})
+   * across the whole source file, including inside comments, as its first lexical
+   * step (JLS &sect;3.3). Without this, a schema doc value such as
+   * {@code \}{@code u002a\}{@code u002f} would be decoded by the compiler to
+   * {@code *}{@code /}, prematurely closing the comment and allowing arbitrary
+   * code to be injected into the generated source.
    */
   public static String escapeForJavadoc(String s) {
-    return s.replace("*/", "*&#47;").replace("<", "&lt;").replace(">", "&gt;");
+    return s.replace("\\", "&#92;").replace("*/", "*&#47;").replace("<", "&lt;").replace(">", "&gt;");
   }
 
   /**
