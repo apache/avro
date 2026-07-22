@@ -70,11 +70,11 @@ typedef struct avro_obj_t *avro_datum_t;
 avro_datum_t avro_string(const char *str);
 avro_datum_t avro_givestring(const char *str,
 			     avro_free_func_t free);
-avro_datum_t avro_bytes(const char *buf, int64_t len);
-avro_datum_t avro_givebytes(const char *buf, int64_t len,
+avro_datum_t avro_bytes(avro_schema_t schema, const char *buf, int64_t len);
+avro_datum_t avro_givebytes(avro_schema_t schema, const char *buf, int64_t len,
 			    avro_free_func_t free);
-avro_datum_t avro_int32(int32_t i);
-avro_datum_t avro_int64(int64_t l);
+avro_datum_t avro_int32(avro_schema_t schema, int32_t i);
+avro_datum_t avro_int64(avro_schema_t schema, int64_t l);
 avro_datum_t avro_float(float f);
 avro_datum_t avro_double(double d);
 avro_datum_t avro_boolean(int8_t i);
