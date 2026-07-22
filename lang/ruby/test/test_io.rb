@@ -42,6 +42,208 @@ class TestIO < Test::Unit::TestCase
     check_default('"bytes"', '"foo"', "foo")
   end
 
+  # A bytes/string value declares a length prefix; a malicious or truncated
+  # input can declare far more bytes than actually exist. On a reader that can
+  # report its size, that is rejected before allocating for it.
+  def test_read_bytes_rejects_length_beyond_stream
+    writer = StringIO.new
+    declared = Avro::IO::BinaryDecoder::MAX_UNCHECKED_READ + 1
+    Avro::IO::BinaryEncoder.new(writer).write_long(declared)
+    reader = StringIO.new(writer.string)
+    decoder = Avro::IO::BinaryDecoder.new(reader)
+    assert_raise(Avro::AvroError) { decoder.read_bytes }
+  end
+
+  def test_read_bytes_within_stream_still_reads
+    payload = 'x' * (Avro::IO::BinaryDecoder::MAX_UNCHECKED_READ + 1)
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_bytes(payload)
+    reader = StringIO.new(writer.string)
+    decoder = Avro::IO::BinaryDecoder.new(reader)
+    assert_equal(payload, decoder.read_bytes)
+  end
+
+  # An array/map block declares an element count; a malicious or truncated input
+  # can declare far more elements than the remaining bytes could hold. The count
+  # is validated against the bytes remaining before iterating, using the minimum
+  # on-wire size of the element schema (so 0-byte elements like null are not
+  # falsely rejected).
+  def decode(schema_json, encoded)
+    schema = Avro::Schema.parse(schema_json)
+    reader = Avro::IO::DatumReader.new(schema)
+    reader.read(Avro::IO::BinaryDecoder.new(StringIO.new(encoded)))
+  end
+
+  def test_read_array_rejects_count_beyond_stream
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_long(1_000_000)
+    assert_raise(Avro::IO::CollectionSizeError) do
+      decode('{"type":"array","items":"long"}', writer.string)
+    end
+  end
+
+  def test_read_map_rejects_count_beyond_stream
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_long(1_000_000)
+    assert_raise(Avro::IO::CollectionSizeError) do
+      decode('{"type":"map","values":"long"}', writer.string)
+    end
+  end
+
+  def test_read_array_of_null_not_falsely_rejected
+    count = 100_000
+    writer = StringIO.new
+    encoder = Avro::IO::BinaryEncoder.new(writer)
+    encoder.write_long(count) # one block of `count` nulls (zero bytes each)
+    encoder.write_long(0)     # end-of-array marker
+    result = decode('{"type":"array","items":"null"}', writer.string)
+    assert_equal(count, result.length)
+    assert_nil(result.first)
+    assert_nil(result.last)
+  end
+
+  def test_read_array_within_stream_still_reads
+    schema = Avro::Schema.parse('{"type":"array","items":"long"}')
+    writer = StringIO.new
+    Avro::IO::DatumWriter.new(schema).write([1, 2, 3], Avro::IO::BinaryEncoder.new(writer))
+    assert_equal([1, 2, 3], decode('{"type":"array","items":"long"}', writer.string))
+  end
+
+  # A zero-byte element type (null) consumes no input, so the bytes-remaining
+  # check cannot bound its block count; a tiny payload declaring a huge count
+  # must instead be rejected by the item cap before building the array.
+  def test_read_array_of_null_rejects_huge_count
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_long(200_000_000) # ~4 byte payload
+    assert_raise(Avro::IO::CollectionSizeError) do
+      decode('{"type":"array","items":"null"}', writer.string)
+    end
+  end
+
+  # INT64_MIN as a block count is the pathological negation case. Ruby integers
+  # do not overflow, so negating it yields 2**63, which the cap rejects. INT64_MIN
+  # zig-zag encodes as the 10-byte varint below, followed by a block byte-size (0)
+  # that the negative-block path reads.
+  def test_read_array_of_null_int64_min_block_count
+    payload = "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x01\x00".b
+    assert_raise(Avro::IO::CollectionSizeError) do
+      decode('{"type":"array","items":"null"}', payload)
+    end
+  end
+
+  def test_read_map_rejects_huge_count
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_long(200_000_000)
+    assert_raise(Avro::IO::CollectionSizeError) do
+      decode('{"type":"map","values":"long"}', writer.string)
+    end
+  end
+
+  # The skip path (a writer field absent from the reader schema) must be bounded
+  # too, so skipping a huge zero-byte block cannot loop endlessly.
+  def test_skip_array_of_null_rejects_huge_count
+    writers_schema = Avro::Schema.parse(<<-JSON)
+      {"type":"record","name":"Foo","fields":[
+        {"name":"arr","type":{"type":"array","items":"null"}},
+        {"name":"val","type":"int"}]}
+    JSON
+    readers_schema = Avro::Schema.parse(<<-JSON)
+      {"type":"record","name":"Foo","fields":[{"name":"val","type":"int"}]}
+    JSON
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_long(200_000_000) # arr block count
+    reader = Avro::IO::DatumReader.new(writers_schema, readers_schema)
+    assert_raise(Avro::IO::CollectionSizeError) do
+      reader.read(Avro::IO::BinaryDecoder.new(StringIO.new(writer.string)))
+    end
+  end
+
+  def test_skip_array_of_null_negative_block_rejects_huge_count
+    # The negative (byte-sized) block form must also be bounded when skipping,
+    # so it cannot bypass the collection cap during projection.
+    writers_schema = Avro::Schema.parse(<<-JSON)
+      {"type":"record","name":"Foo","fields":[
+        {"name":"arr","type":{"type":"array","items":"null"}},
+        {"name":"val","type":"int"}]}
+    JSON
+    readers_schema = Avro::Schema.parse(<<-JSON)
+      {"type":"record","name":"Foo","fields":[{"name":"val","type":"int"}]}
+    JSON
+    writer = StringIO.new
+    encoder = Avro::IO::BinaryEncoder.new(writer)
+    encoder.write_long(-200_000_000) # negative block count
+    encoder.write_long(0)            # block byte-size
+    reader = Avro::IO::DatumReader.new(writers_schema, readers_schema)
+    assert_raise(Avro::IO::CollectionSizeError) do
+      reader.read(Avro::IO::BinaryDecoder.new(StringIO.new(writer.string)))
+    end
+  end
+
+  # A union branch index that is negative or beyond the number of branches is
+  # malformed and must be rejected (Ruby's negative indexing would otherwise
+  # silently select the wrong branch).
+  def test_read_union_rejects_out_of_range_index
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_long(5) # only 2 branches exist
+    assert_raise(Avro::AvroError) do
+      decode('["null","long"]', writer.string)
+    end
+  end
+
+  def test_read_union_rejects_negative_index
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_long(-1)
+    assert_raise(Avro::AvroError) do
+      decode('["null","long"]', writer.string)
+    end
+  end
+
+  # An enum symbol index that is negative or beyond the number of symbols is
+  # malformed and must be rejected.
+  def test_read_enum_rejects_out_of_range_index
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_int(9) # only 2 symbols exist
+    assert_raise(Avro::AvroError) do
+      decode('{"type":"enum","name":"E","symbols":["A","B"]}', writer.string)
+    end
+  end
+
+  def test_read_enum_rejects_negative_index
+    writer = StringIO.new
+    Avro::IO::BinaryEncoder.new(writer).write_int(-1)
+    assert_raise(Avro::AvroError) do
+      decode('{"type":"enum","name":"E","symbols":["A","B"]}', writer.string)
+    end
+  end
+
+  def test_skip_negative_block_size_exceeding_remaining_is_rejected
+    # A negative block declares a byte-size; one larger than the bytes remaining
+    # would seek past EOF, so it must be rejected before skipping.
+    writers_schema = Avro::Schema.parse(<<-JSON)
+      {"type":"record","name":"Foo","fields":[
+        {"name":"arr","type":{"type":"array","items":"int"}},
+        {"name":"val","type":"int"}]}
+    JSON
+    readers_schema = Avro::Schema.parse(<<-JSON)
+      {"type":"record","name":"Foo","fields":[{"name":"val","type":"int"}]}
+    JSON
+    writer = StringIO.new
+    encoder = Avro::IO::BinaryEncoder.new(writer)
+    encoder.write_long(-1)        # negative block count: a byte-size follows
+    encoder.write_long(1_000_000) # block byte-size, but no data follows
+    reader = Avro::IO::DatumReader.new(writers_schema, readers_schema)
+    assert_raise(Avro::AvroError) do
+      reader.read(Avro::IO::BinaryDecoder.new(StringIO.new(writer.string)))
+    end
+  end
+
+  def test_read_long_rejects_overlong_varint
+    # An Avro long is at most 10 bytes; a longer continuation chain must be
+    # rejected rather than forcing unbounded Integer growth.
+    decoder = Avro::IO::BinaryDecoder.new(StringIO.new("\x80".b * 10))
+    assert_raise(Avro::AvroError) { decoder.read_long }
+  end
+
   def test_int
     check('"int"')
     check_default('"int"', "5", 5)

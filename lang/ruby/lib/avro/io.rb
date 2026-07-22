@@ -32,10 +32,21 @@ module Avro
       end
     end
 
+    # Raised when a decoded array or map declares more elements than can be
+    # backed by the input, guarding against an out-of-memory attack.
+    class CollectionSizeError < AvroError; end
+
     # FIXME(jmhodges) move validate to this module?
 
     class BinaryDecoder
       # Read leaf values
+
+      # Reads with a declared length above this many bytes are validated
+      # against the number of bytes actually remaining (when the reader can
+      # report its size) before allocating, to guard against an out-of-memory
+      # attack from a malicious or truncated input. Smaller reads skip the
+      # check to avoid per-value overhead.
+      MAX_UNCHECKED_READ = 1024 * 1024
 
       # reader is an object on which we can call read, seek and tell.
       attr_reader :reader
@@ -64,8 +75,17 @@ module Avro
         b = byte!
         n = b & 0x7F
         shift = 7
+        # An Avro long is a 64-bit zig-zag varint, at most 10 bytes. Bound the
+        # continuation chain so a malicious input cannot force unbounded Integer
+        # growth (and heavy CPU/memory use) before any caller-side check runs.
+        count = 1
         while (b & 0x80) != 0
+          raise AvroError, "Varint is too long" if count >= 10
           b = byte!
+          count += 1
+          # The 10th byte (count == 10) contributes only bit 63; any higher
+          # payload bit would push the value outside the 64-bit range.
+          raise AvroError, "Varint is too long" if count == 10 && (b & 0x7E) != 0
           n |= (b & 0x7F) << shift
           shift += 7
         end
@@ -103,8 +123,48 @@ module Avro
       end
 
       def read(len)
-        # Read n bytes
-        @reader.read(len)
+        # Read n bytes. Reject a declared length that exceeds the bytes
+        # actually remaining before allocating for it, to guard against an
+        # out-of-memory attack from a malicious or truncated input. The check
+        # is only applied to larger reads; smaller reads and stream readers that
+        # cannot report their size fall back to reading directly.
+        if len < 0
+          # A negative length would make IO#read return the rest of the stream,
+          # which bypasses the size check and can allocate without bound.
+          raise AvroError, "Cannot read a negative number of bytes: #{len}"
+        end
+        if len > MAX_UNCHECKED_READ
+          remaining = bytes_remaining
+          if remaining && len > remaining
+            raise AvroError, "Cannot read #{len} bytes, only #{remaining} remaining"
+          end
+        end
+        result = @reader.read(len)
+        # A truncated or partial read must not silently yield fewer bytes than
+        # requested (which would surface later as confusing corruption); reject it.
+        if len.positive? && (result.nil? || result.bytesize < len)
+          got = result.nil? ? 0 : result.bytesize
+          raise AvroError, "Truncated input: expected #{len} bytes, got #{got}"
+        end
+        result
+      end
+
+      # Number of bytes still available to read, or nil when the reader cannot
+      # report its size. Used to reject a declared length or collection block
+      # count that exceeds the data actually available before allocating for it.
+      def bytes_remaining
+        return nil unless @reader.respond_to?(:size) && @reader.respond_to?(:tell)
+        size = @reader.size
+        pos = @reader.tell
+        return nil unless size.is_a?(Integer) && pos.is_a?(Integer)
+        # Clamp negative (e.g. the file was truncated below the current position)
+        # to 0 so callers see "no bytes available" rather than a confusing
+        # negative count.
+        [size - pos, 0].max
+      rescue IOError, SystemCallError, NotImplementedError
+        # The reader responds to #size/#tell but cannot actually report them;
+        # treat the remaining size as unknown and skip the check.
+        nil
       end
 
       def skip_null
@@ -121,8 +181,16 @@ module Avro
 
       def skip_long
         b = byte!
+        count = 1
         while (b & 0x80) != 0
+          # A 64-bit varint is at most 10 bytes; reject an overlong continuation
+          # chain so a skipped long can't force scanning unbounded input.
+          raise AvroError, "Varint is too long" if count >= 10
           b = byte!
+          count += 1
+          # The 10th byte contributes only bit 63; reject out-of-64-bit-range
+          # encodings here too so skipping is consistent with read_long.
+          raise AvroError, "Varint is too long" if count == 10 && (b & 0x7E) != 0
         end
       end
 
@@ -299,6 +367,10 @@ module Avro
 
       def read_enum(writers_schema, readers_schema, decoder)
         index_of_symbol = decoder.read_int
+        if index_of_symbol < 0 || index_of_symbol >= writers_schema.symbols.size
+          raise AvroError, "Enum symbol index #{index_of_symbol} out of range " \
+                           "for #{writers_schema.symbols.size} symbols"
+        end
         read_symbol = writers_schema.symbols[index_of_symbol]
 
         if !readers_schema.symbols.include?(read_symbol) && readers_schema.default
@@ -312,12 +384,16 @@ module Avro
 
       def read_array(writers_schema, readers_schema, decoder)
         read_items = []
+        min_bytes = min_bytes_per_element(writers_schema.items)
+        total = 0
         block_count = decoder.read_long
         while block_count != 0
           if block_count < 0
             block_count = -block_count
-            _block_size = decoder.read_long
+            block_size = decoder.read_long
+            raise AvroError, "Invalid negative block size: #{block_size}" if block_size < 0
           end
+          total = ensure_collection_available(decoder, total, block_count, min_bytes)
           block_count.times do
             read_items << read_data(writers_schema.items,
                                     readers_schema.items,
@@ -331,12 +407,17 @@ module Avro
 
       def read_map(writers_schema, readers_schema, decoder)
         read_items = {}
+        # Map keys are strings (>= 1 byte length prefix) plus the value.
+        min_bytes = 1 + min_bytes_per_element(writers_schema.values)
+        total = 0
         block_count = decoder.read_long
         while block_count != 0
           if block_count < 0
             block_count = -block_count
-            _block_size = decoder.read_long
+            block_size = decoder.read_long
+            raise AvroError, "Invalid negative block size: #{block_size}" if block_size < 0
           end
+          total = ensure_collection_available(decoder, total, block_count, min_bytes)
           block_count.times do
             key = decoder.read_string
             read_items[key] = read_data(writers_schema.values,
@@ -351,6 +432,10 @@ module Avro
 
       def read_union(writers_schema, readers_schema, decoder)
         index_of_schema = decoder.read_long
+        if index_of_schema < 0 || index_of_schema >= writers_schema.schemas.size
+          raise AvroError, "Union branch index #{index_of_schema} out of range " \
+                           "for #{writers_schema.schemas.size} branches"
+        end
         selected_writers_schema = writers_schema.schemas[index_of_schema]
 
         read_data(selected_writers_schema, readers_schema, decoder)
@@ -477,15 +562,22 @@ module Avro
 
       def skip_union(writers_schema, decoder)
         index = decoder.read_long
+        if index < 0 || index >= writers_schema.schemas.size
+          raise AvroError, "Union branch index #{index} out of range " \
+                           "for #{writers_schema.schemas.size} branches"
+        end
         skip_data(writers_schema.schemas[index], decoder)
       end
 
       def skip_array(writers_schema, decoder)
-        skip_blocks(decoder) { skip_data(writers_schema.items, decoder) }
+        min_bytes = min_bytes_per_element(writers_schema.items)
+        skip_blocks(decoder, min_bytes) { skip_data(writers_schema.items, decoder) }
       end
 
       def skip_map(writers_schema, decoder)
-        skip_blocks(decoder) {
+        # Map keys are strings (>= 1 byte length prefix) plus the value.
+        min_bytes = 1 + min_bytes_per_element(writers_schema.values)
+        skip_blocks(decoder, min_bytes) {
           decoder.skip_string
           skip_data(writers_schema.values, decoder)
         }
@@ -496,12 +588,119 @@ module Avro
       end
 
       private
-      def skip_blocks(decoder, &blk)
+      # Minimum number of bytes a single value of the given schema can occupy on
+      # the wire. Used to reject an array/map block count that could not be
+      # backed by the bytes remaining. A type that can encode to zero bytes
+      # (null) returns 0, which disables the check for it (so an array of nulls
+      # is not falsely rejected).
+      def min_bytes_per_element(schema, visited = nil)
+        visited ||= {}.compare_by_identity
+        case schema.type_sym
+        when :null then 0
+        when :float then 4
+        when :double then 8
+        when :fixed then schema.size
+        when :record, :error, :request
+          return 0 if visited[schema]
+          visited[schema] = true
+          total = schema.fields.sum { |field| min_bytes_per_element(field.type, visited) }
+          visited.delete(schema)
+          total
+        else
+          # boolean, int, long, bytes, string, enum, union, array, map: >= 1 byte
+          # (a union encodes at least a 1-byte branch index).
+          1
+        end
+      end
+
+      # Reject a collection (array or map) block that could drive an unbounded
+      # allocation, before iterating. A block whose declared element count could
+      # not be backed by the bytes actually remaining is rejected; a block of
+      # zero-byte elements (where the bytes-remaining check does not apply) is
+      # bounded by a cumulative item cap; and every collection is bounded by a
+      # structural cap. Returns the running total across blocks.
+      #
+      # Both limits default to the same values as the other Avro SDKs and can be
+      # overridden (to a single value capping both) via the
+      # AVRO_MAX_COLLECTION_ITEMS environment variable.
+      DEFAULT_MAX_COLLECTION_ITEMS = 10_000_000       # Zero-byte element cap.
+      DEFAULT_MAX_COLLECTION_STRUCTURAL = 2147483639  # Integer.MAX_VALUE - 8.
+
+      def collection_limits
+        # Memoize per reader instance: ensure_collection_available runs once per
+        # block, so parsing the env var every time adds avoidable overhead for
+        # collections split into many blocks. Reading it once per reader still
+        # lets a new reader pick up a changed value.
+        @collection_limits ||=
+          begin
+            env = Integer(ENV['AVRO_MAX_COLLECTION_ITEMS'], exception: false)
+            if env && env >= 0
+              [env, env]
+            else
+              [DEFAULT_MAX_COLLECTION_ITEMS, DEFAULT_MAX_COLLECTION_STRUCTURAL]
+            end
+          end
+      end
+
+      def ensure_collection_available(decoder, total, count, min_bytes_per_element)
+        # A negative count here is corrupt/malicious data (the read/skip callers
+        # already normalized a legitimate negative block count to its absolute
+        # value); reject it explicitly.
+        raise CollectionSizeError, "Invalid negative collection block count: #{count}" if count < 0
+
+        total += count
+        max_items, max_structural = collection_limits
+
+        # A structural cap covers all collections, including decoders that cannot
+        # report their remaining bytes.
+        if total > max_structural
+          raise CollectionSizeError, "Collection size #{total} exceeds the maximum allowed size of #{max_structural}"
+        end
+
+        if min_bytes_per_element <= 0
+          # Zero-byte elements (e.g. null) consume no input, so the
+          # bytes-remaining check cannot bound them; cap by item count.
+          if total > max_items
+            raise CollectionSizeError, "Collection of zero-byte elements (#{total}) exceeds the maximum allowed size of #{max_items}"
+          end
+        elsif decoder.respond_to?(:bytes_remaining)
+          # A decoder that implements the read protocol but not #bytes_remaining
+          # (e.g. a custom decoder) cannot report the remaining size; skip the
+          # byte check for it rather than raising NoMethodError.
+          remaining = decoder.bytes_remaining
+          # Compare via integer division rather than multiplying, so a huge count
+          # does not create a large intermediate product.
+          if remaining && count > remaining / min_bytes_per_element
+            raise CollectionSizeError, "Collection claims #{count} elements with at least #{min_bytes_per_element} bytes each, but only #{remaining} bytes are available"
+          end
+        end
+
+        total
+      end
+
+      def skip_blocks(decoder, min_bytes = 0, &blk)
+        total = 0
         block_count = decoder.read_long
         while block_count != 0
           if block_count < 0
-            decoder.skip(decoder.read_long)
+            # A negative count declares abs(count) items preceded by a block
+            # byte-size. Bound the count too (so it can't bypass the caps), and
+            # reject a negative byte-size (which would seek the reader backwards)
+            # or one larger than the bytes remaining (a truncated input that would
+            # otherwise seek past EOF) before skipping the whole block by its size.
+            block_count = -block_count
+            block_size = decoder.read_long
+            raise AvroError, "Invalid negative block size: #{block_size}" if block_size < 0
+            if decoder.respond_to?(:bytes_remaining)
+              remaining = decoder.bytes_remaining
+              if remaining && block_size > remaining
+                raise AvroError, "Cannot skip #{block_size} bytes, only #{remaining} remaining"
+              end
+            end
+            total = ensure_collection_available(decoder, total, block_count, min_bytes)
+            decoder.skip(block_size)
           else
+            total = ensure_collection_available(decoder, total, block_count, min_bytes)
             block_count.times(&blk)
           end
           block_count = decoder.read_long
