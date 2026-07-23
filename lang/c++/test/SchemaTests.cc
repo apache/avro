@@ -325,6 +325,7 @@ const char *roundTripSchemas[] = {
     R"({"type":"int","logicalType":"date"})",
     R"({"type":"int","logicalType":"time-millis"})",
     R"({"type":"long","logicalType":"time-micros"})",
+    R"({"type":"long","logicalType":"time-nanos"})",
     R"({"type":"long","logicalType":"timestamp-millis"})",
     R"({"type":"long","logicalType":"timestamp-micros"})",
     R"({"type":"long","logicalType":"timestamp-nanos"})",
@@ -375,6 +376,7 @@ const char *malformedLogicalTypes[] = {
     R"({"type":"string","logicalType":"date"})",
     R"({"type":"string","logicalType":"time-millis"})",
     R"({"type":"string","logicalType":"time-micros"})",
+    R"({"type":"string","logicalType":"time-nanos"})",
     R"({"type":"string","logicalType":"timestamp-millis"})",
     R"({"type":"string","logicalType":"timestamp-micros"})",
     R"({"type":"string","logicalType":"timestamp-nanos"})",
@@ -504,6 +506,7 @@ static void testLogicalTypes() {
     const char *dateType = R"({"type": "int", "logicalType": "date"})";
     const char *timeMillisType = R"({"type": "int", "logicalType": "time-millis"})";
     const char *timeMicrosType = R"({"type": "long", "logicalType": "time-micros"})";
+    const char *timeNanosType = R"({"type": "long", "logicalType": "time-nanos"})";
     const char *timestampMillisType = R"({"type": "long", "logicalType": "timestamp-millis"})";
     const char *timestampMicrosType = R"({"type": "long", "logicalType": "timestamp-micros"})";
     const char *timestampNanosType = R"({"type": "long", "logicalType": "timestamp-nanos"})";
@@ -569,6 +572,15 @@ static void testLogicalTypes() {
         BOOST_CHECK(logicalType.type() == LogicalType::TIME_MICROS);
         GenericDatum datum(schema);
         BOOST_CHECK(datum.logicalType().type() == LogicalType::TIME_MICROS);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(timeNanosType);
+        ValidSchema schema = compileJsonSchemaFromString(timeNanosType);
+        BOOST_CHECK(schema.root()->type() == AVRO_LONG);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::TIME_NANOS);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::TIME_NANOS);
     }
     {
         BOOST_TEST_CHECKPOINT(timestampMillisType);
