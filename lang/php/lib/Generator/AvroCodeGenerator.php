@@ -43,52 +43,51 @@ class AvroCodeGenerator
 
     /** @var array<string, AvroSchema> */
     private array $registry = [];
+    private string $path;
+    private string $phpNamespace;
 
-    public function __construct()
+    public function __construct(string $path, string $phpNamespace)
     {
         $this->factory = new BuilderFactory();
         $this->printer = new Standard(['shortArraySyntax' => true]);
+        $this->path = $path;
+        $this->phpNamespace = $phpNamespace;
+    }
+
+    public function translate(
+        AvroSchema $schema,
+    ): void {
+        $this->collectSchemas($schema);
     }
 
     /**
      * @return array<string, string> Map of filename to file contents
      */
-    public function translate(
-        AvroSchema $schema,
-        string $path,
-        string $phpNamespace
-    ): array {
-        $this->buildRegistry($schema);
-
+    public function generate(): array
+    {
         $files = [];
 
         foreach ($this->registry as $registeredSchema) {
             $node = match (true) {
                 $registeredSchema instanceof AvroEnumSchema => $this->buildEnum(
                     $registeredSchema,
-                    $phpNamespace,
+                    $this->phpNamespace,
                     $registeredSchema->symbols()
                 ),
                 $registeredSchema instanceof AvroRecordSchema => $this->buildRecord(
                     $registeredSchema,
-                    $phpNamespace
+                    $this->phpNamespace
                 ),
                 default => null
             };
 
             if (null !== $node && $registeredSchema instanceof AvroNamedSchema) {
-                $filename = $this->pathForSchema($registeredSchema, $path);
+                $filename = $this->pathForSchema($registeredSchema, $this->path);
                 $files[$filename] = "<?php\n\ndeclare(strict_types=1);\n\n{$this->printer->prettyPrint([$node])}\n";
             }
         }
 
         return $files;
-    }
-
-    private function buildRegistry(AvroSchema $rootSchema): void
-    {
-        $this->registry = [];
-        $this->collectSchemas($rootSchema);
     }
 
     private function collectSchemas(AvroSchema $schema): void

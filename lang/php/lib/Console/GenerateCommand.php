@@ -110,8 +110,7 @@ class GenerateCommand extends Command
         }
 
         $schemata = new AvroNamedSchemata();
-        $generator = new AvroCodeGenerator();
-        $written = [];
+        $generator = new AvroCodeGenerator($outputDir, $namespace);
         $exitCode = Command::SUCCESS;
 
         foreach ($files as $file) {
@@ -135,29 +134,30 @@ class GenerateCommand extends Command
                     json_decode($json, associative: true, flags: JSON_THROW_ON_ERROR),
                     schemata: $schemata
                 );
-                $generatedFiles = $generator->translate($schema, $outputDir, $namespace);
-
-                foreach ($generatedFiles as $path => $content) {
-                    $directory = dirname($path);
-                    if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
-                        $io->error(sprintf('Could not create output directory "%s".', $directory));
-                        $exitCode = Command::FAILURE;
-
-                        continue;
-                    }
-
-                    if (false === file_put_contents($path, $content)) {
-                        $io->error(sprintf('Could not write file: %s', $path));
-                        $exitCode = Command::FAILURE;
-
-                        continue;
-                    }
-                    $written[] = $path;
-                }
+                $generator->translate($schema);
             } catch (\Throwable $e) {
                 $io->error(sprintf('Error processing %s: %s', $file, $e->getMessage()));
                 $exitCode = Command::FAILURE;
             }
+        }
+
+        $written = [];
+        foreach ($generator->generate() as $path => $content) {
+            $directory = dirname($path);
+            if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
+                $io->error(sprintf('Could not create output directory "%s".', $directory));
+                $exitCode = Command::FAILURE;
+
+                continue;
+            }
+
+            if (false === file_put_contents($path, $content)) {
+                $io->error(sprintf('Could not write file: %s', $path));
+                $exitCode = Command::FAILURE;
+
+                continue;
+            }
+            $written[] = $path;
         }
 
         if ([] !== $written) {

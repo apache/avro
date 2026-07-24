@@ -29,13 +29,6 @@ use PHPUnit\Framework\TestCase;
 
 class AvroCodeGeneratorTest extends TestCase
 {
-    private AvroCodeGenerator $transpiler;
-
-    public function setUp(): void
-    {
-        $this->transpiler = new AvroCodeGenerator();
-    }
-
     #[Test]
     public function nested_schema_generation(): void
     {
@@ -70,7 +63,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'MyApp\\Avro\\Generated');
+        $generator = new AvroCodeGenerator('/generated', 'MyApp\\Avro\\Generated');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(2, $files);
 
@@ -156,7 +151,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Model');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Model');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/User.php', $files);
@@ -223,7 +220,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Model');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Model');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/Com/Example/User.php', $files);
@@ -265,7 +264,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Model');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Model');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(3, $files);
         self::assertArrayHasKey('/generated/Organization.php', $files);
@@ -321,7 +322,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Enums');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Enums');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/Color.php', $files);
@@ -361,7 +364,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Config');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Config');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/Config.php', $files);
@@ -422,7 +427,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Music');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Music');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/Playlist.php', $files);
@@ -481,7 +488,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Data');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Data');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/Metadata.php', $files);
@@ -542,7 +551,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Vehicles');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Vehicles');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(2, $files);
         self::assertArrayHasKey('/generated/Car.php', $files);
@@ -616,7 +627,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Social');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Social');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/Profile.php', $files);
@@ -677,7 +690,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Types');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Types');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/AllTypes.php', $files);
@@ -781,7 +796,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Org');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Org');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(2, $files);
         self::assertArrayHasKey('/generated/Team.php', $files);
@@ -875,7 +892,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Events');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Events');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/Event.php', $files);
@@ -934,7 +953,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Shop');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Shop');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(2, $files);
         self::assertArrayHasKey('/generated/Order.php', $files);
@@ -1021,7 +1042,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Enums');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Enums');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/Singleton.php', $files);
@@ -1072,7 +1095,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\HR');
+        $generator = new AvroCodeGenerator('/generated', 'App\\HR');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(2, $files);
         self::assertArrayHasKey('/generated/Employee.php', $files);
@@ -1175,7 +1200,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Library');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Library');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(2, $files);
         self::assertArrayHasKey('/generated/Library.php', $files);
@@ -1284,7 +1311,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Billing');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Billing');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(2, $files);
         self::assertArrayHasKey('/generated/Invoice.php', $files);
@@ -1345,7 +1374,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Config');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Config');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/Settings.php', $files);
@@ -1400,7 +1431,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Inventory');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Inventory');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/Item.php', $files);
@@ -1472,7 +1505,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Tasks');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Tasks');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(2, $files);
         self::assertArrayHasKey('/generated/Task.php', $files);
@@ -1550,7 +1585,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Reports');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Reports');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/Report.php', $files);
@@ -1613,7 +1650,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\UI');
+        $generator = new AvroCodeGenerator('/generated', 'App\\UI');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/Dashboard.php', $files);
@@ -1675,7 +1714,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Math');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Math');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/Matrix.php', $files);
@@ -1737,7 +1778,9 @@ class AvroCodeGeneratorTest extends TestCase
             JSON;
 
         $avroSchema = AvroSchema::parse($schema);
-        $files = $this->transpiler->translate($avroSchema, '/generated', 'App\\Search');
+        $generator = new AvroCodeGenerator('/generated', 'App\\Search');
+        $generator->translate($avroSchema);
+        $files = $generator->generate();
 
         self::assertCount(1, $files);
         self::assertArrayHasKey('/generated/Index.php', $files);
