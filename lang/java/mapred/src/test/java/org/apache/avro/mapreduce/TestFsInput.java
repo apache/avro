@@ -21,8 +21,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -40,6 +42,7 @@ import org.junit.jupiter.api.io.TempDir;
 public class TestFsInput {
   private static File file;
   private static final String FILE_CONTENTS = "abcdefghijklmnopqrstuvwxyz";
+  public static final int LENGTH = FILE_CONTENTS.length();
   private Configuration conf;
   private FsInput fsInput;
 
@@ -71,7 +74,7 @@ public class TestFsInput {
     try (FsInput in = new FsInput(new Path(file.getPath()), conf)) {
       int expectedByteCount = 1;
       byte[] readBytes = new byte[expectedByteCount];
-      int actualByteCount = fsInput.read(readBytes, 0, expectedByteCount);
+      int actualByteCount = in.read(readBytes, 0, expectedByteCount);
       assertThat(actualByteCount, is(equalTo(expectedByteCount)));
     }
   }
@@ -83,7 +86,7 @@ public class TestFsInput {
     try (FsInput in = new FsInput(path, fs)) {
       int expectedByteCount = 1;
       byte[] readBytes = new byte[expectedByteCount];
-      int actualByteCount = fsInput.read(readBytes, 0, expectedByteCount);
+      int actualByteCount = in.read(readBytes, 0, expectedByteCount);
       assertThat(actualByteCount, is(equalTo(expectedByteCount)));
     }
   }
@@ -121,6 +124,59 @@ public class TestFsInput {
     fsInput.seek(expectedTellPos);
     long actualTellPos = fsInput.tell();
     assertThat(actualTellPos, is(equalTo(expectedTellPos)));
+  }
+
+  /**
+   * How does a negative seek manifest itself? It's expected to fail on the seek()
+   * call and not move the file position. Most streams raise EOFExceotion; some
+   * raise IllegalArgumentException instead.
+   */
+  @Test
+  void seekNegative() throws Exception {
+    fsInput.seek(1);
+    assertThrows(Exception.class, () -> fsInput.seek(-1));
+    assertThat("file position after a negative seek", fsInput.tell(), is(equalTo(1L)));
+  }
+
+  /**
+   * Seek past the EOF then read.
+   */
+  @Test
+  void seekPastEOF() {
+    assertThrows(Exception.class, () -> fsInput.seek(LENGTH + 2));
+  }
+
+  /**
+   * Read to the exact EOF then do a read(), which is required to return -1 to
+   * indicate the EOF has been reached.
+   */
+  @Test
+  void readAtEOF() throws Exception {
+    fsInput.seek(LENGTH);
+    final int l = 8;
+    byte[] readBytes = new byte[l];
+    assertThat("bytes read from beyond EOF", fsInput.read(readBytes, 0, l), is(equalTo(-1)));
+  }
+
+  /**
+   * Read across the end of file. All data available up to the EOF is returned.
+   */
+  @Test
+  void readAcrossEOF() throws Exception {
+    fsInput.seek(LENGTH - 2);
+    final int l = 8;
+    byte[] readBytes = new byte[l];
+    assertThat("bytes read from beyond EOF", fsInput.read(readBytes, 0, l), is(equalTo(2)));
+    assertThat("bytes read from beyond EOF", fsInput.tell(), is(equalTo((long) LENGTH)));
+  }
+
+  /**
+   * Delete the file before trying to open it.
+   */
+  @Test
+  void openMissingFile() {
+    file.delete();
+    assertThrows(FileNotFoundException.class, () -> new FsInput(new Path(file.getPath()), conf).close());
   }
 
 }
