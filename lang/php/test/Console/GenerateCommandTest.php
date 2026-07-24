@@ -154,7 +154,8 @@ class GenerateCommandTest extends TestCase
         self::assertSame(Command::SUCCESS, $exitCode);
         self::assertFileExists($this->outputDir.'/User.php');
         self::assertFileExists($this->outputDir.'/Status.php');
-        self::assertStringContainsString('2 file(s) generated', $tester->getDisplay());
+        self::assertFileExists($this->outputDir.'/Car.php');
+        self::assertStringContainsString('3 file(s) generated', $tester->getDisplay());
     }
 
     #[Test]

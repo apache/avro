@@ -104,7 +104,8 @@ class GenerateCommand extends Command
 
                 return Command::FAILURE;
             }
-            $files = glob(rtrim($directory, '/').'/*.avsc') ?: [];
+
+            $files = self::getAvroFiles(rtrim($directory, '/')) ?: [];
         }
 
         $generator = new AvroCodeGenerator();
@@ -162,5 +163,25 @@ class GenerateCommand extends Command
         }
 
         return $exitCode;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function getAvroFiles(string $directory): array
+    {
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS)
+        );
+
+        $avscFiles = [];
+
+        foreach ($iterator as $file) {
+            if ($file->isFile() && 'avsc' === strtolower($file->getExtension())) {
+                $avscFiles[] = $file->getPathname();
+            }
+        }
+
+        return $avscFiles;
     }
 }
