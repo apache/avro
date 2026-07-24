@@ -26,9 +26,13 @@ extern "C" {
 
 #include <stdio.h>
 
+#ifdef __GNUC__
 #pragma GCC visibility push(hidden)
+#endif
 void dump(FILE * out, const char *addr, const long len);
+#ifdef __GNUC__
 #pragma GCC visibility pop
+#endif
 
 CLOSE_EXTERN
 #endif
