@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace Apache\Avro\Console;
 
 use Apache\Avro\Generator\AvroCodeGenerator;
+use Apache\Avro\Schema\AvroNamedSchemata;
 use Apache\Avro\Schema\AvroSchema;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -108,6 +109,7 @@ class GenerateCommand extends Command
             $files = self::getAvroFiles(rtrim($directory, '/')) ?: [];
         }
 
+        $schemata = new AvroNamedSchemata();
         $generator = new AvroCodeGenerator();
         $written = [];
         $exitCode = Command::SUCCESS;
@@ -129,7 +131,10 @@ class GenerateCommand extends Command
             }
 
             try {
-                $schema = AvroSchema::parse($json);
+                $schema = AvroSchema::realParse(
+                    json_decode($json, associative: true, flags: JSON_THROW_ON_ERROR),
+                    schemata: $schemata
+                );
                 $generatedFiles = $generator->translate($schema, $outputDir, $namespace);
 
                 foreach ($generatedFiles as $path => $content) {
