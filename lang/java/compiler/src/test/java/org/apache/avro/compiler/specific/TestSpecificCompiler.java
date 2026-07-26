@@ -1031,6 +1031,33 @@ public class TestSpecificCompiler {
     }
   }
 
+  @Test
+  void annotationCannotBreakOutViaStringLiteral() {
+    // A crafted javaAnnotation value tries to terminate the first annotation,
+    // inject arbitrary declarations plus a static initializer, then reopen a
+    // second valid annotation. It relies on a string literal spanning past its
+    // intended closing quote. Such values must be rejected, not emitted verbatim.
+    String jsonSchema = "{\n" + "  \"type\": \"record\",\n" + "  \"name\": \"Injected\",\n"
+        + "  \"javaAnnotation\": [\n"
+        + "    \"java.lang.SuppressWarnings(\\\"x\\\") static { System.exit(1); } @java.lang.SuppressWarnings(\\\"y\\\")\",\n"
+        + "    \"SuppressWarnings(\\\"unchecked\\\")\"\n" + "  ],\n" + "  \"fields\": [\n"
+        + "    {\"name\": \"value\", \"type\": \"string\"}\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(SchemaParser.parseSingle(jsonSchema))
+        .compile();
+    boolean validAnnotationEmitted = false;
+    for (SpecificCompiler.OutputFile outputFile : outputs) {
+      // The payload is echoed (safely escaped) inside the SCHEMA$ string constant,
+      // so we must distinguish that from a verbatim emission as code. Real injected
+      // code would carry unescaped quotes; the schema literal escapes them as \".
+      // The injection must be absent from every generated file.
+      assertFalse(outputFile.contents.contains("SuppressWarnings(\"x\") static { System.exit(1); }"),
+          "Code injection present? " + outputFile.contents);
+      validAnnotationEmitted |= outputFile.contents.contains("@SuppressWarnings(\"unchecked\")");
+    }
+    // The legitimate annotation in the same list must still be emitted somewhere.
+    assertTrue(validAnnotationEmitted, "Valid annotation missing from generated output");
+  }
+
   private int countOccurrences(Pattern pattern, String textToSearch) {
     int count = 0;
     for (Matcher matcher = pattern.matcher(textToSearch); matcher.find();) {
