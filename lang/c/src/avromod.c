@@ -92,13 +92,6 @@ process_file(const char *in_filename, const char *out_filename)
 
 
 /*-- MAIN PROGRAM --*/
-
-static struct option longopts[] = {
-	{ "block-size", required_argument, NULL, 'b' },
-	{ "codec", required_argument, NULL, 'c' },
-	{ NULL, 0, NULL, 0 }
-};
-
 static void usage(void)
 {
 	fprintf(stderr,
@@ -130,39 +123,61 @@ int main(int argc, char **argv)
 	char  *in_filename;
 	char  *out_filename;
 
-	int  ch;
-	while ((ch = getopt_long(argc, argv, "b:c:", longopts, NULL)) != -1) {
-		switch (ch) {
-			case 'b':
-				parse_block_size(optarg);
-				break;
+        int i = 1;
+        int ind_point = -1;
+        int ind[2] = {0};
+        char *p_str;
+        while (i < argc) {
+            if (argv[i][0] == '-') {
+                if (argv[i][1] == '-') {
+                    if (strncmp("block-size", argv[i]+2, strlen("block-size")) == 0) {
+                        p_str = strchr(argv[i], '=');
+                        if (p_str != NULL) {
+                            parse_block_size(p_str+1);
+                        } else {
+                            goto opt_error;
+                        }
+                    } else if (strncmp("codec", argv[i]+2, strlen("codec")) == 0) {
+                        p_str = strchr(argv[i], '=');
+                        if (p_str != NULL) {
+                            codec = p_str+1;
+                        } else {
+                            goto opt_error;
+                        }
+                    } else {
+                        goto opt_error;
+                    }
+                } else {
+                    goto opt_error;
+                }
+            } else {
+                if (ind_point < 2) {
+                    ind_point++;
+                    ind[ind_point] = i;
+                } else {
+                    fprintf(stderr, "Can't read from multiple input files.\n");
+                    goto opt_error;
+                }
+            }
+            i++;
+        }
 
-			case 'c':
-				codec = optarg;
-				break;
-
-			default:
-				usage();
-				exit(1);
-		}
-	}
-
-	argc -= optind;
-	argv += optind;
-
-	if (argc == 2) {
-		in_filename = argv[0];
-		out_filename = argv[1];
-	} else if (argc == 1) {
-		in_filename = NULL;
-		out_filename = argv[0];
-	} else {
-		fprintf(stderr, "Can't read from multiple input files.\n");
-		usage();
-		exit(1);
+        if (ind_point == 1) {
+                in_filename = argv[ind[0]];
+                out_filename = argv[ind[1]];
+        } else if (ind_point == 0) {
+                in_filename = NULL;
+                out_filename = argv[ind[0]];
+        } else {
+                fprintf(stderr, "Can't read from multiple input files.\n");
+                goto opt_error;
 	}
 
 	/* Process the data file */
 	process_file(in_filename, out_filename);
 	return 0;
+
+opt_error:
+        usage();
+        exit(1);
 }
