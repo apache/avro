@@ -1058,6 +1058,27 @@ public class TestSpecificCompiler {
     assertTrue(validAnnotationEmitted, "Valid annotation missing from generated output");
   }
 
+  @Test
+  void docCannotBreakOutViaUnicodeEscape() {
+    // javac decodes Unicode escapes before it strips comments, so a schema doc
+    // carrying a backslash-u escape for the comment terminator decodes to that
+    // terminator inside the generated Javadoc and ends the comment early, turning
+    // the rest of the doc into code. The escaper must neutralize such escapes.
+    String jsonSchema = "{\n" + "  \"type\": \"record\",\n" + "  \"name\": \"DocInjected\",\n" + "  \"fields\": [\n"
+        + "    {\"name\": \"value\", \"type\": \"string\", \"doc\": "
+        + "\"\\\\u002a\\\\u002f public static int PWNED = 1; \\\\u002f\\\\u002a\"}\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(SchemaParser.parseSingle(jsonSchema))
+        .compile();
+    // A Unicode escape is only decoded by javac when the leading backslash is
+    // preceded by an even number of backslashes. An eligible escape for a comment
+    // char in the generated source is the breakout; the doubled form is inert.
+    Pattern eligibleEscape = Pattern.compile("(?<!\\\\)(?:\\\\\\\\)*\\\\u002[afAF]");
+    for (SpecificCompiler.OutputFile outputFile : outputs) {
+      assertFalse(eligibleEscape.matcher(outputFile.contents).find(),
+          "Unicode-escape comment breakout present? " + outputFile.contents);
+    }
+  }
+
   private int countOccurrences(Pattern pattern, String textToSearch) {
     int count = 0;
     for (Matcher matcher = pattern.matcher(textToSearch); matcher.find();) {

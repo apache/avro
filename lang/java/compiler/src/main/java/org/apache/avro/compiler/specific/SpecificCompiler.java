@@ -1118,7 +1118,11 @@ public class SpecificCompiler {
    * Utility for template use. Escapes comment end with HTML entities.
    */
   public static String escapeForJavadoc(String s) {
-    return s.replace("*/", "*&#47;").replace("<", "&lt;").replace(">", "&gt;");
+    // Double backslashes first so a value cannot smuggle in a Unicode escape such
+    // as \\u002a\\u002f: javac processes Unicode escapes before comments, so an
+    // unneutralized \\u002a\\u002f would decode to */ inside the generated Javadoc
+    // and let a schema doc break out of the comment into code.
+    return s.replace("\\", "\\\\").replace("*/", "*&#47;").replace("<", "&lt;").replace(">", "&gt;");
   }
 
   /**
