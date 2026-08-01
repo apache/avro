@@ -28,6 +28,58 @@ namespace Avro.Test
     class TestReflect
     {
 
+        class SimpleRecord
+        {
+            public string A { get; set; }
+        }
+
+        class SimpleRecordNew : SimpleRecord
+        {
+            public string B { get; set; }
+        }
+
+        [Test]
+        public void TestMultiModelPerSchemaName()
+        {
+            RecordSchema schemaWriter = (RecordSchema) Schema.Parse(@"
+                {
+                    ""type"":""record"",""name"":""SimpleRecord"", ""namespace"":""Avro.Test"", ""fields"":
+                       [
+                            {""name"":""A"",""type"": ""string"" }
+                       ]
+                }");
+
+            RecordSchema schemaReader = (RecordSchema) Schema.Parse(@"
+                {
+                    ""type"":""record"",""name"":""SimpleRecord"", ""namespace"":""Avro.Test"", ""fields"":
+                       [
+                            {""name"":""A"",""type"": ""string"" },
+                            {""name"":""B"",""type"": ""string"", ""default"": """" }
+                       ]
+                }");
+
+            var simpleWrite = new SimpleRecord
+            {
+                A = "A here"
+            };
+
+            // serialize
+            var writer = new ReflectWriter<SimpleRecord>(schemaWriter);
+            var reader = new ReflectReader<SimpleRecordNew>(schemaWriter, schemaReader);
+
+            using(var stream = new MemoryStream(256))
+            {
+                var encoder = new BinaryEncoder(stream);
+                writer.Write(simpleWrite, encoder);
+                stream.Seek(0, SeekOrigin.Begin);
+
+                var decoder = new BinaryDecoder(stream);
+                var simpleNewRead = reader.Read(decoder);
+                Assert.AreEqual(simpleWrite.A, simpleNewRead.A);
+                Assert.AreEqual("", simpleNewRead.B);
+            }
+        }
+
         enum EnumResolutionEnum
         {
             THIRD,
