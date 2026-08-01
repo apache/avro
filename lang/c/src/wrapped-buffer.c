@@ -25,7 +25,7 @@
 #include "avro/refcount.h"
 
 struct avro_wrapped_copy {
-	volatile int  refcount;
+	volatile long  refcount;
 	size_t  allocated_size;
 };
 

@@ -34,12 +34,12 @@ typedef enum avro_io_type_t avro_io_type_t;
 
 struct avro_reader_t_ {
 	avro_io_type_t type;
-	volatile int  refcount;
+	volatile long  refcount;
 };
 
 struct avro_writer_t_ {
 	avro_io_type_t type;
-	volatile int  refcount;
+	volatile long  refcount;
 };
 
 struct _avro_reader_file_t {
