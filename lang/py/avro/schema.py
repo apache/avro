@@ -174,6 +174,26 @@ class PropertiesMixin:
     def props(self) -> MutableMapping[str, object]:
         if self._props is None:
             self._props = {}
+        if not "type" in self._props and hasattr(self, "type"):
+            self._props["type"] = self.type
+        if not "name" in self._props and hasattr(self, "name"):
+            self._props["name"] = self.name
+        if not "namespace" in self._props and hasattr(self, "namespace"):
+            self._props["namespace"] = self.namespace
+        if not "precision" in self._props and hasattr(self, "precision"):
+            self._props["precision"] = self.precision
+        if not "scale" in self._props and hasattr(self, "scale"):
+            self._props["scale"] = self.scale
+        if not "size" in self._props and hasattr(self, "size"):
+            self._props["size"] = self.size
+        if not "symbols" in self._props and hasattr(self, "symbols"):
+            self._props["symbols"] = self.symbols
+        if not "items" in self._props and hasattr(self, "items"):
+            self._props["items"] = self.items
+        if not "values" in self._props and hasattr(self, "values"):
+            self._props["values"] = self.values
+        if not "logicalType" in self._props and hasattr(self, "logical_type"):
+            self._props["logicalType"] = self.logical_type
         return self._props
 
     def get_prop(self, key: str) -> Optional[object]:
@@ -246,13 +266,13 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
     """Base class for all Schema classes."""
 
     _reserved_properties = SCHEMA_RESERVED_PROPS
+    type: str
 
     def __init__(self, type_: str, other_props: Optional[Mapping[str, object]] = None, validate_names: bool = True) -> None:
         if not isinstance(type_, str):
             raise avro.errors.SchemaParseException("Schema type must be a string.")
         if type_ not in avro.constants.VALID_TYPES:
             raise avro.errors.SchemaParseException(f"{type_} is not a valid type.")
-        self.set_prop("type", type_)
         self.type = type_
         self.props.update(other_props or {})
         self.validate_names = validate_names
@@ -341,6 +361,9 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
 class NamedSchema(Schema):
     """Named Schemas specified in NAMED_TYPES."""
 
+    name: str
+    namespace: Optional[str]
+
     def __init__(
         self,
         type_: str,
@@ -360,11 +383,12 @@ class NamedSchema(Schema):
         namespace = namespace or None  # Empty string -> None
         names = names or Names(validate_names=self.validate_names)
         new_name = names.add_name(name, namespace, self)
+        if not new_name.name:
+            raise avro.errors.SchemaParseException("Named Schemas must have a non-empty name.")
 
         # Store name and namespace as they were read in origin schema
-        self.set_prop("name", new_name.name)
-        if new_name.space:
-            self.set_prop("namespace", new_name.space)
+        self.name = new_name.name
+        self.namespace = new_name.space
 
         # Store full name as calculated from name, namespace
         self._fullname = new_name.fullname
@@ -373,14 +397,6 @@ class NamedSchema(Schema):
         return self.name if self.namespace == names.default_namespace else self.fullname
 
     # read-only properties
-    @property
-    def name(self):
-        return self.get_prop("name")
-
-    @property
-    def namespace(self):
-        return self.get_prop("namespace")
-
     @property
     def fullname(self):
         return self._fullname
@@ -420,8 +436,24 @@ class DecimalLogicalSchema(LogicalSchema):
 
 class Field(CanonicalPropertiesMixin, EqualByJsonMixin):
     _reserved_properties: Sequence[str] = FIELD_RESERVED_PROPS
+    type: Schema
+    name: str
+    default: Optional[object]
+    order: Optional[str]
+    doc: Optional[str]
 
-    def __init__(self, type_, name, has_default, default=None, order=None, names=None, doc=None, other_props=None, validate_names: bool = True):
+    def __init__(
+        self,
+        type_,
+        name,
+        has_default,
+        default: Optional[object] = None,
+        order: Optional[str] = None,
+        names=None,
+        doc: Optional[str] = None,
+        other_props=None,
+        validate_names: bool = True,
+    ) -> None:
         if not name:
             raise avro.errors.SchemaParseException("Fields must have a non-empty name.")
         if not isinstance(name, str):
@@ -438,35 +470,17 @@ class Field(CanonicalPropertiesMixin, EqualByJsonMixin):
                 type_schema = make_avsc_object(type_, names, validate_names=validate_names)
             except Exception as e:
                 raise avro.errors.SchemaParseException(f'Type property "{type_}" not a valid Avro schema: {e}')
-        self.set_prop("type", type_schema)
-        self.set_prop("name", name)
         self.type = type_schema
         self.name = name
         self.validate_names = validate_names
-        # TODO(hammer): check to ensure default is valid
-        if has_default:
-            self.set_prop("default", default)
-        if order is not None:
-            self.set_prop("order", order)
-        if doc is not None:
-            self.set_prop("doc", doc)
+        self.default = default
+        self.order = order
+        self.doc = doc
 
     # read-only properties
     @property
-    def default(self):
-        return self.get_prop("default")
-
-    @property
     def has_default(self):
         return self._has_default
-
-    @property
-    def order(self):
-        return self.get_prop("order")
-
-    @property
-    def doc(self):
-        return self.get_prop("doc")
 
     def __str__(self):
         return json.dumps(self.to_json())
@@ -558,20 +572,14 @@ class PrimitiveSchema(EqualByPropsMixin, Schema):
 
 
 class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
-    def __init__(self, precision, scale=0, other_props=None):
+    precision: int
+    scale: int
+
+    def __init__(self, precision: int, scale: int = 0, other_props=None) -> None:
         DecimalLogicalSchema.__init__(self, precision, scale, max_precision=((1 << 31) - 1))
         PrimitiveSchema.__init__(self, "bytes", other_props)
-        self.set_prop("precision", precision)
-        self.set_prop("scale", scale)
-
-    # read-only properties
-    @property
-    def precision(self):
-        return self.get_prop("precision")
-
-    @property
-    def scale(self):
-        return self.get_prop("scale")
+        self.precision = precision
+        self.scale = scale
 
     def to_json(self, names=None):
         return self.props
@@ -585,7 +593,9 @@ class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
 # Complex Types (non-recursive)
 #
 class FixedSchema(EqualByPropsMixin, NamedSchema):
-    def __init__(self, name, namespace, size, names=None, other_props=None, validate_names: bool = True):
+    size: int
+
+    def __init__(self, name, namespace, size: int, names=None, other_props=None, validate_names: bool = True) -> None:
         # Ensure valid ctor args
         if not isinstance(size, int) or size < 0:
             fail_msg = "Fixed Schema requires a valid positive integer for size property."
@@ -593,14 +603,7 @@ class FixedSchema(EqualByPropsMixin, NamedSchema):
 
         # Call parent ctor
         NamedSchema.__init__(self, "fixed", name, namespace, names, other_props, validate_names=validate_names)
-
-        # Add class members
-        self.set_prop("size", size)
-
-    # read-only properties
-    @property
-    def size(self):
-        return self.get_prop("size")
+        self.size = size
 
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
@@ -636,32 +639,27 @@ class FixedSchema(EqualByPropsMixin, NamedSchema):
 
 
 class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
+    precision: int
+    scale: int
+
     def __init__(
         self,
         size,
         name,
-        precision,
-        scale=0,
+        precision: int,
+        scale: int = 0,
         namespace=None,
         names=None,
         other_props=None,
         validate_names: bool = True,
-    ):
+    ) -> None:
         max_precision = int(math.floor(math.log10(2) * (8 * size - 1)))
         DecimalLogicalSchema.__init__(self, precision, scale, max_precision)
         FixedSchema.__init__(self, name, namespace, size, names, other_props, validate_names=validate_names)
-        self.set_prop("precision", precision)
-        self.set_prop("scale", scale)
+        self.precision = precision
+        self.scale = scale
 
     # read-only properties
-    @property
-    def precision(self):
-        return self.get_prop("precision")
-
-    @property
-    def scale(self):
-        return self.get_prop("scale")
-
     def to_json(self, names=None):
         return self.props
 
@@ -671,6 +669,9 @@ class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
 
 
 class EnumSchema(EqualByPropsMixin, NamedSchema):
+    symbols: Sequence[str]
+    doc: Optional[str]
+
     def __init__(
         self,
         name: str,
@@ -699,25 +700,13 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
         NamedSchema.__init__(self, "enum", name, namespace, names, other_props, validate_names)
 
         # Add class members
-        self.set_prop("symbols", symbols)
-        if doc is not None:
-            self.set_prop("doc", doc)
+        self.symbols = symbols
+        self.doc = doc
 
         if validate_enum_symbols and other_props and "default" in other_props:
             default = other_props["default"]
             if default not in symbols:
                 raise avro.errors.InvalidDefault(f"Enum default '{default}' is not a valid member of symbols '{symbols}'")
-
-    @property
-    def symbols(self) -> Sequence[str]:
-        symbols = self.get_prop("symbols")
-        if isinstance(symbols, Sequence):
-            return symbols
-        raise Exception
-
-    @property
-    def doc(self):
-        return self.get_prop("doc")
 
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
@@ -758,7 +747,9 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
 
 
 class ArraySchema(EqualByJsonMixin, Schema):
-    def __init__(self, items, names=None, other_props=None, validate_names: bool = True):
+    items: Schema
+
+    def __init__(self, items: str, names=None, other_props=None, validate_names: bool = True) -> None:
         # Call parent ctor
         Schema.__init__(self, "array", other_props, validate_names=validate_names)
         # Add class members
@@ -772,12 +763,7 @@ class ArraySchema(EqualByJsonMixin, Schema):
                 fail_msg = f"Items schema ({items}) not a valid Avro schema: {e} (known names: {names.names.keys()})"
                 raise avro.errors.SchemaParseException(fail_msg)
 
-        self.set_prop("items", items_schema)
-
-    # read-only properties
-    @property
-    def items(self):
-        return self.get_prop("items")
+        self.items = items_schema
 
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
@@ -791,7 +777,7 @@ class ArraySchema(EqualByJsonMixin, Schema):
         names = names or Names(validate_names=self.validate_names)
 
         to_dump = self.props.copy()
-        item_schema = self.get_prop("items")
+        item_schema = self.items
         to_dump["items"] = item_schema.to_json(names)
 
         return to_dump
@@ -800,7 +786,7 @@ class ArraySchema(EqualByJsonMixin, Schema):
         names = names or Names(validate_names=self.validate_names)
 
         to_dump = self.canonical_properties
-        item_schema = self.get_prop("items")
+        item_schema = self.items
         to_dump["items"] = item_schema.to_canonical_json(names)
 
         return to_dump
@@ -811,7 +797,7 @@ class ArraySchema(EqualByJsonMixin, Schema):
 
 
 class MapSchema(EqualByJsonMixin, Schema):
-    def __init__(self, values, names=None, other_props=None, validate_names: bool = True):
+    def __init__(self, values, names=None, other_props=None, validate_names: bool = True) -> None:
         # Call parent ctor
         Schema.__init__(self, "map", other_props, validate_names=validate_names)
 
@@ -825,13 +811,7 @@ class MapSchema(EqualByJsonMixin, Schema):
                 raise
             except Exception:
                 raise avro.errors.SchemaParseException("Values schema is not a valid Avro schema.")
-
-        self.set_prop("values", values_schema)
-
-    # read-only properties
-    @property
-    def values(self):
-        return self.get_prop("values")
+        self.values = values_schema
 
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
@@ -845,7 +825,7 @@ class MapSchema(EqualByJsonMixin, Schema):
         names = names or Names(validate_names=self.validate_names)
 
         to_dump = self.props.copy()
-        to_dump["values"] = self.get_prop("values").to_json(names)
+        to_dump["values"] = self.values.to_json(names)
 
         return to_dump
 
@@ -853,7 +833,7 @@ class MapSchema(EqualByJsonMixin, Schema):
         names = names or Names(validate_names=self.validate_names)
 
         to_dump = self.canonical_properties
-        to_dump["values"] = self.get_prop("values").to_canonical_json(names)
+        to_dump["values"] = self.values.to_canonical_json(names)
 
         return to_dump
 
@@ -964,8 +944,8 @@ class RecordSchema(EqualByJsonMixin, NamedSchema):
             # null values can have a default value of None
             has_default = "default" in field
             default = field.get("default")
-            order = field.get("order")
-            doc = field.get("doc")
+            order = cast(Optional[str], field.get("order"))
+            doc = cast(Optional[str], field.get("doc"))
             other_props = get_other_props(field, FIELD_RESERVED_PROPS)
             new_field = Field(type, name, has_default, default, order, names, doc, other_props, validate_names=validate_names)
             # make sure field name has not been used yet
@@ -1016,28 +996,15 @@ class RecordSchema(EqualByJsonMixin, NamedSchema):
 
         # Add class members
         field_objects = RecordSchema.make_field_objects(fields, names, validate_names=validate_names)
-        self.set_prop("fields", field_objects)
-        if doc is not None:
-            self.set_prop("doc", doc)
-
+        self.fields = field_objects
+        self.doc = doc
         if schema_type == "record":
             names.default_namespace = old_default
 
     # read-only properties
     @property
-    def fields(self):
-        return self.get_prop("fields")
-
-    @property
-    def doc(self):
-        return self.get_prop("doc")
-
-    @property
     def fields_dict(self):
-        fields_dict = {}
-        for field in self.fields:
-            fields_dict[field.name] = field
-        return fields_dict
+        return {field.name: field for field in self.fields}
 
     def to_json(self, names=None):
         names = names or Names(validate_names=self.validate_names)
@@ -1265,10 +1232,10 @@ def make_avsc_object(
                 raise avro.errors.SchemaParseException(f"Name {name} must be a string, but it is {type(name)}.")
             namespace = json_data.get("namespace", names.default_namespace)
             if type_ == "fixed":
-                size = json_data.get("size")
+                size = cast(int, json_data.get("size"))
                 if logical_type == "decimal":
-                    precision = json_data.get("precision")
-                    scale = json_data.get("scale", 0)
+                    precision = cast(int, json_data.get("precision"))
+                    scale = cast(int, json_data.get("scale", 0))
                     try:
                         return FixedDecimalSchema(size, name, precision, scale, namespace, names, other_props, validate_names)
                     except avro.errors.IgnoredLogicalType as warning:
@@ -1294,7 +1261,7 @@ def make_avsc_object(
 
         if type_ in avro.constants.VALID_TYPES:
             if type_ == "array":
-                items = json_data.get("items")
+                items = cast(str, json_data.get("items"))
                 return ArraySchema(items, names, other_props, validate_names)
             elif type_ == "map":
                 values = json_data.get("values")
