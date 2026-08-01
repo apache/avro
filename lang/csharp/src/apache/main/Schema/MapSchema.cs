@@ -15,9 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Linq;
 
 namespace Avro
@@ -108,15 +107,19 @@ namespace Avro
         /// <returns>true if two schemas are equal, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (this == obj) return true;
-
-            if (obj != null && obj is MapSchema)
+            if (this == obj)
             {
-                MapSchema that = obj as MapSchema;
-                if (ValueSchema.Equals(that.ValueSchema))
-                    return areEqual(that.Props, this.Props);
+                return true;
             }
-            return false;
+
+            if (obj == null || obj.GetType() != typeof(MapSchema))
+            {
+                return false;
+            }
+
+            MapSchema that = (MapSchema)obj;
+            return ValueSchema.Equals(that.ValueSchema)
+                && areEqual(that.Props, this.Props);
         }
 
         /// <summary>

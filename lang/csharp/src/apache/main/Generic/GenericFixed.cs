@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
+using System.Linq;
 
 namespace Avro.Generic
 {
@@ -103,17 +105,19 @@ namespace Avro.Generic
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (this == obj) return true;
-            if (obj != null && obj is GenericFixed)
+            if (this == obj)
             {
-                GenericFixed that = obj as GenericFixed;
-                if (that.Schema.Equals(this.Schema))
-                {
-                    for (int i = 0; i < value.Length; i++) if (this.value[i] != that.value[i]) return false;
-                    return true;
-                }
+                return true;
             }
-            return false;
+
+            if (obj == null || obj.GetType() != typeof(GenericFixed))
+            {
+                return false;
+            }
+
+            GenericFixed that = (GenericFixed)obj;
+            return that.Schema.Equals(Schema)
+                && value.SequenceEqual(that.value);
         }
 
         /// <inheritdoc/>
