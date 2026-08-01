@@ -19,10 +19,11 @@
 using System;
 using System.Reflection;
 using System.Collections;
+using Avro.Reflect.Interfaces.Models;
 
 namespace Avro.Reflect
 {
-    internal class DotnetProperty
+    internal class DotnetProperty : IDotnetProperty
     {
         private PropertyInfo _property;
 
