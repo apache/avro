@@ -286,7 +286,7 @@ public final class IdlUtils {
         throw new AvroRuntimeException("Enum schema must have at least a symbol " + schema);
       }
       writer.append(NEWLINE).append(indent).append("}");
-      var enumDefault = schema.getEnumDefault();
+      String enumDefault = schema.getEnumDefault();
       if (enumDefault != null) {
         writer.append(" = ").append(enumDefault).append(";");
       }
