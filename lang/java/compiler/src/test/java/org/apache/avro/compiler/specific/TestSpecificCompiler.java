@@ -1033,10 +1033,14 @@ public class TestSpecificCompiler {
 
   @Test
   void annotationCannotBreakOutViaStringLiteral() {
-    // A crafted javaAnnotation value tries to terminate the first annotation,
-    // inject arbitrary declarations plus a static initializer, then reopen a
-    // second valid annotation. It relies on a string literal spanning past its
-    // intended closing quote. Such values must be rejected, not emitted verbatim.
+    // Security regression test for AVRO-4313.
+    //
+    // The first javaAnnotation below is an attack. It uses an unescaped quote to
+    // "close" the annotation early, then sneaks in real Java code
+    // ... static { System.exit(1); } ...
+    // before reopening another annotation. If validation is too loose this code
+    // gets written straight into the generated .java file and runs when the
+    // class is loaded. The compiler must reject it instead of copying it out.
     String jsonSchema = "{\n" + "  \"type\": \"record\",\n" + "  \"name\": \"Injected\",\n"
         + "  \"javaAnnotation\": [\n"
         + "    \"java.lang.SuppressWarnings(\\\"x\\\") static { System.exit(1); } @java.lang.SuppressWarnings(\\\"y\\\")\",\n"
@@ -1046,15 +1050,16 @@ public class TestSpecificCompiler {
         .compile();
     boolean validAnnotationEmitted = false;
     for (SpecificCompiler.OutputFile outputFile : outputs) {
-      // The payload is echoed (safely escaped) inside the SCHEMA$ string constant,
-      // so we must distinguish that from a verbatim emission as code. Real injected
-      // code would carry unescaped quotes; the schema literal escapes them as \".
-      // The injection must be absent from every generated file.
+      // The schema is also written into the generated file, inside the SCHEMA$
+      // string constant, so the attack text does appear there - but safely
+      // escaped (every " becomes \"). We only fail if it shows up as real code,
+      // i.e. with the original unescaped quotes.
       assertFalse(outputFile.contents.contains("SuppressWarnings(\"x\") static { System.exit(1); }"),
           "Code injection present? " + outputFile.contents);
       validAnnotationEmitted |= outputFile.contents.contains("@SuppressWarnings(\"unchecked\")");
     }
-    // The legitimate annotation in the same list must still be emitted somewhere.
+    // A normal annotation sitting next to the attack must still come through, so
+    // we know the fix rejects only the bad value, not every annotation.
     assertTrue(validAnnotationEmitted, "Valid annotation missing from generated output");
   }
 
