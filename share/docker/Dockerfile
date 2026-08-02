@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -22,17 +23,17 @@ ARG BUILDPLATFORM
 FROM --platform=$BUILDPLATFORM ubuntu:24.04
 WORKDIR /root
 
-#ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies from vanilla system packages
-RUN apt-get -qqy update \
- && apt-get -qqy install software-properties-common \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -qqy update \
+ && apt-get -qqy install --no-install-recommends software-properties-common \
  && add-apt-repository ppa:deadsnakes/ppa \
  && add-apt-repository ppa:longsleep/golang-backports \
  && apt-get -qqy update \
  && apt-get -qqy install --no-install-recommends ant \
-                                                 apt-transport-https \
                                                  apt-utils \
                                                  asciidoc \
                                                  bison \
@@ -43,38 +44,41 @@ RUN apt-get -qqy update \
                                                  curl \
                                                  doxygen \
                                                  flex \
-                                                 g++ \
-                                                 gcc \
                                                  git \
                                                  gnupg2 \
                                                  golang-go \
                                                  hugo \
-                                                 libboost-all-dev \
+                                                 libboost-dev \
+                                                 libboost-math-dev \
+                                                 libboost-random-dev \
+                                                 libboost-test-dev \
+                                                 libbz2-dev \
                                                  libfontconfig1-dev \
                                                  libfreetype6-dev \
                                                  libglib2.0-dev \
                                                  libjansson-dev \
                                                  libreadline-dev \
                                                  libsnappy-dev \
-                                                 libsnappy1v5 \
                                                  libssl-dev \
-                                                 make \
+                                                 libyaml-dev \
+                                                 libzstd-dev \
                                                  openjdk-11-jdk \
                                                  openjdk-17-jdk \
                                                  openjdk-21-jdk \
                                                  perl \
                                                  source-highlight \
                                                  subversion \
+                                                 tmux \
+                                                 unzip \
                                                  valgrind \
                                                  vim \
-                                                 wget \
- && apt-get -qqy clean
+                                                 wget
 
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/bbb9892e165d40fb35fa19f38929effc5d0c709b/Dockerfile#L30
-ENV MAVEN_VERSION=3.9.11
+ARG MAVEN_VERSION=3.9.11
 # Ideally we use the 1st URL only, but if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
-ENV APACHE_DIST_URLS="https://www.apache.org/dyn/closer.cgi?action=download&filename= \
+ARG APACHE_DIST_URLS="https://www.apache.org/dyn/closer.cgi?action=download&filename= \
   https://www-us.apache.org/dist/ \
   https://www.apache.org/dist/ \
   https://archive.apache.org/dist/"
@@ -99,28 +103,32 @@ RUN set -eux; \
 ENV PATH="/opt/maven/bin:${PATH}"
 
 # Install nodejs
-RUN curl -sSL https://deb.nodesource.com/setup_24.x \
-  | bash \
- && apt-get -qqy install nodejs \
- && apt-get -qqy clean \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    --mount=type=cache,target=/root/.npm \
+    curl -fsSL -o /tmp/nodesource_setup.sh https://deb.nodesource.com/setup_24.x \
+ && bash /tmp/nodesource_setup.sh \
+ && rm /tmp/nodesource_setup.sh \
+ && apt-get -qqy install --no-install-recommends nodejs \
  && npm install -g grunt-cli \
- && npm install -g browserify \
- && npm cache clean --force
+ && npm install -g browserify
 
 # Install PHP
-RUN apt-get -qqy install --no-install-recommends libzstd-dev \
-                                                 libbz2-dev \
-                                                 php \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -qqy update \
+ && apt-get -qqy install --no-install-recommends php \
                                                  php-bz2 \
                                                  php-curl \
+                                                 php-dev \
                                                  php-gmp \
-                                                 php-xml \
                                                  php-mbstring \
-                                                 php-dev
+                                                 php-xml \
+                                                 php-zip
 # Install PHP-snappy and PHP-zstd
-ENV PHP8_VERSION=8.3
-RUN mkdir -p "/etc/php/${PHP8_VERSION}/cli/conf.d"
-RUN mkdir tmp && cd tmp \
+ARG PHP8_VERSION=8.3
+RUN mkdir -p "/etc/php/${PHP8_VERSION}/cli/conf.d" \
+ && mkdir -p /tmp/lang/php && cd /tmp/lang/php \
  && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-zstd.git \
  && cd php-ext-zstd \
  && phpize \
@@ -138,12 +146,15 @@ RUN mkdir tmp && cd tmp \
  && echo "extension=snappy.so" > "/etc/php/${PHP8_VERSION}/cli/conf.d/10-snappy.ini" \
  && cd .. && rm -rf php-ext-snappy \
  && php -m \
- && apt-get -qqy clean
+ && cd / && rm -rf /tmp/lang/php
 
 RUN curl -sS https://getcomposer.org/installer | php -- --version=2.8.12 --install-dir=/usr/local/bin --filename=composer
 
 # Install Perl modules
-RUN apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -qqy update \
+ && apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
                                                  libcpan-uploader-perl \
                                                  libencode-perl \
                                                  libio-string-perl \
@@ -155,18 +166,16 @@ RUN apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
                                                  libregexp-common-perl \
                                                  libtest-exception-perl \
                                                  libtest-pod-perl \
-                                                 libtry-tiny-perl \
- && apt-get -qqy clean
+                                                 libtry-tiny-perl
 
-RUN curl -sSL https://cpanmin.us \
-  | perl - --self-upgrade \
- && cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
-                                                 Module::Install::Repository \
- && rm -rf .cpanm
+RUN --mount=type=cache,target=/root/.cpanm \
+    curl -fsSL -o /usr/local/bin/cpanm https://cpanmin.us \
+ && chmod +x /usr/local/bin/cpanm \
+ && cpanm --mirror https://www.cpan.org/ Compress::Zstd \
+                                         Module::Install::Repository
 
 # Install Python3
-ENV PATH="${PATH}:/opt/pypy3.11/bin:/opt/pypy3.10/bin" \
-    PIP_NO_CACHE_DIR=off
+ENV PATH="${PATH}:/opt/pypy3.11/bin:/opt/pypy3.10/bin"
 
 # https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
 ARG BUILDARCH
@@ -178,12 +187,15 @@ RUN case "${BUILDARCH:?}" in \
  && for url in \
     https://downloads.python.org/pypy/pypy3.11-v7.3.20-"$pypyarch".tar.bz2 \
     https://downloads.python.org/pypy/pypy3.10-v7.3.19-"$pypyarch".tar.bz2 \
-    ; do curl -fsSL "$url" | tar -xvjpf -; \
+    ; do curl -fsSL "$url" | tar -xjpf -; \
     done \
  && ln -s pypy3.11* pypy3.11 && ln -s pypy3.10* pypy3.10
 
 # Note: python3-distutils was removed with Python 3.12; see here for migration advise: https://peps.python.org/pep-0632/#migration-advice
-RUN apt-get -qqy install --no-install-recommends mypy \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -qqy update \
+ && apt-get -qqy install --no-install-recommends mypy \
                                                  python3 \
                                                  python3.10 \
                                                  python3.11 \
@@ -191,33 +203,37 @@ RUN apt-get -qqy install --no-install-recommends mypy \
                                                  python3.13 \
                                                  python3.14 \
                                                  python3.14-dev \
- && apt-get -qqy clean \
- && curl -LsSf https://astral.sh/uv/0.10.4/install.sh | sh
+ && curl -fsSL -o /tmp/uv-install.sh https://astral.sh/uv/0.11.23/install.sh \
+ && sh /tmp/uv-install.sh \
+ && rm /tmp/uv-install.sh
 
 # Install Ruby
-RUN apt-get -qqy install ruby-full \
- && apt-get -qqy clean
-RUN mkdir -p /tmp/lang/ruby/lib/avro && mkdir -p /tmp/share
-COPY lang/ruby/* /tmp/lang/ruby/
-COPY share/VERSION.txt /tmp/share/
-RUN gem install bundler --no-document && \
-    apt-get install -qqy libyaml-dev && \
-    cd /tmp/lang/ruby && bundle install
-
-# Install Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.73.0
-ENV PATH=$PATH:/root/.cargo/bin/:/root/.local/bin
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get -qqy update \
+ && apt-get -qqy install --no-install-recommends ruby ruby-dev
 
 # Install .NET SDK
-RUN cd /opt ; \
-    wget https://dot.net/v1/dotnet-install.sh ; \
-    bash ./dotnet-install.sh --channel "6.0" --install-dir "/opt/dotnet" ; \
-    bash ./dotnet-install.sh --channel "7.0" --install-dir "/opt/dotnet" ; \
-    bash ./dotnet-install.sh --channel "8.0" --install-dir "/opt/dotnet" ;
+RUN set -eux && \
+    wget -nv -O /opt/dotnet-install.sh https://dot.net/v1/dotnet-install.sh && \
+    bash /opt/dotnet-install.sh --channel "6.0" --install-dir "/opt/dotnet" && \
+    bash /opt/dotnet-install.sh --channel "7.0" --install-dir "/opt/dotnet" && \
+    bash /opt/dotnet-install.sh --channel "8.0" --install-dir "/opt/dotnet" && \
+    rm /opt/dotnet-install.sh
 
-ENV PATH=$PATH:/opt/dotnet
+ENV PATH=$PATH:/opt/dotnet:/root/.local/bin
 
 # Since we want the JDK21 as a default, we have to re-prepend it to the PATH.
-RUN update-java-alternatives  -s "java-1.21.*"
+RUN update-java-alternatives -s "java-1.21.*"
+
+# Install Ruby gems
+RUN --mount=type=bind,source=lang/ruby,target=/mnt/ruby \
+    --mount=type=bind,source=share/VERSION.txt,target=/tmp/share/VERSION.txt \
+    --mount=type=cache,target=/usr/local/bundle/cache \
+    cp -a /mnt/ruby /tmp/lang/ruby && \
+    mkdir -p /tmp/lang/ruby/lib/avro && \
+    gem install bundler --no-document && \
+    cd /tmp/lang/ruby && bundle install && \
+    rm -rf /tmp/lang/ruby
 
 CMD ["/bin/bash", "-i"]
