@@ -185,6 +185,9 @@ public class GenericData {
    */
   @SuppressWarnings("unchecked")
   public <T> Conversion<T> getConversionByClass(Class<T> datumClass, LogicalType logicalType) {
+    if (logicalType == null) {
+      return null;
+    }
     Map<String, Conversion<?>> conversions = conversionsByClass.get(datumClass);
     if (conversions != null) {
       return (Conversion<T>) conversions.get(logicalType.getName());
