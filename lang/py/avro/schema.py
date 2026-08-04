@@ -722,7 +722,7 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
             return symbol
         if symbol is None:
             return None
-        raise Exception
+        raise avro.errors.InvalidDefault(f"Enum default '{symbol}' is not a valid member of symbols '{self.symbols}'")
 
     @property
     def doc(self):
