@@ -1,0 +1,51 @@
+{
+  "protocol" : "TestNamespace",
+  "namespace" : "avro.test.protocol",
+  "doc" : "Licensed to the Apache Software Foundation (ASF) under one\nor more contributor license agreements.  See the NOTICE file\ndistributed with this work for additional information\nregarding copyright ownership.  The ASF licenses this file\nto you under the Apache License, Version 2.0 (the\n\"License\"); you may not use this file except in compliance\nwith the License.  You may obtain a copy of the License at\n\n    https://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.",
+  "types" : [ {
+    "type" : "fixed",
+    "name" : "FixedInOtherNamespace",
+    "namespace" : "avro.test.fixed",
+    "size" : 16
+  }, {
+    "type" : "fixed",
+    "name" : "FixedInThisNamespace",
+    "size" : 16
+  }, {
+    "type" : "record",
+    "name" : "RecordInOtherNamespace",
+    "namespace" : "avro.test.record",
+    "fields" : [ ]
+  }, {
+    "type" : "error",
+    "name" : "ErrorInOtherNamespace",
+    "namespace" : "avro.test.error",
+    "fields" : [ ]
+  }, {
+    "type" : "enum",
+    "name" : "EnumInOtherNamespace",
+    "namespace" : "avro.test.enum",
+    "symbols" : [ "FOO" ]
+  }, {
+    "type" : "record",
+    "name" : "RefersToOthers",
+    "fields" : [ {
+      "name" : "someFixed",
+      "type" : "avro.test.fixed.FixedInOtherNamespace"
+    }, {
+      "name" : "someRecord",
+      "type" : "avro.test.record.RecordInOtherNamespace"
+    }, {
+      "name" : "someError",
+      "type" : "avro.test.error.ErrorInOtherNamespace"
+    }, {
+      "name" : "someEnum",
+      "type" : "avro.test.enum.EnumInOtherNamespace"
+    }, {
+      "name" : "thisFixed",
+      "type" : "FixedInThisNamespace"
+    } ]
+  } ],
+  "messages" : {
+  }
+}

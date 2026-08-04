@@ -17,9 +17,9 @@ name: Test C
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [main, branch-1.11, branch-1.12]
   pull_request:
-    branches: [ master ]
+    branches: [main, branch-1.11, branch-1.12]
     paths:
     - .github/workflows/test-lang-c.yml
     - lang/c/**
@@ -34,12 +34,17 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: 
+          - ubuntu-latest
+          - ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Install Dependencies
-        run: sudo apt-get install -qqy libjansson-dev libsnappy-dev
+        run: sudo apt-get update && sudo apt-get install -qqy libjansson-dev libsnappy-dev
 
       - name: Lint
         run: ./build.sh lint
@@ -47,17 +52,40 @@ jobs:
       - name: Test
         run: ./build.sh test
 
+      - name: Check pkg-config
+        run: |
+          mkdir -p build
+          cd build
+          cmake ..
+          export PKG_CONFIG_PATH=./src
+          pkg-config --libs avro-c
+
       - name: Cache Local Maven Repository
-        uses: actions/cache@v3
+        uses: actions/cache@v6
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: 'Setup Temurin JDK 8, 11, 17 & 21'
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: |
+            8
+            11
+            17
+            21
+
+      - name: 'Setup Maven 3.9.11'
+        uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
+        with:
+          maven-version: 3.9.11
+
       - name: Install Java Avro for Interop Test
         working-directory: .
-        run: mvn -B install -DskipTests
+        run: mvn -B install -PskipQuality
 
       - name: Create Interop Data Directory
         working-directory: .
@@ -74,12 +102,18 @@ jobs:
         run: ./build.sh interop-data-test
 
   interop:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: 
+          - ubuntu-latest
+          - ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Install Dependencies
         run: |
+          sudo apt-get update && \
           sudo apt-get install -qqy --no-install-recommends libbz2-dev \
                                                             libjansson-dev \
                                                             liblzma-dev \
@@ -87,16 +121,31 @@ jobs:
                                                             libzstd-dev
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v3
+        uses: actions/cache@v6
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: 'Setup Temurin JDK 8, 11, 17 & 21'
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: |
+            8
+            11
+            17
+            21
+
+      - name: 'Setup Maven 3.9.11'
+        uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
+        with:
+          maven-version: 3.9.11
+
       - name: Install Java Avro for Interop Test
         working-directory: .
-        run: mvn -B install -DskipTests
+        run: mvn -B install -PskipQuality
 
       - name: Create Interop Data Directory
         working-directory: .

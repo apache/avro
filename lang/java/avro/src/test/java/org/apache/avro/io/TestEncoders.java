@@ -25,10 +25,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -52,22 +55,22 @@ public class TestEncoders {
   private static final int ENCODER_BUFFER_SIZE = 32;
   private static final int EXAMPLE_DATA_SIZE = 17;
 
-  private static EncoderFactory factory = EncoderFactory.get();
+  private static final EncoderFactory FACTORY = EncoderFactory.get();
 
   @TempDir
-  public File DIR;
+  public Path dataDir;
 
   @Test
   void binaryEncoderInit() throws IOException {
     OutputStream out = new ByteArrayOutputStream();
-    BinaryEncoder enc = factory.binaryEncoder(out, null);
-    assertSame(enc, factory.binaryEncoder(out, enc));
+    BinaryEncoder enc = FACTORY.binaryEncoder(out, null);
+    assertSame(enc, FACTORY.binaryEncoder(out, enc));
   }
 
   @Test
   void badBinaryEncoderInit() {
     assertThrows(NullPointerException.class, () -> {
-      factory.binaryEncoder(null, null);
+      FACTORY.binaryEncoder(null, null);
     });
   }
 
@@ -75,52 +78,66 @@ public class TestEncoders {
   void blockingBinaryEncoderInit() throws IOException {
     OutputStream out = new ByteArrayOutputStream();
     BinaryEncoder reuse = null;
-    reuse = factory.blockingBinaryEncoder(out, reuse);
-    assertSame(reuse, factory.blockingBinaryEncoder(out, reuse));
+    reuse = FACTORY.blockingBinaryEncoder(out, reuse);
+    assertSame(reuse, FACTORY.blockingBinaryEncoder(out, reuse));
     // comparison
   }
 
   @Test
   void badBlockintBinaryEncoderInit() {
     assertThrows(NullPointerException.class, () -> {
-      factory.binaryEncoder(null, null);
+      FACTORY.binaryEncoder(null, null);
     });
   }
 
   @Test
   void directBinaryEncoderInit() throws IOException {
     OutputStream out = new ByteArrayOutputStream();
-    BinaryEncoder enc = factory.directBinaryEncoder(out, null);
-    assertSame(enc, factory.directBinaryEncoder(out, enc));
+    BinaryEncoder enc = FACTORY.directBinaryEncoder(out, null);
+    assertSame(enc, FACTORY.directBinaryEncoder(out, enc));
   }
 
   @Test
   void badDirectBinaryEncoderInit() {
     assertThrows(NullPointerException.class, () -> {
-      factory.directBinaryEncoder(null, null);
+      FACTORY.directBinaryEncoder(null, null);
+    });
+  }
+
+  @Test
+  void blockingDirectBinaryEncoderInit() throws IOException {
+    OutputStream out = new ByteArrayOutputStream();
+    BinaryEncoder enc = FACTORY.blockingDirectBinaryEncoder(out, null);
+    assertSame(enc, FACTORY.blockingDirectBinaryEncoder(out, enc));
+  }
+
+  @Test
+  void badBlockingDirectBinaryEncoderInit() {
+    assertThrows(NullPointerException.class, () -> {
+      FACTORY.blockingDirectBinaryEncoder(null, null);
     });
   }
 
   @Test
   void jsonEncoderInit() throws IOException {
-    Schema s = new Schema.Parser().parse("\"int\"");
+    Schema s = Schema.create(Type.INT);
     OutputStream out = new ByteArrayOutputStream();
-    factory.jsonEncoder(s, out);
-    JsonEncoder enc = factory.jsonEncoder(s, new JsonFactory().createGenerator(out, JsonEncoding.UTF8));
+    FACTORY.jsonEncoder(s, out);
+    JsonEncoder enc = FACTORY.jsonEncoder(s, new JsonFactory().createGenerator(out, JsonEncoding.UTF8));
     enc.configure(out);
   }
 
   @Test
   void badJsonEncoderInitOS() throws IOException {
     assertThrows(NullPointerException.class, () -> {
-      factory.jsonEncoder(Schema.create(Type.INT), (OutputStream) null);
+      FACTORY.jsonEncoder(Schema.create(Type.INT), (OutputStream) null);
     });
   }
 
   @Test
   void badJsonEncoderInit() throws IOException {
     assertThrows(NullPointerException.class, () -> {
-      factory.jsonEncoder(Schema.create(Type.INT), (JsonGenerator) null);
+      FACTORY.jsonEncoder(Schema.create(Type.INT), (JsonGenerator) null);
     });
   }
 
@@ -128,7 +145,7 @@ public class TestEncoders {
   void jsonEncoderNewlineDelimited() throws IOException {
     OutputStream out = new ByteArrayOutputStream();
     Schema ints = Schema.create(Type.INT);
-    Encoder e = factory.jsonEncoder(ints, out);
+    Encoder e = FACTORY.jsonEncoder(ints, out);
     String separator = System.getProperty("line.separator");
     GenericDatumWriter<Integer> writer = new GenericDatumWriter<>(ints);
     writer.write(1, e);
@@ -142,7 +159,7 @@ public class TestEncoders {
     String value = "{\"b\": {\"string\":\"myVal\"}, \"a\": 1}";
     String schemaStr = "{\"type\": \"record\", \"name\": \"ab\", \"fields\": ["
         + "{\"name\": \"a\", \"type\": \"int\"}, {\"name\": \"b\", \"type\": [\"null\", \"string\"]}" + "]}";
-    Schema schema = new Schema.Parser().parse(schemaStr);
+    Schema schema = SchemaParser.parseSingle(schemaStr);
     byte[] avroBytes = fromJsonToAvro(value, schema);
     ObjectMapper mapper = new ObjectMapper();
 
@@ -155,7 +172,7 @@ public class TestEncoders {
     String value = "{\"b\": {\"string\":\"myVal\"}, \"a\": 1}";
     String schemaStr = "{\"type\": \"record\", \"name\": \"ab\", \"fields\": ["
         + "{\"name\": \"a\", \"type\": \"int\"}, {\"name\": \"b\", \"type\": [\"null\", \"string\"]}" + "]}";
-    Schema schema = new Schema.Parser().parse(schemaStr);
+    Schema schema = SchemaParser.parseSingle(schemaStr);
     byte[] avroBytes = fromJsonToAvro(value, schema);
     ObjectMapper mapper = new ObjectMapper();
 
@@ -165,16 +182,16 @@ public class TestEncoders {
 
   @Test
   void validatingEncoderInit() throws IOException {
-    Schema s = new Schema.Parser().parse("\"int\"");
+    Schema s = Schema.create(Type.INT);
     OutputStream out = new ByteArrayOutputStream();
-    Encoder e = factory.directBinaryEncoder(out, null);
-    factory.validatingEncoder(s, e).configure(e);
+    Encoder e = FACTORY.directBinaryEncoder(out, null);
+    FACTORY.validatingEncoder(s, e).configure(e);
   }
 
   @Test
   void jsonRecordOrdering() throws IOException {
     String value = "{\"b\": 2, \"a\": 1}";
-    Schema schema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": ["
+    Schema schema = SchemaParser.parseSingle("{\"type\": \"record\", \"name\": \"ab\", \"fields\": ["
         + "{\"name\": \"a\", \"type\": \"int\"}, {\"name\": \"b\", \"type\": \"int\"}" + "]}");
     GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
     Decoder decoder = DecoderFactory.get().jsonDecoder(schema, value);
@@ -186,7 +203,7 @@ public class TestEncoders {
   void jsonExcessFields() throws IOException {
     assertThrows(AvroTypeException.class, () -> {
       String value = "{\"b\": { \"b3\": 1.4, \"b2\": 3.14, \"b1\": \"h\"}, \"a\": {\"a0\": 45, \"a2\":true, \"a1\": null}}";
-      Schema schema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+      Schema schema = SchemaParser.parseSingle("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
           + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
           + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}},\n"
           + "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n"
@@ -201,7 +218,7 @@ public class TestEncoders {
   @Test
   void jsonRecordOrdering2() throws IOException {
     String value = "{\"b\": { \"b3\": 1.4, \"b2\": 3.14, \"b1\": \"h\"}, \"a\": {\"a2\":true, \"a1\": null}}";
-    Schema schema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+    Schema schema = SchemaParser.parseSingle("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
         + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
         + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}},\n"
         + "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n"
@@ -217,13 +234,13 @@ public class TestEncoders {
   @Test
   void jsonRecordOrderingWithProjection() throws IOException {
     String value = "{\"b\": { \"b3\": 1.4, \"b2\": 3.14, \"b1\": \"h\"}, \"a\": {\"a2\":true, \"a1\": null}}";
-    Schema writerSchema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+    Schema writerSchema = SchemaParser.parseSingle("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
         + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
         + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}},\n"
         + "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n"
         + "[{\"name\":\"b1\", \"type\":\"string\"}, {\"name\":\"b2\", \"type\":\"float\"}, {\"name\":\"b3\", \"type\":\"double\"}]}}\n"
         + "]}");
-    Schema readerSchema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+    Schema readerSchema = SchemaParser.parseSingle("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
         + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
         + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}}\n" + "]}");
     GenericDatumReader<Object> reader = new GenericDatumReader<>(writerSchema, readerSchema);
@@ -235,13 +252,13 @@ public class TestEncoders {
   @Test
   void jsonRecordOrderingWithProjection2() throws IOException {
     String value = "{\"b\": { \"b1\": \"h\", \"b2\": [3.14, 3.56], \"b3\": 1.4}, \"a\": {\"a2\":true, \"a1\": null}}";
-    Schema writerSchema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+    Schema writerSchema = SchemaParser.parseSingle("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
         + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
         + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}},\n"
         + "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n"
         + "[{\"name\":\"b1\", \"type\":\"string\"}, {\"name\":\"b2\", \"type\":{\"type\":\"array\", \"items\":\"float\"}}, {\"name\":\"b3\", \"type\":\"double\"}]}}\n"
         + "]}");
-    Schema readerSchema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
+    Schema readerSchema = SchemaParser.parseSingle("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [\n"
         + "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n"
         + "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}}\n" + "]}");
     GenericDatumReader<Object> reader = new GenericDatumReader<>(writerSchema, readerSchema);
@@ -259,7 +276,7 @@ public class TestEncoders {
 
   @Test
   void mappedByteBuffer() throws IOException {
-    Path file = Paths.get(DIR.getPath() + "testMappedByteBuffer.avro");
+    Path file = dataDir.resolve("testMappedByteBuffer.avro");
     Files.write(file, someBytes(EXAMPLE_DATA_SIZE));
     MappedByteBuffer buffer = FileChannel.open(file, StandardOpenOption.READ).map(FileChannel.MapMode.READ_ONLY, 0,
         EXAMPLE_DATA_SIZE);
@@ -322,7 +339,7 @@ public class TestEncoders {
     DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
     ByteArrayOutputStream output = new ByteArrayOutputStream();
 
-    JsonEncoder encoder = factory.jsonEncoder(schema, output);
+    JsonEncoder encoder = FACTORY.jsonEncoder(schema, output);
     encoder.setIncludeNamespace(includeNamespace);
     Decoder decoder = DecoderFactory.get().binaryDecoder(avroBytes, null);
     Object datum = reader.read(null, decoder);
@@ -331,5 +348,36 @@ public class TestEncoders {
     output.flush();
 
     return new String(output.toByteArray(), StandardCharsets.UTF_8.name());
+  }
+
+  @Test
+  public void testJsonEncoderInitAutoFlush() throws IOException {
+    Schema s = Schema.create(Type.INT);
+    OutputStream baos = new ByteArrayOutputStream();
+    OutputStream out = new BufferedOutputStream(baos);
+    JsonEncoder enc = FACTORY.jsonEncoder(s, out, false);
+    enc.configure(out, false);
+    enc.writeInt(24);
+    enc.flush();
+    assertEquals("", baos.toString());
+    out.flush();
+    assertEquals("24", baos.toString());
+  }
+
+  @Test
+  public void testJsonEncoderInitAutoFlushDisabled() throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    OutputStream out = new BufferedOutputStream(baos);
+    Schema ints = Schema.create(Type.INT);
+    Encoder e = FACTORY.jsonEncoder(ints, out, false, false);
+    String separator = System.getProperty("line.separator");
+    GenericDatumWriter<Integer> writer = new GenericDatumWriter<Integer>(ints);
+    writer.write(1, e);
+    writer.write(2, e);
+    e.flush();
+    assertEquals("", baos.toString());
+    out.flush();
+    assertEquals("1" + separator + "2", baos.toString());
+    out.close();
   }
 }

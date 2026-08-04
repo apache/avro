@@ -17,14 +17,13 @@
  */
 package org.apache.avro.io;
 
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import java.util.stream.Stream;
 
 /**
  * This class has more exhaustive tests for Blocking IO. The reason we have both
@@ -32,38 +31,29 @@ import org.junit.runners.Parameterized;
  * TestBlockingIO2, it is hard to test skip() operations. and with the test
  * infrastructure of TestBlockingIO, it is hard to test enums, unions etc.
  */
-@RunWith(Parameterized.class)
 public class TestBlockingIO2 {
-  private final Decoder decoder;
-  private final String calls;
-  private Object[] values;
-  private String msg;
 
-  public TestBlockingIO2(int bufferSize, int skipLevel, String calls) throws IOException {
-
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testScan(int bufferSize, int skipLevel, String calls) throws IOException {
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     EncoderFactory factory = new EncoderFactory().configureBlockSize(bufferSize);
     Encoder encoder = factory.blockingBinaryEncoder(os, null);
-    this.values = TestValidatingIO.randomValues(calls);
+    Object[] values = TestValidatingIO.randomValues(calls);
 
     TestValidatingIO.generate(encoder, calls, values);
     encoder.flush();
 
     byte[] bb = os.toByteArray();
 
-    decoder = DecoderFactory.get().binaryDecoder(bb, null);
-    this.calls = calls;
-    this.msg = "Case: { " + bufferSize + ", " + skipLevel + ", \"" + calls + "\" }";
-  }
+    Decoder decoder = DecoderFactory.get().binaryDecoder(bb, null);
+    String msg = "Case: { " + bufferSize + ", " + skipLevel + ", \"" + calls + "\" }";
 
-  @Test
-  public void testScan() throws IOException {
     TestValidatingIO.check(msg, decoder, calls, values, -1);
   }
 
-  @Parameterized.Parameters
-  public static Collection<Object[]> data() {
-    return Arrays.asList(new Object[][] { { 64, 0, "" }, { 64, 0, "S0" }, { 64, 0, "S3" }, { 64, 0, "S64" },
+  public static Stream<Arguments> data() {
+    return Stream.of(new Object[][] { { 64, 0, "" }, { 64, 0, "S0" }, { 64, 0, "S3" }, { 64, 0, "S64" },
         { 64, 0, "S65" }, { 64, 0, "S100" }, { 64, 1, "[]" }, { 64, 1, "[c1sS0]" }, { 64, 1, "[c1sS3]" },
         { 64, 1, "[c1sS61]" }, { 64, 1, "[c1sS62]" }, { 64, 1, "[c1sS64]" }, { 64, 1, "[c1sS65]" },
         { 64, 1, "[c2sS0sS0]" }, { 64, 1, "[c2sS0sS10]" }, { 64, 1, "[c2sS0sS63]" }, { 64, 1, "[c2sS0sS64]" },
@@ -99,6 +89,6 @@ public class TestBlockingIO2 {
 
         { 100, 1, "{c1sK5e10}" }, { 100, 1, "{c1sK5U1S10}" }, { 100, 1, "{c1sK5f10S10}" }, { 100, 1, "{c1sK5NS10}" },
         { 100, 1, "{c1sK5BS10}" }, { 100, 1, "{c1sK5IS10}" }, { 100, 1, "{c1sK5LS10}" }, { 100, 1, "{c1sK5FS10}" },
-        { 100, 1, "{c1sK5DS10}" }, });
+        { 100, 1, "{c1sK5DS10}" }, }).map(Arguments::of);
   }
 }

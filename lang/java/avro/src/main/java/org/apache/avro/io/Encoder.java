@@ -39,7 +39,7 @@ import org.apache.avro.util.Utf8;
  * <p/>
  * {@link EncoderFactory} contains Encoder construction and configuration
  * facilities.
- * 
+ *
  * @see EncoderFactory
  * @see Decoder
  */
@@ -48,7 +48,7 @@ public abstract class Encoder implements Flushable {
   /**
    * "Writes" a null value. (Doesn't actually write anything, but advances the
    * state of the parser if this class is stateful.)
-   * 
+   *
    * @throws AvroTypeException If this is a stateful writer and a null is not
    *                           expected
    */
@@ -56,7 +56,7 @@ public abstract class Encoder implements Flushable {
 
   /**
    * Write a boolean value.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful writer and a boolean is not
    *                           expected
    */
@@ -64,7 +64,7 @@ public abstract class Encoder implements Flushable {
 
   /**
    * Writes a 32-bit integer.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful writer and an integer is not
    *                           expected
    */
@@ -72,7 +72,7 @@ public abstract class Encoder implements Flushable {
 
   /**
    * Write a 64-bit integer.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful writer and a long is not
    *                           expected
    */
@@ -80,7 +80,7 @@ public abstract class Encoder implements Flushable {
 
   /**
    * Write a float.
-   * 
+   *
    * @throws IOException
    * @throws AvroTypeException If this is a stateful writer and a float is not
    *                           expected
@@ -89,7 +89,7 @@ public abstract class Encoder implements Flushable {
 
   /**
    * Write a double.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful writer and a double is not
    *                           expected
    */
@@ -97,7 +97,7 @@ public abstract class Encoder implements Flushable {
 
   /**
    * Write a Unicode character string.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful writer and a char-string is
    *                           not expected
    */
@@ -107,7 +107,7 @@ public abstract class Encoder implements Flushable {
    * Write a Unicode character string. The default implementation converts the
    * String to a {@link org.apache.avro.util.Utf8}. Some Encoder implementations
    * may want to do something different as a performance optimization.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful writer and a char-string is
    *                           not expected
    */
@@ -119,7 +119,7 @@ public abstract class Encoder implements Flushable {
    * Write a Unicode character string. If the CharSequence is an
    * {@link org.apache.avro.util.Utf8} it writes this directly, otherwise the
    * CharSequence is converted to a String via toString() and written.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful writer and a char-string is
    *                           not expected
    */
@@ -132,7 +132,7 @@ public abstract class Encoder implements Flushable {
 
   /**
    * Write a byte string.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful writer and a byte-string is
    *                           not expected
    */
@@ -140,7 +140,7 @@ public abstract class Encoder implements Flushable {
 
   /**
    * Write a byte string.
-   * 
+   *
    * @throws AvroTypeException If this is a stateful writer and a byte-string is
    *                           not expected
    */
@@ -149,7 +149,7 @@ public abstract class Encoder implements Flushable {
   /**
    * Writes a byte string. Equivalent to
    * <tt>writeBytes(bytes, 0, bytes.length)</tt>
-   * 
+   *
    * @throws IOException
    * @throws AvroTypeException If this is a stateful writer and a byte-string is
    *                           not expected
@@ -160,7 +160,7 @@ public abstract class Encoder implements Flushable {
 
   /**
    * Writes a fixed size binary object.
-   * 
+   *
    * @param bytes The contents to write
    * @param start The position within <tt>bytes</tt> where the contents start.
    * @param len   The number of bytes to write.
@@ -172,8 +172,8 @@ public abstract class Encoder implements Flushable {
 
   /**
    * A shorthand for <tt>writeFixed(bytes, 0, bytes.length)</tt>
-   * 
-   * @param bytes
+   *
+   * @param bytes the data
    */
   public void writeFixed(byte[] bytes) throws IOException {
     writeFixed(bytes, 0, bytes.length);
@@ -194,8 +194,8 @@ public abstract class Encoder implements Flushable {
 
   /**
    * Writes an enumeration.
-   * 
-   * @param e
+   *
+   * @param e the enumeration to write
    * @throws AvroTypeException If this is a stateful writer and an enumeration is
    *                           not expected or the <tt>e</tt> is out of range.
    * @throws IOException
@@ -214,9 +214,9 @@ public abstract class Encoder implements Flushable {
    * the array have been written, call {@link #writeArrayEnd}.
    *
    * As an example, let's say you want to write an array of records, the record
-   * consisting of an Long field and a Boolean field. Your code would look
+   * consisting of a Long field and a Boolean field. Your code would look
    * something like this:
-   * 
+   *
    * <pre>
    * out.writeArrayStart();
    * out.setItemCount(list.size());
@@ -227,7 +227,7 @@ public abstract class Encoder implements Flushable {
    * }
    * out.writeArrayEnd();
    * </pre>
-   * 
+   *
    * @throws AvroTypeException If this is a stateful writer and an array is not
    *                           expected
    */
@@ -248,8 +248,8 @@ public abstract class Encoder implements Flushable {
   /**
    * Start a new item of an array or map. See {@link #writeArrayStart} for usage
    * information.
-   * 
-   * @throws AvroTypeException If called outside of an array or map context
+   *
+   * @throws AvroTypeException If called outside an array or map context
    */
   public abstract void startItem() throws IOException;
 
@@ -268,9 +268,9 @@ public abstract class Encoder implements Flushable {
    * usage.
    *
    * As an example of usage, let's say you want to write a map of records, the
-   * record consisting of an Long field and a Boolean field. Your code would look
+   * record consisting of a Long field and a Boolean field. Your code would look
    * something like this:
-   * 
+   *
    * <pre>
    * out.writeMapStart();
    * out.setItemCount(list.size());
@@ -282,7 +282,7 @@ public abstract class Encoder implements Flushable {
    * }
    * out.writeMapEnd();
    * </pre>
-   * 
+   *
    * @throws AvroTypeException If this is a stateful writer and a map is not
    *                           expected
    */
@@ -302,15 +302,15 @@ public abstract class Encoder implements Flushable {
    * Call this method to write the tag of a union.
    *
    * As an example of usage, let's say you want to write a union, whose second
-   * branch is a record consisting of an Long field and a Boolean field. Your code
+   * branch is a record consisting of a Long field and a Boolean field. Your code
    * would look something like this:
-   * 
+   *
    * <pre>
    * out.writeIndex(1);
    * out.writeLong(record.longField);
    * out.writeBoolean(record.boolField);
    * </pre>
-   * 
+   *
    * @throws AvroTypeException If this is a stateful writer and a map is not
    *                           expected
    */

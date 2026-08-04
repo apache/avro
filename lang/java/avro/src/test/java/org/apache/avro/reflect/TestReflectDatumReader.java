@@ -19,6 +19,7 @@
 package org.apache.avro.reflect;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,6 +36,8 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.ClassSecurityValidator;
+import org.apache.avro.util.ClassSecurityValidator.ClassSecurityPredicate;
 import org.junit.jupiter.api.Test;
 
 public class TestReflectDatumReader {
@@ -47,6 +50,21 @@ public class TestReflectDatumReader {
     datumWriter.write(toSerialize, encoder);
     encoder.flush();
     return byteArrayOutputStream.toByteArray();
+  }
+
+  /**
+   * Test that the deserialization of a class that is not trusted throws a
+   * SecurityException.
+   */
+  @Test
+  void testNotSerializableClasses() {
+    ClassSecurityPredicate originalValidator = ClassSecurityValidator.getGlobal();
+    try {
+      ClassSecurityValidator.setGlobal(ClassSecurityValidator.builder().build());
+      assertThrows(SecurityException.class, () -> new ReflectDatumReader<>(PojoWithArray.class));
+    } finally {
+      ClassSecurityValidator.setGlobal(originalValidator);
+    }
   }
 
   @Test

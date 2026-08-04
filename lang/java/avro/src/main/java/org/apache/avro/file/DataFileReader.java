@@ -17,18 +17,19 @@
  */
 package org.apache.avro.file;
 
+import org.apache.avro.InvalidAvroMagicException;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.commons.io.IOUtils;
+
 import java.io.EOFException;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.File;
 import java.util.Arrays;
 
-import org.apache.avro.InvalidAvroMagicException;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.commons.compress.utils.IOUtils;
-import org.apache.avro.io.DatumReader;
-import static org.apache.avro.file.DataFileConstants.SYNC_SIZE;
 import static org.apache.avro.file.DataFileConstants.MAGIC;
+import static org.apache.avro.file.DataFileConstants.SYNC_SIZE;
 
 /**
  * Random access to files written with {@link DataFileWriter}.
@@ -36,7 +37,7 @@ import static org.apache.avro.file.DataFileConstants.MAGIC;
  * @see DataFileWriter
  */
 public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D> {
-  private SeekableInputStream sin;
+  private final SeekableInputStream sin;
   private long blockStart;
   private int[] partialMatchTable;
 
@@ -170,7 +171,7 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
     vin = DecoderFactory.get().binaryDecoder(this.sin, vin);
     datumIn = null;
     blockRemaining = 0;
-    blockStart = position;
+    blockFinished();
   }
 
   /**
@@ -263,9 +264,9 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
 
   static class SeekableInputStream extends InputStream implements SeekableInput {
     private final byte[] oneByte = new byte[1];
-    private SeekableInput in;
+    private final SeekableInput in;
 
-    SeekableInputStream(SeekableInput in) throws IOException {
+    SeekableInputStream(SeekableInput in) {
       this.in = in;
     }
 
@@ -309,15 +310,10 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
     @Override
     public long skip(long skip) throws IOException {
       long position = in.tell();
+      long skipToPosition = position + skip;
       long length = in.length();
-      long remaining = length - position;
-      if (remaining > skip) {
-        in.seek(skip);
-        return in.tell() - position;
-      } else {
-        in.seek(remaining);
-        return in.tell() - position;
-      }
+      in.seek(Math.min(skipToPosition, length));
+      return in.tell() - position;
     }
 
     @Override
@@ -329,7 +325,7 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
     @Override
     public int available() throws IOException {
       long remaining = (in.length() - in.tell());
-      return (remaining > Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) remaining;
+      return (int) Math.min(remaining, Integer.MAX_VALUE);
     }
   }
 }

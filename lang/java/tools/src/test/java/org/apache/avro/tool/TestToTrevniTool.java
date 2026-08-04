@@ -22,23 +22,26 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Iterator;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.util.RandomData;
 import org.apache.trevni.avro.AvroColumnReader;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestToTrevniTool {
   private static final long SEED = System.currentTimeMillis();
 
   private static final int COUNT = Integer.parseInt(System.getProperty("test.count", "200"));
-  private static final File DIR = new File("/tmp");
-  private static final File AVRO_FILE = new File(DIR, "random.avro");
-  private static final File TREVNI_FILE = new File(DIR, "random.trv");
+
+  @TempDir
+  private Path dataDir;
   private static final File SCHEMA_FILE = new File("../../../share/test/schemas/weather.avsc");
 
   private String run(String... args) throws Exception {
@@ -50,17 +53,19 @@ public class TestToTrevniTool {
 
   @Test
   void test() throws Exception {
-    Schema schema = new Schema.Parser().parse(SCHEMA_FILE);
+    Schema schema = new SchemaParser().parse(SCHEMA_FILE).mainSchema();
 
     DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>());
-    writer.create(schema, Util.createFromFS(AVRO_FILE.toString()));
+    File avroFile = dataDir.resolve("random.avro").toFile();
+    writer.create(schema, avroFile);
     for (Object datum : new RandomData(schema, COUNT, SEED))
       writer.append(datum);
     writer.close();
 
-    run(AVRO_FILE.toString(), TREVNI_FILE.toString());
+    File trevniFile = dataDir.resolve("random.trv").toFile();
+    run(avroFile.toString(), trevniFile.toString());
 
-    AvroColumnReader<Object> reader = new AvroColumnReader<>(new AvroColumnReader.Params(TREVNI_FILE));
+    AvroColumnReader<Object> reader = new AvroColumnReader<>(new AvroColumnReader.Params(trevniFile));
     Iterator<Object> found = reader.iterator();
     for (Object expected : new RandomData(schema, COUNT, SEED))
       assertEquals(expected, found.next());

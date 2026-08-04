@@ -31,24 +31,19 @@ public class TestUnionSelfReference {
   @SuppressWarnings("unused")
   private static final Logger LOG = LoggerFactory.getLogger(TestUnionSelfReference.class);
 
-  private static final String SIMPLE_BINARY_TREE = "{" + "    \"namespace\": \"tree\"," + "    \"type\": \"record\","
-      + "    \"name\": \"Node\"," + "    \"fields\": [" + "      {" + "        \"name\": \"left\","
-      + "        \"type\": [" + "          \"null\"," + "          {" + "            \"type\": \"Node\"" + "          }"
-      + "        ]," + "        \"default\": null" + "      }," + "      {" + "        \"name\": \"right\","
-      + "        \"type\": [" + "          \"null\"," + "          {" + "            \"type\": \"Node\"" + "          }"
-      + "        ]," + "        \"default\": null" + "      }" + "    ]" + "  }";
+  private static final String SIMPLE_BINARY_TREE = "{"
+      + "\"namespace\":\"tree\",\"type\":\"record\",\"name\":\"Node\",\"fields\":["
+      + "{\"name\":\"left\",\"type\":[\"null\",\"Node\"],\"default\":null},"
+      + "{\"name\":\"right\",\"type\":[\"null\",\"Node\"],\"default\":null}]}";
 
-  private static final String THREE_TYPE_UNION = "{" + "    \"namespace\": \"tree\"," + "    \"type\": \"record\","
-      + "    \"name\": \"Node\"," + "    \"fields\": [" + "      {" + "        \"name\": \"left\","
-      + "        \"type\": [" + "          \"null\"," + "          \"string\"," + "          {"
-      + "            \"type\": \"Node\"" + "          }" + "        ]," + "        \"default\": null" + "      },"
-      + "      {" + "        \"name\": \"right\"," + "        \"type\": [" + "          \"null\","
-      + "          \"string\"," + "          {" + "            \"type\": \"Node\"" + "          }" + "        ],"
-      + "        \"default\": null" + "      }" + "    ]" + "  }";
+  private static final String THREE_TYPE_UNION = "{"
+      + "\"namespace\":\"tree\",\"type\":\"record\",\"name\":\"Node\",\"fields\":["
+      + "{\"name\":\"left\",\"type\":[\"null\",\"string\",\"Node\"],\"default\":null},"
+      + "{\"name\":\"right\",\"type\":[\"null\",\"string\",\"Node\"],\"default\":null}]}";
 
   @Test
   void selfReferenceInUnion() {
-    Schema schema = new Schema.Parser().parse(SIMPLE_BINARY_TREE);
+    Schema schema = SchemaParser.parseSingle(SIMPLE_BINARY_TREE);
     Field leftField = schema.getField("left");
     assertEquals(JsonProperties.NULL_VALUE, leftField.defaultVal());
     final Schema leftFieldSchema = leftField.schema();
@@ -66,7 +61,7 @@ public class TestUnionSelfReference {
 
   @Test
   void selfReferenceInThreeUnion() {
-    Schema schema = new Schema.Parser().parse(THREE_TYPE_UNION);
+    Schema schema = SchemaParser.parseSingle(THREE_TYPE_UNION);
     Field leftField = schema.getField("left");
     assertEquals(JsonProperties.NULL_VALUE, leftField.defaultVal());
     final Schema leftFieldSchema = leftField.schema();

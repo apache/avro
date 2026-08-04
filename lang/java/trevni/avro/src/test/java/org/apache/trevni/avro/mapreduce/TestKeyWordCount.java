@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.StringTokenizer;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.mapreduce.AvroJob;
@@ -153,7 +154,7 @@ public class TestKeyWordCount {
 
     job.setMapperClass(Counter.class);
 
-    Schema subSchema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"PairValue\"," + "\"fields\": [ "
+    Schema subSchema = SchemaParser.parseSingle("{\"type\":\"record\"," + "\"name\":\"PairValue\"," + "\"fields\": [ "
         + "{\"name\":\"value\", \"type\":\"long\"}" + "]}");
     AvroJob.setInputKeySchema(job, subSchema);
 

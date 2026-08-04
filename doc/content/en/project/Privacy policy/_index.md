@@ -2,7 +2,7 @@
 title: "Privacy policy"
 linkTitle: "Privacy policy"
 weight: 9
-manualLink: https://hadoop.apache.org/privacy_policy.html
+manualLink: https://privacy.apache.org/policies/privacy-policy-public.html
 ---
 
 <!--
@@ -26,4 +26,4 @@ manualLink: https://hadoop.apache.org/privacy_policy.html
 
 -->
 
-Apache Avro project shares the same privacy policy as the [Apache Software Foundation](https://hadoop.apache.org/privacy_policy.html)
+Apache Avro project shares the same privacy policy as the [Apache Software Foundation](https://privacy.apache.org/policies/privacy-policy-public.html)

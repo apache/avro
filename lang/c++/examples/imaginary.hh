@@ -16,31 +16,29 @@
  * limitations under the License.
  */
 
-
 #ifndef IMAGINARY_HH_3460301992__H_
 #define IMAGINARY_HH_3460301992__H_
 
-
-#include "boost/any.hpp"
-#include "avro/Specific.hh"
-#include "avro/Encoder.hh"
 #include "avro/Decoder.hh"
+#include "avro/Encoder.hh"
+#include "avro/Specific.hh"
 
 namespace i {
 struct cpx {
     double im;
 };
 
-}
+} // namespace i
 namespace avro {
-template<> struct codec_traits<i::cpx> {
-    static void encode(Encoder& e, const i::cpx& v) {
+template<>
+struct codec_traits<i::cpx> {
+    static void encode(Encoder &e, const i::cpx &v) {
         avro::encode(e, v.im);
     }
-    static void decode(Decoder& d, i::cpx& v) {
+    static void decode(Decoder &d, i::cpx &v) {
         avro::decode(d, v.im);
     }
 };
 
-}
+} // namespace avro
 #endif

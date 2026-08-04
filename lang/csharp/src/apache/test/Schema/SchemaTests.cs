@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using System.Linq;
+using Avro.Util;
 
 namespace Avro.Test
 {
@@ -108,6 +109,16 @@ namespace Avro.Test
         [TestCase("{\"type\": \"fixed\", \"name\": \"Missing size\"}", typeof(SchemaParseException))]
         [TestCase("{\"type\": \"fixed\", \"size\": 314}",
             typeof(SchemaParseException), Description = "No name")]
+
+        // Names outside the Avro name grammar
+        [TestCase("{\"type\":\"record\",\"name\":\"Bad Name\",\"fields\":[]}",
+            typeof(SchemaParseException), Description = "Record name with a space")]
+        [TestCase("{\"type\":\"record\",\"name\":\"R\",\"fields\":[{\"name\":\"in valid\",\"type\":\"long\"}]}",
+            typeof(SchemaParseException), Description = "Field name with a space")]
+        [TestCase("{\"type\":\"record\",\"name\":\"R\",\"fields\":[{\"name\":\"x; int y\",\"type\":\"long\"}]}",
+            typeof(SchemaParseException), Description = "Field name attempting identifier injection")]
+        [TestCase("{\"type\":\"record\",\"name\":\"R\",\"fields\":[{\"name\":\"valid\",\"aliases\":[\"bad alias\"],\"type\":\"long\"}]}",
+            typeof(SchemaParseException), Description = "Field alias with a space")]
         public void TestBasic(string s, Type expectedExceptionType = null)
         {
             if (expectedExceptionType != null)
@@ -377,6 +388,17 @@ namespace Avro.Test
 
             Field f = recordSchema.Fields[0];
             Assert.AreEqual("歳以上", f.Name);
+
+            // A supplementary-plane letter (U+20000, encoded as a surrogate pair)
+            // is a valid name character and must be accepted.
+            const string astralName = "\U00020000field";
+            var astralFields = new List<Field>
+                {
+                    new Field(PrimitiveSchema.Create(Schema.Type.Long), astralName, null, 0, null, null,
+                        Field.SortOrder.ignore, null)
+                };
+            var astralRecord = RecordSchema.Create("AstralRecord", astralFields);
+            Assert.AreEqual(astralName, astralRecord.Fields[0].Name);
         }
 
         [TestCase]
@@ -406,6 +428,25 @@ namespace Avro.Test
                 };
 
             Assert.AreEqual(schema, recordSchema.ToString());
+        }
+
+        [TestCase]
+        public void TestRecordWithNamedReference()
+        {
+            string nestedSchema = "{\"name\":\"NestedRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"stringField\",\"type\":\"string\"}]}";
+            // The root schema references the nested schema above by name only.
+            // This mimics tools that allow schemas to have references to other schemas.
+            string rootSchema = "{\"name\":\"RootRecord\",\"type\":\"record\",\"fields\":[{\"name\": \"nestedField\",\"type\":\"NestedRecord\"}]}";
+
+            NamedSchema nestedRecord = (NamedSchema) Schema.Parse(nestedSchema);
+
+            SchemaNames names = new SchemaNames();
+            names.Add(nestedRecord.SchemaName, nestedRecord);
+
+            // Pass the schema names when parsing the root schema and its reference.
+            RecordSchema rootRecord = (RecordSchema) Schema.Parse(rootSchema, names);
+            Assert.AreEqual("RootRecord", rootRecord.Name);
+            Assert.AreEqual("NestedRecord", rootRecord.Fields[0].Schema.Name);
         }
 
         [TestCase("{\"type\":\"enum\",\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}",
@@ -548,12 +589,80 @@ namespace Avro.Test
             testToString(sc);
         }
 
+        // Make sure unknown type is carried thru to LogicalTypeName
         [TestCase("{\"type\": \"int\", \"logicalType\": \"unknown\"}", "unknown")]
         public void TestUnknownLogical(string s, string unknownType)
         {
-            var err = Assert.Throws<AvroTypeException>(() => Schema.Parse(s));
+            var schema = Schema.Parse(s);
+            Assert.IsNotNull(schema);
+            Assert.IsInstanceOf(typeof(LogicalSchema), schema);
 
-            Assert.AreEqual("Logical type '" + unknownType + "' is not supported.", err.Message);
+            if (schema is LogicalSchema logicalSchema)
+            {
+                Assert.IsInstanceOf(typeof(UnknownLogicalType), logicalSchema.LogicalType);
+                Assert.AreEqual(logicalSchema.LogicalTypeName, unknownType);
+            }
+            else
+            {
+                Assert.Fail("Parsed schema was not a LogicalSchema");
+            }
+        }
+
+        /*
+            {
+              "fields": [
+                {
+                  "default": 0,
+                  "name": "firstField",
+                  "type": "int"
+                },
+                {
+                  "default": null,
+                  "name": "secondField",
+                  "type": [
+                    "null",
+                    {
+                      "logicalType": "varchar",
+                      "maxLength": 65,
+                      "type": "string"
+                    }
+                  ]
+                }
+              ],
+              "name": "sample_schema",
+              "type": "record"
+            }
+         */
+
+        // Before Change will throw Avro.AvroTypeException: 'Logical type 'varchar' is not supported.'
+        // Per AVRO Spec (v1.8.0 - v1.11.1) ... Logical Types Section
+        //  Language implementations must ignore unknown logical types when reading, and should use the underlying Avro type.
+        [TestCase("{\"fields\": [{\"default\": 0,\"name\": \"firstField\",\"type\": \"int\"},{\"default\": null,\"name\": \"secondField\",\"type\": [\"null\",{\"logicalType\": \"varchar\",\"maxLength\": 65,\"type\": \"string\"}]}],\"name\": \"sample_schema\",\"type\": \"record\"}")]
+        public void TestUnknownLogicalType(string schemaText)
+        {
+            var schema = Avro.Schema.Parse(schemaText);
+            Assert.IsNotNull(schema);
+
+            var secondField = ((RecordSchema)schema).Fields.FirstOrDefault(f => f.Name == @"secondField");
+            Assert.IsNotNull(secondField);
+
+            var secondFieldSchema = (secondField).Schema;
+            Assert.IsNotNull(secondFieldSchema);
+
+            var secondFieldUnionSchema = (UnionSchema)secondFieldSchema;
+            Assert.IsNotNull(secondFieldUnionSchema);
+
+            var props = secondFieldUnionSchema.Schemas.Where(s => s.Props != null).ToList();
+            Assert.IsNotNull(props);
+            Assert.IsTrue(props.Count == 1);
+
+            var prop = props[0];
+            // Confirm that the unknown logical type is ignored and the underlying AVRO type is used
+            Assert.IsTrue(prop.Name == @"string");
+            var logicalSchema = prop as LogicalSchema;
+            Assert.IsInstanceOf(typeof(UnknownLogicalType), logicalSchema.LogicalType);
+
+            Assert.AreEqual(logicalSchema.LogicalTypeName, @"varchar");
         }
 
         [TestCase("{\"type\": \"map\", \"values\": \"long\"}", "long")]

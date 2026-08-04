@@ -2,6 +2,8 @@
 title: "SASL profile"
 linkTitle: "SASL profile"
 weight: 202
+aliases:
+- /docs/current/sasl-profile/
 ---
 
 <!--

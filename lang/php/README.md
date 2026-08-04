@@ -1,4 +1,4 @@
-|[![AVRO](https://raw.githubusercontent.com/apache/avro/master/doc/src/resources/images/avro-logo.png)](https://github.com/apache/avro) | [![AVRO](https://raw.githubusercontent.com/apache/avro/master/doc/src/resources/images/apache_feather.gif)](https://github.com/apac<he/avro)|
+| [<img src="https://www.apache.org/logos/res/avro/default.png" width="360" alt="Avro"/>](https://github.com/apache/avro) | [<img src="https://projects.apache.org/images/asf_logo.png" width="360" alt="Avro"/>](https://github.com/apache/avro) |
 |:-----|-----:|
 
 What the Avro PHP library is
@@ -8,14 +8,14 @@ A library for using [Avro](https://avro.apache.org/) with PHP.
 
 Requirements
 ============
- * PHP 7.3+
+ * PHP 8.1+
  * On 32-bit platforms, the [GMP PHP extension](https://php.net/gmp)
  * For Zstandard compression, [ext-zstd](https://github.com/kjdev/php-ext-zstd)
  * For Snappy compression, [ext-snappy](https://github.com/kjdev/php-ext-snappy)
  * For testing, [PHPUnit](https://www.phpunit.de/)
 
 Both GMP and PHPUnit are often available via package management
-systems as `php7-gmp` and `phpunit`, respectively.
+systems as `php8.1-gmp` and `phpunit`, respectively.
 
 
 Getting started
@@ -28,7 +28,7 @@ your project's `composer.json` configuration file, and run `composer install`:
 ```json
 {
     "require-dev": {
-        "apache/avro": "dev-master"
+        "apache/avro": "dev-main"
     }
 }
 ```

@@ -22,10 +22,13 @@ import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA;
 import static org.apache.avro.TestSchemas.ENUM2_AB_SCHEMA;
 import static org.apache.avro.TestSchemas.ENUM_ABC_ENUM_DEFAULT_A_SCHEMA;
 import static org.apache.avro.TestSchemas.ENUM_AB_ENUM_DEFAULT_A_SCHEMA;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayOutputStream;
+import java.util.concurrent.Callable;
+
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -53,7 +56,8 @@ public class TestSchemaCompatibilityEnumDefaults {
     datum.put("field2", new GenericData.EnumSymbol(writerSchema, "B"));
     AvroTypeException avroTypeException = assertThrows(AvroTypeException.class,
         () -> serializeWithWriterThenDeserializeWithReader(writerSchema, datum, readerSchema));
-    assertEquals("Found Record1, expecting Record1, missing required field field1", avroTypeException.getMessage());
+    assertTrue(
+        avroTypeException.getMessage().contains("Found Record1, expecting Record1, missing required field field1"));
   }
 
   @Test
@@ -111,7 +115,7 @@ public class TestSchemaCompatibilityEnumDefaults {
     datum.put("field1", new GenericData.EnumSymbol(writerSchema, "C"));
     AvroTypeException avroTypeException = assertThrows(AvroTypeException.class,
         () -> serializeWithWriterThenDeserializeWithReader(writerSchema, datum, readerSchema));
-    assertEquals("No match for C", avroTypeException.getMessage());
+    assertEquals("Field \"field1\" content mismatch: No match for C", avroTypeException.getMessage());
   }
 
   private GenericRecord serializeWithWriterThenDeserializeWithReader(Schema writerSchema, GenericRecord datum,
@@ -125,8 +129,9 @@ public class TestSchemaCompatibilityEnumDefaults {
     byte[] bytes = baos.toByteArray();
     Decoder decoder = DecoderFactory.get().resolvingDecoder(writerSchema, readerSchema,
         DecoderFactory.get().binaryDecoder(bytes, null));
-    DatumReader<Object> datumReader = new GenericDatumReader<>(readerSchema);
+    GenericData data = new GenericData();
+    data.setFastReaderEnabled(false);
+    DatumReader<Object> datumReader = new GenericDatumReader<>(readerSchema, readerSchema, data);
     return (GenericRecord) datumReader.read(null, decoder);
   }
-
 }

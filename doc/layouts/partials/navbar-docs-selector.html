@@ -19,11 +19,13 @@
 
 -->
 
-<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-	Documentation
-</a>
-<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-	{{ range .Site.Params.versions }}
-	<a class="dropdown-item" href="{{ .url }}">{{ .version }}</a>
-	{{ end }}
+<div class="dropdown">
+    <button class="nav-link btn btn-secondary dropdown-toggle" type="button" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        Documentation
+    </button>
+    <ul class="dropdown-menu">
+        {{ range .Site.Params.versions }}
+        <li><a class="dropdown-item" href="{{ .url }}">{{ .version }}</a></li>
+        {{ end }}
+    </ul>
 </div>

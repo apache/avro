@@ -20,6 +20,8 @@ package org.apache.avro;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -58,12 +60,14 @@ public class TestSchemaWarnings {
   }
 
   @Test
+  // FIXME: Find a different way of capturing the output
+  @DisabledIfEnvironmentVariable(named = "WithinInvokerPlugin", matches = "true", disabledReason = "Redirecting stderr does not work within the invoker plugin")
   void warnWhenTheLogicalTypeIsOnTheField() {
     // A record with a single int field.
     Schema s = SchemaBuilder.record("A").fields().requiredInt("a1").endRecord();
 
     // Force reparsing the schema, and no warning should be logged.
-    s = new Schema.Parser().parse(s.toString());
+    s = SchemaParser.parseSingle(s.toString());
     assertThat(s.getField("a1").schema().getLogicalType(), nullValue());
     assertThat(getCapturedStdErr(), is(""));
 
@@ -73,7 +77,7 @@ public class TestSchemaWarnings {
     assertThat(s.getField("a1").schema().getLogicalType(), nullValue());
 
     // Force reparsing the schema, and a warning should be logged.
-    s = new Schema.Parser().parse(s.toString());
+    s = SchemaParser.parseSingle(s.toString());
     assertThat(getCapturedStdErr(), containsString("Ignored the A.a1.logicalType property (\"date\"). It should"
         + " probably be nested inside the \"type\" for the field."));
     assertThat(s.getField("a1").schema().getLogicalType(), nullValue());
@@ -85,13 +89,15 @@ public class TestSchemaWarnings {
 
     // Force reparsing the schema. No warning should be logged, and the logical type
     // should be applied.
-    s = new Schema.Parser().parse(s.toString());
+    s = SchemaParser.parseSingle(s.toString());
     assertThat(getCapturedStdErr(), is(""));
     assertThat(s.getField("a1").schema().getLogicalType(), is(LogicalTypes.date()));
 
   }
 
   @Test
+  // FIXME: Find a different way of capturing the output
+  @DisabledIfEnvironmentVariable(named = "WithinInvokerPlugin", matches = "true", disabledReason = "Redirecting stderr does not work within the invoker plugin")
   void warnWhenTheLogicalTypeIsIgnored() {
     // A record with a single int field.
     Schema s = SchemaBuilder.record("A").fields().requiredLong("a1").endRecord();
@@ -101,7 +107,7 @@ public class TestSchemaWarnings {
     s.getField("a1").schema().addProp(LOGICAL_TYPE_PROP, LogicalTypes.date().getName());
     // Force reparsing the schema. No warning should be logged, and the logical type
     // should be applied.
-    s = new Schema.Parser().parse(s.toString());
+    s = SchemaParser.parseSingle(s.toString());
     assertThat(s.getField("a1").schema().getLogicalType(), nullValue());
     assertThat(getCapturedStdErr(), containsString("Ignoring invalid logical type for name: date"));
   }

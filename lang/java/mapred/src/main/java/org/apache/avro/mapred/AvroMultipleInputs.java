@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
+import org.apache.avro.SchemaParser;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.slf4j.Logger;
@@ -194,13 +195,13 @@ public class AvroMultipleInputs {
     }
     Map<Path, Schema> m = new HashMap<>();
     String[] schemaMappings = conf.get(SCHEMA_KEY).split(",");
-    Schema.Parser schemaParser = new Schema.Parser();
+    SchemaParser schemaParser = new SchemaParser();
     for (String schemaMapping : schemaMappings) {
       String[] split = schemaMapping.split(";");
       String schemaString = fromBase64(split[1]);
       Schema inputSchema;
       try {
-        inputSchema = schemaParser.parse(schemaString);
+        inputSchema = schemaParser.parse(schemaString).mainSchema();
       } catch (SchemaParseException e) {
         throw new RuntimeException(e);
       }

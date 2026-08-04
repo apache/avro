@@ -25,7 +25,6 @@ inc/Module/Install/Makefile.pm
 inc/Module/Install/MakeMaker.pm
 inc/Module/Install/Metadata.pm
 inc/Module/Install/ReadmeFromPod.pm
-inc/Module/Install/Repository.pm
 lib/Avro.pm
 lib/Avro/BinaryDecoder.pm
 lib/Avro/BinaryEncoder.pm

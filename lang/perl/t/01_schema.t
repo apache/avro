@@ -19,7 +19,7 @@ use strict;
 use warnings;
 
 use Test::More;
-plan tests => 130;
+plan tests => 145;
 use Test::Exception;
 use_ok 'Avro::Schema';
 
@@ -41,6 +41,32 @@ my $s2 = Avro::Schema->parse(q({"type": "string"}));
 isa_ok $s2, 'Avro::Schema::Primitive';
 is $s2->type, "string", "type is string";
 is $s, $s2, "string Schematas are singletons";
+
+## Perl strings as bytes
+{
+    my $schema = Avro::Schema->parse(q({"type": "bytes"}));
+    ok $schema->is_data_valid(''), 'Empty string is valid as bytes';
+    ok $schema->is_data_valid("\0"), 'Zero byte is valid as bytes';
+    ok !$schema->is_data_valid("\x{100}"), 'Values > 255 not valid as bytes';
+
+    my $bytes = '';
+    utf8::upgrade($bytes);
+
+    ok $schema->is_data_valid($bytes), 'Upgraded string valid as bytes';
+}
+
+## Perl strings as fixed
+{
+    my $schema = Avro::Schema->parse(q({"type": "fixed", "name": "foo", "size": 1 }));
+    ok !$schema->is_data_valid(''), 'Too few bytes vs. schema';
+    ok $schema->is_data_valid("\0"), 'Zero byte is valid as fixed';
+    ok !$schema->is_data_valid("\x{100}"), 'Values > 255 not valid as fixed';
+
+    my $bytes = "\xff";
+    utf8::upgrade($bytes);
+
+    ok $schema->is_data_valid($bytes), 'Upgraded string valid as fixed';
+}
 
 ## Records
 {
@@ -455,6 +481,12 @@ EOJ
     isa_ok $s, 'Avro::Schema::Record';
     is $s->fields->[0]{name}, 'a', 'a';
     isa_ok $s->fields->[0]{type}, 'Avro::Schema::Union';
+}
+
+## is_data_valid for primitives
+for my $type ( qw( int long float double string bytes boolean ) ) {
+    my $schema = Avro::Schema->parse(qq[{ "type": "$type" }]);
+    is $schema->is_data_valid(undef), 0, "$type is_data_valid undef";
 }
 
 sub match_ok {

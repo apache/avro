@@ -23,7 +23,6 @@ use Avro::Schema;
 use Avro::BinaryEncoder;
 use Test::More;
 use Test::Exception;
-use IO::String;
 
 use_ok 'Avro::BinaryDecoder';
 
@@ -31,7 +30,7 @@ use_ok 'Avro::BinaryDecoder';
 {
     my $enc = "\x06\x66\x6f\x6f";
     my $schema = Avro::Schema->parse(q({ "type": "string" }));
-    my $reader = IO::String->new($enc);
+    open my $reader, '<', \$enc or die "Can't open memory file: $!";
     my $dec = Avro::BinaryDecoder->decode(
         writer_schema => $schema,
         reader_schema => $schema,
@@ -49,7 +48,7 @@ use_ok 'Avro::BinaryDecoder';
           ]
           }
 EOJ
-    $reader = IO::String->new("\x36\x06\x66\x6f\x6f");
+    open $reader, '<', \"\x36\x06\x66\x6f\x6f" or die "Can't open memory file: $!";
     $dec = Avro::BinaryDecoder->decode(
         writer_schema => $schema,
         reader_schema => $schema,
@@ -58,7 +57,7 @@ EOJ
     is_deeply $dec, { a => 27, b => 'foo' },
                     "Binary_Encodings.Complex_Types.Records";
 
-    $reader = IO::String->new("\x04\x06\x36\x00");
+    open $reader, '<', \"\x04\x06\x36\x00" or die "Can't open memory file: $!";
     $schema = Avro::Schema->parse(q({"type": "array", "items": "long"}));
     $dec = Avro::BinaryDecoder->decode(
         writer_schema => $schema,
@@ -67,7 +66,7 @@ EOJ
     );
     is_deeply $dec, [3, 27], "Binary_Encodings.Complex_Types.Arrays";
 
-    $reader = IO::String->new("\x02");
+    open $reader, '<', \"\x02" or die "Can't open memory file: $!";
     $schema = Avro::Schema->parse(q(["string","null"]));
     $dec = Avro::BinaryDecoder->decode(
         writer_schema => $schema,
@@ -76,7 +75,7 @@ EOJ
     );
     is $dec, undef, "Binary_Encodings.Complex_Types.Unions-null";
 
-    $reader =  IO::String->new("\x00\x02\x61");
+    open $reader, '<', \"\x00\x02\x61" or die "Can't open memory file: $!";
     $dec = Avro::BinaryDecoder->decode(
         writer_schema => $schema,
         reader_schema => $schema,
@@ -102,10 +101,11 @@ EOP
             data    => $data,
             emit_cb => sub { $enc = ${ $_[0] } },
         );
+        open my $reader, '<', \$enc or die "Cannot open memory file: $!";
         my $dec = Avro::BinaryDecoder->decode(
             writer_schema => $w_enum,
             reader_schema => $r_enum,
-            reader => IO::String->new($enc),
+            reader        => $reader,
         );
         is $dec, $data, "decoded!";
     }
@@ -116,10 +116,11 @@ EOP
             data    => $data,
             emit_cb => sub { $enc = ${ $_[0] } },
         );
+        open my $reader, '<', \$enc or die "Cannot open memory file: $!";
         throws_ok { Avro::BinaryDecoder->decode(
             writer_schema => $w_enum,
             reader_schema => $r_enum,
-            reader => IO::String->new($enc),
+            reader        => $reader,
         )} "Avro::Schema::Error::Mismatch", "schema problem";
     }
 }
@@ -147,10 +148,11 @@ EOJ
         data    => $data,
         emit_cb => sub { $enc .= ${ $_[0] } },
     );
+    open my $reader, '<', \$enc or die "Cannot open memory file: $!";
     my $dec = Avro::BinaryDecoder->decode(
         writer_schema => $w_schema,
         reader_schema => $r_schema,
-        reader => IO::String->new($enc),
+        reader        => $reader,
     );
     is $dec->{a}, 1, "easy";
     ok ! exists $dec->{bonus}, "bonus extra field ignored";
@@ -158,11 +160,12 @@ EOJ
 
     ## delete the default for t
     delete $r_schema->fields->[0]{default};
+    open $reader, '<', \$enc or die "Cannot open memory file: $!";
     throws_ok {
         Avro::BinaryDecoder->decode(
             writer_schema => $w_schema,
             reader_schema => $r_schema,
-            reader => IO::String->new($enc),
+            reader        => $reader,
         );
     } "Avro::Schema::Error::Mismatch", "no default value!";
 }
@@ -182,10 +185,11 @@ EOP
         data    => $data,
         emit_cb => sub { $enc .= ${ $_[0] } },
     );
+    open my $reader, '<', \$enc or die "Cannot open memory file: $!";
     my $dec = Avro::BinaryDecoder->decode(
         writer_schema => $w_schema,
         reader_schema => $r_schema,
-        reader => IO::String->new($enc),
+        reader        => $reader,
     );
 
     is_deeply $dec, $data, "decoded!";
@@ -207,18 +211,20 @@ EOP
         data    => $data,
         emit_cb => sub { $enc .= ${ $_[0] } },
     );
+    open my $reader, '<', \$enc or die "Cannot open memory file: $!";
     throws_ok {
         Avro::BinaryDecoder->decode(
             writer_schema => $w_schema,
             reader_schema => $r_schema,
-            reader => IO::String->new($enc),
+            reader        => $reader,
         )
     } "Avro::Schema::Error::Mismatch", "recursively... fails";
 
+    open $reader, '<', \$enc or die "Cannot open memory file: $!";
     my $dec = Avro::BinaryDecoder->decode(
         writer_schema => $w_schema,
         reader_schema => $w_schema,
-        reader => IO::String->new($enc),
+        reader        => $reader,
     );
     is_deeply $dec, $data, "decoded succeeded!";
 }
@@ -239,10 +245,11 @@ EOP
         data    => $data,
         emit_cb => sub { $enc .= ${ $_[0] } },
     );
+    open my $reader, '<', \$enc or die "Cannot open memory file: $!";
     my $dec = Avro::BinaryDecoder->decode(
         writer_schema => $w_schema,
         reader_schema => $w_schema,
-        reader => IO::String->new($enc),
+        reader        => $reader,
     );
     is_deeply $dec, $data, "decoded succeeded! +upgrade";
     is $dec->{one}[0], 1.0, "kind of dumb test";

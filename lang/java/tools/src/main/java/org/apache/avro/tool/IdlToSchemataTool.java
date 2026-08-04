@@ -21,6 +21,8 @@ package org.apache.avro.tool;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.compiler.idl.Idl;
+import org.apache.avro.idl.IdlFile;
+import org.apache.avro.idl.IdlReader;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,26 +38,40 @@ import java.util.List;
 public class IdlToSchemataTool implements Tool {
   @Override
   public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
-    if (args.isEmpty() || args.size() > 2 || isRequestingHelp(args)) {
-      err.println("Usage: idl2schemata [idl] [outdir]");
-      err.println("");
+    boolean useJavaCC = "--useJavaCC".equals(getArg(args, 0, null));
+
+    if (args.isEmpty() || args.size() > (useJavaCC ? 3 : 2) || isRequestingHelp(args)) {
+      err.println("Usage: idl2schemata [--useJavaCC] [idl [outdir]]");
+      err.println();
       err.println("If an output directory is not specified, " + "outputs to current directory.");
       return -1;
     }
 
-    boolean pretty = true;
-    Idl parser = new Idl(new File(args.get(0)));
-    File outputDirectory = getOutputDirectory(args);
+    String inputName = getArg(args, useJavaCC ? 1 : 0, "-");
+    File inputFile = "-".equals(inputName) ? null : new File(inputName);
+    File outputDirectory = getOutputDirectory(getArg(args, useJavaCC ? 2 : 1, ""));
 
-    final Protocol protocol = parser.CompilationUnit();
-    final List<String> warnings = parser.getWarningsAfterParsing();
-    for (String warning : warnings) {
-      err.println("Warning: " + warning);
+    if (useJavaCC) {
+      try (Idl parser = new Idl(inputFile)) {
+        final Protocol protocol = parser.CompilationUnit();
+        final List<String> warnings = parser.getWarningsAfterParsing();
+        for (String warning : warnings) {
+          err.println("Warning: " + warning);
+        }
+        for (Schema schema : protocol.getTypes()) {
+          print(schema, outputDirectory);
+        }
+      }
+    } else {
+      IdlReader parser = new IdlReader();
+      IdlFile idlFile = inputFile == null ? parser.parse(in) : parser.parse(inputFile.toPath());
+      for (String warning : idlFile.getWarnings()) {
+        err.println("Warning: " + warning);
+      }
+      for (Schema schema : idlFile.getNamedSchemas().values()) {
+        print(schema, outputDirectory);
+      }
     }
-    for (Schema schema : protocol.getTypes()) {
-      print(schema, outputDirectory, pretty);
-    }
-    parser.close();
 
     return 0;
   }
@@ -64,19 +80,26 @@ public class IdlToSchemataTool implements Tool {
     return args.size() == 1 && (args.get(0).equals("--help") || args.get(0).equals("-help"));
   }
 
-  private File getOutputDirectory(List<String> args) {
-    String dirname = (args.size() == 2) ? args.get(1) : "";
+  private String getArg(List<String> args, int index, String defaultValue) {
+    if (index < args.size()) {
+      return args.get(index);
+    } else {
+      return defaultValue;
+    }
+  }
+
+  private File getOutputDirectory(String dirname) {
     File outputDirectory = new File(dirname);
     outputDirectory.mkdirs();
     return outputDirectory;
   }
 
-  private void print(Schema schema, File outputDirectory, boolean pretty) throws FileNotFoundException {
+  private void print(Schema schema, File outputDirectory) throws FileNotFoundException {
     String dirpath = outputDirectory.getAbsolutePath();
     String filename = dirpath + "/" + schema.getName() + ".avsc";
     FileOutputStream fileOutputStream = new FileOutputStream(filename);
     PrintStream printStream = new PrintStream(fileOutputStream);
-    printStream.println(schema.toString(pretty));
+    printStream.println(schema.toString(true));
     printStream.close();
   }
 

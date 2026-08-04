@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#include <boost/filesystem.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
 #include <boost/shared_ptr.hpp>
@@ -24,6 +23,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <chrono>
+#include <filesystem>
 #include <thread>
 
 #include <sstream>
@@ -123,7 +123,7 @@ static ValidSchema makeValidSchema(const char *schema) {
     istringstream iss(schema);
     ValidSchema vs;
     compileJsonSchema(iss, vs);
-    return ValidSchema(vs);
+    return vs;
 }
 
 static const char sch[] = "{\"type\": \"record\","
@@ -199,7 +199,7 @@ public:
     using Pair = pair<ValidSchema, GenericDatum>;
 
     void testCleanup() {
-        BOOST_CHECK(boost::filesystem::remove(filename));
+        BOOST_CHECK(std::filesystem::remove(filename));
     }
 
     void testWrite() {
@@ -216,8 +216,14 @@ public:
     }
 #endif
 
+#ifdef ZSTD_CODEC_AVAILABLE
+    void testWriteWithZstdCodec() {
+        testWriteWithCodec(avro::ZSTD_CODEC);
+    }
+#endif
+
     void testWriteWithCodec(avro::Codec codec) {
-        avro::DataFileWriter<ComplexInteger> df(filename, writerSchema, 100);
+        avro::DataFileWriter<ComplexInteger> df(filename, writerSchema, 100, codec);
         int64_t re = 3;
         int64_t im = 5;
         for (int i = 0; i < count; ++i, re *= im, im += 3) {
@@ -278,12 +284,12 @@ public:
 
     void testTruncate() {
         testWriteDouble();
-        uintmax_t size = boost::filesystem::file_size(filename);
+        uintmax_t size = std::filesystem::file_size(filename);
         {
             avro::DataFileWriter<Pair> df(filename, writerSchema, 100);
             df.close();
         }
-        uintmax_t new_size = boost::filesystem::file_size(filename);
+        uintmax_t new_size = std::filesystem::file_size(filename);
         BOOST_CHECK(size > new_size);
     }
 
@@ -405,7 +411,7 @@ public:
         }
         std::set<pair<int64_t, int64_t>> actual;
         int num = 0;
-        for (int i = sync_points.size() - 2; i >= 0; --i) {
+        for (ssize_t i = sync_points.size() - 2; i >= 0; --i) {
             df.seek(sync_points[i]);
             ComplexInteger ci;
             // Subtract avro::SyncSize here because sync and pastSync
@@ -471,9 +477,7 @@ public:
     void testReaderSplits() {
         boost::mt19937 random(static_cast<uint32_t>(time(nullptr)));
         avro::DataFileReader<ComplexInteger> df(filename, writerSchema);
-        std::ifstream just_for_length(
-            filename, std::ifstream::ate | std::ifstream::binary);
-        int length = just_for_length.tellg();
+        int length = static_cast<int>(std::filesystem::file_size(filename));
         int splits = 10;
         int end = length;     // end of split
         int remaining = end;  // bytes remaining
@@ -575,7 +579,7 @@ public:
         }
         {
             avro::DataFileReader<ComplexInteger> reader(filename, dschema);
-            std::vector<int> found;
+            std::vector<int64_t> found;
             ComplexInteger record;
             while (reader.read(record)) {
                 found.push_back(record.re);
@@ -596,6 +600,39 @@ public:
         {
             avro::DataFileWriter<ComplexInteger> writer(
                 filename, dschema, 16 * 1024, avro::SNAPPY_CODEC);
+
+            for (size_t i = 0; i < number_of_objects; ++i) {
+                ComplexInteger d;
+                d.re = i;
+                d.im = 2 * i;
+                writer.write(d);
+            }
+        }
+        {
+            avro::DataFileReader<ComplexInteger> reader(filename, dschema);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::vector<int64_t> found;
+            ComplexInteger record;
+            while (reader.read(record)) {
+                found.push_back(record.re);
+            }
+            BOOST_CHECK_EQUAL(found.size(), number_of_objects);
+            for (unsigned int i = 0; i < found.size(); ++i) {
+                BOOST_CHECK_EQUAL(found[i], i);
+            }
+        }
+    }
+#endif
+
+#ifdef ZSTD_CODEC_AVAILABLE
+    void testZstd() {
+        // Add enough objects to span multiple blocks
+        const size_t number_of_objects = 1000000;
+        // first create a large file
+        ValidSchema dschema = avro::compileJsonSchemaFromString(sch);
+        {
+            avro::DataFileWriter<ComplexInteger> writer(
+                filename, dschema, 16 * 1024, avro::ZSTD_CODEC);
 
             for (size_t i = 0; i < number_of_objects; ++i) {
                 ComplexInteger d;
@@ -658,6 +695,81 @@ public:
             BOOST_CHECK_EQUAL(root->leafAt(5)->getDoc(), "extra slashes\\\\");
         }
     }
+
+    void testClosedReader() {
+        const auto isNonSeekableInputStreamError = [](const avro::Exception &e) { return e.what() == std::string("seek not supported on non-SeekableInputStream"); };
+
+        avro::DataFileReader<ComplexDouble> df(filename, writerSchema);
+        df.close();
+        ComplexDouble unused;
+        BOOST_CHECK(!df.read(unused));                                                       // closed stream can't be read
+        BOOST_CHECK_EQUAL(df.previousSync(), 0ul);                                           // closed stream always returns begin position
+        BOOST_CHECK(df.pastSync(10l));                                                       // closed stream always point after position                                                                                                                                   // closed stream always returns begin position
+        BOOST_CHECK_EQUAL(df.previousSync(), 0u);                                            // closed stream always point at position 0                                                                                                                       // closed stream always returns begin position
+        BOOST_CHECK_EXCEPTION(df.sync(10l), avro::Exception, isNonSeekableInputStreamError); // closed stream always returns begin position
+        BOOST_CHECK_EXCEPTION(df.seek(10l), avro::Exception, isNonSeekableInputStreamError); // closed stream always returns begin position
+    }
+
+    void testClosedWriter() {
+        avro::DataFileWriter<ComplexDouble> df(filename, writerSchema);
+        df.close();
+        ComplexDouble unused;
+        BOOST_CHECK_NO_THROW(df.write(unused)); // write has not effect on closed stream
+    }
+
+    void testMetadata() {
+        avro::Metadata customMetadata;
+        std::string key1 = "author";
+        std::string value1 = "test-user";
+        customMetadata[key1] = std::vector<uint8_t>(value1.begin(), value1.end());
+
+        std::string key2 = "version";
+        std::string value2 = "1.0.0";
+        customMetadata[key2] = std::vector<uint8_t>(value2.begin(), value2.end());
+
+        std::string key3 = "description";
+        std::string value3 = "Test file with custom metadata";
+        customMetadata[key3] = std::vector<uint8_t>(value3.begin(), value3.end());
+
+        // Write data with custom metadata
+        {
+            avro::DataFileWriter<ComplexInteger> df(filename, writerSchema, 100, avro::NULL_CODEC, customMetadata);
+            int64_t re = 10;
+            int64_t im = 20;
+            for (int i = 0; i < 5; ++i, re += 5, im += 10) {
+                ComplexInteger c(re, im);
+                df.write(c);
+            }
+            df.close();
+        }
+
+        // Read and verify metadata
+        {
+            avro::DataFileReader<ComplexInteger> df(filename, writerSchema);
+            const avro::Metadata &readMetadata = df.metadata();
+
+            // Check that our custom metadata is present
+            auto it1 = readMetadata.find(key1);
+            BOOST_CHECK(it1 != readMetadata.end());
+            BOOST_CHECK_EQUAL(std::string(it1->second.begin(), it1->second.end()), value1);
+
+            auto it2 = readMetadata.find(key2);
+            BOOST_CHECK(it2 != readMetadata.end());
+            BOOST_CHECK_EQUAL(std::string(it2->second.begin(), it2->second.end()), value2);
+
+            auto it3 = readMetadata.find(key3);
+            BOOST_CHECK(it3 != readMetadata.end());
+            BOOST_CHECK_EQUAL(std::string(it3->second.begin(), it3->second.end()), value3);
+
+            // Check that standard metadata is also present
+            auto schemaIt = readMetadata.find("avro.schema");
+            BOOST_CHECK(schemaIt != readMetadata.end());
+
+            auto codecIt = readMetadata.find("avro.codec");
+            BOOST_CHECK(codecIt != readMetadata.end());
+            BOOST_CHECK_EQUAL(std::string(codecIt->second.begin(), codecIt->second.end()), "null");
+        }
+    }
 };
 
 void addReaderTests(test_suite *ts, const shared_ptr<DataFileTest> &t) {
@@ -696,7 +808,7 @@ struct codec_traits<ReaderObj> {
         if (auto *rd =
                 dynamic_cast<avro::ResolvingDecoder *>(&d)) {
             const std::vector<size_t> fo = rd->fieldOrder();
-            for (unsigned long it : fo) {
+            for (const auto it : fo) {
                 switch (it) {
                     case 0: {
                         avro::decode(d, v.s2);
@@ -770,6 +882,88 @@ void testSkipStringDeflateCodec() {
 void testSkipStringSnappyCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
     testSkipString(avro::SNAPPY_CODEC);
+}
+#endif
+
+#ifdef ZSTD_CODEC_AVAILABLE
+void testSkipStringZstdCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testSkipString(avro::ZSTD_CODEC);
+}
+#endif
+
+struct Weather {
+    std::string station;
+    int64_t time;
+    int32_t temp;
+    Weather(const char *station, int64_t time, int32_t temp)
+        : station(station), time(time), temp(temp) {}
+
+    bool operator==(const Weather &other) const {
+        return station == other.station && time == other.time && temp == other.temp;
+    }
+    friend std::ostream &operator<<(std::ostream &os, const Weather &w) {
+        return os << w.station << ' ' << w.time << ' ' << w.temp;
+    }
+};
+
+namespace avro {
+template<>
+struct codec_traits<Weather> {
+    static void decode(Decoder &d, Weather &v) {
+        avro::decode(d, v.station);
+        avro::decode(d, v.time);
+        avro::decode(d, v.temp);
+    }
+};
+} // namespace avro
+
+void testCompatibility(const char *filename) {
+    const char *readerSchemaStr = "{"
+                                  "\"type\": \"record\", \"name\": \"test.Weather\", \"fields\":["
+                                  "{\"name\": \"station\", \"type\": \"string\", \"order\": \"ignore\"},"
+                                  "{\"name\": \"time\", \"type\": \"long\"},"
+                                  "{\"name\": \"temp\", \"type\": \"int\"}"
+                                  "]}";
+    avro::ValidSchema readerSchema =
+        avro::compileJsonSchemaFromString(readerSchemaStr);
+    avro::DataFileReader<Weather> df(filename, readerSchema);
+
+    Weather ro("", -1, -1);
+    BOOST_CHECK_EQUAL(df.read(ro), true);
+    BOOST_CHECK_EQUAL(ro, Weather("011990-99999", -619524000000L, 0));
+    BOOST_CHECK_EQUAL(df.read(ro), true);
+    BOOST_CHECK_EQUAL(ro, Weather("011990-99999", -619506000000L, 22));
+    BOOST_CHECK_EQUAL(df.read(ro), true);
+    BOOST_CHECK_EQUAL(ro, Weather("011990-99999", -619484400000L, -11));
+    BOOST_CHECK_EQUAL(df.read(ro), true);
+    BOOST_CHECK_EQUAL(ro, Weather("012650-99999", -655531200000L, 111));
+    BOOST_CHECK_EQUAL(df.read(ro), true);
+    BOOST_CHECK_EQUAL(ro, Weather("012650-99999", -655509600000L, 78));
+    BOOST_CHECK_EQUAL(df.read(ro), false);
+}
+
+void testCompatibilityNullCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testCompatibility("../../share/test/data/weather.avro");
+}
+
+void testCompatibilityDeflateCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testCompatibility("../../share/test/data/weather-deflate.avro");
+}
+
+#ifdef SNAPPY_CODEC_AVAILABLE
+void testCompatibilitySnappyCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testCompatibility("../../share/test/data/weather-snappy.avro");
+}
+#endif
+
+#ifdef ZSTD_CODEC_AVAILABLE
+void testCompatibilityZstdCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testCompatibility("../../share/test/data/weather-zstd.avro");
 }
 #endif
 
@@ -948,7 +1142,7 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
         std::unique_ptr<avro::InputStream>
             inputStream = avro::memoryInputStream(stitchedData.data(), stitchedData.size());
 
-        int recordsUptoRecordToRead = recordToRead - recordsUptoLastSync;
+        size_t recordsUptoRecordToRead = recordToRead - recordsUptoLastSync;
 
         // Ensure this is not the first record in the chunk.
         BOOST_CHECK_GT(recordsUptoRecordToRead, 0);
@@ -956,7 +1150,7 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
         avro::DataFileReader<TestRecord> df(std::move(inputStream));
         TestRecord readRecord("", 0);
         //::printf("\nReading %d rows until specific record is reached", recordsUptoRecordToRead);
-        for (int index = 0; index < recordsUptoRecordToRead; index++) {
+        for (size_t index = 0; index < recordsUptoRecordToRead; index++) {
             BOOST_CHECK_EQUAL(df.read(readRecord), true);
 
             int64_t expectedId = (recordToRead - recordsUptoRecordToRead + index);
@@ -986,6 +1180,13 @@ void testLastSyncSnappyCodec() {
 }
 #endif
 
+#ifdef ZSTD_CODEC_AVAILABLE
+void testLastSyncZstdCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testLastSync(avro::ZSTD_CODEC);
+}
+#endif
+
 void testReadRecordEfficientlyUsingLastSyncNullCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
     testReadRecordEfficientlyUsingLastSync(avro::NULL_CODEC);
@@ -1003,8 +1204,301 @@ void testReadRecordEfficientlyUsingLastSyncSnappyCodec() {
 }
 #endif
 
+#ifdef ZSTD_CODEC_AVAILABLE
+void testReadRecordEfficientlyUsingLastSyncZstdCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testReadRecordEfficientlyUsingLastSync(avro::ZSTD_CODEC);
+}
+#endif
+
+void testMetadataWithCodec(avro::Codec codec) {
+    const char *filename = "test_metadata_codec.df";
+    avro::ValidSchema schema = avro::compileJsonSchemaFromString(sch);
+
+    avro::Metadata customMetadata;
+    std::string key1 = "test.key1";
+    std::string value1 = "test-value-1";
+    customMetadata[key1] = std::vector<uint8_t>(value1.begin(), value1.end());
+
+    std::string key2 = "test.key2";
+    std::string value2 = "test-value-2-with-special-chars: !@#$%^&*()";
+    customMetadata[key2] = std::vector<uint8_t>(value2.begin(), value2.end());
+
+    // Write data with custom metadata
+    {
+        avro::DataFileWriter<ComplexInteger> writer(filename, schema, 100, codec, customMetadata);
+        for (int i = 0; i < 10; ++i) {
+            ComplexInteger c(i * 2, i * 3);
+            writer.write(c);
+        }
+        writer.close();
+    }
+
+    // Read and verify metadata
+    {
+        avro::DataFileReader<ComplexInteger> reader(filename, schema);
+        const avro::Metadata &readMetadata = reader.metadata();
+
+        // Verify custom metadata
+        auto it1 = readMetadata.find(key1);
+        BOOST_CHECK(it1 != readMetadata.end());
+        BOOST_CHECK_EQUAL(std::string(it1->second.begin(), it1->second.end()), value1);
+
+        auto it2 = readMetadata.find(key2);
+        BOOST_CHECK(it2 != readMetadata.end());
+        BOOST_CHECK_EQUAL(std::string(it2->second.begin(), it2->second.end()), value2);
+
+        // Verify standard metadata
+        auto schemaIt = readMetadata.find("avro.schema");
+        BOOST_CHECK(schemaIt != readMetadata.end());
+
+        auto codecIt = readMetadata.find("avro.codec");
+        BOOST_CHECK(codecIt != readMetadata.end());
+    }
+
+    // Clean up
+    std::filesystem::remove(filename);
+}
+
+void testMetadataWithNullCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testMetadataWithCodec(avro::NULL_CODEC);
+}
+
+void testMetadataWithDeflateCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testMetadataWithCodec(avro::DEFLATE_CODEC);
+}
+
+#ifdef SNAPPY_CODEC_AVAILABLE
+void testMetadataWithSnappyCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testMetadataWithCodec(avro::SNAPPY_CODEC);
+}
+#endif
+
+#ifdef ZSTD_CODEC_AVAILABLE
+void testMetadataWithZstdCodec() {
+    BOOST_TEST_CHECKPOINT(__func__);
+    testMetadataWithCodec(avro::ZSTD_CODEC);
+}
+#endif
+
+void testDeflateCompressionLevelValidation() {
+    BOOST_TEST_CHECKPOINT(__func__);
+
+    avro::ValidSchema schema = avro::compileJsonSchemaFromString(sch);
+    const char *filename = "test_deflate_level.df";
+
+    boost::mt19937 rng(static_cast<uint32_t>(time(nullptr)));
+    boost::random::uniform_int_distribution<> dist(-100, 100);
+
+    for (int i = 0; i < 100; ++i) {
+        int level = dist(rng);
+        bool isValidLevel = (level >= 0 && level <= 9);
+
+        if (isValidLevel) {
+            // Valid levels should succeed
+            BOOST_CHECK_NO_THROW({
+                avro::DataFileWriter<ComplexInteger> writer(
+                    filename, schema, 16 * 1024, avro::DEFLATE_CODEC, {}, level);
+                writer.close();
+            });
+        } else {
+            // Invalid levels should throw
+            BOOST_CHECK_THROW({ avro::DataFileWriter<ComplexInteger> writer(
+                                    filename, schema, 16 * 1024, avro::DEFLATE_CODEC, {}, level); }, avro::Exception);
+        }
+    }
+
+    BOOST_CHECK_NO_THROW({
+        avro::DataFileWriter<ComplexInteger> writer(
+            filename, schema, 16 * 1024, avro::DEFLATE_CODEC, {}, std::nullopt);
+        writer.close();
+    });
+
+    std::filesystem::remove(filename);
+}
+
+#ifdef ZSTD_CODEC_AVAILABLE
+void testZstdCompressionLevelValidation() {
+    BOOST_TEST_CHECKPOINT(__func__);
+
+    avro::ValidSchema schema = avro::compileJsonSchemaFromString(sch);
+    const char *filename = "test_zstd_level.df";
+
+    boost::mt19937 rng(static_cast<uint32_t>(time(nullptr)));
+    boost::random::uniform_int_distribution<> dist(-100, 100);
+
+    for (int i = 0; i < 100; ++i) {
+        int level = dist(rng);
+        bool isValidLevel = (level >= 1 && level <= 22);
+
+        if (isValidLevel) {
+            // Valid levels should succeed
+            BOOST_CHECK_NO_THROW({
+                avro::DataFileWriter<ComplexInteger> writer(
+                    filename, schema, 16 * 1024, avro::ZSTD_CODEC, {}, level);
+                writer.close();
+            });
+        } else {
+            // Invalid levels should throw
+            BOOST_CHECK_THROW({ avro::DataFileWriter<ComplexInteger> writer(
+                                    filename, schema, 16 * 1024, avro::ZSTD_CODEC, {}, level); }, avro::Exception);
+        }
+    }
+
+    BOOST_CHECK_NO_THROW({
+        avro::DataFileWriter<ComplexInteger> writer(
+            filename, schema, 16 * 1024, avro::ZSTD_CODEC, {}, std::nullopt);
+        writer.close();
+    });
+
+    std::filesystem::remove(filename);
+}
+#endif
+
+void testDeflateCompressionRoundTrip() {
+    BOOST_TEST_CHECKPOINT(__func__);
+
+    avro::ValidSchema schema = avro::compileJsonSchemaFromString(sch);
+    const char *filename = "test_deflate_roundtrip.df";
+
+    boost::mt19937 rng(static_cast<uint32_t>(time(nullptr)));
+    boost::random::uniform_int_distribution<> levelDist(0, 10); // 0-9 valid, 10 = nullopt
+    boost::random::uniform_int_distribution<> dataDist(1, 1000);
+
+    for (int i = 0; i < 100; ++i) {
+        int rawLevel = levelDist(rng);
+        std::optional<int> level = (rawLevel == 10) ? std::nullopt : std::optional<int>(rawLevel);
+        int numRecords = dataDist(rng) % 100 + 1;
+
+        std::vector<ComplexInteger> originalData;
+        int64_t re = rng();
+        int64_t im = rng();
+        for (int j = 0; j < numRecords; ++j) {
+            originalData.emplace_back(re, im);
+            re = re * 31 + im;
+            im = im * 17 + re;
+        }
+
+        // Write with compression level
+        {
+            avro::DataFileWriter<ComplexInteger> writer(
+                filename, schema, 16 * 1024, avro::DEFLATE_CODEC, {}, level);
+            for (const auto &record : originalData) {
+                writer.write(record);
+            }
+            writer.close();
+        }
+
+        // Read back and verify
+        {
+            avro::DataFileReader<ComplexInteger> reader(filename, schema);
+            std::vector<ComplexInteger> readData;
+            ComplexInteger record;
+            while (reader.read(record)) {
+                readData.push_back(record);
+            }
+
+            BOOST_CHECK_EQUAL(readData.size(), originalData.size());
+            for (size_t j = 0; j < originalData.size() && j < readData.size(); ++j) {
+                BOOST_CHECK_EQUAL(readData[j].re, originalData[j].re);
+                BOOST_CHECK_EQUAL(readData[j].im, originalData[j].im);
+            }
+        }
+    }
+
+    std::filesystem::remove(filename);
+}
+
+#ifdef ZSTD_CODEC_AVAILABLE
+void testZstdCompressionRoundTrip() {
+    BOOST_TEST_CHECKPOINT(__func__);
+
+    avro::ValidSchema schema = avro::compileJsonSchemaFromString(sch);
+    const char *filename = "test_zstd_roundtrip.df";
+
+    boost::mt19937 rng(static_cast<uint32_t>(time(nullptr)));
+    // Valid ZSTD levels: 1-22
+    boost::random::uniform_int_distribution<> levelDist(0, 22); // 0 = nullopt, 1-22 = valid levels
+    boost::random::uniform_int_distribution<> dataDist(1, 1000);
+
+    for (int i = 0; i < 100; ++i) {
+        int rawLevel = levelDist(rng);
+        std::optional<int> level = (rawLevel == 0) ? std::nullopt : std::optional<int>(rawLevel);
+        int numRecords = dataDist(rng) % 100 + 1;
+
+        std::vector<ComplexInteger> originalData;
+        int64_t re = rng();
+        int64_t im = rng();
+        for (int j = 0; j < numRecords; ++j) {
+            originalData.emplace_back(re, im);
+            re = re * 31 + im;
+            im = im * 17 + re;
+        }
+
+        // Write with compression level
+        {
+            avro::DataFileWriter<ComplexInteger> writer(
+                filename, schema, 16 * 1024, avro::ZSTD_CODEC, {}, level);
+            for (const auto &record : originalData) {
+                writer.write(record);
+            }
+            writer.close();
+        }
+
+        // Read back and verify
+        {
+            avro::DataFileReader<ComplexInteger> reader(filename, schema);
+            std::vector<ComplexInteger> readData;
+            ComplexInteger record;
+            while (reader.read(record)) {
+                readData.push_back(record);
+            }
+
+            BOOST_CHECK_EQUAL(readData.size(), originalData.size());
+            for (size_t j = 0; j < originalData.size() && j < readData.size(); ++j) {
+                BOOST_CHECK_EQUAL(readData[j].re, originalData[j].re);
+                BOOST_CHECK_EQUAL(readData[j].im, originalData[j].im);
+            }
+        }
+    }
+
+    std::filesystem::remove(filename);
+}
+#endif
+
+void testCodecEnumValues() {
+    BOOST_TEST_CHECKPOINT(__func__);
+
+    BOOST_CHECK_EQUAL(static_cast<int>(avro::NULL_CODEC), 0);
+    BOOST_CHECK_EQUAL(static_cast<int>(avro::DEFLATE_CODEC), 1);
+    BOOST_CHECK_EQUAL(static_cast<int>(avro::SNAPPY_CODEC), 2);
+    BOOST_CHECK_EQUAL(static_cast<int>(avro::ZSTD_CODEC), 3);
+}
+
+void testIsCodecAvailable() {
+    BOOST_TEST_CHECKPOINT(__func__);
+
+    BOOST_CHECK_EQUAL(avro::isCodecAvailable(avro::NULL_CODEC), true);
+    BOOST_CHECK_EQUAL(avro::isCodecAvailable(avro::DEFLATE_CODEC), true);
+
+#ifdef SNAPPY_CODEC_AVAILABLE
+    BOOST_CHECK_EQUAL(avro::isCodecAvailable(avro::SNAPPY_CODEC), true);
+#else
+    BOOST_CHECK_EQUAL(avro::isCodecAvailable(avro::SNAPPY_CODEC), false);
+#endif
+
+#ifdef ZSTD_CODEC_AVAILABLE
+    BOOST_CHECK_EQUAL(avro::isCodecAvailable(avro::ZSTD_CODEC), true);
+#else
+    BOOST_CHECK_EQUAL(avro::isCodecAvailable(avro::ZSTD_CODEC), false);
+#endif
+}
+
 test_suite *
-init_unit_test_suite(int argc, char *argv[]) {
+init_unit_test_suite(int, char *[]) {
     {
         auto *ts = BOOST_TEST_SUITE("DataFile tests: test0.df");
         shared_ptr<DataFileTest> t1(new DataFileTest("test1.d0", sch, isch, 0));
@@ -1033,6 +1527,16 @@ init_unit_test_suite(int argc, char *argv[]) {
         shared_ptr<DataFileTest> t1(new DataFileTest("test1.snappy.df", sch, isch));
         ts->add(BOOST_CLASS_TEST_CASE(
             &DataFileTest::testWriteWithSnappyCodec, t1));
+        addReaderTests(ts, t1);
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+#endif
+#ifdef ZSTD_CODEC_AVAILABLE
+    {
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test1.zstd.df");
+        shared_ptr<DataFileTest> t1(new DataFileTest("test1.zstd.df", sch, isch));
+        ts->add(BOOST_CLASS_TEST_CASE(
+            &DataFileTest::testWriteWithZstdCodec, t1));
         addReaderTests(ts, t1);
         boost::unit_test::framework::master_test_suite().add(ts);
     }
@@ -1083,6 +1587,9 @@ init_unit_test_suite(int argc, char *argv[]) {
 #ifdef SNAPPY_CODEC_AVAILABLE
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSnappy, t8));
 #endif
+#ifdef ZSTD_CODEC_AVAILABLE
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testZstd, t8));
+#endif
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
@@ -1097,7 +1604,7 @@ init_unit_test_suite(int argc, char *argv[]) {
         shared_ptr<DataFileTest> t9(new DataFileTest("test9.df", sch, sch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t9));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReaderSyncSeek, t9));
-        //ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t9));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t9));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
@@ -1125,11 +1632,45 @@ init_unit_test_suite(int argc, char *argv[]) {
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
+    {
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test13.df");
+        shared_ptr<DataFileTest> t(new DataFileTest("test13.df", ischWithDoc, ischWithDoc));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testClosedReader, t));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+    {
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test14.df");
+        shared_ptr<DataFileTest> t(new DataFileTest("test14.df", ischWithDoc, ischWithDoc));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testClosedWriter, t));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+    {
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test15.df");
+        shared_ptr<DataFileTest> t(new DataFileTest("test15.df", sch, isch));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testMetadata, t));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
 
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testSkipStringNullCodec));
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testSkipStringDeflateCodec));
 #ifdef SNAPPY_CODEC_AVAILABLE
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testSkipStringSnappyCodec));
+#endif
+#ifdef ZSTD_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testSkipStringZstdCodec));
+#endif
+
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testCompatibilityNullCodec));
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testCompatibilityDeflateCodec));
+#ifdef SNAPPY_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testCompatibilitySnappyCodec));
+#endif
+#ifdef ZSTD_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testCompatibilityZstdCodec));
 #endif
 
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testLastSyncNullCodec));
@@ -1137,11 +1678,42 @@ init_unit_test_suite(int argc, char *argv[]) {
 #ifdef SNAPPY_CODEC_AVAILABLE
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testLastSyncSnappyCodec));
 #endif
+#ifdef ZSTD_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testLastSyncZstdCodec));
+#endif
 
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncNullCodec));
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncDeflateCodec));
 #ifdef SNAPPY_CODEC_AVAILABLE
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncSnappyCodec));
+#endif
+#ifdef ZSTD_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncZstdCodec));
+#endif
+
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testMetadataWithNullCodec));
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testMetadataWithDeflateCodec));
+#ifdef SNAPPY_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testMetadataWithSnappyCodec));
+#endif
+#ifdef ZSTD_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testMetadataWithZstdCodec));
+#endif
+
+    // Codec enum and isCodecAvailable tests
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testCodecEnumValues));
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testIsCodecAvailable));
+
+    // Compression level validation property tests
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testDeflateCompressionLevelValidation));
+#ifdef ZSTD_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testZstdCompressionLevelValidation));
+#endif
+
+    // Compression round-trip property tests
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testDeflateCompressionRoundTrip));
+#ifdef ZSTD_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testZstdCompressionRoundTrip));
 #endif
 
     return nullptr;

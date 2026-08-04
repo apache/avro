@@ -94,7 +94,10 @@ EOS
                             "logicalType": "timestamp-micros"}},
                   {"name": "ts2",
                    "type": {"type": "long",
-                            "logicalType": "timestamp-millis"}}]}
+                            "logicalType": "timestamp-millis"}},
+                  {"name": "ts3",
+                   "type": {"type": "long",
+                            "logicalType": "timestamp-nanos"}}]}
 EOS
     check(record_schema)
   end

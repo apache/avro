@@ -17,23 +17,6 @@
  */
 package org.apache.avro.file;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import java.io.BufferedOutputStream;
-import java.io.Closeable;
-import java.io.File;
-import java.io.FilterOutputStream;
-import java.io.Flushable;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileStream.DataBlock;
@@ -42,7 +25,24 @@ import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.NonCopyingByteArrayOutputStream;
-import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.io.IOUtils;
+
+import java.io.BufferedOutputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FilterOutputStream;
+import java.io.Flushable;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Stores in a file a sequence of data conforming to a schema. The schema is
@@ -51,12 +51,12 @@ import org.apache.commons.compress.utils.IOUtils;
  * <i>blocks</i>. A synchronization marker is written between blocks, so that
  * files may be split. Blocks may be compressed. Extensible metadata is stored
  * at the end of the file. Files may be appended to.
- * 
+ *
  * @see DataFileReader
  */
 public class DataFileWriter<D> implements Closeable, Flushable {
   private Schema schema;
-  private DatumWriter<D> dout;
+  private final DatumWriter<D> dout;
 
   private OutputStream underlyingStream;
 
@@ -72,6 +72,8 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   private byte[] sync; // 16 random bytes
   private int syncInterval = DataFileConstants.DEFAULT_SYNC_INTERVAL;
+  private Function<OutputStream, BinaryEncoder> initEncoder = out -> new EncoderFactory().directBinaryEncoder(out,
+      null);
 
   private boolean isOpen;
   private Codec codec;
@@ -115,17 +117,27 @@ public class DataFileWriter<D> implements Closeable, Flushable {
    * is written. In this case, the {@linkplain #flush()} must be called to flush
    * the stream.
    *
-   * Invalid values throw IllegalArgumentException
-   *
    * @param syncInterval the approximate number of uncompressed bytes to write in
    *                     each block
    * @return this DataFileWriter
+   * @throws IllegalArgumentException if syncInterval is invalid
    */
   public DataFileWriter<D> setSyncInterval(int syncInterval) {
     if (syncInterval < 32 || syncInterval > (1 << 30)) {
       throw new IllegalArgumentException("Invalid syncInterval value: " + syncInterval);
     }
     this.syncInterval = syncInterval;
+    return this;
+  }
+
+  /**
+   * Allows setting a different encoder than the default DirectBinaryEncoder.
+   *
+   * @param initEncoderFunc Function to create a binary encoder
+   * @return this DataFileWriter
+   */
+  public DataFileWriter<D> setEncoder(Function<OutputStream, BinaryEncoder> initEncoderFunc) {
+    this.initEncoder = initEncoderFunc;
     return this;
   }
 
@@ -180,8 +192,8 @@ public class DataFileWriter<D> implements Closeable, Flushable {
    * Set whether this writer should flush the block to the stream every time a
    * sync marker is written. By default, the writer will flush the buffer each
    * time a sync marker is written (if the block size limit is reached or the
-   * {@linkplain #sync()} is called.
-   * 
+   * {@linkplain #sync()} is called).
+   *
    * @param flushOnEveryBlock - If set to false, this writer will not flush the
    *                          block to the stream until {@linkplain #flush()} is
    *                          explicitly called.
@@ -211,7 +223,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   /**
    * Open a writer appending to an existing file. <strong>Since 1.9.0 this method
    * does not close in.</strong>
-   * 
+   *
    * @param in  reading the existing file.
    * @param out positioned at the end of the existing file.
    */
@@ -234,29 +246,40 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     return this;
   }
 
-  private void init(OutputStream outs) throws IOException {
+  private void init(OutputStream outs) {
     this.underlyingStream = outs;
-    this.out = new BufferedFileOutputStream(outs);
+    // Size the output buffer to fit an entire block frame in a single flush:
+    // maxBlockSize() for compressed data + 20 bytes for two varint-encoded longs
+    // (up to 10 bytes each) + sync.length for the sync marker
+    this.out = new BufferedFileOutputStream(outs, maxBlockSize() + 20 + sync.length);
     EncoderFactory efactory = new EncoderFactory();
     this.vout = efactory.directBinaryEncoder(out, null);
     dout.setSchema(schema);
-    buffer = new NonCopyingByteArrayOutputStream(Math.min((int) (syncInterval * 1.25), Integer.MAX_VALUE / 2 - 1));
-    this.bufOut = efactory.directBinaryEncoder(buffer, null);
+    buffer = new NonCopyingByteArrayOutputStream(maxBlockSize());
+    this.bufOut = this.initEncoder.apply(buffer);
     if (this.codec == null) {
       this.codec = CodecFactory.nullCodec().createInstance();
     }
     this.isOpen = true;
   }
 
+  /**
+   * Returns the estimated maximum compressed block size. Blocks are flushed when
+   * uncompressed data reaches {@link #syncInterval}, but compression may increase
+   * size (e.g. uncompressible data with codec framing overhead), so we allow 25%
+   * headroom. The result is clamped to avoid integer overflow when used for
+   * buffer allocation.
+   */
+  private int maxBlockSize() {
+    return Math.min((int) (syncInterval * 1.25), Integer.MAX_VALUE / 2 - 1);
+  }
+
+  private static final SecureRandom RNG = new SecureRandom();
+
   private static byte[] generateSync() {
-    try {
-      MessageDigest digester = MessageDigest.getInstance("MD5");
-      long time = System.currentTimeMillis();
-      digester.update((UUID.randomUUID() + "@" + time).getBytes(UTF_8));
-      return digester.digest();
-    } catch (NoSuchAlgorithmException e) {
-      throw new RuntimeException(e);
-    }
+    byte[] sync = new byte[16];
+    RNG.nextBytes(sync);
+    return sync;
   }
 
   private DataFileWriter<D> setMetaInternal(String key, byte[] value) {
@@ -304,7 +327,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /**
    * Append a datum to the file.
-   * 
+   *
    * @see AppendWriteException
    */
   public void append(D datum) throws IOException {
@@ -365,7 +388,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
    * at compression level 7. If <i>recompress</i> is false, blocks will be copied
    * without changing the compression level. If true, they will be converted to
    * the new compression level.
-   * 
+   *
    * @param otherFile
    * @param recompress
    * @throws IOException
@@ -439,10 +462,10 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
 
   /**
-   * If this writer was instantiated using a File or using an
-   * {@linkplain Syncable} instance, this method flushes all buffers for this
-   * writer to disk. In other cases, this method behaves exactly like
-   * {@linkplain #flush()}.
+   * If this writer was instantiated using a {@linkplain File},
+   * {@linkplain FileOutputStream} or {@linkplain Syncable} instance, this method
+   * flushes all buffers for this writer to disk. In other cases, this method
+   * behaves exactly like {@linkplain #flush()}.
    *
    * @throws IOException
    */
@@ -450,6 +473,8 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     flush();
     if (underlyingStream instanceof Syncable) {
       ((Syncable) underlyingStream).sync();
+    } else if (underlyingStream instanceof FileOutputStream) {
+      ((FileOutputStream) underlyingStream).getFD().sync();
     }
   }
 
@@ -463,11 +488,11 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     }
   }
 
-  private class BufferedFileOutputStream extends BufferedOutputStream {
+  private static class BufferedFileOutputStream extends BufferedOutputStream {
     private long position; // start of buffer
 
     private class PositionFilter extends FilterOutputStream {
-      public PositionFilter(OutputStream out) throws IOException {
+      public PositionFilter(OutputStream out) {
         super(out);
       }
 
@@ -478,8 +503,13 @@ public class DataFileWriter<D> implements Closeable, Flushable {
       }
     }
 
-    public BufferedFileOutputStream(OutputStream out) throws IOException {
+    public BufferedFileOutputStream(OutputStream out) {
       super(null);
+      this.out = new PositionFilter(out);
+    }
+
+    public BufferedFileOutputStream(OutputStream out, int bufferSize) {
+      super(null, bufferSize);
       this.out = new PositionFilter(out);
     }
 

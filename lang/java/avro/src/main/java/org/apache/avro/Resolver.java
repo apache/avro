@@ -435,7 +435,7 @@ public class Resolver {
      * fields that will be read from the writer: these <i>n</i> are in the order
      * dictated by writer's schema. The remaining <i>m</i> fields will be read from
      * default values (actions for these default values are found in
-     * {@link RecordAdjust#defaults}.
+     * {@link RecordAdjust#defaults}).
      */
     public final Field[] readerOrder;
 

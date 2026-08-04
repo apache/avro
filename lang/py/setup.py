@@ -19,9 +19,7 @@
 
 
 import distutils.errors
-import glob
 import os
-import subprocess
 
 import setuptools  # type: ignore
 

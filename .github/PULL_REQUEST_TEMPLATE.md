@@ -13,7 +13,7 @@
 
   - Fill out the template below to describe the changes contributed by the pull request. That will give reviewers the context they need to do the review.
   
-  - Make sure that the change passes the automated tests. You can [build the entire project](https://github.com/apache/avro/blob/master/BUILD.md) or just the [language-specific SDK](https://avro.apache.org/project/how-to-contribute/#unit-tests).
+  - Make sure that the change passes the automated tests. You can [build the entire project](https://github.com/apache/avro/blob/main/BUILD.md) or just the [language-specific SDK](https://avro.apache.org/project/how-to-contribute/#unit-tests).
 
   - Each pull request should address only one issue, not mix up code from multiple issues.
   

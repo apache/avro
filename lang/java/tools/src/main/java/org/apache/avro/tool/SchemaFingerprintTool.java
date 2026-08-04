@@ -29,6 +29,7 @@ import joptsimple.OptionSpec;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaNormalization;
+import org.apache.avro.SchemaParser;
 
 /**
  * Utility to generate fingerprint(s) from a schema.
@@ -40,13 +41,13 @@ public class SchemaFingerprintTool implements Tool {
     final OptionParser optParser = new OptionParser();
     final OptionSpec<String> fingerprintOpt = optParser
         .accepts("fingerprint",
-            "Fingerprint algorithm to use. Recommended Avro practice dictiates "
+            "Fingerprint algorithm to use. Recommended Avro practice dictates "
                 + "that \"CRC-64-AVRO\" is used for 64-bit fingerprints, \"MD5\" is "
                 + "used for 128-bit fingerprints, and \"SHA-256\" is used for 256-bit " + "fingerprints.")
         .withRequiredArg().ofType(String.class).defaultsTo("CRC-64-AVRO");
 
     final OptionSet opts = optParser.parse(args.toArray(new String[0]));
-    final Schema.Parser parser = new Schema.Parser();
+    final SchemaParser parser = new SchemaParser();
     final List<String> nargs = (List<String>) opts.nonOptionArguments();
     if (nargs.size() < 1) {
       printHelp(out, optParser);
@@ -56,7 +57,7 @@ public class SchemaFingerprintTool implements Tool {
     for (final String fileOrStdin : (List<String>) opts.nonOptionArguments()) {
       final InputStream input = Util.fileOrStdin(fileOrStdin, in);
       try {
-        final Schema schema = parser.parse(input);
+        final Schema schema = parser.parse(input).mainSchema();
         final byte[] fingerprint = SchemaNormalization.parsingFingerprint(opts.valueOf(fingerprintOpt), schema);
         out.format("%s %s%n", Util.encodeHex(fingerprint), fileOrStdin);
       } finally {

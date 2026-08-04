@@ -40,6 +40,7 @@ import org.apache.avro.Resolver.Skip;
 import org.apache.avro.Resolver.WriterUnion;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.InstanceSupplier;
@@ -52,6 +53,7 @@ import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
 import org.apache.avro.reflect.ReflectionUtil;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.avro.util.ClassUtils;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.util.WeakIdentityHashMap;
 import org.apache.avro.util.internal.Accessor;
@@ -140,7 +142,7 @@ public class FastReaderBuilder {
     return recordReader;
   }
 
-  private RecordReader initializeRecordReader(RecordReader recordReader, RecordAdjust action) throws IOException {
+  private void initializeRecordReader(RecordReader recordReader, RecordAdjust action) throws IOException {
     recordReader.startInitialization();
 
     // generate supplier for the new object instances
@@ -171,7 +173,6 @@ public class FastReaderBuilder {
     }
 
     recordReader.finishInitialization(readSteps, action.reader, action.instanceSupplier);
-    return recordReader;
   }
 
   private ExecutionStep createFieldSetter(Field field, FieldReader reader) {
@@ -197,7 +198,16 @@ public class FastReaderBuilder {
     } else if (defaultValue instanceof Utf8) {
       return createFieldSetter(field, reusingReader((old, d) -> readUtf8(old, (Utf8) defaultValue)));
     } else if (defaultValue instanceof List && ((List<?>) defaultValue).isEmpty()) {
-      return createFieldSetter(field, reusingReader((old, d) -> data.newArray(old, 0, field.schema())));
+      Schema arraySchema = field.schema();
+      if (arraySchema.getType() == Schema.Type.UNION) {
+        arraySchema = arraySchema.getTypes().stream()
+            .filter(nestedSchema -> nestedSchema.getType() == Schema.Type.ARRAY).findFirst()
+            .orElseThrow(() -> new AvroTypeException(String.format(
+                "Union schema %s has a default value of type Array, but none of the union types is of type Array",
+                field.schema().toString())));
+      }
+      final Schema schema = arraySchema;
+      return createFieldSetter(field, reusingReader((old, d) -> data.newArray(old, 0, schema)));
     } else if (defaultValue instanceof Map && ((Map<?, ?>) defaultValue).isEmpty()) {
       return createFieldSetter(field, reusingReader((old, d) -> data.newMap(old, 0)));
     } else {
@@ -277,7 +287,7 @@ public class FastReaderBuilder {
         throw new IllegalStateException("Error getting reader for action type " + action.getClass());
       }
     case DO_NOTHING:
-      return getReaderForBaseType(action.reader, action.writer);
+      return getReaderForBaseType(action.reader);
     case RECORD:
       return createRecordReader((RecordAdjust) action);
     case ENUM:
@@ -297,7 +307,7 @@ public class FastReaderBuilder {
     }
   }
 
-  private FieldReader getReaderForBaseType(Schema readerSchema, Schema writerSchema) throws IOException {
+  private FieldReader getReaderForBaseType(Schema readerSchema) {
     switch (readerSchema.getType()) {
     case NULL:
       return (old, decoder) -> {
@@ -307,7 +317,7 @@ public class FastReaderBuilder {
     case BOOLEAN:
       return (old, decoder) -> decoder.readBoolean();
     case STRING:
-      return createStringReader(readerSchema, writerSchema);
+      return createStringReader(readerSchema);
     case INT:
       return (old, decoder) -> decoder.readInt();
     case LONG:
@@ -319,7 +329,7 @@ public class FastReaderBuilder {
     case BYTES:
       return createBytesReader();
     case FIXED:
-      return createFixedReader(readerSchema, writerSchema);
+      return createFixedReader(readerSchema);
     case RECORD: // covered by action type
     case UNION: // covered by action type
     case ENUM: // covered by action type
@@ -330,7 +340,7 @@ public class FastReaderBuilder {
     }
   }
 
-  private FieldReader createPromotingReader(Promote promote) throws IOException {
+  private FieldReader createPromotingReader(Promote promote) {
     switch (promote.reader.getType()) {
     case BYTES:
       return (reuse, decoder) -> ByteBuffer.wrap(decoder.readString(null).getBytes());
@@ -364,7 +374,7 @@ public class FastReaderBuilder {
         "No promotion possible for type " + promote.writer.getType() + " to " + promote.reader.getType());
   }
 
-  private FieldReader createStringReader(Schema readerSchema, Schema writerSchema) {
+  private FieldReader createStringReader(Schema readerSchema) {
     FieldReader stringReader = createSimpleStringReader(readerSchema);
     if (isClassPropEnabled()) {
       return getTransformingStringReader(readerSchema.getProp(SpecificData.CLASS_PROP), stringReader);
@@ -410,6 +420,10 @@ public class FastReaderBuilder {
   private FieldReader createUnionReader(FieldReader[] unionReaders) {
     return reusingReader((reuse, decoder) -> {
       final int selection = decoder.readIndex();
+      if (selection < 0 || selection >= unionReaders.length) {
+        throw new AvroTypeException(
+            "Union branch index out of range: must be in [0, " + unionReaders.length + "), but received " + selection);
+      }
       return unionReaders[selection].read(null, decoder);
     });
 
@@ -438,7 +452,11 @@ public class FastReaderBuilder {
       Function<String, ?> transformer = findClass(valueClass)
           .map(clazz -> ReflectionUtil.getConstructorAsFunction(String.class, clazz)).orElse(null);
       if (transformer != null) {
-        return (old, decoder) -> transformer.apply((String) stringReader.read(null, decoder));
+        return (old, decoder) -> {
+          Object value = stringReader.read(null, decoder);
+          String stringValue = value instanceof Utf8 ? ((Utf8) value).toString() : (String) value;
+          return transformer.apply(stringValue);
+        };
       }
     }
 
@@ -447,8 +465,8 @@ public class FastReaderBuilder {
 
   private Optional<Class<?>> findClass(String clazz) {
     try {
-      return Optional.of(data.getClassLoader().loadClass(clazz));
-    } catch (ReflectiveOperationException e) {
+      return Optional.of(ClassUtils.forName(data.getClassLoader(), clazz));
+    } catch (ClassNotFoundException e) {
       return Optional.empty();
     }
   }
@@ -456,39 +474,76 @@ public class FastReaderBuilder {
   @SuppressWarnings("unchecked")
   private FieldReader createArrayReader(Schema readerSchema, Container action) throws IOException {
     FieldReader elementReader = getReaderFor(action.elementAction, null);
+    Schema elementType = readerSchema.getElementType();
+
+    boolean zeroByteElements = GenericDatumReader.isZeroByteSchema(elementType);
 
     return reusingReader((reuse, decoder) -> {
       if (reuse instanceof GenericArray) {
         GenericArray<Object> reuseArray = (GenericArray<Object>) reuse;
         long l = decoder.readArrayStart();
+        long total = 0;
+        checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
         reuseArray.clear();
 
         while (l > 0) {
           for (long i = 0; i < l; i++) {
             reuseArray.add(elementReader.read(reuseArray.peek(), decoder));
           }
+          total += l;
           l = decoder.arrayNext();
+          checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
         }
         return reuseArray;
       } else {
         long l = decoder.readArrayStart();
+        long total = 0;
+        checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
         List<Object> array = (reuse instanceof List) ? (List<Object>) reuse
-            : new GenericData.Array<>((int) l, readerSchema);
+            : new GenericData.Array<>(GenericDatumReader.initialCollectionCapacity(l), readerSchema);
         array.clear();
         while (l > 0) {
           for (long i = 0; i < l; i++) {
             array.add(elementReader.read(null, decoder));
           }
+          total += l;
           l = decoder.arrayNext();
+          checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
         }
         return array;
       }
     });
   }
 
+  /**
+   * Validates an array block count before its elements are allocated, applying
+   * the same guards as the classic {@code GenericDatumReader}: the
+   * bytes-remaining check for elements with a positive minimum size, and the
+   * heap-aware allocation cap for zero-byte elements (which the bytes check
+   * cannot bound).
+   */
+  private static void checkArrayBlock(Decoder decoder, Schema elementType, boolean zeroByteElements, long total,
+      long count) throws IOException {
+    if (count <= 0) {
+      return;
+    }
+    if (zeroByteElements) {
+      // The bytes-remaining check cannot bound zero-byte elements (minBytes is
+      // 0, so ensureAvailableCollectionBytes would no-op after recomputing it);
+      // apply the heap-aware allocation cap instead.
+      SystemLimitException.checkMaxCollectionAllocation(total, count);
+    } else {
+      GenericDatumReader.ensureAvailableCollectionBytes(decoder, count, elementType);
+    }
+  }
+
   private FieldReader createEnumReader(EnumAdjust action) {
     return reusingReader((reuse, decoder) -> {
       int index = decoder.readEnum();
+      if (index < 0 || index >= action.values.length) {
+        throw new AvroTypeException(
+            "Enumeration out of range: must be in [0, " + action.values.length + "), but received " + index);
+      }
       Object resultObject = action.values[index];
       if (resultObject == null) {
         throw new AvroTypeException("No match for " + action.writer.getEnumSymbols().get(index));
@@ -497,7 +552,7 @@ public class FastReaderBuilder {
     });
   }
 
-  private FieldReader createFixedReader(Schema readerSchema, Schema writerSchema) {
+  private FieldReader createFixedReader(Schema readerSchema) {
     return reusingReader((reuse, decoder) -> {
       GenericFixed fixed = (GenericFixed) data.createFixed(reuse, readerSchema);
       decoder.readFixed(fixed.bytes(), 0, readerSchema.getFixedSize());
@@ -516,9 +571,9 @@ public class FastReaderBuilder {
 
   public interface FieldReader extends DatumReader<Object> {
     @Override
-    public Object read(Object reuse, Decoder decoder) throws IOException;
+    Object read(Object reuse, Decoder decoder) throws IOException;
 
-    public default boolean canReuse() {
+    default boolean canReuse() {
       return false;
     }
 
@@ -530,7 +585,7 @@ public class FastReaderBuilder {
 
   public interface ReusingFieldReader extends FieldReader {
     @Override
-    public default boolean canReuse() {
+    default boolean canReuse() {
       return true;
     }
   }
@@ -608,7 +663,7 @@ public class FastReaderBuilder {
   }
 
   public interface ExecutionStep {
-    public void execute(Object record, Decoder decoder) throws IOException;
+    void execute(Object record, Decoder decoder) throws IOException;
   }
 
 }

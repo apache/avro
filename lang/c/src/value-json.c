@@ -29,7 +29,8 @@
 #include "jansson.h"
 
 /*
- * Converts a binary buffer into a NUL-terminated JSON UTF-8 string.
+ * Converts a binary buffer into a JSON UTF-8 string which is NOT
+ * terminated with a null byte ('\0').
  * Avro bytes and fixed values are encoded in JSON as a string, and JSON
  * strings must be in UTF-8.  For these Avro types, the JSON string is
  * restricted to the characters U+0000..U+00FF, which corresponds to the
@@ -51,7 +52,7 @@ encode_utf8_bytes(const void *src, size_t src_len,
 	// the range 0x80..0xff will take up two.
 	const uint8_t  *src8 = (const uint8_t *) src;
 
-	size_t  utf8_len = src_len + 1;  // +1 for NUL terminator
+	size_t  utf8_len = src_len;
 	size_t  i;
 	for (i = 0; i < src_len; i++) {
 		if (src8[i] & 0x80) {
@@ -75,8 +76,6 @@ encode_utf8_bytes(const void *src, size_t src_len,
 			*curr++ = src8[i];
 		}
 	}
-
-	*curr = '\0';
 
 	// And we're good.
 	*dest = dest8;
@@ -127,7 +126,7 @@ avro_value_to_json_t(const avro_value_t *value)
 				return NULL;
 			}
 
-			json_t  *result = json_string_nocheck((const char *) encoded);
+			json_t  *result = json_stringn_nocheck((const char *) encoded, encoded_size);
 			avro_free(encoded, encoded_size);
 			if (result == NULL) {
 				avro_set_error("Cannot allocate JSON bytes");
@@ -242,7 +241,7 @@ avro_value_to_json_t(const avro_value_t *value)
 				return NULL;
 			}
 
-			json_t  *result = json_string_nocheck((const char *) encoded);
+			json_t  *result = json_stringn_nocheck((const char *) encoded, encoded_size);
 			avro_free(encoded, encoded_size);
 			if (result == NULL) {
 				avro_set_error("Cannot allocate JSON fixed");

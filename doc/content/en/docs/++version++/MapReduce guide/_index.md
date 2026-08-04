@@ -2,6 +2,8 @@
 title: "MapReduce guide"
 linkTitle: "MapReduce guide"
 weight: 200
+aliases:
+- /docs/current/mapreduce-guide/
 ---
 
 <!--

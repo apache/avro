@@ -1,0 +1,45 @@
+@namespace("naming")
+@version("1.0.5")
+protocol HappyFlow {
+    /** A sample record type. */
+    @version(2)
+    @aliases(["naming.OldMessage"])
+    record NewMessage {
+        string @generator("uuid-type1") id;
+        @my-key("my-value") string? @aliases(["text","msg"]) message = null;
+        @my-key("my-value") map<common.Flag> @order("DESCENDING") flags;
+        Counter mainCounter;
+        /** A list of counters. */
+        union{null, @my-key("my-value") array<Counter>} otherCounters = null;
+        Nonce nonce;
+        date my_date;
+        time_ms my_time;
+        timestamp_ms my_timestamp;
+        decimal(12,3) my_number;
+        @logicalType("time-micros") long my_dummy;
+    }
+
+    @namespace("common")
+    enum Flag {ON, OFF, CANARY}
+
+    record Counter {
+        string name;
+        int count;
+        /** Because the Flag field is defined earlier in NewMessage, it's already defined and does not need repeating below. */
+        common.Flag flag;
+    }
+
+    fixed Nonce(8);
+
+    error Failure {
+        string reason;
+    }
+
+    null send(Counter counter) oneway;
+    /** Simple echoing service */
+    string echo(
+        /** this message will be returned count times. */
+        string message,
+        int count
+    ) throws Failure;
+}

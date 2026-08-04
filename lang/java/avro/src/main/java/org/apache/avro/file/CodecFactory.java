@@ -28,12 +28,14 @@ import org.slf4j.LoggerFactory;
 /**
  * Encapsulates the ability to specify and configure a compression codec.
  *
- * Currently there are three codecs registered by default:
+ * Currently there are five codecs registered by default:
  * <ul>
  * <li>{@code null}</li>
  * <li>{@code deflate}</li>
  * <li>{@code snappy}</li>
  * <li>{@code bzip2}</li>
+ * <li>{@code xz}</li>
+ * <li>{@code zstandard}</li>
  * </ul>
  *
  * New and custom codecs can be registered using

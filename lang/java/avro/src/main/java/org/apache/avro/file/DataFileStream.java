@@ -17,28 +17,29 @@
  */
 package org.apache.avro.file;
 
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.InvalidAvroMagicException;
+import org.apache.avro.JsonSchemaParser;
+import org.apache.avro.Schema;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DecoderFactory;
+
+import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.InvalidAvroMagicException;
-import org.apache.avro.Schema;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.DatumReader;
 
 /**
  * Streaming access to files written by {@link DataFileWriter}. Use
@@ -62,7 +63,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     }
   }
 
-  private DatumReader<D> reader;
+  private final DatumReader<D> reader;
   private long blockSize;
   private boolean availableBlock = false;
   private Header header;
@@ -70,7 +71,8 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   /** Decoder on raw input stream. (Used for metadata.) */
   BinaryDecoder vin;
   /**
-   * Secondary decoder, for datums. (Different than vin for block segments.)
+   * Secondary decoder, for datums. (Different from `vin`, which is used for block
+   * segments)
    */
   BinaryDecoder datumIn = null;
 
@@ -93,7 +95,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   /**
    * create an uninitialized DataFileStream
    */
-  protected DataFileStream(DatumReader<D> reader) throws IOException {
+  protected DataFileStream(DatumReader<D> reader) {
     this.reader = reader;
   }
 
@@ -139,14 +141,13 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
     // finalize the header
     header.metaKeyList = Collections.unmodifiableList(header.metaKeyList);
-    header.schema = new Schema.Parser().setValidate(false).setValidateDefaults(false)
-        .parse(getMetaString(DataFileConstants.SCHEMA));
+    header.schema = parseHeaderSchema();
     this.codec = resolveCodec();
     reader.setSchema(header.schema);
   }
 
   /** Initialize the stream without reading from it. */
-  void initialize(Header header) throws IOException {
+  void initialize(Header header) {
     this.header = header;
     this.codec = resolveCodec();
     reader.setSchema(header.schema);
@@ -195,6 +196,21 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   /** Return the value of a metadata property. */
   public long getMetaLong(String key) {
     return Long.parseLong(getMetaString(key));
+  }
+
+  static Schema parseSchemaFromMetadata(String schemaJson, String schemaMetadataKey) throws IOException {
+    if (schemaJson == null) {
+      throw new IOException("Missing required metadata: " + schemaMetadataKey);
+    }
+    try {
+      return JsonSchemaParser.parseInternal(schemaJson);
+    } catch (AvroRuntimeException e) {
+      throw new IOException("Invalid schema in metadata: " + schemaMetadataKey, e);
+    }
+  }
+
+  private Schema parseHeaderSchema() throws IOException {
+    return parseSchemaFromMetadata(getMetaString(DataFileConstants.SCHEMA), DataFileConstants.SCHEMA);
   }
 
   /**
@@ -274,6 +290,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     if (blockRemaining != blockCount)
       throw new IllegalStateException("Not at block start.");
     blockRemaining = 0;
+    blockFinished();
     datumIn = null;
     return blockBuffer;
   }
@@ -301,7 +318,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
       blockRemaining = vin.readLong(); // read block count
       blockSize = vin.readLong(); // read block size
       if (blockSize > Integer.MAX_VALUE || blockSize < 0) {
-        throw new IOException("Block size invalid or too large for this " + "implementation: " + blockSize);
+        throw new IOException("Block size invalid or too large for this implementation: " + blockSize);
       }
       blockCount = blockRemaining;
       availableBlock = true;
@@ -328,7 +345,10 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     vin.readFixed(syncBuffer);
     availableBlock = false;
     if (!Arrays.equals(syncBuffer, header.sync))
-      throw new IOException("Invalid sync!");
+      throw new IOException("Invalid sync marker! The sync marker in the data block doesn't match the "
+          + "file header's sync marker. This likely indicates data corruption, truncated file, "
+          + "or incorrectly concatenated Avro files. Verify file integrity and ensure proper "
+          + "file transmission or creation.");
     return reuse;
   }
 
@@ -362,22 +382,6 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
       this.blockSize = block.remaining();
       this.offset = block.arrayOffset() + block.position();
       this.numEntries = numEntries;
-    }
-
-    byte[] getData() {
-      return data;
-    }
-
-    long getNumEntries() {
-      return numEntries;
-    }
-
-    int getBlockSize() {
-      return blockSize;
-    }
-
-    boolean isFlushOnWrite() {
-      return flushOnWrite;
     }
 
     void setFlushOnWrite(boolean flushOnWrite) {

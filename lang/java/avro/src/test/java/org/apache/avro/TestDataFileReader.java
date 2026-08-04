@@ -24,23 +24,34 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import com.sun.management.UnixOperatingSystemMXBean;
 import org.apache.avro.file.DataFileReader;
+import org.apache.avro.file.DataFileConstants;
+import org.apache.avro.file.DataFileReader12;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.FileReader;
+import org.apache.avro.file.SeekableByteArrayInput;
 import org.apache.avro.file.SeekableFileInput;
 import org.apache.avro.file.SeekableInput;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.EncoderFactory;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 @SuppressWarnings("restriction")
 public class TestDataFileReader {
+  @TempDir
+  public Path dataDir;
 
   // regression test for bug AVRO-2286
   @Test
@@ -87,10 +98,9 @@ public class TestDataFileReader {
     // magic header check. This happens with throttled input stream,
     // where we read into buffer less bytes than requested.
 
-    Schema legacySchema = new Schema.Parser().setValidate(false).setValidateDefaults(false)
-        .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
-            + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
-    File f = Files.createTempFile("testThrottledInputStream", ".avro").toFile();
+    Schema legacySchema = JsonSchemaParser.parseInternal("{\"type\": \"record\", \"name\": \"TestSchema\", "
+        + "\"fields\": [ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
+    File f = dataDir.resolve("testThrottledInputStream.avro").toFile();
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
       w.create(legacySchema, f);
       w.flush();
@@ -146,10 +156,9 @@ public class TestDataFileReader {
       // AVRO-2944 describes hanging/failure in reading Avro file with performing
       // magic header check. This potentially happens with a defective input stream
       // where a -1 value is unexpectedly returned from a read.
-      Schema legacySchema = new Schema.Parser().setValidate(false).setValidateDefaults(false)
-          .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
-              + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
-      File f = Files.createTempFile("testInputStreamEOF", ".avro").toFile();
+      Schema legacySchema = JsonSchemaParser.parseInternal("{\"type\": \"record\", \"name\": \"TestSchema\", "
+          + "\"fields\": [ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
+      File f = dataDir.resolve("testInputStreamEOF.avro").toFile();
       try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
         w.create(legacySchema, f);
         w.flush();
@@ -195,12 +204,12 @@ public class TestDataFileReader {
     // This schema has an accent in the name and the default for the field doesn't
     // match the first type in the union. A Java SDK in the past could create a file
     // containing this schema.
-    Schema legacySchema = new Schema.Parser().setValidate(false).setValidateDefaults(false)
-        .parse("{\"type\": \"record\", \"name\": \"InvalidAccëntWithInvalidNull\", \"fields\": "
+    Schema legacySchema = JsonSchemaParser
+        .parseInternal("{\"type\": \"record\", \"name\": \"InvalidAccëntWithInvalidNull\", \"fields\": "
             + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
 
     // Create a file with the legacy schema.
-    File f = Files.createTempFile("testIgnoreSchemaValidationOnRead", ".avro").toFile();
+    File f = dataDir.resolve("testIgnoreSchemaValidationOnRead.avro").toFile();
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
       w.create(legacySchema, f);
       w.flush();
@@ -214,7 +223,7 @@ public class TestDataFileReader {
 
   @Test
   void invalidMagicLength() throws IOException {
-    File f = Files.createTempFile("testInvalidMagicLength", ".avro").toFile();
+    File f = dataDir.resolve("testInvalidMagicLength.avro").toFile();
     try (FileWriter w = new FileWriter(f)) {
       w.write("-");
     }
@@ -226,7 +235,7 @@ public class TestDataFileReader {
 
   @Test
   void invalidMagicBytes() throws IOException {
-    File f = Files.createTempFile("testInvalidMagicBytes", ".avro").toFile();
+    File f = dataDir.resolve("testInvalidMagicBytes.avro").toFile();
     try (FileWriter w = new FileWriter(f)) {
       w.write("invalid");
     }
@@ -234,5 +243,80 @@ public class TestDataFileReader {
       assertThrows(InvalidAvroMagicException.class,
           () -> DataFileReader.openReader(fileInput, new GenericDatumReader<>()));
     }
+  }
+
+  @Test
+  void missingSchemaMetadataDoesNotThrowNullPointerException() throws IOException {
+    byte[] malformedFile = buildContainerHeaderWithoutSchema();
+
+    IOException streamException = assertThrows(IOException.class,
+        () -> new DataFileStream<>(new ByteArrayInputStream(malformedFile), new GenericDatumReader<>()));
+    assertNotNull(streamException.getMessage());
+    assertTrue(streamException.getMessage().contains(DataFileConstants.SCHEMA));
+
+    IOException readerException = assertThrows(IOException.class,
+        () -> new DataFileReader<>(new SeekableByteArrayInput(malformedFile), new GenericDatumReader<>()));
+    assertNotNull(readerException.getMessage());
+    assertTrue(readerException.getMessage().contains(DataFileConstants.SCHEMA));
+  }
+
+  private static byte[] buildContainerHeaderWithoutSchema() throws IOException {
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    output.write(DataFileConstants.MAGIC);
+
+    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(output, null);
+    encoder.writeMapStart();
+    encoder.setItemCount(1);
+    encoder.startItem();
+    encoder.writeString(DataFileConstants.CODEC);
+    encoder.writeBytes("null".getBytes(StandardCharsets.UTF_8));
+    encoder.writeMapEnd();
+    encoder.writeFixed(new byte[DataFileConstants.SYNC_SIZE]);
+    encoder.flush();
+
+    return output.toByteArray();
+  }
+
+  @Test
+  void missingSchemaMetadataInVersion12DoesNotThrowNullPointerException() throws IOException {
+    byte[] malformedFile = buildVersion12ContainerWithoutSchema();
+
+    IOException exception = assertThrows(IOException.class,
+        () -> new DataFileReader12<>(new SeekableByteArrayInput(malformedFile), new GenericDatumReader<>()));
+    assertNotNull(exception.getMessage());
+    assertTrue(exception.getMessage().contains("schema"));
+  }
+
+  /**
+   * Builds a minimal Avro 1.2 format container with the footer metadata map
+   * containing only a sync marker but no schema entry.
+   */
+  private static byte[] buildVersion12ContainerWithoutSchema() throws IOException {
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    // Avro 1.2 magic: 'O' 'b' 'j' 0x00
+    output.write(new byte[] { (byte) 'O', (byte) 'b', (byte) 'j', 0 });
+
+    // Write the footer (metadata map with sync but no schema)
+    ByteArrayOutputStream footer = new ByteArrayOutputStream();
+    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(footer, null);
+    encoder.writeMapStart();
+    encoder.setItemCount(1);
+    encoder.startItem();
+    encoder.writeString("sync");
+    encoder.writeBytes(new byte[16]); // 16-byte sync marker
+    encoder.writeMapEnd();
+    encoder.flush();
+
+    byte[] footerBytes = footer.toByteArray();
+    // Footer size includes the 4 bytes for the size itself
+    int footerSize = footerBytes.length + 4;
+    output.write(footerBytes);
+    // Write footer size as big-endian 4 bytes at the end
+    output.write((footerSize >> 24) & 0xFF);
+    output.write((footerSize >> 16) & 0xFF);
+    output.write((footerSize >> 8) & 0xFF);
+    output.write(footerSize & 0xFF);
+
+    return output.toByteArray();
   }
 }

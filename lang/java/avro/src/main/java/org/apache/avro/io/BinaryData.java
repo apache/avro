@@ -18,6 +18,7 @@
 package org.apache.avro.io;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -178,19 +179,10 @@ public class BinaryData {
 
   /**
    * Lexicographically compare bytes. If equal, return zero. If greater-than,
-   * return a positive value, if less than return a negative value.
+   * return a positive value, if less than, return a negative value.
    */
   public static int compareBytes(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-    int end1 = s1 + l1;
-    int end2 = s2 + l2;
-    for (int i = s1, j = s2; i < end1 && j < end2; i++, j++) {
-      int a = (b1[i] & 0xff);
-      int b = (b2[j] & 0xff);
-      if (a != b) {
-        return a - b;
-      }
-    }
-    return l1 - l2;
+    return Arrays.compareUnsigned(b1, s1, s1 + l1, b2, s2, s2 + l2);
   }
 
   private static class HashData {
@@ -261,11 +253,11 @@ public class BinaryData {
     case UNION:
       return hashCode(data, schema.getTypes().get(decoder.readInt()));
     case FIXED:
-      return hashBytes(1, data, schema.getFixedSize(), false);
+      return hashBytes(data, schema.getFixedSize(), false);
     case STRING:
-      return hashBytes(0, data, decoder.readInt(), false);
+      return hashBytes(data, decoder.readInt(), false);
     case BYTES:
-      return hashBytes(1, data, decoder.readInt(), true);
+      return hashBytes(data, decoder.readInt(), true);
     case NULL:
       return 0;
     default:
@@ -273,8 +265,8 @@ public class BinaryData {
     }
   }
 
-  private static int hashBytes(int init, HashData data, int len, boolean rev) throws IOException {
-    int hashCode = init;
+  private static int hashBytes(HashData data, int len, boolean rev) throws IOException {
+    int hashCode = 1;
     byte[] bytes = data.decoder.getBuf();
     int start = data.decoder.getPos();
     int end = start + len;
@@ -298,7 +290,7 @@ public class BinaryData {
   /**
    * Encode a boolean to the byte array at the given position. Will throw
    * IndexOutOfBounds if the position is not valid.
-   * 
+   *
    * @return The number of bytes written to the buffer, 1.
    */
   public static int encodeBoolean(boolean b, byte[] buf, int pos) {
@@ -310,7 +302,7 @@ public class BinaryData {
    * Encode an integer to the byte array at the given position. Will throw
    * IndexOutOfBounds if it overflows. Users should ensure that there are at least
    * 5 bytes left in the buffer before calling this method.
-   * 
+   *
    * @return The number of bytes written to the buffer, between 1 and 5.
    */
   public static int encodeInt(int n, byte[] buf, int pos) {
@@ -341,7 +333,7 @@ public class BinaryData {
    * Encode a long to the byte array at the given position. Will throw
    * IndexOutOfBounds if it overflows. Users should ensure that there are at least
    * 10 bytes left in the buffer before calling this method.
-   * 
+   *
    * @return The number of bytes written to the buffer, between 1 and 10.
    */
   public static int encodeLong(long n, byte[] buf, int pos) {
@@ -392,7 +384,7 @@ public class BinaryData {
    * Encode a float to the byte array at the given position. Will throw
    * IndexOutOfBounds if it overflows. Users should ensure that there are at least
    * 4 bytes left in the buffer before calling this method.
-   * 
+   *
    * @return Returns the number of bytes written to the buffer, 4.
    */
   public static int encodeFloat(float f, byte[] buf, int pos) {
@@ -408,7 +400,7 @@ public class BinaryData {
    * Encode a double to the byte array at the given position. Will throw
    * IndexOutOfBounds if it overflows. Users should ensure that there are at least
    * 8 bytes left in the buffer before calling this method.
-   * 
+   *
    * @return Returns the number of bytes written to the buffer, 8.
    */
   public static int encodeDouble(double d, byte[] buf, int pos) {

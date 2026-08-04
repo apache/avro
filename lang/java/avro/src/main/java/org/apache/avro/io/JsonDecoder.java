@@ -47,7 +47,7 @@ import com.fasterxml.jackson.databind.util.TokenBuffer;
  */
 public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler {
   private JsonParser in;
-  private static JsonFactory jsonFactory = new JsonFactory();
+  private static final JsonFactory JSON_FACTORY = new JsonFactory();
   Stack<ReorderBuffer> reorderBuffers = new Stack<>();
   ReorderBuffer currentReorderBuffer;
 
@@ -86,7 +86,7 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
    * <p/>
    * Otherwise, this JsonDecoder will reset its state and then reconfigure its
    * input.
-   * 
+   *
    * @param in The InputStream to read from. Cannot be null.
    * @throws IOException
    * @throws NullPointerException if {@code in} is {@code null}
@@ -97,7 +97,7 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
     parser.reset();
     reorderBuffers.clear();
     currentReorderBuffer = null;
-    this.in = jsonFactory.createParser(in);
+    this.in = JSON_FACTORY.createParser(in);
     this.in.nextToken();
     return this;
   }
@@ -109,7 +109,7 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
    * <p/>
    * Otherwise, this JsonDecoder will reset its state and then reconfigure its
    * input.
-   * 
+   *
    * @param in The String to read from. Cannot be null.
    * @throws IOException
    * @throws NullPointerException if {@code in} is {@code null}
@@ -157,25 +157,39 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
   @Override
   public int readInt() throws IOException {
     advance(Symbol.INT);
-    if (in.getCurrentToken().isNumeric()) {
+    if (in.getCurrentToken() == JsonToken.VALUE_NUMBER_INT) {
       int result = in.getIntValue();
       in.nextToken();
       return result;
-    } else {
-      throw error("int");
     }
+    if (in.getCurrentToken() == JsonToken.VALUE_NUMBER_FLOAT) {
+      float value = in.getFloatValue();
+      if (Math.abs(value - Math.round(value)) <= Float.MIN_VALUE) {
+        int result = Math.round(value);
+        in.nextToken();
+        return result;
+      }
+    }
+    throw error("int");
   }
 
   @Override
   public long readLong() throws IOException {
     advance(Symbol.LONG);
-    if (in.getCurrentToken().isNumeric()) {
+    if (in.getCurrentToken() == JsonToken.VALUE_NUMBER_INT) {
       long result = in.getLongValue();
       in.nextToken();
       return result;
-    } else {
-      throw error("long");
     }
+    if (in.getCurrentToken() == JsonToken.VALUE_NUMBER_FLOAT) {
+      double value = in.getDoubleValue();
+      if (Math.abs(value - Math.round(value)) <= Double.MIN_VALUE) {
+        long result = Math.round(value);
+        in.nextToken();
+        return result;
+      }
+    }
+    throw error("long");
   }
 
   @Override
@@ -185,6 +199,19 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
       float result = in.getFloatValue();
       in.nextToken();
       return result;
+    } else if (in.getCurrentToken() == JsonToken.VALUE_STRING) {
+      String stringValue = in.getText();
+      in.nextToken();
+      if (isNaNString(stringValue)) {
+        return Float.NaN;
+      }
+      if (isNegativeInfinityString(stringValue)) {
+        return Float.NEGATIVE_INFINITY;
+      }
+      if (isPositiveInfinityString(stringValue)) {
+        return Float.POSITIVE_INFINITY;
+      }
+      throw error("float");
     } else {
       throw error("float");
     }
@@ -197,9 +224,40 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
       double result = in.getDoubleValue();
       in.nextToken();
       return result;
+    } else if (in.getCurrentToken() == JsonToken.VALUE_STRING) {
+      String stringValue = in.getText();
+      in.nextToken();
+      if (isNaNString(stringValue)) {
+        return Double.NaN;
+      }
+      if (isNegativeInfinityString(stringValue)) {
+        return Double.NEGATIVE_INFINITY;
+      }
+      if (isPositiveInfinityString(stringValue)) {
+        return Double.POSITIVE_INFINITY;
+      }
+      throw error("double");
     } else {
       throw error("double");
     }
+  }
+
+  // check whether the given string represents an IEEE 754 'NaN' string value as
+  // serialized by Jackson
+  private static boolean isNaNString(String value) {
+    return "NaN".equals(value);
+  }
+
+  // check whether the given string represents an IEEE 754 'Infinity' string value
+  // as serialized by Jackson
+  private static boolean isPositiveInfinityString(String value) {
+    return "Infinity".equals(value) || "INF".equals(value);
+  }
+
+  // check whether the given string represents an IEEE 754 '-Infinity' string
+  // value as serialized by Jackson
+  private static boolean isNegativeInfinityString(String value) {
+    return "-Infinity".equals(value) || "-INF".equals(value);
   }
 
   @Override
@@ -254,8 +312,7 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
   }
 
   private byte[] readByteArray() throws IOException {
-    byte[] result = in.getText().getBytes(StandardCharsets.ISO_8859_1);
-    return result;
+    return in.getText().getBytes(StandardCharsets.ISO_8859_1);
   }
 
   @Override

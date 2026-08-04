@@ -21,16 +21,19 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 
-/** Ant task to generate Java interface and classes for a protocol. */
+/** Ant task to generate Java interface and classes for a schema. */
 public class SchemaTask extends ProtocolTask {
   @Override
   protected void doCompile(File src, File dest) throws IOException {
-    final Schema.Parser parser = new Schema.Parser();
-    final Schema schema = parser.parse(src);
-    final SpecificCompiler compiler = new SpecificCompiler(schema);
-    compiler.setStringType(getStringType());
-    compiler.compileToDestination(src, dest);
+    final SchemaParser parser = new SchemaParser();
+    SchemaParser.ParseResult parseResult = parser.parse(src);
+    for (Schema schema : parseResult.parsedNamedSchemas()) {
+      final SpecificCompiler compiler = new SpecificCompiler(schema);
+      compiler.setStringType(getStringType());
+      compiler.compileToDestination(src, dest);
+    }
   }
 
   public static void main(String[] args) throws IOException {

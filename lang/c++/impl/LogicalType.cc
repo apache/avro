@@ -22,28 +22,35 @@
 namespace avro {
 
 LogicalType::LogicalType(Type type)
-    : type_(type), precision_(0), scale_(0) {}
+    : type_(type), precision_(0), scale_(0), custom_(nullptr) {
+    if (type == CUSTOM) {
+        throw Exception("Logical type CUSTOM must be initialized with a custom logical type");
+    }
+}
+
+LogicalType::LogicalType(std::shared_ptr<CustomLogicalType> custom)
+    : type_(CUSTOM), precision_(0), scale_(0), custom_(std::move(custom)) {}
 
 LogicalType::Type LogicalType::type() const {
     return type_;
 }
 
-void LogicalType::setPrecision(int precision) {
+void LogicalType::setPrecision(int32_t precision) {
     if (type_ != DECIMAL) {
         throw Exception("Only logical type DECIMAL can have precision");
     }
     if (precision <= 0) {
-        throw Exception(boost::format("Precision cannot be: %1%") % precision);
+        throw Exception("Precision cannot be: {}", precision);
     }
     precision_ = precision;
 }
 
-void LogicalType::setScale(int scale) {
+void LogicalType::setScale(int32_t scale) {
     if (type_ != DECIMAL) {
         throw Exception("Only logical type DECIMAL can have scale");
     }
     if (scale < 0) {
-        throw Exception(boost::format("Scale cannot be: %1%") % scale);
+        throw Exception("Scale cannot be: {}", scale);
     }
     scale_ = scale;
 }
@@ -51,6 +58,9 @@ void LogicalType::setScale(int scale) {
 void LogicalType::printJson(std::ostream &os) const {
     switch (type_) {
         case LogicalType::NONE: break;
+        case LogicalType::BIG_DECIMAL:
+            os << R"("logicalType": "big-decimal")";
+            break;
         case LogicalType::DECIMAL:
             os << R"("logicalType": "decimal")";
             os << ", \"precision\": " << precision_;
@@ -71,13 +81,51 @@ void LogicalType::printJson(std::ostream &os) const {
         case TIMESTAMP_MICROS:
             os << R"("logicalType": "timestamp-micros")";
             break;
+        case TIMESTAMP_NANOS:
+            os << R"("logicalType": "timestamp-nanos")";
+            break;
+        case LOCAL_TIMESTAMP_MILLIS:
+            os << R"("logicalType": "local-timestamp-millis")";
+            break;
+        case LOCAL_TIMESTAMP_MICROS:
+            os << R"("logicalType": "local-timestamp-micros")";
+            break;
+        case LOCAL_TIMESTAMP_NANOS:
+            os << R"("logicalType": "local-timestamp-nanos")";
+            break;
         case DURATION:
             os << R"("logicalType": "duration")";
             break;
         case UUID:
             os << R"("logicalType": "uuid")";
             break;
+        case CUSTOM:
+            custom_->printJson(os);
+            break;
     }
+}
+
+void CustomLogicalType::printJson(std::ostream &os) const {
+    os << R"("logicalType": ")" << name_ << "\"";
+}
+
+CustomLogicalTypeRegistry &CustomLogicalTypeRegistry::instance() {
+    static CustomLogicalTypeRegistry instance;
+    return instance;
+}
+
+void CustomLogicalTypeRegistry::registerType(const std::string &name, Factory factory) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    registry_[name] = factory;
+}
+
+std::shared_ptr<CustomLogicalType> CustomLogicalTypeRegistry::create(const std::string &name, const std::string &json) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = registry_.find(name);
+    if (it == registry_.end()) {
+        return nullptr;
+    }
+    return it->second(json);
 }
 
 } // namespace avro

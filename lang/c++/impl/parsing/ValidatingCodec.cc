@@ -19,7 +19,6 @@
 #include "ValidatingCodec.hh"
 
 #include <algorithm>
-#include <boost/any.hpp>
 #include <map>
 #include <memory>
 #include <utility>
@@ -152,7 +151,7 @@ ProductionPtr ValidatingGrammarGenerator::doGenerate(const NodePtr &n,
 }
 
 struct DummyHandler {
-    static size_t handle(const Symbol &s) {
+    static size_t handle(const Symbol &) {
         return 0;
     }
 };
@@ -502,6 +501,7 @@ void ValidatingEncoder<P>::setItemCount(size_t count) {
 
 template<typename P>
 void ValidatingEncoder<P>::startItem() {
+    parser_.processImplicitActions();
     if (parser_.top() != Symbol::Kind::Repeater) {
         throw Exception("startItem at not an item boundary");
     }

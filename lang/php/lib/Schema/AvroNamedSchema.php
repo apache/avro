@@ -22,62 +22,44 @@ namespace Apache\Avro\Schema;
 
 /**
  * Parent class of named Avro schema
- * @package Avro
- * @todo Refactor AvroNamedSchema to use an AvroName instance
- *       to store name information.
+ * @phpstan-import-type AvroAliases from AvroAliasedSchema
  */
-class AvroNamedSchema extends AvroSchema
+class AvroNamedSchema extends AvroSchema implements AvroAliasedSchema
 {
     /**
-     * @var AvroName $name
-     */
-    private $name;
-
-    /**
-     * @var string documentation string
-     */
-    private $doc;
-    /**
-     * @var array
-     */
-    private $aliases;
-
-    /**
-     * @param string $type
-     * @param AvroName $name
-     * @param string $doc documentation string
-     * @param AvroNamedSchemata &$schemata
-     * @param array $aliases
+     * @param null|AvroAliases $aliases
      * @throws AvroSchemaParseException
      */
-    public function __construct($type, $name, $doc = null, &$schemata = null, $aliases = null)
-    {
+    public function __construct(
+        string $type,
+        private readonly AvroName $name,
+        private readonly ?string $doc = null,
+        ?AvroNamedSchemata $schemata = null,
+        private ?array $aliases = null
+    ) {
         parent::__construct($type);
-        $this->name = $name;
 
-        if ($doc && !is_string($doc)) {
-            throw new AvroSchemaParseException('Schema doc attribute must be a string');
-        }
-        $this->doc = $doc;
-        if ($aliases) {
-            self::hasValidAliases($aliases);
-            $this->aliases = $aliases;
+        if ($this->aliases) {
+            self::hasValidAliases($this->aliases);
         }
 
         if (!is_null($schemata)) {
-            $schemata = $schemata->cloneWithNewSchema($this);
+            $schemata->registerNamedSchema($this);
         }
     }
 
-    public function getAliases()
+    /**
+     * @return null|AvroAliases
+     */
+    public function getAliases(): ?array
     {
         return $this->aliases;
     }
 
     /**
-     * @returns mixed
+     * @return array<string, mixed>|string
      */
-    public function toAvro()
+    public function toAvro(): string|array
     {
         $avro = parent::toAvro();
         [$name, $namespace] = AvroName::extractNamespace($this->qualifiedName());
@@ -91,19 +73,22 @@ class AvroNamedSchema extends AvroSchema
         if (!is_null($this->aliases)) {
             $avro[AvroSchema::ALIASES_ATTR] = $this->aliases;
         }
+
         return $avro;
     }
 
-    public function qualifiedName()
+    public function qualifiedName(): string
     {
         return $this->name->qualifiedName();
     }
 
-    /**
-     * @returns string
-     */
-    public function fullname()
+    public function fullname(): string
     {
         return $this->name->fullname();
+    }
+
+    public function namespace(): ?string
+    {
+        return $this->name->namespace();
     }
 }

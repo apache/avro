@@ -2778,7 +2778,7 @@ static avro_generic_value_iface_t  AVRO_GENERIC_MAP_CLASS =
 static avro_generic_value_iface_t *
 avro_generic_map_class(avro_schema_t schema, memoize_state_t *state)
 {
-	avro_schema_t  child_schema = avro_schema_array_items(schema);
+	avro_schema_t  child_schema = avro_schema_map_values(schema);
 	avro_generic_value_iface_t  *child_giface =
 	    avro_generic_class_from_schema_memoized(child_schema, state);
 	if (child_giface == NULL) {

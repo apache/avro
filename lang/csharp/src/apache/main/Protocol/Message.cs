@@ -76,6 +76,7 @@ namespace Avro
         public Message(string name, string doc, RecordSchema request, Schema response, UnionSchema error, bool? oneway)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name), "name cannot be null.");
+            SchemaName.ValidateName(name, "message");
             this.Request = request;
             this.Response = response;
             this.Error = error;

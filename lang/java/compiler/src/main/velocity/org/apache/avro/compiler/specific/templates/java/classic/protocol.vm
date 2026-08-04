@@ -20,7 +20,7 @@ package $this.mangle($protocol.getNamespace());
 #end
 
 #if ($protocol.getDoc())
-/** $protocol.getDoc() */
+/** $this.escapeForJavadoc($protocol.getDoc()) */
 #end
 #foreach ($annotation in $this.javaAnnotations($protocol))
 @$annotation
@@ -37,7 +37,7 @@ public interface $this.mangleTypeIdentifier($protocol.getName()) {
    * $this.escapeForJavadoc($message.getDoc())
 #end
 #foreach ($p in $message.getRequest().getFields())##
-#if ($p.doc())   * @param ${this.mangle($p.name())} $p.doc()
+#if ($p.doc())   * @param ${this.mangle($p.name())} $this.escapeForJavadoc($p.doc())
 #end
 #end
    */
@@ -62,7 +62,7 @@ ${this.mangle($error.getFullName())}##
 
 ## Generate nested callback API
 #if ($protocol.getDoc())
-  /** $protocol.getDoc() */
+  /** $this.escapeForJavadoc($protocol.getDoc()) */
 #end
   @org.apache.avro.specific.AvroGenerated
   public interface Callback extends $this.mangleTypeIdentifier($protocol.getName()) {
@@ -78,7 +78,7 @@ ${this.mangle($error.getFullName())}##
      * $this.escapeForJavadoc($message.getDoc())
 #end
 #foreach ($p in $message.getRequest().getFields())##
-#if ($p.doc())     * @param ${this.mangle($p.name())} $p.doc()
+#if ($p.doc())     * @param ${this.mangle($p.name())} $this.escapeForJavadoc($p.doc())
 #end
 #end
      * @throws java.io.IOException The async call could not be completed.

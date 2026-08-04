@@ -198,7 +198,7 @@ namespace Avro.Generic
             var readerDefaultOrdinal = null != readerSchema.Default ? readerSchema.Ordinal(readerSchema.Default) : -1;
 
             foreach (var symbol in writerSchema.Symbols)
-            { 
+            {
                 var writerOrdinal = writerSchema.Ordinal(symbol);
                 if (readerSchema.Contains(symbol))
                 {
@@ -274,27 +274,29 @@ namespace Avro.Generic
             {
                 if (writerSchema.Contains(rf.Name)) continue;
 
-                var defaultStream = new MemoryStream();
-                var defaultEncoder = new BinaryEncoder(defaultStream);
-
-                defaultStream.Position = 0; // reset for writing
-                Resolver.EncodeDefaultValue(defaultEncoder, rf.Schema, rf.DefaultValue);
-                defaultStream.Flush();
-	            var defaultBytes = defaultStream.ToArray();
-
-                var readItem = ResolveReader(rf.Schema, rf.Schema);
-
-                var rfInstance = rf;
-                if(IsReusable(rf.Schema.Tag))
+                using (var defaultStream = new MemoryStream())
                 {
-                    readSteps.Add((rec, d) => recordAccess.AddField(rec, rfInstance.Name, rfInstance.Pos,
-                        readItem(recordAccess.GetField(rec, rfInstance.Name, rfInstance.Pos),
-                            new BinaryDecoder(new MemoryStream( defaultBytes)))));
-                }
-                else
-                {
-                    readSteps.Add((rec, d) => recordAccess.AddField(rec, rfInstance.Name, rfInstance.Pos,
-                        readItem(null, new BinaryDecoder(new MemoryStream(defaultBytes)))));
+                    var defaultEncoder = new BinaryEncoder(defaultStream);
+
+                    defaultStream.Position = 0; // reset for writing
+                    Resolver.EncodeDefaultValue(defaultEncoder, rf.Schema, rf.DefaultValue);
+                    defaultStream.Flush();
+                    var defaultBytes = defaultStream.ToArray();
+
+                    var readItem = ResolveReader(rf.Schema, rf.Schema);
+
+                    var rfInstance = rf;
+                    if (IsReusable(rf.Schema.Tag))
+                    {
+                        readSteps.Add((rec, d) => recordAccess.AddField(rec, rfInstance.Name, rfInstance.Pos,
+                            readItem(recordAccess.GetField(rec, rfInstance.Name, rfInstance.Pos),
+                                new BinaryDecoder(new MemoryStream(defaultBytes)))));
+                    }
+                    else
+                    {
+                        readSteps.Add((rec, d) => recordAccess.AddField(rec, rfInstance.Name, rfInstance.Pos,
+                            readItem(null, new BinaryDecoder(new MemoryStream(defaultBytes)))));
+                    }
                 }
             }
 

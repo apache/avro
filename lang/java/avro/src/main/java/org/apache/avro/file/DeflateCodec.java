@@ -27,6 +27,8 @@ import java.util.zip.InflaterOutputStream;
 
 import org.apache.avro.util.NonCopyingByteArrayOutputStream;
 
+import static org.apache.avro.util.NonCopyingByteArrayOutputStream.capacityLimitedOutputStream;
+
 /**
  * Implements DEFLATE (RFC1951) compression and decompression.
  *
@@ -40,7 +42,7 @@ public class DeflateCodec extends Codec {
   private static final int DEFAULT_BUFFER_SIZE = 8192;
 
   static class Option extends CodecFactory {
-    private int compressionLevel;
+    private final int compressionLevel;
 
     Option(int compressionLevel) {
       this.compressionLevel = compressionLevel;
@@ -55,8 +57,8 @@ public class DeflateCodec extends Codec {
   private Deflater deflater;
   private Inflater inflater;
   // currently only do 'nowrap' -- RFC 1951, not zlib
-  private boolean nowrap = true;
-  private int compressionLevel;
+  private final boolean nowrap = true;
+  private final int compressionLevel;
 
   public DeflateCodec(int compressionLevel) {
     this.compressionLevel = compressionLevel;
@@ -78,7 +80,7 @@ public class DeflateCodec extends Codec {
 
   @Override
   public ByteBuffer decompress(ByteBuffer data) throws IOException {
-    NonCopyingByteArrayOutputStream baos = new NonCopyingByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
+    NonCopyingByteArrayOutputStream baos = capacityLimitedOutputStream(DEFAULT_BUFFER_SIZE);
     try (OutputStream outputStream = new InflaterOutputStream(baos, getInflater())) {
       outputStream.write(data.array(), computeOffset(data), data.remaining());
     }

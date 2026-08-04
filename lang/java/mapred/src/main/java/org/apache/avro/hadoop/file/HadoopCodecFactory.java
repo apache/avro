@@ -35,9 +35,11 @@ import org.apache.avro.file.CodecFactory;
  * <li>{@code org.apache.hadoop.io.compress.SnappyCodec} will map to
  * {@code snappy}</li>
  * <li>{@code org.apache.hadoop.io.compress.BZip2Codec} will map to
- * {@code zbip2}</li>
+ * {@code bzip2}</li>
  * <li>{@code org.apache.hadoop.io.compress.GZipCodec} will map to
  * {@code deflate}</li>
+ * <li>{@code org.apache.hadoop.io.compress.ZStandardCodec} will map to
+ * {@code zstandard}</li>
  * </ul>
  */
 public class HadoopCodecFactory {
@@ -49,6 +51,7 @@ public class HadoopCodecFactory {
     HADOOP_AVRO_NAME_MAP.put("org.apache.hadoop.io.compress.SnappyCodec", "snappy");
     HADOOP_AVRO_NAME_MAP.put("org.apache.hadoop.io.compress.BZip2Codec", "bzip2");
     HADOOP_AVRO_NAME_MAP.put("org.apache.hadoop.io.compress.GZipCodec", "deflate");
+    HADOOP_AVRO_NAME_MAP.put("org.apache.hadoop.io.compress.ZStandardCodec", "zstandard");
   }
 
   /**
@@ -61,9 +64,11 @@ public class HadoopCodecFactory {
    * <li>{@code org.apache.hadoop.io.compress.SnappyCodec} will map to
    * {@code snappy}</li>
    * <li>{@code org.apache.hadoop.io.compress.BZip2Codec} will map to
-   * {@code zbip2}</li>
+   * {@code bzip2}</li>
    * <li>{@code org.apache.hadoop.io.compress.GZipCodec} will map to
    * {@code deflate}</li>
+   * <li>{@code org.apache.hadoop.io.compress.ZStandardCodec} will map to
+   * {@code zstandard}</li>
    * </ul>
    */
   public static CodecFactory fromHadoopString(String hadoopCodecClass) {

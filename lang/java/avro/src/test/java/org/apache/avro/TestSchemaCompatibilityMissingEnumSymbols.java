@@ -17,19 +17,19 @@
  */
 package org.apache.avro;
 
-import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
-import static org.apache.avro.TestSchemas.*;
-
-import java.util.Arrays;
-
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
 
-@RunWith(Parameterized.class)
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
+
+import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
+import static org.apache.avro.TestSchemas.ENUM1_ABC_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM1_BC_SCHEMA;
+
 public class TestSchemaCompatibilityMissingEnumSymbols {
 
   private static final Schema RECORD1_WITH_ENUM_AB = SchemaBuilder.record("Record1").fields() //
@@ -39,26 +39,15 @@ public class TestSchemaCompatibilityMissingEnumSymbols {
       .name("field1").type(ENUM1_ABC_SCHEMA).noDefault() //
       .endRecord();
 
-  @Parameters(name = "r: {0} | w: {1}")
-  public static Iterable<Object[]> data() {
-    Object[][] fields = { //
-        { ENUM1_AB_SCHEMA, ENUM1_ABC_SCHEMA, "[C]", "/symbols" },
-        { ENUM1_BC_SCHEMA, ENUM1_ABC_SCHEMA, "[A]", "/symbols" },
-        { RECORD1_WITH_ENUM_AB, RECORD1_WITH_ENUM_ABC, "[C]", "/fields/0/type/symbols" } };
-    return Arrays.asList(fields);
+  public static Stream<Arguments> data() {
+    return Stream.of(Arguments.of(ENUM1_AB_SCHEMA, ENUM1_ABC_SCHEMA, "[C]", "/symbols"),
+        Arguments.of(ENUM1_BC_SCHEMA, ENUM1_ABC_SCHEMA, "[A]", "/symbols"),
+        Arguments.of(RECORD1_WITH_ENUM_AB, RECORD1_WITH_ENUM_ABC, "[C]", "/fields/0/type/symbols"));
   }
 
-  @Parameter(0)
-  public Schema reader;
-  @Parameter(1)
-  public Schema writer;
-  @Parameter(2)
-  public String details;
-  @Parameter(3)
-  public String location;
-
-  @Test
-  public void testTypeMismatchSchemas() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testTypeMismatchSchemas(Schema reader, Schema writer, String details, String location) {
     validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.MISSING_ENUM_SYMBOLS, details, location);
   }
 }

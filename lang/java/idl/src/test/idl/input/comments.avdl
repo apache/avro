@@ -1,0 +1,64 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+@namespace("testing")
+protocol Comments {
+  /** Documented Enum */
+  enum /** Dangling Enum1 */ DocumentedEnum /** Dangling Enum2 */ {
+    /** Dangling Enum3 */ A,
+    /** Dangling Enum4 */ B,
+    /** Dangling Enum5 */ C
+    /** Dangling Enum6 */}
+      /** Dangling Enum7 */=
+      /** Dangling Enum8 */ A
+      /** Dangling Enum9 */;
+
+  enum UndocumentedEnum {D,E}
+
+  /** Documented Fixed Type */ fixed
+      /** Dangling Fixed1 */ DocumentedFixed
+      /** Dangling Fixed2 */(
+    /** Dangling Fixed3 */ 16
+    /** Dangling Fixed4 */)
+      /** Dangling Fixed5 */;
+
+  fixed UndocumentedFixed(16);
+
+  /** Documented Error */ error
+      /** Dangling Error1 */ DocumentedError
+      /** Dangling Field1 */{
+    /** Default Doc Explanation Field */string
+        /** Documented Reason Field */reason, explanation
+        /** Dangling Field2 */;
+    /** Dangling Error2 */}
+
+  record UndocumentedRecord {
+    string description;
+  }
+
+  /** Documented Method */ void
+      /** Dangling Param1 */ documentedMethod
+      /** Dangling Param2 */(
+    string /** Documented Parameter */ message,
+    /** Default Documented Parameter */ string defMsg
+        /** Dangling Param3 */)
+      /** Dangling Method1 */ throws
+          /** Dangling Method2 */ DocumentedError
+          /** Dangling Method3 */;
+
+  void undocumentedMethod(string message);
+}

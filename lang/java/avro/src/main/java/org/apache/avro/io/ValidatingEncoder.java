@@ -36,7 +36,7 @@ import org.apache.avro.util.Utf8;
  * and configure.
  * <p/>
  * ValidatingEncoder is not thread-safe.
- * 
+ *
  * @see Encoder
  * @see EncoderFactory
  */
@@ -44,12 +44,12 @@ public class ValidatingEncoder extends ParsingEncoder implements Parser.ActionHa
   protected Encoder out;
   protected final Parser parser;
 
-  ValidatingEncoder(Symbol root, Encoder out) throws IOException {
+  ValidatingEncoder(Symbol root, Encoder out) {
     this.out = out;
     this.parser = new Parser(root, this);
   }
 
-  ValidatingEncoder(Schema schema, Encoder in) throws IOException {
+  ValidatingEncoder(Schema schema, Encoder in) {
     this(new ValidatingGrammarGenerator().generate(schema), in);
   }
 
@@ -60,7 +60,7 @@ public class ValidatingEncoder extends ParsingEncoder implements Parser.ActionHa
 
   /**
    * Reconfigures this ValidatingEncoder to wrap the encoder provided.
-   * 
+   *
    * @param encoder The Encoder to wrap for validation.
    * @return This ValidatingEncoder.
    */

@@ -18,86 +18,100 @@
  * limitations under the License.
  */
 
+declare(strict_types=1);
+
 namespace Apache\Avro\Schema;
 
 /**
  *  Keeps track of AvroNamedSchema which have been observed so far,
  *  as well as the default namespace.
- *
- * @package Avro
  */
 class AvroNamedSchemata
 {
-    /**
-     * @var AvroNamedSchema[]
-     */
-    private $schemata;
-
-    /**
-     * @param AvroNamedSchemata[]
-     */
-    public function __construct($schemata = array())
-    {
-        $this->schemata = $schemata;
+    public function __construct(
+        /**
+         * @var AvroNamedSchema[]
+         */
+        private array $schemata = []
+    ) {
     }
 
-    public function listSchemas()
+    public function listSchemas(): void
     {
         var_export($this->schemata);
         foreach ($this->schemata as $sch) {
-            print('Schema ' . $sch->__toString() . "\n");
+            echo 'Schema '.$sch->__toString()."\n";
         }
     }
 
-    /**
-     * @param AvroName $name
-     * @returns AvroSchema|null
-     */
-    public function schemaByName($name)
+    public function schemaByName(AvroName $name): ?AvroSchema
     {
         return $this->schema($name->fullname());
     }
 
     /**
-     * @param string $fullname
-     * @returns AvroSchema|null the schema which has the given name,
+     * @return null|AvroSchema the schema which has the given name,
      *          or null if there is no schema with the given name.
      */
-    public function schema($fullname)
+    public function schema(string $fullname): ?AvroSchema
     {
-        if (isset($this->schemata[$fullname])) {
-            return $this->schemata[$fullname];
-        }
-        return null;
+        return $this->schemata[$fullname] ?? null;
     }
 
     /**
      * Creates a new AvroNamedSchemata instance of this schemata instance
      * with the given $schema appended.
-     * @param AvroNamedSchema schema to add to this existing schemata
-     * @returns AvroNamedSchemata
+     *
+     * @param AvroNamedSchema $schema schema to add to this existing schemata
+     * @throws AvroSchemaParseException
      */
-    public function cloneWithNewSchema($schema)
+    public function cloneWithNewSchema(AvroNamedSchema $schema): self
     {
         $name = $schema->fullname();
-        if (AvroSchema::isValidType($name)) {
-            throw new AvroSchemaParseException(sprintf('Name "%s" is a reserved type name', $name));
-        }
-        if ($this->hasName($name)) {
-            throw new AvroSchemaParseException(sprintf('Name "%s" is already in use', $name));
-        }
-        $schemata = new AvroNamedSchemata($this->schemata);
+        $this->validateNamedSchema($name);
+
+        $schemata = new self($this->schemata);
         $schemata->schemata[$name] = $schema;
+
         return $schemata;
     }
 
     /**
-     * @param string $fullname
-     * @returns boolean true if there exists a schema with the given name
+     * Append the given AvroNamedSchema to this schemata instance.
+     *
+     * @param AvroNamedSchema $schema schema to add to this existing schemata
+     * @throws AvroSchemaParseException
+     */
+    public function registerNamedSchema(AvroNamedSchema $schema): self
+    {
+        $name = $schema->fullname();
+        $this->validateNamedSchema($name);
+
+        $this->schemata[$name] = $schema;
+
+        return $this;
+    }
+
+    /**
+     * @return bool true if there exists a schema with the given name
      *                  and false otherwise.
      */
-    public function hasName($fullname)
+    public function hasName(string $fullname): bool
     {
         return array_key_exists($fullname, $this->schemata);
+    }
+
+    /**
+     * @throws AvroSchemaParseException
+     */
+    private function validateNamedSchema(string $name): void
+    {
+        if (AvroSchema::isValidType($name)) {
+            throw new AvroSchemaParseException(sprintf('Name "%s" is a reserved type name', $name));
+        }
+
+        if ($this->hasName($name)) {
+            throw new AvroSchemaParseException(sprintf('Name "%s" is already in use', $name));
+        }
     }
 }

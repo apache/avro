@@ -20,51 +20,104 @@
 
 namespace Apache\Avro\Schema;
 
+use Apache\Avro\AvroException;
+
 /**
  * AvroNamedSchema with fixed-length data values
- * @package Avro
  */
 class AvroFixedSchema extends AvroNamedSchema
 {
     /**
      * @var int byte count of this fixed schema data value
      */
-    private $size;
+    private int $size;
 
     /**
-     * @param AvroName $name
-     * @param string $doc Set to null, as fixed schemas don't have doc strings
      * @param int $size byte count of this fixed schema data value
-     * @param AvroNamedSchemata &$schemata
-     * @param array $aliases
      * @throws AvroSchemaParseException
      */
-    public function __construct($name, $doc, $size, &$schemata = null, $aliases = null)
+    public function __construct(AvroName $name, ?string $doc, int $size, AvroNamedSchemata $schemata, ?array $aliases = null)
     {
-        if (!is_int($size)) {
-            throw new AvroSchemaParseException(
-                'Fixed Schema requires a valid integer for "size" attribute'
-            );
-        }
-        parent::__construct(AvroSchema::FIXED_SCHEMA, $name, null, $schemata, $aliases);
+        parent::__construct(AvroSchema::FIXED_SCHEMA, $name, $doc, $schemata, $aliases);
         $this->size = $size;
     }
 
     /**
-     * @returns int byte count of this fixed schema data value
+     * @return int byte count of this fixed schema data value
      */
-    public function size()
+    public function size(): int
     {
         return $this->size;
     }
 
-    /**
-     * @returns mixed
-     */
-    public function toAvro()
+    public function toAvro(): string|array
     {
         $avro = parent::toAvro();
         $avro[AvroSchema::SIZE_ATTR] = $this->size;
+
         return $avro;
+    }
+
+    /**
+     * @param null|array<int, string> $aliases
+     * @throws AvroSchemaParseException
+     */
+    public static function duration(
+        AvroName $name,
+        ?string $doc,
+        AvroNamedSchemata $schemata,
+        ?array $aliases = null
+    ): self {
+        $fixedSchema = new self(
+            name: $name,
+            doc: $doc,
+            size: 12,
+            schemata: $schemata,
+            aliases: $aliases
+        );
+
+        $fixedSchema->logicalType = AvroLogicalType::duration();
+
+        return $fixedSchema;
+    }
+
+    /**
+     * @param null|array<int, string> $aliases
+     * @throws AvroSchemaParseException
+     * @throws AvroException
+     */
+    public static function decimal(
+        AvroName $name,
+        ?string $doc,
+        int $size,
+        int $precision,
+        int $scale,
+        AvroNamedSchemata $schemata,
+        ?array $aliases = null
+    ): self {
+        $self = new self(
+            name: $name,
+            doc: $doc,
+            size: $size,
+            schemata: $schemata,
+            aliases: $aliases
+        );
+
+        $maxPrecision = (int) floor(log10(self::maxDecimalMagnitude($size)));
+
+        if ($precision > $maxPrecision) {
+            throw new AvroException(
+                "Invalid precision for specified fixed size (size='{$size}', precision='{$precision}')."
+            );
+        }
+
+        $self->logicalType = AvroLogicalType::decimal($precision, $scale);
+
+        return $self;
+    }
+
+    public static function maxDecimalMagnitude(int $size): float
+    {
+        return (float) (2 ** ((8 * $size) - 1)) - 1;
     }
 }

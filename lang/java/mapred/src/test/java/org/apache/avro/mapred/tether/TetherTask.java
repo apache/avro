@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.net.InetSocketAddress;
 import java.net.URL;
 
+import org.apache.avro.SchemaParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,8 +140,8 @@ public abstract class TetherTask<IN, MID, OUT> {
   void configure(TaskType taskType, CharSequence inSchemaText, CharSequence outSchemaText) {
     this.taskType = taskType;
     try {
-      Schema inSchema = new Schema.Parser().parse(inSchemaText.toString());
-      Schema outSchema = new Schema.Parser().parse(outSchemaText.toString());
+      Schema inSchema = SchemaParser.parseSingle(inSchemaText.toString());
+      Schema outSchema = SchemaParser.parseSingle(outSchemaText.toString());
       switch (taskType) {
       case MAP:
         this.inReader = new SpecificDatumReader<>(inSchema);

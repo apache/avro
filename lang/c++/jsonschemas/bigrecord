@@ -1,6 +1,6 @@
 {
     "type": "record",
-    "doc": "Top level Doc.",
+    "doc": "Top level Doc.\nWith multiple lines",
     "name": "RootRecord",
     "fields": [
         {
@@ -10,6 +10,7 @@
         },
         {
             "name": "nestedrecord",
+            "doc": "Doc edge cases\r\nwith trailing backslash\\\t \n\\\n\\ \n\\x",
             "type": {
                 "type": "record",
                 "name": "Nested",

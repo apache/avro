@@ -18,16 +18,21 @@
 
 package org.apache.avro;
 
-import java.util.Arrays;
-import java.util.concurrent.Callable;
-
 import org.hamcrest.collection.IsMapContaining;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.concurrent.Callable;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestLogicalType {
 
@@ -185,7 +190,7 @@ public class TestLogicalType {
   void fixedDecimalToFromJson() {
     Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     LogicalTypes.decimal(9, 2).addToSchema(schema);
-    Schema parsed = new Schema.Parser().parse(schema.toString(true));
+    Schema parsed = SchemaParser.parseSingle(schema.toString(true));
     assertEquals(schema, parsed, "Constructed and parsed schemas should match");
   }
 
@@ -193,8 +198,32 @@ public class TestLogicalType {
   void bytesDecimalToFromJson() {
     Schema schema = Schema.create(Schema.Type.BYTES);
     LogicalTypes.decimal(9, 2).addToSchema(schema);
-    Schema parsed = new Schema.Parser().parse(schema.toString(true));
+    Schema parsed = SchemaParser.parseSingle(schema.toString(true));
     assertEquals(schema, parsed, "Constructed and parsed schemas should match");
+  }
+
+  @Test
+  void uuidExtendsString() {
+    Schema uuidSchema = LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING));
+    assertEquals(LogicalTypes.uuid(), uuidSchema.getLogicalType());
+
+    assertThrows("UUID requires a string", IllegalArgumentException.class,
+        "Uuid can only be used with an underlying string or fixed type",
+        () -> LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.INT)));
+  }
+
+  @Test
+  void durationExtendsFixed12() {
+    Schema durationSchema = LogicalTypes.duration().addToSchema(Schema.createFixed("f", null, null, 12));
+    assertEquals(LogicalTypes.duration(), LogicalTypes.fromSchema(durationSchema));
+
+    assertThrows("Duration requires a fixed(12)", IllegalArgumentException.class,
+        "Duration can only be used with an underlying fixed type of size 12.",
+        () -> LogicalTypes.duration().addToSchema(Schema.create(Schema.Type.INT)));
+
+    assertThrows("Duration requires a fixed(12)", IllegalArgumentException.class,
+        "Duration can only be used with an underlying fixed type of size 12.",
+        () -> LogicalTypes.duration().addToSchema(Schema.createFixed("wrong", null, null, 42)));
   }
 
   @Test
@@ -288,9 +317,9 @@ public class TestLogicalType {
   }
 
   @Test
-  void registerLogicalTypeFactoryByServiceLoader() {
+  public void testRegisterLogicalTypeFactoryByServiceLoader() {
     assertThat(LogicalTypes.getCustomRegisteredTypes(),
-        IsMapContaining.hasEntry(equalTo("service-example"), instanceOf(LogicalTypes.LogicalTypeFactory.class)));
+        IsMapContaining.hasEntry(equalTo("custom"), instanceOf(LogicalTypes.LogicalTypeFactory.class)));
   }
 
   public static void assertEqualsTrue(String message, Object o1, Object o2) {

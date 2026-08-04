@@ -1,2 +1,3 @@
 {"protocol": "org.foo.Bar",
- "messages": { "bar": {"request": [], "response": "null"}}}
+ "types": [{"name":  "AorB", "type": "enum", "symbols": ["A", "B"], "default": "A"}],
+ "messages": { "bar": {"request": [{"name": "choice", "type": "AorB"}],"response": "null"}}}

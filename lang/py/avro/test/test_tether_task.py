@@ -18,7 +18,6 @@
 # limitations under the License.
 
 import io
-import os
 import subprocess
 import sys
 import time
@@ -108,7 +107,7 @@ class TestTetherTask(unittest.TestCase):
             task.status("Status message")
         finally:
             # close the process
-            if not (proc is None):
+            if proc is not None:
                 proc.kill()
 
 

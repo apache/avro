@@ -139,7 +139,7 @@ public class Parser {
    * repeater and <tt>input</tt> is either {@link Symbol#ARRAY_END} or
    * {@link Symbol#MAP_END} pushes nothing.
    *
-   * @param sym
+   * @param sym the symbol
    */
   public final void pushProduction(Symbol sym) {
     Symbol[] p = sym.production;

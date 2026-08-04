@@ -17,82 +17,94 @@
  */
 package org.apache.avro;
 
-import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
-import static org.apache.avro.TestSchemas.*;
-
-import java.util.Arrays;
-
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
 
-@RunWith(Parameterized.class)
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
+
+import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
+import static org.apache.avro.TestSchemas.A_INT_RECORD1;
+import static org.apache.avro.TestSchemas.BOOLEAN_SCHEMA;
+import static org.apache.avro.TestSchemas.BYTES_SCHEMA;
+import static org.apache.avro.TestSchemas.DOUBLE_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM2_AB_SCHEMA;
+import static org.apache.avro.TestSchemas.FIXED_4_BYTES;
+import static org.apache.avro.TestSchemas.FLOAT_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_ARRAY_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_FLOAT_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_LIST_RECORD;
+import static org.apache.avro.TestSchemas.INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_MAP_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_SCHEMA;
+import static org.apache.avro.TestSchemas.LONG_ARRAY_SCHEMA;
+import static org.apache.avro.TestSchemas.LONG_LIST_RECORD;
+import static org.apache.avro.TestSchemas.LONG_MAP_SCHEMA;
+import static org.apache.avro.TestSchemas.LONG_SCHEMA;
+import static org.apache.avro.TestSchemas.NULL_SCHEMA;
+import static org.apache.avro.TestSchemas.STRING_SCHEMA;
+
 public class TestSchemaCompatibilityTypeMismatch {
-  @Parameters(name = "r: {0} | w: {1}")
-  public static Iterable<Object[]> data() {
-    Object[][] fields = { //
-        { NULL_SCHEMA, INT_SCHEMA, "reader type: NULL not compatible with writer type: INT", "/" },
-        { NULL_SCHEMA, LONG_SCHEMA, "reader type: NULL not compatible with writer type: LONG", "/" },
 
-        { BOOLEAN_SCHEMA, INT_SCHEMA, "reader type: BOOLEAN not compatible with writer type: INT", "/" },
+  public static Stream<Arguments> data() {
+    return Stream.of(
+        Arguments.of(NULL_SCHEMA, INT_SCHEMA, "reader type: NULL not compatible with writer type: INT", "/"),
+        Arguments.of(NULL_SCHEMA, LONG_SCHEMA, "reader type: NULL not compatible with writer type: LONG", "/"),
 
-        { INT_SCHEMA, NULL_SCHEMA, "reader type: INT not compatible with writer type: NULL", "/" },
-        { INT_SCHEMA, BOOLEAN_SCHEMA, "reader type: INT not compatible with writer type: BOOLEAN", "/" },
-        { INT_SCHEMA, LONG_SCHEMA, "reader type: INT not compatible with writer type: LONG", "/" },
-        { INT_SCHEMA, FLOAT_SCHEMA, "reader type: INT not compatible with writer type: FLOAT", "/" },
-        { INT_SCHEMA, DOUBLE_SCHEMA, "reader type: INT not compatible with writer type: DOUBLE", "/" },
+        Arguments.of(BOOLEAN_SCHEMA, INT_SCHEMA, "reader type: BOOLEAN not compatible with writer type: INT", "/"),
 
-        { LONG_SCHEMA, FLOAT_SCHEMA, "reader type: LONG not compatible with writer type: FLOAT", "/" },
-        { LONG_SCHEMA, DOUBLE_SCHEMA, "reader type: LONG not compatible with writer type: DOUBLE", "/" },
+        Arguments.of(INT_SCHEMA, NULL_SCHEMA, "reader type: INT not compatible with writer type: NULL", "/"),
+        Arguments.of(INT_SCHEMA, BOOLEAN_SCHEMA, "reader type: INT not compatible with writer type: BOOLEAN", "/"),
+        Arguments.of(INT_SCHEMA, LONG_SCHEMA, "reader type: INT not compatible with writer type: LONG", "/"),
+        Arguments.of(INT_SCHEMA, FLOAT_SCHEMA, "reader type: INT not compatible with writer type: FLOAT", "/"),
+        Arguments.of(INT_SCHEMA, DOUBLE_SCHEMA, "reader type: INT not compatible with writer type: DOUBLE", "/"),
 
-        { FLOAT_SCHEMA, DOUBLE_SCHEMA, "reader type: FLOAT not compatible with writer type: DOUBLE", "/" },
+        Arguments.of(LONG_SCHEMA, FLOAT_SCHEMA, "reader type: LONG not compatible with writer type: FLOAT", "/"),
+        Arguments.of(LONG_SCHEMA, DOUBLE_SCHEMA, "reader type: LONG not compatible with writer type: DOUBLE", "/"),
 
-        { DOUBLE_SCHEMA, STRING_SCHEMA, "reader type: DOUBLE not compatible with writer type: STRING", "/" },
+        Arguments.of(FLOAT_SCHEMA, DOUBLE_SCHEMA, "reader type: FLOAT not compatible with writer type: DOUBLE", "/"),
 
-        { FIXED_4_BYTES, STRING_SCHEMA, "reader type: FIXED not compatible with writer type: STRING", "/" },
+        Arguments.of(DOUBLE_SCHEMA, STRING_SCHEMA, "reader type: DOUBLE not compatible with writer type: STRING", "/"),
 
-        { STRING_SCHEMA, BOOLEAN_SCHEMA, "reader type: STRING not compatible with writer type: BOOLEAN", "/" },
-        { STRING_SCHEMA, INT_SCHEMA, "reader type: STRING not compatible with writer type: INT", "/" },
+        Arguments.of(FIXED_4_BYTES, STRING_SCHEMA, "reader type: FIXED not compatible with writer type: STRING", "/"),
 
-        { BYTES_SCHEMA, NULL_SCHEMA, "reader type: BYTES not compatible with writer type: NULL", "/" },
-        { BYTES_SCHEMA, INT_SCHEMA, "reader type: BYTES not compatible with writer type: INT", "/" },
+        Arguments.of(STRING_SCHEMA, BOOLEAN_SCHEMA, "reader type: STRING not compatible with writer type: BOOLEAN",
+            "/"),
+        Arguments.of(STRING_SCHEMA, INT_SCHEMA, "reader type: STRING not compatible with writer type: INT", "/"),
 
-        { A_INT_RECORD1, INT_SCHEMA, "reader type: RECORD not compatible with writer type: INT", "/" },
+        Arguments.of(BYTES_SCHEMA, NULL_SCHEMA, "reader type: BYTES not compatible with writer type: NULL", "/"),
+        Arguments.of(BYTES_SCHEMA, INT_SCHEMA, "reader type: BYTES not compatible with writer type: INT", "/"),
 
-        { INT_ARRAY_SCHEMA, LONG_ARRAY_SCHEMA, "reader type: INT not compatible with writer type: LONG", "/items" },
-        { INT_MAP_SCHEMA, INT_ARRAY_SCHEMA, "reader type: MAP not compatible with writer type: ARRAY", "/" },
-        { INT_ARRAY_SCHEMA, INT_MAP_SCHEMA, "reader type: ARRAY not compatible with writer type: MAP", "/" },
-        { INT_MAP_SCHEMA, LONG_MAP_SCHEMA, "reader type: INT not compatible with writer type: LONG", "/values" },
+        Arguments.of(A_INT_RECORD1, INT_SCHEMA, "reader type: RECORD not compatible with writer type: INT", "/"),
 
-        { INT_SCHEMA, ENUM2_AB_SCHEMA, "reader type: INT not compatible with writer type: ENUM", "/" },
-        { ENUM2_AB_SCHEMA, INT_SCHEMA, "reader type: ENUM not compatible with writer type: INT", "/" },
+        Arguments.of(INT_ARRAY_SCHEMA, LONG_ARRAY_SCHEMA, "reader type: INT not compatible with writer type: LONG",
+            "/items"),
+        Arguments.of(INT_MAP_SCHEMA, INT_ARRAY_SCHEMA, "reader type: MAP not compatible with writer type: ARRAY", "/"),
+        Arguments.of(INT_ARRAY_SCHEMA, INT_MAP_SCHEMA, "reader type: ARRAY not compatible with writer type: MAP", "/"),
+        Arguments.of(INT_MAP_SCHEMA, LONG_MAP_SCHEMA, "reader type: INT not compatible with writer type: LONG",
+            "/values"),
 
-        { FLOAT_SCHEMA, INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA,
-            "reader type: FLOAT not compatible with writer type: DOUBLE", "/" },
-        { LONG_SCHEMA, INT_FLOAT_UNION_SCHEMA, "reader type: LONG not compatible with writer type: FLOAT", "/" },
-        { INT_SCHEMA, INT_FLOAT_UNION_SCHEMA, "reader type: INT not compatible with writer type: FLOAT", "/" },
+        Arguments.of(INT_SCHEMA, ENUM2_AB_SCHEMA, "reader type: INT not compatible with writer type: ENUM", "/"),
+        Arguments.of(ENUM2_AB_SCHEMA, INT_SCHEMA, "reader type: ENUM not compatible with writer type: INT", "/"),
 
-        { INT_LIST_RECORD, LONG_LIST_RECORD, "reader type: INT not compatible with writer type: LONG",
-            "/fields/0/type" },
+        Arguments.of(FLOAT_SCHEMA, INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA,
+            "reader type: FLOAT not compatible with writer type: DOUBLE", "/3"),
+        Arguments.of(LONG_SCHEMA, INT_FLOAT_UNION_SCHEMA, "reader type: LONG not compatible with writer type: FLOAT",
+            "/1"),
+        Arguments.of(INT_SCHEMA, INT_FLOAT_UNION_SCHEMA, "reader type: INT not compatible with writer type: FLOAT",
+            "/1"),
 
-        { NULL_SCHEMA, INT_SCHEMA, "reader type: NULL not compatible with writer type: INT", "/" } };
-    return Arrays.asList(fields);
+        Arguments.of(INT_LIST_RECORD, LONG_LIST_RECORD, "reader type: INT not compatible with writer type: LONG",
+            "/fields/0/type"),
+
+        Arguments.of(NULL_SCHEMA, INT_SCHEMA, "reader type: NULL not compatible with writer type: INT", "/"));
   }
 
-  @Parameter(0)
-  public Schema reader;
-  @Parameter(1)
-  public Schema writer;
-  @Parameter(2)
-  public String details;
-  @Parameter(3)
-  public String location;
-
-  @Test
-  public void testTypeMismatchSchemas() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testTypeMismatchSchemas(Schema reader, Schema writer, String details, String location) throws Exception {
     validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.TYPE_MISMATCH, details, location);
   }
 }

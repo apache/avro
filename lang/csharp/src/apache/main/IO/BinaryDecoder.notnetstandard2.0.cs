@@ -35,7 +35,7 @@ namespace Avro.IO
         /// <summary>
         /// A float is written as 4 bytes.
         /// The float is converted into a 32-bit integer using a method equivalent to
-        /// Java's floatToIntBits and then encoded in little-endian format.
+        /// Java's floatToRawIntBits and then encoded in little-endian format.
         /// </summary>
         /// <returns></returns>
         public float ReadFloat()
@@ -49,7 +49,7 @@ namespace Avro.IO
         /// <summary>
         /// A double is written as 8 bytes.
         /// The double is converted into a 64-bit integer using a method equivalent to
-        /// Java's doubleToLongBits and then encoded in little-endian format.
+        /// Java's doubleToRawLongBits and then encoded in little-endian format.
         /// </summary>
         /// <returns>A double value.</returns>
         public double ReadDouble()

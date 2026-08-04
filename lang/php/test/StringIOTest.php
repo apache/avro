@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -31,7 +32,7 @@ use PHPUnit\Framework\TestCase;
 
 class StringIOTest extends TestCase
 {
-    public function test_write()
+    public function test_write(): void
     {
         $strio = new AvroStringIO();
         $this->assertEquals(0, $strio->tell());
@@ -41,7 +42,7 @@ class StringIOTest extends TestCase
         $this->assertEquals($strlen, $strio->tell());
     }
 
-    public function test_seek()
+    public function test_seek(): void
     {
         $strio = new AvroStringIO('abcdefghijklmnopqrstuvwxyz');
         $strio->seek(4, AvroIO::SEEK_SET);
@@ -52,7 +53,7 @@ class StringIOTest extends TestCase
         $this->assertEquals('wxyz', $strio->read(4));
     }
 
-    public function test_tell()
+    public function test_tell(): void
     {
         $strio = new AvroStringIO('foobar');
         $this->assertEquals(0, $strio->tell());
@@ -61,7 +62,7 @@ class StringIOTest extends TestCase
         $this->assertEquals($strlen, $strio->tell());
     }
 
-    public function test_read()
+    public function test_read(): void
     {
         $str = 'foobar';
         $strio = new AvroStringIO($str);
@@ -69,7 +70,7 @@ class StringIOTest extends TestCase
         $this->assertEquals(substr($str, 0, $strlen), $strio->read($strlen));
     }
 
-    public function test_string_rep()
+    public function test_string_rep(): void
     {
         $writers_schema_json = '"null"';
         $writers_schema = AvroSchema::parse($writers_schema_json);
@@ -79,8 +80,11 @@ class StringIOTest extends TestCase
         $dw = new AvroDataIOWriter($strio, $datum_writer, $writers_schema_json);
         $dw->close();
 
-        $this->assertEquals(57, strlen($strio->string()),
-            AvroDebug::asciiString($strio->string()));
+        $this->assertEquals(
+            57,
+            strlen((string) $strio->string()),
+            AvroDebug::asciiString($strio->string())
+        );
 
         $read_strio = new AvroStringIO($strio->string());
 

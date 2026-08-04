@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Random;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
@@ -76,7 +77,7 @@ public class ReflectLargeFloatArrayTest {
     public TestStateEncode() {
       super(ARRAY_SIZE);
       final String jsonText = ReflectData.get().getSchema(float[].class).toString();
-      this.schema = new Schema.Parser().parse(jsonText);
+      this.schema = SchemaParser.parseSingle(jsonText);
     }
 
     /**
@@ -107,7 +108,7 @@ public class ReflectLargeFloatArrayTest {
     public TestStateDecode() {
       super(ARRAY_SIZE);
       final String jsonText = ReflectData.get().getSchema(float[].class).toString();
-      this.schema = new Schema.Parser().parse(jsonText);
+      this.schema = SchemaParser.parseSingle(jsonText);
     }
 
     /**

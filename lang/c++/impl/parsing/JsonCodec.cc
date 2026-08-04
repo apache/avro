@@ -17,7 +17,6 @@
  */
 
 #include <algorithm>
-#include <boost/math/special_functions/fpclassify.hpp>
 #include <map>
 #include <memory>
 #include <string>
@@ -162,8 +161,7 @@ public:
             case Symbol::Kind::Field:
                 expectToken(in_, JsonParser::Token::String);
                 if (s.extra<string>() != in_.stringValue()) {
-                    throw Exception(boost::format("Incorrect field: expected \"%1%\" but got \"%2%\".") % 
-                        s.extra<string>() % in_.stringValue());
+                    throw Exception(R"(Incorrect field: expected "{}" but got "{}".)", s.extra<string>(), in_.stringValue());
                 }
                 break;
             default:
@@ -241,8 +239,7 @@ int32_t JsonDecoder<P>::decodeInt() {
     expect(JsonParser::Token::Long);
     int64_t result = in_.longValue();
     if (result < INT32_MIN || result > INT32_MAX) {
-        throw Exception(boost::format("Value out of range for Avro int: %1%")
-                        % result);
+        throw Exception("Value out of range for Avro int: {}", result);
     }
     return static_cast<int32_t>(result);
 }
@@ -496,6 +493,7 @@ public:
 template<typename P, typename F>
 void JsonEncoder<P, F>::init(OutputStream &os) {
     out_.init(os);
+    parser_.reset();
 }
 
 template<typename P, typename F>
@@ -540,7 +538,7 @@ void JsonEncoder<P, F>::encodeFloat(float f) {
         out_.encodeString("Infinity");
     } else if (-f == std::numeric_limits<float>::infinity()) {
         out_.encodeString("-Infinity");
-    } else if (boost::math::isnan(f)) {
+    } else if (std::isnan(f)) {
         out_.encodeString("NaN");
     } else {
         out_.encodeNumber(f);
@@ -554,7 +552,7 @@ void JsonEncoder<P, F>::encodeDouble(double d) {
         out_.encodeString("Infinity");
     } else if (-d == std::numeric_limits<double>::infinity()) {
         out_.encodeString("-Infinity");
-    } else if (boost::math::isnan(d)) {
+    } else if (std::isnan(d)) {
         out_.encodeString("NaN");
     } else {
         out_.encodeNumber(d);

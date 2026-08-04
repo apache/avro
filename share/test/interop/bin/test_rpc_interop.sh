@@ -24,7 +24,7 @@ VERSION=$(<share/VERSION.txt)
 export GEM_HOME="$PWD/lang/ruby/.gem/"
 
 java_tool() {
-  java -jar "lang/java/tools/target/avro-tools-$VERSION.jar" "$@"
+  java -Dorg.apache.avro.SERIALIZABLE_PACKAGES=org.apache.avro -jar "lang/java/tools/target/avro-tools-$VERSION.jar" "$@"
 }
 
 py_tool() {

@@ -157,8 +157,7 @@ def main() -> int:
 if __name__ == "__main__":
     if os.path.dirname(avro.io.__file__) in sys.path:
         warnings.warn(
-            "Invoking avro/tool.py directly is likely to lead to a name collision "
-            "with the python io module. Try doing `python -m avro.tool` instead."
+            "Invoking avro/tool.py directly is likely to lead to a name collision with the python io module. Try doing `python -m avro.tool` instead."
         )
 
     sys.exit(main())

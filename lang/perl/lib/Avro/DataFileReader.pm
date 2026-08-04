@@ -55,7 +55,7 @@ sub new {
 
 sub codec {
     my $datafile = shift;
-    return $datafile->metadata->{'avro.codec'};
+    return $datafile->metadata->{'avro.codec'} || 'null';
 }
 
 sub writer_schema {
@@ -99,7 +99,7 @@ sub read_file_header {
     $datafile->{sync_marker} = $data->{sync}
         or croak "sync marker appears invalid";
 
-    my $codec = $data->{meta}{'avro.codec'} || "";
+    my $codec = $data->{meta}{'avro.codec'} || 'null';
 
     throw Avro::DataFile::Error::UnsupportedCodec($codec)
         unless Avro::DataFile->is_codec_valid($codec);

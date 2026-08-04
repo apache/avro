@@ -24,7 +24,6 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.util.NonCopyingByteArrayOutputStream;
-import org.apache.commons.compress.utils.IOUtils;
 
 public class ZstandardCodec extends Codec {
   public final static int DEFAULT_COMPRESSION = 3;
@@ -78,11 +77,12 @@ public class ZstandardCodec extends Codec {
 
   @Override
   public ByteBuffer decompress(ByteBuffer compressedData) throws IOException {
-    NonCopyingByteArrayOutputStream baos = new NonCopyingByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
+    NonCopyingByteArrayOutputStream baos = NonCopyingByteArrayOutputStream
+        .capacityLimitedOutputStream(DEFAULT_BUFFER_SIZE);
     InputStream bytesIn = new ByteArrayInputStream(compressedData.array(), computeOffset(compressedData),
         compressedData.remaining());
     try (InputStream ios = ZstandardLoader.input(bytesIn, useBufferPool)) {
-      IOUtils.copy(ios, baos);
+      ios.transferTo(baos);
     }
     return baos.asByteBuffer();
   }

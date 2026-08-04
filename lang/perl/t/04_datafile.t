@@ -221,4 +221,21 @@ is_deeply $all[0], $data, "Our data is intact!";
     is scalar @next, 0, "no more objects back";
 }
 
+## Test with a datafile that has no codec
+{
+    my $container = join '',
+        "Obj\x{01}",
+        "\x{02}\x{16}avro.schema\x{10}\x{22}string\x{22}\x{00}",
+        "\x{de}\x{ad}\x{be}\x{ef}" x 4,
+        "\x{02}\x{08}\x{06}foo",
+        "\x{de}\x{ad}\x{be}\x{ef}" x 4;
+
+    open my $fh, '<', \$container or die "Could not open memory handle: $!";
+
+    my $reader = Avro::DataFileReader->new( fh => $fh );
+
+    my ($data) = $reader->next(1);
+    is $data, 'foo', 'Can read data from container without a codec';
+}
+
 done_testing;

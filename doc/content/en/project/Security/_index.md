@@ -2,7 +2,6 @@
 title: "Security"
 linkTitle: "Security"
 weight: 10
-manualLink: https://www.apache.org/security/
 ---
 
 <!--
@@ -26,4 +25,44 @@ manualLink: https://www.apache.org/security/
 
 -->
 
-Apache Avro project shares the same security policy as the [Apache Software Foundation](https://www.apache.org/security/)
+Security Policy
+===============
+
+Apache Avro project shares the same security policy as
+the [Apache Software Foundation](https://www.apache.org/security/).
+
+
+Security Model
+==============
+
+The Avro library implementations are designed to read and write any data conforming
+to a schema. Transport is outside the scope of the Avro library: applications using
+Avro should be surrounded by security measures that prevent attackers from writing
+random data and otherwise interfering with the consumers of schemas.
+
+Although the Avro library will not read or write data except as directed to by
+invoking it, avoiding leaking data into a side channel like log files is a non-goal
+security-wise for Avro. This means, for example, that you will need to catch and
+handle exceptions instead of simply writing them to a log file.
+
+In some cases, like schema parsing, type conversions and based on explicit schema
+properties, Avro can execute code provided by the environment. Avro has opt-in
+mechanisms for code that is eligible for execution. Applications using Avro should
+have a secured supply chain, ensuring code registered to be executed is safe.
+
+This supply chain also includes the schemas being used: if they are user provided,
+additional validation is strongly advised. Such validation can use the parsed schema,
+as schema parsing itself is safe: the parser allows SPIs, but is not otherwise
+configurable.
+
+
+Summary
+-------
+
+In short, using Avro is safe, provided applications:
+
+* are surrounded by security measures that prevent attackers from writing random
+  data and otherwise interfering with the consumers of schemas
+* avoid leaking data by, for example, catching and handling exceptions
+* have a secured supply chain, ensuring code registered to be executed is safe
+* if schemas are user provided, validate the parsed schema before use

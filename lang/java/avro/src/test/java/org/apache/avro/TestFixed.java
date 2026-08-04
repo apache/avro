@@ -18,10 +18,9 @@
 
 package org.apache.avro;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestFixed {
 
@@ -35,4 +34,16 @@ public class TestFixed {
     assertArrayEquals(new byte[16], (byte[]) field.defaultVal());
   }
 
+  @Test
+  void fixedLengthOutOfLimit() {
+    Exception ex = assertThrows(UnsupportedOperationException.class,
+        () -> Schema.createFixed("oversize", "doc", "space", Integer.MAX_VALUE));
+    assertEquals(TestSystemLimitException.ERROR_VM_LIMIT_BYTES, ex.getMessage());
+  }
+
+  @Test
+  void fixedNegativeLength() {
+    Exception ex = assertThrows(AvroRuntimeException.class, () -> Schema.createFixed("negative", "doc", "space", -1));
+    assertEquals(TestSystemLimitException.ERROR_NEGATIVE, ex.getMessage());
+  }
 }

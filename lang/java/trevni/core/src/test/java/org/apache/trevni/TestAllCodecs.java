@@ -18,28 +18,17 @@
 
 package org.apache.trevni;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collection;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(Parameterized.class)
 public class TestAllCodecs {
-  @Parameterized.Parameters(name = "{index}: codec={0}")
-  public static Collection<Object[]> data() {
-    return Arrays.asList(new Object[][] { { "bzip2" }, { "null" }, { "snappy" }, { "deflate" }, });
-  }
-
-  @Parameterized.Parameter(0)
-  public String codec;
 
   public static Codec getCodec(String name) {
     MetaData m = new MetaData();
@@ -47,8 +36,9 @@ public class TestAllCodecs {
     return Codec.get(m);
   }
 
-  @Test
-  public void testCodec() throws IOException {
+  @ParameterizedTest
+  @ValueSource(strings = { "bzip2", "null", "snappy", "deflate" })
+  public void testCodec(String codec) throws IOException {
     int inputSize = 500_000;
 
     byte[] input = generateTestData(inputSize);
@@ -76,8 +66,9 @@ public class TestAllCodecs {
     assertEquals(decompressedBuffer, inputByteBuffer);
   }
 
-  @Test
-  public void testCodecSlice() throws IOException {
+  @ParameterizedTest
+  @ValueSource(strings = { "bzip2", "null", "snappy", "deflate" })
+  public void testCodecSlice(String codec) throws IOException {
     int inputSize = 500_000;
     byte[] input = generateTestData(inputSize);
 

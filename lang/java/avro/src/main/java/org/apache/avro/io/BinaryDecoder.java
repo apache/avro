@@ -17,17 +17,18 @@
  */
 package org.apache.avro.io;
 
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.InvalidNumberEncodingException;
+import org.apache.avro.SystemLimitException;
+import org.apache.avro.util.ByteBufferInputStream;
+import org.apache.avro.util.Utf8;
+
+import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.InvalidNumberEncodingException;
-import org.apache.avro.util.Utf8;
-import org.slf4j.LoggerFactory;
 
 /**
  * An {@link Decoder} for binary-format data.
@@ -39,27 +40,20 @@ import org.slf4j.LoggerFactory;
  * can be accessed by inputStream().remaining(), if the BinaryDecoder is not
  * 'direct'.
  * <p/>
- * To prevent this class from making large allocations when handling potentially
- * pathological input data, set Java properties
- * <tt>org.apache.avro.limits.string.maxLength</tt> and
- * <tt>org.apache.avro.limits.bytes.maxLength</tt> before instantiating this
- * class to limit the maximum sizes of <tt>string</tt> and <tt>bytes</tt> types
- * handled. The default is to permit sizes up to Java's maximum array length.
  *
  * @see Encoder
+ * @see SystemLimitException
  */
 
 public class BinaryDecoder extends Decoder {
 
   /**
-   * The maximum size of array to allocate. Some VMs reserve some header words in
-   * an array. Attempts to allocate larger arrays may result in OutOfMemoryError:
-   * Requested array size exceeds VM limit
+   * When reading a collection (MAP or ARRAY), this keeps track of the number of
+   * elements to ensure that the
+   * {@link SystemLimitException#checkMaxCollectionLength} constraint is
+   * respected.
    */
-  static final long MAX_ARRAY_SIZE = (long) Integer.MAX_VALUE - 8L;
-
-  private static final String MAX_BYTES_LENGTH_PROPERTY = "org.apache.avro.limits.bytes.maxLength";
-  protected final int maxBytesLength;
+  private long collectionCount = 0L;
 
   private ByteSource source = null;
   // we keep the buffer and its state variables in this class and not in a
@@ -99,17 +93,6 @@ public class BinaryDecoder extends Decoder {
   /** protected constructor for child classes */
   protected BinaryDecoder() {
     super();
-    String o = System.getProperty(MAX_BYTES_LENGTH_PROPERTY);
-    int i = Integer.MAX_VALUE;
-    if (o != null) {
-      try {
-        i = Integer.parseUnsignedInt(o);
-      } catch (NumberFormatException nfe) {
-        LoggerFactory.getLogger(BinaryDecoder.class)
-            .warn("Could not parse property " + MAX_BYTES_LENGTH_PROPERTY + ": " + o, nfe);
-      }
-    }
-    maxBytesLength = i;
   }
 
   BinaryDecoder(InputStream in, int bufferSize) {
@@ -203,10 +186,25 @@ public class BinaryDecoder extends Decoder {
   @Override
   public long readLong() throws IOException {
     ensureBounds(10);
-    int b = buf[pos++] & 0xff;
-    int n = b & 0x7f;
+
+    /*
+     * Long values are used for many different areas of the spec, for example: a
+     * string is encoded as a long followed by that many bytes of UTF-8 encoded
+     * character data. Because of this, long values actually tend to be pretty small
+     * on average, and so can often fit within the first byte of the variable-length
+     * array. Therefore, the first byte is prioritized. For the first byte, if the
+     * high-order bit is set, this indicates there are more bytes to read, but also
+     * this means a signed value >= 0 does not have any following bytes.
+     */
     long l;
-    if (b > 0x7f) {
+    int b, n;
+    if ((b = buf[pos++]) == 0) {
+      return 0;
+    } else if (b > 0) {
+      // back to two's-complement (zig-zag)
+      return (b >>> 1) ^ -(b & 1);
+    } else {
+      n = b & 0x7f;
       b = buf[pos++] & 0xff;
       n ^= (b & 0x7f) << 7;
       if (b > 0x7f) {
@@ -218,7 +216,7 @@ public class BinaryDecoder extends Decoder {
           if (b > 0x7f) {
             // only the low 28 bits can be set, so this won't carry
             // the sign bit to the long
-            l = innerLongDecode((long) n);
+            l = innerLongDecode(n);
           } else {
             l = n;
           }
@@ -228,8 +226,6 @@ public class BinaryDecoder extends Decoder {
       } else {
         l = n;
       }
-    } else {
-      l = n;
     }
     if (pos > limit) {
       throw new EOFException();
@@ -300,17 +296,12 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public Utf8 readString(Utf8 old) throws IOException {
-    long length = readLong();
-    if (length > MAX_ARRAY_SIZE) {
-      throw new UnsupportedOperationException("Cannot read strings longer than " + MAX_ARRAY_SIZE + " bytes");
-    }
-    if (length < 0L) {
-      throw new AvroRuntimeException("Malformed data. Length is negative: " + length);
-    }
+    int length = SystemLimitException.checkMaxStringLength(readLong());
+    ensureAvailableBytes(length);
     Utf8 result = (old != null ? old : new Utf8());
-    result.setByteLength((int) length);
-    if (0L != length) {
-      doReadBytes(result.getBytes(), 0, (int) length);
+    result.setByteLength(length);
+    if (0 != length) {
+      doReadBytes(result.getBytes(), 0, length);
     }
     return result;
   }
@@ -329,25 +320,17 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
-    int length = readInt();
-    if (length > MAX_ARRAY_SIZE) {
-      throw new UnsupportedOperationException("Cannot read arrays longer than " + MAX_ARRAY_SIZE + " bytes");
-    }
-    if (length > maxBytesLength) {
-      throw new AvroRuntimeException("Bytes length " + length + " exceeds maximum allowed");
-    }
-    if (length < 0L) {
-      throw new AvroRuntimeException("Malformed data. Length is negative: " + length);
-    }
+    int length = SystemLimitException.checkMaxBytesLength(readLong());
+    ensureAvailableBytes(length);
     final ByteBuffer result;
     if (old != null && length <= old.capacity()) {
       result = old;
-      ((Buffer) result).clear();
+      result.clear();
     } else {
       result = ByteBuffer.allocate(length);
     }
     doReadBytes(result.array(), result.position(), length);
-    ((Buffer) result).limit(length);
+    result.limit(length);
     return result;
   }
 
@@ -372,6 +355,9 @@ public class BinaryDecoder extends Decoder {
   }
 
   protected void doSkipBytes(long length) throws IOException {
+    if (length <= 0) {
+      return;
+    }
     int remaining = limit - pos;
     if (length <= remaining) {
       pos = (int) (pos + length);
@@ -422,8 +408,21 @@ public class BinaryDecoder extends Decoder {
   protected long doReadItemCount() throws IOException {
     long result = readLong();
     if (result < 0L) {
-      // Consume byte-count if present
-      readLong();
+      if (result == Long.MIN_VALUE) {
+        // Long.MIN_VALUE cannot be negated (-Long.MIN_VALUE overflows back to
+        // Long.MIN_VALUE), so it is not a valid block count. Reject it rather
+        // than letting it fall through as a negative "count" that would later be
+        // truncated to 0 and silently terminate the collection without consuming
+        // the end marker, desynchronizing decoding of subsequent fields.
+        throw new AvroRuntimeException("Malformed data. Block count is invalid: " + result);
+      }
+      // A negative block count is followed by a block byte-size; consume it.
+      final long bytecount = readLong();
+      if (bytecount < 0L) {
+        // The block byte-size is a byte count and must be non-negative, matching
+        // doSkipItems().
+        throw new AvroRuntimeException("Malformed data. Block byte-size is negative: " + bytecount);
+      }
       result = -result;
     }
     return result;
@@ -443,7 +442,6 @@ public class BinaryDecoder extends Decoder {
    * @return Zero if there are no more items to skip and end of array/map is
    *         reached. Positive number if some items are found that cannot be
    *         skipped and the client needs to skip them individually.
-   *
    * @throws IOException If the first byte cannot be read for any reason other
    *                     than the end of the file, if the input stream has been
    *                     closed, or if some other I/O error occurs.
@@ -451,7 +449,16 @@ public class BinaryDecoder extends Decoder {
   private long doSkipItems() throws IOException {
     long result = readLong();
     while (result < 0L) {
+      if (result == Long.MIN_VALUE) {
+        // Consistent with doReadItemCount: Long.MIN_VALUE is not a valid block
+        // count (it cannot be negated), so reject it rather than treating it as
+        // a byte-sized block and continuing to skip.
+        throw new AvroRuntimeException("Malformed data. Block count is invalid: " + result);
+      }
       final long bytecount = readLong();
+      if (bytecount < 0L) {
+        throw new AvroRuntimeException("Malformed data. Block byte-size is negative: " + bytecount);
+      }
       doSkipBytes(bytecount);
       result = readLong();
     }
@@ -460,32 +467,38 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public long readArrayStart() throws IOException {
-    return doReadItemCount();
+    collectionCount = SystemLimitException.checkMaxCollectionLength(doReadItemCount());
+    return collectionCount;
   }
 
   @Override
   public long arrayNext() throws IOException {
-    return doReadItemCount();
+    long length = doReadItemCount();
+    collectionCount = SystemLimitException.checkMaxCollectionLength(collectionCount, length);
+    return length;
   }
 
   @Override
   public long skipArray() throws IOException {
-    return doSkipItems();
+    return SystemLimitException.checkMaxCollectionLength(doSkipItems());
   }
 
   @Override
   public long readMapStart() throws IOException {
-    return doReadItemCount();
+    collectionCount = SystemLimitException.checkMaxCollectionLength(doReadItemCount());
+    return collectionCount;
   }
 
   @Override
   public long mapNext() throws IOException {
-    return doReadItemCount();
+    long length = doReadItemCount();
+    collectionCount = SystemLimitException.checkMaxCollectionLength(collectionCount, length);
+    return length;
   }
 
   @Override
   public long skipMap() throws IOException {
-    return doSkipItems();
+    return SystemLimitException.checkMaxCollectionLength(doSkipItems());
   }
 
   @Override
@@ -522,6 +535,21 @@ public class BinaryDecoder extends Decoder {
   }
 
   /**
+   * Returns the total number of bytes remaining that can be read from this
+   * decoder (including any buffered bytes), or {@code -1} if the total is
+   * unknown.
+   * <p>
+   * Byte-array-backed decoders return an exact count. InputStream-backed decoders
+   * return an exact count only when the wrapped stream can report one.
+   * <p>
+   * {@link DirectBinaryDecoder} always returns {@code -1}.
+   */
+  @Override
+  public int remainingBytes() {
+    return source != null ? source.remainingBytes() : -1;
+  }
+
+  /**
    * Ensures that buf[pos + num - 1] is not out of the buffer array bounds.
    * However, buf[pos + num -1] may be >= limit if there is not enough data left
    * in the source to fill the array with num bytes.
@@ -540,6 +568,27 @@ public class BinaryDecoder extends Decoder {
       source.compactAndFill(buf, pos, minPos, remaining);
       if (pos >= limit)
         throw new EOFException();
+    }
+  }
+
+  /**
+   * Validates that the source has at least {@code length} bytes remaining before
+   * proceeding. Throws early if the declared length is inconsistent with the
+   * available data.
+   * <p>
+   * This check is only applied when the decoder knows the exact remaining byte
+   * count.
+   *
+   * @param length the number of bytes expected to be available
+   * @throws EOFException if the source is known to have fewer bytes remaining
+   */
+  private void ensureAvailableBytes(int length) throws EOFException {
+    if (source != null && length > 0) {
+      int remaining = source.remainingBytes();
+      if (remaining >= 0 && length > remaining) {
+        throw new EOFException(
+            "Attempted to read " + length + " bytes, but only " + remaining + " bytes are available");
+      }
     }
   }
 
@@ -677,6 +726,12 @@ public class BinaryDecoder extends Decoder {
 
     abstract boolean isEof();
 
+    /**
+     * Returns the total number of bytes remaining that can be read from this source
+     * (including any buffered bytes), or {@code -1} if the total is unknown.
+     */
+    protected abstract int remainingBytes();
+
     protected void attach(int bufferSize, BinaryDecoder decoder) {
       decoder.buf = new byte[bufferSize];
       decoder.pos = 0;
@@ -805,7 +860,7 @@ public class BinaryDecoder extends Decoder {
   }
 
   private static class InputStreamByteSource extends ByteSource {
-    private InputStream in;
+    private final InputStream in;
     protected boolean isEof = false;
 
     private InputStreamByteSource(InputStream in) {
@@ -924,6 +979,20 @@ public class BinaryDecoder extends Decoder {
     }
 
     @Override
+    protected int remainingBytes() {
+      int buffered = ba.getLim() - ba.getPos();
+      try {
+        if (in.getClass() == ByteArrayInputStream.class || in.getClass() == ByteBufferInputStream.class) {
+          long total = (long) buffered + in.available();
+          return (int) Math.min(total, Integer.MAX_VALUE);
+        }
+      } catch (IOException e) {
+        return -1;
+      }
+      return -1;
+    }
+
+    @Override
     public void close() throws IOException {
       in.close();
     }
@@ -932,11 +1001,10 @@ public class BinaryDecoder extends Decoder {
   /**
    * This byte source is special. It will avoid copying data by using the source's
    * byte[] as a buffer in the decoder.
-   *
    */
   private static class ByteArrayByteSource extends ByteSource {
     private static final int MIN_SIZE = 16;
-    private byte[] data;
+    private final byte[] data;
     private int position;
     private int max;
     private boolean compacted = false;
@@ -976,7 +1044,7 @@ public class BinaryDecoder extends Decoder {
     }
 
     @Override
-    protected long trySkipBytes(long length) throws IOException {
+    protected long trySkipBytes(long length) {
       // the buffer is shared, so this should return 0
       max = ba.getLim();
       position = ba.getPos();
@@ -1001,13 +1069,13 @@ public class BinaryDecoder extends Decoder {
     }
 
     @Override
-    protected int tryReadRaw(byte[] data, int off, int len) throws IOException {
+    protected int tryReadRaw(byte[] data, int off, int len) {
       // the buffer is shared, nothing to read
       return 0;
     }
 
     @Override
-    protected void compactAndFill(byte[] buf, int pos, int minPos, int remaining) throws IOException {
+    protected void compactAndFill(byte[] buf, int pos, int minPos, int remaining) {
       // this implementation does not want to mutate the array passed in,
       // so it makes a new tiny buffer unless it has been compacted once before
       if (!compacted) {
@@ -1041,6 +1109,11 @@ public class BinaryDecoder extends Decoder {
     public boolean isEof() {
       int remaining = ba.getLim() - ba.getPos();
       return (remaining == 0);
+    }
+
+    @Override
+    protected int remainingBytes() {
+      return ba.getLim() - ba.getPos();
     }
   }
 }

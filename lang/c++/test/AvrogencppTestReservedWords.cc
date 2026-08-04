@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "cpp_reserved_words.hh"
+#include "cpp_reserved_words_union_typedef.hh"
 
 #include "Compiler.hh"
 

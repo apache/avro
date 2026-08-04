@@ -1,9 +1,11 @@
 ---
 categories: []
-tags: ["java"] 
+tags: ["java"]
 title: "Getting Started (Java)"
 linkTitle: "Getting Started (Java)"
 weight: 2
+aliases:
+- /docs/current/getting-started-java/
 ---
 
 <!--
@@ -50,16 +52,16 @@ As well as the Avro Maven plugin (for performing code generation):
   <groupId>org.apache.avro</groupId>
   <artifactId>avro-maven-plugin</artifactId>
   <version>{{< avro_version >}}</version>
+  <configuration>
+    <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
+    <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
+  </configuration>
   <executions>
     <execution>
       <phase>generate-sources</phase>
       <goals>
         <goal>schema</goal>
       </goals>
-      <configuration>
-        <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
-        <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
-      </configuration>
     </execution>
   </executions>
 </plugin>
@@ -72,12 +74,12 @@ As well as the Avro Maven plugin (for performing code generation):
   </configuration>
 </plugin>
 ```
-      
+
 You may also build the required Avro jars from source. Building Avro is beyond the scope of this guide; see the Build Documentation page in the wiki for more information.
 
 ## Defining a schema
 
-Avro schemas are defined using JSON. Schemas are composed of primitive types (null, boolean, int, long, float, double, bytes, and string) and complex types (record, enum, array, map, union, and fixed). You can learn more about Avro schemas and types from the specification, but for now let's start with a simple schema example, user.avsc:
+Avro schemas are defined using JSON or IDL (the latter requires an extra dependency). Schemas are composed of primitive types (null, boolean, int, long, float, double, bytes, and string) and complex types (record, enum, array, map, union, and fixed). You can learn more about Avro schemas and types from the specification, but for now let's start with a simple schema example, user.avsc:
 
 ```json
 {"namespace": "example.avro",
@@ -90,7 +92,7 @@ Avro schemas are defined using JSON. Schemas are composed of primitive types (nu
  ]
 }
 ```
-      
+
 This schema defines a record representing a hypothetical user. (Note that a schema file can only contain a single schema definition.) At minimum, a record definition must include its type ("type": "record"), a name ("name": "User"), and fields, in this case name, favorite_number, and favorite_color. We also define a namespace ("namespace": "example.avro"), which together with the name attribute defines the "full name" of the schema (example.avro.User in this case).
 
 Fields are defined via an array of objects, each of which defines a name and type (other attributes are optional, see the record specification for more details). The type attribute of a field is another schema object, which can be either a primitive or complex type. For example, the name field of our User schema is the primitive type string, whereas the favorite_number and favorite_color fields are both unions, represented by JSON arrays. unions are a complex type that can be any of the types listed in the array; e.g., favorite_number can either be an int or null, essentially making it an optional field.
@@ -172,7 +174,7 @@ user = dataFileReader.next(user);
 System.out.println(user);
 }
 ```
-        
+
 This snippet will output:
 
 ```json
@@ -198,10 +200,10 @@ In release 1.9.0, we introduced a new approach to generating code that speeds up
 
 $ mvn -q exec:java -Dexec.mainClass=example.SpecificMain \
     -Dorg.apache.avro.specific.use_custom_coders=true
-        
+
 Note that you do not have to recompile your Avro schema to have access to this feature. The feature is compiled and built into your code, and you turn it on and off at runtime using the feature flag. As a result, you can turn it on during testing, for example, and then off in production. Or you can turn it on in production, and quickly turn it off if something breaks.
 
-We encourage the Avro community to exercise this new feature early to help build confidence. (For those paying one-demand for compute resources in the cloud, it can lead to meaningful cost savings.) As confidence builds, we will turn this feature on by default, and eventually eliminate the feature flag (and the old code).
+We encourage the Avro community to exercise this new feature early to help build confidence. (For those paying on demand for compute resources in the cloud, it can lead to meaningful cost savings.) As confidence builds, we will turn this feature on by default, and eventually eliminate the feature flag (and the old code).
 
 ## Serializing and deserializing without code generation
 Data in Avro is always stored with its corresponding schema, meaning we can always read a serialized item regardless of whether we know the schema ahead of time. This allows us to perform serialization and deserialization without code generation.
@@ -209,10 +211,10 @@ Data in Avro is always stored with its corresponding schema, meaning we can alwa
 Let's go over the same example as in the previous section, but without using code generation: we'll create some users, serialize them to a data file on disk, and then read back the file and deserialize the users objects.
 
 ### Creating users
-First, we use a Parser to read our schema definition and create a Schema object.
+First, we use a SchemaParser to read our schema definition and create a Schema object.
 
 ```java
-Schema schema = new Schema.Parser().parse(new File("user.avsc"));
+Schema schema = new SchemaParser().parse(new File("user.avsc")).mainSchema();
 ```
 
 Using this schema, let's create some users.
@@ -275,7 +277,7 @@ This outputs:
 {"name": "Alyssa", "favorite_number": 256, "favorite_color": null}
 {"name": "Ben", "favorite_number": 7, "favorite_color": "red"}
 ```
-        
+
 Deserializing is very similar to serializing. We create a GenericDatumReader, analogous to the GenericDatumWriter we used in serialization, which converts in-memory serialized items into GenericRecords. We pass the DatumReader and the previously created File to a DataFileReader, analogous to the DataFileWriter, which reads both the schema used by the writer as well as the data from the file on disk. The data will be read using the writer's schema included in the file, and the reader's schema provided to the GenericDatumReader. The writer's schema is needed to know the order in which fields were written, while the reader's schema is needed to know what fields are expected and how to fill in default values for fields added since the file was written. If there are differences between the two schemas, they are resolved according to the Schema Resolution specification.
 
 Next, we use the DataFileReader to iterate through the serialized users and print the deserialized object to stdout. Note how we perform the iteration: we create a single GenericRecord object which we store the current deserialized user in, and pass this record object to every call of dataFileReader.next. This is a performance optimization that allows the DataFileReader to reuse the same record object rather than allocating a new GenericRecord for every iteration, which can be very expensive in terms of object allocation and garbage collection if we deserialize a large data file. While this technique is the standard way to iterate through a data file, it's also possible to use for (GenericRecord user : dataFileReader) if performance is not a concern.

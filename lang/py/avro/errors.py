@@ -120,3 +120,7 @@ class UsageError(RuntimeError, AvroException):
 
 class AvroRuntimeException(RuntimeError, AvroException):
     """Raised when compatibility parsing encounters an unknown type"""
+
+
+class UnknownFingerprintAlgorithmException(AvroException):
+    """Raised when attempting to generate a fingerprint with an unknown algorithm"""

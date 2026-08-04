@@ -77,6 +77,7 @@ public class TestWordCountTether {
     List<String> execargs = new ArrayList<>();
     execargs.add("-classpath");
     execargs.add(System.getProperty("java.class.path"));
+    execargs.add("-Dorg.apache.avro.SERIALIZABLE_PACKAGES=org.apache.avro");
     execargs.add("org.apache.avro.mapred.tether.WordCountTask");
 
     FileInputFormat.addInputPaths(job, inputPath.toString());

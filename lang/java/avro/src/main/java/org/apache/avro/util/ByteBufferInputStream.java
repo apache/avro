@@ -25,7 +25,7 @@ import java.util.List;
 
 /** Utility to present {@link ByteBuffer} data as an {@link InputStream}. */
 public class ByteBufferInputStream extends InputStream {
-  private List<ByteBuffer> buffers;
+  private final List<ByteBuffer> buffers;
   private int current;
 
   public ByteBufferInputStream(List<ByteBuffer> buffers) {
@@ -65,6 +65,18 @@ public class ByteBufferInputStream extends InputStream {
     }
   }
 
+  @Override
+  public int available() throws IOException {
+    long remaining = 0;
+    for (int i = current; i < buffers.size(); i++) {
+      remaining += buffers.get(i).remaining();
+      if (remaining >= Integer.MAX_VALUE) {
+        return Integer.MAX_VALUE;
+      }
+    }
+    return (int) remaining;
+  }
+
   /**
    * Read a buffer from the input without copying, if possible.
    */
@@ -90,7 +102,7 @@ public class ByteBufferInputStream extends InputStream {
   /**
    * Returns the next non-empty buffer.
    */
-  private ByteBuffer getBuffer() throws IOException {
+  private ByteBuffer getBuffer() {
     while (current < buffers.size()) {
       ByteBuffer buffer = buffers.get(current);
       if (buffer.hasRemaining())

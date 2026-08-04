@@ -52,7 +52,7 @@ public class ClassUtils {
       c = forName(className, Thread.currentThread().getContextClassLoader());
     }
     if (c == null) {
-      throw new ClassNotFoundException("Failed to load class" + className);
+      throw new ClassNotFoundException("Failed to load class " + className);
     }
     return c;
   }
@@ -75,14 +75,14 @@ public class ClassUtils {
       c = forName(className, Thread.currentThread().getContextClassLoader());
     }
     if (c == null) {
-      throw new ClassNotFoundException("Failed to load class" + className);
+      throw new ClassNotFoundException("Failed to load class " + className);
     }
     return c;
   }
 
   /**
    * Loads a {@link Class} from the specified {@link ClassLoader} without throwing
-   * {@link ClassNotFoundException}.
+   * {@link ClassNotFoundException}. The class is loaded without initialization.
    *
    * @param className
    * @param classLoader
@@ -92,7 +92,11 @@ public class ClassUtils {
     Class<?> c = null;
     if (classLoader != null && className != null) {
       try {
-        c = Class.forName(className, true, classLoader);
+        // Load the class without initializing it so we can distinguish between
+        // ClassNotFoundException and SecurityException (that may be thrown by the
+        // validator).
+        c = Class.forName(className, false, classLoader);
+        ClassSecurityValidator.validate(c);
       } catch (ClassNotFoundException e) {
         // Ignore and return null
       }

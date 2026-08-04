@@ -22,7 +22,6 @@ namespace Apache\Avro\Schema;
 
 /**
  * Avro schema for basic types such as null, int, long, string.
- * @package Avro
  */
 class AvroPrimitiveSchema extends AvroSchema
 {
@@ -31,7 +30,7 @@ class AvroPrimitiveSchema extends AvroSchema
      * @throws AvroSchemaParseException if the given $type is not a
      *         primitive schema type name
      */
-    public function __construct($type)
+    public function __construct(string $type)
     {
         if (!self::isPrimitiveType($type)) {
             throw new AvroSchemaParseException(sprintf('%s is not a valid primitive type.', $type));
@@ -39,16 +38,88 @@ class AvroPrimitiveSchema extends AvroSchema
         parent::__construct($type);
     }
 
-    /**
-     * @returns mixed
-     */
-    public function toAvro()
+    public static function decimal(int $precision, int $scale): self
+    {
+        $self = new self(AvroSchema::BYTES_TYPE);
+        $self->logicalType = AvroLogicalType::decimal($precision, $scale);
+
+        return $self;
+    }
+
+    public static function uuid(): self
+    {
+        $self = new self(AvroSchema::STRING_TYPE);
+        $self->logicalType = AvroLogicalType::uuid();
+
+        return $self;
+    }
+
+    public static function date(): self
+    {
+        $self = new self(AvroSchema::INT_TYPE);
+        $self->logicalType = AvroLogicalType::date();
+
+        return $self;
+    }
+
+    public static function timeMillis(): self
+    {
+        $self = new self(AvroSchema::INT_TYPE);
+        $self->logicalType = AvroLogicalType::timeMillis();
+
+        return $self;
+    }
+
+    public static function timeMicros(): self
+    {
+        $self = new self(AvroSchema::LONG_TYPE);
+        $self->logicalType = AvroLogicalType::timeMicros();
+
+        return $self;
+    }
+
+    public static function timestampMillis(): self
+    {
+        $self = new self(AvroSchema::LONG_TYPE);
+        $self->logicalType = AvroLogicalType::timestampMillis();
+
+        return $self;
+    }
+
+    public static function timestampMicros(): self
+    {
+        $self = new self(AvroSchema::LONG_TYPE);
+        $self->logicalType = AvroLogicalType::timestampMicros();
+
+        return $self;
+    }
+
+    public static function localTimestampMillis(): self
+    {
+        $self = new self(AvroSchema::LONG_TYPE);
+        $self->logicalType = AvroLogicalType::localTimestampMillis();
+
+        return $self;
+    }
+
+    public static function localTimestampMicros(): self
+    {
+        $self = new self(AvroSchema::LONG_TYPE);
+        $self->logicalType = AvroLogicalType::localTimestampMicros();
+
+        return $self;
+    }
+
+    public function toAvro(): string|array
     {
         $avro = parent::toAvro();
-        // FIXME: Is this if really necessary? When *wouldn't* this be the case?
-        if (1 == count($avro)) {
+
+        // This check has been added (I guess) to avoid printing something like this for primitive types:
+        // {"name": "something", "type": {"type": "string"}}
+        if (1 === count($avro)) {
             return $this->type;
         }
+
         return $avro;
     }
 }

@@ -22,14 +22,36 @@ import org.apache.avro.Schema;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.ResolvingDecoder;
+import org.apache.avro.util.ClassSecurityValidator.SystemPropertiesPredicate;
 import org.apache.avro.util.ClassUtils;
+
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import org.apache.avro.util.ClassSecurityValidator;
 
 /**
  * {@link org.apache.avro.io.DatumReader DatumReader} for generated Java
  * classes.
  */
 public class SpecificDatumReader<T> extends GenericDatumReader<T> {
+
+  /**
+   * @deprecated Use {@link SystemPropertiesPredicate} instead.
+   * @see ClassSecurityValidator
+   */
+  @Deprecated
+  public static final String[] SERIALIZABLE_PACKAGES = SystemPropertiesPredicate.SERIALIZABLE_PACKAGES
+      .toArray(new String[0]);
+
+  /**
+   * @deprecated Use {@link SystemPropertiesPredicate} instead.
+   * @see ClassSecurityValidator
+   */
+  @Deprecated
+  public static final String[] SERIALIZABLE_CLASSES = SystemPropertiesPredicate.SERIALIZABLE_CLASSES
+      .toArray(new String[0]);
+
   public SpecificDatumReader() {
     this(null, null, SpecificData.get());
   }
@@ -101,10 +123,29 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     if (name == null)
       return null;
     try {
-      return ClassUtils.forName(getData().getClassLoader(), name);
+      Class clazz = ClassUtils.forName(getData().getClassLoader(), name);
+      return clazz;
     } catch (ClassNotFoundException e) {
       throw new AvroRuntimeException(e);
     }
+  }
+
+  /**
+   * @deprecated Use {@link SystemPropertiesPredicate} instead.
+   * @see ClassSecurityValidator
+   */
+  @Deprecated
+  public final List<String> getTrustedPackages() {
+    return Arrays.asList(SERIALIZABLE_PACKAGES);
+  }
+
+  /**
+   * @deprecated Use {@link SystemPropertiesPredicate} instead.
+   * @see ClassSecurityValidator
+   */
+  @Deprecated
+  public final List<String> getTrustedClasses() {
+    return Arrays.asList(SERIALIZABLE_CLASSES);
   }
 
   @Override

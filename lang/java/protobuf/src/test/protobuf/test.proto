@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+syntax = "proto2";
+
 package org.apache.avro.protobuf.noopt;
 
 import "google/protobuf/timestamp.proto";

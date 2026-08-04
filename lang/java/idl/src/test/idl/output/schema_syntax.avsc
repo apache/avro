@@ -1,0 +1,36 @@
+{
+    "type": "array",
+    "items": {
+        "type": "record",
+        "name": "StatusUpdate",
+        "namespace": "monitoring",
+        "fields": [
+            {
+                "name": "timestamp",
+                "type": {
+                    "type": "long",
+                    "logicalType": "timestamp-millis"
+                },
+                "doc": "The moment of the status change."
+            }, {
+                "name": "processName",
+                "type": "string",
+                "doc": "The process whose status changed."
+            }, {
+                "name": "newStatus",
+                "type": {
+                    "type": "enum",
+                    "name": "Status",
+                    "namespace": "system",
+                    "symbols": ["UNKNOWN", "NEW", "STARTUP", "RUNNING", "TERMINATING", "SHUTDOWN", "CRASHED"],
+                    "default": "UNKNOWN"
+                },
+                "doc": "The new status of the process."
+            }, {
+                "name": "description",
+                "type": ["null", "string"],
+                "doc": "A description why this status change occurred (optional)."
+            }
+        ]
+    }
+}

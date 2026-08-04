@@ -21,8 +21,11 @@ use warnings;
 use Test::More;
 use File::Basename qw(basename);
 use IO::File;
-use_ok 'Avro::DataFile';
-use_ok 'Avro::DataFileReader';
+
+BEGIN {
+    use_ok 'Avro::DataFile';
+    use_ok 'Avro::DataFileReader';
+}
 
 for my $path (glob '../../build/interop/data/*.avro') {
     my $fn = basename($path);

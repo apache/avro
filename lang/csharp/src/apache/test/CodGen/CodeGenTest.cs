@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis.CSharp;
 using NUnit.Framework;
 
@@ -80,6 +81,60 @@ namespace Avro.Test.CodeGen
             {
                 Protocol protocol = null;
                 Assert.Throws<ArgumentNullException>(() => this.GenerateNames(protocol));
+            }
+
+
+            [Test]
+            public void GetTypesShouldReturnTypes()
+            {
+                AddSchema(@"
+{
+  ""name"": ""PlanetEnum"",
+  ""namespace"": ""Space.Models"",
+  ""type"": ""enum"",
+  ""symbols"": [
+    ""Earth"",
+    ""Mars"",
+    ""Jupiter"",
+    ""Saturn"",
+    ""Uranus"",
+    ""Neptune""
+  ]
+}
+");
+                GenerateCode();
+                var types = GetTypes();
+                Assert.That(types.Count, Is.EqualTo(1));
+                bool hasPlanetEnumCode = types.TryGetValue("PlanetEnum", out string planetEnumCode);
+                Assert.That(hasPlanetEnumCode);
+                Assert.That(Regex.Matches(planetEnumCode, "public enum PlanetEnum").Count, Is.EqualTo(1));
+            }
+
+            [Test]
+            public void EnumWithKeywordSymbolsShouldHavePrefixedSymbols()
+            {
+                AddSchema(@"{
+    ""type"": ""enum"",
+    ""symbols"": [
+        ""string"",
+        ""integer"",
+        ""float"",
+        ""boolean"",
+        ""list"",
+        ""dict"",
+        ""regex""
+    ],
+    ""name"": ""type"",
+    ""namespace"": ""com.example""
+}");
+                GenerateCode();
+                var types = GetTypes();
+                Assert.That(types.Count, Is.EqualTo(1));
+                bool hasTypeCode = types.TryGetValue("type", out string typeCode);
+                Assert.That(hasTypeCode);
+                Assert.That(Regex.Matches(typeCode, "public enum type").Count, Is.EqualTo(1));
+                Assert.That(Regex.Matches(typeCode, "@string,").Count, Is.EqualTo(1));
+                Assert.That(Regex.Matches(typeCode, "@float,").Count, Is.EqualTo(1));
             }
         }
     }

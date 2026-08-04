@@ -18,15 +18,49 @@
 #
 # Pull Request Labeler Github Action Configuration: https://github.com/marketplace/actions/labeler
 
-C: ["lang/c/**/*"]
-C++: ["lang/c++/**/*"]
-C#: ["lang/csharp/**/*"]
-Java: ["lang/java/**/*"]
-Js: ["lang/js/**/*"]
-Perl: ["lang/perl/**/*"]
-Php: ["lang/php/**/*"]
-Python: ["lang/py/**/*"]
-Ruby: ["lang/ruby/**/*"]
-Rust: ["lang/rust/**/*"]
-build: ["**/*Dockerfile*", "**/*.sh", "**/*pom.xml", ".github/**/*"]
-website: ["doc/**/*"]
+C:
+  - changed-files:
+    - any-glob-to-any-file: "lang/c/**/*"
+    - any-glob-to-any-file: ".github/workflows/test-lang-c.yml"
+C++:
+  - changed-files:
+    - any-glob-to-any-file: "lang/c++/**/*"
+    - any-glob-to-any-file: ".github/workflows/test-lang-c++.yml"
+C#:
+  - changed-files:
+    - any-glob-to-any-file: "lang/csharp/**/*"
+    - any-glob-to-any-file: ".github/workflows/*-csharp*.yml"
+Java:
+  - changed-files:
+    - any-glob-to-any-file: "lang/java/**/*"
+    - any-glob-to-any-file: ".github/workflows/*-java*.yml"
+    - any-glob-to-any-file: ".github/workflows/*maven*.yml"
+    - any-glob-to-any-file: ".github/workflows/*spotless*.yml"
+Js:
+  - changed-files:
+    - any-glob-to-any-file: "lang/js/**/*"
+    - any-glob-to-any-file: ".github/workflows/*-js*.yml"
+Perl:
+  - changed-files:
+    - any-glob-to-any-file: "lang/perl/**/*"
+    - any-glob-to-any-file: ".github/workflows/test-lang-perl.yml"
+Php:
+  - changed-files:
+    - any-glob-to-any-file: "lang/php/**/*"
+    - any-glob-to-any-file: ".github/workflows/test-lang-php.yml"
+Python:
+  - changed-files:
+    - any-glob-to-any-file: "lang/py/**/*"
+    - any-glob-to-any-file: ".github/workflows/*-py*.yml"
+Ruby:
+  - changed-files:
+    - any-glob-to-any-file: "lang/ruby/**/*"
+    - any-glob-to-any-file: ".github/workflows/test-lang-ruby.yml"
+build:
+  - changed-files:
+    - any-glob-to-any-file: ["**/*Dockerfile*", "**/*.sh", "**/*pom.xml", ".github/**/*"]
+    - any-glob-to-any-file: ".github/workflows/test-docker.yml"
+website:
+  - changed-files:
+    - any-glob-to-any-file: "doc/**/*"
+    - any-glob-to-any-file: ".github/workflows/deploy-docs.yml"

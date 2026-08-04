@@ -19,7 +19,6 @@
 
 import io
 import logging
-import os
 import subprocess
 import sys
 import time
@@ -47,7 +46,6 @@ class TestTetherTaskRunner(unittest.TestCase):
 
             pyfile = avro.test.mock_tether_parent.__file__
             proc = subprocess.Popen([sys.executable, pyfile, "start_server", f"{parent_port}"])
-            input_port = avro.tether.util.find_port()
 
             print(f"Mock server started process pid={proc.pid}")
             # Possible race condition? open tries to connect to the subprocess before the subprocess is fully started
@@ -133,7 +131,7 @@ class TestTetherTaskRunner(unittest.TestCase):
 
         finally:
             # close the process
-            if not (proc is None):
+            if proc is not None:
                 proc.kill()
 
     def test2(self):
@@ -177,10 +175,10 @@ class TestTetherTaskRunner(unittest.TestCase):
 
         finally:
             # close the process
-            if not (runnerproc is None):
+            if runnerproc is not None:
                 runnerproc.kill()
 
-            if not (proc is None):
+            if proc is not None:
                 proc.kill()
 
 

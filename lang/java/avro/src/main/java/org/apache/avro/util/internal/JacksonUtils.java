@@ -40,6 +40,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 public class JacksonUtils {
+  /**
+   * Object Mapper used for toJsonNode method.
+   */
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+
+  /**
+   * This object mapper uses a special variant that has different visibility
+   * rules, used in objectToMap method.
+   */
+  private static final ObjectMapper OBJECT_TO_MAP_MAPPER = MAPPER.copy()
+      .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE)
+      .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
 
   private JacksonUtils() {
   }
@@ -49,9 +61,9 @@ public class JacksonUtils {
       return null;
     }
     try {
-      TokenBuffer generator = new TokenBuffer(new ObjectMapper(), false);
+      TokenBuffer generator = new TokenBuffer(MAPPER, false);
       toJson(datum, generator);
-      return new ObjectMapper().readTree(generator.asParser());
+      return MAPPER.readTree(generator.asParser());
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }
@@ -102,14 +114,26 @@ public class JacksonUtils {
   }
 
   public static Object toObject(JsonNode jsonNode, Schema schema) {
-    if (schema != null && schema.getType().equals(Schema.Type.UNION)) {
-      return toObject(jsonNode, schema.getTypes().get(0));
-    }
     if (jsonNode == null) {
       return null;
     } else if (jsonNode.isNull()) {
       return JsonProperties.NULL_VALUE;
-    } else if (jsonNode.isBoolean()) {
+    }
+
+    if (schema != null && schema.getType().equals(Schema.Type.UNION)) {
+      for (Schema unionType : schema.getTypes()) {
+        if (unionType.getType().equals(Schema.Type.NULL)) {
+          continue;
+        }
+        Object unionObject = toObject(jsonNode, unionType);
+        if (unionObject != null) {
+          return unionObject;
+        }
+      }
+      return null;
+    }
+
+    if (jsonNode.isBoolean()) {
       return jsonNode.asBoolean();
     } else if (jsonNode.isInt()) {
       if (schema == null || schema.getType().equals(Schema.Type.INT)) {
@@ -175,15 +199,11 @@ public class JacksonUtils {
 
   /**
    * Convert an object into a map
-   * 
+   *
    * @param datum The object
    * @return Its Map representation
    */
   public static Map objectToMap(Object datum) {
-    ObjectMapper mapper = new ObjectMapper();
-    // we only care about fields
-    mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE);
-    mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-    return mapper.convertValue(datum, Map.class);
+    return OBJECT_TO_MAP_MAPPER.convertValue(datum, Map.class);
   }
 }

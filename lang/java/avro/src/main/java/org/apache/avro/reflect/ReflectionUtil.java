@@ -24,6 +24,7 @@ import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -56,25 +57,13 @@ public class ReflectionUtil {
     // so it is monomorphic and the JIT can inline
     FieldAccess access = null;
     try {
-      if (null == System.getProperty("avro.disable.unsafe")) {
-        FieldAccess unsafeAccess = load("org.apache.avro.reflect.FieldAccessUnsafe", FieldAccess.class);
-        if (validate(unsafeAccess)) {
-          access = unsafeAccess;
-        }
+      FieldAccess reflectAccess = new FieldAccessReflect();
+      if (validate(reflectAccess)) {
+        fieldAccess = reflectAccess;
       }
-    } catch (Throwable ignored) {
+    } catch (Throwable oops) {
+      throw new AvroRuntimeException("Unable to load a functional FieldAccess class!");
     }
-    if (access == null) {
-      try {
-        FieldAccess reflectAccess = load("org.apache.avro.reflect.FieldAccessReflect", FieldAccess.class);
-        if (validate(reflectAccess)) {
-          access = reflectAccess;
-        }
-      } catch (Throwable oops) {
-        throw new AvroRuntimeException("Unable to load a functional FieldAccess class!");
-      }
-    }
-    fieldAccess = access;
   }
 
   private static <T> T load(String name, Class<T> type) throws Exception {
@@ -200,4 +189,19 @@ public class ReflectionUtil {
     }
   }
 
+  protected static AvroEncode getAvroEncode(Field field) {
+    var enc = field.getAnnotation(AvroEncode.class);
+    if (enc != null) {
+      return enc;
+    } else {
+      return getAvroEncode(field.getType());
+    }
+  }
+
+  protected static AvroEncode getAvroEncode(Class<?> clazz) {
+    if (clazz == null) {
+      return null;
+    }
+    return clazz.getAnnotation(AvroEncode.class);
+  }
 }

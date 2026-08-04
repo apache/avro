@@ -18,6 +18,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -33,6 +34,34 @@ namespace Avro.Test.File
     {
         const string specificSchema  = "{\"type\":\"record\",\"name\":\"Foo\",\"namespace\":\"Avro.Test.File\",\"fields\":"
                                      + "[{\"name\":\"name\",\"type\":[\"null\",\"string\"]},{\"name\":\"age\",\"type\":\"int\"}]}";
+
+        /// <summary>
+        /// This test case added to confirm standalone serialization / deserialization behavior of new type UnknownLogicalType
+        /// </summary>
+        const string unknowLogicalTypeSchema = @"
+{
+	""type"" : ""record"",
+	""name"" : ""Foo"",
+	""namespace"" : ""Avro.Test.File"",
+	""fields"": [
+		{
+			""name"" :""name"",
+			""type"":  [
+                ""null"",
+                {
+                  ""logicalType"": ""varchar"",
+                  ""maxLength"": 65,
+                  ""type"": ""string""
+                }
+              ]
+		}, 
+		{
+			""name"" : ""age"",
+			""type"" : ""int""
+		}
+	]
+}
+";
 
         private static IEnumerable<TestCaseData> TestSpecificDataSource()
         {
@@ -99,6 +128,11 @@ namespace Avro.Test.File
                         new object[] { "Bob", 9 },
                         new object[] { null, 48 }
                     }, codecType).SetName("{m}(Case3,{2})");
+
+                yield return new TestCaseData(unknowLogicalTypeSchema, new object[]
+                    {
+                        new object[] { "John", 23 }
+                    }, codecType).SetName("{m}(Case4,{2})");
             }
         }
 
@@ -555,7 +589,6 @@ namespace Avro.Test.File
         /// position in stream
         /// </summary>
         /// <param name="schemaStr"></param>
-        /// <param name="value"></param>
         /// <param name="codecType"></param>
         [TestCaseSource(nameof(TestPartialReadSource))]
         public void TestPartialRead(string schemaStr, Codec.Type codecType, int position, int expectedRecords)

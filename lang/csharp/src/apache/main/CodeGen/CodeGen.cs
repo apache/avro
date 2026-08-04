@@ -474,8 +474,6 @@ namespace Avro
         /// <exception cref="CodeGenException">
         /// Unable to cast schema into an enum
         /// or
-        /// Enum symbol " + symbol + " is a C# reserved keyword
-        /// or
         /// Namespace required for enum schema " + enumschema.Name.
         /// </exception>
         protected virtual void processEnum(Schema schema)
@@ -498,11 +496,6 @@ namespace Avro
 
             foreach (string symbol in enumschema.Symbols)
             {
-                if (CodeGenUtil.Instance.ReservedKeywords.Contains(symbol))
-                {
-                    throw new CodeGenException("Enum symbol " + symbol + " is a C# reserved keyword");
-                }
-
                 CodeMemberField field = new CodeMemberField(typeof(int), symbol);
                 ctd.Members.Add(field);
             }
@@ -1133,6 +1126,50 @@ namespace Avro
             using (var outfile = new StreamWriter(outputFile))
             {
                 cscp.GenerateCodeFromCompileUnit(CompileUnit, outfile, opts);
+            }
+        }
+
+        /// <summary>
+        /// Gets names and generated code of the schema(s) types
+        /// </summary>
+        /// <returns></returns>
+        public virtual IDictionary<string, string> GetTypes()
+        {
+            using (var cscp = new CSharpCodeProvider())
+            {
+                var opts = new CodeGeneratorOptions
+                {
+                    BracingStyle = "C", IndentString = "\t", BlankLinesBetweenMembers = false
+                };
+                CodeNamespaceCollection nsc = CompileUnit.Namespaces;
+
+                var sourceCodeByName = new Dictionary<string, string>();
+                for (int i = 0; i < nsc.Count; i++)
+                {
+                    var ns = nsc[i];
+
+                    var new_ns = new CodeNamespace(ns.Name);
+                    new_ns.Comments.Add(CodeGenUtil.Instance.FileComment);
+                    foreach (CodeNamespaceImport nci in CodeGenUtil.Instance.NamespaceImports)
+                    {
+                        new_ns.Imports.Add(nci);
+                    }
+
+                    var types = ns.Types;
+                    for (int j = 0; j < types.Count; j++)
+                    {
+                        var ctd = types[j];
+                        using (var writer = new StringWriter())
+                        {
+                            new_ns.Types.Add(ctd);
+                            cscp.GenerateCodeFromNamespace(new_ns, writer, opts);
+                            new_ns.Types.Remove(ctd);
+                            sourceCodeByName[ctd.Name] = writer.ToString();
+                        }
+                    }
+                }
+
+                return sourceCodeByName;
             }
         }
 

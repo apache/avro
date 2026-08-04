@@ -256,7 +256,7 @@ class BinaryDecoder:
         """
         A float is written as 4 bytes.
         The float is converted into a 32-bit integer using a method equivalent to
-        Java's floatToIntBits and then encoded in little-endian format.
+        Java's floatToRawIntBits and then encoded in little-endian format.
         """
         return float(STRUCT_FLOAT.unpack(self.read(4))[0])
 
@@ -264,7 +264,7 @@ class BinaryDecoder:
         """
         A double is written as 8 bytes.
         The double is converted into a 64-bit integer using a method equivalent to
-        Java's doubleToLongBits and then encoded in little-endian format.
+        Java's doubleToRawLongBits and then encoded in little-endian format.
         """
         return float(STRUCT_DOUBLE.unpack(self.read(8))[0])
 
@@ -425,7 +425,6 @@ class BinaryEncoder:
         """
         null is written as zero bytes
         """
-        pass
 
     def write_boolean(self, datum: bool) -> None:
         """
@@ -454,7 +453,7 @@ class BinaryEncoder:
         """
         A float is written as 4 bytes.
         The float is converted into a 32-bit integer using a method equivalent to
-        Java's floatToIntBits and then encoded in little-endian format.
+        Java's floatToRawIntBits and then encoded in little-endian format.
         """
         self.write(STRUCT_FLOAT.pack(datum))
 
@@ -462,7 +461,7 @@ class BinaryEncoder:
         """
         A double is written as 8 bytes.
         The double is converted into a 64-bit integer using a method equivalent to
-        Java's doubleToLongBits and then encoded in little-endian format.
+        Java's doubleToRawLongBits and then encoded in little-endian format.
         """
         self.write(STRUCT_DOUBLE.pack(datum))
 
@@ -634,9 +633,10 @@ class DatumReader:
     def read(self, decoder: "BinaryDecoder") -> object:
         if self.writers_schema is None:
             raise avro.errors.IONotReadyException("Cannot read without a writer's schema.")
-        if self.readers_schema is None:
-            self.readers_schema = self.writers_schema
-        return self.read_data(self.writers_schema, self.readers_schema, decoder)
+        reader_schema = self.readers_schema
+        if reader_schema is None:
+            reader_schema = self.writers_schema
+        return self.read_data(self.writers_schema, reader_schema, decoder)
 
     def read_data(self, writers_schema: avro.schema.Schema, readers_schema: avro.schema.Schema, decoder: "BinaryDecoder") -> object:
         # schema matching
@@ -803,7 +803,7 @@ class DatumReader:
         while block_count != 0:
             if block_count < 0:
                 block_count = -block_count
-                block_size = decoder.read_long()
+                decoder.skip_long()
             for i in range(block_count):
                 read_items.append(self.read_data(writers_schema.items, readers_schema.items, decoder))
             block_count = decoder.read_long()
@@ -840,7 +840,7 @@ class DatumReader:
         while block_count != 0:
             if block_count < 0:
                 block_count = -block_count
-                block_size = decoder.read_long()
+                decoder.skip_long()
             for i in range(block_count):
                 key = decoder.read_utf8()
                 read_items[key] = self.read_data(writers_schema.values, readers_schema.values, decoder)

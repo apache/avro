@@ -37,6 +37,7 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.TestProtocolParsing;
 import org.apache.avro.TestSchema;
 import org.apache.avro.TestAnnotation;
@@ -70,7 +71,7 @@ public class TestSpecificCompiler {
 
   @Test
   void esc() {
-    assertEquals("\\\"", SpecificCompiler.javaEscape("\""));
+    assertEquals("\\\"", SpecificCompiler.escapeForJavaString("\""));
   }
 
   @Test
@@ -82,12 +83,12 @@ public class TestSpecificCompiler {
 
   @Test
   void primitiveSchemaGeneratesNothing() {
-    assertEquals(0, new SpecificCompiler(new Schema.Parser().parse("\"double\"")).compile().size());
+    assertEquals(0, new SpecificCompiler(SchemaParser.parseSingle("\"double\"")).compile().size());
   }
 
   @Test
   void simpleEnumSchema(TestInfo testInfo) throws IOException {
-    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(TestSchema.BASIC_ENUM_SCHEMA))
+    Collection<OutputFile> outputs = new SpecificCompiler(SchemaParser.parseSingle(TestSchema.BASIC_ENUM_SCHEMA))
         .compile();
     assertEquals(1, outputs.size());
     OutputFile o = outputs.iterator().next();
@@ -130,7 +131,7 @@ public class TestSpecificCompiler {
 
   @Test
   void manglingForRecords(TestInfo testInfo) throws IOException {
-    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(SCHEMA)).compile();
+    Collection<OutputFile> outputs = new SpecificCompiler(SchemaParser.parseSingle(SCHEMA)).compile();
     assertEquals(1, outputs.size());
     String contents = outputs.iterator().next().contents;
 
@@ -145,7 +146,7 @@ public class TestSpecificCompiler {
   void manglingForEnums(TestInfo testInfo) throws IOException {
     String enumSchema = "" + "{ \"name\": \"instanceof\", \"type\": \"enum\","
         + "  \"symbols\": [\"new\", \"super\", \"switch\"] }";
-    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(enumSchema)).compile();
+    Collection<OutputFile> outputs = new SpecificCompiler(SchemaParser.parseSingle(enumSchema)).compile();
     assertEquals(1, outputs.size());
     String contents = outputs.iterator().next().contents;
 
@@ -156,7 +157,7 @@ public class TestSpecificCompiler {
 
   @Test
   void schemaSplit(TestInfo testInfo) throws IOException {
-    SpecificCompiler compiler = new SpecificCompiler(new Schema.Parser().parse(SCHEMA));
+    SpecificCompiler compiler = new SpecificCompiler(SchemaParser.parseSingle(SCHEMA));
     compiler.maxStringChars = 10;
     Collection<OutputFile> files = compiler.compile();
     assertCompilesWithJavaCompiler(new File(INPUT_DIR, testInfo.getTestMethod().get().getName()), files);
@@ -172,7 +173,7 @@ public class TestSpecificCompiler {
 
   @Test
   void schemaWithDocs() {
-    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(TestSchema.SCHEMA_WITH_DOC_TAGS))
+    Collection<OutputFile> outputs = new SpecificCompiler(SchemaParser.parseSingle(TestSchema.SCHEMA_WITH_DOC_TAGS))
         .compile();
     assertEquals(3, outputs.size());
     int count = 0;
@@ -300,12 +301,11 @@ public class TestSpecificCompiler {
 
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
-    assertEquals("getHeight$0",
-        SpecificCompiler.generateGetMethod(createRecord("test", false, height, Height), height));
+    assertEquals("getHeight", SpecificCompiler.generateGetMethod(createRecord("test", false, height, Height), height));
 
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
-    assertEquals("getHeight$1",
+    assertEquals("getHeight$0",
         SpecificCompiler.generateGetMethod(createRecord("test", false, height, Height), Height));
 
     message = new Field("message", Schema.create(Type.STRING), null, null);
@@ -314,12 +314,12 @@ public class TestSpecificCompiler {
 
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
-    assertEquals("getMessage$0",
+    assertEquals("getMessage$",
         SpecificCompiler.generateGetMethod(createRecord("test", true, message, Message), message));
 
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
-    assertEquals("getMessage$1",
+    assertEquals("getMessage$0",
         SpecificCompiler.generateGetMethod(createRecord("test", true, message, Message), Message));
 
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
@@ -328,12 +328,12 @@ public class TestSpecificCompiler {
 
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
-    assertEquals("getSchema$0",
+    assertEquals("getSchema$",
         SpecificCompiler.generateGetMethod(createRecord("test", false, schema, Schema$), schema));
 
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
-    assertEquals("getSchema$1",
+    assertEquals("getSchema$0",
         SpecificCompiler.generateGetMethod(createRecord("test", false, schema, Schema$), Schema$));
   }
 
@@ -376,12 +376,11 @@ public class TestSpecificCompiler {
 
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
-    assertEquals("setHeight$0",
-        SpecificCompiler.generateSetMethod(createRecord("test", false, height, Height), height));
+    assertEquals("setHeight", SpecificCompiler.generateSetMethod(createRecord("test", false, height, Height), height));
 
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
-    assertEquals("setHeight$1",
+    assertEquals("setHeight$0",
         SpecificCompiler.generateSetMethod(createRecord("test", false, height, Height), Height));
 
     message = new Field("message", Schema.create(Type.STRING), null, null);
@@ -390,12 +389,12 @@ public class TestSpecificCompiler {
 
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
-    assertEquals("setMessage$0",
+    assertEquals("setMessage$",
         SpecificCompiler.generateSetMethod(createRecord("test", true, message, Message), message));
 
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
-    assertEquals("setMessage$1",
+    assertEquals("setMessage$0",
         SpecificCompiler.generateSetMethod(createRecord("test", true, message, Message), Message));
 
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
@@ -404,12 +403,12 @@ public class TestSpecificCompiler {
 
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
-    assertEquals("setSchema$0",
+    assertEquals("setSchema$",
         SpecificCompiler.generateSetMethod(createRecord("test", false, schema, Schema$), schema));
 
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
-    assertEquals("setSchema$1",
+    assertEquals("setSchema$0",
         SpecificCompiler.generateSetMethod(createRecord("test", false, schema, Schema$), Schema$));
   }
 
@@ -452,12 +451,11 @@ public class TestSpecificCompiler {
 
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
-    assertEquals("hasHeight$0",
-        SpecificCompiler.generateHasMethod(createRecord("test", false, height, Height), height));
+    assertEquals("hasHeight", SpecificCompiler.generateHasMethod(createRecord("test", false, height, Height), height));
 
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
-    assertEquals("hasHeight$1",
+    assertEquals("hasHeight$0",
         SpecificCompiler.generateHasMethod(createRecord("test", false, height, Height), Height));
 
     message = new Field("message", Schema.create(Type.STRING), null, null);
@@ -466,12 +464,12 @@ public class TestSpecificCompiler {
 
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
-    assertEquals("hasMessage$0",
+    assertEquals("hasMessage$",
         SpecificCompiler.generateHasMethod(createRecord("test", true, message, Message), message));
 
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
-    assertEquals("hasMessage$1",
+    assertEquals("hasMessage$0",
         SpecificCompiler.generateHasMethod(createRecord("test", true, message, Message), Message));
 
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
@@ -480,12 +478,12 @@ public class TestSpecificCompiler {
 
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
-    assertEquals("hasSchema$0",
+    assertEquals("hasSchema$",
         SpecificCompiler.generateHasMethod(createRecord("test", false, schema, Schema$), schema));
 
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
-    assertEquals("hasSchema$1",
+    assertEquals("hasSchema$0",
         SpecificCompiler.generateHasMethod(createRecord("test", false, schema, Schema$), Schema$));
   }
 
@@ -528,12 +526,12 @@ public class TestSpecificCompiler {
 
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
-    assertEquals("clearHeight$0",
+    assertEquals("clearHeight",
         SpecificCompiler.generateClearMethod(createRecord("test", false, height, Height), height));
 
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
-    assertEquals("clearHeight$1",
+    assertEquals("clearHeight$0",
         SpecificCompiler.generateClearMethod(createRecord("test", false, height, Height), Height));
 
     message = new Field("message", Schema.create(Type.STRING), null, null);
@@ -542,12 +540,12 @@ public class TestSpecificCompiler {
 
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
-    assertEquals("clearMessage$0",
+    assertEquals("clearMessage$",
         SpecificCompiler.generateClearMethod(createRecord("test", true, message, Message), message));
 
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
-    assertEquals("clearMessage$1",
+    assertEquals("clearMessage$0",
         SpecificCompiler.generateClearMethod(createRecord("test", true, message, Message), Message));
 
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
@@ -556,12 +554,12 @@ public class TestSpecificCompiler {
 
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
-    assertEquals("clearSchema$0",
+    assertEquals("clearSchema$",
         SpecificCompiler.generateClearMethod(createRecord("test", false, schema, Schema$), schema));
 
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
-    assertEquals("clearSchema$1",
+    assertEquals("clearSchema$0",
         SpecificCompiler.generateClearMethod(createRecord("test", false, schema, Schema$), Schema$));
   }
 
@@ -584,7 +582,7 @@ public class TestSpecificCompiler {
 
   @Test
   void aliases() throws IOException {
-    Schema s = new Schema.Parser().parse("{\"name\":\"X\",\"type\":\"record\",\"aliases\":[\"Y\"],\"fields\":["
+    Schema s = SchemaParser.parseSingle("{\"name\":\"X\",\"type\":\"record\",\"aliases\":[\"Y\"],\"fields\":["
         + "{\"name\":\"f\",\"type\":\"int\",\"aliases\":[\"g\"]}]}");
     SpecificCompiler compiler = new SpecificCompiler(s);
     compiler.setStringType(StringType.valueOf("String"));
@@ -645,7 +643,7 @@ public class TestSpecificCompiler {
 
   @Test
   void generateExceptionCodeBlock() throws IOException {
-    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(SCHEMA1)).compile();
+    Collection<OutputFile> outputs = new SpecificCompiler(SchemaParser.parseSingle(SCHEMA1)).compile();
     assertEquals(1, outputs.size());
     String contents = outputs.iterator().next().contents;
 

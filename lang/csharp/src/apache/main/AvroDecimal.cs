@@ -53,8 +53,11 @@ namespace Avro
         {
             var bytes = GetBytesFromDecimal(value);
 
-            var unscaledValueBytes = new byte[12];
-            Array.Copy(bytes, unscaledValueBytes, unscaledValueBytes.Length);
+            // Copy the first 12 bytes of the decimal into an array of size 13
+            // so that the last byte is 0, which is required by the
+            // BigInteger constructor to ensure the unscaled value is positive.
+            var unscaledValueBytes = new byte[13];
+            Array.Copy(bytes, unscaledValueBytes, 12);
 
             var unscaledValue = new BigInteger(unscaledValueBytes);
             var scale = bytes[14];
@@ -1137,20 +1140,14 @@ namespace Avro
             var unscaledValueCompare = UnscaledValue.CompareTo(other.UnscaledValue);
             var scaleCompare = Scale.CompareTo(other.Scale);
 
-            // if both are the same value, return the value
-            if (unscaledValueCompare == scaleCompare)
-            {
-                return unscaledValueCompare;
-            }
-
             // if the scales are both the same return unscaled value
             if (scaleCompare == 0)
             {
                 return unscaledValueCompare;
             }
 
-            var scaledValue = BigInteger.Divide(UnscaledValue, BigInteger.Pow(new BigInteger(10), Scale));
-            var otherScaledValue = BigInteger.Divide(other.UnscaledValue, BigInteger.Pow(new BigInteger(10), other.Scale));
+            var scaledValue = (decimal) UnscaledValue / (decimal) Math.Pow(10, Scale);
+            var otherScaledValue = (decimal) other.UnscaledValue / (decimal) Math.Pow(10, other.Scale);
 
             return scaledValue.CompareTo(otherScaledValue);
         }

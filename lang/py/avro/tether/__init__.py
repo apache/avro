@@ -27,3 +27,13 @@ from avro.tether.tether_task import (
 )
 from avro.tether.tether_task_runner import TaskRunner
 from avro.tether.util import find_port
+
+__all__ = (
+    "HTTPRequestor",
+    "TaskRunner",
+    "TaskType",
+    "TetherTask",
+    "find_port",
+    "inputProtocol",
+    "outputProtocol",
+)

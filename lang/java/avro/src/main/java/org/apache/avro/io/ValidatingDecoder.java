@@ -164,7 +164,7 @@ public class ValidatingDecoder extends ParsingDecoder implements Parser.ActionHa
     Symbol.IntCheckAction top = (Symbol.IntCheckAction) parser.popSymbol();
     int result = in.readEnum();
     if (result < 0 || result >= top.size) {
-      throw new AvroTypeException("Enumeration out of range: max is " + top.size + " but received " + result);
+      throw new AvroTypeException("Enumeration out of range: must be in [0, " + top.size + "), but received " + result);
     }
     return result;
   }
@@ -245,5 +245,10 @@ public class ValidatingDecoder extends ParsingDecoder implements Parser.ActionHa
   @Override
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
     return null;
+  }
+
+  @Override
+  public int remainingBytes() {
+    return in != null ? in.remainingBytes() : -1;
   }
 }

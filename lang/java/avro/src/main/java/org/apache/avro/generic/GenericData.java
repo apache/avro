@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
@@ -56,6 +57,7 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.FastReaderBuilder;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.util.internal.Accessor;
+import org.apache.avro.generic.PrimitivesArrays.PrimitiveArray;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.avro.util.springframework.ConcurrentReferenceHashMap;
@@ -117,6 +119,7 @@ public class GenericData {
   /** For subclasses. GenericData does not use a ClassLoader. */
   public GenericData(ClassLoader classLoader) {
     this.classLoader = (classLoader != null) ? classLoader : getClass().getClassLoader();
+    loadConversions();
   }
 
   /** Return the class loader that's used (by subclasses). */
@@ -124,9 +127,20 @@ public class GenericData {
     return classLoader;
   }
 
-  private Map<String, Conversion<?>> conversions = new HashMap<>();
+  /**
+   * Use the Java 6 ServiceLoader to load conversions.
+   *
+   * @see #addLogicalTypeConversion(Conversion)
+   */
+  private void loadConversions() {
+    for (Conversion<?> conversion : ServiceLoader.load(Conversion.class, classLoader)) {
+      addLogicalTypeConversion(conversion);
+    }
+  }
 
-  private Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass = new IdentityHashMap<>();
+  private final Map<String, Conversion<?>> conversions = new HashMap<>();
+
+  private final Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass = new IdentityHashMap<>();
 
   public Collection<Conversion<?>> getConversions() {
     return conversions.values();
@@ -134,19 +148,17 @@ public class GenericData {
 
   /**
    * Registers the given conversion to be used when reading and writing with this
-   * data model.
+   * data model. Conversions can also be registered automatically, as documented
+   * on the class {@link Conversion Conversion&lt;T&gt;}.
    *
    * @param conversion a logical type Conversion.
    */
   public void addLogicalTypeConversion(Conversion<?> conversion) {
     conversions.put(conversion.getLogicalTypeName(), conversion);
     Class<?> type = conversion.getConvertedType();
-    Map<String, Conversion<?>> conversions = conversionsByClass.get(type);
-    if (conversions == null) {
-      conversions = new LinkedHashMap<>();
-      conversionsByClass.put(type, conversions);
-    }
-    conversions.put(conversion.getLogicalTypeName(), conversion);
+    Map<String, Conversion<?>> conversionsForClass = conversionsByClass.computeIfAbsent(type,
+        k -> new LinkedHashMap<>());
+    conversionsForClass.put(conversion.getLogicalTypeName(), conversion);
   }
 
   /**
@@ -187,15 +199,15 @@ public class GenericData {
    * @return the conversion for the logical type, or null
    */
   @SuppressWarnings("unchecked")
-  public Conversion<Object> getConversionFor(LogicalType logicalType) {
+  public <T> Conversion<T> getConversionFor(LogicalType logicalType) {
     if (logicalType == null) {
       return null;
     }
-    return (Conversion<Object>) conversions.get(logicalType.getName());
+    return (Conversion<T>) conversions.get(logicalType.getName());
   }
 
   public static final String FAST_READER_PROP = "org.apache.avro.fastread";
-  private boolean fastReaderEnabled = "true".equalsIgnoreCase(System.getProperty(FAST_READER_PROP));
+  private boolean fastReaderEnabled = "true".equalsIgnoreCase(System.getProperty(FAST_READER_PROP, "true"));
   private FastReaderBuilder fastReaderBuilder = null;
 
   public GenericData setFastReaderEnabled(boolean flag) {
@@ -306,30 +318,16 @@ public class GenericData {
     }
   }
 
-  /** Default implementation of an array. */
-  @SuppressWarnings(value = "unchecked")
-  public static class Array<T> extends AbstractList<T> implements GenericArray<T>, Comparable<GenericArray<T>> {
-    private static final Object[] EMPTY = new Object[0];
+  public static abstract class AbstractArray<T> extends AbstractList<T>
+      implements GenericArray<T>, Comparable<GenericArray<T>> {
     private final Schema schema;
-    private int size;
-    private Object[] elements = EMPTY;
 
-    public Array(int capacity, Schema schema) {
+    protected int size = 0;
+
+    public AbstractArray(Schema schema) {
       if (schema == null || !Type.ARRAY.equals(schema.getType()))
         throw new AvroRuntimeException("Not an array schema: " + schema);
       this.schema = schema;
-      if (capacity != 0)
-        elements = new Object[capacity];
-    }
-
-    public Array(Schema schema, Collection<T> c) {
-      if (schema == null || !Type.ARRAY.equals(schema.getType()))
-        throw new AvroRuntimeException("Not an array schema: " + schema);
-      this.schema = schema;
-      if (c != null) {
-        elements = new Object[c.size()];
-        addAll(c);
-      }
     }
 
     @Override
@@ -343,27 +341,31 @@ public class GenericData {
     }
 
     @Override
-    public void clear() {
-      // Let GC do its work
-      Arrays.fill(elements, 0, size, null);
-      size = 0;
-    }
-
-    @Override
     public void reset() {
       size = 0;
     }
 
     @Override
-    public void prune() {
-      if (size < elements.length) {
-        Arrays.fill(elements, size, elements.length, null);
+    public int compareTo(GenericArray<T> that) {
+      return GenericData.get().compare(this, that, this.getSchema());
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+      if (!(o instanceof Collection)) {
+        return false;
       }
+      return GenericData.get().compare(this, o, this.getSchema(), true) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+      return super.hashCode();
     }
 
     @Override
     public Iterator<T> iterator() {
-      return new Iterator<T>() {
+      return new Iterator<>() {
         private int position = 0;
 
         @Override
@@ -373,7 +375,7 @@ public class GenericData {
 
         @Override
         public T next() {
-          return (T) elements[position++];
+          return AbstractArray.this.get(position++);
         }
 
         @Override
@@ -381,6 +383,57 @@ public class GenericData {
           throw new UnsupportedOperationException();
         }
       };
+    }
+
+    @Override
+    public void reverse() {
+      int left = 0;
+      int right = size - 1;
+
+      while (left < right) {
+        this.swap(left, right);
+
+        left++;
+        right--;
+      }
+    }
+
+    protected abstract void swap(int index1, int index2);
+  }
+
+  /** Default implementation of an array. */
+  @SuppressWarnings(value = "unchecked")
+  public static class Array<T> extends AbstractArray<T> {
+    private static final Object[] EMPTY = new Object[0];
+
+    private Object[] elements = EMPTY;
+
+    public Array(int capacity, Schema schema) {
+      super(schema);
+      if (capacity != 0)
+        elements = new Object[capacity];
+    }
+
+    public Array(Schema schema, Collection<T> c) {
+      super(schema);
+      if (c != null) {
+        elements = new Object[c.size()];
+        addAll(c);
+      }
+    }
+
+    @Override
+    public void clear() {
+      // Let GC do its work
+      Arrays.fill(elements, 0, size, null);
+      size = 0;
+    }
+
+    @Override
+    public void prune() {
+      if (size < elements.length) {
+        Arrays.fill(elements, size, elements.length, null);
+      }
     }
 
     @Override
@@ -431,23 +484,10 @@ public class GenericData {
     }
 
     @Override
-    public int compareTo(GenericArray<T> that) {
-      return GenericData.get().compare(this, that, this.getSchema());
-    }
-
-    @Override
-    public void reverse() {
-      int left = 0;
-      int right = elements.length - 1;
-
-      while (left < right) {
-        Object tmp = elements[left];
-        elements[left] = elements[right];
-        elements[right] = tmp;
-
-        left++;
-        right--;
-      }
+    protected void swap(final int index1, final int index2) {
+      Object tmp = elements[index1];
+      elements[index1] = elements[index2];
+      elements[index2] = tmp;
     }
   }
 
@@ -512,8 +552,8 @@ public class GenericData {
 
   /** Default implementation of {@link GenericEnumSymbol}. */
   public static class EnumSymbol implements GenericEnumSymbol<EnumSymbol> {
-    private Schema schema;
-    private String symbol;
+    private final Schema schema;
+    private final String symbol;
 
     public EnumSymbol(Schema schema, String symbol) {
       this.schema = schema;
@@ -1167,7 +1207,11 @@ public class GenericData {
       return 0;
     }
 
-    if (m2.size() != m2.size()) {
+    if (m1.isEmpty() && m2.isEmpty()) {
+      return 0;
+    }
+
+    if (m1.size() != m2.size()) {
       return 1;
     }
 
@@ -1216,9 +1260,7 @@ public class GenericData {
           }
         }
       }
-    } catch (ClassCastException unused) {
-      return 1;
-    } catch (NullPointerException unused) {
+    } catch (ClassCastException | NullPointerException unused) {
       return 1;
     }
 
@@ -1270,9 +1312,9 @@ public class GenericData {
     case NULL:
       return 0;
     case STRING:
-      Utf8 u1 = o1 instanceof Utf8 ? (Utf8) o1 : new Utf8(o1.toString());
-      Utf8 u2 = o2 instanceof Utf8 ? (Utf8) o2 : new Utf8(o2.toString());
-      return u1.compareTo(u2);
+      CharSequence cs1 = o1 instanceof CharSequence ? (CharSequence) o1 : o1.toString();
+      CharSequence cs2 = o2 instanceof CharSequence ? (CharSequence) o2 : o2.toString();
+      return Utf8.compareSequences(cs1, cs2);
     default:
       return ((Comparable) o1).compareTo(o2);
     }
@@ -1472,21 +1514,72 @@ public class GenericData {
 
   }
 
-  /*
+  /**
    * Called to create new array instances. Subclasses may override to use a
-   * different array implementation. By default, this returns a {@link
-   * GenericData.Array}.
+   * different array implementation. By default, this returns a
+   * {@link GenericData.Array}.
+   *
+   * @param old    the old array instance to reuse, if possible. If the old array
+   *               is an appropriate type, it may be cleared and returned.
+   * @param size   the size of the array to create.
+   * @param schema the schema of the array elements.
    */
   public Object newArray(Object old, int size, Schema schema) {
-    if (old instanceof GenericArray) {
-      ((GenericArray<?>) old).reset();
-      return old;
-    } else if (old instanceof Collection) {
-      ((Collection<?>) old).clear();
-      return old;
-    } else
-      return new GenericData.Array<Object>(size, schema);
+    final var logicalType = schema.getElementType().getLogicalType();
+    final var conversion = getConversionFor(logicalType);
+    final var optimalValueType = optimalValueType(schema, logicalType,
+        conversion == null ? null : conversion.getConvertedType());
+
+    if (old != null) {
+      if (old instanceof GenericData.Array<?>) {
+        ((GenericData.Array<?>) old).reset();
+        return old;
+      } else if (old instanceof PrimitiveArray) {
+        var primitiveOld = (PrimitiveArray<?>) old;
+        if (primitiveOld.valueType() == optimalValueType) {
+          primitiveOld.reset();
+          return old;
+        }
+      } else if (old instanceof Collection) {
+        ((Collection<?>) old).clear();
+        return old;
+      }
+    }
+    // we can't reuse the old array, so we create a new one
+    return PrimitivesArrays.createOptimizedArray(size, schema, optimalValueType);
   }
+
+  /**
+   * Determine the optimal value type for an array. The value type is determined
+   * form the convertedElementType if supplied, otherwise the underlying type from
+   * the schema
+   *
+   * @param schema               the schema of the array
+   * @param convertedElementType the converted elements value type. This may not
+   *                             be the same and the schema if for instance there
+   *                             is a logical type, and a convertor is use
+   * @return an indicator for the type of the array, useful for
+   *         {@link PrimitivesArrays#createOptimizedArray(int, Schema, Schema.Type)}.
+   *         May be null if the type is not optimised
+   */
+  public static Schema.Type optimalValueType(Schema schema, LogicalType logicalType, Class<?> convertedElementType) {
+    if (logicalType == null)
+      // if there are no logical types- use the schema type
+      return schema.getElementType().getType();
+    else if (convertedElementType == null)
+      // if there is no convertor
+      return null;
+    else
+      // use the converted type
+      return PRIMITIVE_TYPES_WITH_SPECIALISED_ARRAYS.get(convertedElementType);
+  }
+
+  private final static Map<Class<?>, Schema.Type> PRIMITIVE_TYPES_WITH_SPECIALISED_ARRAYS = Map.of(//
+      Long.TYPE, Schema.Type.LONG, //
+      Integer.TYPE, Schema.Type.INT, //
+      Float.TYPE, Schema.Type.FLOAT, //
+      Double.TYPE, Schema.Type.DOUBLE, //
+      Boolean.TYPE, Schema.Type.BOOLEAN);
 
   /**
    * Called to create new array instances. Subclasses may override to use a

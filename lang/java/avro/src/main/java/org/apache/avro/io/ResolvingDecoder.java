@@ -140,7 +140,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
 
   /**
    * Consume any more data that has been written by the writer but not needed by
-   * the reader so that the the underlying decoder is in proper shape for the next
+   * the reader so that the underlying decoder is in proper shape for the next
    * record. This situation happens when, for example, the writer writes a record
    * with two fields and the reader needs only the first field.
    *
@@ -187,11 +187,11 @@ public class ResolvingDecoder extends ValidatingDecoder {
   public double readDouble() throws IOException {
     Symbol actual = parser.advance(Symbol.DOUBLE);
     if (actual == Symbol.INT) {
-      return (double) in.readInt();
+      return in.readInt();
     } else if (actual == Symbol.LONG) {
       return (double) in.readLong();
     } else if (actual == Symbol.FLOAT) {
-      return (double) in.readFloat();
+      return in.readFloat();
     } else {
       assert actual == Symbol.DOUBLE;
       return in.readDouble();
@@ -260,7 +260,18 @@ public class ResolvingDecoder extends ValidatingDecoder {
     Symbol.EnumAdjustAction top = (Symbol.EnumAdjustAction) parser.popSymbol();
     int n = in.readEnum();
     if (top.noAdjustments) {
+      // n is used directly as an index into the reader enum's symbols, so it
+      // must fall within the reader symbol count.
+      if (n < 0 || n >= top.size) {
+        throw new AvroTypeException("Enumeration out of range: must be in [0, " + top.size + "), but received " + n);
+      }
       return n;
+    }
+    // Otherwise n indexes the writer-to-reader adjustment table; reject an index
+    // outside it rather than letting the array access throw.
+    if (n < 0 || n >= top.adjustments.length) {
+      throw new AvroTypeException(
+          "Enumeration out of range: must be in [0, " + top.adjustments.length + "), but received " + n);
     }
     Object o = top.adjustments[n];
     if (o instanceof Integer) {

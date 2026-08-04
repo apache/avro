@@ -37,9 +37,9 @@ $writers_schema_json = <<<_JSON
            {"name":"member_name", "type":"string"}]}
 _JSON;
 
-$jose = array('member_id' => 1392, 'member_name' => 'Jose');
-$maria = array('member_id' => 1642, 'member_name' => 'Maria');
-$data = array($jose, $maria);
+$jose = ['member_id' => 1392, 'member_name' => 'Jose'];
+$maria = ['member_id' => 1642, 'member_name' => 'Maria'];
+$data = [$jose, $maria];
 
 $file_name = 'data.avr';
 // Open $file_name for writing, using the given writer's schema

@@ -23,6 +23,7 @@ import base64
 import io
 import json
 import os
+from contextlib import closing
 from pathlib import Path
 from typing import IO, TextIO
 
@@ -93,7 +94,8 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = _parse_args()
-    generate(args.schema_path, args.output_path)
+    with closing(args.output_path) as op:
+        generate(args.schema_path, op)
     return 0
 
 

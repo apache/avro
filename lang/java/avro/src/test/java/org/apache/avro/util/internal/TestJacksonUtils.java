@@ -100,6 +100,11 @@ public class TestJacksonUtils {
         toObject(NullNode.getInstance(), SchemaBuilder.unionOf().nullType().and().intType().endUnion()));
 
     assertEquals("a", toObject(TextNode.valueOf("a"), SchemaBuilder.unionOf().stringType().and().intType().endUnion()));
+
+    assertEquals(1, toObject(IntNode.valueOf(1), SchemaBuilder.unionOf().nullType().and().intType().endUnion()));
+    assertEquals(42.0,
+        toObject(DoubleNode.valueOf(42.0), SchemaBuilder.unionOf().intType().and().doubleType().endUnion()));
+    assertEquals("1", toObject(TextNode.valueOf("1"), SchemaBuilder.unionOf().intType().and().stringType().endUnion()));
   }
 
 }

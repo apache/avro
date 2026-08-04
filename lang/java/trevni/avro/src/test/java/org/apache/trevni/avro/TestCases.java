@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.apache.avro.SchemaParser;
 import org.apache.trevni.ColumnFileMetaData;
 
 import org.apache.avro.Schema;
@@ -49,7 +50,7 @@ public class TestCases {
   }
 
   private void runCase(File dir) throws Exception {
-    Schema schema = new Schema.Parser().parse(new File(dir, "input.avsc"));
+    Schema schema = new SchemaParser().parse(new File(dir, "input.avsc")).mainSchema();
     List<Object> data = fromJson(schema, new File(dir, "input.json"));
 
     // write full data
@@ -64,7 +65,7 @@ public class TestCases {
     // test that sub-schemas read correctly
     for (File f : dir.listFiles())
       if (f.isDirectory() && !f.getName().startsWith(".")) {
-        Schema s = new Schema.Parser().parse(new File(f, "sub.avsc"));
+        Schema s = new SchemaParser().parse(new File(f, "sub.avsc")).mainSchema();
         checkRead(s, fromJson(s, new File(f, "sub.json")));
       }
   }

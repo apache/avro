@@ -4,20 +4,19 @@
 
 The following packages must be installed before Avro can be built:
 
- - Java: JDK 1.8, Maven 3 or better, protobuf-compile
- - PHP: php7, phpunit, php7-gmp
- - Python 3: 3.6 or greater
+ - Java: 11, 17 and 21 with the appropriate toolchain config, Maven 3.9.6 or better, protobuf-compile
+ - PHP: php8, phpunit, php8-gmp
+ - Python 3: 3.10 or greater, tox (tox will install other dependencies as needed)
  - C: gcc, cmake, asciidoc, source-highlight, Jansson, pkg-config
  - C++: cmake 3.7.2 or greater, g++, flex, bison, libboost-dev
  - C#: .NET Core 2.2 SDK
- - JavaScript: Node 12.x+, nodejs, npm
+ - JavaScript: Node 20.x+, nodejs, npm
  - Ruby: Ruby 2.7 or greater, ruby-dev, gem, bundler, snappy
  - Perl: Perl 5.24.1 or greater, gmake, Module::Install,
    Module::Install::ReadmeFromPod, Module::Install::Repository,
-   Math::BigInt, JSON::XS, Try::Tiny, Regexp::Common, Encode,
-   IO::String, Object::Tiny, Compress::ZLib, Error::Simple,
-   Test::More, Test::Exception, Test::Pod
- - Rust: rustc and Cargo 1.60.0 or greater
+   Math::BigInt, JSON::MaybeXS, Try::Tiny, Regexp::Common, Encode,
+   Object::Tiny, Compress::ZLib, Error::Simple, Test::More,
+   Test::Exception, Test::Pod
  - Apache Ant 1.7
  - md5sum, sha1sum, used by top-level dist target
 
@@ -44,7 +43,7 @@ The working directory in the container is mounted from your host. This
 allows you to access the files in your Avro development tree from the
 Docker container.
 
-There are some additional `DOCKER_` environment variables described in 
+There are some additional `DOCKER_` environment variables described in
 [build.sh](./build.sh) that can be used to interact with the image using
 the build script. Some examples:
 
@@ -65,13 +64,13 @@ Requirement:
  - [Visual Studio Code](https://code.visualstudio.com/)
  - [Remote Development extension pack](https://aka.ms/vscode-remote/download/extension)
  - Docker
-   - Windows: (Docker Desktop)[https://www.docker.com/products/docker-desktop]
-   - macOS: (Docker Desktop)[https://www.docker.com/products/docker-desktop]
-   - Linux: (Docker CE/EE)[https://docs.docker.com/install/#supported-platforms] and (Docker Compose)[https://docs.docker.com/compose/install]
+   - Windows: [Docker Desktop](https://www.docker.com/products/docker-desktop)
+   - macOS: [Docker Desktop](https://www.docker.com/products/docker-desktop)
+   - Linux: [Docker CE/EE](https://docs.docker.com/install/#supported-platforms) and [Docker Compose](https://docs.docker.com/compose/install)
 
 Useful links:
- - (Developing inside a Container)[https://code.visualstudio.com/docs/remote/containers]
- - (Going further with Dev Containers)[https://microsoft.github.io/code-with-engineering-playbook/developer-experience/going-further/]
+ - [Developing inside a Container](https://code.visualstudio.com/docs/remote/containers)
+ - [Going further with Dev Containers](https://microsoft.github.io/code-with-engineering-playbook/developer-experience/going-further/)
 
 ## Building
 

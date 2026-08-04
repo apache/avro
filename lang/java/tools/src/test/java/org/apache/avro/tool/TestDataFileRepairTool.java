@@ -180,7 +180,7 @@ public class TestDataFileRepairTool {
   }
 
   private void checkFileContains(File repairedFile, String... lines) throws IOException {
-    DataFileReader r = new DataFileReader<>(repairedFile, new GenericDatumReader<>(SCHEMA));
+    DataFileReader<Object> r = new DataFileReader<>(repairedFile, new GenericDatumReader<>(SCHEMA));
     for (String line : lines) {
       assertEquals(line, r.next().toString());
     }

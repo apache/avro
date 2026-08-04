@@ -17,17 +17,18 @@
  */
 package org.apache.avro.compiler.idl;
 
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.compiler.schema.Schemas;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-
-import org.apache.avro.Protocol;
-import org.apache.avro.Schema;
-import org.apache.avro.compiler.schema.Schemas;
 
 /**
  * Utility class to resolve schemas that are unavailable at the time they are
@@ -44,6 +45,8 @@ final class SchemaResolver {
 
   private static final String UR_SCHEMA_NS = "org.apache.avro.compiler";
 
+  private static final AtomicInteger COUNTER = new AtomicInteger();
+
   /**
    * Create a schema to represent a "unresolved" schema. (used to represent a
    * schema where the definition is not known at the time) This concept might be
@@ -53,8 +56,8 @@ final class SchemaResolver {
    * @return
    */
   static Schema unresolvedSchema(final String name) {
-    Schema schema = Schema.createRecord(UR_SCHEMA_NAME, "unresolved schema", UR_SCHEMA_NS, false,
-        Collections.EMPTY_LIST);
+    Schema schema = Schema.createRecord(UR_SCHEMA_NAME + '_' + COUNTER.getAndIncrement(), "unresolved schema",
+        UR_SCHEMA_NS, false, Collections.EMPTY_LIST);
     schema.addProp(UR_SCHEMA_ATTR, name);
     return schema;
   }
@@ -66,8 +69,8 @@ final class SchemaResolver {
    * @return
    */
   static boolean isUnresolvedSchema(final Schema schema) {
-    return (schema.getType() == Schema.Type.RECORD && schema.getProp(UR_SCHEMA_ATTR) != null
-        && UR_SCHEMA_NAME.equals(schema.getName()) && UR_SCHEMA_NS.equals(schema.getNamespace()));
+    return (schema.getType() == Schema.Type.RECORD && schema.getProp(UR_SCHEMA_ATTR) != null && schema.getName() != null
+        && schema.getName().startsWith(UR_SCHEMA_NAME) && UR_SCHEMA_NS.equals(schema.getNamespace()));
   }
 
   /**
@@ -100,12 +103,12 @@ final class SchemaResolver {
   /**
    * Will clone the provided protocol while resolving all unreferenced schemas
    *
-   * @param protocol
-   * @return
+   * @param protocol a protocol with possibly unresolved schema references
+   * @return a protocol without unresolved schema references
    */
   static Protocol resolve(final Protocol protocol) {
     Protocol result = new Protocol(protocol.getName(), protocol.getDoc(), protocol.getNamespace());
-    final Collection<Schema> types = protocol.getTypes();
+    final Collection<Schema> types = protocol.getUnresolvedTypes();
     // replace unresolved schemas.
     List<Schema> newSchemas = new ArrayList<>(types.size());
     IdentityHashMap<Schema, Schema> replacements = new IdentityHashMap<>();

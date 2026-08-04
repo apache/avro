@@ -15,9 +15,48 @@
 // specific language governing permissions and limitations
 // under the License.
 
+@font-face {
+  font-family: 'PT Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(./PTMono-Regular.ttf) format('truetype');
+}
+
 // Disable all github editing links for now
 .td-page-meta--view { display: none !important; }
 .td-page-meta--edit { display: none !important; }
 .td-page-meta--child { display: none !important; }
 .td-page-meta--issue { display: none !important; }
 .td-page-meta--project-issue { display: none !important; }
+
+.navbar-brand {
+  font-family: "PT Mono", monospace;
+}
+
+@media (max-width: 992px) {
+
+  footer .row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  footer .row > div {
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+    margin-bottom: 1.25rem;
+  }
+
+  footer ul.list-inline {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  footer ul.list-inline li {
+    margin: 0.4rem;
+  }
+}
+

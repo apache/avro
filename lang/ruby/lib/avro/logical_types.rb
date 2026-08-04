@@ -214,30 +214,50 @@ module Avro
     end
 
     module TimestampMillis
+      SUBUNITS_PER_SECOND = 1000
+
       def self.encode(value)
         return value.to_i if value.is_a?(Numeric)
 
         time = value.to_time
-        time.to_i * 1000 + time.usec / 1000
+        time.to_i * SUBUNITS_PER_SECOND + time.usec / SUBUNITS_PER_SECOND
       end
 
       def self.decode(int)
-        s, ms = int / 1000, int % 1000
-        Time.at(s, ms * 1000).utc
+        s, ms = int.divmod(SUBUNITS_PER_SECOND)
+        Time.at(s, ms, :millisecond).utc
       end
     end
 
     module TimestampMicros
+      SUBUNITS_PER_SECOND = 1000_000
+
       def self.encode(value)
         return value.to_i if value.is_a?(Numeric)
 
         time = value.to_time
-        time.to_i * 1000_000 + time.usec
+        time.to_i * SUBUNITS_PER_SECOND + time.usec
       end
 
       def self.decode(int)
-        s, us = int / 1000_000, int % 1000_000
-        Time.at(s, us).utc
+        s, us = int.divmod(SUBUNITS_PER_SECOND)
+        Time.at(s, us, :microsecond).utc
+      end
+    end
+
+    module TimestampNanos
+      SUBUNITS_PER_SECOND = 1000_000_000
+
+      def self.encode(value)
+        return value.to_i if value.is_a?(Numeric)
+
+        time = value.to_time
+        time.to_i * SUBUNITS_PER_SECOND + time.nsec
+      end
+
+      def self.decode(int)
+        s, ns = int.divmod(SUBUNITS_PER_SECOND)
+        Time.at(s, ns, :nanosecond).utc
       end
     end
 
@@ -260,7 +280,8 @@ module Avro
       },
       "long" => {
         "timestamp-millis" => TimestampMillis,
-        "timestamp-micros" => TimestampMicros
+        "timestamp-micros" => TimestampMicros,
+        "timestamp-nanos"  => TimestampNanos
       },
     }.freeze
 

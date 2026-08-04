@@ -23,6 +23,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "../impl/json/JsonDom.hh"
+#include "Exception.hh"
 
 namespace avro {
 namespace json {
@@ -65,9 +66,13 @@ TestData<const char *> stringData[] = {
     {R"("\U000a")", EntityType::String, "\n", R"("\n")"},
     {R"("\u000a")", EntityType::String, "\n", R"("\n")"},
     {R"("\"")", EntityType::String, "\"", R"("\"")"},
-    {R"("\/")", EntityType::String, "/", R"("\/")"},
+    // While a solidus may be escaped according to the JSON standard, it need not be escaped.
+    {R"("/\/")", EntityType::String, "//", R"("//")"},
+    {R"("\b\f\n\r\t")", EntityType::String, "\b\f\n\r\t", R"("\b\f\n\r\t")"},
     {R"("\u20ac")", EntityType::String, "\xe2\x82\xac", R"("\u20ac")"},
     {R"("\u03c0")", EntityType::String, "\xcf\x80", R"("\u03c0")"},
+    {R"("hello\n")", EntityType::String, "hello\n", R"("hello\n")"},
+    {R"("\Ud8ab\udccd")", EntityType::String, "\xf0\xba\xb3\x8d", R"("\ud8ab\udccd")"},
 };
 
 void testBool(const TestData<bool> &d) {
@@ -171,6 +176,14 @@ static void testObject2() {
     BOOST_CHECK_EQUAL(a[1].stringValue(), "v0");
 }
 
+// A low surrogate that is not preceded by a high surrogate is not a valid
+// code point and must be rejected, including the last one (U+DFFF).
+static void testLoneLowSurrogate() {
+    BOOST_CHECK_THROW(loadEntity(R"("\udc00")").stringValue(), Exception);
+    BOOST_CHECK_THROW(loadEntity(R"("\udffe")").stringValue(), Exception);
+    BOOST_CHECK_THROW(loadEntity(R"("\udfff")").stringValue(), Exception);
+}
+
 } // namespace json
 } // namespace avro
 
@@ -203,6 +216,8 @@ init_unit_test_suite(int /* argc */, char * /* argv */[]) {
     ts->add(BOOST_TEST_CASE(&avro::json::testObject0));
     ts->add(BOOST_TEST_CASE(&avro::json::testObject1));
     ts->add(BOOST_TEST_CASE(&avro::json::testObject2));
+
+    ts->add(BOOST_TEST_CASE(&avro::json::testLoneLowSurrogate));
 
     return ts;
 }

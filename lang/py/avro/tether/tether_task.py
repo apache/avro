@@ -285,7 +285,7 @@ class TetherTask(abc.ABC):
 
         try:
             inSchema = avro.schema.parse(inSchemaText)
-            outSchema = avro.schema.parse(outSchemaText)
+            avro.schema.parse(outSchemaText)
 
             if taskType == TaskType.MAP:
                 self.inReader = avro.io.DatumReader(writers_schema=inSchema, readers_schema=self.inschema)
@@ -299,7 +299,7 @@ class TetherTask(abc.ABC):
                 # determine which fields in the input record are they keys for the reducer
                 self._red_fkeys = [f.name for f in self.midschema.fields if not (f.order == "ignore")]
 
-        except Exception as e:
+        except Exception:
             estr = traceback.format_exc()
             self.fail(estr)
 
@@ -313,7 +313,7 @@ class TetherTask(abc.ABC):
         self._partitions = npartitions
 
     def input(self, data, count):
-        """Recieve input from the server
+        """Receive input from the server
 
         Parameters
         ------------------------------------------------------
@@ -345,7 +345,7 @@ class TetherTask(abc.ABC):
                         self.reduceFlush(prev, self.outCollector)
                     self.reduce(self.midRecord, self.outCollector)
 
-        except Exception as e:
+        except Exception:
             estr = traceback.format_exc()
             self.log.warning("failing: %s", estr)
             self.fail(estr)
@@ -354,10 +354,10 @@ class TetherTask(abc.ABC):
         """
         Process the complete request
         """
-        if (self.taskType == TaskType.REDUCE) and not (self.midRecord is None):
+        if (self.taskType == TaskType.REDUCE) and self.midRecord is not None:
             try:
                 self.reduceFlush(self.midRecord, self.outCollector)
-            except Exception as e:
+            except Exception:
                 estr = traceback.format_exc()
                 self.log.warning("failing: %s", estr)
                 self.fail(estr)
@@ -422,7 +422,7 @@ class TetherTask(abc.ABC):
         """
         Call to fail the task.
         """
-        self.log.error("TetherTask.fail: failure occured message follows:\n%s", message)
+        self.log.error("TetherTask.fail: failure occurred message follows:\n%s", message)
         try:
             message = message.decode()
         except AttributeError:
@@ -430,18 +430,18 @@ class TetherTask(abc.ABC):
 
         try:
             self.outputClient.request("fail", {"message": message})
-        except Exception as e:
-            self.log.exception("TetherTask.fail: an exception occured while trying to send the fail message to the output server.")
+        except Exception:
+            self.log.exception("TetherTask.fail: an exception occurred while trying to send the fail message to the output server.")
 
         self.close()
 
     def close(self):
         self.log.info("TetherTask.close: closing")
-        if not (self.clienTransciever is None):
+        if self.clienTransciever is not None:
             try:
                 self.clienTransciever.close()
 
-            except Exception as e:
+            except Exception:
                 # ignore exceptions
                 pass
 

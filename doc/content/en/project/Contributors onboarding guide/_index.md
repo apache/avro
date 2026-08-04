@@ -2,6 +2,8 @@
 title: "Contributor onboarding guide"
 linkTitle: "Contributor onboarding guide"
 weight: 8
+aliases:
+  - /docs/contribution-guidelines
 ---
 
 <!--

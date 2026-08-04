@@ -76,6 +76,7 @@ public class TestTetherTool {
 
     // create a string of the arguments
     String execargs = "-classpath " + System.getProperty("java.class.path");
+    execargs += " -Dorg.apache.avro.SERIALIZABLE_PACKAGES=org.apache.avro";
     execargs += " org.apache.avro.mapred.tether.WordCountTask";
 
     // Create a list of the arguments to pass to the tull run method

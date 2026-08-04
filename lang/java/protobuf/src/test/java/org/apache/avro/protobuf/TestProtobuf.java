@@ -24,6 +24,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.protobuf.noopt.TestProto3;
 import org.apache.avro.specific.SpecificData;
 import org.apache.commons.compress.utils.Lists;
 import org.junit.jupiter.api.Test;
@@ -145,5 +146,18 @@ public class TestProtobuf {
     instance2.addLogicalTypeConversion(conversion);
     Schema s2 = instance2.getSchema(com.google.protobuf.Timestamp.class);
     assertEquals(conversion.getRecommendedSchema(), s2);
+  }
+
+  @Test
+  void enumDefault() {
+    Schema fooSchema = ProtobufData.get().getSchema(Foo.class);
+    assertEquals("Z", fooSchema.getField("enum").schema().getEnumDefault());
+
+    Schema nSchema = ProtobufData.get().getSchema(N.class);
+    assertEquals("A", nSchema.getEnumDefault());
+
+    Schema proto3Schema = ProtobufData.get().getSchema(TestProto3.User.class);
+    assertEquals("STATUS_UNKNOWN", proto3Schema.getField("status").defaultVal());
+    assertEquals("STATUS_UNKNOWN", proto3Schema.getField("status").schema().getEnumDefault());
   }
 }

@@ -19,8 +19,10 @@ package org.apache.avro.data;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.util.internal.JacksonUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -43,6 +45,8 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.ResolvingDecoder;
 
+import static java.util.Objects.requireNonNull;
+
 /** Utilities for reading and writing arbitrary Json data in Avro format. */
 public class Json {
   private Json() {
@@ -53,10 +57,14 @@ public class Json {
 
   /** The schema for Json data. */
   public static final Schema SCHEMA;
+
+  private static final String JSON_AVSC_NOT_FOUND = "Packaged Avro JSON schema not found";
+
   static {
     try {
       try (InputStream in = Json.class.getResourceAsStream("/org/apache/avro/data/Json.avsc")) {
-        SCHEMA = new Schema.Parser().parse(in);
+        String schema = new String(requireNonNull(in, JSON_AVSC_NOT_FOUND).readAllBytes(), StandardCharsets.UTF_8);
+        SCHEMA = JsonSchemaParser.parseInternal(schema);
       }
     } catch (IOException e) {
       throw new AvroRuntimeException(e);

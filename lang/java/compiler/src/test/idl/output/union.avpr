@@ -1,0 +1,38 @@
+{
+  "protocol": "UnionFwd",
+  "namespace": "org.apache.avro.gen",
+  "types": [
+    {
+      "type": "record",
+      "name": "TestRecord",
+      "fields": [
+        {
+          "name": "unionField",
+          "type": [
+            {
+              "type": "record",
+              "name": "SR1",
+              "fields": [
+                {
+                  "name": "field",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "type": "record",
+              "name": "SR2",
+              "fields": [
+                {
+                  "name": "field",
+                  "type": "string"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "messages": {}
+}

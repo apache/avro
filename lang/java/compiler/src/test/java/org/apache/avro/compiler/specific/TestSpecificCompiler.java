@@ -26,6 +26,21 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.SchemaParser;
+import org.apache.avro.generic.GenericData.StringType;
+import org.apache.avro.specific.SpecificData;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,29 +52,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
-import org.apache.avro.AvroTypeException;
-
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.avro.LogicalType;
-import org.apache.avro.LogicalTypes;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
-import org.apache.avro.generic.GenericData.StringType;
-import org.apache.avro.specific.SpecificData;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TestSpecificCompiler {
   private static final Logger LOG = LoggerFactory.getLogger(TestSpecificCompiler.class);
@@ -85,7 +88,7 @@ public class TestSpecificCompiler {
 
   static void assertCompilesWithJavaCompiler(File dstDir, Collection<SpecificCompiler.OutputFile> outputs)
       throws IOException {
-    assertCompilesWithJavaCompiler(dstDir, outputs, false);
+    assertCompilesWithJavaCompiler(dstDir, outputs, true);
   }
 
   /**
@@ -131,7 +134,7 @@ public class TestSpecificCompiler {
     boolean compilesWithoutError = cTask.call();
     assertTrue(compilesWithoutError);
     if (!ignoreWarnings) {
-      assertEquals(0, warnings.size(), "Warnings produced when compiling generated code with -Xlint:all");
+      assertEquals(List.of(), warnings, "Warnings produced when compiling generated code with -Xlint:all");
     }
   }
 
@@ -147,8 +150,8 @@ public class TestSpecificCompiler {
   }
 
   private SpecificCompiler createCompiler() throws IOException {
-    Schema.Parser parser = new Schema.Parser();
-    Schema schema = parser.parse(this.src);
+    SchemaParser parser = new SchemaParser();
+    Schema schema = parser.parse(this.src).mainSchema();
     SpecificCompiler compiler = new SpecificCompiler(schema);
     String velocityTemplateDir = "src/main/velocity/org/apache/avro/compiler/specific/templates/java/classic/";
     compiler.setTemplateDir(velocityTemplateDir);
@@ -393,6 +396,7 @@ public class TestSpecificCompiler {
     Schema timeMicrosSchema = LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampMicrosSchema = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+    Schema timestampNanosSchema = LogicalTypes.timestampNanos().addToSchema(Schema.create(Schema.Type.LONG));
 
     // Date/time types should always use upper level java classes
     assertEquals("java.time.LocalDate", compiler.javaType(dateSchema), "Should use java.time.LocalDate for date type");
@@ -404,6 +408,8 @@ public class TestSpecificCompiler {
         "Should use java.time.LocalTime for time-micros type");
     assertEquals("java.time.Instant", compiler.javaType(timestampMicrosSchema),
         "Should use java.time.Instant for timestamp-micros type");
+    assertEquals("java.time.Instant", compiler.javaType(timestampNanosSchema),
+        "Should use java.time.Instant for timestamp-nanos type");
   }
 
   @Test
@@ -526,7 +532,7 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(true);
 
-    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
+    final Schema schema = SchemaParser.parseSingle("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
         + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
         + "\"doc\":\"Test nested types with logical types in generated Java classes\"," + "\"fields\":["
         + "{\"name\":\"nestedRecord\",\"type\":" + "{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":"
@@ -548,7 +554,7 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(true);
 
-    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
+    final Schema schema = SchemaParser.parseSingle("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
         + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
         + "\"doc\":\"Test nested types with logical types in generated Java classes\"," + "\"fields\":["
         + "{\"name\":\"nestedRecord\"," + "\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":"
@@ -582,22 +588,25 @@ public class TestSpecificCompiler {
     // present or added as converters (AVRO-2481).
     final Schema tsMillis = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
     final Schema tsMicros = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+    final Schema tsNanos = LogicalTypes.timestampNanos().addToSchema(Schema.create(Schema.Type.LONG));
 
     final Collection<String> conversions = compiler.getUsedConversionClasses(SchemaBuilder.record("WithTimestamps")
         .fields().name("tsMillis").type(tsMillis).noDefault().name("tsMillisOpt").type().unionOf().nullType().and()
         .type(tsMillis).endUnion().noDefault().name("tsMicros").type(tsMicros).noDefault().name("tsMicrosOpt").type()
-        .unionOf().nullType().and().type(tsMicros).endUnion().noDefault().endRecord());
+        .unionOf().nullType().and().type(tsMicros).endUnion().noDefault().name("tsNanos").type(tsNanos).noDefault()
+        .name("tsNanosOpt").type().unionOf().nullType().and().type(tsNanos).endUnion().noDefault().endRecord());
 
-    assertEquals(2, conversions.size());
+    assertEquals(3, conversions.size());
     assertThat(conversions, hasItem("org.apache.avro.data.TimeConversions.TimestampMillisConversion"));
     assertThat(conversions, hasItem("org.apache.avro.data.TimeConversions.TimestampMicrosConversion"));
+    assertThat(conversions, hasItem("org.apache.avro.data.TimeConversions.TimestampNanosConversion"));
   }
 
   @Test
   void getUsedConversionClassesForNullableLogicalTypesInNestedRecord() throws Exception {
     SpecificCompiler compiler = createCompiler();
 
-    final Schema schema = new Schema.Parser().parse(
+    final Schema schema = SchemaParser.parseSingle(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesRecord\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"nestedRecord\",\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
@@ -609,7 +618,7 @@ public class TestSpecificCompiler {
   void getUsedConversionClassesForNullableLogicalTypesInArray() throws Exception {
     SpecificCompiler compiler = createCompiler();
 
-    final Schema schema = new Schema.Parser().parse(
+    final Schema schema = SchemaParser.parseSingle(
         "{\"type\":\"record\",\"name\":\"NullableLogicalTypesArray\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"arrayOfLogicalType\",\"type\":{\"type\":\"array\",\"items\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
@@ -621,7 +630,7 @@ public class TestSpecificCompiler {
   void getUsedConversionClassesForNullableLogicalTypesInArrayOfRecords() throws Exception {
     SpecificCompiler compiler = createCompiler();
 
-    final Schema schema = new Schema.Parser().parse(
+    final Schema schema = SchemaParser.parseSingle(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesArray\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"arrayOfRecords\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"RecordInArray\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
@@ -633,7 +642,7 @@ public class TestSpecificCompiler {
   void getUsedConversionClassesForNullableLogicalTypesInUnionOfRecords() throws Exception {
     SpecificCompiler compiler = createCompiler();
 
-    final Schema schema = new Schema.Parser().parse(
+    final Schema schema = SchemaParser.parseSingle(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesUnion\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"unionOfRecords\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"RecordInUnion\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}]}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
@@ -645,7 +654,7 @@ public class TestSpecificCompiler {
   void getUsedConversionClassesForNullableLogicalTypesInMapOfRecords() throws Exception {
     SpecificCompiler compiler = createCompiler();
 
-    final Schema schema = new Schema.Parser().parse(
+    final Schema schema = SchemaParser.parseSingle(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesMap\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"mapOfRecords\",\"type\":{\"type\":\"map\",\"values\":{\"type\":\"record\",\"name\":\"RecordInMap\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]},\"avro.java.string\":\"String\"}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
@@ -670,12 +679,12 @@ public class TestSpecificCompiler {
       String dstDirPrefix) throws IOException {
     Set<String> reservedIdentifiers = new HashSet<>();
     reservedIdentifiers.addAll(SpecificData.RESERVED_WORDS);
-    reservedIdentifiers.addAll(SpecificCompiler.TYPE_IDENTIFIER_RESERVED_WORDS);
-    reservedIdentifiers.addAll(SpecificCompiler.ACCESSOR_MUTATOR_RESERVED_WORDS);
-    reservedIdentifiers.addAll(SpecificCompiler.ERROR_RESERVED_WORDS);
+    reservedIdentifiers.addAll(SpecificData.TYPE_IDENTIFIER_RESERVED_WORDS);
+    reservedIdentifiers.addAll(SpecificData.ACCESSOR_MUTATOR_RESERVED_WORDS);
+    reservedIdentifiers.addAll(SpecificData.ERROR_RESERVED_WORDS);
     for (String reserved : reservedIdentifiers) {
       try {
-        Schema s = new Schema.Parser().parse(schema.replace("__test__", reserved));
+        Schema s = SchemaParser.parseSingle(schema.replace("__test__", reserved));
         assertCompilesWithJavaCompiler(new File(OUTPUT_DIR, dstDirPrefix + "_" + reserved),
             new SpecificCompiler(s).compile());
       } catch (AvroTypeException e) {
@@ -725,24 +734,24 @@ public class TestSpecificCompiler {
 
   @Test
   void logicalTypesWithMultipleFields() throws Exception {
-    Schema logicalTypesWithMultipleFields = new Schema.Parser()
-        .parse(new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
+    Schema logicalTypesWithMultipleFields = new SchemaParser()
+        .parse(new File("src/test/resources/logical_types_with_multiple_fields.avsc")).mainSchema();
     assertCompilesWithJavaCompiler(new File(OUTPUT_DIR, "testLogicalTypesWithMultipleFields"),
         new SpecificCompiler(logicalTypesWithMultipleFields).compile(), true);
   }
 
   @Test
   void unionAndFixedFields() throws Exception {
-    Schema unionTypesWithMultipleFields = new Schema.Parser()
-        .parse(new File("src/test/resources/union_and_fixed_fields.avsc"));
+    Schema unionTypesWithMultipleFields = new SchemaParser()
+        .parse(new File("src/test/resources/union_and_fixed_fields.avsc")).mainSchema();
     assertCompilesWithJavaCompiler(new File(this.outputFile, "testUnionAndFixedFields"),
         new SpecificCompiler(unionTypesWithMultipleFields).compile());
   }
 
   @Test
   void logicalTypesWithMultipleFieldsDateTime() throws Exception {
-    Schema logicalTypesWithMultipleFields = new Schema.Parser()
-        .parse(new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
+    Schema logicalTypesWithMultipleFields = new SchemaParser()
+        .parse(new File("src/test/resources/logical_types_with_multiple_fields.avsc")).mainSchema();
     assertCompilesWithJavaCompiler(new File(this.outputFile, "testLogicalTypesWithMultipleFieldsDateTime"),
         new SpecificCompiler(logicalTypesWithMultipleFields).compile());
   }
@@ -929,4 +938,206 @@ public class TestSpecificCompiler {
     }
   }
 
+  @Test
+  void fieldWithUnderscore_avro3826() {
+    String jsonSchema = "{\n" + "  \"name\": \"Value\",\n" + "  \"type\": \"record\",\n" + "  \"fields\": [\n"
+        + "    { \"name\": \"__deleted\",  \"type\": \"string\"\n" + "    }\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(SchemaParser.parseSingle(jsonSchema))
+        .compile();
+    assertEquals(1, outputs.size());
+    SpecificCompiler.OutputFile outputFile = outputs.iterator().next();
+    assertTrue(outputFile.contents.contains("getDeleted()"));
+    assertFalse(outputFile.contents.contains("$0"));
+    assertFalse(outputFile.contents.contains("$1"));
+
+    String jsonSchema2 = "{\n" + "  \"name\": \"Value\",  \"type\": \"record\",\n" + "  \"fields\": [\n"
+        + "    { \"name\": \"__deleted\",  \"type\": \"string\"},\n"
+        + "    { \"name\": \"_deleted\",  \"type\": \"string\"}\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs2 = new SpecificCompiler(SchemaParser.parseSingle(jsonSchema2))
+        .compile();
+    assertEquals(1, outputs2.size());
+    SpecificCompiler.OutputFile outputFile2 = outputs2.iterator().next();
+
+    assertTrue(outputFile2.contents.contains("getDeleted()"));
+    assertTrue(outputFile2.contents.contains("getDeleted$0()"));
+    assertFalse(outputFile.contents.contains("$1"));
+
+    String jsonSchema3 = "{\n" + "  \"name\": \"Value\",  \"type\": \"record\",\n" + "  \"fields\": [\n"
+        + "    { \"name\": \"__deleted\",  \"type\": \"string\"},\n"
+        + "    { \"name\": \"_deleted\",  \"type\": \"string\"},\n"
+        + "    { \"name\": \"deleted\",  \"type\": \"string\"}\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs3 = new SpecificCompiler(SchemaParser.parseSingle(jsonSchema3))
+        .compile();
+    assertEquals(1, outputs3.size());
+    SpecificCompiler.OutputFile outputFile3 = outputs3.iterator().next();
+
+    assertTrue(outputFile3.contents.contains("getDeleted()"));
+    assertTrue(outputFile3.contents.contains("getDeleted$0()"));
+    assertTrue(outputFile3.contents.contains("getDeleted$1()"));
+    assertFalse(outputFile3.contents.contains("$2"));
+
+    String jsonSchema4 = "{\n" + "  \"name\": \"Value\",  \"type\": \"record\",\n" + "  \"fields\": [\n"
+        + "    { \"name\": \"__deleted\",  \"type\": \"string\"},\n"
+        + "    { \"name\": \"_deleted\",  \"type\": \"string\"},\n"
+        + "    { \"name\": \"deleted\",  \"type\": \"string\"},\n"
+        + "    { \"name\": \"Deleted\",  \"type\": \"string\"}\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs4 = new SpecificCompiler(SchemaParser.parseSingle(jsonSchema4))
+        .compile();
+    assertEquals(1, outputs4.size());
+    SpecificCompiler.OutputFile outputFile4 = outputs4.iterator().next();
+
+    assertTrue(outputFile4.contents.contains("getDeleted()"));
+    assertTrue(outputFile4.contents.contains("getDeleted$0()"));
+    assertTrue(outputFile4.contents.contains("getDeleted$1()"));
+    assertTrue(outputFile4.contents.contains("getDeleted$2()"));
+    assertFalse(outputFile4.contents.contains("$3"));
+  }
+
+  @Test
+  void docsAreEscaped_avro4053() {
+    String jsonSchema = "{\n" + "  \"protocol\": \"DummyProtocol\",\n"
+        + "  \"doc\": \"*/\\nTest escaping <threats>\\n/*\",\n" + "  \"types\" : [\n"
+        + "    {\"type\": \"fixed\", \"name\": \"Hash\", \"size\": 16, \"doc\": \"*/\\nTest escaping <threats>\\n/*\""
+        + "},\n"
+        + "    {\"type\": \"enum\", \"name\": \"Status\", \"symbols\": [\"ON\", \"OFF\"], \"doc\": \"*/\\nTest escaping <threats>\\n/*\"},\n"
+        + "   " + " {\"type\": \"record\", \"name\": \"Message\", \"fields\" : [\n"
+        + "      {\"name\": \"content\", \"type\": \"string\", \"doc\":  \"*/\\nTest escaping <threats>\\n/*\"},\n"
+        + "      {\"name\": \"status\", \"type\": \"Status\", \"doc\":  \"*/\\nTest escaping <threats>\\n/*\"},\n"
+        + "      {\"name\": \"signature\", \"type\": \"Hash\", \"doc\":  \"*/\\nTest escaping <threats>\\n/*\"}\n"
+        + "    ]}\n" + "  ],\n" + "  \"messages\" : {\n" + "    \"echo\": {\"request\": ["
+        + "{\"name\": \"msg\", \"type\": \"Message\"}"
+        + "], \"response\": \"Message\", \"doc\": \"*/\\nTest escaping <threats>\\n/*\"}\n" + "  },\n"
+        + "  \"javaAnnotation\": [\n" + "    \"Deprecated(forRemoval = true, since = \\\"forever\\\")\",\n"
+        + "    \"SuppressWarnings(\\\"ALL\\\")\",\n" + "    \"SuppressWarnings(\\\"CodeInjection\\\")/*\",\n"
+        + "    \" This is inside a comment as each line is prefixed with @\",\n"
+        + "    \" and the next bit is really dangerous... */ static { System.exit(); }\"\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(Protocol.parse(jsonSchema)).compile();
+    for (SpecificCompiler.OutputFile outputFile : outputs) {
+      assertFalse(outputFile.contents.contains("*/\\nTest escaping <threats>\\n/*"), "Threats present?");
+
+      int expectedEscapeCount = countOccurrences(Pattern.compile("Test escaping", Pattern.LITERAL),
+          outputFile.contents);
+      int escapedJavaDocCount = countOccurrences(Pattern.compile("\\*&#47;\\s*Test escaping &lt;threats&gt;\\s*/\\*"),
+          outputFile.contents);
+      // noinspection RegExpRedundantEscape
+      int escapedDocStringCount = countOccurrences(
+          Pattern.compile("\\\"doc\\\":\\\"*/\\\\nTest escaping <threats>\\\\n/*\\\"", Pattern.LITERAL),
+          outputFile.contents);
+      assertEquals(expectedEscapeCount, escapedJavaDocCount + escapedDocStringCount,
+          "Escaped threats in " + outputFile.path);
+
+      assertFalse(Pattern.compile("\\{ System.exit\\(\\); }(?!\\\\\")").matcher(outputFile.contents).find(),
+          "Code injection present? " + outputFile.contents);
+    }
+  }
+
+  @Test
+  void annotationCannotBreakOutViaStringLiteral() {
+    // Security regression test for AVRO-4313.
+    //
+    // The first javaAnnotation below is an attack. It uses an unescaped quote to
+    // "close" the annotation early, then sneaks in real Java code
+    // ... static { System.exit(1); } ...
+    // before reopening another annotation. If validation is too loose this code
+    // gets written straight into the generated .java file and runs when the
+    // class is loaded. The compiler must reject it instead of copying it out.
+    String jsonSchema = "{\n" + "  \"type\": \"record\",\n" + "  \"name\": \"Injected\",\n"
+        + "  \"javaAnnotation\": [\n"
+        + "    \"java.lang.SuppressWarnings(\\\"x\\\") static { System.exit(1); } @java.lang.SuppressWarnings(\\\"y\\\")\",\n"
+        + "    \"SuppressWarnings(\\\"unchecked\\\")\"\n" + "  ],\n" + "  \"fields\": [\n"
+        + "    {\"name\": \"value\", \"type\": \"string\"}\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(SchemaParser.parseSingle(jsonSchema))
+        .compile();
+    boolean validAnnotationEmitted = false;
+    for (SpecificCompiler.OutputFile outputFile : outputs) {
+      // The schema is also written into the generated file, inside the SCHEMA$
+      // string constant, so the attack text does appear there - but safely
+      // escaped (every " becomes \"). We only fail if it shows up as real code,
+      // i.e. with the original unescaped quotes.
+      assertFalse(outputFile.contents.contains("SuppressWarnings(\"x\") static { System.exit(1); }"),
+          "Code injection present? " + outputFile.contents);
+      validAnnotationEmitted |= outputFile.contents.contains("@SuppressWarnings(\"unchecked\")");
+    }
+    // A normal annotation sitting next to the attack must still come through, so
+    // we know the fix rejects only the bad value, not every annotation.
+    assertTrue(validAnnotationEmitted, "Valid annotation missing from generated output");
+  }
+
+  @Test
+  void unicodeEscapesInDocsAreNeutralized() {
+    // The Java compiler decodes Unicode escapes (\ uXXXX) across the whole source
+    // file, including inside comments, before comments are recognized (JLS 3.3).
+    // A doc value carrying the literal text "\ u002a\ u002f" therefore decodes to
+    // "*/" at compile time and could close the generated Javadoc comment early,
+    // enabling arbitrary code injection. Since a Unicode escape always requires a
+    // literal backslash, escapeForJavadoc neutralizes every backslash, which
+    // covers all escape variants at once.
+    String[] maliciousDocs = { //
+        "\\u002a\\u002f static { System.exit(1); } \\u002f\\u002a", // basic form
+        "\\uuuu002a\\uuuu002f System.exit(1);", // multiple 'u's are legal (JLS 3.3)
+        "\\u005cu002a\\u005cu002f System.exit(1);", // escape that would decode to a backslash
+        "\\U002A\\u002F", // uppercase hex / uppercase-U decoy
+        "prefix\\\\u002a\\\\u002f even-backslash-run", // even run of backslashes
+        "literal */ static { System.exit(1); } /* comment close", // no escape at all
+        "first line\\u002a\\u002f\nsecond line \\u002f\\u002a end" // spans multiple physical lines
+    };
+
+    for (String maliciousDoc : maliciousDocs) {
+      // Unit-level check on the escaping utility itself.
+      String escaped = SpecificCompiler.escapeForJavadoc(maliciousDoc);
+      assertFalse(escaped.contains("\\"), "Backslashes must be neutralized: " + escaped);
+      assertFalse(escaped.contains("*/"), "Comment terminator must be neutralized: " + escaped);
+
+      // End-to-end check: no raw backslash may reach the generated source outside of
+      // string literals. A Java Unicode escape always requires a literal backslash,
+      // so the absence of backslashes everywhere except string literals proves no
+      // \ uXXXX sequence can be reconstituted by the compiler to close a comment.
+      Schema schema = SchemaBuilder.record("EvilRecord").namespace("org.apache.avro.codegentest.testdata")
+          .doc(maliciousDoc).fields().name("field").doc(maliciousDoc).type().stringType().noDefault().endRecord();
+      Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(schema).compile();
+      assertEquals(1, outputs.size());
+      for (SpecificCompiler.OutputFile outputFile : outputs) {
+        // Remove Java string literals (the schema is embedded via escapeForJavaString,
+        // which doubles backslashes and is therefore immune) so that the remaining
+        // text is code and comments only. This checks every line of every Javadoc
+        // block, including the middle lines of a multi-line doc comment.
+        String withoutStringLiterals = removeJavaStringLiterals(outputFile.contents);
+        assertFalse(withoutStringLiterals.contains("\\"),
+            "Raw backslash reached generated code/comments: " + outputFile.path);
+      }
+    }
+  }
+
+  /**
+   * Returns the given Java source with the content of all double-quoted string
+   * literals removed, so tests can assert on code and comments without matching
+   * the (legitimately backslash-containing) embedded schema string literal.
+   */
+  private String removeJavaStringLiterals(String source) {
+    StringBuilder out = new StringBuilder(source.length());
+    boolean inString = false;
+    for (int i = 0; i < source.length(); i++) {
+      char c = source.charAt(i);
+      if (inString) {
+        if (c == '\\') {
+          i++; // skip the escaped character (e.g. \" or \\)
+        } else if (c == '"') {
+          inString = false;
+        }
+      } else if (c == '"') {
+        inString = true;
+      } else {
+        out.append(c);
+      }
+    }
+    return out.toString();
+  }
+
+  private int countOccurrences(Pattern pattern, String textToSearch) {
+    int count = 0;
+    for (Matcher matcher = pattern.matcher(textToSearch); matcher.find();) {
+      count++;
+    }
+    return count;
+  }
 }

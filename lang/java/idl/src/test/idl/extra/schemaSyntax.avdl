@@ -1,0 +1,8 @@
+namespace communication;
+
+schema array<Message>;
+
+record Message {
+	string? title;
+	string message;
+}

@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.zip.Deflater;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileConstants;
 import org.apache.avro.file.DataFileReader;
@@ -124,8 +125,8 @@ class Util {
   }
 
   /**
-   * Closes the inputstream created from {@link Util.fileOrStdin} unless it is
-   * System.in.
+   * Closes the inputstream created from
+   * {@link Util#fileOrStdin(String, InputStream)} unless it is System.in.
    *
    * @param in The inputstream to be closed.
    */
@@ -140,8 +141,8 @@ class Util {
   }
 
   /**
-   * Closes the outputstream created from {@link Util.fileOrStdout} unless it is
-   * System.out.
+   * Closes the outputstream created from
+   * {@link Util#fileOrStdout(String, OutputStream)} unless it is System.out.
    *
    * @param out The outputStream to be closed.
    */
@@ -165,7 +166,7 @@ class Util {
   static Schema parseSchemaFromFS(String filename) throws IOException {
     InputStream stream = openFromFS(filename);
     try {
-      return new Schema.Parser().parse(stream);
+      return new SchemaParser().parse(stream).mainSchema();
     } finally {
       close(stream);
     }
@@ -296,8 +297,7 @@ class Util {
    * the length of the passed array, as it takes two characters to represent any
    * given byte.
    *
-   * @param data     a byte[] to convert to Hex characters
-   * @param toDigits the output alphabet
+   * @param data a byte[] to convert to Hex characters
    * @return A char[] containing hexadecimal characters
    */
   static String encodeHex(final byte[] data) {

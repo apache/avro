@@ -1,6 +1,7 @@
 {
-  "type": "record", 
+  "type": "record",
   "name": "SimpleRecord",
+  "doc": ",*/\n hoping the compiler won't barf on strange comments\n/*",
   "fields" : [
     {"name": "value", "type": "int"},
     {"name": "nullableValue", "type": ["null","int"], "doc" : "doc"}

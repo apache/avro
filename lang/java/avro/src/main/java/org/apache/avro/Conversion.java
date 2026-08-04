@@ -21,6 +21,9 @@ package org.apache.avro;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Map;
+import java.util.ServiceLoader;
+
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericEnumSymbol;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
@@ -28,23 +31,33 @@ import org.apache.avro.generic.IndexedRecord;
 /**
  * Conversion between generic and logical type instances.
  * <p>
- * Instances of this class are added to GenericData to convert a logical type to
- * a particular representation.
+ * Instances of this class can be added to GenericData to convert a logical type
+ * to a particular representation. This can be done manually, using
+ * {@link GenericData#addLogicalTypeConversion(Conversion)}, or automatically.
+ * This last option uses the Java {@link ServiceLoader}, and requires the
+ * implementation to be a public class with a public no-arg constructor, be
+ * named in a file called {@code /META-INF/services/org.apache.avro.Conversion},
+ * and both must available in the classpath.</li>
  * <p>
- * Implementations must provide: * {@link #getConvertedType()}: get the Java
- * class used for the logical type * {@link #getLogicalTypeName()}: get the
- * logical type this implements
+ * Implementations must provide:
+ * <ul>
+ * <li>{@link #getConvertedType()}: get the Java class used for the logical
+ * type</li>
+ * <li>{@link #getLogicalTypeName()}: get the logical type this implements</li>
+ * </ul>
  * <p>
- * Subclasses must also override all of the conversion methods for Avro's base
- * types that are valid for the logical type, or else risk causing
+ * Subclasses must also override the conversion methods for Avro's base types
+ * that are valid for the logical type, or else risk causing
  * {@code UnsupportedOperationException} at runtime.
  * <p>
  * Optionally, use {@link #getRecommendedSchema()} to provide a Schema that will
- * be used when a Schema is generated for the class returned by
- * {@code getConvertedType}.
+ * be used when generating a Schema for the class. This is useful when using
+ * {@code ReflectData} or {@code ProtobufData}, for example.
  *
- * @param <T> a Java type that generic data is converted to
+ * @param <T> a Java type that can represent the named logical type
+ * @see ServiceLoader
  */
+@SuppressWarnings("unused")
 public abstract class Conversion<T> {
 
   /**
@@ -65,9 +78,9 @@ public abstract class Conversion<T> {
    * Certain logical types may require adjusting the code within the "setter"
    * methods to make sure the data that is set is properly formatted. This method
    * allows the Conversion to generate custom setter code if required.
-   * 
-   * @param varName
-   * @param valParamName
+   *
+   * @param varName      the name of the variable holding the converted value
+   * @param valParamName the name of the parameter with the new converted value
    * @return a String for the body of the setter method
    */
   public String adjustAndSetValue(String varName, String valParamName) {
@@ -102,7 +115,7 @@ public abstract class Conversion<T> {
     throw new UnsupportedOperationException("fromCharSequence is not supported for " + type.getName());
   }
 
-  public T fromEnumSymbol(GenericEnumSymbol value, Schema schema, LogicalType type) {
+  public T fromEnumSymbol(GenericEnumSymbol<?> value, Schema schema, LogicalType type) {
     throw new UnsupportedOperationException("fromEnumSymbol is not supported for " + type.getName());
   }
 
@@ -150,7 +163,7 @@ public abstract class Conversion<T> {
     throw new UnsupportedOperationException("toCharSequence is not supported for " + type.getName());
   }
 
-  public GenericEnumSymbol toEnumSymbol(T value, Schema schema, LogicalType type) {
+  public GenericEnumSymbol<?> toEnumSymbol(T value, Schema schema, LogicalType type) {
     throw new UnsupportedOperationException("toEnumSymbol is not supported for " + type.getName());
   }
 

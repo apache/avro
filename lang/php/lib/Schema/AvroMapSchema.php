@@ -23,68 +23,63 @@ namespace Apache\Avro\Schema;
 /**
  * Avro map schema consisting of named values of defined
  * Avro Schema types.
- * @package Avro
+ *
+ * @phpstan-import-type AvroSchemaDefinitionArray from AvroSchema
  */
 class AvroMapSchema extends AvroSchema
 {
     /**
-     * @var string|AvroSchema named schema name or AvroSchema
-     *      of map schema values.
+     * AvroSchema definition based on input $values variable that could contain a primitive type or an associative
+     * array with the AVRO definition.
      */
-    private $values;
+    private AvroSchema $values;
 
     /**
-     * @var boolean true if the named schema
-     * XXX Couldn't we derive this based on whether or not
-     * $this->values is a string?
+     * @var bool true if the named schema
      */
-    private $isValuesSchemaFromSchemata;
+    private bool $isValuesSchemaFromSchemata;
 
     /**
-     * @param string|AvroSchema $values
-     * @param string $defaultNamespace namespace of enclosing schema
-     * @param AvroNamedSchemata &$schemata
+     * @param AvroSchemaDefinitionArray|string $values
+     * @throws AvroSchemaParseException
      */
-    public function __construct($values, $defaultNamespace, &$schemata = null)
+    public function __construct(string|array $values, ?string $defaultNamespace, AvroNamedSchemata $schemata)
     {
         parent::__construct(AvroSchema::MAP_SCHEMA);
 
         $this->isValuesSchemaFromSchemata = false;
-        $values_schema = null;
+        $valuesSchema = null;
         if (
             is_string($values)
-            && $values_schema = $schemata->schemaByName(
+            && $valuesSchema = $schemata->schemaByName(
                 new AvroName($values, null, $defaultNamespace)
             )
         ) {
             $this->isValuesSchemaFromSchemata = true;
         } else {
-            $values_schema = AvroSchema::subparse(
+            $valuesSchema = AvroSchema::subparse(
                 $values,
                 $defaultNamespace,
                 $schemata
             );
         }
 
-        $this->values = $values_schema;
+        $this->values = $valuesSchema;
     }
 
-    /**
-     * @returns XXX|AvroSchema
-     */
-    public function values()
+    public function values(): AvroSchema
     {
         return $this->values;
     }
 
-    /**
-     * @returns mixed
-     */
-    public function toAvro()
+    public function toAvro(): string|array
     {
         $avro = parent::toAvro();
-        $avro[AvroSchema::VALUES_ATTR] = $this->isValuesSchemaFromSchemata
-            ? $this->values->qualifiedName() : $this->values->toAvro();
+        $avro[AvroSchema::VALUES_ATTR] = match (true) {
+            $this->isValuesSchemaFromSchemata && $this->values instanceof AvroNamedSchema => $this->values->qualifiedName(),
+            default => $this->values->toAvro(),
+        };
+
         return $avro;
     }
 }

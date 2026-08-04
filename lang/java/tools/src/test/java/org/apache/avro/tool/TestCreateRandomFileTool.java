@@ -20,7 +20,9 @@ package org.apache.avro.tool;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.Iterator;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericDatumReader;
@@ -37,27 +40,29 @@ import org.apache.trevni.TestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestCreateRandomFileTool {
   private static final String COUNT = System.getProperty("test.count", "200");
-  private static final File DIR = new File("/tmp");
-  private static final File OUT_FILE = new File(DIR, "random.avro");
-  private static final File SCHEMA_FILE = new File("../../../share/test/schemas/weather.avsc");
 
-  private final Schema.Parser schemaParser = new Schema.Parser();
+  @TempDir
+  private Path dataDir;
+  private static final File SCHEMA_FILE = new File("../../../share/test/schemas/weather.avsc");
 
   private static final long SEED = System.currentTimeMillis();
 
   private ByteArrayOutputStream out;
   private ByteArrayOutputStream err;
+  private Schema schema;
 
   @BeforeEach
-  public void before() {
+  public void before() throws IOException {
     out = new ByteArrayOutputStream();
     err = new ByteArrayOutputStream();
+    schema = new SchemaParser().parse(SCHEMA_FILE).mainSchema();
   }
 
   @AfterEach
@@ -83,15 +88,16 @@ public class TestCreateRandomFileTool {
 
   private void check(String... extraArgs) throws Exception {
     ArrayList<String> args = new ArrayList<>();
-    args.addAll(Arrays.asList(OUT_FILE.toString(), "--count", COUNT, "--schema-file", SCHEMA_FILE.toString(), "--seed",
+    File outFile = dataDir.resolve("random.avro").toFile();
+    args.addAll(Arrays.asList(outFile.toString(), "--count", COUNT, "--schema-file", SCHEMA_FILE.toString(), "--seed",
         Long.toString(SEED)));
     args.addAll(Arrays.asList(extraArgs));
     run(args);
 
-    DataFileReader<Object> reader = new DataFileReader<>(OUT_FILE, new GenericDatumReader<>());
+    DataFileReader<Object> reader = new DataFileReader<>(outFile, new GenericDatumReader<>());
 
     Iterator<Object> found = reader.iterator();
-    for (Object expected : new RandomData(schemaParser.parse(SCHEMA_FILE), Integer.parseInt(COUNT), SEED))
+    for (Object expected : new RandomData(schema, Integer.parseInt(COUNT), SEED))
       assertEquals(expected, found.next());
 
     reader.close();
@@ -99,8 +105,9 @@ public class TestCreateRandomFileTool {
 
   private void checkMissingCount(String... extraArgs) throws Exception {
     ArrayList<String> args = new ArrayList<>();
+    File outFile = dataDir.resolve("random.avro").toFile();
     args.addAll(
-        Arrays.asList(OUT_FILE.toString(), "--schema-file", SCHEMA_FILE.toString(), "--seed", Long.toString(SEED)));
+        Arrays.asList(outFile.toString(), "--schema-file", SCHEMA_FILE.toString(), "--seed", Long.toString(SEED)));
     args.addAll(Arrays.asList(extraArgs));
     run(args);
     assertTrue(err.toString().contains("Need count (--count)"));
@@ -131,7 +138,7 @@ public class TestCreateRandomFileTool {
     DataFileStream<Object> reader = new DataFileStream<>(new ByteArrayInputStream(file), new GenericDatumReader<>());
 
     Iterator<Object> found = reader.iterator();
-    for (Object expected : new RandomData(schemaParser.parse(SCHEMA_FILE), Integer.parseInt(COUNT), SEED))
+    for (Object expected : new RandomData(schema, Integer.parseInt(COUNT), SEED))
       assertEquals(expected, found.next());
 
     reader.close();

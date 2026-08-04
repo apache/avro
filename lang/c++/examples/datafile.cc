@@ -18,25 +18,21 @@
 
 #include <fstream>
 
-#include "cpx.hh"
-#include "avro/Encoder.hh"
-#include "avro/Decoder.hh"
-#include "avro/ValidSchema.hh"
 #include "avro/Compiler.hh"
 #include "avro/DataFile.hh"
+#include "avro/Decoder.hh"
+#include "avro/Encoder.hh"
+#include "avro/ValidSchema.hh"
+#include "cpx.hh"
 
-
-avro::ValidSchema loadSchema(const char* filename)
-{
+avro::ValidSchema loadSchema(const char *filename) {
     std::ifstream ifs(filename);
     avro::ValidSchema result;
     avro::compileJsonSchema(ifs, result);
     return result;
 }
 
-int
-main()
-{
+int main() {
     avro::ValidSchema cpxSchema = loadSchema("cpx.json");
 
     {
@@ -59,4 +55,3 @@ main()
     }
     return 0;
 }
-

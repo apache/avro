@@ -228,7 +228,7 @@ namespace Avro
         public static Schema Parse(string json)
         {
             if (string.IsNullOrEmpty(json)) throw new ArgumentNullException(nameof(json), "json cannot be null.");
-            return Parse(json.Trim(), new SchemaNames(), null); // standalone schema, so no enclosing namespace
+            return ParseInternal(json.Trim(), new SchemaNames(), null); // standalone schema, so no enclosing namespace
         }
 
         /// <summary>
@@ -238,7 +238,20 @@ namespace Avro
         /// <param name="names">list of named schemas already read</param>
         /// <param name="encspace">enclosing namespace of the schema</param>
         /// <returns>new Schema object</returns>
-        internal static Schema Parse(string json, SchemaNames names, string encspace)
+        public static Schema Parse(string json, SchemaNames names, string encspace = null)
+        {
+            if (string.IsNullOrEmpty(json)) throw new ArgumentNullException(nameof(json), "json cannot be null.");
+            return ParseInternal(json.Trim(), names, encspace); // standalone schema, so no enclosing namespace
+        }
+
+        /// <summary>
+        /// Parses a JSON string to create a new schema object
+        /// </summary>
+        /// <param name="json">JSON string</param>
+        /// <param name="names">list of named schemas already read</param>
+        /// <param name="encspace">enclosing namespace of the schema</param>
+        /// <returns>new Schema object</returns>
+        internal static Schema ParseInternal(string json, SchemaNames names, string encspace)
         {
             Schema sc = PrimitiveSchema.NewInstance(json);
             if (null != sc) return sc;

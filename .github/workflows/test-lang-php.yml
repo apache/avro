@@ -17,11 +17,12 @@ name: 'Test PHP'
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [main, branch-1.11, branch-1.12]
   pull_request:
-    branches: [ master ]
+    branches: [main, branch-1.11, branch-1.12]
     paths:
     - .github/workflows/test-lang-php.yml
+    - composer.json
     - lang/php/**
 
 defaults:
@@ -34,29 +35,33 @@ concurrency:
 
 jobs:
   test:
-    name: PHP ${{ matrix.php }} Test
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: 
+          - ubuntu-latest
+          - ubuntu-24.04-arm
         php:
-        - '7.3'
-        - '7.4'
-        - '8.0'
+          - '8.1'
+          - '8.2'
+          - '8.3'
+          - '8.4'
+          - '8.5'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          tools: composer:2.2.5
+          tools: composer:2.9.8
 
       - name: Get Composer Cache Directory
         id: composer-cache
-        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v6
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -64,41 +69,64 @@ jobs:
             ${{ runner.os }}-composer-
 
       - name: Lint
+        if: matrix.php == '8.1'
         run: ./build.sh lint
+
+      - name: Static analysis
+        run: ./build.sh phpstan
 
       - name: Test
         run: ./build.sh test
 
   interop:
-    name: PHP ${{ matrix.php }} Interop
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: 
+          - ubuntu-latest
+          - ubuntu-24.04-arm
         php:
-        - '7.3'
-        - '7.4'
-        - '8.0'
+          - '8.1'
+          - '8.2'
+          - '8.3'
+          - '8.4'
+          - '8.5'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          tools: composer:2.2.5
+          tools: composer:2.9.8
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v3
+        uses: actions/cache@v6
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: 'Setup Temurin JDK 8, 11, 17 & 21'
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: |
+            8
+            11
+            17
+            21
+
+      - name: 'Setup Maven 3.9.11'
+        uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
+        with:
+          maven-version: 3.9.11
+
       - name: Install Java Avro for Interop Test
         working-directory: .
-        run: mvn -B install -DskipTests
+        run: mvn -B install -PskipQuality
 
       - name: Create Interop Data Directory
         working-directory: .
@@ -108,7 +136,7 @@ jobs:
         working-directory: lang/java/avro
         run: mvn -B -P interop-data-generate generate-resources
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
         with:
           repository: kjdev/php-ext-zstd
           path: lang/php/php-ext-zstd
@@ -124,7 +152,7 @@ jobs:
           echo "extension=zstd.so" | sudo tee -a /etc/php/${{ matrix.php }}/cli/conf.d/10-zstd.ini
           php -m
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
         with:
           repository: kjdev/php-ext-snappy
           path: lang/php/php-ext-snappy

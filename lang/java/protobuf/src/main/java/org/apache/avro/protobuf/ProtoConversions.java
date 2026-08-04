@@ -25,8 +25,9 @@ import org.apache.avro.Schema;
 
 public class ProtoConversions {
 
-  private static final int THOUSAND = 1000;
-  private static final int MILLION = 1000000;
+  private static final int THOUSAND = 1_000;
+  private static final int MILLION = 1_000_000;
+  private static final int BILLION = 1_000_000_000;
 
   // second value must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z
   // inclusive.
@@ -39,7 +40,7 @@ public class ProtoConversions {
 
   // timestamp precise of conversion from long
   private enum TimestampPrecise {
-    Millis, Micros
+    Millis, Micros, Nanos
   };
 
   public static class TimestampMillisConversion extends Conversion<Timestamp> {
@@ -96,6 +97,33 @@ public class ProtoConversions {
     }
   }
 
+  public static class TimestampNanosConversion extends Conversion<Timestamp> {
+    @Override
+    public Class<Timestamp> getConvertedType() {
+      return Timestamp.class;
+    }
+
+    @Override
+    public String getLogicalTypeName() {
+      return "timestamp-nanos";
+    }
+
+    @Override
+    public Timestamp fromLong(Long nanosFromEpoch, Schema schema, LogicalType type) throws IllegalArgumentException {
+      return ProtoConversions.fromLong(nanosFromEpoch, TimestampPrecise.Nanos);
+    }
+
+    @Override
+    public Long toLong(Timestamp value, Schema schema, LogicalType type) {
+      return ProtoConversions.toLong(value, TimestampPrecise.Nanos);
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.timestampNanos().addToSchema(Schema.create(Schema.Type.LONG));
+    }
+  }
+
   private static long toLong(Timestamp value, TimestampPrecise precise) {
     long rv = 0L;
 
@@ -112,8 +140,8 @@ public class ProtoConversions {
   }
 
   private static Timestamp fromLong(Long elapsedSinceEpoch, TimestampPrecise precise) throws IllegalArgumentException {
-    long seconds = 0L;
-    int nanos = 0;
+    final long seconds;
+    final int nanos;
 
     switch (precise) {
     case Millis:
@@ -124,6 +152,12 @@ public class ProtoConversions {
       seconds = Math.floorDiv(elapsedSinceEpoch, (long) MILLION);
       nanos = (int) Math.floorMod(elapsedSinceEpoch, (long) MILLION) * THOUSAND;
       break;
+    case Nanos:
+      seconds = Math.floorDiv(elapsedSinceEpoch, (long) BILLION);
+      nanos = (int) Math.floorMod(elapsedSinceEpoch, (long) BILLION);
+      break;
+    default:
+      throw new IllegalArgumentException("Unknown precision: " + precise);
     }
 
     if (seconds < SECONDS_LOWERLIMIT || seconds > SECONDS_UPPERLIMIT) {

@@ -1,0 +1,9 @@
+[
+  {
+    "type": "enum",
+    "name": "Status",
+    "namespace": "system",
+    "symbols": [ "UNKNOWN", "NEW", "STARTUP", "RUNNING", "TERMINATING", "SHUTDOWN", "CRASHED" ],
+    "default": "UNKNOWN"
+  }
+]

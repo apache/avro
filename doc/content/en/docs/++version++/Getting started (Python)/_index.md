@@ -4,6 +4,8 @@ tags: ["python"]
 title: "Getting Started (Python)"
 linkTitle: "Getting Started (Python)"
 weight: 3
+aliases:
+- /docs/current/getting-started-python/
 ---
 
 <!--
@@ -102,8 +104,8 @@ reader.close()
 This outputs:
 
 ```json
-{u'favorite_color': None, u'favorite_number': 256, u'name': u'Alyssa'}
-{u'favorite_color': u'red', u'favorite_number': 7, u'name': u'Ben'}
+{'favorite_color': None, 'favorite_number': 256, 'name': 'Alyssa'}
+{'favorite_color': 'red', 'favorite_number': 7, 'name': 'Ben'}
 ```
 
 Do make sure that you open your files in binary mode (i.e. using the modes wb or rb respectively). Otherwise you might generate corrupt files due to automatic replacement of newline characters with the platform-specific representations.
