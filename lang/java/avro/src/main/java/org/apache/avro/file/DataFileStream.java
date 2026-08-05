@@ -320,6 +320,18 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
       if (blockSize > Integer.MAX_VALUE || blockSize < 0) {
         throw new IOException("Block size invalid or too large for this implementation: " + blockSize);
       }
+      // When the number of bytes remaining in the input is known (e.g. a
+      // byte-array- or known-length-stream-backed decoder), reject a declared
+      // block size that could not possibly be satisfied by the data available.
+      // This avoids eagerly allocating a large block buffer (see the DataBlock
+      // constructor) for a malformed, corrupted, or truncated file before any
+      // block byte has been read. A value of -1 means the remaining count is
+      // unknown, in which case the check is skipped.
+      int remaining = vin.remainingBytes();
+      if (remaining >= 0 && blockSize > remaining) {
+        throw new IOException("Block size " + blockSize + " exceeds the number of bytes remaining in the input ("
+            + remaining + "). The file is likely corrupted or truncated.");
+      }
       blockCount = blockRemaining;
       availableBlock = true;
       return true;

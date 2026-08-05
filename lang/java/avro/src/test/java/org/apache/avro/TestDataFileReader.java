@@ -319,4 +319,63 @@ public class TestDataFileReader {
 
     return output.toByteArray();
   }
+
+  /**
+   * A block header may declare a block size much larger than the data actually
+   * present in a corrupted or truncated file. When the remaining byte count is
+   * known, the reader must reject such a block up front rather than attempting to
+   * allocate a buffer of the declared size.
+   */
+  @Test
+  void oversizedBlockSizeIsRejectedBeforeAllocation() throws IOException {
+    Schema schema = new Schema.Parser().parse("{\"type\":\"int\"}");
+
+    // A spec-correct header with zero records, so no real data block is written.
+    ByteArrayOutputStream fileBytes = new ByteArrayOutputStream();
+    try (DataFileWriter<Object> w = new DataFileWriter<>(new GenericDatumWriter<>(schema))) {
+      w.create(schema, fileBytes);
+    }
+
+    // Append a single block header that declares a huge block size but no data.
+    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(fileBytes, null);
+    encoder.writeLong(1L); // block entry count
+    encoder.writeLong(2_000_000_000L); // block size in bytes, far larger than what follows
+    encoder.flush();
+
+    byte[] malformed = fileBytes.toByteArray();
+
+    // hasNextBlock() surfaces block-header IOExceptions wrapped in an
+    // AvroRuntimeException, the same way the existing "block size too large"
+    // check does.
+    AvroRuntimeException exception = assertThrows(AvroRuntimeException.class, () -> {
+      DataFileStream<Object> reader = new DataFileStream<>(new ByteArrayInputStream(malformed),
+          new GenericDatumReader<>());
+      while (reader.hasNext()) {
+        reader.next();
+      }
+    });
+    assertNotNull(exception.getMessage());
+    assertTrue(exception.getMessage().contains("Block size"), "Unexpected message: " + exception.getMessage());
+  }
+
+  /**
+   * A valid single-record file must still read normally after the guard is added.
+   */
+  @Test
+  void validFileWithSingleRecordStillReads() throws IOException {
+    Schema schema = new Schema.Parser().parse("{\"type\":\"int\"}");
+
+    ByteArrayOutputStream fileBytes = new ByteArrayOutputStream();
+    try (DataFileWriter<Object> w = new DataFileWriter<>(new GenericDatumWriter<>(schema))) {
+      w.create(schema, fileBytes);
+      w.append(42);
+    }
+
+    try (DataFileStream<Object> reader = new DataFileStream<>(new ByteArrayInputStream(fileBytes.toByteArray()),
+        new GenericDatumReader<>())) {
+      assertTrue(reader.hasNext());
+      assertEquals(42, reader.next());
+      assertFalse(reader.hasNext());
+    }
+  }
 }
