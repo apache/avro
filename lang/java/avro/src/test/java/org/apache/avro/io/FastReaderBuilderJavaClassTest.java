@@ -18,99 +18,190 @@
 package org.apache.avro.io;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.Map;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.GenericRecordBuilder;
+import org.apache.avro.specific.SpecificData;
+import org.apache.avro.util.Utf8;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for FastReaderBuilder behavior with schemas containing "java-class"
- * attributes.
+ * Tests for FastReaderBuilder behavior with schemas containing
+ * {@link SpecificData#CLASS_PROP} and {@link SpecificData#KEY_CLASS_PROP}
+ * attributes. Note that {@link SpecificData#ELEMENT_PROP} isn't tested because
+ * it is only used by ReflectData.
  */
 public class FastReaderBuilderJavaClassTest {
 
+  private static final Schema SCHEMA_RECORD_WITH_NULLABLE_CLASS_PROP = SchemaBuilder.record("NullableStringRecord")
+      .fields().requiredString("id").name("price").type().unionOf().nullType().and()
+      .type(SchemaBuilder.builder().stringBuilder().prop(SpecificData.CLASS_PROP, "java.math.BigDecimal").endString())
+      .endUnion().noDefault().endRecord();
+
+  private static final GenericRecord RECORD_WITH_NULLABLE_CLASS_PROP = new GenericRecordBuilder(
+      SCHEMA_RECORD_WITH_NULLABLE_CLASS_PROP).set("id", "123").set("price", "-0.0002").build();
+
+  private static final Schema SCHEMA_RECORD_WITH_CLASS_PROP = SchemaBuilder.record("StringRecord").fields()
+      .requiredString("id").name("price")
+      .type(SchemaBuilder.builder().stringBuilder().prop(SpecificData.CLASS_PROP, "java.math.BigDecimal").endString())
+      .noDefault().endRecord();
+
+  private static final GenericRecord RECORD_WITH_CLASS_PROP = new GenericRecordBuilder(SCHEMA_RECORD_WITH_CLASS_PROP)
+      .set("id", "123").set("price", "-0.0002").build();
+
+  private static final Schema SCHEMA_RECORD_WITH_MAP_KEY_CLASS_PROP = SchemaBuilder.record("MapRecord").fields()
+      .requiredString("id").name("prices").type().map().prop(SpecificData.KEY_CLASS_PROP, "java.math.BigDecimal")
+      .values().stringType().noDefault().endRecord();
+
+  private static final GenericRecord RECORD_WITH_MAP_KEY_CLASS_PROP = new GenericRecordBuilder(
+      SCHEMA_RECORD_WITH_MAP_KEY_CLASS_PROP).set("id", "123")
+          .set("prices", Map.of("-0.0002", "cheap", "12345.678", "expensive")).build();
+
   /**
-   * Tests that GenericDatumReader can deserialize records with string fields that
-   * have a "java-class" attribute (e.g., BigDecimal).
-   *
-   * This test reproduces a bug where
+   * Reusable round-trip logic for a record, using the given model.
+   */
+  public static GenericRecord roundTrip(GenericRecord record, GenericData model) throws IOException {
+    byte[] serialized;
+
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+      GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(record.getSchema());
+      BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
+      writer.write(record, encoder);
+      encoder.flush();
+      serialized = baos.toByteArray();
+    }
+
+    GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(record.getSchema(), record.getSchema(), model);
+    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(serialized, null);
+    return reader.read(null, decoder);
+  }
+
+  /**
+   * Tests that a plain GenericDatumReader (GenericData model) ignores the
+   * {@link SpecificData#CLASS_PROP} attribute on a string field inside a union,
+   * matching the classic (non fast-reader) behavior of GenericData.
+   * <p>
+   * This test also reproduces a bug (AVRO-4225) where
    * FastReaderBuilder.getTransformingStringReader() casts the result of
-   * stringReader.read() directly to String, but in GenericData mode the reader
-   * returns Utf8, causing a ClassCastException.
+   * stringReader.read() directly to String, but GenericData returns Utf8, causing
+   * a ClassCastException
    */
   @Test
-  void genericDatumReaderWithJavaClassAttribute() throws IOException {
-    // Schema with a string field that has "java-class": "java.math.BigDecimal"
-    // This is a common pattern for representing decimal values as strings
-    String schemaJson = "{\n" + "  \"type\": \"record\",\n" + "  \"name\": \"TestRecord\",\n" + "  \"fields\": [\n"
-        + "    {\"name\": \"id\", \"type\": \"string\"},\n" + "    {\"name\": \"price\", \"type\": [\"null\", {\n"
-        + "      \"type\": \"string\",\n" + "      \"java-class\": \"java.math.BigDecimal\"\n" + "    }]}\n" + "  ]\n"
-        + "}";
-
-    Schema schema = new Schema.Parser().parse(schemaJson);
-
-    GenericRecord record = new GenericData.Record(schema);
-    record.put("id", "123");
-    record.put("price", "-0.0002");
-
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(schema);
-    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(out, null);
-    writer.write(record, encoder);
-    encoder.flush();
-
-    byte[] serialized = out.toByteArray();
-
-    // Deserialize using GenericDatumReader (which uses FastReaderBuilder by
-    // default)
-    GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(schema);
-    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(serialized, null);
-
-    // AVRO-4225 this should not throw ClassCastException: Utf8 cannot be cast
-    // to String
-    GenericRecord result = reader.read(null, decoder);
+  void genericDataModelIgnoresJavaClassPropWithStringUnion() throws IOException {
+    // This round trip shouldn't cause a ClassCastException (AVRO-4225)
+    GenericRecord result = roundTrip(RECORD_WITH_NULLABLE_CLASS_PROP, GenericData.get());
 
     assertNotNull(result);
+    assertInstanceOf(Utf8.class, result.get("id"));
     assertEquals("123", result.get("id").toString());
+    assertInstanceOf(Utf8.class, result.get("price"), "GenericData should ignore 'java-class'");
     assertEquals("-0.0002", result.get("price").toString());
   }
 
   /**
-   * Tests that GenericDatumReader can deserialize records with a direct string
-   * field (not in a union) that has a "java-class" attribute.
+   * Tests that a plain GenericDatumReader (GenericData model) ignores the
+   * {@link SpecificData#CLASS_PROP} attribute on a direct (non-union) string
+   * field.
    */
   @Test
-  void genericDatumReaderWithDirectJavaClassString() throws IOException {
-    String schemaJson = "{\n" + "  \"type\": \"record\",\n" + "  \"name\": \"TestRecord\",\n" + "  \"fields\": [\n"
-        + "    {\"name\": \"amount\", \"type\": {\n" + "      \"type\": \"string\",\n"
-        + "      \"java-class\": \"java.math.BigDecimal\"\n" + "    }}\n" + "  ]\n" + "}";
-
-    Schema schema = new Schema.Parser().parse(schemaJson);
-
-    GenericRecord record = new GenericData.Record(schema);
-    record.put("amount", "123.45");
-
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(schema);
-    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(out, null);
-    writer.write(record, encoder);
-    encoder.flush();
-
-    byte[] serialized = out.toByteArray();
-
-    GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(schema);
-    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(serialized, null);
-
-    GenericRecord result = reader.read(null, decoder);
+  void genericDataModelIgnoresJavaClassPropWithString() throws IOException {
+    GenericRecord result = roundTrip(RECORD_WITH_CLASS_PROP, GenericData.get());
 
     assertNotNull(result);
-    assertEquals("123.45", result.get("amount").toString());
+    assertInstanceOf(Utf8.class, result.get("id"));
+    assertEquals("123", result.get("id").toString());
+    assertInstanceOf(Utf8.class, result.get("price"), "GenericData should ignore 'java-class'");
+    assertEquals("-0.0002", result.get("price").toString());
+  }
+
+  /**
+   * Tests that a GenericDatumReader built on the SpecificData model uses
+   * {@link SpecificData#CLASS_PROP} on a string field inside a union,
+   * transforming it into the named class without throwing ClassCastException.
+   */
+  @Test
+  void specificDataModelUsesJavaClassProp() throws IOException {
+    GenericRecord result = roundTrip(RECORD_WITH_NULLABLE_CLASS_PROP, SpecificData.get());
+
+    assertNotNull(result);
+    assertInstanceOf(Utf8.class, result.get("id"));
+    assertEquals("123", result.get("id").toString());
+    assertInstanceOf(BigDecimal.class, result.get("price"), "SpecificData should use the class in 'java-class'");
+    assertEquals(new BigDecimal("-0.0002"), result.get("price"));
+  }
+
+  /**
+   * Tests that a GenericDatumReader built on the SpecificData model uses
+   * {@link SpecificData#CLASS_PROP} on a direct (non-union) string field,
+   * transforming it into the named class without throwing ClassCastException.
+   */
+  @Test
+  void specificDataModelUsesJavaClassPropWithDirectString() throws IOException {
+    GenericRecord result = roundTrip(RECORD_WITH_CLASS_PROP, SpecificData.get());
+
+    assertNotNull(result);
+    assertInstanceOf(Utf8.class, result.get("id"));
+    assertEquals("123", result.get("id").toString());
+    assertInstanceOf(BigDecimal.class, result.get("price"), "SpecificData should use the class in 'java-class'");
+    assertEquals(new BigDecimal("-0.0002"), result.get("price"));
+  }
+
+  /**
+   * Tests that a plain GenericDatumReader (GenericData model) ignores the
+   * {@link SpecificData#KEY_CLASS_PROP} property on a map schema, matching the
+   * classic (non-fast-reader) behavior of GenericData, and leaves the map keys as
+   * Utf8/String.
+   */
+  @Test
+  void genericDataModelIgnoresJavaKeyClassPropWithMap() throws IOException {
+    GenericRecord result = roundTrip(RECORD_WITH_MAP_KEY_CLASS_PROP, GenericData.get());
+
+    assertNotNull(result);
+    assertInstanceOf(Utf8.class, result.get("id"));
+    assertEquals("123", result.get("id").toString());
+
+    @SuppressWarnings("unchecked")
+    Map<Object, Object> prices = (Map<Object, Object>) result.get("prices");
+    assertEquals(2, prices.size());
+    for (Object key : prices.keySet()) {
+      assertInstanceOf(Utf8.class, key, "GenericData should ignore 'java-key-class'");
+    }
+    assertEquals("cheap", prices.get(new Utf8("-0.0002")).toString());
+    assertEquals("expensive", prices.get(new Utf8("12345.678")).toString());
+  }
+
+  /**
+   * Tests that a GenericDatumReader built on the SpecificData model uses
+   * {@link SpecificData#KEY_CLASS_PROP} property on a map schema, transforming
+   * the map keys into the named class.
+   */
+  @Test
+  void specificDataModelUsesJavaKeyClassProp() throws IOException {
+    GenericRecord result = roundTrip(RECORD_WITH_MAP_KEY_CLASS_PROP, SpecificData.get());
+
+    assertNotNull(result);
+    assertInstanceOf(Utf8.class, result.get("id"));
+    assertEquals("123", result.get("id").toString());
+
+    @SuppressWarnings("unchecked")
+    Map<Object, Object> prices = (Map<Object, Object>) result.get("prices");
+    assertEquals(2, prices.size());
+    for (Object key : prices.keySet()) {
+      assertInstanceOf(BigDecimal.class, key, "SpecificData should use the class in 'java-key-class'");
+    }
+    assertEquals("cheap", prices.get(new BigDecimal("-0.0002")).toString());
+    assertEquals("expensive", prices.get(new BigDecimal("12345.678")).toString());
   }
 }

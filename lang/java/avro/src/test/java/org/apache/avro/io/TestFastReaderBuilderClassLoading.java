@@ -19,16 +19,12 @@ package org.apache.avro.io;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.specific.SpecificData;
@@ -101,18 +97,12 @@ public class TestFastReaderBuilderClassLoading {
       Schema recordSchema = Schema.createRecord("TestRecord", null, "test", false);
       recordSchema.setFields(Collections.singletonList(new Schema.Field("value", stringSchema, null, null)));
 
-      // Encode
       GenericRecord record = new GenericRecordBuilder(recordSchema).set("value", TEST_VALUE).build();
-      ByteArrayOutputStream out = new ByteArrayOutputStream();
-      Encoder encoder = EncoderFactory.get().binaryEncoder(out, null);
-      new GenericDatumWriter<GenericRecord>(recordSchema).write(record, encoder);
-      encoder.flush();
 
       // Decode with fast reader enabled
-      GenericData data = new GenericData();
+      GenericData data = new SpecificData();
       data.setFastReaderEnabled(true);
-      GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(recordSchema, recordSchema, data);
-      return reader.read(null, DecoderFactory.get().binaryDecoder(new ByteArrayInputStream(out.toByteArray()), null));
+      return FastReaderBuilderJavaClassTest.roundTrip(record, data);
     } catch (IOException e) {
       return fail("Unexpected IOException during encode/decode", e);
     }
