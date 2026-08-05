@@ -662,6 +662,116 @@ class TestMisc(unittest.TestCase):
         with self.assertRaisesRegex(avro.errors.AvroTypeException, r"The datum \".*\" provided for \".*\" is not an example of the schema [\s\S]*"):
             write_datum(datum_to_write, writers_schema)
 
+    def test_can_read_future_enum_symbol_with_default(self) -> None:
+        default_symbol = "unknown"
+        future_symbol = "crc32_be"
+
+        readers_schema = avro.schema.parse(
+            json.dumps(
+                {
+                    "fields": [
+                        {
+                            "name": "checksum_algorithm",
+                            "type": {
+                                "name": "ChecksumAlgorithm",
+                                "symbols": [default_symbol, "xxhash3_64_be"],
+                                "type": "enum",
+                                "default": default_symbol,
+                            },
+                        },
+                    ],
+                    "name": "Test",
+                    "type": "record",
+                }
+            )
+        )
+        # Writer adds the "crc32_be" symbol.
+        writers_schema = avro.schema.parse(
+            json.dumps(
+                {
+                    "fields": [
+                        {
+                            "name": "checksum_algorithm",
+                            "type": {
+                                "name": "ChecksumAlgorithm",
+                                "symbols": [
+                                    "unknown",
+                                    "xxhash3_64_be",
+                                    future_symbol,
+                                ],
+                                "type": "enum",
+                                "default": default_symbol,
+                            },
+                        }
+                    ],
+                    "name": "Test",
+                    "type": "record",
+                }
+            )
+        )
+
+        datum_to_write = {"checksum_algorithm": future_symbol}
+
+        buffer, encoder, datum_writer = write_datum(datum_to_write, writers_schema)
+        buffer.seek(0)
+        decoder = avro.io.BinaryDecoder(buffer)
+        reader = avro.io.DatumReader(readers_schema)
+        datum_read = reader.read(decoder)
+        self.assertEqual(datum_read, {"checksum_algorithm": default_symbol})
+
+    def test_raises_error_for_future_enum_symbol_without_default(self) -> None:
+        future_symbol = "crc32_be"
+
+        readers_schema = avro.schema.parse(
+            json.dumps(
+                {
+                    "fields": [
+                        {
+                            "name": "checksum_algorithm",
+                            "type": {
+                                "name": "ChecksumAlgorithm",
+                                "symbols": ["xxhash3_64_be"],
+                                "type": "enum",
+                            },
+                        },
+                    ],
+                    "name": "Test",
+                    "type": "record",
+                }
+            )
+        )
+        # Writer adds the "crc32_be" symbol.
+        writers_schema = avro.schema.parse(
+            json.dumps(
+                {
+                    "fields": [
+                        {
+                            "name": "checksum_algorithm",
+                            "type": {
+                                "name": "ChecksumAlgorithm",
+                                "symbols": [
+                                    "xxhash3_64_be",
+                                    future_symbol,
+                                ],
+                                "type": "enum",
+                            },
+                        }
+                    ],
+                    "name": "Test",
+                    "type": "record",
+                }
+            )
+        )
+
+        datum_to_write = {"checksum_algorithm": future_symbol}
+
+        buffer, encoder, datum_writer = write_datum(datum_to_write, writers_schema)
+        buffer.seek(0)
+        decoder = avro.io.BinaryDecoder(buffer)
+        reader = avro.io.DatumReader(readers_schema)
+        with self.assertRaises(avro.errors.SchemaResolutionException):
+            reader.read(decoder)
+
 
 def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) -> unittest.TestSuite:
     """Generate test cases across many test schema."""
