@@ -96,7 +96,7 @@ public class FastReaderBuilder {
   }
 
   public boolean isKeyClassEnabled() {
-    return this.keyClassEnabled;
+    return this.keyClassEnabled && data.getClass() == SpecificData.class;
   }
 
   public FastReaderBuilder withClassPropEnabled(boolean enabled) {
@@ -105,7 +105,7 @@ public class FastReaderBuilder {
   }
 
   public boolean isClassPropEnabled() {
-    return this.classPropEnabled;
+    return this.classPropEnabled && data.getClass() == SpecificData.class;
   }
 
   public <D> DatumReader<D> createDatumReader(Schema schema) throws IOException {
@@ -438,8 +438,7 @@ public class FastReaderBuilder {
   private FieldReader createMapKeyReader(Schema readerSchema) {
     FieldReader stringReader = createSimpleStringReader(readerSchema);
     if (isKeyClassEnabled()) {
-      return getTransformingStringReader(readerSchema.getProp(SpecificData.KEY_CLASS_PROP),
-          createSimpleStringReader(readerSchema));
+      return getTransformingStringReader(readerSchema.getProp(SpecificData.KEY_CLASS_PROP), stringReader);
     } else {
       return stringReader;
     }
