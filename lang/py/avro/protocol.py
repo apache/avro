@@ -25,7 +25,7 @@ https://avro.apache.org/docs/current/spec.html#Protocol+Declaration
 
 import hashlib
 import json
-from typing import Mapping, Optional, Sequence, Union, cast
+from typing import Mapping, MutableMapping, Optional, Sequence, Union, cast
 
 import avro.errors
 import avro.name
@@ -37,7 +37,7 @@ VALID_TYPE_SCHEMA_TYPES = ("enum", "record", "error", "fixed")
 
 
 class MessageObject(TypedDict, total=False):
-    request: Sequence[Mapping[str, object]]
+    request: Sequence[MutableMapping[str, object]]
     response: Union[str, object]
     errors: Optional[Sequence[str]]
 
@@ -176,7 +176,7 @@ class Message:
     def __init__(
         self,
         name: str,
-        request: Sequence[Mapping[str, object]],
+        request: Sequence[MutableMapping[str, object]],
         response: Union[str, object],
         errors: Optional[Sequence[str]] = None,
         names: Optional[avro.name.Names] = None,
@@ -215,10 +215,10 @@ class Message:
             to_dump = MessageObject()
         except NameError:
             to_dump = {}
-        to_dump["request"] = self.request.to_json(names)
+        to_dump["request"] = cast(Sequence[MutableMapping[str, object]], self.request.to_json(names))
         to_dump["response"] = self.response.to_json(names)
         if self.errors:
-            to_dump["errors"] = self.errors.to_json(names)
+            to_dump["errors"] = cast(Optional[Sequence[str]], self.errors.to_json(names))
 
         return to_dump
 
@@ -226,7 +226,7 @@ class Message:
         return all(hasattr(that, prop) and getattr(self, prop) == getattr(that, prop) for prop in self.__class__.__slots__)
 
 
-def _parse_request(request: Sequence[Mapping[str, object]], names: avro.name.Names, validate_names: bool = True) -> avro.schema.RecordSchema:
+def _parse_request(request: Sequence[MutableMapping[str, object]], names: avro.name.Names, validate_names: bool = True) -> avro.schema.RecordSchema:
     if not isinstance(request, Sequence):
         raise avro.errors.ProtocolParseException(f"Request property not a list: {request}")
     return avro.schema.RecordSchema(None, None, request, names, "request", validate_names=validate_names)
