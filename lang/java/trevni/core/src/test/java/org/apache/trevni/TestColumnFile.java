@@ -18,6 +18,8 @@
 package org.apache.trevni;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.Random;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -26,6 +28,7 @@ import java.util.HashMap;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -56,6 +59,33 @@ public class TestColumnFile {
     Assertions.assertEquals(0, in.getRowCount());
     Assertions.assertEquals(0, in.getColumnCount());
     in.close();
+  }
+
+  /** Byte offset of the little-endian 4-byte columnCount field in the header. */
+  private static final int COLUMN_COUNT_OFFSET = 12; // MAGIC(4) + rowCount fixed64(8)
+
+  /**
+   * A header column count larger than the data present (from a malformed,
+   * corrupted, or truncated file) must be rejected before allocating, rather than
+   * attempting an oversized allocation or failing later.
+   */
+  @Test
+  void oversizedColumnCountIsRejected() throws Exception {
+    FILE.delete();
+    // A valid, minimal file (no columns) written by Trevni's own writer.
+    new ColumnFileWriter(new ColumnFileMetaData()).writeTo(FILE);
+
+    // Overwrite the columnCount field with Integer.MAX_VALUE.
+    try (RandomAccessFile raf = new RandomAccessFile(FILE, "rw")) {
+      raf.seek(COLUMN_COUNT_OFFSET);
+      raf.write(0xFF);
+      raf.write(0xFF);
+      raf.write(0xFF);
+      raf.write(0x7F);
+    }
+
+    IOException e = Assertions.assertThrows(IOException.class, () -> new ColumnFileReader(FILE).close());
+    Assertions.assertNotNull(e.getMessage());
   }
 
   @ParameterizedTest

@@ -90,8 +90,12 @@ public class ColumnValues<T extends Comparable> implements Iterator<T>, Iterable
     this.row = column.firstRows[block];
 
     in.seek(column.blockStarts[block]);
-    int end = column.blocks[block].compressedSize;
-    byte[] raw = new byte[end + checksum.size()];
+    // Validate the declared compressed size against the bytes remaining (after
+    // the seek) before allocating, and guard the addition of the checksum size
+    // against integer overflow, so a malformed, corrupted, or truncated file
+    // cannot drive an oversized or negative allocation.
+    int end = in.checkLength(column.blocks[block].compressedSize, 1);
+    byte[] raw = new byte[Math.addExact(end, checksum.size())];
     in.readFully(raw);
     ByteBuffer data = codec.decompress(ByteBuffer.wrap(raw, 0, end));
     if (!checksum.compute(data).equals(ByteBuffer.wrap(raw, end, checksum.size())))
