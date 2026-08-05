@@ -32,6 +32,7 @@ import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.ResolvingDecoder;
@@ -142,6 +143,17 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     long l = in.readArrayStart();
     if (l <= 0) {
       return newArray(old, 0, expected);
+    }
+    // Match GenericDatumReader.readArray: before eagerly allocating the backing
+    // array for the declared block count, verify the input could plausibly hold
+    // that many elements (guarding against a malformed or truncated payload),
+    // and separately cap element types whose minimum encoded size is zero, which
+    // the bytes-remaining check cannot bound. Without this a small malformed
+    // record mapped to a Java array field (e.g. long[]) could drive a very large
+    // eager allocation before any element is read.
+    ensureAvailableCollectionBytes(in, l, expectedType);
+    if (isZeroByteSchema(expectedType)) {
+      SystemLimitException.checkMaxCollectionAllocation(0, l);
     }
     Object array = newArray(old, (int) l, expected);
     if (array instanceof Collection) {

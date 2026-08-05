@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -100,6 +101,27 @@ public class TestReflectDatumReader {
     reflectDatumReader.read(deserialized, decoder);
 
     assertEquals(pojoWithArray, deserialized);
+  }
+
+  /**
+   * A malformed or truncated record can declare an array block count far larger
+   * than the data that follows. The reader must reject it before eagerly
+   * allocating the backing Java array, the same way GenericDatumReader does.
+   */
+  @Test
+  void read_PojoWithArray_rejectsOversizedArrayCount() throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    Encoder encoder = EncoderFactory.get().binaryEncoder(out, null);
+    encoder.writeInt(42); // record field "id"
+    encoder.writeLong(2_000_000_000L); // array block count for "relatedIds", with no items following
+    encoder.flush();
+
+    byte[] malformed = out.toByteArray();
+
+    Decoder decoder = DecoderFactory.get().binaryDecoder(malformed, null);
+    ReflectDatumReader<PojoWithArray> reflectDatumReader = new ReflectDatumReader<>(PojoWithArray.class);
+
+    assertThrows(EOFException.class, () -> reflectDatumReader.read(new PojoWithArray(), decoder));
   }
 
   @Test
