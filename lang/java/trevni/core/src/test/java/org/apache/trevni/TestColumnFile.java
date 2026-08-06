@@ -62,7 +62,7 @@ public class TestColumnFile {
   }
 
   /** Byte offset of the little-endian 4-byte columnCount field in the header. */
-  private static final int COLUMN_COUNT_OFFSET = 12; // MAGIC(4) + rowCount fixed64(8)
+  private static final int COLUMN_COUNT_OFFSET = ColumnFileWriter.MAGIC.length + Long.BYTES; // MAGIC + rowCount fixed64
 
   /**
    * A header column count larger than the data present (from a malformed,

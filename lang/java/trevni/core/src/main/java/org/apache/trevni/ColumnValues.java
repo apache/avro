@@ -90,12 +90,24 @@ public class ColumnValues<T extends Comparable> implements Iterator<T>, Iterable
     this.row = column.firstRows[block];
 
     in.seek(column.blockStarts[block]);
-    // Validate the declared compressed size against the bytes remaining (after
-    // the seek) before allocating, and guard the addition of the checksum size
-    // against integer overflow, so a malformed, corrupted, or truncated file
-    // cannot drive an oversized or negative allocation.
-    int end = in.checkLength(column.blocks[block].compressedSize, 1);
-    byte[] raw = new byte[Math.addExact(end, checksum.size())];
+    // The block on disk is the compressed payload followed by the checksum
+    // bytes. Validate the combined length against the bytes remaining before
+    // allocating, computing in long to avoid integer overflow, so a malformed,
+    // corrupted, or truncated file fails fast with an IOException rather than an
+    // oversized/negative allocation or an unchecked ArithmeticException.
+    int checksumSize = checksum.size();
+    int end = column.blocks[block].compressedSize;
+    if (end < 0)
+      throw new IOException("Invalid negative block size: " + end);
+    if (end > Integer.MAX_VALUE - checksumSize)
+      throw new IOException(
+          "Block size " + end + " plus checksum size " + checksumSize + " exceeds the maximum " + "array size");
+    int rawLength = end + checksumSize;
+    long remaining = in.remaining();
+    if (remaining >= 0 && rawLength > remaining)
+      throw new IOException("Block size " + end + " plus checksum size " + checksumSize + " exceeds the " + remaining
+          + " bytes remaining in the input. The file is likely corrupted or truncated.");
+    byte[] raw = new byte[rawLength];
     in.readFully(raw);
     ByteBuffer data = codec.decompress(ByteBuffer.wrap(raw, 0, end));
     if (!checksum.compute(data).equals(ByteBuffer.wrap(raw, end, checksum.size())))
