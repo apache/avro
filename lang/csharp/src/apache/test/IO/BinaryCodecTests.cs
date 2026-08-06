@@ -598,7 +598,55 @@ namespace Avro.Test
             Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
         }
 
-        // A non-zero-byte array on a non-seekable stream cannot have its block
+        // The zero-byte item cap is cumulative across a decoded datum, not per
+        // collection. A container file carries its own schema, so an attacker can
+        // declare a record with many array<null> fields, each block individually
+        // under the limit but jointly unbounded. The first field (1 null) plus a
+        // second field declaring the full cap (10,000,000) exceeds the cap in
+        // aggregate and must be rejected before allocating the second field.
+        [Test]
+        public void TestRecordOfNullArrayFieldsRejectedCumulativelyAcrossDatum()
+        {
+            var schema = Avro.Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"R\",\"fields\":[" +
+                "{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}," +
+                "{\"name\":\"b\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}]}");
+            var ms = new MemoryStream();
+            var enc = new BinaryEncoder(ms);
+            enc.WriteLong(1);           // field a: one null
+            enc.WriteLong(0);           // end of a
+            enc.WriteLong(10_000_000);  // field b: cumulative 10,000,001 > cap; rejected before allocating
+            enc.WriteLong(0);           // end of b (not reached)
+            ms.Position = 0;
+            var reader = new GenericReader<object>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
+        }
+
+        // The complement: a record whose array<null> fields are jointly under the
+        // cap decodes normally, and the per-datum budget resets between datums so
+        // reusing the reader does not accumulate across records.
+        [Test]
+        public void TestRecordOfNullArrayFieldsWithinCumulativeLimitReads()
+        {
+            var schema = Avro.Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"R\",\"fields\":[" +
+                "{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}," +
+                "{\"name\":\"b\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}]}");
+            var ms = new MemoryStream();
+            var enc = new BinaryEncoder(ms);
+            enc.WriteLong(3); enc.WriteLong(0); // field a: 3 nulls
+            enc.WriteLong(3); enc.WriteLong(0); // field b: 3 nulls
+            var reader = new GenericReader<object>(schema, schema);
+            // Decode twice on the same reader: the per-datum budget must reset.
+            for (int i = 0; i < 2; i++)
+            {
+                ms.Position = 0;
+                var rec = (GenericRecord)reader.Read(null, new BinaryDecoder(ms));
+                Assert.AreEqual(3, ((System.Collections.IList)rec["a"]).Count);
+                Assert.AreEqual(3, ((System.Collections.IList)rec["b"]).Count);
+            }
+        }
+
         // count bounded by the bytes remaining (the length is unknown). The
         // backing array must therefore be grown on demand rather than
         // preallocated to the declared count, so a huge count with truncated data

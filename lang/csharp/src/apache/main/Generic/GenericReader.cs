@@ -110,6 +110,15 @@ namespace Avro.Generic
         /// </summary>
         public Schema WriterSchema { get; private set; }
 
+        // Cumulative number of zero-byte-encoded collection elements (e.g. an
+        // array of nulls) seen while decoding the current datum. Reset per
+        // top-level Read. Such elements consume no input, so the bytes-remaining
+        // check cannot bound them, and a per-collection cap is not enough either:
+        // a record's schema can declare many collection fields, each block under
+        // the limit but jointly unbounded. The cap is therefore applied across
+        // the whole datum. See EnsureCollectionAvailable.
+        private long zeroByteItemsRead;
+
 
         /// <summary>
         /// Constructs the default reader for the given schemas using the DefaultReader. If the
@@ -137,6 +146,10 @@ namespace Avro.Generic
         /// <returns>Object read from the decoder.</returns>
         public T Read<T>(T reuse, Decoder decoder)
         {
+            // Start a fresh zero-byte-element budget for this datum. The cap is
+            // cumulative across every collection decoded in this datum (see
+            // EnsureCollectionAvailable), not per collection.
+            zeroByteItemsRead = 0;
             return (T)Read(reuse, WriterSchema, ReaderSchema, decoder);
         }
 
@@ -661,7 +674,7 @@ namespace Avro.Generic
         /// apply) are bounded by a cumulative item cap; and every collection is
         /// bounded by a structural cap. Returns the running total across blocks.
         /// </summary>
-        private static long EnsureCollectionAvailable(Decoder d, long total, long count, long minBytesPerElement)
+        private long EnsureCollectionAvailable(Decoder d, long total, long count, long minBytesPerElement)
         {
             // A negative count is corrupt/malicious data (it can also arise from
             // long.MinValue overflow when negating a negative block count), and
@@ -687,11 +700,15 @@ namespace Avro.Generic
             if (minBytesPerElement <= 0)
             {
                 // Zero-byte elements (e.g. null) consume no input, so the
-                // bytes-remaining check cannot bound them; cap by item count.
-                if (total > MaxCollectionItems)
+                // bytes-remaining check cannot bound them. Cap the cumulative
+                // count across the whole datum, not just this collection: a
+                // record's schema can declare many zero-byte collection fields,
+                // each block under the limit but jointly unbounded.
+                zeroByteItemsRead += count;
+                if (zeroByteItemsRead > MaxCollectionItems)
                 {
                     throw new AvroException(
-                        $"Collection of zero-byte elements ({total}) exceeds the maximum allowed size of {MaxCollectionItems}");
+                        $"Collection of zero-byte elements ({zeroByteItemsRead}) exceeds the maximum allowed size of {MaxCollectionItems}");
                 }
             }
             else if (d is BinaryDecoder bd)
