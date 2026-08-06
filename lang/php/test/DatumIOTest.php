@@ -35,6 +35,10 @@ use PHPUnit\Framework\TestCase;
 
 class DatumIOTest extends TestCase
 {
+    private const TWO_NULL_ARRAY_FIELDS_SCHEMA = '{"type":"record","name":"R","fields":['
+        .'{"name":"a","type":{"type":"array","items":"null"}},'
+        .'{"name":"b","type":{"type":"array","items":"null"}}]}';
+
     /** @var false|string Value of AVRO_MAX_COLLECTION_ITEMS captured before each test. */
     private string|false $originalMaxCollectionItems = false;
 
@@ -431,6 +435,56 @@ class DatumIOTest extends TestCase
         try {
             $this->expectException(AvroIOCollectionSizeException::class);
             $this->decodeWith('{"type":"array","items":"null"}', self::zeroByteBlock(200000, true));
+        } finally {
+            $this->restoreMaxCollectionItems();
+        }
+    }
+
+    public function test_record_of_null_array_fields_rejected_cumulatively_across_datum(): void
+    {
+        // The zero-byte cap is cumulative across a decoded datum, not per
+        // collection. A record with many array<null> fields, each block under the
+        // limit but jointly unbounded, must be rejected once the cumulative count
+        // exceeds the cap: two fields of 600 nulls each (1200 > 1000) fail on the
+        // second field.
+        $io = new AvroStringIO();
+        $encoder = new AvroIOBinaryEncoder($io);
+        $encoder->writeLong(600); // field a: block of 600 nulls
+        $encoder->writeLong(0);   // end of a
+        $encoder->writeLong(600); // field b: block of 600 nulls
+        $encoder->writeLong(0);   // end of b
+        putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
+
+        try {
+            $this->expectException(AvroIOCollectionSizeException::class);
+            $this->decodeWith(self::TWO_NULL_ARRAY_FIELDS_SCHEMA, $io);
+        } finally {
+            $this->restoreMaxCollectionItems();
+        }
+    }
+
+    public function test_record_of_null_array_fields_within_cumulative_limit_reads(): void
+    {
+        // The complement: two array<null> fields whose combined count stays under
+        // the cap decode normally, and the per-datum budget resets between datums.
+        $io = new AvroStringIO();
+        $encoder = new AvroIOBinaryEncoder($io);
+        $encoder->writeLong(400);
+        $encoder->writeLong(0);
+        $encoder->writeLong(400);
+        $encoder->writeLong(0);
+        putenv('AVRO_MAX_COLLECTION_ITEMS=1000');
+
+        try {
+            $schema = AvroSchema::parse(self::TWO_NULL_ARRAY_FIELDS_SCHEMA);
+            $reader = new AvroIODatumReader($schema);
+            // Decode twice on the same reader: the per-datum budget must reset.
+            for ($i = 0; $i < 2; $i++) {
+                $io->seek(0);
+                $result = $reader->read(new AvroIOBinaryDecoder($io));
+                $this->assertCount(400, $result['a']);
+                $this->assertCount(400, $result['b']);
+            }
         } finally {
             $this->restoreMaxCollectionItems();
         }

@@ -83,6 +83,11 @@ class AvroIODatumReader
             $this->readersSchema = $this->writersSchema;
         }
 
+        // Start a fresh zero-byte-element budget for this datum. The cap is
+        // cumulative across every collection decoded in this datum (see
+        // AvroIOBinaryDecoder::$zeroByteItemsRead), not per collection.
+        $decoder->zeroByteItemsRead = 0;
+
         return $this->readData(
             $this->writersSchema,
             $this->readersSchema,
@@ -594,15 +599,25 @@ class AvroIODatumReader
      *
      * @throws AvroIOCollectionSizeException if the limit is exceeded
      */
-    public static function checkSkipCollectionCount(int $existing, int $count, int $minBytes): void
+    public static function checkSkipCollectionCount(AvroIOBinaryDecoder $decoder, int $existing, int $count, int $minBytes): void
     {
         if ($count <= 0) {
             return;
         }
         [$zeroByteLimit, $structuralLimit] = self::collectionLimits();
-        $limit = $minBytes > 0 ? $structuralLimit : $zeroByteLimit;
-        if ($count > $limit || $existing > $limit - $count) {
-            throw new AvroIOCollectionSizeException($limit);
+        if ($minBytes > 0) {
+            if ($count > $structuralLimit || $existing > $structuralLimit - $count) {
+                throw new AvroIOCollectionSizeException($structuralLimit);
+            }
+
+            return;
+        }
+        // Zero-byte elements: bound the cumulative count across the whole datum,
+        // not just this collection, so skipping many small zero-byte collection
+        // fields cannot loop unboundedly in aggregate.
+        $decoder->zeroByteItemsRead += $count;
+        if ($decoder->zeroByteItemsRead > $zeroByteLimit) {
+            throw new AvroIOCollectionSizeException($zeroByteLimit);
         }
     }
 
@@ -729,7 +744,12 @@ class AvroIODatumReader
 
             return;
         }
-        if ($count > $zeroByteLimit || $existing > $zeroByteLimit - $count) {
+        // Zero-byte elements consume no input, so the bytes-remaining check
+        // cannot bound them. Cap the cumulative count across the whole datum,
+        // not just this collection: a record's schema can declare many zero-byte
+        // collection fields, each block under the limit but jointly unbounded.
+        $decoder->zeroByteItemsRead += $count;
+        if ($decoder->zeroByteItemsRead > $zeroByteLimit) {
             throw new AvroIOCollectionSizeException($zeroByteLimit);
         }
     }

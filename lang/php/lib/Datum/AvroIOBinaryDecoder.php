@@ -47,6 +47,18 @@ class AvroIOBinaryDecoder
     private const MAX_UNCHECKED_READ = 1048576; // 1 MiB
 
     /**
+     * Cumulative number of zero-byte-encoded collection elements (e.g. an array
+     * of nulls) seen while decoding the current datum. Reset per top-level
+     * {@see AvroIODatumReader::read()}. Such elements consume no input, so the
+     * bytes-remaining check cannot bound them, and a per-collection cap is not
+     * enough either: a record's schema can declare many collection fields, each
+     * block under the limit but jointly unbounded. The cap is therefore applied
+     * across the whole datum. This lives on the decoder because it is threaded
+     * through both the read and the (decoder-driven) skip paths.
+     */
+    public int $zeroByteItemsRead = 0;
+
+    /**
      * @param AvroIO $io object from which to read.
      */
     public function __construct(
@@ -296,7 +308,7 @@ class AvroIOBinaryDecoder
             }
             // Bound the (normalized) count on both the sized and unsized paths so
             // a negative block count cannot bypass the skip limit.
-            AvroIODatumReader::checkSkipCollectionCount($skipped, $blockCount, $minBytes);
+            AvroIODatumReader::checkSkipCollectionCount($decoder, $skipped, $blockCount, $minBytes);
             $skipped += $blockCount;
             if (null !== $blockSize) {
                 // seek() can move past EOF, so a truncated/oversized block would
@@ -336,7 +348,7 @@ class AvroIOBinaryDecoder
                     throw new AvroException('Invalid negative map block size');
                 }
             }
-            AvroIODatumReader::checkSkipCollectionCount($skipped, $blockCount, $minBytes);
+            AvroIODatumReader::checkSkipCollectionCount($decoder, $skipped, $blockCount, $minBytes);
             $skipped += $blockCount;
             if (null !== $blockSize) {
                 // seek() can move past EOF; reject a block size larger than the
