@@ -314,10 +314,20 @@ module Avro
       def initialize(writers_schema=nil, readers_schema=nil)
         @writers_schema = writers_schema
         @readers_schema = readers_schema
+        # Cumulative number of zero-byte-encoded collection elements (e.g. an
+        # array of nulls) seen while decoding the current datum. Reset per
+        # top-level #read. Such elements consume no input, so the bytes-remaining
+        # check cannot bound them, and a per-collection cap is not enough either:
+        # a record's schema can declare many collection fields, each block under
+        # the limit but jointly unbounded. The cap is therefore applied across
+        # the whole datum. See #ensure_collection_available.
+        @zero_byte_items_read = 0
       end
 
       def read(decoder)
         self.readers_schema = writers_schema unless readers_schema
+        # Start a fresh zero-byte-element budget for this datum.
+        @zero_byte_items_read = 0
         read_data(writers_schema, readers_schema, decoder)
       end
 
@@ -659,9 +669,14 @@ module Avro
 
         if min_bytes_per_element <= 0
           # Zero-byte elements (e.g. null) consume no input, so the
-          # bytes-remaining check cannot bound them; cap by item count.
-          if total > max_items
-            raise CollectionSizeError, "Collection of zero-byte elements (#{total}) exceeds the maximum allowed size of #{max_items}"
+          # bytes-remaining check cannot bound them. Cap the cumulative count
+          # across the whole datum, not just this collection: a record's schema
+          # can declare many zero-byte collection fields, each block under the
+          # limit but jointly unbounded, so per-collection accounting would let a
+          # tiny payload over-allocate in aggregate.
+          @zero_byte_items_read += count
+          if @zero_byte_items_read > max_items
+            raise CollectionSizeError, "Collection of zero-byte elements (#{@zero_byte_items_read}) exceeds the maximum allowed size of #{max_items}"
           end
         elsif decoder.respond_to?(:bytes_remaining)
           # A decoder that implements the read protocol but not #bytes_remaining

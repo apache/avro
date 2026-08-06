@@ -74,6 +74,19 @@ class TestIO < Test::Unit::TestCase
     reader.read(Avro::IO::BinaryDecoder.new(StringIO.new(encoded)))
   end
 
+  # Run the block with AVRO_MAX_COLLECTION_ITEMS set, restoring it afterwards.
+  def with_collection_items_limit(value)
+    previous = ENV['AVRO_MAX_COLLECTION_ITEMS']
+    ENV['AVRO_MAX_COLLECTION_ITEMS'] = value
+    yield
+  ensure
+    if previous.nil?
+      ENV.delete('AVRO_MAX_COLLECTION_ITEMS')
+    else
+      ENV['AVRO_MAX_COLLECTION_ITEMS'] = previous
+    end
+  end
+
   def test_read_array_rejects_count_beyond_stream
     writer = StringIO.new
     Avro::IO::BinaryEncoder.new(writer).write_long(1_000_000)
@@ -100,6 +113,54 @@ class TestIO < Test::Unit::TestCase
     assert_equal(count, result.length)
     assert_nil(result.first)
     assert_nil(result.last)
+  end
+
+  # The zero-byte item cap is cumulative across a decoded datum, not per
+  # collection. A container file carries its own schema, so an attacker can
+  # declare a record with many array<null> fields, each block individually under
+  # the limit but jointly unbounded. Two fields of 600 nulls each (1200 > 1000)
+  # must be rejected on the second field.
+  def test_record_of_null_array_fields_rejected_cumulatively_across_datum
+    schema_json = <<-JSON
+      {"type":"record","name":"R","fields":[
+        {"name":"a","type":{"type":"array","items":"null"}},
+        {"name":"b","type":{"type":"array","items":"null"}}]}
+    JSON
+    writer = StringIO.new
+    encoder = Avro::IO::BinaryEncoder.new(writer)
+    encoder.write_long(600) # field a: block of 600 nulls
+    encoder.write_long(0)   # end of a
+    encoder.write_long(600) # field b: block of 600 nulls
+    encoder.write_long(0)   # end of b
+    with_collection_items_limit('1000') do
+      assert_raise(Avro::IO::CollectionSizeError) { decode(schema_json, writer.string) }
+    end
+  end
+
+  # The complement: two array<null> fields whose combined count stays under the
+  # cap decode normally, and the budget resets between datums.
+  def test_record_of_null_array_fields_within_cumulative_limit_reads
+    schema_json = <<-JSON
+      {"type":"record","name":"R","fields":[
+        {"name":"a","type":{"type":"array","items":"null"}},
+        {"name":"b","type":{"type":"array","items":"null"}}]}
+    JSON
+    writer = StringIO.new
+    encoder = Avro::IO::BinaryEncoder.new(writer)
+    encoder.write_long(400)
+    encoder.write_long(0)
+    encoder.write_long(400)
+    encoder.write_long(0)
+    with_collection_items_limit('1000') do
+      schema = Avro::Schema.parse(schema_json)
+      reader = Avro::IO::DatumReader.new(schema)
+      # Decode twice on the same reader: the per-datum budget must reset.
+      2.times do
+        result = reader.read(Avro::IO::BinaryDecoder.new(StringIO.new(writer.string)))
+        assert_equal(400, result['a'].length)
+        assert_equal(400, result['b'].length)
+      end
+    end
   end
 
   def test_read_array_within_stream_still_reads
