@@ -41,7 +41,11 @@ SCHEMA = json.dumps(
         "namespace": "test.avro",
         "name": "LooneyTunes",
         "type": "record",
-        "fields": [{"name": "first", "type": "string"}, {"name": "last", "type": "string"}, {"name": "type", "type": "string"}],
+        "fields": [
+            {"name": "first", "type": "string"},
+            {"name": "last", "type": "string"},
+            {"name": "type", "type": "string"},
+        ],
     }
 )
 
@@ -57,7 +61,7 @@ LOONIES = (
 
 
 def looney_records():
-    return ({"first": f, "last": l, "type": t} for f, l, t in LOONIES)
+    return ({"first": first, "last": last, "type": typ} for first, last, typ in LOONIES)
 
 
 _JSON_PRETTY = """{
@@ -178,7 +182,14 @@ class TestWrite(unittest.TestCase):
                 continue
 
     def _run(self, *args, **kw):
-        args = [sys.executable, "-m", "avro", "write", "--schema", self.schema_file] + list(args)
+        args = [
+            sys.executable,
+            "-m",
+            "avro",
+            "write",
+            "--schema",
+            self.schema_file,
+        ] + list(args)
         subprocess.check_call(args, **kw)
 
     def load_avro(self, filename):

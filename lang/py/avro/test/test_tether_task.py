@@ -107,7 +107,7 @@ class TestTetherTask(unittest.TestCase):
             task.status("Status message")
         finally:
             # close the process
-            if not (proc is None):
+            if proc is not None:
                 proc.kill()
 
 

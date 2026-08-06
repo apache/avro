@@ -131,7 +131,7 @@ class TestTetherTaskRunner(unittest.TestCase):
 
         finally:
             # close the process
-            if not (proc is None):
+            if proc is not None:
                 proc.kill()
 
     def test2(self):
@@ -175,10 +175,10 @@ class TestTetherTaskRunner(unittest.TestCase):
 
         finally:
             # close the process
-            if not (runnerproc is None):
+            if runnerproc is not None:
                 runnerproc.kill()
 
-            if not (proc is None):
+            if proc is not None:
                 proc.kill()
 
 

@@ -32,11 +32,18 @@ MAIL_PROTOCOL_JSON = json.dumps(
             {
                 "name": "Message",
                 "type": "record",
-                "fields": [{"name": "to", "type": "string"}, {"name": "from", "type": "string"}, {"name": "body", "type": "string"}],
+                "fields": [
+                    {"name": "to", "type": "string"},
+                    {"name": "from", "type": "string"},
+                    {"name": "body", "type": "string"},
+                ],
             }
         ],
         "messages": {
-            "send": {"request": [{"name": "message", "type": "Message"}], "response": "string"},
+            "send": {
+                "request": [{"name": "message", "type": "Message"}],
+                "response": "string",
+            },
             "replay": {"request": [], "response": "string"},
         },
     }
@@ -71,7 +78,7 @@ class MailHandler(http.server.BaseHTTPRequestHandler):
 
 
 def main():
-    mail_server = http_server.HTTPServer(SERVER_ADDRESS, MailHandler)
+    mail_server = http.server.HTTPServer(SERVER_ADDRESS, MailHandler)
     mail_server.allow_reuse_address = True
     mail_server.serve_forever()
 
