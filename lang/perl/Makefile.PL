@@ -48,7 +48,7 @@ test_requires 'Test::Exception';
 test_requires 'Test::More', 0.88;
 test_requires 'Test::Pod';
 requires 'Compress::Zlib';
-requires 'Compress::Zstd';
+requires 'Compress::Zstd', '0.10'; # 0.10 first provides the streaming Compress::Zstd::Decompressor
 requires 'Encode';
 requires 'Error::Simple';
 requires 'JSON::MaybeXS';
