@@ -686,14 +686,16 @@ class BinaryEncoder:
 # elements in any collection, allocated from a single decode.
 MAX_COLLECTION_ITEMS_ENV = "AVRO_MAX_COLLECTION_ITEMS"
 
-# Default maximum number of zero-byte-encoded collection elements to allocate.
-# Elements whose schema encodes to zero bytes (``null``, a zero-length ``fixed``,
-# or a record with only zero-byte fields) consume no input, so the bytes-remaining
-# check cannot bound their count; without a cap a tiny payload can declare a huge
-# block count and exhaust memory. A legitimate collection of zero-byte elements is
-# small, so this default is generous while still rejecting pathological input. It
-# can be raised (or lowered) with the ``AVRO_MAX_COLLECTION_ITEMS`` environment
-# variable.
+# Default maximum number of zero-byte-encoded collection elements to allocate
+# across a single decoded datum. Elements whose schema encodes to zero bytes
+# (``null``, a zero-length ``fixed``, or a record with only zero-byte fields)
+# consume no input, so the bytes-remaining check cannot bound their count; without
+# a cap a tiny payload can declare a huge block count and exhaust memory. The cap
+# is cumulative over the whole datum rather than per collection, because a record's
+# schema can declare many such collection fields, each individually under the limit
+# but jointly unbounded. A legitimate datum of zero-byte elements is small, so this
+# default is generous while still rejecting pathological input. It can be raised (or
+# lowered) with the ``AVRO_MAX_COLLECTION_ITEMS`` environment variable.
 DEFAULT_MAX_COLLECTION_ITEMS = 10_000_000
 
 # Default structural cap on the number of elements in any array or map (a
@@ -805,6 +807,15 @@ class DatumReader:
         """
         self._writers_schema = writers_schema
         self._readers_schema = readers_schema
+        # Cumulative number of zero-byte-encoded collection elements (e.g. an
+        # array of nulls) allocated while decoding the *current* datum. Reset at
+        # the start of each top-level read(). Because such elements consume no
+        # input bytes, the bytes-remaining check cannot bound them; capping the
+        # count per collection is not enough either, since a single record's
+        # schema can declare many collection fields, each individually under the
+        # limit but together unbounded. The cap is therefore applied across the
+        # whole datum. See _ensure_collection_available.
+        self._zero_byte_items_read = 0
 
     @property
     def writers_schema(self) -> Optional[avro.schema.Schema]:
@@ -828,6 +839,12 @@ class DatumReader:
         reader_schema = self.readers_schema
         if reader_schema is None:
             reader_schema = self.writers_schema
+        # Start a fresh zero-byte-element budget for this datum. The cap bounds
+        # the *cumulative* number of zero-byte collection elements decoded across
+        # every collection in this datum, not per collection, so a record made of
+        # many small collection fields cannot bypass it (see
+        # _ensure_collection_available).
+        self._zero_byte_items_read = 0
         return self.read_data(self.writers_schema, reader_schema, decoder)
 
     def read_data(self, writers_schema: avro.schema.Schema, readers_schema: avro.schema.Schema, decoder: "BinaryDecoder") -> object:
@@ -982,8 +999,8 @@ class DatumReader:
     def skip_enum(self, writers_schema: avro.schema.EnumSchema, decoder: BinaryDecoder) -> None:
         return decoder.skip_int()
 
-    @staticmethod
     def _ensure_collection_available(
+        self,
         decoder: BinaryDecoder,
         existing: int,
         count: int,
@@ -997,10 +1014,17 @@ class DatumReader:
 
         For elements with a positive minimum on-wire size, the declared count is
         checked against the bytes actually remaining and against a structural
-        limit (an overflow/defense-in-depth cap). For zero-byte elements (e.g. an
-        array of nulls), which consume no input and so cannot be bounded by the
-        bytes remaining, the cumulative count is checked against the (tighter)
-        zero-byte limit.
+        limit (an overflow/defense-in-depth cap); both are naturally bounded per
+        collection because decoding consumes input, so ``existing`` is the count
+        already read in *this* collection.
+
+        For zero-byte elements (e.g. an array of nulls), which consume no input,
+        neither the bytes remaining nor a per-collection count can bound them: a
+        single datum's schema may declare many such collections (one per record
+        field), each individually small but jointly unbounded. Their count is
+        therefore accumulated on the reader across the whole datum
+        (``self._zero_byte_items_read``, reset per top-level ``read()``) and
+        checked against the (tighter) zero-byte limit.
         """
         if count <= 0:
             return
@@ -1024,10 +1048,14 @@ class DatumReader:
                     f"Cannot read a collection of more than {structural_limit} elements "
                     f"(declared {existing + count}); raise the {MAX_COLLECTION_ITEMS_ENV} limit if this is legitimate."
                 )
-        elif existing + count > zero_byte_limit:
+            return
+        # Zero-byte element type: bound the cumulative count across the datum.
+        self._zero_byte_items_read += count
+        if self._zero_byte_items_read > zero_byte_limit:
             raise avro.errors.AvroCollectionSizeException(
-                f"Cannot read a collection of more than {zero_byte_limit} zero-byte elements "
-                f"(declared {existing + count}); raise the {MAX_COLLECTION_ITEMS_ENV} limit if this is legitimate."
+                f"Cannot read more than {zero_byte_limit} zero-byte collection elements "
+                f"in a single datum (reached {self._zero_byte_items_read}); raise the "
+                f"{MAX_COLLECTION_ITEMS_ENV} limit if this is legitimate."
             )
 
     def read_array(self, writers_schema: avro.schema.ArraySchema, readers_schema: avro.schema.ArraySchema, decoder: BinaryDecoder) -> List[object]:
