@@ -348,10 +348,11 @@ public class TestDataFileReader {
     // AvroRuntimeException, the same way the existing "block size too large"
     // check does.
     AvroRuntimeException exception = assertThrows(AvroRuntimeException.class, () -> {
-      DataFileStream<Object> reader = new DataFileStream<>(new ByteArrayInputStream(malformed),
-          new GenericDatumReader<>());
-      while (reader.hasNext()) {
-        reader.next();
+      try (DataFileStream<Object> reader = new DataFileStream<>(new ByteArrayInputStream(malformed),
+          new GenericDatumReader<>())) {
+        while (reader.hasNext()) {
+          reader.next();
+        }
       }
     });
     assertNotNull(exception.getMessage());
