@@ -164,20 +164,47 @@ static void ensureCollectionAvailable(Decoder &d, size_t existing, size_t count,
     }
 }
 
-// Reject a collection of zero-byte elements (e.g. null) whose cumulative count
-// exceeds the configured limit. These elements consume no input, so they cannot
-// be bounded by the bytes remaining; the count is the only signal.
-static void ensureZeroByteCollectionWithinLimit(size_t existing, size_t count) {
+// Per-thread cumulative count of zero-byte collection elements decoded in the
+// current datum. Such elements consume no input, so neither the bytes-remaining
+// check nor a per-collection cap can bound a record made of many small zero-byte
+// collection fields (each block under the limit but jointly unbounded). Because
+// the recursive read() is re-entered for every nested value, a depth counter
+// marks the outermost decode; the running total is reset only there.
+thread_local int64_t currentZeroByteItems = 0;
+thread_local int currentDecodeDepth = 0;
+
+// RAII scope bracketing a decode: increments the depth on construction and
+// decrements on destruction, resetting the running total at the outermost scope
+// (and clearing it on exit so it never leaks into a later decode on the thread).
+struct ZeroByteBudgetScope {
+    ZeroByteBudgetScope() {
+        if (currentDecodeDepth++ == 0) {
+            currentZeroByteItems = 0;
+        }
+    }
+    ~ZeroByteBudgetScope() {
+        if (--currentDecodeDepth == 0) {
+            currentZeroByteItems = 0;
+        }
+    }
+};
+
+// Reject a collection of zero-byte elements (e.g. null) once the cumulative
+// count across the current datum exceeds the configured limit. These elements
+// consume no input, so they cannot be bounded by the bytes remaining, and the
+// cap must be cumulative across the datum rather than per collection.
+static void ensureZeroByteCollectionWithinLimit(size_t count) {
     const int64_t zeroByte = collectionLimits().zeroByte;
     const uint64_t limit = static_cast<uint64_t>(zeroByte);
-    // Compare without adding, so existing + count cannot overflow.
+    // Compare without adding, so the running total + count cannot overflow.
     if (static_cast<uint64_t>(count) > limit ||
-        static_cast<uint64_t>(existing) > limit - static_cast<uint64_t>(count)) {
+        static_cast<uint64_t>(currentZeroByteItems) > limit - static_cast<uint64_t>(count)) {
         throw Exception(
             "Cannot read a collection of more than {} zero-byte elements; "
             "set AVRO_MAX_COLLECTION_ITEMS if this is legitimate",
             zeroByte);
     }
+    currentZeroByteItems += static_cast<int64_t>(count);
 }
 
 // Guard against size_t overflow / an over-large request when growing a
@@ -215,6 +242,12 @@ void GenericReader::read(GenericDatum &datum) const {
 }
 
 void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
+    // Open a decode scope so the zero-byte allocation cap is enforced
+    // cumulatively across this datum (see ensureZeroByteCollectionWithinLimit):
+    // a record with many small array<null>-style fields, each individually under
+    // the limit, must not over-allocate in aggregate. Scopes nest via a depth
+    // counter; only the outermost resets the running total.
+    ZeroByteBudgetScope zeroByteBudgetScope;
     if (datum.isUnion()) {
         datum.selectBranch(d.decodeUnionIndex());
     }
@@ -289,7 +322,7 @@ void GenericReader::read(GenericDatum &datum, Decoder &d, bool isResolving) {
                 // Zero-byte elements are not bounded by the bytes check, so cap
                 // their cumulative count (r.size() is the count so far).
                 if (zeroByte) {
-                    ensureZeroByteCollectionWithinLimit(r.size(), m);
+                    ensureZeroByteCollectionWithinLimit(m);
                 }
                 ensureCanGrow(r, m);
                 // Grow on demand in bounded steps rather than resizing to the

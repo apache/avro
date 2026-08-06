@@ -271,6 +271,30 @@ static void testReadArrayOfNullRespectsConfiguredLimit() {
     BOOST_CHECK_THROW(decodeLongs(s, {600, 600, 0}), Exception);
 }
 
+// The zero-byte item cap is cumulative across a decoded datum, not per
+// collection. A container file carries its own schema, so an attacker can
+// declare a record with many array<null> fields, each block individually under
+// the limit but jointly unbounded. Two fields of 600 nulls each (1200 > 1000)
+// must be rejected on the second field, while two fields of 400 each still decode
+// (and the per-datum budget resets between datums).
+static void testRecordOfNullArrayFieldsCumulativeAcrossDatum() {
+    ValidSchema s = compileJsonSchemaFromString(
+        "{\"type\":\"record\",\"name\":\"R\",\"fields\":["
+        "{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"null\"}},"
+        "{\"name\":\"b\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}]}");
+    ScopedCollectionLimit limitGuard("1000");
+    // field a: {600, end}; field b: {600, end} -> cumulative 1200 > 1000
+    BOOST_CHECK_THROW(decodeLongs(s, {600, 0, 600, 0}), Exception);
+    // field a: {400, end}; field b: {400, end} -> 800 < 1000, decodes; the
+    // budget resets per top-level read, so decoding twice must both succeed.
+    for (int i = 0; i < 2; ++i) {
+        GenericDatum datum = decodeLongs(s, {400, 0, 400, 0});
+        const GenericRecord &rec = datum.value<GenericRecord>();
+        BOOST_CHECK_EQUAL(rec.fieldAt(0).value<GenericArray>().value().size(), 400u);
+        BOOST_CHECK_EQUAL(rec.fieldAt(1).value<GenericArray>().value().size(), 400u);
+    }
+}
+
 // A backed non-zero-byte array that passes the bytes check is still bounded by
 // the structural cap (exercised with a lowered limit).
 static void testReadArrayOfLongRejectedByStructuralCap() {
@@ -353,6 +377,7 @@ init_unit_test_suite(int, char *[]) {
     ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfNullRejectsNegativeCount));
     ts->add(BOOST_TEST_CASE(&avro::testReadMapOfNullRejectedByAvailableBytes));
     ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfNullRespectsConfiguredLimit));
+    ts->add(BOOST_TEST_CASE(&avro::testRecordOfNullArrayFieldsCumulativeAcrossDatum));
     ts->add(BOOST_TEST_CASE(&avro::testReadArrayOfLongRejectedByStructuralCap));
     ts->add(BOOST_TEST_CASE(&avro::testSkipArrayRejectsHugeCount));
     ts->add(BOOST_TEST_CASE(&avro::testSkipArrayRejectsNegativeBlockSize));
