@@ -38,7 +38,8 @@ Security Model
 The Avro library implementations are designed to read and write any data conforming
 to a schema. Transport is outside the scope of the Avro library: applications using
 Avro should be surrounded by security measures that prevent attackers from writing
-random data and otherwise interfering with the consumers of schemas.
+random data and otherwise interfering with the consumers of schemas. In addition,
+the Avro IPC mechanism should not be exposed on a public network to untrusted actors.
 
 Although the Avro library will not read or write data except as directed to by
 invoking it, avoiding leaking data into a side channel like log files is a non-goal
@@ -54,7 +55,6 @@ This supply chain also includes the schemas being used: if they are user provide
 additional validation is strongly advised. Such validation can use the parsed schema,
 as schema parsing itself is safe: the parser allows SPIs, but is not otherwise
 configurable.
-
 
 Summary
 -------
