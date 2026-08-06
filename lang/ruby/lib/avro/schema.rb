@@ -42,7 +42,7 @@ module Avro
     DECIMAL_LOGICAL_TYPE = 'decimal'
 
     def self.parse(json_string)
-      real_parse(MultiJson.load(json_string), {})
+      real_parse(JSON.parse(json_string, create_additions: false, quirks_mode: true), {})
     end
 
     # Build Avro Schema from data parsed out of JSON string.
@@ -236,7 +236,7 @@ module Avro
     end
 
     def to_s
-      MultiJson.dump to_avro
+      JSON.dump to_avro
     end
 
     def validate_aliases!
