@@ -531,6 +531,128 @@ describe('files', function () {
         });
     });
 
+    it('rejects a block that decompresses beyond the limit', function (cb) {
+      // A large, highly compressible payload compresses to a tiny block but
+      // would decompress to far more than the configured limit.
+      var t = createType('string');
+      var big = new Array(100001).join('a'); // 100000 bytes when decompressed
+      var encoder = new streams.BlockEncoder(t, {codec: 'deflate'});
+      var decoder = new streams.BlockDecoder({maxDecompressLength: 1024})
+        .on('data', function () {})
+        .on('error', function (err) {
+          // zlib's maxOutputLength cap fires, so the allocation itself is bounded.
+          assert.equal(err.code, 'ERR_BUFFER_TOO_LARGE');
+          cb();
+        });
+      encoder.pipe(decoder);
+      encoder.end(big);
+    });
+
+    it('decompresses a block within the limit', function (cb) {
+      var t = createType('string');
+      var payload = 'hello world';
+      var out = [];
+      var encoder = new streams.BlockEncoder(t, {codec: 'deflate'});
+      var decoder = new streams.BlockDecoder({maxDecompressLength: 1024})
+        .on('data', function (s) { out.push(s); })
+        .on('end', function () {
+          assert.deepEqual(out, [payload]);
+          cb();
+        });
+      encoder.pipe(decoder);
+      encoder.end(payload);
+    });
+
+    it('falls back to the default limit for an out-of-range value', function (cb) {
+      // A non-finite/out-of-range limit is not usable, so normalizeMaxDecompressLength
+      // returns undefined and the decoder falls back to its default limit rather
+      // than making zlib throw synchronously; a normal block still decodes.
+      // Clear the env override so the fallback default is deterministic.
+      var savedEnv = process.env.AVRO_MAX_DECOMPRESS_LENGTH;
+      delete process.env.AVRO_MAX_DECOMPRESS_LENGTH;
+      var restore = function () {
+        if (savedEnv === undefined) {
+          delete process.env.AVRO_MAX_DECOMPRESS_LENGTH;
+        } else {
+          process.env.AVRO_MAX_DECOMPRESS_LENGTH = savedEnv;
+        }
+      };
+      var t = createType('string');
+      var payload = 'hello world';
+      var out = [];
+      var encoder = new streams.BlockEncoder(t, {codec: 'deflate'});
+      var decoder = new streams.BlockDecoder({maxDecompressLength: Infinity})
+        .on('data', function (s) { out.push(s); })
+        .on('error', function (err) { restore(); cb(err); })
+        .on('end', function () {
+          restore();
+          assert.deepEqual(out, [payload]);
+          cb();
+        });
+      encoder.pipe(decoder);
+      encoder.end(payload);
+    });
+
+    it('enforces the limit for custom codecs', function (cb) {
+      // A custom codec that yields more than the limit is rejected by the
+      // size safeguard applied to every codec.
+      var t = createType('int');
+      var codecs = {
+        'null': function (data, cb) { cb(null, Buffer.alloc(4096)); }
+      };
+      var encoder = new streams.BlockEncoder(t, {codec: 'null'});
+      var decoder = new streams.BlockDecoder({
+        codecs: codecs,
+        maxDecompressLength: 1024
+      })
+        .on('data', function () {})
+        .on('error', function (err) {
+          // The generic post-decompress size safeguard fires for custom codecs.
+          assert(/decompressed block size exceeds/.test(err.message));
+          cb();
+        });
+      encoder.pipe(decoder);
+      encoder.end(1);
+    });
+
+    it('normalizes decompress limits', function () {
+      var cap = files.MAX_DECOMPRESS_LENGTH_CAP;
+      var normalize = files.normalizeMaxDecompressLength;
+      // A finite value above the cap is clamped to the cap (the "> cap" path).
+      assert.equal(normalize(cap + 1), cap);
+      assert.equal(normalize(Number.MAX_VALUE), cap);
+      // A finite value at/below the cap is floored and kept.
+      assert.equal(normalize(1024), 1024);
+      assert.equal(normalize(1024.9), 1024);
+      assert.equal(normalize('2048'), 2048);
+      // Missing / invalid / out-of-range values fall back to undefined.
+      assert.equal(normalize(undefined), undefined);
+      assert.equal(normalize(Infinity), undefined);
+      assert.equal(normalize(0), undefined);
+      assert.equal(normalize(-1), undefined);
+      assert.equal(normalize('nope'), undefined);
+    });
+
+    it('caps a custom deflate codec that reuses zlib.inflateRaw', function (cb) {
+      // A custom codecs map that reuses the built-in raw inflater must still get
+      // the zlib maxOutputLength cap (not just the post-decompress check).
+      var zlib = require('zlib');
+      var t = createType('string');
+      var big = new Array(100001).join('a'); // 100000 bytes when decompressed
+      var encoder = new streams.BlockEncoder(t, {codec: 'deflate'});
+      var decoder = new streams.BlockDecoder({
+        codecs: {deflate: zlib.inflateRaw},
+        maxDecompressLength: 1024
+      })
+        .on('data', function () {})
+        .on('error', function (err) {
+          assert.equal(err.code, 'ERR_BUFFER_TOO_LARGE');
+          cb();
+        });
+      encoder.pipe(decoder);
+      encoder.end(big);
+    });
+
   });
 
   it('createFileDecoder', function (cb) {
