@@ -199,6 +199,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   private Object readObjectArray(Object[] array, Schema expectedType, long l, ResolvingDecoder in) throws IOException {
     LogicalType logicalType = expectedType.getLogicalType();
     Conversion<?> conversion = getData().getConversionFor(logicalType);
+    boolean zeroByte = isZeroByteSchema(expectedType);
     int index = 0;
     if (logicalType != null && conversion != null) {
       do {
@@ -208,7 +209,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
           array[index] = element;
           index++;
         }
-      } while ((l = in.arrayNext()) > 0);
+      } while ((l = nextArrayBlock(in, expectedType, index, zeroByte)) > 0);
     } else {
       do {
         int limit = index + (int) l;
@@ -217,7 +218,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
           array[index] = element;
           index++;
         }
-      } while ((l = in.arrayNext()) > 0);
+      } while ((l = nextArrayBlock(in, expectedType, index, zeroByte)) > 0);
     }
     return array;
   }
@@ -226,22 +227,51 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       throws IOException {
     LogicalType logicalType = expectedType.getLogicalType();
     Conversion<?> conversion = getData().getConversionFor(logicalType);
+    boolean zeroByte = isZeroByteSchema(expectedType);
+    long count = 0;
     if (logicalType != null && conversion != null) {
       do {
         for (int i = 0; i < l; i++) {
           Object element = readWithConversion(null, expectedType, logicalType, conversion, in);
           c.add(element);
         }
-      } while ((l = in.arrayNext()) > 0);
+        count += l;
+      } while ((l = nextArrayBlock(in, expectedType, count, zeroByte)) > 0);
     } else {
       do {
         for (int i = 0; i < l; i++) {
           Object element = readWithoutConversion(null, expectedType, in);
           c.add(element);
         }
-      } while ((l = in.arrayNext()) > 0);
+        count += l;
+      } while ((l = nextArrayBlock(in, expectedType, count, zeroByte)) > 0);
     }
     return c;
+  }
+
+  /**
+   * Read and validate the next array block count, mirroring
+   * {@link org.apache.avro.generic.GenericDatumReader#readArray}: bound the
+   * declared count against the bytes remaining, and for element types whose
+   * minimum encoded size is zero bound the cumulative allocation (which the
+   * bytes-remaining check cannot). This closes the gap where a large logical
+   * array split across multiple blocks would otherwise pass only the first
+   * block's guard.
+   *
+   * @param in           the decoder
+   * @param expectedType the array element schema
+   * @param existing     the number of elements already read
+   * @param zeroByte     whether the element type's minimum encoded size is zero
+   * @return the validated next block count
+   */
+  private long nextArrayBlock(ResolvingDecoder in, Schema expectedType, long existing, boolean zeroByte)
+      throws IOException {
+    long l = in.arrayNext();
+    ensureAvailableCollectionBytes(in, l, expectedType);
+    if (zeroByte && l > 0) {
+      SystemLimitException.checkMaxCollectionAllocation(existing, l);
+    }
+    return l;
   }
 
   @Override
