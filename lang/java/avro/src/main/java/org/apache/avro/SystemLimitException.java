@@ -119,6 +119,24 @@ public class SystemLimitException extends AvroRuntimeException {
    */
   private static long maxCollectionAllocation = defaultMaxCollectionAllocation();
 
+  /**
+   * Per-thread cumulative accounting of zero-byte collection elements allocated
+   * while decoding a single datum. The {@link #maxCollectionAllocation} cap on
+   * such elements must apply across the whole datum, not per collection: a
+   * container file carries its own schema, so an attacker can declare a record
+   * with many collection fields, each block individually under the limit but
+   * jointly unbounded. A depth counter marks the outermost decode scope so the
+   * running total is reset only there and accumulates across every (possibly
+   * nested) collection in between.
+   */
+  private static final class CollectionAllocationScope {
+    private int depth;
+    private long allocated;
+  }
+
+  private static final ThreadLocal<CollectionAllocationScope> COLLECTION_ALLOCATION_SCOPE = ThreadLocal
+      .withInitial(CollectionAllocationScope::new);
+
   static {
     resetLimits();
   }
@@ -331,6 +349,68 @@ public class SystemLimitException extends AvroRuntimeException {
           + maxCollectionAllocation + " (configure with the system property " + MAX_COLLECTION_ALLOCATION_PROPERTY
           + ")");
     }
+    return total;
+  }
+
+  /**
+   * Begin an outermost decode scope for cumulative zero-byte collection
+   * allocation accounting. Must be paired with
+   * {@link #endCollectionAllocationScope()} in a {@code finally} block. Scopes
+   * nest: only the outermost one resets the running total, so the cap applies
+   * across the whole datum rather than per collection. See
+   * {@link #checkMaxCollectionAllocation(long)}.
+   */
+  public static void beginCollectionAllocationScope() {
+    CollectionAllocationScope scope = COLLECTION_ALLOCATION_SCOPE.get();
+    if (scope.depth == 0) {
+      scope.allocated = 0;
+    }
+    scope.depth++;
+  }
+
+  /**
+   * End a decode scope opened by {@link #beginCollectionAllocationScope()}. When
+   * the outermost scope closes the running total is cleared so it never leaks
+   * into an unrelated later decode on the same thread.
+   */
+  public static void endCollectionAllocationScope() {
+    CollectionAllocationScope scope = COLLECTION_ALLOCATION_SCOPE.get();
+    if (scope.depth > 0) {
+      scope.depth--;
+      if (scope.depth == 0) {
+        scope.allocated = 0;
+      }
+    }
+  }
+
+  /**
+   * Accumulate {@code items} zero-byte-minimum collection elements into the
+   * current decode scope and verify the running total stays within
+   * {@link #MAX_COLLECTION_ALLOCATION_PROPERTY the allocation limit}.
+   * <p>
+   * Unlike {@link #checkMaxCollectionAllocation(long, long)}, which bounds a
+   * single collection, this bounds the cumulative count across every collection
+   * decoded within the enclosing {@link #beginCollectionAllocationScope() scope}
+   * (one datum), so a record made of many small zero-byte collection fields
+   * cannot bypass the cap in aggregate. When called outside any scope it falls
+   * back to a stateless single-collection check, preserving the previous
+   * behaviour for callers that do not delimit a datum.
+   *
+   * @param items The next number of zero-byte elements to allocate.
+   * @return The cumulative element count if and only if it is within the limit.
+   * @throws SystemLimitException if the cumulative allocation would exceed the
+   *                              limit.
+   * @throws AvroRuntimeException if {@code items} is negative.
+   */
+  public static long checkMaxCollectionAllocation(long items) {
+    CollectionAllocationScope scope = COLLECTION_ALLOCATION_SCOPE.get();
+    if (scope.depth == 0) {
+      // Not inside a delimited datum: behave as a per-collection check so this
+      // path is never stricter than before for callers that do not open a scope.
+      return checkMaxCollectionAllocation(0L, items);
+    }
+    long total = checkMaxCollectionAllocation(scope.allocated, items);
+    scope.allocated = total;
     return total;
   }
 

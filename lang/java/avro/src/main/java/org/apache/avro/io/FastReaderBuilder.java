@@ -481,23 +481,20 @@ public class FastReaderBuilder {
       if (reuse instanceof GenericArray) {
         GenericArray<Object> reuseArray = (GenericArray<Object>) reuse;
         long l = decoder.readArrayStart();
-        long total = 0;
-        checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
+        checkArrayBlock(decoder, elementType, zeroByteElements, l);
         reuseArray.clear();
 
         while (l > 0) {
           for (long i = 0; i < l; i++) {
             reuseArray.add(elementReader.read(reuseArray.peek(), decoder));
           }
-          total += l;
           l = decoder.arrayNext();
-          checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
+          checkArrayBlock(decoder, elementType, zeroByteElements, l);
         }
         return reuseArray;
       } else {
         long l = decoder.readArrayStart();
-        long total = 0;
-        checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
+        checkArrayBlock(decoder, elementType, zeroByteElements, l);
         List<Object> array = (reuse instanceof List) ? (List<Object>) reuse
             : new GenericData.Array<>(GenericDatumReader.initialCollectionCapacity(l), readerSchema);
         array.clear();
@@ -505,9 +502,8 @@ public class FastReaderBuilder {
           for (long i = 0; i < l; i++) {
             array.add(elementReader.read(null, decoder));
           }
-          total += l;
           l = decoder.arrayNext();
-          checkArrayBlock(decoder, elementType, zeroByteElements, total, l);
+          checkArrayBlock(decoder, elementType, zeroByteElements, l);
         }
         return array;
       }
@@ -521,16 +517,18 @@ public class FastReaderBuilder {
    * heap-aware allocation cap for zero-byte elements (which the bytes check
    * cannot bound).
    */
-  private static void checkArrayBlock(Decoder decoder, Schema elementType, boolean zeroByteElements, long total,
-      long count) throws IOException {
+  private static void checkArrayBlock(Decoder decoder, Schema elementType, boolean zeroByteElements, long count)
+      throws IOException {
     if (count <= 0) {
       return;
     }
     if (zeroByteElements) {
       // The bytes-remaining check cannot bound zero-byte elements (minBytes is
       // 0, so ensureAvailableCollectionBytes would no-op after recomputing it);
-      // apply the heap-aware allocation cap instead.
-      SystemLimitException.checkMaxCollectionAllocation(total, count);
+      // apply the heap-aware allocation cap instead. The cap is cumulative across
+      // the enclosing datum scope (see SystemLimitException), so a record of many
+      // small array<null>-style fields cannot over-allocate in aggregate.
+      SystemLimitException.checkMaxCollectionAllocation(count);
     } else {
       GenericDatumReader.ensureAvailableCollectionBytes(decoder, count, elementType);
     }
