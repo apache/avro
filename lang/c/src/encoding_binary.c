@@ -40,7 +40,7 @@ static int read_long(avro_reader_t reader, int64_t * l)
 			return EILSEQ;
 		}
 		AVRO_READ(reader, &b, 1);
-		value |= (int64_t) (b & 0x7F) << (7 * offset);
+		value |= (uint64_t) (b & 0x7F) << (7 * offset);
 		++offset;
 	}
 	while (b & 0x80);
@@ -226,9 +226,9 @@ static int read_float(avro_reader_t reader, float *f)
 	} v;
 #if AVRO_PLATFORM_IS_BIG_ENDIAN
 	AVRO_READ(reader, buf, 4);
-	v.i = ((int32_t) buf[0] << 0)
-	    | ((int32_t) buf[1] << 8)
-	    | ((int32_t) buf[2] << 16) | ((int32_t) buf[3] << 24);
+	v.i = ((uint32_t) buf[0] << 0)
+	    | ((uint32_t) buf[1] << 8)
+	    | ((uint32_t) buf[2] << 16) | ((uint32_t) buf[3] << 24);
 #else
 	AVRO_READ(reader, (void *)&v.i, 4);
 #endif
@@ -285,13 +285,13 @@ static int read_double(avro_reader_t reader, double *d)
 
 #if AVRO_PLATFORM_IS_BIG_ENDIAN
 	AVRO_READ(reader, buf, 8);
-	v.l = ((int64_t) buf[0] << 0)
-	    | ((int64_t) buf[1] << 8)
-	    | ((int64_t) buf[2] << 16)
-	    | ((int64_t) buf[3] << 24)
-	    | ((int64_t) buf[4] << 32)
-	    | ((int64_t) buf[5] << 40)
-	    | ((int64_t) buf[6] << 48) | ((int64_t) buf[7] << 56);
+	v.l = ((uint64_t) buf[0] << 0)
+	    | ((uint64_t) buf[1] << 8)
+	    | ((uint64_t) buf[2] << 16)
+	    | ((uint64_t) buf[3] << 24)
+	    | ((uint64_t) buf[4] << 32)
+	    | ((uint64_t) buf[5] << 40)
+	    | ((uint64_t) buf[6] << 48) | ((uint64_t) buf[7] << 56);
 #else
 	AVRO_READ(reader, (void *)&v.l, 8);
 #endif
