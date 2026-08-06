@@ -354,7 +354,7 @@ class TetherTask(abc.ABC):
         """
         Process the complete request
         """
-        if (self.taskType == TaskType.REDUCE) and not (self.midRecord is None):
+        if (self.taskType == TaskType.REDUCE) and self.midRecord is not None:
             try:
                 self.reduceFlush(self.midRecord, self.outCollector)
             except Exception:
@@ -437,7 +437,7 @@ class TetherTask(abc.ABC):
 
     def close(self):
         self.log.info("TetherTask.close: closing")
-        if not (self.clienTransciever is None):
+        if self.clienTransciever is not None:
             try:
                 self.clienTransciever.close()
 
