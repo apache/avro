@@ -20,6 +20,7 @@ package org.apache.avro.io;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -133,6 +134,8 @@ public class FastReaderBuilderJavaClassTest {
    */
   @Test
   void specificDataModelUsesJavaClassProp() throws IOException {
+    assumeTrue(SpecificData.get().isFastReaderEnabled(),
+        "java-class conversion is only applied on the fast-reader path");
     GenericRecord result = roundTrip(RECORD_WITH_NULLABLE_CLASS_PROP, SpecificData.get());
 
     assertNotNull(result);
@@ -149,6 +152,8 @@ public class FastReaderBuilderJavaClassTest {
    */
   @Test
   void specificDataModelUsesJavaClassPropWithDirectString() throws IOException {
+    assumeTrue(SpecificData.get().isFastReaderEnabled(),
+        "java-class conversion is only applied on the fast-reader path");
     GenericRecord result = roundTrip(RECORD_WITH_CLASS_PROP, SpecificData.get());
 
     assertNotNull(result);
@@ -189,6 +194,8 @@ public class FastReaderBuilderJavaClassTest {
    */
   @Test
   void specificDataModelUsesJavaKeyClassProp() throws IOException {
+    assumeTrue(SpecificData.get().isFastReaderEnabled(),
+        "java-key-class conversion is only applied on the fast-reader path");
     GenericRecord result = roundTrip(RECORD_WITH_MAP_KEY_CLASS_PROP, SpecificData.get());
 
     assertNotNull(result);
