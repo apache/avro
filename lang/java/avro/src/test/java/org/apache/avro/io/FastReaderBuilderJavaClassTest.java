@@ -29,8 +29,6 @@ import java.util.Map;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.specific.SpecificData;
@@ -70,20 +68,24 @@ public class FastReaderBuilderJavaClassTest {
           .set("prices", Map.of("-0.0002", "cheap", "12345.678", "expensive")).build();
 
   /**
-   * Reusable round-trip logic for a record, using the given model.
+   * Reusable round-trip logic for a record, using the given model. The reader is
+   * built via {@link GenericData#createDatumReader(Schema, Schema)} so that
+   * SpecificData produces a real {@code SpecificDatumReader}, rather than a
+   * {@code GenericDatumReader} wrapping a SpecificData instance.
    */
+  @SuppressWarnings("unchecked")
   public static GenericRecord roundTrip(GenericRecord record, GenericData model) throws IOException {
     byte[] serialized;
 
     try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-      GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(record.getSchema());
+      DatumWriter<GenericRecord> writer = model.createDatumWriter(record.getSchema());
       BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
       writer.write(record, encoder);
       encoder.flush();
       serialized = baos.toByteArray();
     }
 
-    GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(record.getSchema(), record.getSchema(), model);
+    DatumReader<GenericRecord> reader = model.createDatumReader(record.getSchema(), record.getSchema());
     BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(serialized, null);
     return reader.read(null, decoder);
   }
