@@ -501,6 +501,54 @@ sub decode_zero_byte_array {
 }
 
 {
+    ## The zero-byte cap is cumulative across a decoded datum, not per collection.
+    ## A record with many array<null> fields, each block under the limit but
+    ## jointly unbounded, must be rejected once the cumulative count exceeds the
+    ## cap: two fields of 600 nulls each (1200 > 1000) fail on the second field.
+    local $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS = 1000;
+    my $schema = Avro::Schema->parse(<<'EOJ');
+{ "type": "record", "name": "R", "fields": [
+    {"name":"a","type":{"type":"array","items":"null"}},
+    {"name":"b","type":{"type":"array","items":"null"}} ] }
+EOJ
+    my $enc = encode_long(600) . encode_long(0)   # field a
+            . encode_long(600) . encode_long(0);  # field b
+    open my $reader, '<', \$enc or die "Can't open memory file: $!";
+    throws_ok {
+        Avro::BinaryDecoder->decode(
+            writer_schema => $schema,
+            reader_schema => $schema,
+            reader        => $reader,
+        );
+    } qr/more than 1000 zero-byte/, "record of null-array fields rejected cumulatively across datum";
+}
+
+{
+    ## The complement: two array<null> fields whose combined count stays under the
+    ## cap decode normally, and the per-datum budget resets between datums.
+    local $Avro::BinaryDecoder::MAX_COLLECTION_ITEMS = 1000;
+    my $schema = Avro::Schema->parse(<<'EOJ');
+{ "type": "record", "name": "R", "fields": [
+    {"name":"a","type":{"type":"array","items":"null"}},
+    {"name":"b","type":{"type":"array","items":"null"}} ] }
+EOJ
+    my $enc = encode_long(400) . encode_long(0)
+            . encode_long(400) . encode_long(0);
+    ## Decode twice reusing the same encoded datum: the budget must reset per
+    ## top-level decode, so the second datum is not penalised by the first.
+    for my $iteration (1, 2) {
+        open my $reader, '<', \$enc or die "Can't open memory file: $!";
+        my $dec = Avro::BinaryDecoder->decode(
+            writer_schema => $schema,
+            reader_schema => $schema,
+            reader        => $reader,
+        );
+        is scalar(@{ $dec->{a} }), 400, "field a within cumulative limit (datum $iteration)";
+        is scalar(@{ $dec->{b} }), 400, "field b within cumulative limit (datum $iteration)";
+    }
+}
+
+{
     ## A huge map<null> is bounded by the bytes-remaining check (each entry has a
     ## >= 1 byte key), not the zero-byte cap.
     my $map_schema = Avro::Schema->parse(q({ "type": "map", "values": "null" }));

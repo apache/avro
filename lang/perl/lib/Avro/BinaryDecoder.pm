@@ -32,6 +32,18 @@ unless ($Config{use64bitint}) {
     $complement = Math::BigInt->new("0b" . ("1" x 57) . ("0" x 7));
 }
 
+## Cumulative number of zero-byte-encoded collection elements (e.g. an array of
+## nulls) seen while decoding the current datum, plus the current decode/skip
+## recursion depth used to know when to reset it. The zero-byte cap must be
+## cumulative across the whole datum, not per collection: a container file
+## carries its own schema, so an attacker can declare a record with many such
+## collection fields, each block under the limit but jointly unbounded. Because
+## decode()/skip() are re-entered recursively for every nested value, the running
+## total is reset only at the outermost call (depth 1). See decode(), skip() and
+## _account_zero_byte_items().
+our $_COLLECTION_DEPTH = 0;
+our $_ZERO_BYTE_ITEMS_READ = 0;
+
 =head2 decode(%param)
 
 Resolve the given writer and reader_schema to decode the data provided by the
@@ -69,6 +81,11 @@ sub decode {
         reader => $reader_schema,
     ) or throw Avro::Schema::Error::Mismatch 'schema do not match';
 
+    # Track decode/skip recursion depth so the cumulative zero-byte-element
+    # budget is reset once per top-level datum, not per nested value.
+    local $_COLLECTION_DEPTH = $_COLLECTION_DEPTH + 1;
+    $_ZERO_BYTE_ITEMS_READ = 0 if $_COLLECTION_DEPTH == 1;
+
     my $meth = "decode_$type";
     return $class->$meth($writer_schema, $reader_schema, $reader);
 }
@@ -76,6 +93,10 @@ sub decode {
 sub skip {
     my $class = shift;
     my ($schema, $reader) = @_;
+    # Skips share the datum's zero-byte budget (a skip mid-decode must not reset
+    # it); a top-level skip is bounded per invocation. See decode().
+    local $_COLLECTION_DEPTH = $_COLLECTION_DEPTH + 1;
+    $_ZERO_BYTE_ITEMS_READ = 0 if $_COLLECTION_DEPTH == 1;
     my $type = ref $schema ? $schema->type : $schema;
     my $meth = "skip_$type";
     return $class->$meth($schema, $reader);
@@ -265,6 +286,24 @@ sub _min_bytes_per_element {
     return 1;
 }
 
+## Accumulate $count zero-byte-encoded elements into the current datum's running
+## total and reject if it exceeds the zero-byte item cap. The cap is cumulative
+## across the whole datum (reset per top-level decode/skip, see decode()) because
+## such elements consume no input: neither the bytes-remaining check nor a
+## per-collection cap can bound a record made of many small zero-byte collection
+## fields.
+sub _account_zero_byte_items {
+    my ($count) = @_;
+    $_ZERO_BYTE_ITEMS_READ += $count;
+    if ($_ZERO_BYTE_ITEMS_READ > $MAX_COLLECTION_ITEMS) {
+        throw Avro::BinaryDecoder::Error::CollectionSize(
+            "Cannot read a collection of more than $MAX_COLLECTION_ITEMS zero-byte "
+          . "elements in a single datum (reached $_ZERO_BYTE_ITEMS_READ); raise "
+          . "\$Avro::BinaryDecoder::MAX_COLLECTION_ITEMS if this is legitimate");
+    }
+    return;
+}
+
 ## Reject a collection (array or map) block whose declared element count could
 ## not be backed by the bytes actually remaining, before iterating. Skipped when
 ## the per-element minimum is zero or when the reader cannot report how many
@@ -291,12 +330,10 @@ sub _ensure_collection_available {
         }
     }
     # Zero-byte elements (e.g. null) consume no input, so they cannot be bounded
-    # by the bytes remaining; additionally cap their cumulative count.
-    elsif ($total > $MAX_COLLECTION_ITEMS) {
-        throw Avro::BinaryDecoder::Error::CollectionSize(
-            "Cannot read a collection of more than $MAX_COLLECTION_ITEMS zero-byte "
-          . "elements (declared $total); raise "
-          . "\$Avro::BinaryDecoder::MAX_COLLECTION_ITEMS if this is legitimate");
+    # by the bytes remaining; additionally cap their cumulative count across the
+    # whole datum rather than per collection.
+    else {
+        _account_zero_byte_items($count);
     }
     return;
 }
@@ -392,29 +429,26 @@ sub skip_block {
     # no leading class argument. decode_long ignores its (shifted) first argument
     # and reads from the last, so pass __PACKAGE__ for it and $reader last.
     my ($reader, $min_bytes, $block_content) = @_;
-    # Zero-byte elements loop with no per-item input, so bound them tightly;
-    # other elements consume bytes (bounded by EOF) so only the structural cap
-    # applies. Every collection is capped by the structural limit, so for
-    # zero-byte elements use whichever of the two limits is tighter.
-    my $limit = $MAX_COLLECTION_STRUCTURAL;
-    if ($min_bytes <= 0 && $MAX_COLLECTION_ITEMS < $limit) {
-        $limit = $MAX_COLLECTION_ITEMS;
-    }
+    # Zero-byte elements loop with no per-item input, so bound them cumulatively
+    # across the datum (below); other elements consume bytes (bounded by EOF) so
+    # only the per-collection structural cap applies.
+    my $zero_byte = $min_bytes <= 0;
     my $block_count = decode_long(__PACKAGE__, undef, undef, $reader);
     my $skipped = 0;
     while ($block_count) {
         if ($block_count < 0) {
             # A byte-sized (negative-count) block still declares an element
-            # count; bound it cumulatively too, so a huge declared count with a
-            # small or zero block size cannot bypass the cap (e.g. zero-byte
-            # elements whose block size is 0).
+            # count; bound it too, so a huge declared count with a small or zero
+            # block size cannot bypass the cap (e.g. zero-byte elements whose
+            # block size is 0).
             my $count = -$block_count;
-            if ($skipped + $count > $limit) {
+            if ($skipped + $count > $MAX_COLLECTION_STRUCTURAL) {
                 throw Avro::BinaryDecoder::Error::CollectionSize(
-                    "Cannot skip a collection of more than $limit "
+                    "Cannot skip a collection of more than $MAX_COLLECTION_STRUCTURAL "
                   . "elements (declared @{[ $skipped + $count ]})");
             }
             $skipped += $count;
+            _account_zero_byte_items($count) if $zero_byte;
             # A negative count is followed by a long block size in bytes, which
             # lets the whole block be skipped without decoding each item. Skip
             # forward by that many bytes relative to the current position
@@ -445,15 +479,17 @@ sub skip_block {
             }
         }
         else {
-            # Bound the cumulative element count: skipping a huge block of
-            # zero-byte elements would otherwise loop unboundedly (a CPU
-            # exhaustion) even though it allocates nothing.
-            if ($skipped + $block_count > $limit) {
+            # Bound the element count: skipping a huge block of zero-byte
+            # elements would otherwise loop unboundedly (a CPU exhaustion) even
+            # though it allocates nothing. The structural cap is per collection;
+            # the zero-byte cap is cumulative across the datum.
+            if ($skipped + $block_count > $MAX_COLLECTION_STRUCTURAL) {
                 throw Avro::BinaryDecoder::Error::CollectionSize(
-                    "Cannot skip a collection of more than $limit "
+                    "Cannot skip a collection of more than $MAX_COLLECTION_STRUCTURAL "
                   . "elements (declared @{[ $skipped + $block_count ]})");
             }
             $skipped += $block_count;
+            _account_zero_byte_items($block_count) if $zero_byte;
             for (1..$block_count) {
                 $block_content->();
             }
