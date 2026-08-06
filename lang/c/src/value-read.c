@@ -193,12 +193,23 @@ ensure_collection_available(avro_reader_t reader, int64_t existing,
 		}
 		return 0;
 	}
-	/* Compare without adding, so existing + count cannot overflow. */
-	if (count > zero_byte || existing > zero_byte - count) {
-		avro_set_error("Cannot read a collection of more than %" PRId64
-			       " zero-byte elements; raise AVRO_MAX_COLLECTION_ITEMS "
-			       "if this is legitimate", zero_byte);
-		return EINVAL;
+	/*
+	 * Zero-byte elements consume no input, so the bytes-remaining check
+	 * cannot bound them. Cap the cumulative count across the whole datum,
+	 * not just this collection: a record's schema can declare many zero-byte
+	 * collection fields, each block under the limit but jointly unbounded.
+	 * Compare without adding, so the running total + count cannot overflow.
+	 */
+	(void) existing;
+	{
+		int64_t *items = avro_reader_zero_byte_items(reader);
+		if (count > zero_byte || *items > zero_byte - count) {
+			avro_set_error("Cannot read a collection of more than %" PRId64
+				       " zero-byte elements; raise AVRO_MAX_COLLECTION_ITEMS "
+				       "if this is legitimate", zero_byte);
+			return EINVAL;
+		}
+		*items += count;
 	}
 	return 0;
 }
@@ -611,5 +622,9 @@ avro_value_read(avro_reader_t reader, avro_value_t *dest)
 {
 	int  rval;
 	check(rval, avro_value_reset(dest));
+	/* Start a fresh zero-byte-element budget for this datum. The cap is
+	 * cumulative across every collection decoded in this datum (see
+	 * ensure_collection_available), not per collection. */
+	*avro_reader_zero_byte_items(reader) = 0;
 	return read_value(reader, dest);
 }

@@ -388,6 +388,40 @@ static int check_null_array_cumulative_rejected(int64_t each, const char *label)
 	return EXIT_FAILURE;
 }
 
+/* A record with two array<null> fields. The zero-byte cap is cumulative across
+ * the whole datum, not per collection: a container file carries its own schema,
+ * so an attacker can declare many such fields, each block under the limit but
+ * jointly unbounded. Two fields of `each` (2*each > limit) must be rejected on
+ * the second field. When expect_reject is 0 the record is expected to decode. */
+static const char record_two_null_arrays[] =
+    "{\"type\":\"record\",\"name\":\"R\",\"fields\":["
+    "{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"null\"}},"
+    "{\"name\":\"b\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}]}";
+
+static int check_record_null_array_fields(int64_t each, int expect_reject, const char *label)
+{
+	char buf[64];
+	size_t n = 0;
+	int rc;
+	n += build_null_array(each, 0, buf + n); /* field a */
+	n += build_null_array(each, 0, buf + n); /* field b */
+	rc = decode_schema(record_two_null_arrays, buf, n);
+	if (expect_reject) {
+		if (rc == EINVAL) {
+			fprintf(stderr, "%s: rejected as expected: %s\n", label, avro_strerror());
+			return EXIT_SUCCESS;
+		}
+		fprintf(stderr, "%s: FAIL - rc=%d (expected EINVAL)\n", label, rc);
+		return EXIT_FAILURE;
+	}
+	if (rc == 0) {
+		fprintf(stderr, "%s: accepted as expected\n", label);
+		return EXIT_SUCCESS;
+	}
+	fprintf(stderr, "%s: FAIL - rc=%d (expected 0)\n", label, rc);
+	return EXIT_FAILURE;
+}
+
 /* Skipping a zero-byte array/map is bounded the same way as reading it. */
 static int check_skip_null_collection_rejected(const char *schema_literal, int64_t count,
 					       const char *label)
@@ -499,6 +533,19 @@ int main(void)
 		return EXIT_FAILURE;
 	}
 	if (check_null_array_cumulative_rejected(600, "array<null> cumulative 600+600") != EXIT_SUCCESS) {
+		unset_collection_limit();
+		return EXIT_FAILURE;
+	}
+	/* The cap is cumulative across the datum: a record with two array<null>
+	 * fields of 600 each (1200 > 1000) is rejected on the second field, while
+	 * two fields of 400 each (800 < 1000) still decode. */
+	if (check_record_null_array_fields(600, 1,
+					   "record<array<null>,array<null>> cumulative 600+600") != EXIT_SUCCESS) {
+		unset_collection_limit();
+		return EXIT_FAILURE;
+	}
+	if (check_record_null_array_fields(400, 0,
+					   "record<array<null>,array<null>> within limit 400+400") != EXIT_SUCCESS) {
 		unset_collection_limit();
 		return EXIT_FAILURE;
 	}

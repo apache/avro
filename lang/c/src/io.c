@@ -36,6 +36,17 @@ typedef enum avro_io_type_t avro_io_type_t;
 struct avro_reader_t_ {
 	avro_io_type_t type;
 	volatile int  refcount;
+	/*
+	 * Cumulative number of zero-byte-encoded collection elements (e.g. an
+	 * array of nulls) read while decoding the current datum. Reset per
+	 * top-level avro_value_read. Such elements consume no input, so the
+	 * bytes-remaining check cannot bound them, and a per-collection cap is
+	 * not enough either: a record's schema can declare many collection
+	 * fields, each block under the limit but jointly unbounded. The cap is
+	 * therefore applied across the whole datum. Stored on the reader so it is
+	 * per-decode and not shared between concurrent readers.
+	 */
+	int64_t zero_byte_items_read;
 };
 
 struct avro_writer_t_ {
@@ -84,6 +95,7 @@ struct _avro_writer_memory_t {
 static void reader_init(avro_reader_t reader, avro_io_type_t type)
 {
 	reader->type = type;
+	reader->zero_byte_items_read = 0;
 	avro_refcount_set(&reader->refcount, 1);
 }
 
@@ -210,6 +222,12 @@ avro_reader_bytes_available(avro_reader_t reader)
 	/* File readers buffer internally and cannot cheaply report how many
 	 * bytes remain in the underlying file, so the amount is unknown. */
 	return -1;
+}
+
+int64_t *
+avro_reader_zero_byte_items(avro_reader_t reader)
+{
+	return &reader->zero_byte_items_read;
 }
 
 #define bytes_available(reader) (reader->end - reader->cur)
