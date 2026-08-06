@@ -195,6 +195,11 @@ RUN case "${BUILDARCH:?}" in \
 RUN python3 -m pip install --upgrade pip setuptools wheel \
  && python3 -m pip install tox zstandard
 
+# Install uv (Python package/build manager used by lang/py/build.sh).
+# Pinned version, installed to $HOME/.local/bin (/root/.local/bin at build
+# time). The PATH is set on the Rust/cargo line below, matching main branch.
+RUN curl -LsSf https://astral.sh/uv/0.10.4/install.sh | sh
+
 # Install Ruby
 RUN apt-get -qqy install ruby-full \
  && apt-get -qqy clean
@@ -207,7 +212,7 @@ RUN gem install bundler --no-document && \
 
 # Install Rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.73.0
-ENV PATH $PATH:/root/.cargo/bin/
+ENV PATH=$PATH:/root/.cargo/bin/:/root/.local/bin
 
 # Install .NET SDK
 RUN cd /opt ; \
