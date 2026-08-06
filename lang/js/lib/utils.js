@@ -285,6 +285,14 @@ OrderedQueue.prototype.pop = function () {
 function Tap(buf, pos) {
   this.buf = buf;
   this.pos = pos | 0;
+  // Cumulative number of zero-byte-encoded collection elements (e.g. an array
+  // of nulls) read from this tap while decoding the current datum. Reset per
+  // top-level read. Such elements consume no input, so the bytes-remaining
+  // check cannot bound them, and a per-collection cap is not enough either: a
+  // record's schema can declare many collection fields, each block under the
+  // limit but jointly unbounded. The cap is therefore applied across the whole
+  // datum. See `checkCollectionBlock` in schemas.js.
+  this.zeroByteItems = 0;
 }
 
 /**

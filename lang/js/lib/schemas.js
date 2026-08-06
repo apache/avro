@@ -2101,6 +2101,10 @@ Resolver.prototype.inspect = function () { return '<Resolver>'; };
  *
  */
 function readValue(type, tap, resolver, lazy) {
+  // Start a fresh zero-byte-element budget for this datum. The cap is
+  // cumulative across every collection decoded in this datum (see
+  // `checkCollectionBlock`), not per collection.
+  tap.zeroByteItems = 0;
   if (resolver) {
     if (resolver._readerType !== type) {
       throw new Error('invalid resolver');
@@ -2313,10 +2317,13 @@ function getMinBytes(type, seen) {
  * Reject a collection block whose declared item count cannot be backed by the
  * input, guarding against unbounded allocation from a tiny payload.
  *
- * `total` is the cumulative item count across all blocks read so far (including
- * the current one). Elements with a positive on-wire minimum are bounded by the
- * bytes remaining in the buffer; zero-byte elements are bounded by the item
- * cap; and every collection is bounded by the structural cap.
+ * `total` is the cumulative item count within the current collection (across its
+ * blocks). Elements with a positive on-wire minimum are bounded by the bytes
+ * remaining in the buffer; every collection is bounded by the structural cap;
+ * and zero-byte elements are bounded by a cap on their cumulative count across
+ * the whole datum (tracked on the tap), not just this collection, since a record
+ * can declare many such collection fields that are each individually under the
+ * limit but jointly unbounded.
  */
 function checkCollectionBlock(tap, n, minBytes, total) {
   if (total > MAX_COLLECTION_STRUCTURAL) {
@@ -2327,8 +2334,11 @@ function checkCollectionBlock(tap, n, minBytes, total) {
     if (n > (tap.buf.length - tap.pos) / minBytes) {
       throw new Error('collection size exceeds remaining buffer');
     }
-  } else if (total > MAX_COLLECTION_ITEMS) {
-    throw new Error('collection of zero-byte items exceeds maximum allowed');
+  } else {
+    tap.zeroByteItems += n;
+    if (tap.zeroByteItems > MAX_COLLECTION_ITEMS) {
+      throw new Error('collection of zero-byte items exceeds maximum allowed');
+    }
   }
 }
 

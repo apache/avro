@@ -1073,6 +1073,45 @@ describe('types', function () {
       assert.deepEqual(t.fromBuffer(buf), [null, null, null]);
     });
 
+    it('rejects zero-byte array fields cumulatively across a record', function () {
+      // The zero-byte cap is cumulative across a datum, not per collection: a
+      // record with many array<null> fields, each block under the limit but
+      // jointly unbounded, must be rejected. field a = 1 null, field b declares
+      // 10,000,000 (cumulative 10,000,001 > the 10M cap), rejected before
+      // allocating field b.
+      var t = createType({
+        name: 'R',
+        type: 'record',
+        fields: [
+          {name: 'a', type: {type: 'array', items: 'null'}},
+          {name: 'b', type: {type: 'array', items: 'null'}}
+        ]
+      });
+      // a: block count 1 (0x02) + terminator (0x00); b: block count 10,000,000
+      // (zig-zag varint 0x80 0xda 0xc4 0x09).
+      var buf = Buffer.from([0x02, 0x00, 0x80, 0xda, 0xc4, 0x09]);
+      assert.throws(function () { t.fromBuffer(buf); }, /collection/);
+    });
+
+    it('reads zero-byte array fields within the cumulative cap, resetting per datum', function () {
+      var t = createType({
+        name: 'R',
+        type: 'record',
+        fields: [
+          {name: 'a', type: {type: 'array', items: 'null'}},
+          {name: 'b', type: {type: 'array', items: 'null'}}
+        ]
+      });
+      // a=[null,null], b=[null,null]: block count 2 (0x04) + terminator each.
+      var buf = Buffer.from([0x04, 0x00, 0x04, 0x00]);
+      // Decode twice: the per-datum budget must reset between datums.
+      for (var i = 0; i < 2; i++) {
+        var rec = t.fromBuffer(buf);
+        assert.deepEqual(rec.a, [null, null]);
+        assert.deepEqual(rec.b, [null, null]);
+      }
+    });
+
     it('rejects an INT64_MIN block count', function () {
       // INT64_MIN zig-zags to the 10-byte varint below (then a block byte-size).
       // Negating it yields ~2^63, which the structural cap rejects.
