@@ -33,6 +33,20 @@ use Apache\Avro\Schema\AvroSchema;
  */
 class AvroDataIOReader
 {
+    /**
+     * Default upper bound, in bytes, on the size a single data-file block may
+     * decompress to. A block with a very high compression ratio (or a malformed
+     * block) can otherwise expand to far more memory than its compressed size.
+     * Mirrors the Java SDK's decompression limit (AVRO-4247). Overridable with
+     * the AVRO_MAX_DECOMPRESS_LENGTH environment variable.
+     */
+    public const DEFAULT_MAX_DECOMPRESS_LENGTH = 209715200; // 200 MiB
+
+    public const MAX_DECOMPRESS_LENGTH_ENV = 'AVRO_MAX_DECOMPRESS_LENGTH';
+
+    /** Chunk size, in bytes, used when streaming inflate so the output can be bounded incrementally. */
+    private const INFLATE_CHUNK_SIZE = 8192;
+
     public string $sync_marker;
     /**
      * @var array<string, mixed> object container metadata
@@ -221,17 +235,68 @@ class AvroDataIOReader
     }
 
     /**
+     * The maximum number of bytes a single block is allowed to decompress to.
+     */
+    private static function maxDecompressLength(): int
+    {
+        $value = getenv(self::MAX_DECOMPRESS_LENGTH_ENV);
+        if (false !== $value && ctype_digit($value) && (int) $value > 0) {
+            return (int) $value;
+        }
+
+        return self::DEFAULT_MAX_DECOMPRESS_LENGTH;
+    }
+
+    /**
+     * @throws AvroDataIODecompressionSizeException if the length exceeds the limit
+     */
+    private static function checkDecompressLength(int $length, int $maxLength): void
+    {
+        if ($length > $maxLength) {
+            throw new AvroDataIODecompressionSizeException($maxLength);
+        }
+    }
+
+    /**
      * @throws AvroException
      */
     private function gzUncompress(string $compressed): string
     {
-        $datum = gzinflate($compressed);
-
-        if (false === $datum) {
-            throw new AvroException('gzip uncompression failed.');
+        $maxLength = self::maxDecompressLength();
+        $context = inflate_init(ZLIB_ENCODING_RAW);
+        if (false === $context) {
+            throw new AvroException('deflate uncompression failed.');
         }
 
-        return $datum;
+        // Inflate in chunks and check the running total after each step so an
+        // over-large (or malicious) block is rejected before its whole output is
+        // accumulated (each inflated chunk is still materialized), while genuine
+        // decompression errors (inflate_add === false) are reported distinctly.
+        // Pieces are collected and joined once at the end to avoid repeatedly
+        // reallocating a growing result string.
+        $pieces = [];
+        $total = 0;
+        $length = strlen($compressed);
+        for ($offset = 0; $offset < $length; $offset += self::INFLATE_CHUNK_SIZE) {
+            $piece = substr($compressed, $offset, self::INFLATE_CHUNK_SIZE);
+            $out = inflate_add($context, $piece);
+            if (false === $out) {
+                throw new AvroException('deflate uncompression failed.');
+            }
+            $pieces[] = $out;
+            $total += strlen($out);
+            self::checkDecompressLength($total, $maxLength);
+        }
+
+        $out = inflate_add($context, '', ZLIB_FINISH);
+        if (false === $out) {
+            throw new AvroException('deflate uncompression failed.');
+        }
+        $pieces[] = $out;
+        $total += strlen($out);
+        self::checkDecompressLength($total, $maxLength);
+
+        return implode('', $pieces);
     }
 
     /**
@@ -247,6 +312,8 @@ class AvroDataIOReader
         if (false === $datum) {
             throw new AvroException('zstd uncompression failed.');
         }
+
+        self::checkDecompressLength(strlen($datum), self::maxDecompressLength());
 
         return $datum;
     }
@@ -265,6 +332,8 @@ class AvroDataIOReader
             throw new AvroException('bz2 uncompression failed.');
         }
 
+        self::checkDecompressLength(strlen($datum), self::maxDecompressLength());
+
         return $datum;
     }
 
@@ -276,17 +345,77 @@ class AvroDataIOReader
         if (!extension_loaded('snappy')) {
             throw new AvroException('Please install ext-snappy to use snappy compression.');
         }
-        $crc32 = unpack('N', substr((string) $compressed, -4))[1];
-        $datum = snappy_uncompress(substr((string) $compressed, 0, -4));
+        $maxLength = self::maxDecompressLength();
+        // The block is a Snappy payload followed by a 4-byte CRC32 trailer; a
+        // shorter block is malformed and must not be sliced with negative
+        // offsets (which would make unpack() return false below).
+        if (strlen($compressed) < 4) {
+            throw new AvroException('snappy uncompression failed - block too small.');
+        }
+        $payload = substr($compressed, 0, -4);
+        $unpacked = unpack('N', substr($compressed, -4));
+        if (false === $unpacked) {
+            throw new AvroException('snappy uncompression failed - missing crc32 trailer.');
+        }
+        $crc32 = $unpacked[1];
+        // The Snappy block header declares the uncompressed length as a varint;
+        // reject an over-large block before allocating for it. Parsed with an
+        // early cap so it stays correct even if a 32-bit int would overflow.
+        self::ensureSnappyWithinLimit($payload, $maxLength);
+        $datum = snappy_uncompress($payload);
 
         if (false === $datum) {
             throw new AvroException('snappy uncompression failed.');
         }
 
-        if ($crc32 !== crc32($datum)) {
+        self::checkDecompressLength(strlen($datum), $maxLength);
+
+        // Compare the CRC32 values in a common unsigned representation:
+        // unpack('N') can yield a float (> PHP_INT_MAX) on 32-bit PHP while
+        // crc32() yields a (possibly negative) int, so a strict/int comparison
+        // would report false mismatches for valid data.
+        if (sprintf('%u', $crc32) !== sprintf('%u', crc32($datum))) {
             throw new AvroException('snappy uncompression failed - crc32 mismatch.');
         }
 
         return $datum;
+    }
+
+    /**
+     * Reject a Snappy block whose declared uncompressed length (a little-endian
+     * base-128 varint at the start of the block) exceeds $maxLength, before
+     * allocating for it. The running length is compared against the cap after
+     * every group, and any wrap to a negative value (32-bit int overflow) is
+     * treated as over the limit, so the guard holds on 32-bit builds too. A
+     * varint longer than five bytes is malformed and is rejected as well.
+     *
+     * @throws AvroException if the declared length exceeds the limit or is malformed
+     */
+    private static function ensureSnappyWithinLimit(string $data, int $maxLength): void
+    {
+        $result = 0;
+        $shift = 0;
+        $length = strlen($data);
+        for ($i = 0; $i < $length; $i++) {
+            $byte = ord($data[$i]);
+            $result += ($byte & 0x7F) << $shift;
+            if ($result < 0 || $result > $maxLength) {
+                throw new AvroDataIODecompressionSizeException($maxLength);
+            }
+            if (0 === ($byte & 0x80)) {
+                return; // declared length is within the limit
+            }
+            $shift += 7;
+            if ($shift > 28) {
+                // A Snappy uncompressed length is a uint32, encoded in at most
+                // five varint bytes; a longer encoding is malformed.
+                throw new AvroException('snappy uncompression failed - malformed length header.');
+            }
+        }
+
+        // The data ended before a terminating byte (top bit clear) was seen, so
+        // the length header is truncated/malformed; reject it rather than
+        // letting a malformed block bypass the guard.
+        throw new AvroException('snappy uncompression failed - truncated length header.');
     }
 }
