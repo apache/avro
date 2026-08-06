@@ -17,8 +17,10 @@
  */
 
 #include "Compiler.hh"
+#include "Decoder.hh"
 #include "GenericDatum.hh"
 #include "NodeImpl.hh"
+#include "Schema.hh"
 #include "ValidSchema.hh"
 
 #include <boost/algorithm/string/replace.hpp>
@@ -924,6 +926,23 @@ static void testCustomAttributesSchema2Json2Schema() {
     }
 }
 
+// A reader record built with the programmatic API (RecordSchema::addField)
+// carries no default values, so fieldsDefaultValues_ is empty. When the writer
+// schema omits a field the reader declares, resolution asks the reader for that
+// field's default and previously indexed the empty vector out of bounds. It must
+// throw instead.
+void testResolveReaderFieldWithoutDefault() {
+    ValidSchema writer = compileJsonSchemaFromString(
+        R"({"type":"record","name":"R","fields":[{"name":"a","type":"int"}]})");
+
+    RecordSchema readerRecord("R");
+    readerRecord.addField("a", IntSchema());
+    readerRecord.addField("b", IntSchema());
+    ValidSchema reader(readerRecord);
+
+    BOOST_CHECK_THROW(resolvingDecoder(writer, reader, binaryDecoder()), Exception);
+}
+
 } // namespace schema
 } // namespace avro
 
@@ -952,5 +971,6 @@ init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     ts->add(BOOST_TEST_CASE(&avro::schema::testAddCustomAttributes));
     ts->add(BOOST_TEST_CASE(&avro::schema::testCustomAttributesJson2Schema2Json));
     ts->add(BOOST_TEST_CASE(&avro::schema::testCustomAttributesSchema2Json2Schema));
+    ts->add(BOOST_TEST_CASE(&avro::schema::testResolveReaderFieldWithoutDefault));
     return ts;
 }
