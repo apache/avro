@@ -23,7 +23,9 @@
     "issues": "https://issues.apache.org/jira/browse/AVRO"
   },
   "require": {
-    "php": "^8.1"
+    "php": "^8.1",
+    "nikic/php-parser": "^5.7",
+    "symfony/console": "^6.4"
   },
   "deps": [
     "vendor/phpunit/phpunit"
@@ -54,6 +56,9 @@
       "dev-master": "1.0.x-dev"
     }
   },
+  "bin": [
+    "lang/php/bin/avro"
+  ],
   "archive": {
     "exclude": [
       "*",
@@ -64,6 +69,7 @@
       "!/README.md",
       "!/composer.json",
       "!/lang/php/README.md",
+      "!/lang/php/bin",
       "!/lang/php/lib"
     ]
   },

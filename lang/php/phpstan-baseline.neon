@@ -52,13 +52,7 @@ parameters:
 			path: lib/Datum/AvroIODatumReader.php
 
 		-
-			message: '#^Parameter \#1 \$writers_schema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readEnum\(\) expects Apache\\Avro\\Schema\\AvroEnumSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
-			identifier: argument.type
-			count: 1
-			path: lib/Datum/AvroIODatumReader.php
-
-		-
-			message: '#^Parameter \#1 \$writers_schema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readFixed\(\) expects Apache\\Avro\\Schema\\AvroFixedSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readEnum\(\) expects Apache\\Avro\\Schema\\AvroEnumSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
 			identifier: argument.type
 			count: 1
 			path: lib/Datum/AvroIODatumReader.php
@@ -76,6 +70,12 @@ parameters:
 			path: lib/Datum/AvroIODatumReader.php
 
 		-
+			message: '#^Parameter \#1 \$writers_schema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readFixed\(\) expects Apache\\Avro\\Schema\\AvroFixedSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
 			message: '#^Parameter \#1 \$writers_schema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readUnion\(\) expects Apache\\Avro\\Schema\\AvroUnionSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
 			identifier: argument.type
 			count: 1
@@ -88,13 +88,7 @@ parameters:
 			path: lib/Datum/AvroIODatumReader.php
 
 		-
-			message: '#^Parameter \#2 \$readers_schema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readEnum\(\) expects Apache\\Avro\\Schema\\AvroEnumSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
-			identifier: argument.type
-			count: 1
-			path: lib/Datum/AvroIODatumReader.php
-
-		-
-			message: '#^Parameter \#2 \$readers_schema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readFixed\(\) expects Apache\\Avro\\Schema\\AvroFixedSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			message: '#^Parameter \#2 \$readersSchema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readEnum\(\) expects Apache\\Avro\\Schema\\AvroEnumSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
 			identifier: argument.type
 			count: 1
 			path: lib/Datum/AvroIODatumReader.php
@@ -112,13 +106,31 @@ parameters:
 			path: lib/Datum/AvroIODatumReader.php
 
 		-
+			message: '#^Parameter \#2 \$readers_schema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readFixed\(\) expects Apache\\Avro\\Schema\\AvroFixedSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumReader.php
+
+		-
 			message: '#^Parameter \#2 \$readers_schema of method Apache\\Avro\\Datum\\AvroIODatumReader\:\:readUnion\(\) expects Apache\\Avro\\Schema\\AvroUnionSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
 			identifier: argument.type
 			count: 1
 			path: lib/Datum/AvroIODatumReader.php
 
 		-
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIODatumWriter\:\:writeArray\(\) expects Apache\\Avro\\Schema\\AvroArraySchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumWriter.php
+
+		-
 			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIODatumWriter\:\:writeEnum\(\) expects Apache\\Avro\\Schema\\AvroEnumSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: lib/Datum/AvroIODatumWriter.php
+
+		-
+			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIODatumWriter\:\:writeMap\(\) expects Apache\\Avro\\Schema\\AvroMapSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
 			identifier: argument.type
 			count: 1
 			path: lib/Datum/AvroIODatumWriter.php
@@ -131,18 +143,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIODatumWriter\:\:writeUnion\(\) expects Apache\\Avro\\Schema\\AvroUnionSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
-			identifier: argument.type
-			count: 1
-			path: lib/Datum/AvroIODatumWriter.php
-
-		-
-			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIODatumWriter\:\:writeArray\(\) expects Apache\\Avro\\Schema\\AvroArraySchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
-			identifier: argument.type
-			count: 1
-			path: lib/Datum/AvroIODatumWriter.php
-
-		-
-			message: '#^Parameter \#1 \$writersSchema of method Apache\\Avro\\Datum\\AvroIODatumWriter\:\:writeMap\(\) expects Apache\\Avro\\Schema\\AvroMapSchema, Apache\\Avro\\Schema\\AvroSchema given\.$#'
 			identifier: argument.type
 			count: 1
 			path: lib/Datum/AvroIODatumWriter.php
