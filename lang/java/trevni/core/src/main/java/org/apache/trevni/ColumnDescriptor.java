@@ -69,7 +69,11 @@ class ColumnDescriptor<T extends Comparable> {
 
     // read block descriptors
     InputBuffer in = new InputBuffer(file, start);
-    int blockCount = in.readFixed32();
+    // Each block descriptor occupies at least one byte on the wire, so a block
+    // count larger than the bytes remaining cannot be satisfied. Validate before
+    // allocating to avoid an oversized allocation from a malformed, corrupted, or
+    // truncated file.
+    int blockCount = in.checkLength(in.readFixed32(), 1);
     BlockDescriptor[] blocks = new BlockDescriptor[blockCount];
     if (metaData.hasIndexValues())
       firstValues = (T[]) new Comparable[blockCount];
