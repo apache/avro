@@ -166,6 +166,24 @@ describe('utils', function () {
 
       });
 
+      it('read rejects overlong varint', function () {
+        // 10 continuation bytes then a terminator: a 64-bit value uses at most
+        // 10 bytes, so this overlong encoding must be rejected.
+        var bytes = [];
+        for (var i = 0; i < 10; i++) { bytes.push(0x80); }
+        bytes.push(0x01);
+        var buf = Buffer.from(bytes);
+        assert.throws(function () { (new Tap(buf)).readLong(); }, /overlong varint/);
+      });
+
+      it('skip rejects overlong varint', function () {
+        var bytes = [];
+        for (var i = 0; i < 10; i++) { bytes.push(0x80); }
+        bytes.push(0x01);
+        var buf = Buffer.from(bytes);
+        assert.throws(function () { (new Tap(buf)).skipLong(); }, /overlong varint/);
+      });
+
     });
 
     describe('boolean', function () {
