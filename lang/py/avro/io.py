@@ -249,17 +249,15 @@ class BinaryDecoder:
         so a truncated or hostile declared length fails after a bounded allocation
         rather than allocating the full ``n`` bytes up front.
         """
-        chunks: List[bytes] = []
-        got = 0
-        while got < n:
-            chunk = self.reader.read(min(self._MAX_UNCHECKED_READ, n - got))
+        buf = bytearray()
+        while len(buf) < n:
+            chunk = self.reader.read(min(self._MAX_UNCHECKED_READ, n - len(buf)))
             if not chunk:
                 break
-            chunks.append(chunk)
-            got += len(chunk)
-        if got != n:
-            raise avro.errors.InvalidAvroBinaryEncoding(f"Read {got} bytes, expected {n} bytes")
-        return b"".join(chunks)
+            buf.extend(chunk)
+        if len(buf) != n:
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Read {len(buf)} bytes, expected {n} bytes")
+        return bytes(buf)
 
     def bytes_remaining(self) -> Optional[int]:
         """

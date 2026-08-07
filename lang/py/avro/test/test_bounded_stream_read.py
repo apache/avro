@@ -38,12 +38,20 @@ def _encode_long(value: int) -> bytes:
 
 
 class NonSeekable:
-    """A minimal non-seekable, tell-less stream wrapper (socket/pipe-like)."""
+    """A minimal non-seekable, tell-less stream wrapper (socket/pipe-like).
+
+    Records the largest single ``read(n)`` request so tests can assert the
+    decoder never asks for one huge allocation up front (i.e. that it goes
+    through the bounded, chunked read path).
+    """
 
     def __init__(self, data: bytes) -> None:
         self._bio = io.BytesIO(data)
+        self.max_read_request = 0
 
     def read(self, n: int = -1) -> bytes:
+        if n is not None and n >= 0:
+            self.max_read_request = max(self.max_read_request, n)
         return self._bio.read(n)
 
     def seekable(self) -> bool:
@@ -61,21 +69,31 @@ class TestBoundedStreamRead(unittest.TestCase):
 
     def test_huge_bytes_length_on_stream_rejected_without_huge_allocation(self) -> None:
         data = self._length_prefixed(self.HUGE_LENGTH, b"\x01\x02\x03\x04\x05")
-        decoder = avro.io.BinaryDecoder(NonSeekable(data))  # type: ignore[arg-type]
+        stream = NonSeekable(data)
+        decoder = avro.io.BinaryDecoder(stream)  # type: ignore[arg-type]
         self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, decoder.read_bytes)
+        # The decoder must never have requested the full declared length in a
+        # single read; it reads in bounded chunks instead.
+        self.assertLessEqual(stream.max_read_request, avro.io.BinaryDecoder._MAX_UNCHECKED_READ)
 
     def test_huge_string_length_on_stream_rejected_without_huge_allocation(self) -> None:
         data = self._length_prefixed(self.HUGE_LENGTH, b"abc")
-        decoder = avro.io.BinaryDecoder(NonSeekable(data))  # type: ignore[arg-type]
+        stream = NonSeekable(data)
+        decoder = avro.io.BinaryDecoder(stream)  # type: ignore[arg-type]
         self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, decoder.read_utf8)
+        self.assertLessEqual(stream.max_read_request, avro.io.BinaryDecoder._MAX_UNCHECKED_READ)
 
     def test_legitimate_large_bytes_round_trips_on_stream(self) -> None:
         # Larger than the per-chunk bound so it exercises the chunked-read path,
         # but a genuinely present payload must still decode intact.
         payload = bytes((i & 0xFF) for i in range(2 * 1024 * 1024))
         data = self._length_prefixed(len(payload), payload)
-        decoder = avro.io.BinaryDecoder(NonSeekable(data))  # type: ignore[arg-type]
+        stream = NonSeekable(data)
+        decoder = avro.io.BinaryDecoder(stream)  # type: ignore[arg-type]
         self.assertEqual(decoder.read_bytes(), payload)
+        # Even for a legitimately large value the read is chunked, so no single
+        # read request exceeds the per-chunk bound.
+        self.assertLessEqual(stream.max_read_request, avro.io.BinaryDecoder._MAX_UNCHECKED_READ)
 
 
 if __name__ == "__main__":
