@@ -19,6 +19,7 @@ package org.apache.avro.io;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
@@ -121,6 +122,29 @@ public class TestBinaryDecoderBoundedRead {
 
     BinaryDecoder d = DecoderFactory.get().binaryDecoder(nonSeekable(out.toByteArray()), null);
     ByteBuffer result = d.readBytes(null);
+    byte[] decoded = new byte[result.remaining()];
+    result.get(decoded);
+    assertArrayEquals(payload, decoded);
+  }
+
+  @Test
+  void reusableBufferWithSufficientCapacityIsHonoredOnNonSeekableStream() throws IOException {
+    // A large value on a non-seekable stream, supplied with a reusable buffer that
+    // is already big enough, must reuse it (Decoder#readBytes reuse contract)
+    // rather than take the bounded-read path and allocate a new array.
+    byte[] payload = new byte[1_000_000];
+    for (int i = 0; i < payload.length; i++) {
+      payload[i] = (byte) i;
+    }
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    BinaryEncoder e = EncoderFactory.get().directBinaryEncoder(out, null);
+    e.writeBytes(payload);
+    e.flush();
+
+    ByteBuffer reusable = ByteBuffer.allocate(payload.length + 100);
+    BinaryDecoder d = DecoderFactory.get().binaryDecoder(nonSeekable(out.toByteArray()), null);
+    ByteBuffer result = d.readBytes(reusable);
+    assertSame(reusable.array(), result.array(), "supplied buffer with sufficient capacity should be reused");
     byte[] decoded = new byte[result.remaining()];
     result.get(decoded);
     assertArrayEquals(payload, decoded);

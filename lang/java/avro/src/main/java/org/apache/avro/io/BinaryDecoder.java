@@ -297,7 +297,11 @@ public class BinaryDecoder extends Decoder {
   @Override
   public Utf8 readString(Utf8 old) throws IOException {
     int length = SystemLimitException.checkMaxStringLength(readLong());
-    if (length != 0 && requiresBoundedRead(length)) {
+    // Only take the bounded growing-buffer path when we would otherwise have to
+    // allocate a new backing array. When a reusable buffer of sufficient capacity
+    // is supplied there is no large up-front allocation to guard against, so honor
+    // the reuse contract and read straight into it.
+    if (length != 0 && requiresBoundedRead(length) && (old == null || length > old.getBytes().length)) {
       // Large declared length on a non-seekable stream: read via a growing buffer
       // so a truncated/hostile stream fails after a bounded allocation rather than
       // allocating the full declared length up front. See requiresBoundedRead.
@@ -327,7 +331,11 @@ public class BinaryDecoder extends Decoder {
   @Override
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
     int length = SystemLimitException.checkMaxBytesLength(readLong());
-    if (length != 0 && requiresBoundedRead(length)) {
+    // Only take the bounded growing-buffer path when we would otherwise have to
+    // allocate a new buffer. A reusable buffer of sufficient capacity carries no
+    // large up-front allocation to guard against, so honor the reuse contract
+    // (see Decoder#readBytes) and read straight into it.
+    if (length != 0 && requiresBoundedRead(length) && (old == null || length > old.capacity())) {
       // Large declared length on a non-seekable stream: read via a growing buffer
       // so a truncated/hostile stream fails after a bounded allocation rather than
       // allocating the full declared length up front. See requiresBoundedRead.
