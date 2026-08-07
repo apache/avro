@@ -18,6 +18,7 @@
 package org.apache.avro.reflect;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
 
 import java.lang.invoke.CallSite;
 import java.lang.invoke.LambdaMetafactory;
@@ -93,29 +94,30 @@ public class ReflectionUtil {
 
     private boolean validate(FieldAccess access) throws Exception {
       boolean valid = true;
-      valid &= validField(access, "b", b, false);
-      valid &= validField(access, "by", by, (byte) 0xaf);
-      valid &= validField(access, "c", c, 'C');
-      valid &= validField(access, "s", s, (short) 321);
-      valid &= validField(access, "i", i, 111);
-      valid &= validField(access, "l", l, 54321L);
-      valid &= validField(access, "f", f, 0.2f);
-      valid &= validField(access, "d", d, 0.4d);
-      valid &= validField(access, "o", o, new Object());
-      valid &= validField(access, "i2", i2, -555);
+      valid &= validField(access, "b", null, b, false);
+      valid &= validField(access, "by", null, by, (byte) 0xaf);
+      valid &= validField(access, "c", null, c, 'C');
+      valid &= validField(access, "s", null, s, (short) 321);
+      valid &= validField(access, "i", null, i, 111);
+      valid &= validField(access, "l", null, l, 54321L);
+      valid &= validField(access, "f", null, f, 0.2f);
+      valid &= validField(access, "d", null, d, 0.4d);
+      valid &= validField(access, "o", null, o, new Object());
+      valid &= validField(access, "i2", null, i2, -555);
       return valid;
     }
 
-    private boolean validField(FieldAccess access, String name, Object original, Object toSet) throws Exception {
-      FieldAccessor a = accessor(access, name);
+    private boolean validField(FieldAccess access, String name, Schema schema, Object original, Object toSet)
+        throws Exception {
+      FieldAccessor a = accessor(access, name, schema);
       boolean valid = original.equals(a.get(this));
       a.set(this, toSet);
       valid &= !original.equals(a.get(this));
       return valid;
     }
 
-    private FieldAccessor accessor(FieldAccess access, String name) throws Exception {
-      return access.getAccessor(this.getClass().getDeclaredField(name));
+    private FieldAccessor accessor(FieldAccess access, String name, Schema schema) throws Exception {
+      return access.getAccessor(this.getClass().getDeclaredField(name), schema);
     }
   }
 
