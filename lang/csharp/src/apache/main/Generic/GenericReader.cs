@@ -137,7 +137,13 @@ namespace Avro.Generic
         /// <returns>Object read from the decoder.</returns>
         public T Read<T>(T reuse, Decoder decoder)
         {
-            return (T)Read(reuse, WriterSchema, ReaderSchema, decoder);
+            // Open a fresh zero-byte-element budget for this datum. The cap is
+            // cumulative across every collection decoded in this datum (see
+            // CollectionBounds.EnsureCollectionAvailable), not per collection.
+            using (CollectionBounds.EnterScope())
+            {
+                return (T)Read(reuse, WriterSchema, ReaderSchema, decoder);
+            }
         }
 
         /// <summary>
@@ -404,11 +410,52 @@ namespace Avro.Generic
             ArraySchema rs = (ArraySchema)readerSchema;
             object result = CreateArray(reuse, rs);
             int i = 0;
-            for (int n = (int)d.ReadArrayStart(); n != 0; n = (int)d.ReadArrayNext())
+            long minBytes = CollectionBounds.MinBytesPerElement(writerSchema.ItemSchema);
+            long total = 0;
+            for (long nl = d.ReadArrayStart(); nl != 0; nl = d.ReadArrayNext())
             {
-                if (GetArraySize(result) < (i + n)) ResizeArray(ref result, i + n);
+                // Reject a block whose element count could not be backed by the
+                // bytes remaining (or, for zero-byte elements, that exceeds the
+                // item cap) before allocating for it. Checked on the raw long,
+                // which also avoids the int cast below overflowing.
+                total = CollectionBounds.EnsureCollectionAvailable(d, total, nl, minBytes);
+                int n = (int)nl;
+                // Preallocate only a bounded amount up front, then grow on demand
+                // below. On a non-seekable stream EnsureCollectionAvailable cannot
+                // bound the count, so resizing straight to i+n could allocate a
+                // huge array before any element is read; a truncated stream instead
+                // fails within Read() after a bounded growth. Blocks no larger than
+                // the cap keep the original single-resize fast path. Compute in
+                // long and clamp so a large i near the structural cap cannot
+                // overflow the int sum.
+                long preallocLong = Math.Min((long)i + Math.Min(n, CollectionBounds.MaxCollectionPrealloc), CollectionBounds.MaxCollectionStructural);
+                int prealloc = (int)preallocLong;
+                if (GetArraySize(result) < prealloc) ResizeArray(ref result, prealloc);
                 for (int j = 0; j < n; j++, i++)
                 {
+                    if (GetArraySize(result) <= i)
+                    {
+                        int current = GetArraySize(result);
+                        // Grow ~1.5x, computed in long to avoid int overflow, and
+                        // clamp to the structural cap (which is <= the runtime's
+                        // max array length). The validated element count never
+                        // exceeds that cap, so clamping cannot starve a legitimate
+                        // collection while it keeps Array.Resize from being handed
+                        // an over-large (or overflowed/negative) size.
+                        long grown = (long)current + (current >> 1) + 1;
+                        if (grown < i + 1)
+                        {
+                            grown = i + 1;
+                        }
+
+                        if (grown > CollectionBounds.MaxCollectionStructural)
+                        {
+                            grown = CollectionBounds.MaxCollectionStructural;
+                        }
+
+                        ResizeArray(ref result, (int)grown);
+                    }
+
                     SetArrayElement(result, i, Read(GetArrayElement(result, i), writerSchema.ItemSchema, rs.ItemSchema, d));
                 }
             }
@@ -490,8 +537,13 @@ namespace Avro.Generic
         {
             MapSchema rs = (MapSchema)readerSchema;
             object result = CreateMap(reuse, rs);
-            for (int n = (int)d.ReadMapStart(); n != 0; n = (int)d.ReadMapNext())
+            // Map keys are strings (>= 1 byte length prefix) plus the value.
+            long minBytes = 1L + CollectionBounds.MinBytesPerElement(writerSchema.ValueSchema);
+            long total = 0;
+            for (long nl = d.ReadMapStart(); nl != 0; nl = d.ReadMapNext())
             {
+                total = CollectionBounds.EnsureCollectionAvailable(d, total, nl, minBytes);
+                int n = (int)nl;
                 for (int j = 0; j < n; j++)
                 {
                     string k = d.ReadString();
@@ -661,8 +713,11 @@ namespace Avro.Generic
                 case Schema.Type.Array:
                     {
                         Schema s = (writerSchema as ArraySchema).ItemSchema;
+                        long minBytes = CollectionBounds.MinBytesPerElement(s);
+                        long total = 0;
                         for (long n = d.ReadArrayStart(); n != 0; n = d.ReadArrayNext())
                         {
+                            total = CollectionBounds.EnsureCollectionAvailable(d, total, n, minBytes);
                             for (long i = 0; i < n; i++) Skip(s, d);
                         }
                     }
@@ -670,8 +725,11 @@ namespace Avro.Generic
                 case Schema.Type.Map:
                     {
                         Schema s = (writerSchema as MapSchema).ValueSchema;
+                        long minBytes = 1L + CollectionBounds.MinBytesPerElement(s);
+                        long total = 0;
                         for (long n = d.ReadMapStart(); n != 0; n = d.ReadMapNext())
                         {
+                            total = CollectionBounds.EnsureCollectionAvailable(d, total, n, minBytes);
                             for (long i = 0; i < n; i++) { d.SkipString(); Skip(s, d); }
                         }
                     }

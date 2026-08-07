@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Avro.IO;
+using Avro.Generic;
 
 namespace Avro.Test
 {
@@ -38,6 +39,12 @@ namespace Avro.Test
     [TestFixture]
     public class BinaryCodecTests
     {
+        // NOTE: the collection-limit tests assume the default caps. CollectionBounds
+        // (shared by every reader) captures AVRO_MAX_COLLECTION_ITEMS into static
+        // readonly fields at class load, so the value is fixed for the process;
+        // these tests therefore assume the test process was not started with a
+        // custom AVRO_MAX_COLLECTION_ITEMS (the normal case). Clearing it at
+        // runtime would have no effect on the already-captured limits.
 
         /// <summary>
         /// Writes an avro type T with value t into a stream using the encode method e
@@ -278,10 +285,12 @@ namespace Avro.Test
                 iostr.Position = 0;
                 Decoder d = new BinaryDecoder(iostr);
 
+                // The declared length far exceeds the bytes remaining in the
+                // (seekable) stream, so it is rejected before any allocation.
                 var exception = Assert.Throws<AvroException>(() => d.ReadString());
 
                 Assert.NotNull(exception);
-                Assert.AreEqual("String length is not supported!", exception.Message);
+                StringAssert.Contains("bytes remaining in the stream", exception.Message);
                 iostr.Close();
             }
         }
@@ -306,10 +315,12 @@ namespace Avro.Test
                 iostr.Position = 0;
                 Decoder d = new BinaryDecoder(iostr);
 
+                // The declared length far exceeds the bytes remaining in the
+                // (seekable) stream, so it is rejected before any allocation.
                 var exception = Assert.Throws<AvroException>(() => d.ReadString());
 
                 Assert.NotNull(exception);
-                Assert.AreEqual("Could not read as many bytes from stream as expected!", exception.Message);
+                StringAssert.Contains("bytes remaining in the stream", exception.Message);
                 iostr.Close();
             }
         }
@@ -429,6 +440,568 @@ namespace Avro.Test
                 (Encoder e, byte[] t) => e.WriteFixed(t), size);
             TestSkip(b, (Decoder d) => d.SkipFixed(size),
                 (Encoder e, byte[] t) => e.WriteFixed(t), size);
+        }
+
+        // A bytes/string value is a length prefix followed by that many bytes.
+        // A malicious or truncated input can declare a huge length with little
+        // actual data; on a seekable stream the reader must reject it before
+        // allocating, rather than attempting a huge allocation.
+        [Test]
+        public void TestReadBytesRejectsLengthBeyondStream()
+        {
+            MemoryStream ms = new MemoryStream();
+            Encoder e = new BinaryEncoder(ms);
+            e.WriteLong(1_000_000); // declares 1,000,000 bytes...
+            ms.Position = 0;        // ...but no data follows
+            Decoder d = new BinaryDecoder(ms);
+            Assert.Throws<AvroException>(() => d.ReadBytes());
+        }
+
+        [Test]
+        public void TestReadStringRejectsLengthBeyondStream()
+        {
+            MemoryStream ms = new MemoryStream();
+            Encoder e = new BinaryEncoder(ms);
+            e.WriteLong(1_000_000); // declares 1,000,000 bytes...
+            ms.Position = 0;        // ...but no data follows
+            Decoder d = new BinaryDecoder(ms);
+            Assert.Throws<AvroException>(() => d.ReadString());
+        }
+
+        // A well-formed value whose declared length fits the stream still reads.
+        [Test]
+        public void TestReadBytesWithinStreamStillReads()
+        {
+            byte[] payload = Encoding.UTF8.GetBytes("hello");
+            MemoryStream ms = new MemoryStream();
+            Encoder e = new BinaryEncoder(ms);
+            e.WriteBytes(payload);
+            ms.Position = 0;
+            Decoder d = new BinaryDecoder(ms);
+            Assert.AreEqual(payload, d.ReadBytes());
+        }
+
+        // On a non-seekable stream the remaining length is unknown, so the
+        // pre-check is skipped and a valid value still decodes.
+        [Test]
+        public void TestReadBytesNonSeekableStreamStillReads()
+        {
+            byte[] payload = Encoding.UTF8.GetBytes("hello");
+            MemoryStream backing = new MemoryStream();
+            Encoder e = new BinaryEncoder(backing);
+            e.WriteBytes(payload);
+            byte[] encoded = backing.ToArray();
+
+            using (var ns = new NonSeekableStream(new MemoryStream(encoded)))
+            {
+                Decoder d = new BinaryDecoder(ns);
+                Assert.AreEqual(payload, d.ReadBytes());
+            }
+        }
+
+        // An array/map block declares an element count; a malicious or truncated
+        // input can declare far more elements than the remaining bytes could
+        // hold. The count is validated against the bytes remaining before
+        // allocating, using the minimum on-wire size of the element schema (so
+        // 0-byte elements like null are not falsely rejected).
+        [Test]
+        public void TestReadArrayRejectsCountBeyondStream()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"long\"}");
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong(1000000); // 1,000,000 longs, no data
+            ms.Position = 0;
+            var reader = new GenericReader<object>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
+        }
+
+        [Test]
+        public void TestReadMapRejectsCountBeyondStream()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"map\",\"values\":\"long\"}");
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong(1000000);
+            ms.Position = 0;
+            var reader = new GenericReader<object>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
+        }
+
+        [Test]
+        public void TestReadArrayOfNullNotFalselyRejected()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"null\"}");
+            var ms = new MemoryStream();
+            var enc = new BinaryEncoder(ms);
+            enc.WriteLong(100000); // one block of 100,000 nulls (zero bytes each)
+            enc.WriteLong(0);      // end-of-array marker
+            ms.Position = 0;
+            var reader = new GenericReader<object>(schema, schema);
+            var result = (Array)reader.Read(null, new BinaryDecoder(ms));
+            Assert.AreEqual(100000, result.Length);
+        }
+
+        // A negative bytes length must be rejected explicitly rather than
+        // flowing into a negative array allocation.
+        [Test]
+        public void TestReadBytesRejectsNegativeLength()
+        {
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong(-5);
+            ms.Position = 0;
+            var d = new BinaryDecoder(ms);
+            Assert.Throws<AvroException>(() => d.ReadBytes());
+        }
+
+        // A block count larger than int.MaxValue must be rejected before the
+        // int cast, even for a null-element array where the byte check is
+        // skipped.
+        [Test]
+        public void TestReadArrayRejectsCountAboveIntMax()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"null\"}");
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong((long)int.MaxValue + 1);
+            ms.Position = 0;
+            var reader = new GenericReader<object>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
+        }
+
+        // A bytes length above the maximum .NET array length must be rejected
+        // with a consistent AvroException rather than letting new byte[p] throw.
+        // A non-seekable stream is used so the length reaches the array-length
+        // check without needing gigabytes of backing data.
+        [Test]
+        public void TestReadBytesRejectsLengthAboveMaxArrayLength()
+        {
+            var backing = new MemoryStream();
+            new BinaryEncoder(backing).WriteLong(3_000_000_000L); // > any MaxDotNetArrayLength
+            byte[] encoded = backing.ToArray();
+            using (var ns = new NonSeekableStream(new MemoryStream(encoded)))
+            {
+                var d = new BinaryDecoder(ns);
+                Assert.Throws<AvroException>(() => d.ReadBytes());
+            }
+        }
+
+        // A zero-byte element type (null) consumes no input, so the
+        // bytes-remaining check cannot bound its block count; a tiny payload
+        // declaring a huge count must instead be rejected by the item cap
+        // before building the array.
+        [Test]
+        public void TestReadArrayOfNullRejectsHugeCount()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"null\"}");
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong(10_000_001); // just over the zero-byte item cap; bounded if the guard regresses
+            ms.Position = 0;
+            var reader = new GenericReader<object>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
+        }
+
+        // The zero-byte item cap is cumulative across a decoded datum, not per
+        // collection. A container file carries its own schema, so an attacker can
+        // declare a record with many array<null> fields, each block individually
+        // under the limit but jointly unbounded. The first field (1 null) plus a
+        // second field declaring the full cap (10,000,000) exceeds the cap in
+        // aggregate and must be rejected before allocating the second field.
+        [Test]
+        public void TestRecordOfNullArrayFieldsRejectedCumulativelyAcrossDatum()
+        {
+            var schema = Avro.Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"R\",\"fields\":[" +
+                "{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}," +
+                "{\"name\":\"b\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}]}");
+            var ms = new MemoryStream();
+            var enc = new BinaryEncoder(ms);
+            enc.WriteLong(1);           // field a: one null
+            enc.WriteLong(0);           // end of a
+            enc.WriteLong(10_000_000);  // field b: cumulative 10,000,001 > cap; rejected before allocating
+            enc.WriteLong(0);           // end of b (not reached)
+            ms.Position = 0;
+            var reader = new GenericReader<object>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
+        }
+
+        // The complement: a record whose array<null> fields are jointly under the
+        // cap decodes normally, and the per-datum budget resets between datums so
+        // reusing the reader does not accumulate across records.
+        [Test]
+        public void TestRecordOfNullArrayFieldsWithinCumulativeLimitReads()
+        {
+            var schema = Avro.Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"R\",\"fields\":[" +
+                "{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}," +
+                "{\"name\":\"b\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}]}");
+            var ms = new MemoryStream();
+            var enc = new BinaryEncoder(ms);
+            enc.WriteLong(3); enc.WriteLong(0); // field a: 3 nulls
+            enc.WriteLong(3); enc.WriteLong(0); // field b: 3 nulls
+            var reader = new GenericReader<object>(schema, schema);
+            // Decode twice on the same reader: the per-datum budget must reset.
+            for (int i = 0; i < 2; i++)
+            {
+                ms.Position = 0;
+                var rec = (GenericRecord)reader.Read(null, new BinaryDecoder(ms));
+                Assert.AreEqual(3, ((System.Collections.IList)rec["a"]).Count);
+                Assert.AreEqual(3, ((System.Collections.IList)rec["b"]).Count);
+            }
+        }
+
+        // On a non-seekable stream the declared element count cannot be bounded by
+        // the bytes remaining (the length is unknown). The backing array must
+        // therefore be grown on demand rather than preallocated to the declared
+        // count, so a huge count with truncated data fails with a bounded
+        // AvroException instead of attempting a multi-gigabyte allocation.
+        [Test]
+        public void TestReadArrayHugeCountOnStreamClampsPreallocation()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"long\"}");
+            var backing = new MemoryStream();
+            new BinaryEncoder(backing).WriteLong(200_000_000); // block count; no element data
+            byte[] encoded = backing.ToArray();
+            using (var ns = new NonSeekableStream(new MemoryStream(encoded)))
+            {
+                var reader = new GenericReader<object>(schema, schema);
+                Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ns)));
+            }
+        }
+
+        // The skip path (a writer field absent from the reader schema) must be
+        // bounded too, so skipping a huge zero-byte block cannot loop endlessly.
+        [Test]
+        public void TestSkipArrayOfNullRejectsHugeCount()
+        {
+            var writer = Avro.Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"Foo\",\"fields\":[" +
+                "{\"name\":\"arr\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}," +
+                "{\"name\":\"val\",\"type\":\"int\"}]}");
+            var reader = Avro.Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"Foo\",\"fields\":[" +
+                "{\"name\":\"val\",\"type\":\"int\"}]}");
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong(10_000_001); // just over the zero-byte item cap; bounded if the guard regresses
+            ms.Position = 0;
+            var r = new GenericReader<object>(writer, reader);
+            Assert.Throws<AvroException>(() => r.Read(null, new BinaryDecoder(ms)));
+        }
+
+        // A collection split across blocks must not let the running total
+        // overflow: block 1 count=1 then block 2 count=long.MaxValue would wrap
+        // the total negative and bypass the caps. A non-seekable stream disables
+        // the bytes-remaining check, so the structural pre-add check must reject it.
+        [Test]
+        public void TestReadArrayRejectsBlockCountOverflow()
+        {
+            var backing = new MemoryStream();
+            var enc = new BinaryEncoder(backing);
+            enc.WriteLong(1);             // block 1: one element
+            enc.WriteLong(42);            // the element
+            enc.WriteLong(long.MaxValue); // block 2: huge count -> would overflow total
+            byte[] encoded = backing.ToArray();
+            using (var ns = new NonSeekableStream(new MemoryStream(encoded)))
+            {
+                var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"long\"}");
+                var reader = new GenericReader<object>(schema, schema);
+                Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ns)));
+            }
+        }
+
+        // A block count of long.MinValue cannot be negated; it must be rejected
+        // rather than wrapping back to a negative (or huge) count.
+        [Test]
+        public void TestReadArrayRejectsInt64MinBlockCount()
+        {
+            // long.MinValue zig-zag encodes as the 10-byte varint below.
+            var data = new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01 };
+            var d = new BinaryDecoder(new MemoryStream(data));
+            Assert.Throws<AvroException>(() => d.ReadArrayStart());
+        }
+
+        // A union branch index outside [0, branch count) must be rejected with a
+        // clear AvroException rather than an ArgumentOutOfRangeException.
+        [Test]
+        public void TestReadUnionRejectsOutOfRangeIndex()
+        {
+            var schema = Avro.Schema.Parse("[\"null\",\"long\"]");
+            // Branch index 5 (zig-zag long 0x0a) and -1 (0x01); only 2 branches exist.
+            foreach (var data in new[] { new byte[] { 0x0a }, new byte[] { 0x01 } })
+            {
+                var reader = new GenericReader<object>(schema, schema);
+                Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(new MemoryStream(data))));
+            }
+        }
+
+        // An enum symbol index outside [0, symbol count) must be rejected with a
+        // clear AvroException.
+        [Test]
+        public void TestReadEnumRejectsOutOfRangeIndex()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"A\",\"B\"]}");
+            // Symbol index 9 (zig-zag int 0x12) and -1 (0x01); only 2 symbols exist.
+            foreach (var data in new[] { new byte[] { 0x12 }, new byte[] { 0x01 } })
+            {
+                var reader = new GenericReader<object>(schema, schema);
+                Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(new MemoryStream(data))));
+            }
+        }
+
+        [Test]
+        public void TestReadMapRejectsInt64MinBlockCount()
+        {
+            var data = new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01 };
+            var d = new BinaryDecoder(new MemoryStream(data));
+            Assert.Throws<AvroException>(() => d.ReadMapStart());
+        }
+
+        // A 64-bit value uses at most 10 bytes; an 11th continuation byte is a
+        // malformed (overlong) varint and must be rejected rather than silently
+        // wrapping to a wrong value.
+        [Test]
+        public void TestReadLongRejectsOverlongVarint()
+        {
+            var data = new byte[11];
+            for (int i = 0; i < 10; i++) data[i] = 0x80; // 10 continuation bytes
+            data[10] = 0x01;
+            var d = new BinaryDecoder(new MemoryStream(data));
+            Assert.Throws<AvroException>(() => d.ReadLong());
+        }
+
+        // A string length prefix above int.MaxValue must be rejected as an
+        // unsupported length, not overflow the int cast into a negative length.
+        // A non-seekable stream is used so the check is reached without the
+        // remaining-bytes guard firing first.
+        [Test]
+        public void TestReadStringRejectsLengthAboveInt32()
+        {
+            var backing = new MemoryStream();
+            new BinaryEncoder(backing).WriteLong((long)int.MaxValue + 1);
+            byte[] encoded = backing.ToArray();
+            using (var ns = new NonSeekableStream(new MemoryStream(encoded)))
+            {
+                var d = new BinaryDecoder(ns);
+                var ex = Assert.Throws<AvroException>(() => d.ReadString());
+                StringAssert.Contains("not supported", ex.Message);
+            }
+        }
+
+        // C# has a second reader implementation, GenericDatumReader<T> (based on
+        // PreresolvingDatumReader<T>), which is public and used directly by
+        // callers. It must enforce the same collection-allocation caps as the
+        // DefaultReader used above; the following tests exercise it independently.
+
+        // A zero-byte element type (null) consumes no input, so the
+        // bytes-remaining check cannot bound its block count: a tiny payload
+        // declaring a huge count must be rejected by the item cap before building
+        // the array, rather than decoding e.g. 100,000,000 elements from 5 bytes.
+        [Test]
+        public void TestDatumReaderReadArrayOfNullRejectsHugeCount()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"null\"}");
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong(100_000_000); // well over the zero-byte item cap
+            ms.Position = 0;
+            var reader = new GenericDatumReader<object>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
+        }
+
+        // A non-zero-byte element block whose declared count could not be backed
+        // by the bytes remaining must be rejected before allocating.
+        [Test]
+        public void TestDatumReaderReadArrayRejectsCountBeyondStream()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"long\"}");
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong(1000000); // 1,000,000 longs, no data
+            ms.Position = 0;
+            var reader = new GenericDatumReader<object>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
+        }
+
+        // The complement: a legitimate array of nulls under the cap still decodes.
+        [Test]
+        public void TestDatumReaderReadArrayOfNullNotFalselyRejected()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"null\"}");
+            var ms = new MemoryStream();
+            var enc = new BinaryEncoder(ms);
+            enc.WriteLong(100000); // one block of 100,000 nulls (zero bytes each)
+            enc.WriteLong(0);      // end-of-array marker
+            ms.Position = 0;
+            var reader = new GenericDatumReader<object>(schema, schema);
+            var result = (object[])reader.Read(null, new BinaryDecoder(ms));
+            Assert.AreEqual(100000, result.Length);
+        }
+
+        [Test]
+        public void TestDatumReaderReadMapRejectsCountBeyondStream()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"map\",\"values\":\"long\"}");
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong(1000000);
+            ms.Position = 0;
+            var reader = new GenericDatumReader<object>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
+        }
+
+        // The zero-byte item cap is cumulative across a decoded datum, not per
+        // collection: a record declaring many array<null> fields, each block under
+        // the limit but jointly over it, must be rejected before allocating the
+        // offending field.
+        [Test]
+        public void TestDatumReaderRecordOfNullArrayFieldsRejectedCumulatively()
+        {
+            var schema = Avro.Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"R\",\"fields\":[" +
+                "{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}," +
+                "{\"name\":\"b\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}]}");
+            var ms = new MemoryStream();
+            var enc = new BinaryEncoder(ms);
+            enc.WriteLong(1);           // field a: one null
+            enc.WriteLong(0);           // end of a
+            enc.WriteLong(10_000_000);  // field b: cumulative 10,000,001 > cap; rejected before allocating
+            enc.WriteLong(0);           // end of b (not reached)
+            ms.Position = 0;
+            var reader = new GenericDatumReader<object>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
+        }
+
+        // The complement: jointly-under-the-cap fields decode, and the per-datum
+        // budget resets between datums so reusing the reader does not accumulate.
+        [Test]
+        public void TestDatumReaderRecordOfNullArrayFieldsWithinLimitReads()
+        {
+            var schema = Avro.Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"R\",\"fields\":[" +
+                "{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}," +
+                "{\"name\":\"b\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}]}");
+            var ms = new MemoryStream();
+            var enc = new BinaryEncoder(ms);
+            enc.WriteLong(3); enc.WriteLong(0); // field a: 3 nulls
+            enc.WriteLong(3); enc.WriteLong(0); // field b: 3 nulls
+            var reader = new GenericDatumReader<object>(schema, schema);
+            for (int i = 0; i < 2; i++)
+            {
+                ms.Position = 0;
+                var rec = (GenericRecord)reader.Read(null, new BinaryDecoder(ms));
+                Assert.AreEqual(3, ((object[])rec["a"]).Length);
+                Assert.AreEqual(3, ((object[])rec["b"]).Length);
+            }
+        }
+
+        // The skip path (a writer field absent from the reader schema) must be
+        // bounded too, so skipping a huge zero-byte block cannot loop endlessly.
+        [Test]
+        public void TestDatumReaderSkipArrayOfNullRejectsHugeCount()
+        {
+            var writer = Avro.Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"Foo\",\"fields\":[" +
+                "{\"name\":\"arr\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}," +
+                "{\"name\":\"val\",\"type\":\"int\"}]}");
+            var reader = Avro.Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"Foo\",\"fields\":[" +
+                "{\"name\":\"val\",\"type\":\"int\"}]}");
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong(100_000_000); // well over the zero-byte item cap
+            ms.Position = 0;
+            var r = new GenericDatumReader<object>(writer, reader);
+            Assert.Throws<AvroException>(() => r.Read(null, new BinaryDecoder(ms)));
+        }
+
+        // A block count larger than int.MaxValue must be rejected before the int
+        // cast, even for a null-element array where the byte check is skipped.
+        [Test]
+        public void TestDatumReaderReadArrayRejectsCountAboveIntMax()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"null\"}");
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong((long)int.MaxValue + 1);
+            ms.Position = 0;
+            var reader = new GenericDatumReader<object>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ms)));
+        }
+
+        // A huge non-zero-byte count on a non-seekable stream (where the
+        // bytes-remaining check cannot bound it) must not preallocate the whole
+        // block: the backing store grows on demand, so a truncated stream fails
+        // with a bounded AvroException instead of a multi-gigabyte allocation.
+        [Test]
+        public void TestDatumReaderReadArrayHugeCountOnStreamClampsPreallocation()
+        {
+            var schema = Avro.Schema.Parse("{\"type\":\"array\",\"items\":\"long\"}");
+            var backing = new MemoryStream();
+            new BinaryEncoder(backing).WriteLong(200_000_000); // block count; no element data
+            byte[] encoded = backing.ToArray();
+            using (var ns = new NonSeekableStream(new MemoryStream(encoded)))
+            {
+                var reader = new GenericDatumReader<object>(schema, schema);
+                Assert.Throws<AvroException>(() => reader.Read(null, new BinaryDecoder(ns)));
+            }
+        }
+
+        // A resolved PreresolvingDatumReader is documented as safe to share among
+        // threads. The per-datum zero-byte-element budget must therefore not be
+        // reader instance state (a shared counter would let concurrent decodes
+        // reset and increment each other); it is thread-static. Many threads
+        // decoding within-cap data through one shared reader must all succeed.
+        [Test]
+        public void TestDatumReaderSharedAcrossThreadsIsThreadSafe()
+        {
+            var schema = Avro.Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"R\",\"fields\":[" +
+                "{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}," +
+                "{\"name\":\"b\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}]}");
+            var ms = new MemoryStream();
+            var enc = new BinaryEncoder(ms);
+            enc.WriteLong(3); enc.WriteLong(0); // field a: 3 nulls
+            enc.WriteLong(3); enc.WriteLong(0); // field b: 3 nulls
+            byte[] encoded = ms.ToArray();
+
+            var reader = new GenericDatumReader<object>(schema, schema);
+            // Parallel.For aggregates any exception thrown in the body (a spurious
+            // AvroException from a thread-safety bug, or a failed assertion) into
+            // an AggregateException and rethrows it, failing the test. A shared
+            // per-instance zero-byte budget would surface here; the thread-static
+            // budget must not.
+            System.Threading.Tasks.Parallel.For(0, 32, _ =>
+            {
+                for (int i = 0; i < 500; i++)
+                {
+                    var rec = (GenericRecord)reader.Read(null, new BinaryDecoder(new MemoryStream(encoded)));
+                    Assert.AreEqual(3, ((object[])rec["a"]).Length);
+                    Assert.AreEqual(3, ((object[])rec["b"]).Length);
+                }
+            });
+        }
+
+        // Minimal read-only, forward-only stream wrapper reporting CanSeek=false.
+        private sealed class NonSeekableStream : Stream
+        {
+            private readonly Stream inner;
+            public NonSeekableStream(Stream inner) { this.inner = inner; }
+            public override bool CanRead => true;
+            public override bool CanSeek => false;
+            public override bool CanWrite => false;
+            public override long Length => throw new NotSupportedException();
+            public override long Position
+            {
+                get => throw new NotSupportedException();
+                set => throw new NotSupportedException();
+            }
+            public override void Flush() { }
+            public override int Read(byte[] buffer, int offset, int count) => inner.Read(buffer, offset, count);
+            public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+            public override void SetLength(long value) => throw new NotSupportedException();
+            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    inner.Dispose();
+                }
+
+                base.Dispose(disposing);
+            }
         }
     }
 }

@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Avro.IO;
@@ -69,7 +70,15 @@ namespace Avro.Generic
         /// <inheritdoc/>
         public T Read(T reuse, Decoder decoder)
         {
-            return (T)_reader(reuse, decoder);
+            // Open a fresh zero-byte-element budget for this datum. The cap is
+            // cumulative across every collection decoded in this datum (see
+            // CollectionBounds.EnsureCollectionAvailable), not per collection. The
+            // budget is thread-static, so this reader stays safe to share among
+            // threads as documented.
+            using (CollectionBounds.EnterScope())
+            {
+                return (T)_reader(reuse, decoder);
+            }
         }
 
         /// <summary>
@@ -364,15 +373,24 @@ namespace Avro.Generic
             var reader = ResolveReader(ws, rs);
             var mapAccess = GetMapAccess(readerSchema);
 
-            return (r,d) => ReadMap(r, d, mapAccess, reader);
+            // Map keys are strings (>= 1 byte length prefix) plus the value.
+            long valueMinBytes = 1L + CollectionBounds.MinBytesPerElement(ws);
+            return (r,d) => ReadMap(r, d, mapAccess, reader, valueMinBytes);
         }
 
-        private object ReadMap(object reuse, Decoder decoder, MapAccess mapAccess, ReadItem valueReader)
+        private object ReadMap(object reuse, Decoder decoder, MapAccess mapAccess, ReadItem valueReader, long valueMinBytes)
         {
             object map = mapAccess.Create(reuse);
 
-            for (int n = (int)decoder.ReadMapStart(); n != 0; n = (int)decoder.ReadMapNext())
+            long total = 0;
+            for (long nl = decoder.ReadMapStart(); nl != 0; nl = decoder.ReadMapNext())
             {
+                // Reject a block whose element count could not be backed by the
+                // bytes remaining (or, for zero-byte elements, that exceeds the
+                // item cap) before allocating for it. Checked on the raw long,
+                // which also avoids the int cast below overflowing.
+                total = CollectionBounds.EnsureCollectionAvailable(decoder, total, nl, valueMinBytes);
+                int n = (int)nl;
                 mapAccess.AddElements(map, n, valueReader, decoder, false);
             }
             return map;
@@ -383,18 +401,59 @@ namespace Avro.Generic
             var itemReader = ResolveReader(writerSchema.ItemSchema, readerSchema.ItemSchema);
 
             var arrayAccess = GetArrayAccess(readerSchema);
-            return (r, d) => ReadArray(r, d, arrayAccess, itemReader, IsReusable(readerSchema.ItemSchema.Tag));
+            long itemMinBytes = CollectionBounds.MinBytesPerElement(writerSchema.ItemSchema);
+            return (r, d) => ReadArray(r, d, arrayAccess, itemReader, IsReusable(readerSchema.ItemSchema.Tag), itemMinBytes);
         }
 
-        private object ReadArray(object reuse, Decoder decoder, ArrayAccess arrayAccess, ReadItem itemReader, bool itemReusable)
+        private object ReadArray(object reuse, Decoder decoder, ArrayAccess arrayAccess, ReadItem itemReader, bool itemReusable, long itemMinBytes)
         {
             object array = arrayAccess.Create(reuse);
             int i = 0;
-            for (int n = (int)decoder.ReadArrayStart(); n != 0; n = (int)decoder.ReadArrayNext())
+            // Capacity we have requested from arrayAccess.EnsureSize so far. The
+            // block is read in bounded chunks that grow this geometrically, so a
+            // huge declared count on a non-seekable stream (where the
+            // bytes-remaining check cannot bound it) does not preallocate the
+            // whole block before any element is read; a truncated stream instead
+            // faults after a bounded growth.
+            int capacity = 0;
+            long total = 0;
+            for (long nl = decoder.ReadArrayStart(); nl != 0; nl = decoder.ReadArrayNext())
             {
-                arrayAccess.EnsureSize(ref array, i + n);
-                arrayAccess.AddElements(array, n, i, itemReader, decoder, itemReusable);
-                i += n;
+                total = CollectionBounds.EnsureCollectionAvailable(decoder, total, nl, itemMinBytes);
+                int n = (int)nl;
+                int remaining = n;
+                while (remaining > 0)
+                {
+                    int chunk = Math.Min(remaining, CollectionBounds.MaxCollectionPrealloc);
+                    int needed = i + chunk;
+                    if (capacity < needed)
+                    {
+                        // Grow ~1.5x (amortized O(n), so a legitimate large array
+                        // is not resized on every chunk) plus the current chunk,
+                        // then clamp to the structural cap (which is <= the
+                        // runtime's max array length). Adding `chunk` (not the full
+                        // prealloc bound) avoids over-allocating a small array to
+                        // MaxCollectionPrealloc only to shrink it again at the end.
+                        // The validated element count never exceeds the cap.
+                        long grown = (long)capacity + (capacity >> 1) + chunk;
+                        if (grown < needed)
+                        {
+                            grown = needed;
+                        }
+
+                        if (grown > CollectionBounds.MaxCollectionStructural)
+                        {
+                            grown = CollectionBounds.MaxCollectionStructural;
+                        }
+
+                        capacity = (int)grown;
+                        arrayAccess.EnsureSize(ref array, capacity);
+                    }
+
+                    arrayAccess.AddElements(array, chunk, i, itemReader, decoder, itemReusable);
+                    i += chunk;
+                    remaining -= chunk;
+                }
             }
             arrayAccess.Resize(ref array, i);
             return array;
@@ -486,20 +545,26 @@ namespace Avro.Generic
                     return d => d.SkipFixed(size);
                 case Schema.Type.Array:
                     var itemSkip = GetSkip(((ArraySchema)writerSchema).ItemSchema);
+                    var arrayItemMinBytes = CollectionBounds.MinBytesPerElement(((ArraySchema)writerSchema).ItemSchema);
                     return d =>
                     {
+                        long total = 0;
                         for (long n = d.ReadArrayStart(); n != 0; n = d.ReadArrayNext())
                         {
+                            total = CollectionBounds.EnsureCollectionAvailable(d, total, n, arrayItemMinBytes);
                             for (long i = 0; i < n; i++) itemSkip(d);
                         }
                     };
                 case Schema.Type.Map:
                     {
                         var valueSkip = GetSkip(((MapSchema)writerSchema).ValueSchema);
+                        var mapValueMinBytes = 1L + CollectionBounds.MinBytesPerElement(((MapSchema)writerSchema).ValueSchema);
                         return d =>
                         {
+                            long total = 0;
                             for (long n = d.ReadMapStart(); n != 0; n = d.ReadMapNext())
                             {
+                                total = CollectionBounds.EnsureCollectionAvailable(d, total, n, mapValueMinBytes);
                                 for (long i = 0; i < n; i++) { d.SkipString(); valueSkip(d); }
                             }
                         };
