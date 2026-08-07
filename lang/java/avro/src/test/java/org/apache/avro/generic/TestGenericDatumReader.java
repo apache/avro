@@ -433,6 +433,71 @@ public class TestGenericDatumReader {
     }
   }
 
+  // --- Cumulative zero-byte element allocation across a datum (AVRO-4241
+  // follow-up) ---
+
+  private static final String TWO_NULL_ARRAY_FIELDS_SCHEMA = "{\"type\":\"record\",\"name\":\"R\",\"fields\":["
+      + "{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"null\"}},"
+      + "{\"name\":\"b\",\"type\":{\"type\":\"array\",\"items\":\"null\"}}]}";
+
+  /**
+   * The zero-byte allocation cap is cumulative across a decoded datum, not per
+   * collection. A container file carries its own schema, so an attacker can
+   * declare a record with many {@code array<null>} fields, each block
+   * individually under the limit but jointly unbounded. Two fields of 600 nulls
+   * each (1200 > 1000) must be rejected on the second field, on both reader
+   * paths.
+   */
+  @Test
+  void recordOfNullArrayFieldsRejectedCumulativelyAcrossDatum() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      Schema schema = new Schema.Parser().parse(TWO_NULL_ARRAY_FIELDS_SCHEMA);
+      // field a: {600 nulls, end}, field b: {600 nulls, end}
+      byte[] data = encodeVarints(600L, 0L, 600L, 0L);
+      for (boolean fast : new boolean[] { true, false }) {
+        GenericDatumReader<Object> reader = readerFor(schema, fast);
+        BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+        assertThrows(SystemLimitException.class, () -> reader.read(null, decoder), "fastReader=" + fast);
+      }
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  /**
+   * The complement of the amplification test: two {@code array<null>} fields
+   * whose combined count stays under the cap decode normally, and the running
+   * total is reset per top-level read so a subsequent datum on the same reader is
+   * not penalised.
+   */
+  @Test
+  void recordOfNullArrayFieldsWithinCumulativeLimitStillDecodes() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      Schema schema = new Schema.Parser().parse(TWO_NULL_ARRAY_FIELDS_SCHEMA);
+      // field a: {400 nulls, end}, field b: {400 nulls, end}; 800 < 1000
+      byte[] data = encodeVarints(400L, 0L, 400L, 0L);
+      for (boolean fast : new boolean[] { true, false }) {
+        GenericDatumReader<Object> reader = readerFor(schema, fast);
+        // Decode twice on the same reader: the per-datum budget must reset, so the
+        // second datum is not rejected by the first datum's accounting.
+        for (int i = 0; i < 2; i++) {
+          BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+          GenericRecord result = (GenericRecord) reader.read(null, decoder);
+          assertEquals(400, ((Collection<?>) result.get("a")).size(), "fastReader=" + fast);
+          assertEquals(400, ((Collection<?>) result.get("b")).size(), "fastReader=" + fast);
+        }
+      }
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
   private static GenericDatumReader<Object> arrayReader(Schema elementType, boolean fastReader) {
     return readerFor(Schema.createArray(elementType), fastReader);
   }

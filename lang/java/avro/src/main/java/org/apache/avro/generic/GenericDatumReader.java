@@ -168,18 +168,29 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   @Override
   @SuppressWarnings("unchecked")
   public D read(D reuse, Decoder in) throws IOException {
-    if (data.isFastReaderEnabled()) {
-      if (this.fastDatumReader == null) {
-        this.fastDatumReader = data.getFastReaderBuilder().createDatumReader(actual, expected);
+    // Open a decode scope so the zero-byte collection-element allocation cap is
+    // enforced cumulatively across this datum (see SystemLimitException): a
+    // record with many small array<null>-style fields, each individually under
+    // the limit, must not be able to over-allocate in aggregate. Nested scopes
+    // (e.g. the delegated fast reader, or skipped writer fields) accumulate into
+    // this one; only the outermost resets the running total.
+    SystemLimitException.beginCollectionAllocationScope();
+    try {
+      if (data.isFastReaderEnabled()) {
+        if (this.fastDatumReader == null) {
+          this.fastDatumReader = data.getFastReaderBuilder().createDatumReader(actual, expected);
+        }
+        return fastDatumReader.read(reuse, in);
       }
-      return fastDatumReader.read(reuse, in);
-    }
 
-    ResolvingDecoder resolver = getResolver(actual, expected);
-    resolver.configure(in);
-    D result = (D) read(reuse, expected, resolver);
-    resolver.drain();
-    return result;
+      ResolvingDecoder resolver = getResolver(actual, expected);
+      resolver.configure(in);
+      D result = (D) read(reuse, expected, resolver);
+      resolver.drain();
+      return result;
+    } finally {
+      SystemLimitException.endCollectionAllocationScope();
+    }
   }
 
   /** Called to read data. */
@@ -326,7 +337,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       // backing-array allocation.
       boolean zeroByteElements = isZeroByteSchema(expectedType);
       if (zeroByteElements) {
-        SystemLimitException.checkMaxCollectionAllocation(base, l);
+        SystemLimitException.checkMaxCollectionAllocation(l);
       }
       LogicalType logicalType = expectedType.getLogicalType();
       Conversion<?> conversion = getData().getConversionFor(logicalType);
@@ -345,7 +356,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
         base += l;
         l = arrayNext(in, expectedType);
         if (zeroByteElements && l > 0) {
-          SystemLimitException.checkMaxCollectionAllocation(base, l);
+          SystemLimitException.checkMaxCollectionAllocation(l);
         }
       } while (l > 0);
       return pruneArray(array);
@@ -792,10 +803,24 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   /** Skip an instance of a schema. */
   public static void skip(Schema schema, Decoder in) throws IOException {
+    // Delimit a decode scope so a huge count of zero-byte elements split across
+    // fields/blocks is bounded cumulatively (see SystemLimitException). Scopes
+    // nest, so a skip invoked mid-read (e.g. an unused writer field) accumulates
+    // into the enclosing datum budget instead of resetting it, while a top-level
+    // skip (e.g. from BinaryData.compare) is bounded per invocation.
+    SystemLimitException.beginCollectionAllocationScope();
+    try {
+      skipInternal(schema, in);
+    } finally {
+      SystemLimitException.endCollectionAllocationScope();
+    }
+  }
+
+  private static void skipInternal(Schema schema, Decoder in) throws IOException {
     switch (schema.getType()) {
     case RECORD:
       for (Field field : schema.getFields())
-        skip(field.schema(), in);
+        skipInternal(field.schema(), in);
       break;
     case ENUM:
       in.readEnum();
@@ -816,11 +841,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
         // cannot drive an unbounded skip loop.
         SystemLimitException.checkMaxCollectionLength(arrayTotal, l);
         if (zeroByteElements) {
-          SystemLimitException.checkMaxCollectionAllocation(arrayTotal, l);
+          SystemLimitException.checkMaxCollectionAllocation(l);
         }
         arrayTotal += l;
         for (long i = 0; i < l; i++) {
-          skip(elementType, in);
+          skipInternal(elementType, in);
         }
       }
       break;
@@ -833,12 +858,12 @@ public class GenericDatumReader<D> implements DatumReader<D> {
         mapTotal += l;
         for (long i = 0; i < l; i++) {
           in.skipString();
-          skip(value, in);
+          skipInternal(value, in);
         }
       }
       break;
     case UNION:
-      skip(schema.getTypes().get(in.readIndex()), in);
+      skipInternal(schema.getTypes().get(in.readIndex()), in);
       break;
     case FIXED:
       in.skipFixed(schema.getFixedSize());
