@@ -478,34 +478,48 @@ public class FastReaderBuilder {
     boolean zeroByteElements = GenericDatumReader.isZeroByteSchema(elementType);
 
     return reusingReader((reuse, decoder) -> {
-      if (reuse instanceof GenericArray) {
-        GenericArray<Object> reuseArray = (GenericArray<Object>) reuse;
-        long l = decoder.readArrayStart();
-        checkArrayBlock(decoder, elementType, zeroByteElements, l);
-        reuseArray.clear();
+      // Open a decode scope so the zero-byte element allocation cap is cumulative
+      // across every block of this array even when the fast reader is used
+      // standalone (i.e. without GenericDatumReader.read opening the outer datum
+      // scope); otherwise a huge array split into many small blocks would bypass
+      // the cap. The scope nests: when a datum scope is already open this simply
+      // accumulates into it, and only the outermost scope resets the running
+      // total (see SystemLimitException). The try/finally guarantees the scope is
+      // always closed so ThreadLocal state cannot leak into later decodes on the
+      // same thread.
+      SystemLimitException.beginCollectionAllocationScope();
+      try {
+        if (reuse instanceof GenericArray) {
+          GenericArray<Object> reuseArray = (GenericArray<Object>) reuse;
+          long l = decoder.readArrayStart();
+          checkArrayBlock(decoder, elementType, zeroByteElements, l);
+          reuseArray.clear();
 
-        while (l > 0) {
-          for (long i = 0; i < l; i++) {
-            reuseArray.add(elementReader.read(reuseArray.peek(), decoder));
+          while (l > 0) {
+            for (long i = 0; i < l; i++) {
+              reuseArray.add(elementReader.read(reuseArray.peek(), decoder));
+            }
+            l = decoder.arrayNext();
+            checkArrayBlock(decoder, elementType, zeroByteElements, l);
           }
-          l = decoder.arrayNext();
+          return reuseArray;
+        } else {
+          long l = decoder.readArrayStart();
           checkArrayBlock(decoder, elementType, zeroByteElements, l);
-        }
-        return reuseArray;
-      } else {
-        long l = decoder.readArrayStart();
-        checkArrayBlock(decoder, elementType, zeroByteElements, l);
-        List<Object> array = (reuse instanceof List) ? (List<Object>) reuse
-            : new GenericData.Array<>(GenericDatumReader.initialCollectionCapacity(l), readerSchema);
-        array.clear();
-        while (l > 0) {
-          for (long i = 0; i < l; i++) {
-            array.add(elementReader.read(null, decoder));
+          List<Object> array = (reuse instanceof List) ? (List<Object>) reuse
+              : new GenericData.Array<>(GenericDatumReader.initialCollectionCapacity(l), readerSchema);
+          array.clear();
+          while (l > 0) {
+            for (long i = 0; i < l; i++) {
+              array.add(elementReader.read(null, decoder));
+            }
+            l = decoder.arrayNext();
+            checkArrayBlock(decoder, elementType, zeroByteElements, l);
           }
-          l = decoder.arrayNext();
-          checkArrayBlock(decoder, elementType, zeroByteElements, l);
+          return array;
         }
-        return array;
+      } finally {
+        SystemLimitException.endCollectionAllocationScope();
       }
     });
   }
