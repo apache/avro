@@ -429,11 +429,13 @@ namespace Avro.Generic
                     if (capacity < needed)
                     {
                         // Grow ~1.5x (amortized O(n), so a legitimate large array
-                        // is not resized on every chunk) plus one chunk, then
-                        // clamp to the structural cap (which is <= the runtime's
-                        // max array length). The validated element count never
-                        // exceeds that cap.
-                        long grown = (long)capacity + (capacity >> 1) + CollectionBounds.MaxCollectionPrealloc;
+                        // is not resized on every chunk) plus the current chunk,
+                        // then clamp to the structural cap (which is <= the
+                        // runtime's max array length). Adding `chunk` (not the full
+                        // prealloc bound) avoids over-allocating a small array to
+                        // MaxCollectionPrealloc only to shrink it again at the end.
+                        // The validated element count never exceeds the cap.
+                        long grown = (long)capacity + (capacity >> 1) + chunk;
                         if (grown < needed)
                         {
                             grown = needed;
