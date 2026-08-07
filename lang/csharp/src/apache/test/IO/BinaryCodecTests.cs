@@ -39,12 +39,12 @@ namespace Avro.Test
     [TestFixture]
     public class BinaryCodecTests
     {
-        // NOTE: the collection-limit tests assume the default caps. GenericReader
-        // captures AVRO_MAX_COLLECTION_ITEMS into static readonly fields at class
-        // load, so the value is fixed for the process; these tests therefore
-        // assume the test process was not started with a custom
-        // AVRO_MAX_COLLECTION_ITEMS (the normal case). Clearing it at runtime
-        // would have no effect on the already-captured limits.
+        // NOTE: the collection-limit tests assume the default caps. CollectionBounds
+        // (shared by every reader) captures AVRO_MAX_COLLECTION_ITEMS into static
+        // readonly fields at class load, so the value is fixed for the process;
+        // these tests therefore assume the test process was not started with a
+        // custom AVRO_MAX_COLLECTION_ITEMS (the normal case). Clearing it at
+        // runtime would have no effect on the already-captured limits.
 
         /// <summary>
         /// Writes an avro type T with value t into a stream using the encode method e
@@ -647,11 +647,11 @@ namespace Avro.Test
             }
         }
 
-        // count bounded by the bytes remaining (the length is unknown). The
-        // backing array must therefore be grown on demand rather than
-        // preallocated to the declared count, so a huge count with truncated data
-        // fails with a bounded AvroException instead of attempting a multi-
-        // gigabyte allocation.
+        // On a non-seekable stream the declared element count cannot be bounded by
+        // the bytes remaining (the length is unknown). The backing array must
+        // therefore be grown on demand rather than preallocated to the declared
+        // count, so a huge count with truncated data fails with a bounded
+        // AvroException instead of attempting a multi-gigabyte allocation.
         [Test]
         public void TestReadArrayHugeCountOnStreamClampsPreallocation()
         {
