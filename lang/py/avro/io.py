@@ -903,10 +903,10 @@ class DatumReader:
         unwinds the enclosing (already-entered) levels, and the depth is restored
         on exit so a reader instance can be reused.
         """
-        if self._read_depth >= _max_decode_depth():
+        max_depth = _max_decode_depth()
+        if self._read_depth >= max_depth:
             raise avro.errors.AvroException(
-                f"Decode nesting depth exceeds the maximum allowed of {_max_decode_depth()} "
-                f"(configure with the {MAX_DECODE_DEPTH_ENV} environment variable)"
+                f"Decode nesting depth exceeds the maximum allowed of {max_depth} (configure with the {MAX_DECODE_DEPTH_ENV} environment variable)"
             )
         self._read_depth += 1
         try:
@@ -1019,13 +1019,17 @@ class DatumReader:
         if isinstance(writers_schema, avro.schema.EnumSchema):
             return self.skip_enum(writers_schema, decoder)
         if isinstance(writers_schema, avro.schema.ArraySchema):
-            return self.skip_array(writers_schema, decoder)
+            with self._nested_read():
+                return self.skip_array(writers_schema, decoder)
         if isinstance(writers_schema, avro.schema.MapSchema):
-            return self.skip_map(writers_schema, decoder)
+            with self._nested_read():
+                return self.skip_map(writers_schema, decoder)
         if isinstance(writers_schema, avro.schema.UnionSchema):
-            return self.skip_union(writers_schema, decoder)
+            with self._nested_read():
+                return self.skip_union(writers_schema, decoder)
         if isinstance(writers_schema, avro.schema.RecordSchema):
-            return self.skip_record(writers_schema, decoder)
+            with self._nested_read():
+                return self.skip_record(writers_schema, decoder)
         raise avro.errors.AvroException(f"Unknown schema type: {writers_schema.type}")
 
     def read_fixed(self, writers_schema: avro.schema.FixedSchema, readers_schema: avro.schema.Schema, decoder: BinaryDecoder) -> bytes:

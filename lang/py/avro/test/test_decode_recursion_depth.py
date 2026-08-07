@@ -69,15 +69,28 @@ class TestDecodeRecursionDepth(unittest.TestCase):
         result = self._read(self._linked_list(20))
         self.assertIsInstance(result, dict)
 
+    def test_deeply_nested_input_rejected_when_skipped(self) -> None:
+        # The skip path (a writer-only field during resolution) descends
+        # recursively too and must be bounded as well.
+        bomb = self._linked_list(100_000)
+        reader = avro.io.DatumReader(self.NODE, self.NODE)
+        decoder = avro.io.BinaryDecoder(io.BytesIO(bomb))
+        self.assertRaises(avro.errors.AvroException, reader.skip_data, self.NODE, decoder)
+
     def test_custom_depth_limit_env_is_honored(self) -> None:
         import os
 
+        prior = os.environ.get(avro.io.MAX_DECODE_DEPTH_ENV)
         os.environ[avro.io.MAX_DECODE_DEPTH_ENV] = "6"
         try:
             # 6 allows only 3 list levels (2 descents each); 10 levels must fail.
             self.assertRaises(avro.errors.AvroException, self._read, self._linked_list(10))
         finally:
-            del os.environ[avro.io.MAX_DECODE_DEPTH_ENV]
+            # Restore any pre-existing value instead of unconditionally clearing it.
+            if prior is None:
+                del os.environ[avro.io.MAX_DECODE_DEPTH_ENV]
+            else:
+                os.environ[avro.io.MAX_DECODE_DEPTH_ENV] = prior
 
 
 if __name__ == "__main__":
