@@ -957,24 +957,20 @@ namespace Avro.Test
             byte[] encoded = ms.ToArray();
 
             var reader = new GenericDatumReader<object>(schema, schema);
-            var errors = new System.Collections.Concurrent.ConcurrentQueue<Exception>();
+            // Parallel.For aggregates any exception thrown in the body (a spurious
+            // AvroException from a thread-safety bug, or a failed assertion) into
+            // an AggregateException and rethrows it, failing the test. A shared
+            // per-instance zero-byte budget would surface here; the thread-static
+            // budget must not.
             System.Threading.Tasks.Parallel.For(0, 32, _ =>
             {
-                try
+                for (int i = 0; i < 500; i++)
                 {
-                    for (int i = 0; i < 500; i++)
-                    {
-                        var rec = (GenericRecord)reader.Read(null, new BinaryDecoder(new MemoryStream(encoded)));
-                        Assert.AreEqual(3, ((object[])rec["a"]).Length);
-                        Assert.AreEqual(3, ((object[])rec["b"]).Length);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    errors.Enqueue(ex);
+                    var rec = (GenericRecord)reader.Read(null, new BinaryDecoder(new MemoryStream(encoded)));
+                    Assert.AreEqual(3, ((object[])rec["a"]).Length);
+                    Assert.AreEqual(3, ((object[])rec["b"]).Length);
                 }
             });
-            Assert.IsEmpty(errors);
         }
 
         // Minimal read-only, forward-only stream wrapper reporting CanSeek=false.
