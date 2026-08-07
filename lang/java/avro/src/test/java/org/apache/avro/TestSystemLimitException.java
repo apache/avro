@@ -247,16 +247,21 @@ public class TestSystemLimitException {
   void testDecodeDepthResetAtOutermostScope() {
     System.setProperty(MAX_DECODE_DEPTH_PROPERTY, "5");
     resetLimits();
-    // Simulate a decode that terminated abnormally leaving a stale depth.
+    // Leave a stale depth behind, as an abnormally terminated earlier decode on
+    // this thread might. (In normal operation the try/finally around every
+    // increment keeps it balanced; the reset is a defensive backstop.)
     incrementDecodeDepth();
     incrementDecodeDepth();
-    // Opening a fresh outermost datum scope must clear the stale depth so the
-    // next decode starts from zero.
+    // Opening a fresh outermost datum scope clears the stale depth, so a new
+    // decode starts from zero and gets the full depth budget.
     beginCollectionAllocationScope();
     try {
       for (int i = 0; i < 5; i++) {
         incrementDecodeDepth();
       }
+      // Exactly at the limit now: one more level is rejected. This proves the two
+      // stale increments were reset, otherwise the limit would have been reached
+      // two levels early.
       assertThrows(SystemLimitException.class, SystemLimitException::incrementDecodeDepth);
       for (int i = 0; i < 5; i++) {
         decrementDecodeDepth();
@@ -264,8 +269,5 @@ public class TestSystemLimitException {
     } finally {
       endCollectionAllocationScope();
     }
-    // Balance the two stale increments left before the scope reset.
-    decrementDecodeDepth();
-    decrementDecodeDepth();
   }
 }

@@ -845,11 +845,66 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private static void skipInternal(Schema schema, Decoder in) throws IOException {
     switch (schema.getType()) {
     case RECORD:
-      for (Field field : schema.getFields())
-        skipInternal(field.schema(), in);
+    case ARRAY:
+    case MAP:
+    case UNION:
+      // Skipping descends into nested structural values with the same recursive
+      // call chain as reading, so bound the nesting depth here too. Otherwise a
+      // recursive schema whose deeply nested value is skipped (a writer-only field
+      // during resolution, the fast reader's skip steps, or BinaryData.compare)
+      // would still overflow the stack.
+      SystemLimitException.incrementDecodeDepth();
+      try {
+        skipStructural(schema, in);
+      } finally {
+        SystemLimitException.decrementDecodeDepth();
+      }
       break;
     case ENUM:
       in.readEnum();
+      break;
+    case FIXED:
+      in.skipFixed(schema.getFixedSize());
+      break;
+    case STRING:
+      in.skipString();
+      break;
+    case BYTES:
+      in.skipBytes();
+      break;
+    case INT:
+      in.readInt();
+      break;
+    case LONG:
+      in.readLong();
+      break;
+    case FLOAT:
+      in.readFloat();
+      break;
+    case DOUBLE:
+      in.readDouble();
+      break;
+    case BOOLEAN:
+      in.readBoolean();
+      break;
+    case NULL:
+      in.readNull();
+      break;
+    default:
+      throw new RuntimeException("Unknown type: " + schema);
+    }
+  }
+
+  /**
+   * Skips the structural (nesting) value types. Split out of
+   * {@link #skipInternal} so the decode-depth guard wraps exactly the types that
+   * grow the recursive call stack, mirroring {@link #readStructural}.
+   */
+  private static void skipStructural(Schema schema, Decoder in) throws IOException {
+    switch (schema.getType()) {
+    case RECORD:
+      for (Field field : schema.getFields())
+        skipInternal(field.schema(), in);
       break;
     case ARRAY:
       Schema elementType = schema.getElementType();
@@ -891,35 +946,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     case UNION:
       skipInternal(schema.getTypes().get(in.readIndex()), in);
       break;
-    case FIXED:
-      in.skipFixed(schema.getFixedSize());
-      break;
-    case STRING:
-      in.skipString();
-      break;
-    case BYTES:
-      in.skipBytes();
-      break;
-    case INT:
-      in.readInt();
-      break;
-    case LONG:
-      in.readLong();
-      break;
-    case FLOAT:
-      in.readFloat();
-      break;
-    case DOUBLE:
-      in.readDouble();
-      break;
-    case BOOLEAN:
-      in.readBoolean();
-      break;
-    case NULL:
-      in.readNull();
-      break;
     default:
-      throw new RuntimeException("Unknown type: " + schema);
+      throw new RuntimeException("Not a structural type: " + schema);
     }
   }
 
