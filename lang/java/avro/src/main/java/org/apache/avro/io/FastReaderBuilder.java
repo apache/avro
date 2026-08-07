@@ -483,22 +483,22 @@ public class FastReaderBuilder {
     boolean zeroByteElements = GenericDatumReader.isZeroByteSchema(elementType);
 
     return reusingReader((reuse, decoder) -> {
-      // Descending into an array grows the decode call stack; bound the nesting
-      // depth first so a recursive schema cannot overflow the stack. Kept outside
-      // the collection-allocation scope below so that when the depth check throws
-      // (before incrementing) no unbalanced decrement occurs.
-      SystemLimitException.incrementDecodeDepth();
+      // Open the collection-allocation scope first: when the fast reader is used
+      // standalone with a top-level array this is the outermost datum boundary,
+      // where the scope clears any stale decode depth. Only after that do we count
+      // this array's nesting level, so the reset cannot wipe the increment and a
+      // stale depth cannot trip the limit before being cleared. Both the depth
+      // decrement and the scope end run in finally blocks, and because the depth
+      // increment sits inside the scope's try, a throw from the depth check still
+      // closes the scope.
+      SystemLimitException.beginCollectionAllocationScope();
       try {
-        // Open a decode scope so the zero-byte element allocation cap is cumulative
-        // across every block of this array even when the fast reader is used
-        // standalone (i.e. without GenericDatumReader.read opening the outer datum
-        // scope); otherwise a huge array split into many small blocks would bypass
-        // the cap. The scope nests: when a datum scope is already open this simply
-        // accumulates into it, and only the outermost scope resets the running
-        // total (see SystemLimitException). The try/finally guarantees the scope is
-        // always closed so ThreadLocal state cannot leak into later decodes on the
-        // same thread.
-        SystemLimitException.beginCollectionAllocationScope();
+        // The scope also makes the zero-byte element allocation cap cumulative
+        // across every block of this array (a huge array split into many small
+        // blocks would otherwise bypass the cap). The scope nests: when a datum
+        // scope is already open this accumulates into it, and only the outermost
+        // scope resets the running total (see SystemLimitException).
+        SystemLimitException.incrementDecodeDepth();
         try {
           if (reuse instanceof GenericArray) {
             GenericArray<Object> reuseArray = (GenericArray<Object>) reuse;
@@ -530,10 +530,10 @@ public class FastReaderBuilder {
             return array;
           }
         } finally {
-          SystemLimitException.endCollectionAllocationScope();
+          SystemLimitException.decrementDecodeDepth();
         }
       } finally {
-        SystemLimitException.decrementDecodeDepth();
+        SystemLimitException.endCollectionAllocationScope();
       }
     });
   }

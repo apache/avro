@@ -30,6 +30,8 @@ import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.FastReaderBuilder;
+import org.apache.avro.io.DatumReader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -104,5 +106,29 @@ public class TestDecodeRecursionDepth {
     // overflow the stack on a deeply nested recursive value either.
     byte[] bomb = linkedList(100_000);
     assertThrows(SystemLimitException.class, () -> BinaryData.compare(bomb, 0, bomb, 0, NODE));
+  }
+
+  @Test
+  void standaloneFastReaderTopLevelArrayBoundsDepth() throws IOException {
+    // When the fast reader is used standalone with a top-level array, the array
+    // reader is the outermost scope: it must open the collection scope (which
+    // resets stale depth) before counting its own level, so depth accounting stays
+    // consistent and a deeply nested element is still rejected.
+    Schema arrayOfNode = Schema.createArray(NODE);
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(out, null);
+    encoder.writeArrayStart();
+    encoder.setItemCount(1);
+    encoder.startItem();
+    for (int i = 0; i < 100_000; i++) {
+      encoder.writeIndex(1); // one more nested Node
+    }
+    encoder.writeIndex(0); // terminate the linked list
+    encoder.writeArrayEnd();
+    encoder.flush();
+
+    DatumReader<Object> reader = FastReaderBuilder.get().createDatumReader(arrayOfNode);
+    Decoder decoder = DecoderFactory.get().binaryDecoder(out.toByteArray(), null);
+    assertThrows(SystemLimitException.class, () -> reader.read(null, decoder));
   }
 }
