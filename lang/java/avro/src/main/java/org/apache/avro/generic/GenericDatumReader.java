@@ -214,15 +214,21 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   protected Object readWithoutConversion(Object old, Schema expected, ResolvingDecoder in) throws IOException {
     switch (expected.getType()) {
     case RECORD:
-      return readRecord(old, expected, in);
+    case ARRAY:
+    case MAP:
+    case UNION:
+      // Descending into a structural value grows the decode call stack. Bound the
+      // nesting depth so a recursive schema fed a deeply nested payload fails with
+      // a SystemLimitException instead of a StackOverflowError. The counter is
+      // decremented on exit via the finally so it stays balanced even on error.
+      SystemLimitException.incrementDecodeDepth();
+      try {
+        return readStructural(old, expected, in);
+      } finally {
+        SystemLimitException.decrementDecodeDepth();
+      }
     case ENUM:
       return readEnum(expected, in);
-    case ARRAY:
-      return readArray(old, expected, in);
-    case MAP:
-      return readMap(old, expected, in);
-    case UNION:
-      return read(old, expected.getTypes().get(in.readIndex()), in);
     case FIXED:
       return readFixed(old, expected, in);
     case STRING:
@@ -244,6 +250,26 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       return null;
     default:
       throw new AvroRuntimeException("Unknown type: " + expected);
+    }
+  }
+
+  /**
+   * Dispatches the structural (nesting) value types. Split out of
+   * {@link #readWithoutConversion} so the decode-depth guard wraps exactly the
+   * types that grow the recursive call stack.
+   */
+  private Object readStructural(Object old, Schema expected, ResolvingDecoder in) throws IOException {
+    switch (expected.getType()) {
+    case RECORD:
+      return readRecord(old, expected, in);
+    case ARRAY:
+      return readArray(old, expected, in);
+    case MAP:
+      return readMap(old, expected, in);
+    case UNION:
+      return read(old, expected.getTypes().get(in.readIndex()), in);
+    default:
+      throw new AvroRuntimeException("Not a structural type: " + expected);
     }
   }
 

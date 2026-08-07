@@ -47,6 +47,7 @@ public class TestSystemLimitException {
     System.clearProperty(MAX_COLLECTION_LENGTH_PROPERTY);
     System.clearProperty(MAX_STRING_LENGTH_PROPERTY);
     System.clearProperty(MAX_COLLECTION_ALLOCATION_PROPERTY);
+    System.clearProperty(MAX_DECODE_DEPTH_PROPERTY);
     resetLimits();
   }
 
@@ -155,8 +156,7 @@ public class TestSystemLimitException {
   }
 
   @Test
-  void testCheckMaxCollectionLengthFromNonZero() {
-    // Correct values pass through
+  void testCheckMaxCollectionLengthFromNonZero() { // Correct values pass through
     assertEquals(10, checkMaxCollectionLength(10L, 0L));
     assertEquals(MAX_ARRAY_VM_LIMIT, checkMaxCollectionLength(10L, MAX_ARRAY_VM_LIMIT - 10L));
     assertEquals(MAX_ARRAY_VM_LIMIT, checkMaxCollectionLength(MAX_ARRAY_VM_LIMIT - 10L, 10L));
@@ -204,5 +204,68 @@ public class TestSystemLimitException {
     assertEquals("Collection length 1024 exceeds maximum allowed", ex.getMessage());
     ex = assertThrows(SystemLimitException.class, () -> checkMaxCollectionLength(25, 999));
     assertEquals("Collection length 1024 exceeds maximum allowed", ex.getMessage());
+  }
+
+  @Test
+  void testDecodeDepthDefaultAllowsModerateNestingAndRejectsBeyondLimit() {
+    resetLimits();
+    // Descend exactly to the default limit: all increments must succeed.
+    for (int i = 0; i < DEFAULT_MAX_DECODE_DEPTH; i++) {
+      incrementDecodeDepth();
+    }
+    // One level too deep is rejected with a clear, bounded error (not a crash).
+    SystemLimitException ex = assertThrows(SystemLimitException.class, SystemLimitException::incrementDecodeDepth);
+    assertTrue(
+        ex.getMessage().contains("Decode nesting depth exceeds the maximum allowed of " + DEFAULT_MAX_DECODE_DEPTH),
+        ex.getMessage());
+    // The rejected increment must not have advanced the counter: after unwinding
+    // all successful descents the depth returns to zero.
+    for (int i = 0; i < DEFAULT_MAX_DECODE_DEPTH; i++) {
+      decrementDecodeDepth();
+    }
+    // Now at zero again; a fresh descent is permitted.
+    incrementDecodeDepth();
+    decrementDecodeDepth();
+  }
+
+  @Test
+  void testDecodeDepthHonoursCustomLimit() {
+    System.setProperty(MAX_DECODE_DEPTH_PROPERTY, "3");
+    resetLimits();
+    incrementDecodeDepth();
+    incrementDecodeDepth();
+    incrementDecodeDepth();
+    SystemLimitException ex = assertThrows(SystemLimitException.class, SystemLimitException::incrementDecodeDepth);
+    assertTrue(ex.getMessage().contains("maximum allowed of 3"), ex.getMessage());
+    assertTrue(ex.getMessage().contains(MAX_DECODE_DEPTH_PROPERTY), ex.getMessage());
+    decrementDecodeDepth();
+    decrementDecodeDepth();
+    decrementDecodeDepth();
+  }
+
+  @Test
+  void testDecodeDepthResetAtOutermostScope() {
+    System.setProperty(MAX_DECODE_DEPTH_PROPERTY, "5");
+    resetLimits();
+    // Simulate a decode that terminated abnormally leaving a stale depth.
+    incrementDecodeDepth();
+    incrementDecodeDepth();
+    // Opening a fresh outermost datum scope must clear the stale depth so the
+    // next decode starts from zero.
+    beginCollectionAllocationScope();
+    try {
+      for (int i = 0; i < 5; i++) {
+        incrementDecodeDepth();
+      }
+      assertThrows(SystemLimitException.class, SystemLimitException::incrementDecodeDepth);
+      for (int i = 0; i < 5; i++) {
+        decrementDecodeDepth();
+      }
+    } finally {
+      endCollectionAllocationScope();
+    }
+    // Balance the two stale increments left before the scope reset.
+    decrementDecodeDepth();
+    decrementDecodeDepth();
   }
 }

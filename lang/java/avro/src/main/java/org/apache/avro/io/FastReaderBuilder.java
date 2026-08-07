@@ -419,12 +419,17 @@ public class FastReaderBuilder {
 
   private FieldReader createUnionReader(FieldReader[] unionReaders) {
     return reusingReader((reuse, decoder) -> {
-      final int selection = decoder.readIndex();
-      if (selection < 0 || selection >= unionReaders.length) {
-        throw new AvroTypeException(
-            "Union branch index out of range: must be in [0, " + unionReaders.length + "), but received " + selection);
+      SystemLimitException.incrementDecodeDepth();
+      try {
+        final int selection = decoder.readIndex();
+        if (selection < 0 || selection >= unionReaders.length) {
+          throw new AvroTypeException("Union branch index out of range: must be in [0, " + unionReaders.length
+              + "), but received " + selection);
+        }
+        return unionReaders[selection].read(null, decoder);
+      } finally {
+        SystemLimitException.decrementDecodeDepth();
       }
-      return unionReaders[selection].read(null, decoder);
     });
 
   }
@@ -478,48 +483,57 @@ public class FastReaderBuilder {
     boolean zeroByteElements = GenericDatumReader.isZeroByteSchema(elementType);
 
     return reusingReader((reuse, decoder) -> {
-      // Open a decode scope so the zero-byte element allocation cap is cumulative
-      // across every block of this array even when the fast reader is used
-      // standalone (i.e. without GenericDatumReader.read opening the outer datum
-      // scope); otherwise a huge array split into many small blocks would bypass
-      // the cap. The scope nests: when a datum scope is already open this simply
-      // accumulates into it, and only the outermost scope resets the running
-      // total (see SystemLimitException). The try/finally guarantees the scope is
-      // always closed so ThreadLocal state cannot leak into later decodes on the
-      // same thread.
-      SystemLimitException.beginCollectionAllocationScope();
+      // Descending into an array grows the decode call stack; bound the nesting
+      // depth first so a recursive schema cannot overflow the stack. Kept outside
+      // the collection-allocation scope below so that when the depth check throws
+      // (before incrementing) no unbalanced decrement occurs.
+      SystemLimitException.incrementDecodeDepth();
       try {
-        if (reuse instanceof GenericArray) {
-          GenericArray<Object> reuseArray = (GenericArray<Object>) reuse;
-          long l = decoder.readArrayStart();
-          checkArrayBlock(decoder, elementType, zeroByteElements, l);
-          reuseArray.clear();
+        // Open a decode scope so the zero-byte element allocation cap is cumulative
+        // across every block of this array even when the fast reader is used
+        // standalone (i.e. without GenericDatumReader.read opening the outer datum
+        // scope); otherwise a huge array split into many small blocks would bypass
+        // the cap. The scope nests: when a datum scope is already open this simply
+        // accumulates into it, and only the outermost scope resets the running
+        // total (see SystemLimitException). The try/finally guarantees the scope is
+        // always closed so ThreadLocal state cannot leak into later decodes on the
+        // same thread.
+        SystemLimitException.beginCollectionAllocationScope();
+        try {
+          if (reuse instanceof GenericArray) {
+            GenericArray<Object> reuseArray = (GenericArray<Object>) reuse;
+            long l = decoder.readArrayStart();
+            checkArrayBlock(decoder, elementType, zeroByteElements, l);
+            reuseArray.clear();
 
-          while (l > 0) {
-            for (long i = 0; i < l; i++) {
-              reuseArray.add(elementReader.read(reuseArray.peek(), decoder));
+            while (l > 0) {
+              for (long i = 0; i < l; i++) {
+                reuseArray.add(elementReader.read(reuseArray.peek(), decoder));
+              }
+              l = decoder.arrayNext();
+              checkArrayBlock(decoder, elementType, zeroByteElements, l);
             }
-            l = decoder.arrayNext();
+            return reuseArray;
+          } else {
+            long l = decoder.readArrayStart();
             checkArrayBlock(decoder, elementType, zeroByteElements, l);
-          }
-          return reuseArray;
-        } else {
-          long l = decoder.readArrayStart();
-          checkArrayBlock(decoder, elementType, zeroByteElements, l);
-          List<Object> array = (reuse instanceof List) ? (List<Object>) reuse
-              : new GenericData.Array<>(GenericDatumReader.initialCollectionCapacity(l), readerSchema);
-          array.clear();
-          while (l > 0) {
-            for (long i = 0; i < l; i++) {
-              array.add(elementReader.read(null, decoder));
+            List<Object> array = (reuse instanceof List) ? (List<Object>) reuse
+                : new GenericData.Array<>(GenericDatumReader.initialCollectionCapacity(l), readerSchema);
+            array.clear();
+            while (l > 0) {
+              for (long i = 0; i < l; i++) {
+                array.add(elementReader.read(null, decoder));
+              }
+              l = decoder.arrayNext();
+              checkArrayBlock(decoder, elementType, zeroByteElements, l);
             }
-            l = decoder.arrayNext();
-            checkArrayBlock(decoder, elementType, zeroByteElements, l);
+            return array;
           }
-          return array;
+        } finally {
+          SystemLimitException.endCollectionAllocationScope();
         }
       } finally {
-        SystemLimitException.endCollectionAllocationScope();
+        SystemLimitException.decrementDecodeDepth();
       }
     });
   }
@@ -637,11 +651,18 @@ public class FastReaderBuilder {
 
     @Override
     public Object read(Object reuse, Decoder decoder) throws IOException {
-      Object object = supplier.newInstance(reuse, schema);
-      for (ExecutionStep thisStep : readSteps) {
-        thisStep.execute(object, decoder);
+      // Bound decode nesting depth: a recursive schema fed deeply nested data
+      // would otherwise overflow the stack via this recursive descent.
+      SystemLimitException.incrementDecodeDepth();
+      try {
+        Object object = supplier.newInstance(reuse, schema);
+        for (ExecutionStep thisStep : readSteps) {
+          thisStep.execute(object, decoder);
+        }
+        return object;
+      } finally {
+        SystemLimitException.decrementDecodeDepth();
       }
-      return object;
     }
   }
 
@@ -657,19 +678,24 @@ public class FastReaderBuilder {
 
     @Override
     public Object read(Object reuse, Decoder decoder) throws IOException {
-      long l = decoder.readMapStart();
-      Map<Object, Object> targetMap = new HashMap<>();
+      SystemLimitException.incrementDecodeDepth();
+      try {
+        long l = decoder.readMapStart();
+        Map<Object, Object> targetMap = new HashMap<>();
 
-      while (l > 0) {
-        for (int i = 0; i < l; i++) {
-          Object key = keyReader.read(null, decoder);
-          Object value = valueReader.read(null, decoder);
-          targetMap.put(key, value);
+        while (l > 0) {
+          for (int i = 0; i < l; i++) {
+            Object key = keyReader.read(null, decoder);
+            Object value = valueReader.read(null, decoder);
+            targetMap.put(key, value);
+          }
+          l = decoder.mapNext();
         }
-        l = decoder.mapNext();
-      }
 
-      return targetMap;
+        return targetMap;
+      } finally {
+        SystemLimitException.decrementDecodeDepth();
+      }
     }
   }
 
