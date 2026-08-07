@@ -297,6 +297,12 @@ public class BinaryDecoder extends Decoder {
   @Override
   public Utf8 readString(Utf8 old) throws IOException {
     int length = SystemLimitException.checkMaxStringLength(readLong());
+    if (length != 0 && requiresBoundedRead(length)) {
+      // Large declared length on a non-seekable stream: read via a growing buffer
+      // so a truncated/hostile stream fails after a bounded allocation rather than
+      // allocating the full declared length up front. See requiresBoundedRead.
+      return new Utf8(readBoundedByteArray(length));
+    }
     ensureAvailableBytes(length);
     Utf8 result = (old != null ? old : new Utf8());
     result.setByteLength(length);
@@ -321,6 +327,14 @@ public class BinaryDecoder extends Decoder {
   @Override
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
     int length = SystemLimitException.checkMaxBytesLength(readLong());
+    if (length != 0 && requiresBoundedRead(length)) {
+      // Large declared length on a non-seekable stream: read via a growing buffer
+      // so a truncated/hostile stream fails after a bounded allocation rather than
+      // allocating the full declared length up front. See requiresBoundedRead.
+      ByteBuffer result = ByteBuffer.wrap(readBoundedByteArray(length));
+      result.limit(length);
+      return result;
+    }
     ensureAvailableBytes(length);
     final ByteBuffer result;
     if (old != null && length <= old.capacity()) {
@@ -590,6 +604,68 @@ public class BinaryDecoder extends Decoder {
             "Attempted to read " + length + " bytes, but only " + remaining + " bytes are available");
       }
     }
+  }
+
+  /**
+   * Largest buffer allocated up front for a length-prefixed {@code bytes} or
+   * {@code string} value whose backing data cannot be shown to be present (see
+   * {@link #requiresBoundedRead(int)}). Above this size the value is read via a
+   * buffer that grows in bounded steps so the cost of a truncated or hostile
+   * declared length is proportional to the bytes actually delivered, not to the
+   * (attacker-chosen) declared length.
+   */
+  static final int MAX_UNVERIFIED_ALLOCATION = 16 * 1024;
+
+  /**
+   * Whether a length-prefixed value of the given declared {@code length} must be
+   * read via the bounded growing-buffer path rather than a single up-front
+   * allocation.
+   * <p>
+   * The up-front allocation is safe when the source can report that at least
+   * {@code length} bytes remain (a memory-backed or seekable source):
+   * {@link #ensureAvailableBytes(int)} rejects an over-long declaration before
+   * any allocation. On a non-seekable stream (socket, pipe, decompression stream)
+   * the remaining byte count is unknown, so a huge declared length would
+   * otherwise drive a single large allocation before a single payload byte is
+   * read. In that case, for lengths above {@link #MAX_UNVERIFIED_ALLOCATION},
+   * read incrementally instead.
+   *
+   * @param length the declared length of the value to read
+   * @return {@code true} if the value should be read incrementally
+   */
+  private boolean requiresBoundedRead(int length) {
+    return length > MAX_UNVERIFIED_ALLOCATION && (source == null || source.remainingBytes() < 0);
+  }
+
+  /**
+   * Reads exactly {@code length} bytes into a freshly allocated array, growing
+   * the backing buffer in bounded steps (starting at
+   * {@link #MAX_UNVERIFIED_ALLOCATION} and doubling, capped at {@code length}).
+   * <p>
+   * This is used when the number of bytes remaining is unknown so that a
+   * truncated or hostile stream declaring a huge length fails with an
+   * {@link EOFException} after a bounded allocation, instead of allocating the
+   * full declared length up front. The returned array is exactly {@code length}
+   * bytes long, so callers may take ownership of it without copying.
+   *
+   * @param length the number of bytes to read; must be positive
+   * @return a newly allocated array of exactly {@code length} bytes
+   * @throws EOFException if the source is exhausted before {@code length} bytes
+   *                      are read
+   */
+  byte[] readBoundedByteArray(int length) throws IOException {
+    byte[] data = new byte[Math.min(length, MAX_UNVERIFIED_ALLOCATION)];
+    int read = 0;
+    while (read < length) {
+      if (read == data.length) {
+        int next = (int) Math.min((long) length, (long) data.length * 2);
+        data = Arrays.copyOf(data, next);
+      }
+      int chunk = data.length - read;
+      doReadBytes(data, read, chunk);
+      read += chunk;
+    }
+    return data;
   }
 
   /**
