@@ -1142,6 +1142,52 @@ class TestDatumReaderCollectionSizeLimit(unittest.TestCase):
                 buf.getvalue(),
             )
 
+    def test_record_of_array_of_null_fields_cumulative_across_datum(self) -> None:
+        # AVRO-4296 follow-up: the cap is per decoded datum, not per collection.
+        # A record whose schema declares several array<null> fields, each block
+        # individually under the limit, must still be rejected once their combined
+        # count exceeds it. Here two fields of 600 nulls each (1200 > 1000) are
+        # rejected on the second field, mirroring the multi-field container-file
+        # amplification (many small collection fields, unbounded in aggregate).
+        schema_json = json.dumps(
+            {
+                "type": "record",
+                "name": "R",
+                "fields": [
+                    {"name": "a", "type": {"type": "array", "items": "null"}},
+                    {"name": "b", "type": {"type": "array", "items": "null"}},
+                ],
+            }
+        )
+        payload = self._array_block(600) + self._array_block(600)
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            self.assertRaises(avro.errors.AvroCollectionSizeException, self._decode, schema_json, payload)
+
+    def test_record_of_array_of_null_fields_within_datum_limit_reads(self) -> None:
+        # The complement of the amplification test: two array<null> fields whose
+        # combined count stays under the per-datum cap decode normally, and a
+        # fresh read() resets the budget so a subsequent datum is not penalized.
+        schema_json = json.dumps(
+            {
+                "type": "record",
+                "name": "R",
+                "fields": [
+                    {"name": "a", "type": {"type": "array", "items": "null"}},
+                    {"name": "b", "type": {"type": "array", "items": "null"}},
+                ],
+            }
+        )
+        payload = self._array_block(400) + self._array_block(400)
+        schema = avro.schema.parse(schema_json)
+        reader = avro.io.DatumReader(schema)
+        with unittest.mock.patch.dict(os.environ, {"AVRO_MAX_COLLECTION_ITEMS": "1000"}):
+            with io.BytesIO(payload) as bio:
+                self.assertEqual(reader.read(avro.io.BinaryDecoder(bio)), {"a": [None] * 400, "b": [None] * 400})
+            # The budget resets per top-level read(): decoding the same datum
+            # again on the same reader must not accumulate across datums.
+            with io.BytesIO(payload) as bio:
+                self.assertEqual(reader.read(avro.io.BinaryDecoder(bio)), {"a": [None] * 400, "b": [None] * 400})
+
     def test_map_duplicate_keys_counted_cumulatively(self) -> None:
         # Two blocks of 600 pairs that repeat the SAME key: len(read_items) would
         # be 1, so a separate decoded-pair counter is needed to reject 1200 > 1000.
