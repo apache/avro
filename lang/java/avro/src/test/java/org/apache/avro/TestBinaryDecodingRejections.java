@@ -18,7 +18,6 @@
 package org.apache.avro;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,10 +72,17 @@ public class TestBinaryDecodingRejections {
   }
 
   private static byte[] fromHex(String hex) {
-    int len = hex.length();
-    byte[] out = new byte[len / 2];
+    if (hex.length() % 2 != 0) {
+      throw new IllegalArgumentException("Hex string must have an even length: '" + hex + "'");
+    }
+    byte[] out = new byte[hex.length() / 2];
     for (int i = 0; i < out.length; i++) {
-      out[i] = (byte) Integer.parseInt(hex.substring(2 * i, 2 * i + 2), 16);
+      int hi = Character.digit(hex.charAt(2 * i), 16);
+      int lo = Character.digit(hex.charAt(2 * i + 1), 16);
+      if (hi < 0 || lo < 0) {
+        throw new IllegalArgumentException("Invalid hex character in '" + hex + "'");
+      }
+      out[i] = (byte) ((hi << 4) | lo);
     }
     return out;
   }
@@ -99,12 +105,11 @@ public class TestBinaryDecodingRejections {
       // malformed input was wrongly accepted) or an Error is thrown (a crash such
       // as StackOverflowError/OutOfMemoryError). Both outcomes are what the
       // hardening must prevent, so a plain bounded Exception is the pass condition.
-      try {
-        assertThrows(Exception.class, () -> decode(schemaJson, bytes, fastReader),
-            () -> "Vector '" + name + "' (" + category + ") was not rejected (fastReader=" + fastReader + ")");
-      } catch (AssertionError e) {
-        fail(e.getMessage());
-      }
+      // The original AssertionError propagates directly, preserving its full
+      // context (expected-vs-actual, any Error thrown) for diagnosis.
+      final boolean fast = fastReader;
+      assertThrows(Exception.class, () -> decode(schemaJson, bytes, fast),
+          () -> "Vector '" + name + "' (" + category + ") was not rejected (fastReader=" + fast + ")");
     }
   }
 }
