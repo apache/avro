@@ -224,12 +224,42 @@ class BinaryDecoder:
             raise avro.errors.InvalidAvroBinaryEncoding(f"Requested {n} bytes to read, expected positive integer.")
         if n > self._MAX_UNCHECKED_READ:
             remaining = self.bytes_remaining()
-            if remaining is not None and n > remaining:
-                raise avro.errors.InvalidAvroBinaryEncoding(f"Requested {n} bytes to read, but only {remaining} remain.")
+            if remaining is not None:
+                if n > remaining:
+                    raise avro.errors.InvalidAvroBinaryEncoding(f"Requested {n} bytes to read, but only {remaining} remain.")
+            else:
+                # The number of bytes remaining is unknown (a non-seekable stream:
+                # socket, pipe, decompression stream). A single reader.read(n) for
+                # a huge declared n allocates n bytes up front before a single
+                # payload byte is validated, so a tiny truncated/hostile input can
+                # force a large allocation. Read into a buffer that grows in
+                # bounded chunks instead, so the cost of a hostile length is
+                # proportional to the bytes actually delivered and a truncated
+                # stream fails after a bounded allocation.
+                return self._read_bounded(n)
         read_bytes = self.reader.read(n)
         if len(read_bytes) != n:
             raise avro.errors.InvalidAvroBinaryEncoding(f"Read {len(read_bytes)} bytes, expected {n} bytes")
         return read_bytes
+
+    def _read_bounded(self, n: int) -> bytes:
+        """Read exactly ``n`` bytes in bounded chunks from a non-seekable stream.
+
+        Reads at most ``_MAX_UNCHECKED_READ`` bytes per step into a growing buffer
+        so a truncated or hostile declared length fails after a bounded allocation
+        rather than allocating the full ``n`` bytes up front.
+        """
+        chunks: List[bytes] = []
+        got = 0
+        while got < n:
+            chunk = self.reader.read(min(self._MAX_UNCHECKED_READ, n - got))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            got += len(chunk)
+        if got != n:
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Read {got} bytes, expected {n} bytes")
+        return b"".join(chunks)
 
     def bytes_remaining(self) -> Optional[int]:
         """
