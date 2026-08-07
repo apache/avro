@@ -684,7 +684,7 @@ public class FastReaderBuilder {
         Map<Object, Object> targetMap = new HashMap<>();
 
         while (l > 0) {
-          for (int i = 0; i < l; i++) {
+          for (long i = 0; i < l; i++) {
             Object key = keyReader.read(null, decoder);
             Object value = valueReader.read(null, decoder);
             targetMap.put(key, value);
