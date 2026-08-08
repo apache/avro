@@ -30,20 +30,20 @@ import java.io.StringWriter;
 import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class IdlSchemaFormatterFactoryTest {
+class TestIdlSchemaFormatterFactory {
   @Test
   void verifyIdlFormatting() throws IOException {
     SchemaFormatter idlFormatter = SchemaFormatter.getInstance("idl");
     assertEquals(IdlSchemaFormatter.class, idlFormatter.getClass());
 
-    String formattedHappyFlowSchema = getResourceAsString("../util/idl_utils_test_schema.avdl");
+    String schemaResourceName = "../idl/idl_utils_test_schema.avdl";
+    String formattedHappyFlowSchema = getResourceAsString(schemaResourceName);
 
-    String schemaResourceName = "../util/idl_utils_test_schema.avdl";
     try (InputStream stream = getClass().getResourceAsStream(schemaResourceName)) {
       Schema happyFlowSchema = new SchemaParser().parse(formattedHappyFlowSchema).mainSchema();
       // The Avro project indents .avdl files less than common
-      String formatted = idlFormatter.format(happyFlowSchema).replaceAll("    ", "\t").replaceAll("\t", "  ");
-      assertEquals(formattedHappyFlowSchema, formatted);
+      String formatted = idlFormatter.format(happyFlowSchema);
+      assertEquals(formatted.replace("\r", ""), formattedHappyFlowSchema.replace("\r", ""));
     }
   }
 
