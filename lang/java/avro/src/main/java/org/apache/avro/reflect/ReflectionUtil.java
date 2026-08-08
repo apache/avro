@@ -34,11 +34,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * A few utility methods for using @link{java.misc.Unsafe}, mostly for private
- * use.
- *
- * Use of Unsafe on Android is forbidden, as Android provides only a very
- * limited functionality for this class compared to the JDK version.
+ * Utility methods for reflective field access.
  *
  * InterfaceAudience.Private
  */

@@ -20,7 +20,6 @@ package org.apache.avro.ipc.netty;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.Security;

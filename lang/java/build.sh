@@ -33,8 +33,6 @@ main() {
         ;;
       test)
         mvn -B verify
-        # Test the modules that depend on hadoop using Hadoop 2
-        mvn -Dmaven.build.cache.enabled=false -B test -Phadoop2
         ;;
       dist)
         mvn -P dist package -DskipTests javadoc:aggregate

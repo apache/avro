@@ -59,9 +59,9 @@ RUN apt-get -qqy update \
                                                  libsnappy1v5 \
                                                  libssl-dev \
                                                  make \
-                                                 openjdk-11-jdk \
                                                  openjdk-17-jdk \
                                                  openjdk-21-jdk \
+                                                 openjdk-25-jdk \
                                                  perl \
                                                  source-highlight \
                                                  subversion \
@@ -217,7 +217,7 @@ RUN cd /opt ; \
 
 ENV PATH=$PATH:/opt/dotnet
 
-# Since we want the JDK21 as a default, we have to re-prepend it to the PATH.
-RUN update-java-alternatives  -s "java-1.21.*"
+# Since we want the JDK25 as a default, we have to re-prepend it to the PATH.
+RUN update-java-alternatives  -s "java-1.25.*"
 
 CMD ["/bin/bash", "-i"]
