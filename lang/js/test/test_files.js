@@ -518,6 +518,100 @@ describe('files', function () {
       encoder.end(1);
     });
 
+    it('surfaces a single error for many failing blocks', function (cb) {
+      // A codec that fails on every block must not emit one 'error' per block
+      // (an error storm); only the first should surface and the stream should be
+      // destroyed.
+      var t = createType('int');
+      var codecs = {
+        'null': function (data, cb) { cb(new Error('ouch')); }
+      };
+      var encoder = new streams.BlockEncoder(t, {codec: 'null', blockSize: 1});
+      var decoder = new streams.BlockDecoder({codecs: codecs});
+      var errorCount = 0;
+      // Finish deterministically when the decoder is actually destroyed ('close')
+      // rather than after a fixed delay: the failing codec can call back
+      // synchronously, so a timeout is both slower and race-prone.
+      decoder
+        .on('data', function () {})
+        .on('error', function () { errorCount++; })
+        .on('close', function () {
+          assert.equal(errorCount, 1);
+          assert(decoder.destroyed);
+          cb();
+        });
+      encoder.pipe(decoder);
+      // Write many records; blockSize 1 forces many separate blocks.
+      for (var i = 0; i < 100; i++) { encoder.write(i); }
+      encoder.end();
+    });
+
+    it('createFileDecoder tears down the source on error', function (cb) {
+      // Write a valid file, then decode it with a codec that always fails; the
+      // underlying file stream must be destroyed (descriptor released) rather
+      // than left reading a file already known to be bad.
+      var t = createType('int');
+      var filePath = tmp.fileSync().name;
+      var encoder = files.createFileEncoder(filePath, t);
+      for (var i = 0; i < 100; i++) { encoder.write(i); }
+      encoder.end();
+      encoder.getDownstream().on('finish', function () {
+        var errorCount = 0;
+        // Capture the source ReadStream that createFileDecoder opens so we can
+        // assert it is torn down (its descriptor released), not just the decoder.
+        var origCreateReadStream = fs.createReadStream;
+        var src;
+        fs.createReadStream = function () {
+          src = origCreateReadStream.apply(fs, arguments);
+          return src;
+        };
+        var decoder;
+        try {
+          decoder = files.createFileDecoder(filePath, {
+            codecs: { 'null': function (data, cb) { cb(new Error('ouch')); } }
+          });
+        } finally {
+          fs.createReadStream = origCreateReadStream;
+        }
+        decoder
+          .on('data', function () {})
+          .on('error', function () { errorCount++; });
+        // Finish when the source stream is actually closed (descriptor released),
+        // which is the teardown this test verifies; by then the decoder has been
+        // destroyed and the single error surfaced.
+        src.on('close', function () {
+          assert.equal(errorCount, 1);
+          assert(decoder.destroyed);
+          assert(src.destroyed);
+          cb();
+        });
+      });
+    });
+
+    it('releases the write callback on a fatal header error', function (cb) {
+      // A fatal header error destroys the stream; _write must still invoke its
+      // write callback, otherwise upstream writers/pipelines stall mid-write.
+      // _onError is stubbed to only flag the error (not destroy), so this
+      // isolates the _write callback from Node's own destroy machinery: if the
+      // callback were left pending the test would hang and time out.
+      var t = createType('int');
+      var chunks = [];
+      var encoder = new streams.BlockEncoder(t);
+      encoder.on('data', function (chunk) { chunks.push(chunk); });
+      encoder.on('end', function () {
+        var buf = Buffer.concat(chunks);
+        buf[0] = buf[0] ^ 0xff; // corrupt the magic bytes -> fatal header error
+        var decoder = new streams.BlockDecoder();
+        var errored = false;
+        decoder._onError = function () { this._errored = errored = true; };
+        decoder._write(buf, undefined, function () {
+          assert(errored);
+          cb();
+        });
+      });
+      encoder.end(1);
+    });
+
     it('decompression late read', function (cb) {
       var chunks = [];
       var encoder = new streams.BlockEncoder(createType('int'));

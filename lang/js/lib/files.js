@@ -156,6 +156,7 @@ function BlockDecoder(opts) {
   this._pending = 0; // Number of blocks undergoing decompression.
   this._needPush = false;
   this._finished = false;
+  this._errored = false; // Whether a fatal error was already surfaced.
 
   this.on('finish', function () {
     this._finished = true;
@@ -165,6 +166,25 @@ function BlockDecoder(opts) {
   });
 }
 util.inherits(BlockDecoder, stream.Duplex);
+
+/**
+ * Surface a fatal decoding error exactly once and tear the stream down.
+ *
+ * Block decompression is asynchronous, so several block callbacks can fail for
+ * the same corrupt or oversized input. Without a guard each one would emit its
+ * own 'error' event (an error storm), and a bare `emit('error')` would neither
+ * stop a piped source (e.g. the file ReadStream in `createFileDecoder`) from
+ * continuing to read nor release its descriptor. Guard on a flag and `destroy`
+ * so only the first error is reported and the pipe unwinds (which unpipes and
+ * lets the upstream stream be cleaned up).
+ */
+BlockDecoder.prototype._onError = function (err) {
+  if (this._errored) {
+    return;
+  }
+  this._errored = true;
+  this.destroy(err); // Emits 'error' with `err`, then tears the stream down.
+};
 
 BlockDecoder.getDefaultCodecs = function () {
   return {
@@ -182,14 +202,14 @@ BlockDecoder.prototype._decodeHeader = function () {
   }
 
   if (!MAGIC_BYTES.equals(header.magic)) {
-    this.emit('error', new Error('invalid magic bytes'));
+    this._onError(new Error('invalid magic bytes'));
     return;
   }
 
   var codec = (header.meta['avro.codec'] || 'null').toString();
   this._decompress = (this._codecs || BlockDecoder.getDefaultCodecs())[codec];
   if (!this._decompress) {
-    this.emit('error', new Error(f('unknown codec: %s', codec)));
+    this._onError(new Error(f('unknown codec: %s', codec)));
     return;
   }
 
@@ -197,7 +217,7 @@ BlockDecoder.prototype._decodeHeader = function () {
     var schema = JSON.parse(header.meta['avro.schema'].toString());
     this._type = parse(schema, this._parseOpts);
   } catch (err) {
-    this.emit('error', err);
+    this._onError(err);
     return;
   }
 
@@ -213,6 +233,8 @@ BlockDecoder.prototype._write = function (chunk, encoding, cb) {
   tap.pos = 0;
 
   if (!this._decodeHeader()) {
+    // Release the write callback even when a fatal header error destroyed the
+    // stream, so upstream writers/pipelines are not left stalled mid-write.
     process.nextTick(cb);
     return;
   }
@@ -231,6 +253,12 @@ BlockDecoder.prototype._writeChunk = function (chunk, encoding, cb) {
 
   var block;
   while ((block = tryReadBlock(tap))) {
+    if (this._errored) {
+      // A prior block already failed and destroyed the stream; release the
+      // write callback so upstream writers/pipelines are not left stalled.
+      process.nextTick(cb);
+      return;
+    }
     if (!this._syncMarker.equals(block.sync)) {
       cb(new Error('invalid sync marker'));
       return;
@@ -247,11 +275,11 @@ BlockDecoder.prototype._createBlockCallback = function () {
   this._pending++;
 
   return function (err, data) {
+    self._pending--;
     if (err) {
-      self.emit('error', err);
+      self._onError(err);
       return;
     }
-    self._pending--;
     self._queue.push(new BlockData(index, data));
     if (self._needPush) {
       self._needPush = false;
@@ -557,7 +585,13 @@ function extractFileHeader(path, opts) {
  *
  */
 function createFileDecoder(path, opts) {
-  return fs.createReadStream(path).pipe(new BlockDecoder(opts));
+  var decoder = new BlockDecoder(opts);
+  // Use pipeline (not pipe) so that if decoding fails, the source file stream is
+  // destroyed and its descriptor released, rather than left open reading a file
+  // already known to be bad. Errors still surface on the returned decoder via
+  // its own 'error' event; the callback just keeps pipeline from throwing.
+  stream.pipeline(fs.createReadStream(path), decoder, function () {});
+  return decoder;
 }
 
 
