@@ -271,12 +271,14 @@
       <artifactId>trevni-core</artifactId>
       <classifier>tests</classifier>
       <version>${project.version}</version>
+      <scope>tests</scope>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>trevni-avro</artifactId>
       <classifier>tests</classifier>
       <version>${project.version}</version>
+      <scope>tests</scope>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
