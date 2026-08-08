@@ -19,6 +19,7 @@
 
 #include <avro/platform.h>
 #include "avro/basics.h"
+#include "avro/logical.h"
 #include "avro/schema.h"
 #include "avro_private.h"
 #include "st.h"
@@ -66,6 +67,7 @@ struct avro_union_schema_t {
 
 struct avro_fixed_schema_t {
 	struct avro_obj_t obj;
+	avro_logical_schema_t *logical_type;
 	const char *name;
 	const char *space;
 	int64_t size;
@@ -76,6 +78,21 @@ struct avro_link_schema_t {
 	avro_schema_t to;
 };
 
+struct avro_bytes_schema_t {
+  struct avro_obj_t obj;
+  avro_logical_schema_t *logical_type;
+};
+
+struct avro_int_schema_t {
+  struct avro_obj_t obj;
+  avro_logical_schema_t *logical_type;
+};
+
+struct avro_long_schema_t {
+  struct avro_obj_t obj;
+  avro_logical_schema_t *logical_type;
+};
+
 #define avro_schema_to_record(schema_)  (container_of(schema_, struct avro_record_schema_t, obj))
 #define avro_schema_to_enum(schema_)    (container_of(schema_, struct avro_enum_schema_t, obj))
 #define avro_schema_to_array(schema_)   (container_of(schema_, struct avro_array_schema_t, obj))
@@ -83,5 +100,8 @@ struct avro_link_schema_t {
 #define avro_schema_to_union(schema_)   (container_of(schema_, struct avro_union_schema_t, obj))
 #define avro_schema_to_fixed(schema_)   (container_of(schema_, struct avro_fixed_schema_t, obj))
 #define avro_schema_to_link(schema_)    (container_of(schema_, struct avro_link_schema_t, obj))
+#define avro_schema_to_bytes(schema_)   (container_of(schema_, struct avro_bytes_schema_t, obj))
+#define avro_schema_to_int(schema_)     (container_of(schema_, struct avro_int_schema_t, obj))
+#define avro_schema_to_long(schema_)    (container_of(schema_, struct avro_long_schema_t, obj))
 
 #endif
