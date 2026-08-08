@@ -132,6 +132,29 @@ string getStringField(const Entity &e, const Object &m,
     return it->second.stringValue();
 }
 
+// Validates that a record field name or enum symbol conforms to the Avro name
+// grammar: a non-empty string whose first character is [A-Za-z_] and whose
+// remaining characters are [A-Za-z0-9_] (the same rule enforced for named type
+// simple names by Name::check()). This prevents out-of-spec strings from being
+// emitted verbatim as identifiers by the C++ code generator. The character checks
+// are restricted to ASCII (rather than the locale-dependent std::isalnum), which
+// is consistent with the locale-independent checks used by Name::check().
+static void validateSimpleName(const string &name, const char *what) {
+    if (name.empty()) {
+        throw Exception("Empty {} name", what);
+    }
+    const auto isAsciiLetter = [](char c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'); };
+    if (!isAsciiLetter(name[0]) && name[0] != '_') {
+        throw Exception("Invalid {} name: {}", what, name);
+    }
+    for (const char c : name) {
+        const bool isAsciiAlnum = isAsciiLetter(c) || (c >= '0' && c <= '9');
+        if (!isAsciiAlnum && c != '_') {
+            throw Exception("Invalid {} name: {}", what, name);
+        }
+    }
+}
+
 const Array &getArrayField(const Entity &e, const Object &m,
                            const string &fieldName);
 
@@ -309,6 +332,7 @@ static void getCustomAttributes(const Object &m, CustomAttributes &customAttribu
 static Field makeField(const Entity &e, SymbolTable &st, const string &ns) {
     const Object &m = e.objectValue();
     string n = getStringField(e, m, "name");
+    validateSimpleName(n, "field");
     vector<string> aliases;
     string aliasesName = "aliases";
     if (containsField(m, aliasesName)) {
@@ -427,7 +451,9 @@ static NodePtr makeEnumNode(const Entity &e,
         if (it.type() != json::EntityType::String) {
             throw Exception("Enum symbol not a string: {}", it.toString());
         }
-        symbols.add(it.stringValue());
+        const string &symbol = it.stringValue();
+        validateSimpleName(symbol, "enum symbol");
+        symbols.add(symbol);
     }
     NodePtr node = NodePtr(new NodeEnum(asSingleAttribute(name), symbols));
     if (containsField(m, "doc")) {
