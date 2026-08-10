@@ -111,6 +111,32 @@ namespace Avro.Test.CodeGen
             }
 
             [Test]
+            public void RecordGetAndPutSwitchesShouldNotEmitUnreachableStatement()
+            {
+                AddSchema(@"
+{
+  ""name"": ""Sample"",
+  ""namespace"": ""Avro.Test.CodeGen.UnreachableCodeRegression"",
+  ""type"": ""record"",
+  ""fields"": [
+    { ""name"": ""value"", ""type"": ""string"" }
+  ]
+}
+");
+                GenerateCode();
+                var types = GetTypes();
+                bool hasSampleCode = types.TryGetValue("Sample", out string sampleCode);
+                Assert.That(hasSampleCode);
+
+                // The exhaustive switch in Get()/Put() must not be followed by a stray ";" -
+                // that empty statement is unreachable (every case returns or throws) and
+                // trips IDE-only unreachable-code analysis (e.g. ReSharper) even though Roslyn
+                // does not flag it.
+                Assert.That(Regex.IsMatch(sampleCode, @"\}\s*;\s*\}\s*public virtual void Put"), Is.False);
+                Assert.That(Regex.IsMatch(sampleCode, @"in Put\(\)""\);\s*\}\s*;"), Is.False);
+            }
+
+            [Test]
             public void EnumWithKeywordSymbolsShouldHavePrefixedSymbols()
             {
                 AddSchema(@"{

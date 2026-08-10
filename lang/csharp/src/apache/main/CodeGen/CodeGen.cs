@@ -874,15 +874,15 @@ namespace Avro
             // end switch block for Get()
             getFieldStmt.AppendLine("\t\t\tdefault: throw new global::Avro.AvroRuntimeException(\"Bad index \" + fieldPos + \" in Get()\");")
                 .Append("\t\t\t}");
-            var cseGet = new CodeSnippetExpression(getFieldStmt.ToString());
-            cmmGet.Statements.Add(cseGet);
+            var cssGet = new CodeSnippetStatement(getFieldStmt.ToString());
+            cmmGet.Statements.Add(cssGet);
             ctd.Members.Add(cmmGet);
 
             // end switch block for Put()
             putFieldStmt.AppendLine("\t\t\tdefault: throw new global::Avro.AvroRuntimeException(\"Bad index \" + fieldPos + \" in Put()\");")
                 .Append("\t\t\t}");
-            var csePut = new CodeSnippetExpression(putFieldStmt.ToString());
-            cmmPut.Statements.Add(csePut);
+            var cssPut = new CodeSnippetStatement(putFieldStmt.ToString());
+            cmmPut.Statements.Add(cssPut);
             ctd.Members.Add(cmmPut);
 
             string nspace = recordSchema.Namespace;
