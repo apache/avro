@@ -6,7 +6,7 @@ protocol HappyFlow {
     @aliases(["naming.OldMessage"])
     record NewMessage {
         string @generator("uuid-type1") id;
-        @my-key("my-value") string? @aliases(["text","msg"]) message = null;
+        @my-key("my-value") string? @aliases(["text", "msg"]) message = null;
         @my-key("my-value") map<common.Flag> @order("DESCENDING") flags;
         Counter mainCounter;
         /** A list of counters. */
@@ -20,7 +20,9 @@ protocol HappyFlow {
     }
 
     @namespace("common")
-    enum Flag {ON, OFF, CANARY}
+    enum Flag {
+        ON, OFF, CANARY
+    }
 
     record Counter {
         string name;

@@ -84,7 +84,7 @@ public final class IdlUtils {
     module.addSerializer(new StdSerializer<byte[]>(byte[].class) {
       @Override
       public void serialize(byte[] value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-        MAPPER.writeValueAsString(new String(value, StandardCharsets.ISO_8859_1));
+        gen.writeString(new String(value, StandardCharsets.ISO_8859_1));
       }
     });
 
