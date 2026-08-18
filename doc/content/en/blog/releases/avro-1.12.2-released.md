@@ -58,6 +58,11 @@ This release includes a broad round of hardening against malformed and adversari
 * [AVRO-4296](https://issues.apache.org/jira/browse/AVRO-4296): Bound allocation when decoding length-prefixed values and collections
 
 
+## Breaking Changes
+
+### Java
+* [AVRO-4189](https://issues.apache.org/jira/browse/AVRO-4189) ([#3693](https://github.com/apache/avro/pull/3693)): Classes referenced by the `java-class` schema property are now validated when using the fast reader. Avro will throw a `SecurityException` instead of instantiating non-permitted classes. Set the system property `org.apache.avro.SERIALIZABLE_PACKAGES` to `*`, or call `ClassSecurityValidator.setGlobal(...)`, to restore the old behavior.
+
 ## Highlights
 
 ### C
