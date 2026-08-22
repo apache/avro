@@ -61,7 +61,23 @@ This release includes a broad round of hardening against malformed and adversari
 ## Breaking Changes
 
 ### Java
-* [AVRO-4189](https://issues.apache.org/jira/browse/AVRO-4189) ([#3693](https://github.com/apache/avro/pull/3693)): Classes referenced by the `java-class` schema property are now validated when using the fast reader. Avro will throw a `SecurityException` instead of instantiating non-permitted classes. Set the system property `org.apache.avro.SERIALIZABLE_PACKAGES` to `*`, or call `ClassSecurityValidator.setGlobal(...)`, to restore the old behavior.
+
+The Avro 1.12.2 Java SDK now restricts arbitrary Java classes from being instantiated, either from the `SpecificDatumReader` or `java-class` attributes in a schema. 
+If you are not setting the `org.apache.avro.SERIALIZABLE_CLASSES` or `org.apache.avro.SERIALIZABLE_PACKAGES` system properties, you may experience the following `java.lang.SecurityException`: 
+
+```
+java.lang.SecurityException: Forbidden com.example.MyCustomClass!
+  This class is not trusted to be included in Avro schemas.
+    at org.apache.avro.util.ClassSecurityValidator.validate(ClassSecurityValidator.java:60)
+    at org.apache.avro.util.ClassUtils.forName(ClassUtils.java:99)
+    ...
+```
+
+See [AVRO-4189](https://issues.apache.org/jira/browse/AVRO-4189) for more details.
+
+The recommended action is to list the classes and packages that Avro is allowed to instantiate in the `org.apache.avro.SERIALIZABLE_CLASSES` or `org.apache.avro.SERIALIZABLE_PACKAGES` system properties.
+If you are running Avro in an environment with trusted schemas and trusted data, you can restore the old behaviour by setting `org.apache.avro.SERIALIZABLE_PACKAGES` to `*`
+(or calling `ClassSecurityValidator.setGlobal(...)` to trust your own classes).
 
 ## Highlights
 
