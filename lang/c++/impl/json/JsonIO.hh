@@ -318,6 +318,13 @@ class AVRO_DECL JsonGenerator {
                         value <<= 6;
                         value |= *p & 0x3f;
                     }
+                    if (value >= 0xd800 && value <= 0xdfff) {
+                        // Surrogate code points are ill-formed in UTF-8 and
+                        // cannot be represented in JSON; emitting them here
+                        // produces a lone \u surrogate, matching what the
+                        // decoder already rejects.
+                        throw Exception("Invalid UTF-8 sequence");
+                    }
                     escapeUnicode(value);
                 }
             } else {
