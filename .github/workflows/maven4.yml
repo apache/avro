@@ -28,6 +28,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  MAVEN4_VERSION: '4.0.0-rc-5'
+
 jobs:
   maven4:
     runs-on: ubuntu-latest
@@ -50,20 +53,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-build-cache
 
-      - name: 'Setup Temurin JDK 8, 11, 17 & 21'
+      - name: 'Setup Temurin JDK 11, 17 & 21'
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: |
-            8
             11
             17
             21
 
       - name: Setup Maven 4
-        uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
-        with:
-          maven-version: 4.0.0-alpha-10
+        run: |
+          wget -q https://archive.apache.org/dist/maven/maven-4/${{ env.MAVEN4_VERSION }}/binaries/apache-maven-${{ env.MAVEN4_VERSION }}-bin.tar.gz
+          tar xzf apache-maven-${{ env.MAVEN4_VERSION }}-bin.tar.gz -C /opt
+          echo "/opt/apache-maven-${{ env.MAVEN4_VERSION }}/bin" >> $GITHUB_PATH
 
       - name: Test
         run: mvn clean verify
