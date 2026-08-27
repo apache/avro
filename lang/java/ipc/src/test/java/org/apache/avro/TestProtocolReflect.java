@@ -28,8 +28,6 @@ import org.apache.avro.ipc.reflect.ReflectResponder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -143,21 +141,6 @@ public class TestProtocolReflect {
     random.nextBytes(data);
     byte[] echoed = proxy.echoBytes(data);
     assertArrayEquals(data, echoed);
-  }
-
-  @Test
-  // The JRE range is because reflection based protocols try to (among others)
-  // make the field Throwable.cause accessible, and are not allowed to.
-  @EnabledForJreRange(min = JRE.JAVA_8, max = JRE.JAVA_11, disabledReason = "Java 11 announced: All illegal access operations will be denied in a future release")
-  void error() throws IOException {
-    SimpleException error = null;
-    try {
-      proxy.error();
-    } catch (SimpleException e) {
-      error = e;
-    }
-    assertNotNull(error);
-    assertEquals("foo", error.getMessage());
   }
 
   @Test

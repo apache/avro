@@ -49,11 +49,9 @@ import org.apache.avro.test.MD5;
 import org.apache.avro.test.Kind;
 
 import org.apache.avro.compiler.specific.SpecificCompiler.OutputFile;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.rules.TestName;
 
 public class TestSpecificCompiler {
 

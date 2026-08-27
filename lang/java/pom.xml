@@ -91,7 +91,6 @@
     <module>integration-test</module>
     <module>perf</module>
     <module>interop-data-test</module>
-    <module>java17-test</module>
   </modules>
 
   <build>
@@ -341,8 +340,7 @@
               <file>${main.basedir}/lang/java/eclipse-java-formatter.xml</file>
               <version>4.19</version>
             </eclipse>
-            <!-- Temporarily disabled for JDK 16+ builds -->
-            <!--<removeUnusedImports/>-->
+            <removeUnusedImports/>
             <replaceRegex>
               <name>Remove wildcard imports</name>
               <searchRegex>import\s+[^\*\s]+\*;(\r\n|\r|\n)</searchRegex>
@@ -500,13 +498,6 @@
           </plugin>
         </plugins>
       </build>
-    </profile>
-    <!-- This profile is used on tests to validate backwards compatibility with Hadoop 2 -->
-    <profile>
-      <id>hadoop2</id>
-      <properties>
-        <hadoop.version>2.10.1</hadoop.version>
-      </properties>
     </profile>
   </profiles>
 

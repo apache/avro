@@ -5,7 +5,6 @@
  */
 package org.apache.avro.specific;
 
-import com.fasterxml.jackson.databind.jsonschema.JsonSchema;
 import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.BinaryMessageEncoder;

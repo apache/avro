@@ -23,7 +23,6 @@ import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.specific.TestRecordWithMapsAndArrays;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -33,7 +32,6 @@ import java.util.Arrays;
 import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;

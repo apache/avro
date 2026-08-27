@@ -20,7 +20,6 @@ package org.apache.avro.mojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.FileUtils;
 import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
 
 import java.io.File;
 import java.nio.file.Files;

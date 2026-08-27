@@ -194,13 +194,13 @@ public class Perf {
       String a = args[i];
       TestDescriptor t = ALL_TESTS.get(a);
       if (null != t) {
-        tests.add(t.test.newInstance());
+        tests.add(t.test.getDeclaredConstructor().newInstance());
         continue;
       }
       List<TestDescriptor> lt = BATCHES.get(a);
       if (null != lt) {
         for (TestDescriptor td : lt) {
-          tests.add(td.test.newInstance());
+          tests.add(td.test.getDeclaredConstructor().newInstance());
         }
         continue;
       }
@@ -257,7 +257,7 @@ public class Perf {
     if (tests.isEmpty()) {
       for (Map.Entry<String, TestDescriptor> entry : ALL_TESTS.entrySet()) {
         TestDescriptor t = entry.getValue();
-        Test test = t.test.newInstance();
+        Test test = t.test.getDeclaredConstructor().newInstance();
         tests.add(test);
       }
     }

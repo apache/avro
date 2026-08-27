@@ -27,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayOutputStream;
-import java.util.concurrent.Callable;
 
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
