@@ -18,6 +18,7 @@
 
 using System;
 using System.Reflection;
+using Avro.Reflect.Converter;
 
 namespace Avro.Reflect
 {
