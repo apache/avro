@@ -219,9 +219,10 @@ void
 avro_raw_string_set_length(avro_raw_string_t *str,
 			   const void *src, size_t length)
 {
-	avro_raw_string_ensure_buf(str, length+1);
+	size_t length_including_nul = length + (((char *) src)[length - 1] != '\0');
+	avro_raw_string_ensure_buf(str, length_including_nul);
 	memcpy((void *) str->wrapped.buf, src, length);
-	((char *) str->wrapped.buf)[length] = '\0';
+	((char *) str->wrapped.buf)[length_including_nul-1] = '\0';
 	str->wrapped.size = length;
 }
 
