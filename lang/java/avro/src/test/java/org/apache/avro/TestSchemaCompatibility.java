@@ -95,6 +95,7 @@ import org.apache.avro.generic.GenericData.EnumSymbol;
 import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
@@ -452,6 +453,12 @@ public class TestSchemaCompatibility {
 
   // -----------------------------------------------------------------------------------------------
 
+  private static final Schema UNION_A_AND_B = SchemaBuilder.unionOf().record("A").fields().requiredBoolean("a")
+      .endRecord().and().record("B").fields().requiredBoolean("b").endRecord().endUnion();
+  private static final Schema UNION_B_ALIAS_A = SchemaBuilder.unionOf().record("B").aliases("A").fields().name("a")
+      .type().booleanType().booleanDefault(false).name("b").type().booleanType().booleanDefault(false).endRecord()
+      .endUnion();
+
   public static final List<DecodingTestCase> DECODING_COMPATIBILITY_TEST_CASES = list(
       new DecodingTestCase(INT_SCHEMA, 1, INT_SCHEMA, 1), new DecodingTestCase(INT_SCHEMA, 1, LONG_SCHEMA, 1L),
       new DecodingTestCase(INT_SCHEMA, 1, FLOAT_SCHEMA, 1.0f), new DecodingTestCase(INT_SCHEMA, 1, DOUBLE_SCHEMA, 1.0d),
@@ -477,7 +484,12 @@ public class TestSchemaCompatibility {
 
       new DecodingTestCase(INT_STRING_UNION_SCHEMA, "the string", STRING_SCHEMA, new Utf8("the string")),
 
-      new DecodingTestCase(INT_STRING_UNION_SCHEMA, "the string", STRING_UNION_SCHEMA, new Utf8("the string")));
+      new DecodingTestCase(INT_STRING_UNION_SCHEMA, "the string", STRING_UNION_SCHEMA, new Utf8("the string")),
+
+      // AVRO-2830
+      new DecodingTestCase(UNION_A_AND_B,
+          new GenericRecordBuilder(UNION_A_AND_B.getTypes().get(0)).set("a", true).build(), UNION_B_ALIAS_A,
+          new GenericRecordBuilder(UNION_B_ALIAS_A.getTypes().get(0)).set("a", true).build()));
 
   /**
    * Tests the reader/writer compatibility at decoding time.
