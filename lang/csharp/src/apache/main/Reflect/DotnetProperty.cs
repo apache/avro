@@ -22,13 +22,27 @@ using System.Collections;
 
 namespace Avro.Reflect
 {
-    internal class DotnetProperty
+    /// <summary>
+    /// Dotnet property type
+    /// </summary>
+    public class DotnetProperty
     {
-        private PropertyInfo _property;
+        /// <summary>
+        /// Property info
+        /// </summary>
+        protected readonly PropertyInfo _property;
 
+        /// <summary>
+        /// Converter
+        /// </summary>
         public IAvroFieldConverter Converter { get; set; }
 
-        private bool IsPropertyCompatible(Avro.Schema schema)
+        /// <summary>
+        /// Check if property match avro type
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <returns></returns>
+        public bool IsPropertyCompatible(Avro.Schema schema)
         {
             Type propType;
             var schemaTag = schema.Tag;
@@ -84,6 +98,14 @@ namespace Avro.Reflect
             return false;
         }
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="property"></param>
+        /// <param name="schema"></param>
+        /// <param name="converter"></param>
+        /// <param name="cache"></param>
+        /// <exception cref="AvroException"></exception>
         public DotnetProperty(PropertyInfo property, Avro.Schema schema, IAvroFieldConverter converter, ClassCache cache)
         {
             _property = property;
@@ -105,11 +127,28 @@ namespace Avro.Reflect
             }
         }
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="property"></param>
+        /// <param name="schema"></param>
+        /// <param name="cache"></param>
         public DotnetProperty(PropertyInfo property, Avro.Schema schema, ClassCache cache)
             : this(property, schema, null, cache)
         {
         }
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        protected DotnetProperty()
+        {
+        }
+
+        /// <summary>
+        /// Get property type
+        /// </summary>
+        /// <returns></returns>
         public virtual Type GetPropertyType()
         {
             if (Converter != null)
@@ -120,6 +159,12 @@ namespace Avro.Reflect
             return _property.PropertyType;
         }
 
+        /// <summary>
+        /// Get property value
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="s"></param>
+        /// <returns></returns>
         public virtual object GetValue(object o, Schema s)
         {
             if (Converter != null)
@@ -130,6 +175,12 @@ namespace Avro.Reflect
             return _property.GetValue(o);
         }
 
+        /// <summary>
+        /// Set Property value
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="v"></param>
+        /// <param name="s"></param>
         public virtual void SetValue(object o, object v, Schema s)
         {
             if (Converter != null)
