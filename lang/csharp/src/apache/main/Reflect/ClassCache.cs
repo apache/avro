@@ -19,6 +19,7 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace Avro.Reflect
 {
@@ -32,7 +33,6 @@ namespace Avro.Reflect
         private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
 
         private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
-        private ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
 
         private void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
         {
@@ -182,7 +182,7 @@ namespace Avro.Reflect
             DotnetClass c;
             if (!_nameClassMap.TryGetValue(schema.Fullname, out c))
             {
-               return null;
+                return null;
             }
 
             return c;
@@ -195,6 +195,9 @@ namespace Avro.Reflect
         /// <param name="s">Schema</param>
         public void LoadClassCache(Type objType, Schema s)
         {
+            if (!ToBeCached(s))
+                return;
+
             switch (s)
             {
                 case RecordSchema rs:
@@ -215,16 +218,8 @@ namespace Avro.Reflect
                     var c = GetClass(rs);
                     foreach (var f in rs.Fields)
                     {
-                        /*              
-                        //.StackOverflowException
                         var t = c.GetPropertyType(f);
                         LoadClassCache(t, f.Schema);
-                        */
-                        if (_previousFields.TryAdd(f.Name, f.Schema))
-                        {
-                            var t = c.GetPropertyType(f);
-                            LoadClassCache(t, f.Schema);
-                        }
                     }
 
                     break;
@@ -299,6 +294,23 @@ namespace Avro.Reflect
 
                     break;
             }
+        }
+
+        /// <summary>
+        /// Check if schema has to be cached
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <returns>false - not applicable schema type or has been cached before</returns>
+        protected virtual bool ToBeCached(Schema schema)
+        {
+            if (schema is RecordSchema || schema is ArraySchema
+                || schema is MapSchema || schema is NamedSchema
+                || schema is UnionSchema)
+            {
+                return !_nameClassMap.ContainsKey(schema.Fullname);
+            }
+
+            return false;
         }
     }
 }
