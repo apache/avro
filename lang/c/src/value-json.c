@@ -62,7 +62,7 @@ encode_utf8_bytes(const void *src, size_t src_len,
 
 	// Allocate a new buffer for the UTF-8 string and fill it in.
 	uint8_t  *dest8 = (uint8_t *) avro_malloc(utf8_len);
-	if (dest8 == NULL) {
+	if (dest8 == NULL && utf8_len) {
 		avro_set_error("Cannot allocate JSON bytes buffer");
 		return ENOMEM;
 	}
@@ -126,7 +126,7 @@ avro_value_to_json_t(const avro_value_t *value)
 				return NULL;
 			}
 
-			json_t  *result = json_stringn_nocheck((const char *) encoded, encoded_size);
+			json_t  *result = json_stringn_nocheck((const char *) encoded ? encoded : "", encoded_size);
 			avro_free(encoded, encoded_size);
 			if (result == NULL) {
 				avro_set_error("Cannot allocate JSON bytes");
