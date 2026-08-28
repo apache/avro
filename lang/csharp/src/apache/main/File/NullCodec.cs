@@ -59,7 +59,13 @@ namespace Avro.File
         /// <inheritdoc/>
         public override bool Equals(object other)
         {
-            return this == other || GetType().Name == other.GetType().Name;
+            if (other == this)
+            {
+                return true;
+            }
+
+            return other != null
+                && other.GetType() == typeof(NullCodec);
         }
 
         /// <inheritdoc/>

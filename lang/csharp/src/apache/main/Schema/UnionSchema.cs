@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -162,16 +163,30 @@ namespace Avro
         /// <returns>true if objects are equal, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (obj == this) return true;
-            if (obj != null && obj is UnionSchema)
+            if (obj == this)
             {
-                UnionSchema that = obj as UnionSchema;
-                if (that.Count == Count)
-                {
-                    for (int i = 0; i < Count; i++) if (!that[i].Equals(this[i])) return false;
-                    return areEqual(that.Props, this.Props);
-                }
+                return true;
             }
+
+            if (obj == null || obj.GetType() != typeof(UnionSchema))
+            {
+                return false;
+            }
+
+            UnionSchema that = (UnionSchema)obj;
+            if (that.Count == Count)
+            {
+                for (int i = 0; i < Count; i++)
+                {
+                    if (!that[i].Equals(this[i]))
+                    {
+                        return false;
+                    }
+                }
+
+                return areEqual(that.Props, this.Props);
+            }
+
             return false;
         }
 
