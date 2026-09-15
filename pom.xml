@@ -524,6 +524,9 @@
                 <exclude>lang/py/userlogs/**</exclude>
                 <exclude>lang/py/docs/build/**</exclude>
                 <exclude>lang/ruby/Manifest</exclude>
+                <exclude>**/.gradle/**</exclude>
+                <exclude>lang/java/gradle-plugin/gradle/**</exclude>
+                <exclude>lang/java/gradle-plugin/build/**</exclude>
                 <!-- text documentation files -->
                 <exclude>CHANGES.txt</exclude>
                 <exclude>DIST_README.txt</exclude>
