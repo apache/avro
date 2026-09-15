@@ -537,14 +537,26 @@ inline LogicalType GenericDatum::logicalType() const {
 
 template<typename T>
 T &GenericDatum::value() {
-    return (type_ == AVRO_UNION) ? std::any_cast<GenericUnion>(&value_)->datum().value<T>()
-                                 : *std::any_cast<T>(&value_);
+    if (type_ == AVRO_UNION) {
+        return std::any_cast<GenericUnion>(&value_)->datum().value<T>();
+    }
+    T *ptr = std::any_cast<T>(&value_);
+    if (ptr == nullptr) {
+        throw Exception("Invalid type. Requested C++ type does not match the datum type {}", toString(type_));
+    }
+    return *ptr;
 }
 
 template<typename T>
 const T &GenericDatum::value() const {
-    return (type_ == AVRO_UNION) ? std::any_cast<GenericUnion>(&value_)->datum().value<T>()
-                                 : *std::any_cast<T>(&value_);
+    if (type_ == AVRO_UNION) {
+        return std::any_cast<GenericUnion>(&value_)->datum().value<T>();
+    }
+    const T *ptr = std::any_cast<T>(&value_);
+    if (ptr == nullptr) {
+        throw Exception("Invalid type. Requested C++ type does not match the datum type {}", toString(type_));
+    }
+    return *ptr;
 }
 
 inline size_t GenericDatum::unionBranch() const {
