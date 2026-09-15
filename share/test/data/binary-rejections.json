@@ -1,0 +1,68 @@
+{
+  "description": "Shared cross-SDK 'must-reject' binary decoding vectors (AVRO-4304). Each vector is a schema plus a raw binary payload (hex) that a conformant Avro binary decoder MUST reject with a bounded, well-defined error (an Avro/IO error) rather than accepting it, crashing (StackOverflowError), or exhausting memory (OutOfMemoryError). Payloads are hex-encoded bytes. The 'schema' field is the Avro schema as a JSON string. The 'category' groups the kind of malformation. These vectors lock in, across every language SDK, the decoder-hardening behaviour introduced under AVRO-4292 and siblings.",
+  "vectors": [
+    {
+      "name": "long_varint_non_terminating",
+      "schema": "\"long\"",
+      "category": "overlong_varint",
+      "bytesHex": "80808080808080808080",
+      "comment": "A long varint whose continuation bit is still set after 10 bytes (64 bits) never terminates and must be rejected."
+    },
+    {
+      "name": "int_varint_non_terminating",
+      "schema": "\"int\"",
+      "category": "overlong_varint",
+      "bytesHex": "8080808080",
+      "comment": "An int varint whose continuation bit is still set after 5 bytes (32 bits) never terminates and must be rejected."
+    },
+    {
+      "name": "array_block_count_int64_min",
+      "schema": "{\"type\":\"array\",\"items\":\"int\"}",
+      "category": "negative_block_count",
+      "bytesHex": "ffffffffffffffffff0102",
+      "comment": "Array block count encoded as Long.MIN_VALUE. Its absolute value cannot be represented (negation overflows), so it must be rejected rather than driving an unbounded read."
+    },
+    {
+      "name": "bytes_length_negative",
+      "schema": "\"bytes\"",
+      "category": "negative_length",
+      "bytesHex": "01",
+      "comment": "A bytes value with a negative length prefix (-1) must be rejected."
+    },
+    {
+      "name": "string_length_negative",
+      "schema": "\"string\"",
+      "category": "negative_length",
+      "bytesHex": "01",
+      "comment": "A string value with a negative length prefix (-1) must be rejected."
+    },
+    {
+      "name": "union_branch_index_negative",
+      "schema": "[\"null\",\"int\"]",
+      "category": "union_index_out_of_range",
+      "bytesHex": "01",
+      "comment": "A union branch index of -1 is outside the range of declared branches and must be rejected."
+    },
+    {
+      "name": "union_branch_index_too_large",
+      "schema": "[\"null\",\"int\"]",
+      "category": "union_index_out_of_range",
+      "bytesHex": "0a",
+      "comment": "A union branch index of 5 exceeds the 2 declared branches and must be rejected."
+    },
+    {
+      "name": "enum_index_negative",
+      "schema": "{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"A\",\"B\"]}",
+      "category": "enum_index_out_of_range",
+      "bytesHex": "01",
+      "comment": "An enum symbol index of -1 is outside the range of declared symbols and must be rejected."
+    },
+    {
+      "name": "enum_index_too_large",
+      "schema": "{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"A\",\"B\"]}",
+      "category": "enum_index_out_of_range",
+      "bytesHex": "0a",
+      "comment": "An enum symbol index of 5 exceeds the 2 declared symbols and must be rejected."
+    }
+  ]
+}
