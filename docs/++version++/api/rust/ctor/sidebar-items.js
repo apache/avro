@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"attr":["ctor"],"mod":["declarative","life_before_main","statics"]};

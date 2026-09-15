@@ -1,0 +1,271 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Combines idents and strings into a single ident or string."><title>combine in linktime_proc_macro - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-1ed95124.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="linktime_proc_macro" data-themes="" data-resource-suffix="" data-rustdoc-version="1.98.1 (48a229cea 2026-09-01)" data-channel="1.98.1" data-search-js="search-9944d736.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../static.files/storage-41dd4d93.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc macro"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">combine</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../linktime_proc_macro/index.html">linktime_<wbr>proc_<wbr>macro</a><span class="version">0.2.3</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">combine</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#token-handling" title="Token handling">Token handling</a></li><li><a href="#functions" title="Functions">Functions</a></li><li><a href="#source-span-functions" title="Source span functions">Source span functions</a></li><li><a href="#string-functions" title="String functions">String functions</a></li><li><a href="#pattern-functions" title="Pattern functions">Pattern functions</a></li><li><a href="#comparison-functions" title="Comparison functions">Comparison functions</a></li><li><a href="#math-functions" title="Math functions">Math functions</a></li><li><a href="#conversion-functions" title="Conversion functions">Conversion functions</a></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="index.html">In crate linktime_<wbr>proc_<wbr>macro</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="index.html">linktime_proc_macro</a></div><h1>Macro <span class="macro">combine</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/linktime_proc_macro/lib.rs.html#373-375">Source</a> </span></div><pre class="rust item-decl"><code>combine!() { <span class="comment">/* proc-macro */</span> }</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Combines idents and strings into a single ident or string.</p>
+<p>Both idents and strings are decoded as literal strings. Punctuation is
+ignored when building <code>ident</code> output.</p>
+<p>Arguments are specified via named arguments:</p>
+<ul>
+<li><code>output</code>: The type of the combined value. Must be either <code>ident</code>, <code>string</code>
+or <code>isize</code>.</li>
+<li><code>input</code>: The input tokens to combine.</li>
+<li><code>prefix</code>: The prefix tokens to emit before the combined value.</li>
+<li><code>suffix</code>: The suffix tokens to emit after the combined value.</li>
+<li><code>paren</code>: The group to emit around the combined value.</li>
+<li><code>paren_prefix</code>: The prefix tokens to emit before the value inside the
+group.</li>
+<li><code>paren_suffix</code>: The suffix tokens to emit after the value inside the
+group.</li>
+<li><code>span</code>: The span of the combined value. If not specified, the call-site’s
+span is used.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="comment">// Idents, strings and numeric literals are combined as-is.
+</span><span class="kw">let </span>str = <span class="macro">combine!</span>(output=string input=(prefix <span class="kw">_ </span><span class="string">"NAME" </span><span class="kw">_ </span>suffix));
+<span class="macro">assert_eq!</span>(str, <span class="string">"prefix_NAME_suffix"</span>);
+<span class="kw">let </span>str = <span class="macro">combine!</span>(output=string input=(prefix <span class="kw">_ </span>NAME <span class="kw">_ </span><span class="number">1 </span><span class="kw">_ </span>suffix));
+<span class="macro">assert_eq!</span>(str, <span class="string">"prefix_NAME_1_suffix"</span>);
+
+<span class="comment">// Resolves to `let prefix_NAME_suffix = 1;`
+</span><span class="macro">combine!</span>(output=ident input=(prefix <span class="kw">_ </span><span class="string">"NAME" </span><span class="kw">_ </span>suffix) prefix=(<span class="kw">let </span>) suffix=(= <span class="number">1</span>;));
+<span class="macro">assert_eq!</span>(prefix_NAME_suffix, <span class="number">1</span>);
+
+<span class="comment">// Set the span of the combined value to one of a specific token (useful for macros)
+</span><span class="macro">combine!</span>(output=ident input=(prefix <span class="kw">_ </span><span class="string">"NAME" </span><span class="kw">_ </span>suffix) span=token);</code></pre></div><h3 id="token-handling"><a class="doc-anchor" href="#token-handling">§</a>Token handling</h3>
+<p>The macro will ignore grouping tokens. For ident output, the macro will also
+ignore punctuation tokens and will strip any non-ident-compatible
+characters.</p>
+<h3 id="functions"><a class="doc-anchor" href="#functions">§</a>Functions</h3>
+<p>The macro also supports a number of special function tokens which are
+resolved recursively and can be nested arbitrarily deep.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">macro_rules!</span> make_name_max_length {
+    (<span class="macro-nonterminal">$prefix</span>:ident <span class="macro-nonterminal">$name</span>:ident <span class="macro-nonterminal">$suffix</span>:ident) =&gt; {
+      <span class="comment">// Ensure user calls are not expanded recursively
+      /* $crate:: */ </span><span class="macro">make_name_max_length!</span>(@internal (__RAW__(input=(<span class="macro-nonterminal">$prefix</span>))) (__RAW__(input=(<span class="macro-nonterminal">$name</span>))) (__RAW__(input=(<span class="macro-nonterminal">$suffix</span>))))
+    };
+    (@internal <span class="macro-nonterminal">$prefix</span>:tt <span class="macro-nonterminal">$name</span>:tt <span class="macro-nonterminal">$suffix</span>:tt) =&gt; {
+        <span class="macro">combine!</span>(output=string input=(
+            __IF__(
+              test=(__GT__(a=(__LENGTH__(string=(<span class="macro-nonterminal">$prefix </span><span class="kw">_ </span><span class="macro-nonterminal">$name </span><span class="kw">_ </span><span class="macro-nonterminal">$suffix</span>))) b=<span class="number">20</span>))
+              then=(
+                __SUBSTRING__(input=(<span class="macro-nonterminal">$prefix </span><span class="kw">_ </span><span class="macro-nonterminal">$name </span><span class="kw">_ </span><span class="macro-nonterminal">$suffix</span>) start=<span class="number">0 </span>end=<span class="number">10</span>)
+                <span class="kw">_ </span>$
+                <span class="comment">// uppercase hash
+                </span>__TRANSLATE__(
+                  input=(__SUBSTRING__(input=(__HASH__(string=(<span class="macro-nonterminal">$prefix </span><span class="kw">_ </span><span class="macro-nonterminal">$name </span><span class="kw">_ </span><span class="macro-nonterminal">$suffix</span>))) length=<span class="number">10</span>))
+                  pattern=[a-f] replacement=[A-F]
+                )
+              )
+              <span class="kw">else</span>=(
+                <span class="macro-nonterminal">$prefix </span><span class="kw">_ </span><span class="macro-nonterminal">$name </span><span class="kw">_ </span><span class="macro-nonterminal">$suffix </span><span class="kw">_ </span>__LENGTH__(string=(<span class="macro-nonterminal">$name</span>))
+              )
+            )
+        ))
+    };
+}
+<span class="macro">assert_eq!</span>(<span class="macro">make_name_max_length!</span>(prefix NAME suffix), <span class="string">"prefix_NAME_suffix_4"</span>);
+<span class="macro">assert_eq!</span>(<span class="macro">make_name_max_length!</span>(prefix LONG_NAME suffix), <span class="string">"prefix_LON_$64470473B5"</span>);</code></pre></div><h3 id="source-span-functions"><a class="doc-anchor" href="#source-span-functions">§</a>Source span functions</h3>
+<ul>
+<li><code>__FILE__(of=token)</code>: The file name of the file containing the <code>token</code>.
+Supported on Rust 1.88+, returns “” otherwise.</li>
+<li><code>__LINE__(of=token)</code>: The line number of the <code>token</code>. Supported on Rust
+1.88+, returns 0 otherwise.</li>
+<li><code>__COLUMN__(of=token)</code>: The column number of the <code>token</code>. Supported on
+Rust 1.88+, returns 0 otherwise.</li>
+</ul>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">let </span>file = <span class="macro">combine!</span>(output=string input=(<span class="string">"file:" </span>__FILE__(of=token) <span class="string">":" </span>__LINE__(of=token) <span class="string">":" </span>__COLUMN__(of=token)));
+<span class="macro">assert_eq!</span>(file, <span class="string">"file:linktime-proc-macro/src/lib.rs:6:110"</span>);</code></pre></div>
+<ul>
+<li>
+<p><code>__LOCATIONHASH__(of=token, alphabet=[chars...], ignore_base=token)</code>:
+Returns a hash of location information for all tokens within the tree of
+<code>token</code>. If <code>alphabet</code> is specified, the hash is converted to a string
+using the characters in the <code>alphabet</code>. No zero padding is applied in this
+case.</p>
+<p><code>ignore_base</code> hashes tokens from that crate by content instead of location,
+so macro-synthesized def-site spans don’t shift the hash when that crate
+is edited.</p>
+</li>
+</ul>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">let </span>location_hash = <span class="macro">combine!</span>(output=string input=(<span class="string">"location_hash:" </span>__LOCATIONHASH__(of=(a bunch of tokens) alphabet=[a-z])));
+<span class="macro">assert_eq!</span>(location_hash, <span class="string">"location_hash:dwsrxapjetrwwu"</span>);</code></pre></div>
+<ul>
+<li><code>__SOURCE__(of=token)</code>: The source text content of the <code>token</code>.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">macro_rules!</span> source_of {
+    (<span class="macro-nonterminal">$token</span>:item) =&gt; {
+        <span class="macro">combine!</span>(output=string input=(<span class="string">"source" "(@" </span>__LINE__(of=<span class="macro-nonterminal">$token</span>) <span class="string">"):" </span>__SOURCE__(of=<span class="macro-nonterminal">$token</span>)))
+    };
+}
+<span class="comment">// Use a macro to get the line and source text of a token
+</span><span class="macro">assert_eq!</span>(<span class="macro">source_of!</span>(<span class="kw">fn </span>foo() {}), <span class="string">"source(@12):fn foo () {}"</span>);
+<span class="macro">assert_eq!</span>(<span class="macro">source_of!</span>(<span class="kw">static </span>X: u32 = <span class="number">1</span>;), <span class="string">"source(@13):static X : u32 = 1 ;"</span>);
+
+<span class="kw">let </span>source = <span class="macro">combine!</span>(output=string input=(<span class="string">"source:" </span>__SOURCE__(of=(my token))));
+<span class="macro">assert_eq!</span>(source, <span class="string">"source:my token"</span>);</code></pre></div><h3 id="string-functions"><a class="doc-anchor" href="#string-functions">§</a>String functions</h3>
+<ul>
+<li><code>__HASH__(string=(tokens...) [alphabet=[chars...]])</code>: The hash of the
+<code>tokens</code> when converted to a string, by default as a zero-padding
+lowercase hexadecimal string. <code>tokens</code> may contain nested function calls.
+If <code>alphabet</code> is specified, the hash is converted to a string using the
+characters in the <code>alphabet</code>. No zero padding is applied in this case.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>hash = <span class="macro">combine!</span>(output=string input=(<span class="string">"hash:" </span>__HASH__(string=(__LENGTH__(string=<span class="string">"a"</span>)))));
+<span class="macro">assert_eq!</span>(hash, <span class="string">"hash:65cd25028f98f158"</span>);
+<span class="kw">let </span>hash = <span class="macro">combine!</span>(output=string input=(<span class="string">"hash:" </span>__HASH__(string=(<span class="number">1</span>))));
+<span class="macro">assert_eq!</span>(hash, <span class="string">"hash:65cd25028f98f158"</span>);
+<span class="kw">let </span>hash = <span class="macro">combine!</span>(output=string input=(<span class="string">"hash:" </span>__HASH__(string=(<span class="number">1</span>) alphabet=[<span class="number">0</span>-<span class="number">9a</span>-f])));
+<span class="macro">assert_eq!</span>(hash, <span class="string">"hash:65cd25028f98f158"</span>);
+<span class="kw">let </span>hash = <span class="macro">combine!</span>(output=string input=(<span class="string">"hash:" </span>__HASH__(string=(<span class="number">1</span>) alphabet=[a-z])));
+<span class="macro">assert_eq!</span>(hash, <span class="string">"hash:cywprjlaqhbdie"</span>);</code></pre></div>
+<ul>
+<li><code>__LENGTH__(string=(tokens...))</code>: The length of the <code>tokens</code> when
+converted to a string.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>length = <span class="macro">combine!</span>(output=string input=(<span class="string">"length:" </span>__LENGTH__(string=<span class="string">"a"</span>)));
+<span class="macro">assert_eq!</span>(length, <span class="string">"length:1"</span>);</code></pre></div>
+<ul>
+<li><code>__SUBSTRING__(input=(input) start=start end=end length=length)</code>: The
+substring of the <code>input</code> from the <code>start</code> to the <code>end</code> index (exclusive)
+or <code>length</code> characters from the <code>start</code> index. If <code>end</code> or <code>length</code> would
+exceed the length of the input, the substring is truncated to the end of
+the input. If <code>end</code> or <code>length</code> are missing, the substring is the entire
+input from <code>start</code> to the end of the input.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>substring = <span class="macro">combine!</span>(output=string input=(<span class="string">"substring:" </span>__SUBSTRING__(input=<span class="string">"abc" </span>start=<span class="number">1 </span>end=<span class="number">2</span>)));
+<span class="macro">assert_eq!</span>(substring, <span class="string">"substring:b"</span>);
+<span class="kw">let </span>substring = <span class="macro">combine!</span>(output=string input=(<span class="string">"substring:" </span>__SUBSTRING__(input=<span class="string">"abc" </span>start=<span class="number">1 </span>length=<span class="number">2</span>)));
+<span class="macro">assert_eq!</span>(substring, <span class="string">"substring:bc"</span>);</code></pre></div>
+<ul>
+<li><code>__PAD__(input=(input) length=length left=(padding...) right=(padding...))</code>: Pad the <code>input</code> to the <code>length</code> with the
+<code>padding...</code> (converted to a string).</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>pad = <span class="macro">combine!</span>(output=string input=(<span class="string">"pad:" </span>__PAD__(input=<span class="number">123 </span>length=<span class="number">5 </span>left=<span class="number">0</span>)));
+<span class="macro">assert_eq!</span>(pad, <span class="string">"pad:00123"</span>);</code></pre></div><h3 id="pattern-functions"><a class="doc-anchor" href="#pattern-functions">§</a>Pattern functions</h3>
+<ul>
+<li><code>__REPLACE__(input=(input) pattern=(pattern...)|[chars...] replacement=(replacement))</code>: Replace all occurrences of the <code>pattern...</code>
+(converted to a string) in the <code>input</code> with the <code>replacement</code>. If
+<code>replacement</code> is missing or empty, the pattern is removed.</li>
+</ul>
+<p>Note: <code>pattern</code> may be specified as a regex-like character group. Use square
+brackets to specify a character group.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>replace = <span class="macro">combine!</span>(output=string input=(<span class="string">"replace:" </span>__REPLACE__(input=(a b c) pattern=(b) replacement=(x))));
+<span class="macro">assert_eq!</span>(replace, <span class="string">"replace:axc"</span>);
+
+<span class="comment">// Remove non-alnum characters
+</span><span class="kw">let </span>translate = <span class="macro">combine!</span>(output=string input=(<span class="string">"replace:" </span>__REPLACE__(input=<span class="string">"⚠️ thx 1138" </span>pattern=[^a-zA-Z0-<span class="number">9</span>] replacement=<span class="string">""</span>)));
+<span class="macro">assert_eq!</span>(translate, <span class="string">"replace:thx1138"</span>);</code></pre></div>
+<ul>
+<li><code>__TRANSLATE__(input=(input) pattern=(pattern...)|[chars...] replacement=(replacement)|[chars...])</code>: Replace all occurrences of the
+<code>pattern...</code> (converted to a string) characters in the <code>input</code> with the
+<code>replacement</code> characters. If replacement is missing or empty, the
+character is removed. Otherwise, the replacement character is selected
+from the replacement string in order (repeating the last character if
+necessary).</li>
+</ul>
+<p>Note: <code>pattern</code> and <code>replacement</code> may be specified as regex-like character
+groups. Use square brackets to specify a character group.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="comment">// Deletes all digits
+</span><span class="kw">let </span>translate = <span class="macro">combine!</span>(output=string input=(<span class="string">"translate:" </span>__TRANSLATE__(input=(thx <span class="number">1138</span>) pattern=(<span class="number">0 1 2 3 4 5 6 7 8 9</span>))));
+<span class="macro">assert_eq!</span>(translate, <span class="string">"translate:thx"</span>);
+<span class="comment">// Uppercase all ASCII letters
+</span><span class="kw">let </span>translate = <span class="macro">combine!</span>(output=string input=(<span class="string">"translate:" </span>__TRANSLATE__(input=(thx <span class="number">1138</span>) pattern=[a-z] replacement=[A-Z])));
+<span class="macro">assert_eq!</span>(translate, <span class="string">"translate:THX1138"</span>);</code></pre></div>
+<ul>
+<li><code>__TRIM__(input=(input) left=(padding...)|[chars...] right=(padding...)|[chars...])</code>: Trim the
+<code>input</code> of the <code>left</code> and <code>right</code> patterns.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="comment">// Note: because we are using escaped characters, we need to put them in a string
+</span><span class="kw">let </span>trim = <span class="macro">combine!</span>(output=string input=(<span class="string">"trim:" </span>__TRIM__(input=<span class="string">"  thx 1138  " </span>left=[<span class="string">" \n\t"</span>] right=[<span class="string">" \n\t"</span>])));
+<span class="macro">assert_eq!</span>(trim, <span class="string">"trim:thx 1138"</span>);
+<span class="kw">let </span>trim = <span class="macro">combine!</span>(output=string input=(<span class="string">"trim:" </span>__TRIM__(input=<span class="string">"  thx 1138  " </span>left=[<span class="string">' '</span>] right=[<span class="string">' '</span>])));
+<span class="macro">assert_eq!</span>(trim, <span class="string">"trim:thx 1138"</span>);</code></pre></div>
+<ul>
+<li><code>__CONTAINS__(input=(input) pattern=(pattern...)|[chars...])</code>: Check if
+the <code>input</code> contains the <code>pattern...</code>. If so, returns <code>1</code>, otherwise <code>0</code>.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>contains = <span class="macro">combine!</span>(output=isize input=(<span class="string">"contains:" </span>__CONTAINS__(input=<span class="string">"thx 1138" </span>pattern=[<span class="number">0</span>-<span class="number">9</span>])));
+<span class="macro">assert_eq!</span>(contains, <span class="number">1</span>);
+<span class="kw">let </span>contains = <span class="macro">combine!</span>(output=isize input=(<span class="string">"contains:" </span>__CONTAINS__(input=<span class="string">"thx 1138" </span>pattern=[aeiou])));
+<span class="macro">assert_eq!</span>(contains, <span class="number">0</span>);
+<span class="kw">let </span>contains = <span class="macro">combine!</span>(output=isize input=(<span class="string">"contains:" </span>__CONTAINS__(input=<span class="string">"thx 1138" </span>pattern=<span class="string">"1138"</span>)));
+<span class="macro">assert_eq!</span>(contains, <span class="number">1</span>);</code></pre></div>
+<ul>
+<li><code>__STREQ__(a=(tokens...) b=(tokens...))</code>: Compare <code>a</code> and <code>b</code> as strings.
+Returns <code>1</code> if equal, <code>0</code> otherwise.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>eq = <span class="macro">combine!</span>(output=isize input=(<span class="string">"eq:" </span>__STREQ__(a=<span class="string">"thx 1138" </span>b=<span class="string">"thx 1138"</span>)));
+<span class="macro">assert_eq!</span>(eq, <span class="number">1</span>);
+<span class="kw">let </span>eq = <span class="macro">combine!</span>(output=isize input=(<span class="string">"eq:" </span>__STREQ__(a=<span class="string">"thx 1138" </span>b=<span class="string">"thx 1139"</span>)));
+<span class="macro">assert_eq!</span>(eq, <span class="number">0</span>);</code></pre></div><h3 id="comparison-functions"><a class="doc-anchor" href="#comparison-functions">§</a>Comparison functions</h3>
+<ul>
+<li><code>__IF__(test=(tokens...) then=(tokens...) else=(tokens...))</code>: If test is
+non-zero, emit the <code>then</code> tokens, otherwise emit the <code>else</code> tokens.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="comment">// Outputs true or false idents
+</span><span class="macro">assert!</span>(<span class="macro">combine!</span>(output=ident input=(__IF__(test=<span class="number">1 </span>then=<span class="string">"true" </span><span class="kw">else</span>=<span class="string">"false"</span>))));
+<span class="macro">assert!</span>(<span class="macro">combine!</span>(output=ident input=(__IF__(test=(__CONTAINS__(input=<span class="string">"thx 1138" </span>pattern=<span class="string">"1138"</span>)) then=<span class="string">"true" </span><span class="kw">else</span>=<span class="string">"false"</span>))));</code></pre></div>
+<ul>
+<li><code>__LT__(a=(tokens...) b=(tokens...))</code>: Compare <code>a</code> &lt; <code>b</code> as numbers.</li>
+<li><code>__GT__(a=(tokens...) b=(tokens...))</code>: Compare <code>a</code> &gt; <code>b</code> as numbers.</li>
+<li><code>__LE__(a=(tokens...) b=(tokens...))</code>: Compare <code>a</code> &lt;= <code>b</code> as numbers.</li>
+<li><code>__GE__(a=(tokens...) b=(tokens...))</code>: Compare <code>a</code> &gt;= <code>b</code> as numbers.</li>
+<li><code>__EQ__(a=(tokens...) b=(tokens...))</code>: Compare <code>a</code> == <code>b</code> as numbers.</li>
+<li><code>__NE__(a=(tokens...) b=(tokens...))</code>: Compare <code>a</code> != <code>b</code> as numbers.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>lt = <span class="macro">combine!</span>(output=isize input=(__LT__(a=<span class="number">1 </span>b=<span class="number">2</span>)));
+<span class="macro">assert_eq!</span>(lt, <span class="number">1</span>);
+<span class="kw">let </span>gt = <span class="macro">combine!</span>(output=isize input=(__GT__(a=<span class="number">1 </span>b=<span class="number">2</span>)));
+<span class="macro">assert_eq!</span>(gt, <span class="number">0</span>);</code></pre></div><h3 id="math-functions"><a class="doc-anchor" href="#math-functions">§</a>Math functions</h3>
+<ul>
+<li><code>__ADD__(a=(tokens...) b=(tokens...))</code>: Add the <code>a</code> and <code>b</code> tokens.</li>
+<li><code>__SUB__(a=(tokens...) b=(tokens...))</code>: Subtract the <code>b</code> from <code>a</code>.</li>
+<li><code>__MUL__(a=(tokens...) b=(tokens...))</code>: Multiply the <code>a</code> and <code>b</code> tokens.</li>
+<li><code>__DIV__(a=(tokens...) b=(tokens...))</code>: Divide the <code>a</code> by <code>b</code>.</li>
+<li><code>__AND__(a=(tokens...) b=(tokens...))</code>: Bitwise AND the <code>a</code> and <code>b</code>
+tokens.</li>
+<li><code>__OR__(a=(tokens...) b=(tokens...))</code>: Bitwise OR the <code>a</code> and <code>b</code> tokens.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">assert_eq!</span>(<span class="macro">combine!</span>(output=isize input=(<span class="string">"add:" </span>__ADD__(a=<span class="number">1 </span>b=<span class="number">2</span>))), <span class="number">3</span>);
+<span class="macro">assert_eq!</span>(<span class="macro">combine!</span>(output=isize input=(<span class="string">"sub:" </span>__SUB__(a=<span class="number">1 </span>b=<span class="number">2</span>))), -<span class="number">1</span>);
+<span class="macro">assert_eq!</span>(<span class="macro">combine!</span>(output=isize input=(<span class="string">"mul:" </span>__MUL__(a=<span class="number">1 </span>b=<span class="number">2</span>))), <span class="number">2</span>);
+<span class="macro">assert_eq!</span>(<span class="macro">combine!</span>(output=isize input=(<span class="string">"div:" </span>__DIV__(a=<span class="number">1 </span>b=<span class="number">2</span>))), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="macro">combine!</span>(output=isize input=(<span class="string">"and:" </span>__AND__(a=<span class="number">1 </span>b=<span class="number">2</span>))), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="macro">combine!</span>(output=isize input=(<span class="string">"or:" </span>__OR__(a=<span class="number">1 </span>b=<span class="number">2</span>))), <span class="number">3</span>);</code></pre></div><h3 id="conversion-functions"><a class="doc-anchor" href="#conversion-functions">§</a>Conversion functions</h3>
+<ul>
+<li><code>__TOSTRING__(input=(tokens...))</code>: Convert the <code>tokens</code> to a string
+literal.</li>
+<li><code>__RAW__(input=(tokens...))</code>: Convert the <code>tokens</code> to a string, ignoring
+nested function calls (recommended for user input).</li>
+<li><code>__TOIDENT__(input=(tokens...))</code>: Convert the <code>tokens</code> to an ident,
+stripping invalid characters.</li>
+<li><code>__TONUMBER__(input=(tokens...))</code>: Convert the <code>tokens</code> to a numeric
+literal.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>string = <span class="macro">combine!</span>(output=string input=(<span class="string">"string:" </span>__TOSTRING__(input=(a b c))));
+<span class="macro">assert_eq!</span>(string, <span class="string">"string:abc"</span>);
+
+<span class="kw">let </span>number = <span class="macro">combine!</span>(output=isize input=(<span class="string">"number:" </span>__TONUMBER__(input=(<span class="number">1 2 3</span>))));
+<span class="macro">assert_eq!</span>(number, <span class="number">123</span>);
+<span class="kw">let </span>number = <span class="macro">combine!</span>(output=isize input=(<span class="string">"number:" </span>__TONUMBER__(input=(<span class="string">"0x" </span><span class="number">123 </span><span class="kw">_ </span><span class="number">456</span>))));
+<span class="macro">assert_eq!</span>(number, <span class="number">0x123456</span>);
+
+<span class="kw">let </span>ident = <span class="macro">combine!</span>(output=string input=(<span class="string">"ident:" </span>__TOIDENT__(input=(a $ b <span class="kw">_ </span>c))));
+<span class="macro">assert_eq!</span>(ident, <span class="string">"ident:ab_c"</span>);
+
+<span class="kw">let </span>raw = <span class="macro">combine!</span>(output=string input=(<span class="string">"raw:" </span>__RAW__(input=(__TOSTRING__(input=(a b c))))));
+<span class="macro">assert_eq!</span>(raw, <span class="string">"raw:__TOSTRING__input=abc"</span>);</code></pre></div></div></details></section></div></main></body></html>

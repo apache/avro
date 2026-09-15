@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["avro_data_model_to_serde","dynamic","primer","serde_data_model_to_avro"]};
