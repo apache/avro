@@ -187,6 +187,10 @@ class ValidatingDecoder : public Decoder {
         base->drain();
     }
 
+    int64_t bytesRemaining() const final {
+        return base->bytesRemaining();
+    }
+
 public:
     ValidatingDecoder(const ValidSchema &s, const shared_ptr<Decoder> &b) : base(b),
                                                                             parser(ValidatingGrammarGenerator().generate(s), NULL, handler_) {}

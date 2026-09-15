@@ -471,6 +471,10 @@ class ResolvingDecoderImpl : public ResolvingDecoder {
         base_->drain();
     }
 
+    int64_t bytesRemaining() const final {
+        return base_->bytesRemaining();
+    }
+
 public:
     ResolvingDecoderImpl(const ValidSchema &writer, const ValidSchema &reader,
                          DecoderPtr base) : base_(std::move(base)),

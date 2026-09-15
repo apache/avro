@@ -169,6 +169,14 @@ public:
     /// by the avro decoder. Similar set of problems occur if the Decoder
     /// consumes more than what it should.
     virtual void drain() = 0;
+
+    /// Returns the number of bytes that remain to be read from the underlying
+    /// stream, or a negative value when that count is not known (for example a
+    /// streaming source, or a decoder not backed by a byte stream). The default
+    /// is "unknown"; byte-stream decoders override it so a length prefix or a
+    /// collection block count that exceeds the data actually available can be
+    /// rejected before allocating for it.
+    virtual int64_t bytesRemaining() const { return -1; }
 };
 
 /**
