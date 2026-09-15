@@ -124,7 +124,12 @@ sub skip_bytes {
     my $class = shift;
     my $reader = pop;
     my $size = decode_long($class, undef, undef, $reader);
-    $reader->seek($size, 0);
+    throw Avro::Schema::Error::Parse("bytes length is negative: $size")
+        if $size < 0;
+    ## SEEK_CUR (1): skip forward $size bytes relative to the current position.
+    ## (Using SEEK_SET here would jump to an absolute offset and corrupt the
+    ## decoding of every subsequent field.)
+    $reader->seek($size, 1);
     return;
 }
 
@@ -219,14 +224,17 @@ sub skip_block {
     my ($reader, $block_content) = @_;
     my $block_count = decode_long($class, undef, undef, $reader);
     while ($block_count) {
+        ## A negative block count means abs($block_count) items follow, preceded
+        ## by a long block size (in bytes). Take the absolute value and consume
+        ## the block size (matching decode_array/decode_map).
         if ($block_count < 0) {
-            $reader->seek($block_count, 0);
-            next;
+            $block_count = -$block_count;
+            my $block_size = decode_long($class, undef, undef, $reader);
+            throw Avro::Schema::Error::Parse("block size is negative: $block_size")
+                if $block_size < 0;
         }
-        else {
-            for (1..$block_count) {
-                $block_content->();
-            }
+        for (1..$block_count) {
+            $block_content->();
         }
         $block_count = decode_long($class, undef, undef, $reader);
     }
@@ -235,7 +243,7 @@ sub skip_block {
 sub skip_array {
     my $class = shift;
     my ($schema, $reader) = @_;
-    skip_block($reader, sub { $class->skip($schema->items, $reader) });
+    $class->skip_block($reader, sub { $class->skip($schema->items, $reader) });
 }
 
 ## 1.3.2 Arrays are encoded as a series of blocks. Each block consists of a
@@ -273,7 +281,7 @@ sub decode_array {
 sub skip_map {
     my $class = shift;
     my ($schema, $reader) = @_;
-    skip_block($reader, sub {
+    $class->skip_block($reader, sub {
         skip_string($class, $reader);
         $class->skip($schema->values, $reader);
     });
@@ -350,7 +358,8 @@ sub decode_union {
 sub skip_fixed {
     my $class = shift;
     my ($schema, $reader) = @_;
-    $reader->seek($schema->size, 0);
+    ## SEEK_CUR (1): skip forward relative to the current position.
+    $reader->seek($schema->size, 1);
 }
 
 ## 1.3.2 Fixed instances are encoded using the number of bytes declared in the
