@@ -85,6 +85,7 @@ in that datum, if there are any.
 """
 
 import collections
+import contextlib
 import datetime
 import decimal
 import os
@@ -742,6 +743,41 @@ def _collection_limits() -> Tuple[int, int]:
     return parsed, parsed
 
 
+# Environment variable overriding the maximum decode nesting depth.
+MAX_DECODE_DEPTH_ENV = "AVRO_MAX_DECODE_DEPTH"
+
+# Default maximum decode nesting depth. A recursive schema (e.g. a linked list or
+# a tree) lets a small, hostile payload drive arbitrarily deep nesting during
+# decoding, exhausting the Python call stack (RecursionError, or a fatal
+# interpreter crash once the C stack is exhausted) before any allocation limit is
+# reached. Bounding the depth turns such input into a clean, catchable Avro error.
+# The default comfortably exceeds any realistic schema nesting while staying well
+# below the interpreter's recursion ceiling, and aligns with the value used by
+# Protocol Buffers. Configure with the ``AVRO_MAX_DECODE_DEPTH`` environment
+# variable.
+DEFAULT_MAX_DECODE_DEPTH = 100
+
+
+def _max_decode_depth() -> int:
+    """Return the configured maximum decode nesting depth.
+
+    Overridable with ``AVRO_MAX_DECODE_DEPTH`` (a positive integer). Invalid or
+    non-positive values are ignored with a warning and the default is used.
+    """
+    value = os.environ.get(MAX_DECODE_DEPTH_ENV)
+    if value is None:
+        return DEFAULT_MAX_DECODE_DEPTH
+    try:
+        parsed = int(value)
+    except ValueError:
+        warnings.warn(avro.errors.AvroWarning(f"Ignoring invalid {MAX_DECODE_DEPTH_ENV} value: {value!r}"))
+        return DEFAULT_MAX_DECODE_DEPTH
+    if parsed <= 0:
+        warnings.warn(avro.errors.AvroWarning(f"Ignoring non-positive {MAX_DECODE_DEPTH_ENV} value: {value!r}"))
+        return DEFAULT_MAX_DECODE_DEPTH
+    return parsed
+
+
 def _max_collection_items() -> int:
     """Return the configured zero-byte-element collection limit."""
     return _collection_limits()[0]
@@ -816,6 +852,12 @@ class DatumReader:
         # limit but together unbounded. The cap is therefore applied across the
         # whole datum. See _ensure_collection_available.
         self._zero_byte_items_read = 0
+        # Current decode nesting depth (structural descents into records, arrays,
+        # maps and unions) for the datum being read. Reset at the start of each
+        # top-level read() and bounded by _max_decode_depth() so a recursive
+        # schema fed deeply nested data fails with a clean error instead of
+        # exhausting the call stack. See _nested_read.
+        self._read_depth = 0
 
     @property
     def writers_schema(self) -> Optional[avro.schema.Schema]:
@@ -845,7 +887,32 @@ class DatumReader:
         # many small collection fields cannot bypass it (see
         # _ensure_collection_available).
         self._zero_byte_items_read = 0
+        # Start a fresh nesting-depth budget for this datum (see _nested_read).
+        self._read_depth = 0
         return self.read_data(self.writers_schema, reader_schema, decoder)
+
+    @contextlib.contextmanager
+    def _nested_read(self) -> Generator[None, None, None]:
+        """Track one level of structural nesting while decoding.
+
+        Entering a record, array, map or union grows the (recursive) Python call
+        stack. Bounding the nesting depth turns a recursive schema fed a deeply
+        nested payload into a clean, catchable error instead of a RecursionError
+        or a fatal interpreter crash from C-stack exhaustion. The check runs
+        before incrementing so the counter stays balanced as the exception
+        unwinds the enclosing (already-entered) levels, and the depth is restored
+        on exit so a reader instance can be reused.
+        """
+        max_depth = _max_decode_depth()
+        if self._read_depth >= max_depth:
+            raise avro.errors.AvroException(
+                f"Decode nesting depth exceeds the maximum allowed of {max_depth} (configure with the {MAX_DECODE_DEPTH_ENV} environment variable)"
+            )
+        self._read_depth += 1
+        try:
+            yield
+        finally:
+            self._read_depth -= 1
 
     def read_data(self, writers_schema: avro.schema.Schema, readers_schema: avro.schema.Schema, decoder: "BinaryDecoder") -> object:
         # schema matching
@@ -856,7 +923,8 @@ class DatumReader:
 
         # function dispatch for reading data based on type of writer's schema
         if isinstance(writers_schema, avro.schema.UnionSchema) and isinstance(readers_schema, avro.schema.UnionSchema):
-            return self.read_union(writers_schema, readers_schema, decoder)
+            with self._nested_read():
+                return self.read_union(writers_schema, readers_schema, decoder)
 
         if isinstance(readers_schema, avro.schema.UnionSchema):
             # schema resolution: reader's schema is a union, writer's schema is not
@@ -918,12 +986,15 @@ class DatumReader:
         if isinstance(writers_schema, avro.schema.EnumSchema) and isinstance(readers_schema, avro.schema.EnumSchema):
             return self.read_enum(writers_schema, readers_schema, decoder)
         if isinstance(writers_schema, avro.schema.ArraySchema) and isinstance(readers_schema, avro.schema.ArraySchema):
-            return self.read_array(writers_schema, readers_schema, decoder)
+            with self._nested_read():
+                return self.read_array(writers_schema, readers_schema, decoder)
         if isinstance(writers_schema, avro.schema.MapSchema) and isinstance(readers_schema, avro.schema.MapSchema):
-            return self.read_map(writers_schema, readers_schema, decoder)
+            with self._nested_read():
+                return self.read_map(writers_schema, readers_schema, decoder)
         if isinstance(writers_schema, avro.schema.RecordSchema) and isinstance(readers_schema, avro.schema.RecordSchema):
             # .type in ["record", "error", "request"]:
-            return self.read_record(writers_schema, readers_schema, decoder)
+            with self._nested_read():
+                return self.read_record(writers_schema, readers_schema, decoder)
         raise avro.errors.AvroException(f"Cannot read unknown schema type: {writers_schema.type}")
 
     def skip_data(self, writers_schema: avro.schema.Schema, decoder: BinaryDecoder) -> None:
@@ -948,13 +1019,17 @@ class DatumReader:
         if isinstance(writers_schema, avro.schema.EnumSchema):
             return self.skip_enum(writers_schema, decoder)
         if isinstance(writers_schema, avro.schema.ArraySchema):
-            return self.skip_array(writers_schema, decoder)
+            with self._nested_read():
+                return self.skip_array(writers_schema, decoder)
         if isinstance(writers_schema, avro.schema.MapSchema):
-            return self.skip_map(writers_schema, decoder)
+            with self._nested_read():
+                return self.skip_map(writers_schema, decoder)
         if isinstance(writers_schema, avro.schema.UnionSchema):
-            return self.skip_union(writers_schema, decoder)
+            with self._nested_read():
+                return self.skip_union(writers_schema, decoder)
         if isinstance(writers_schema, avro.schema.RecordSchema):
-            return self.skip_record(writers_schema, decoder)
+            with self._nested_read():
+                return self.skip_record(writers_schema, decoder)
         raise avro.errors.AvroException(f"Unknown schema type: {writers_schema.type}")
 
     def read_fixed(self, writers_schema: avro.schema.FixedSchema, readers_schema: avro.schema.Schema, decoder: BinaryDecoder) -> bytes:
