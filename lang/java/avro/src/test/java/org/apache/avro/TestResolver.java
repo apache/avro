@@ -22,8 +22,13 @@ import java.util.Arrays;
 
 import org.apache.avro.data.TimeConversions;
 import org.apache.avro.generic.IndexedRecord;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.FastReaderBuilder;
 import org.apache.avro.io.JsonDecoder;
 import org.hamcrest.MatcherAssert;
@@ -101,6 +106,44 @@ class TestResolver {
     MatcherAssert.assertThat("", read, Matchers.instanceOf(IndexedRecord.class));
     IndexedRecord result = (IndexedRecord) read;
     Assertions.assertEquals("e3", result.get(0).toString());
+  }
+
+  // AVRO-3235: enums (and their enclosing records) that share the same simple
+  // name but live in different namespaces must still resolve, so that data
+  // versioned by namespace stays backward/forward compatible.
+  @Test
+  void resolveEnumAcrossNamespaces() throws IOException {
+    final Schema writeEnum = Schema.createEnum("Status", "", "test.v1", Arrays.asList("ON", "OFF"));
+    final Schema readEnum = Schema.createEnum("Status", "", "test.v2", Arrays.asList("ON", "OFF"));
+
+    // The enum action must be an EnumAdjust, not a NAMES_DONT_MATCH error.
+    Resolver.Action enumAction = Resolver.resolve(writeEnum, readEnum);
+    MatcherAssert.assertThat(enumAction, Matchers.instanceOf(Resolver.EnumAdjust.class));
+
+    // Full record round-trip: writer record in v1, reader record in v2 with an
+    // extra defaulted field; the enum resolves and the default is inserted.
+    Schema writeRecord = Schema.createRecord("Simple", "", "test.v1", false,
+        Arrays.asList(new Schema.Field("name", Schema.create(Schema.Type.STRING), ""),
+            new Schema.Field("status", writeEnum, "", "ON")));
+    Schema readRecord = Schema.createRecord("Simple", "", "test.v2", false,
+        Arrays.asList(new Schema.Field("name", Schema.create(Schema.Type.STRING), ""),
+            new Schema.Field("description", Schema.create(Schema.Type.STRING), "", ""),
+            new Schema.Field("status", readEnum, "", "ON")));
+
+    GenericData.Record rec = new GenericData.Record(writeRecord);
+    rec.put("name", "A");
+    rec.put("status", new GenericData.EnumSymbol(writeEnum, "ON"));
+    java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+    org.apache.avro.io.Encoder enc = EncoderFactory.get().binaryEncoder(bos, null);
+    new GenericDatumWriter<GenericRecord>(writeRecord).write(rec, enc);
+    enc.flush();
+
+    GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(writeRecord, readRecord);
+    GenericRecord out = datumReader.read(null,
+        DecoderFactory.get().binaryDecoder(bos.toByteArray(), null));
+    Assertions.assertEquals("A", out.get("name").toString());
+    Assertions.assertEquals("", out.get("description").toString());
+    Assertions.assertEquals("ON", out.get("status").toString());
   }
 
   @Test
