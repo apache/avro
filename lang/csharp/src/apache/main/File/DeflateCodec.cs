@@ -63,7 +63,10 @@ namespace Avro.File
             {
                 using (DeflateStream decompress = new DeflateStream(inStream, CompressionMode.Decompress))
                 {
-                    decompress.CopyTo(outStream);
+                    // Bound the decompressed size to guard against a block with a very
+                    // high compression ratio expanding to far more memory than its
+                    // compressed size.
+                    CopyBounded(decompress, outStream, GetMaxDecompressLength());
                 }
                 return outStream.ToArray();
             }
