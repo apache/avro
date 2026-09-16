@@ -34,6 +34,7 @@ struct avro_string_datum_t {
 
 struct avro_bytes_datum_t {
 	struct avro_obj_t obj;
+	avro_schema_t schema;
 	char *bytes;
 	int64_t size;
 	avro_free_func_t  free;
@@ -41,11 +42,13 @@ struct avro_bytes_datum_t {
 
 struct avro_int32_datum_t {
 	struct avro_obj_t obj;
+	avro_schema_t schema;
 	int32_t i32;
 };
 
 struct avro_int64_datum_t {
 	struct avro_obj_t obj;
+	avro_schema_t schema;
 	int64_t i64;
 };
 

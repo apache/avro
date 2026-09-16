@@ -55,30 +55,26 @@ avro_generic_value_new(avro_value_iface_t *iface, avro_value_t *dest);
 
 /*
  * These functions return an avro_value_iface_t implementation for each
- * primitive schema type.  (For enum, fixed, and the compound types, you
+ * primitive schema type.  (For enum, fixed, bytes, int, long and the compound types, you
  * must use the @ref avro_generic_class_from_schema function.)
  */
 
 avro_value_iface_t *avro_generic_boolean_class(void);
-avro_value_iface_t *avro_generic_bytes_class(void);
 avro_value_iface_t *avro_generic_double_class(void);
 avro_value_iface_t *avro_generic_float_class(void);
-avro_value_iface_t *avro_generic_int_class(void);
-avro_value_iface_t *avro_generic_long_class(void);
 avro_value_iface_t *avro_generic_null_class(void);
 avro_value_iface_t *avro_generic_string_class(void);
 
 
 /*
  * These functions instantiate a new generic primitive value.
+ * For enum, fixed, bytes, int, long and compound types, you must use the
+ * @ref avro_generic_value_new function.)
  */
 
 int avro_generic_boolean_new(avro_value_t *value, int val);
-int avro_generic_bytes_new(avro_value_t *value, void *buf, size_t size);
 int avro_generic_double_new(avro_value_t *value, double val);
 int avro_generic_float_new(avro_value_t *value, float val);
-int avro_generic_int_new(avro_value_t *value, int32_t val);
-int avro_generic_long_new(avro_value_t *value, int64_t val);
 int avro_generic_null_new(avro_value_t *value);
 int avro_generic_string_new(avro_value_t *value, const char *val);
 int avro_generic_string_new_length(avro_value_t *value, const char *val, size_t size);

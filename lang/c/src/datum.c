@@ -136,8 +136,9 @@ int avro_givestring_set(avro_datum_t datum, const char *p,
 	return avro_string_set_private(datum, p, size, free);
 }
 
-static avro_datum_t avro_bytes_private(char *bytes, int64_t size,
-				       avro_free_func_t bytes_free)
+static avro_datum_t avro_bytes_private(avro_schema_t schema,
+                                       char *bytes, int64_t size,
+                                       avro_free_func_t bytes_free)
 {
 	struct avro_bytes_datum_t *datum;
 	datum = (struct avro_bytes_datum_t *) avro_new(struct avro_bytes_datum_t);
@@ -145,6 +146,7 @@ static avro_datum_t avro_bytes_private(char *bytes, int64_t size,
 		avro_set_error("Cannot create new bytes datum");
 		return NULL;
 	}
+	datum->schema = avro_schema_incref(schema);
 	datum->bytes = bytes;
 	datum->size = size;
 	datum->free = bytes_free;
@@ -153,7 +155,8 @@ static avro_datum_t avro_bytes_private(char *bytes, int64_t size,
 	return &datum->obj;
 }
 
-avro_datum_t avro_bytes(const char *bytes, int64_t size)
+avro_datum_t avro_bytes(avro_schema_t schema,
+                        const char *bytes, int64_t size)
 {
 	char *bytes_copy = (char *) avro_malloc(size);
 	if (!bytes_copy) {
@@ -162,17 +165,19 @@ avro_datum_t avro_bytes(const char *bytes, int64_t size)
 	}
 	memcpy(bytes_copy, bytes, size);
 	avro_datum_t  result =
-		avro_bytes_private(bytes_copy, size, avro_alloc_free_func);
+		avro_bytes_private(schema, bytes_copy, size,
+                       avro_alloc_free_func);
 	if (result == NULL) {
 		avro_free(bytes_copy, size);
 	}
 	return result;
 }
 
-avro_datum_t avro_givebytes(const char *bytes, int64_t size,
-			    avro_free_func_t free)
+avro_datum_t avro_givebytes(avro_schema_t schema,
+                            const char *bytes, int64_t size,
+                            avro_free_func_t free)
 {
-	return avro_bytes_private((char *)bytes, size, free);
+	return avro_bytes_private(schema, (char *)bytes, size, free);
 }
 
 static int avro_bytes_set_private(avro_datum_t datum, const char *bytes,
@@ -227,7 +232,8 @@ int avro_bytes_get(avro_datum_t datum, char **bytes, int64_t * size)
 	return 0;
 }
 
-avro_datum_t avro_int32(int32_t i)
+avro_datum_t avro_int32(avro_schema_t schema,
+                        int32_t i)
 {
 	struct avro_int32_datum_t *datum =
 	    (struct avro_int32_datum_t *) avro_new(struct avro_int32_datum_t);
@@ -235,6 +241,7 @@ avro_datum_t avro_int32(int32_t i)
 		avro_set_error("Cannot create new int datum");
 		return NULL;
 	}
+	datum->schema = avro_schema_incref(schema);
 	datum->i32 = i;
 
 	avro_datum_init(&datum->obj, AVRO_INT32);
@@ -260,7 +267,8 @@ int avro_int32_set(avro_datum_t datum, const int32_t i)
 	return 0;
 }
 
-avro_datum_t avro_int64(int64_t l)
+avro_datum_t avro_int64(avro_schema_t schema,
+                        int64_t l)
 {
 	struct avro_int64_datum_t *datum =
 	    (struct avro_int64_datum_t *) avro_new(struct avro_int64_datum_t);
@@ -268,6 +276,7 @@ avro_datum_t avro_int64(int64_t l)
 		avro_set_error("Cannot create new long datum");
 		return NULL;
 	}
+	datum->schema = avro_schema_incref(schema);
 	datum->i64 = l;
 
 	avro_datum_init(&datum->obj, AVRO_INT64);
@@ -982,24 +991,6 @@ avro_schema_t avro_datum_get_schema(const avro_datum_t datum)
 				avro_schema_decref(result);
 				return result;
 			}
-		case AVRO_BYTES:
-			{
-				avro_schema_t  result = avro_schema_bytes();
-				avro_schema_decref(result);
-				return result;
-			}
-		case AVRO_INT32:
-			{
-				avro_schema_t  result = avro_schema_int();
-				avro_schema_decref(result);
-				return result;
-			}
-		case AVRO_INT64:
-			{
-				avro_schema_t  result = avro_schema_long();
-				avro_schema_decref(result);
-				return result;
-			}
 		case AVRO_FLOAT:
 			{
 				avro_schema_t  result = avro_schema_float();
@@ -1037,6 +1028,12 @@ avro_schema_t avro_datum_get_schema(const avro_datum_t datum)
 			return avro_datum_to_array(datum)->schema;
 		case AVRO_UNION:
 			return avro_datum_to_union(datum)->schema;
+		case AVRO_INT32:
+			return avro_datum_to_int32(datum)->schema;
+		case AVRO_INT64:
+			return avro_datum_to_int64(datum)->schema;
+		case AVRO_BYTES:
+			return avro_datum_to_bytes(datum)->schema;
 
 		default:
 			return NULL;
@@ -1062,14 +1059,21 @@ static void avro_datum_free(avro_datum_t datum)
 				if (bytes->free) {
 					bytes->free(bytes->bytes, bytes->size);
 				}
+				avro_schema_decref(bytes->schema);
 				avro_freet(struct avro_bytes_datum_t, bytes);
 			}
 			break;
 		case AVRO_INT32:{
+				struct avro_int32_datum_t *int_datum;
+				int_datum = avro_datum_to_int32(datum);
+				avro_schema_decref(int_datum->schema);
 				avro_freet(struct avro_int32_datum_t, datum);
 			}
 			break;
 		case AVRO_INT64:{
+				struct avro_int64_datum_t *long_datum;
+				long_datum = avro_datum_to_int64(datum);
+				avro_schema_decref(long_datum->schema);
 				avro_freet(struct avro_int64_datum_t, datum);
 			}
 			break;
