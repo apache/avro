@@ -18,7 +18,10 @@
 
 #include "DataFile.hh"
 #include "Compiler.hh"
+#include <cerrno>
+#include <cstdlib>
 #include <cstring>
+#include <limits>
 #include "Exception.hh"
 
 #include <random>
@@ -54,6 +57,42 @@ const size_t maxSyncInterval = 1u << 30;
 
 // Recommended by https://www.zlib.net/zlib_how.html
 const size_t zlibBufGrowSize = 128 * 1024;
+
+// Default upper bound, in bytes, on the size a single data-file block may
+// decompress to. A block with a very high compression ratio (or a malformed
+// block) can otherwise expand to far more memory than its compressed size.
+// Mirrors the Java SDK's decompression limit (AVRO-4247). Overridable with the
+// AVRO_MAX_DECOMPRESS_LENGTH environment variable.
+const size_t defaultMaxDecompressLength = static_cast<size_t>(200) * 1024 * 1024; // 200 MiB
+
+size_t maxDecompressLength() {
+    const char *env = std::getenv("AVRO_MAX_DECOMPRESS_LENGTH");
+    if (env != nullptr && *env != '\0') {
+        // Skip leading whitespace so a signed value such as "  -5" is still
+        // detected below; strtoull silently accepts leading whitespace and
+        // wraps a negative into a huge unsigned value otherwise.
+        const char *p = env;
+        while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r' ||
+               *p == '\f' || *p == '\v') {
+            ++p;
+        }
+        // Reject an explicit sign before parsing (strtoull would wrap '-').
+        if (*p != '-' && *p != '+') {
+            errno = 0;
+            char *end = nullptr;
+            unsigned long long value = std::strtoull(p, &end, 10);
+            // Clamp to what size_t can represent so a huge value does not
+            // truncate on 32-bit (or smaller size_t) builds.
+            if (errno == 0 && end != nullptr && *end == '\0' && value > 0) {
+                if (value > std::numeric_limits<size_t>::max()) {
+                    return std::numeric_limits<size_t>::max();
+                }
+                return static_cast<size_t>(value);
+            }
+        }
+    }
+    return defaultMaxDecompressLength;
+}
 
 template<Codec codec>
 struct codec_trait {
@@ -568,6 +607,19 @@ void DataFileReaderBase::readDataBlock() {
         int b4 = compressed_[len - 1] & 0xFF;
 
         checksum = (b1 << 24) + (b2 << 16) + (b3 << 8) + (b4);
+        {
+            // Reject an over-large block before allocating for it, based on the
+            // uncompressed length declared in the Snappy block header.
+            size_t declared = 0;
+            const size_t maxLength = maxDecompressLength();
+            if (snappy::GetUncompressedLength(reinterpret_cast<const char *>(compressed_.data()),
+                                              len - 4, &declared) &&
+                declared > maxLength) {
+                throw Exception(
+                    "Decompressed block size {} exceeds the maximum allowed of {} bytes",
+                    declared, maxLength);
+            }
+        }
         if (!snappy::Uncompress(reinterpret_cast<const char *>(compressed_.data()),
                                 len - 4, &uncompressed)) {
             throw Exception(
@@ -599,7 +651,7 @@ void DataFileReaderBase::readDataBlock() {
         }
 
         ZstdDecompressWrapper zstdDecompressWrapper;
-        uncompressed = zstdDecompressWrapper.decompress(compressed_);
+        uncompressed = zstdDecompressWrapper.decompress(compressed_, maxDecompressLength());
 
         std::unique_ptr<InputStream> in = memoryInputStream(
             reinterpret_cast<const uint8_t *>(uncompressed.data()),
@@ -627,12 +679,45 @@ void DataFileReaderBase::readDataBlock() {
 
             const uint8_t *data;
             size_t len;
+            size_t maxLength = maxDecompressLength();
+            // zlib tracks output in a uLong (z_stream::total_out), which is only
+            // 32-bit on some platforms (e.g. Windows). Cap the working limit to
+            // uLong's range so the buffer-size arithmetic below (which uses
+            // total_out) cannot wrap when a larger AVRO_MAX_DECOMPRESS_LENGTH is
+            // configured.
+            const uLong zlibMax = std::numeric_limits<uLong>::max();
+            if (maxLength > zlibMax) {
+                maxLength = zlibMax;
+            }
             while (ret != Z_STREAM_END && st->next(&data, &len)) {
                 zs.avail_in = static_cast<uInt>(len);
                 zs.next_in = const_cast<Bytef *>(data);
                 do {
                     if (zs.total_out == uncompressed.size()) {
-                        uncompressed.resize(uncompressed.size() + zlibBufGrowSize);
+                        // Reject a block that would decompress to more than the
+                        // allowed maximum, before growing the buffer further.
+                        if (uncompressed.size() >= maxLength) {
+                            (void) inflateEnd(&zs);
+                            // At the trigger uncompressed.size() == maxLength and
+                            // inflate still has output, so the block is at least
+                            // maxLength + 1 bytes. Report that (like the snappy/zstd
+                            // errors) so the message is accurate and consistent,
+                            // saturating the +1 so it cannot wrap to 0 when
+                            // uncompressed.size() is at size_t's maximum.
+                            const size_t reported =
+                                uncompressed.size() < std::numeric_limits<size_t>::max()
+                                    ? uncompressed.size() + 1
+                                    : uncompressed.size();
+                            throw Exception(
+                                "Decompressed block size {} exceeds the maximum allowed of {} bytes",
+                                reported, maxLength);
+                        }
+                        // Grow by the remaining capacity (capped at the grow
+                        // step) rather than size + step, which could overflow
+                        // size_t when maxLength is near SIZE_MAX.
+                        size_t remaining = maxLength - uncompressed.size();
+                        size_t grow = remaining < zlibBufGrowSize ? remaining : zlibBufGrowSize;
+                        uncompressed.resize(uncompressed.size() + grow);
                     }
                     zs.avail_out = static_cast<uInt>(uncompressed.size() - zs.total_out);
                     zs.next_out = reinterpret_cast<Bytef *>(uncompressed.data() + zs.total_out);
@@ -641,6 +726,7 @@ void DataFileReaderBase::readDataBlock() {
                         break;
                     }
                     if (ret != Z_OK) {
+                        (void) inflateEnd(&zs);
                         throw Exception("Failed to inflate, error: {}", ret);
                     }
                 } while (zs.avail_out == 0);
