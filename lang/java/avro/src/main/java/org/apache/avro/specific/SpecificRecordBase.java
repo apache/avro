@@ -91,7 +91,7 @@ public abstract class SpecificRecordBase
 
   @Override
   public String toString() {
-    return getSpecificData().toString(this);
+    return getClass().getName() + " " + getSpecificData().toString(this);
   }
 
   @Override
