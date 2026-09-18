@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 using System;
+using System.IO;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 
@@ -256,17 +257,47 @@ namespace Avro
             Schema sc = PrimitiveSchema.NewInstance(json);
             if (null != sc) return sc;
 
-            try
+            // Refer to https://issues.apache.org/jira/browse/AVRO-3856
+            // Refer to https://github.com/JamesNK/Newtonsoft.Json/pull/2904
+            // Newtonsoft author advised to use JObject.Load/JArray.Load instead of JObject.Parse()/JArray.Parse()
+            // The reason is we can set the MaxDepth property on the JsonReader.
+            using (var reader = new JsonTextReader(new StringReader(json)))
             {
-                bool IsArray = json.StartsWith("[", StringComparison.Ordinal)
-                    && json.EndsWith("]", StringComparison.Ordinal);
-                JContainer j = IsArray ? (JContainer)JArray.Parse(json) : (JContainer)JObject.Parse(json);
+                // Another issue discovered is Avro schema depth level is not counted the same as in JsonReader.
+                // The default depth level limit of 64 in JsonReader can only support around 20 levels of Avro schema.
+                // When putting break point in JsonReader Push methods with various Avro schema depth levels,
+                // here is my observation:
+                //
+                // Avro Schema Depth	JsonReader Depth Level Count
+                // 4	                11
+                // 16                   44
+                // 32	                92
+                // 64	                188
+                //
+                // So, roughly speaking, the depth level count is about 2.75 times of Avro schema depth.
+                // Below is the hard-coded value to compensate over-counting of depth level in Newtonsoft
+                // to support Avro schema depth level to 64 slightly beyond.
+                reader.MaxDepth = 192;
 
-                return ParseJson(j, names, encspace);
-            }
-            catch (Newtonsoft.Json.JsonSerializationException ex)
-            {
-                throw new SchemaParseException("Could not parse. " + ex.Message + Environment.NewLine + json);
+                try
+                {
+                    bool IsArray = json.StartsWith("[", StringComparison.Ordinal)
+                        && json.EndsWith("]", StringComparison.Ordinal);
+                    JContainer j = IsArray ? (JContainer)JArray.Load(reader) : (JContainer)JObject.Load(reader);
+
+                    // When replacing JArray.Parse and JObject.Parse with JArray.Load and JObject.Load,
+                    // we will need this check following what Newtonsoft.Json does.
+                    while (reader.Read())
+                    {
+                        // Any content encountered here other than a comment will throw in the reader.
+                    }
+
+                    return ParseJson(j, names, encspace);
+                }
+                catch (Newtonsoft.Json.JsonSerializationException ex)
+                {
+                    throw new SchemaParseException("Could not parse. " + ex.Message + Environment.NewLine + json);
+                }
             }
         }
 
