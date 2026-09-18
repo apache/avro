@@ -272,6 +272,19 @@ static int test_int64(void)
 		avro_datum_decref(double_datum);
 	}
 
+	/* Boundary values that encode to a full-width 10-byte varint and set
+	 * the high bit on the final byte, exercising the widest shift in the
+	 * varint decoder. */
+	static const int64_t edge_values[] = {
+		INT64_MAX, INT64_MIN, INT64_MAX - 1, INT64_MIN + 1,
+		(int64_t) 1 << 62, -((int64_t) 1 << 62)
+	};
+	for (i = 0; i < (int) (sizeof(edge_values) / sizeof(edge_values[0])); i++) {
+		avro_datum_t edge_datum = avro_int64(edge_values[i]);
+		write_read_check(writer_schema, edge_datum, NULL, NULL, "long");
+		avro_datum_decref(edge_datum);
+	}
+
 	avro_datum_t  datum = avro_int64(10000);
 	test_json(datum, "10000");
 	avro_datum_decref(datum);
