@@ -17,6 +17,7 @@
  */
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Avro.IO;
 
 namespace Avro.Generic
@@ -244,6 +245,7 @@ namespace Avro.Generic
             _recordReaders.Add(schemaPair, recordReader);
 
             var readSteps = new List<FieldReader>();
+            var unmatchedReaderFields = readerSchema.Fields.ToDictionary(rf => rf.Name);
 
             foreach (Field wf in writerSchema)
             {
@@ -261,6 +263,7 @@ namespace Avro.Generic
                         readSteps.Add((rec, d) => recordAccess.AddField(rec, rf.Name, rf.Pos,
                             readItem(null, d)));
                     }
+                    unmatchedReaderFields.Remove(rf.Name);
                 }
                 else
                 {
@@ -270,10 +273,8 @@ namespace Avro.Generic
             }
 
             // fill in defaults for any reader fields not in the writer schema
-            foreach (Field rf in readerSchema)
+            foreach (var rf in unmatchedReaderFields.Values)
             {
-                if (writerSchema.Contains(rf.Name)) continue;
-
                 using (var defaultStream = new MemoryStream())
                 {
                     var defaultEncoder = new BinaryEncoder(defaultStream);
