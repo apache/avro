@@ -170,6 +170,63 @@ EOJ
     } "Avro::Schema::Error::Mismatch", "no default value!";
 }
 
+## skipping a writer field must advance relative to the current position, so a
+## field that follows a skipped bytes/string/fixed field still decodes correctly
+{
+    my $w_schema = Avro::Schema->parse(<<EOJ);
+          { "type": "record", "name": "skiptest",
+            "fields" : [
+                {"name": "skipped", "type": "bytes"},
+                {"name": "keep", "type": "long"} ]}
+EOJ
+    my $r_schema = Avro::Schema->parse(<<EOJ);
+          { "type": "record", "name": "skiptest",
+            "fields" : [
+                {"name": "keep", "type": "long"} ]}
+EOJ
+    my $enc = '';
+    Avro::BinaryEncoder->encode(
+        schema  => $w_schema,
+        data    => { skipped => "hello", keep => 42 },
+        emit_cb => sub { $enc .= ${ $_[0] } },
+    );
+    open my $reader, '<', \$enc or die "Cannot open memory file: $!";
+    my $dec = Avro::BinaryDecoder->decode(
+        writer_schema => $w_schema,
+        reader_schema => $r_schema,
+        reader        => $reader,
+    );
+    is $dec->{keep}, 42, "field after a skipped bytes field decodes correctly";
+
+    my $wf_schema = Avro::Schema->parse(<<EOJ);
+          { "type": "record", "name": "skipfixed",
+            "fields" : [
+                {"name": "before", "type": "long"},
+                {"name": "skipped", "type": {"type":"fixed","name":"F","size":4}},
+                {"name": "keep", "type": "long"} ]}
+EOJ
+    my $rf_schema = Avro::Schema->parse(<<EOJ);
+          { "type": "record", "name": "skipfixed",
+            "fields" : [
+                {"name": "before", "type": "long"},
+                {"name": "keep", "type": "long"} ]}
+EOJ
+    $enc = '';
+    Avro::BinaryEncoder->encode(
+        schema  => $wf_schema,
+        data    => { before => 9, skipped => "abcd", keep => 7 },
+        emit_cb => sub { $enc .= ${ $_[0] } },
+    );
+    open $reader, '<', \$enc or die "Cannot open memory file: $!";
+    $dec = Avro::BinaryDecoder->decode(
+        writer_schema => $wf_schema,
+        reader_schema => $rf_schema,
+        reader        => $reader,
+    );
+    is $dec->{before}, 9, "field before a skipped fixed field decodes correctly";
+    is $dec->{keep}, 7, "field after a skipped fixed field decodes correctly";
+}
+
 ## union resolution
 {
     my $w_schema = Avro::Schema->parse(<<EOP);

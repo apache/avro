@@ -22,6 +22,7 @@ use warnings;
 use Config;
 use Encode();
 use Error::Simple;
+use Fcntl();
 use Avro::Schema;
 
 our $VERSION = '++MODULE_VERSION++';
@@ -124,7 +125,7 @@ sub skip_bytes {
     my $class = shift;
     my $reader = pop;
     my $size = decode_long($class, undef, undef, $reader);
-    $reader->seek($size, 0);
+    $reader->seek($size, Fcntl->SEEK_CUR);
     return;
 }
 
@@ -350,7 +351,7 @@ sub decode_union {
 sub skip_fixed {
     my $class = shift;
     my ($schema, $reader) = @_;
-    $reader->seek($schema->size, 0);
+    $reader->seek($schema->size, Fcntl->SEEK_CUR);
 }
 
 ## 1.3.2 Fixed instances are encoded using the number of bytes declared in the
