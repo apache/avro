@@ -608,10 +608,19 @@ function tryReadBlock(tap) {
  */
 function createReader(decode, type) {
   if (decode) {
-    return function (tap) { return type._read(tap); };
+    return function (tap) {
+      // Reset the per-datum zero-byte-element budget: this tap is reused across
+      // records, so each record must start with a fresh cumulative count (see
+      // checkCollectionBlock in schemas.js).
+      tap.zeroByteItems = 0;
+      return type._read(tap);
+    };
   } else {
     return (function (skipper) {
       return function (tap) {
+        // Reset the per-datum zero-byte-element budget (the skip path also
+        // enforces it) since this tap is reused across records.
+        tap.zeroByteItems = 0;
         var pos = tap.pos;
         skipper(tap);
         return tap.buf.slice(pos, tap.pos);
