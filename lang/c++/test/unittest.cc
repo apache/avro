@@ -24,8 +24,11 @@
 #include "Compiler.hh"
 #include "Decoder.hh"
 #include "Encoder.hh"
+#include "Layout.hh"
 #include "Node.hh"
 #include "Parser.hh"
+#include "ResolverSchema.hh"
+#include "ResolvingReader.hh"
 #include "Schema.hh"
 #include "SchemaResolution.hh"
 #include "Serializer.hh"
@@ -912,10 +915,68 @@ struct TestBadStuff {
         std::cout << "(intentional) error: " << error << '\n';
     }
 
+    // A union branch index and an enum ordinal are read straight off the wire,
+    // so a corrupt or hostile datum can name a branch the writer schema does
+    // not have.  Both must be rejected instead of indexing out of range.
+    void testOutOfRangeUnionIndex() {
+        std::cout << "TestOutOfRangeUnionIndex\n";
+
+        avro::ValidSchema writer = avro::compileJsonSchemaFromString(
+            R"({"type":"record","name":"R","fields":[)"
+            R"({"name":"x","type":["null","int"]}]})");
+        avro::ValidSchema reader = avro::compileJsonSchemaFromString(
+            R"({"type":"record","name":"R","fields":[)"
+            R"({"name":"y","type":"int"}]})");
+
+        avro::CompoundLayout layout(0);
+        std::unique_ptr<avro::Layout> field(new avro::PrimitiveLayout(0));
+        layout.add(field);
+
+        // zigzag(10000) == branch 5000, the writer union has 2 branches
+        const char data[] = {'\x90', '\x4e'};
+        avro::OutputBuffer buf;
+        buf.writeTo(data, sizeof(data));
+
+        avro::ResolverSchema xSchema(writer, reader, layout);
+        avro::ResolvingReader r(xSchema, avro::InputBuffer(buf));
+
+        uint8_t object[64] = {0};
+        BOOST_CHECK_THROW(r.parse(object), avro::Exception);
+    }
+
+    void testOutOfRangeEnumIndex() {
+        std::cout << "TestOutOfRangeEnumIndex\n";
+
+        const char *json =
+            R"({"type":"record","name":"R","fields":[{"name":"e","type":)"
+            R"({"type":"enum","name":"E","symbols":["A","B"]}}]})";
+        avro::ValidSchema schema = avro::compileJsonSchemaFromString(json);
+
+        avro::CompoundLayout layout(0);
+        auto *enumLayout = new avro::CompoundLayout(0);
+        std::unique_ptr<avro::Layout> value(new avro::PrimitiveLayout(0));
+        enumLayout->add(value);
+        std::unique_ptr<avro::Layout> field(enumLayout);
+        layout.add(field);
+
+        // zigzag(10000) == ordinal 5000, the enum has 2 symbols
+        const char data[] = {'\x90', '\x4e'};
+        avro::OutputBuffer buf;
+        buf.writeTo(data, sizeof(data));
+
+        avro::ResolverSchema xSchema(schema, schema, layout);
+        avro::ResolvingReader r(xSchema, avro::InputBuffer(buf));
+
+        uint8_t object[64] = {0};
+        BOOST_CHECK_THROW(r.parse(object), avro::Exception);
+    }
+
     void test() {
         std::cout << "TestBadStuff\n";
         testBadFile();
         testBadSchema();
+        testOutOfRangeUnionIndex();
+        testOutOfRangeEnumIndex();
     }
 };
 

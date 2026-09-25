@@ -46,6 +46,15 @@ NoOp noop;
 #define DEBUG_OUT(str) noop << str
 #endif
 
+// The branch index is read straight off the wire, so it has to be checked
+// against the writer union before it is used to index the resolver vectors.
+static void checkUnionChoice(size_t choice, size_t branches) {
+    if (choice >= branches) {
+        throw Exception("Union selection out of range, got {}, expecting 0-{}",
+                        choice, branches - 1);
+    }
+}
+
 template<typename T>
 class PrimitiveSkipper : public Resolver {
 public:
@@ -307,7 +316,10 @@ public:
 
     void parse(Reader &reader, uint8_t *address) const final {
         auto val = static_cast<size_t>(reader.readEnum());
-        assert(val < mapping_.size());
+        if (val >= mapping_.size()) {
+            throw Exception("Enum index out of range, got {}, expecting 0-{}",
+                            val, mapping_.size() - 1);
+        }
 
         if (mapping_[val] < readerSize_) {
             auto *location = reinterpret_cast<EnumRepresentation *>(address + offset_);
@@ -329,6 +341,7 @@ public:
     void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Skipping union");
         auto choice = static_cast<size_t>(reader.readUnion());
+        checkUnionChoice(choice, resolvers_.size());
         resolvers_[choice]->parse(reader, address);
     }
 
@@ -345,6 +358,7 @@ public:
     void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Reading union");
         auto writerChoice = static_cast<size_t>(reader.readUnion());
+        checkUnionChoice(writerChoice, resolvers_.size());
         auto *readerChoice = reinterpret_cast<int64_t *>(address + choiceOffset_);
 
         *readerChoice = choiceMapping_[writerChoice];
@@ -375,6 +389,7 @@ public:
     void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Reading union to non-union");
         auto choice = static_cast<size_t>(reader.readUnion());
+        checkUnionChoice(choice, resolvers_.size());
         resolvers_[choice]->parse(reader, address);
     }
 
