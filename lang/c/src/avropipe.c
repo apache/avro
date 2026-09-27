@@ -17,12 +17,15 @@
 
 #include <ctype.h>
 #include <errno.h>
-#include <getopt.h>
-#include <avro/platform.h>
 #include <avro/platform.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#include "getopt/getopt.h"
+#else
+#include <getopt.h>
+#endif
 
 #include "avro.h"
 #include "avro_private.h"
@@ -399,6 +402,15 @@ static void usage(void)
 int main(int argc, char **argv)
 {
 	char  *data_filename;
+
+#ifdef _MSC_VER
+	{
+		const char *cp = argv[0] + strlen(argv[0]);
+		while (cp > argv[0] && *(cp-1) != '/' && *(cp-1) != '\\' && *(cp-1) != ':')
+			--cp;
+		opt_progname = cp;
+	}
+#endif
 
 	int  ch;
 	while ((ch = getopt_long(argc, argv, "s:", longopts, NULL) ) != -1) {
