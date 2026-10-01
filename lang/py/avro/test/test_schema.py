@@ -400,9 +400,10 @@ TIMEMILLIS_LOGICAL_TYPE = [ValidTestSchema({"type": "int", "logicalType": "time-
 
 TIMEMICROS_LOGICAL_TYPE = [ValidTestSchema({"type": "long", "logicalType": "time-micros"})]
 
-TIMESTAMPMILLIS_LOGICAL_TYPE = [ValidTestSchema({"type": "long", "logicalType": "timestamp-millis"})]
-
+LOCALTIMESTAMPMICROS_LOGICAL_TYPE = [ValidTestSchema({"type": "long", "logicalType": "local-timestamp-micros"})]
+LOCALTIMESTAMPMILLIS_LOGICAL_TYPE = [ValidTestSchema({"type": "long", "logicalType": "local-timestamp-millis"})]
 TIMESTAMPMICROS_LOGICAL_TYPE = [ValidTestSchema({"type": "long", "logicalType": "timestamp-micros"})]
+TIMESTAMPMILLIS_LOGICAL_TYPE = [ValidTestSchema({"type": "long", "logicalType": "timestamp-millis"})]
 
 UUID_LOGICAL_TYPE = [ValidTestSchema({"type": "string", "logicalType": "uuid"})]
 
