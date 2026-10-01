@@ -77,6 +77,11 @@ class AvroNamedSchema extends AvroSchema implements AvroAliasedSchema
         return $avro;
     }
 
+    public function name(): string
+    {
+        return $this->name->name();
+    }
+
     public function qualifiedName(): string
     {
         return $this->name->qualifiedName();

@@ -35,7 +35,7 @@ use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
  * ```
  */
 $finder = PhpCsFixer\Finder::create()
-    ->in(['lib', 'test'])
+    ->in(['bin', 'lib', 'test'])
     ->append(['.php-cs-fixer.dist.php']);
 
 return (new PhpCsFixer\Config())

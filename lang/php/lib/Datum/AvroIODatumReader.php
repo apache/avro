@@ -346,14 +346,14 @@ class AvroIODatumReader
     }
 
     public function readEnum(
-        AvroEnumSchema $writers_schema,
-        AvroEnumSchema $readers_schema,
+        AvroEnumSchema $writersSchema,
+        AvroEnumSchema $readersSchema,
         AvroIOBinaryDecoder $decoder
     ): ?string {
         $symbol_index = $decoder->readInt();
-        $symbol = $writers_schema->symbolByIndex($symbol_index);
+        $symbol = $writersSchema->symbolByIndex($symbol_index);
 
-        if (!$readers_schema->hasSymbol($symbol)) {
+        if (!$readersSchema->hasSymbol($symbol)) {
             return null;
         } // FIXME: unset wrt schema resolution
 
