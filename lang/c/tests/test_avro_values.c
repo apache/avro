@@ -965,6 +965,23 @@ test_enum(void)
 		avro_value_decref(&val);
 	}
 
+	/* A symbol index read from the wire that falls outside the declared
+	 * symbols must be rejected, otherwise it is stored as-is and later
+	 * dereferenced by avro_schema_enum_get. */
+	{
+		/* zig-zag long 99 => {0xC6, 0x01}; "suits" has only 4 symbols */
+		char  bad_enum[] = { (char) 0xC6, 0x01 };
+		avro_reader_t  reader =
+		    avro_reader_memory(bad_enum, sizeof(bad_enum));
+		avro_value_t  val;
+		try(avro_generic_value_new(enum_class, &val),
+		    "Cannot create enum");
+		try(!avro_value_read(reader, &val),
+		    "Expected error reading out-of-range enum index");
+		avro_value_decref(&val);
+		avro_reader_free(reader);
+	}
+
 	avro_schema_decref(enum_schema);
 	avro_value_iface_decref(enum_class);
 	return 0;
