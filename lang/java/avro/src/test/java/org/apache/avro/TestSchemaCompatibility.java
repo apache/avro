@@ -571,4 +571,80 @@ public class TestSchemaCompatibility {
     // This is a new field, and should be null
     assertNull(loc.get("long_r2"));
   }
+
+  @Test
+  void fieldsSwappedByAliasesAreCompatible() throws IOException {
+    // Each reader field reads the writer field its alias names, as the decoder
+    // reads them,
+    // though the writer also has a field of its own name: another field's alias
+    // renames it away.
+    Schema writer = parseRecord("{\"name\":\"a\",\"type\":\"int\"},{\"name\":\"b\",\"type\":\"string\"}");
+    Schema reader = parseRecord("{\"name\":\"b\",\"type\":\"int\",\"aliases\":[\"a\"]},"
+        + "{\"name\":\"a\",\"type\":\"string\",\"aliases\":[\"b\"]}");
+    assertEquals(SchemaCompatibilityType.COMPATIBLE, checkReaderWriterCompatibility(reader, writer).getType());
+
+    GenericData.Record written = new GenericData.Record(writer);
+    written.put("a", 5);
+    written.put("b", "s");
+    GenericData.Record read = decode(written, reader);
+    assertEquals(5, read.get("b"));
+    assertEquals(new Utf8("s"), read.get("a"));
+  }
+
+  @Test
+  void fieldsRotatedByAliasesAreCompatible() {
+    Schema writer = parseRecord("{\"name\":\"a\",\"type\":\"int\"},{\"name\":\"b\",\"type\":\"string\"},"
+        + "{\"name\":\"c\",\"type\":\"long\"}");
+    Schema reader = parseRecord("{\"name\":\"b\",\"type\":\"int\",\"aliases\":[\"a\"]},"
+        + "{\"name\":\"c\",\"type\":\"string\",\"aliases\":[\"b\"]},"
+        + "{\"name\":\"a\",\"type\":\"long\",\"aliases\":[\"c\"]}");
+    assertEquals(SchemaCompatibilityType.COMPATIBLE, checkReaderWriterCompatibility(reader, writer).getType());
+  }
+
+  @Test
+  void fieldsSwappedByAliasesInANestedRecordAreCompatible() {
+    Schema writer = parseRecord("{\"name\":\"n\",\"type\":{\"type\":\"record\",\"name\":\"N\",\"fields\":["
+        + "{\"name\":\"a\",\"type\":\"int\"},{\"name\":\"b\",\"type\":\"string\"}]}}");
+    Schema reader = parseRecord("{\"name\":\"n\",\"type\":{\"type\":\"record\",\"name\":\"N\",\"fields\":["
+        + "{\"name\":\"b\",\"type\":\"int\",\"aliases\":[\"a\"]},"
+        + "{\"name\":\"a\",\"type\":\"string\",\"aliases\":[\"b\"]}]}}");
+    assertEquals(SchemaCompatibilityType.COMPATIBLE, checkReaderWriterCompatibility(reader, writer).getType());
+  }
+
+  @Test
+  void fieldsSwappedByAliasesAreComparedWithTheFieldsTheirAliasesName() {
+    // b now reads a, an int, so a string b is a type mismatch.
+    Schema writer = parseRecord("{\"name\":\"a\",\"type\":\"int\"},{\"name\":\"b\",\"type\":\"string\"}");
+    Schema reader = parseRecord("{\"name\":\"b\",\"type\":\"string\",\"aliases\":[\"a\"]},"
+        + "{\"name\":\"a\",\"type\":\"int\",\"aliases\":[\"b\"]}");
+    SchemaPairCompatibility result = checkReaderWriterCompatibility(reader, writer);
+    assertEquals(SchemaCompatibilityType.INCOMPATIBLE, result.getType());
+    assertEquals(SchemaIncompatibilityType.TYPE_MISMATCH, result.getResult().getIncompatibilities().get(0).getType());
+  }
+
+  @Test
+  void aFieldAliasingAnotherWhoseNameNoAliasFreesStillFails() {
+    // The decoder renames writer a to b beside writer b, a duplicate field: still
+    // an error.
+    Schema writer = parseRecord("{\"name\":\"a\",\"type\":\"int\"},{\"name\":\"b\",\"type\":\"int\"}");
+    Schema reader = parseRecord(
+        "{\"name\":\"b\",\"type\":\"int\",\"aliases\":[\"a\"]}," + "{\"name\":\"a\",\"type\":\"int\"}");
+    assertThrows(AvroRuntimeException.class, () -> checkReaderWriterCompatibility(reader, writer));
+  }
+
+  private static Schema parseRecord(String fields) {
+    return new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"R\",\"fields\":[" + fields + "]}");
+  }
+
+  private static GenericData.Record decode(GenericData.Record written, Schema readSchema) throws IOException {
+    byte[] payload;
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+      Encoder encoder = EncoderFactory.get().binaryEncoder(out, null);
+      new GenericDatumWriter<GenericData.Record>(written.getSchema()).write(written, encoder);
+      encoder.flush();
+      payload = out.toByteArray();
+    }
+    GenericDatumReader<GenericData.Record> reader = new GenericDatumReader<>(written.getSchema(), readSchema);
+    return reader.read(null, DecoderFactory.get().binaryDecoder(payload, null));
+  }
 }

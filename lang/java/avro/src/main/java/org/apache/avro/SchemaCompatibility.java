@@ -139,6 +139,59 @@ public class SchemaCompatibility {
   }
 
   /**
+   * Identifies the writer field that corresponds to the specified field of a
+   * reader record, as {@link Schema#applyAliases} pairs them when reading.
+   *
+   * <p>
+   * As {@link #lookupWriterField(Schema, Field)}, except that an alias of the
+   * reader field takes precedence over its own name when another field of the
+   * reader record claims the writer field of that name by an alias. The decoder
+   * then renames that writer field away, so fields whose names are swapped or
+   * rotated by aliases each read the writer field their alias names.
+   * </p>
+   *
+   * @param writerSchema Schema of the record where to look for the writer field.
+   * @param readerSchema Schema of the record the reader field belongs to.
+   * @param readerField  Reader field to identify the corresponding writer field
+   *                     of.
+   * @return the writer field, if any does correspond, or null.
+   */
+  static Field lookupWriterField(final Schema writerSchema, final Schema readerSchema, final Field readerField) {
+    final Field direct = writerSchema.getField(readerField.name());
+    if (direct != null && isClaimedByAlias(readerSchema, readerField, direct.name())) {
+      Field aliased = null;
+      for (final String readerFieldAliasName : readerField.aliases()) {
+        final Field writerField = writerSchema.getField(readerFieldAliasName);
+        if (writerField != null) {
+          if (aliased != null) {
+            throw new AvroRuntimeException(
+                String.format("Reader record field %s matches multiple fields in writer record schema %s", readerField,
+                    writerSchema));
+          }
+          aliased = writerField;
+        }
+      }
+      if (aliased != null) {
+        return aliased;
+      }
+    }
+    return lookupWriterField(writerSchema, readerField);
+  }
+
+  /**
+   * Whether a field of the reader record other than the specified one has an
+   * alias naming the specified writer field name.
+   */
+  private static boolean isClaimedByAlias(final Schema readerSchema, final Field readerField, final String name) {
+    for (final Field other : readerSchema.getFields()) {
+      if (other != readerField && other.aliases().contains(name)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Reader/writer schema pair that can be used as a key in a hash map.
    *
    * This reader/writer pair differentiates Schema objects based on their system
@@ -398,7 +451,7 @@ public class SchemaCompatibility {
       // record:
       for (final Field readerField : reader.getFields()) {
         location.addFirst(Integer.toString(readerField.pos()));
-        final Field writerField = lookupWriterField(writer, readerField);
+        final Field writerField = lookupWriterField(writer, reader, readerField);
         if (writerField == null) {
           // Reader field does not correspond to any field in the writer record schema, so
           // the
