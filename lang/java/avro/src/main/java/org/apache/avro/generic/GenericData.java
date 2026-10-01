@@ -1318,9 +1318,27 @@ public class GenericData {
       CharSequence cs1 = o1 instanceof CharSequence ? (CharSequence) o1 : o1.toString();
       CharSequence cs2 = o2 instanceof CharSequence ? (CharSequence) o2 : o2.toString();
       return Utf8.compareSequences(cs1, cs2);
+    case BYTES:
+      if (o1 instanceof ByteBuffer && o2 instanceof ByteBuffer) {
+        return compareByteBuffers((ByteBuffer) o1, (ByteBuffer) o2);
+      }
+      return ((Comparable) o1).compareTo(o2);
     default:
       return ((Comparable) o1).compareTo(o2);
     }
+  }
+
+  private static int compareByteBuffers(ByteBuffer buffer1, ByteBuffer buffer2) {
+    int position1 = buffer1.position();
+    int position2 = buffer2.position();
+    int length1 = buffer1.remaining();
+    int length2 = buffer2.remaining();
+    for (int i = 0; i < Math.min(length1, length2); i++) {
+      int result = Byte.compareUnsigned(buffer1.get(position1 + i), buffer2.get(position2 + i));
+      if (result != 0)
+        return result;
+    }
+    return Integer.compare(length1, length2);
   }
 
   private final ConcurrentMap<Field, Object> defaultValueCache = new ConcurrentReferenceHashMap<>(128, WEAK);
