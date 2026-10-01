@@ -111,6 +111,80 @@ namespace Avro.Test.CodeGen
             }
 
             [Test]
+            public void RecordGetAndPutSwitchesShouldNotEmitUnreachableStatement()
+            {
+                AddSchema(@"
+{
+  ""name"": ""Sample"",
+  ""namespace"": ""Avro.Test.CodeGen.UnreachableCodeRegression"",
+  ""type"": ""record"",
+  ""fields"": [
+    { ""name"": ""value"", ""type"": ""string"" }
+  ]
+}
+");
+                GenerateCode();
+                var types = GetTypes();
+                bool hasSampleCode = types.TryGetValue("Sample", out string sampleCode);
+                Assert.That(hasSampleCode);
+
+                // The exhaustive switch in Get()/Put() must not be followed by a stray ";" -
+                // that empty statement is unreachable (every case returns or throws) and
+                // trips IDE-only unreachable-code analysis (e.g. ReSharper) even though Roslyn
+                // does not flag it.
+                Assert.That(Regex.IsMatch(sampleCode, @"\}\s*;\s*\}\s*public virtual void Put"), Is.False);
+                Assert.That(Regex.IsMatch(sampleCode, @"in Put\(\)""\);\s*\}\s*;"), Is.False);
+
+                // CodeDom writes CodeSnippetStatement at column 0, so the snippet carries its own indent.
+                Assert.That(Regex.Matches(sampleCode, @"(?m)^\t\t\tswitch \(fieldPos\)\r?$").Count, Is.EqualTo(2));
+                Assert.That(Regex.Matches(sampleCode, @"(?m)^\s*switch \(fieldPos\)").Count, Is.EqualTo(2));
+            }
+
+            [Test]
+            public void ProtocolRequestSwitchShouldBeIndentedAndNotFollowedByEmptyStatement()
+            {
+                AddProtocol(@"
+{
+  ""protocol"": ""Greeter"",
+  ""namespace"": ""Avro.Test.CodeGen.ProtocolSwitchRegression"",
+  ""types"": [],
+  ""messages"": {
+    ""hello"": {
+      ""request"": [ { ""name"": ""greeting"", ""type"": ""string"" } ],
+      ""response"": ""string""
+    }
+  }
+}
+");
+                GenerateCode();
+                var types = GetTypes();
+                bool hasGreeterCode = types.TryGetValue("Greeter", out string greeterCode);
+                Assert.That(hasGreeterCode);
+
+                Assert.That(Regex.Matches(greeterCode, @"(?m)^\t\t\tswitch\(messageName\)\r?$").Count, Is.EqualTo(1));
+                Assert.That(Regex.IsMatch(greeterCode, @"break;\s*\}\s*;"), Is.False);
+            }
+
+            [Test]
+            public void ProtocolWithoutMessagesShouldGenerateEmptyRequestBody()
+            {
+                AddProtocol(@"
+{
+  ""protocol"": ""Silent"",
+  ""namespace"": ""Avro.Test.CodeGen.EmptyProtocolRegression"",
+  ""types"": [],
+  ""messages"": {}
+}
+");
+                GenerateCode();
+                var types = GetTypes();
+                bool hasSilentCode = types.TryGetValue("Silent", out string silentCode);
+                Assert.That(hasSilentCode);
+
+                Assert.That(Regex.IsMatch(silentCode, @"object callback\)\s*\{\s*\}"), Is.True);
+            }
+
+            [Test]
             public void EnumWithKeywordSymbolsShouldHavePrefixedSymbols()
             {
                 AddSchema(@"{

@@ -563,7 +563,7 @@ namespace Avro
 
             if (protocol.Messages.Count > 0)
             {
-                builder.AppendLine("switch(messageName)");
+                builder.AppendLine("\t\t\tswitch(messageName)");
                 builder.Append("\t\t\t{");
 
                 foreach (var a in protocol.Messages)
@@ -580,11 +580,11 @@ namespace Avro
                 }
 
                 builder.Append("\t\t\t}");
+
+                var cssRequest = new CodeSnippetStatement(builder.ToString());
+                requestMethod.Statements.Add(cssRequest);
             }
 
-            var cseGet = new CodeSnippetExpression(builder.ToString());
-
-            requestMethod.Statements.Add(cseGet);
             ctd.Members.Add(requestMethod);
 
             AddMethods(protocol, false, ctd);
@@ -770,7 +770,7 @@ namespace Avro
             cmmGet.Attributes = MemberAttributes.Public;
             cmmGet.ReturnType = new CodeTypeReference("System.Object");
             cmmGet.Parameters.Add(new CodeParameterDeclarationExpression(typeof(int), "fieldPos"));
-            StringBuilder getFieldStmt = new StringBuilder("switch (fieldPos)")
+            StringBuilder getFieldStmt = new StringBuilder("\t\t\tswitch (fieldPos)")
                 .AppendLine().AppendLine("\t\t\t{");
 
             // declare Put() to be used by the Reader classes
@@ -780,7 +780,7 @@ namespace Avro
             cmmPut.ReturnType = new CodeTypeReference(typeof(void));
             cmmPut.Parameters.Add(new CodeParameterDeclarationExpression(typeof(int), "fieldPos"));
             cmmPut.Parameters.Add(new CodeParameterDeclarationExpression("System.Object", "fieldValue"));
-            var putFieldStmt = new StringBuilder("switch (fieldPos)")
+            var putFieldStmt = new StringBuilder("\t\t\tswitch (fieldPos)")
                 .AppendLine().AppendLine("\t\t\t{");
 
             if (isError)
@@ -874,15 +874,15 @@ namespace Avro
             // end switch block for Get()
             getFieldStmt.AppendLine("\t\t\tdefault: throw new global::Avro.AvroRuntimeException(\"Bad index \" + fieldPos + \" in Get()\");")
                 .Append("\t\t\t}");
-            var cseGet = new CodeSnippetExpression(getFieldStmt.ToString());
-            cmmGet.Statements.Add(cseGet);
+            var cssGet = new CodeSnippetStatement(getFieldStmt.ToString());
+            cmmGet.Statements.Add(cssGet);
             ctd.Members.Add(cmmGet);
 
             // end switch block for Put()
             putFieldStmt.AppendLine("\t\t\tdefault: throw new global::Avro.AvroRuntimeException(\"Bad index \" + fieldPos + \" in Put()\");")
                 .Append("\t\t\t}");
-            var csePut = new CodeSnippetExpression(putFieldStmt.ToString());
-            cmmPut.Statements.Add(csePut);
+            var cssPut = new CodeSnippetStatement(putFieldStmt.ToString());
+            cmmPut.Statements.Add(cssPut);
             ctd.Members.Add(cmmPut);
 
             string nspace = recordSchema.Namespace;
