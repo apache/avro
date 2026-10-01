@@ -1,0 +1,103 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="linktime"><title>linktime - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-1ed95124.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="linktime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.98.1 (48a229cea 2026-09-01)" data-channel="1.98.1" data-search-js="search-9944d736.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../static.files/storage-41dd4d93.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Crate linktime</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../linktime/index.html">linktime</a><span class="version">0.19.0</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#linktime" title="linktime">linktime</a><ul><li><a href="#crates" title="Crates">Crates</a></li><li><a href="#ctor" title="`ctor`"><code>ctor</code></a></li><li><a href="#dtor" title="`dtor`"><code>dtor</code></a></li><li><a href="#link-section" title="`link-section`"><code>link-section</code></a></li><li><a href="#scattered-collect" title="`scattered-collect`"><code>scattered-collect</code></a></li><li><a href="#contributing" title="Contributing">Contributing</a></li><li><a href="#license" title="License">License</a></li></ul></li></ul><h3><a href="#modules">Crate Items</a></h3><ul class="block"><li><a href="#modules" title="Modules">Modules</a></li><li><a href="#attributes" title="Attribute Macros">Attribute Macros</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1>Crate <span>linktime</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/linktime/lib.rs.html#1-59">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="linktime"><a class="doc-anchor" href="#linktime">§</a>linktime</h2>
+<p>Cross-platform libraries for link-time initialization, finalization and
+collection in Rust.</p>
+<p><a href="https://github.com/mmastrac/linktime"><img src="https://img.shields.io/badge/repo-github-blue" alt="GitHub" /></a> <a href="https://crates.io/crates/link-section"><img src="https://img.shields.io/crates/l/link-section" alt="Crates.io License" /></a> <a href="https://github.com/mmastrac/linktime/actions/workflows/rust.yml"><img src="https://github.com/mmastrac/linktime/actions/workflows/rust.yml/badge.svg" alt="Build Status" /></a></p>
+<div><table><thead><tr><th>crate</th><th></th></tr></thead><tbody>
+<tr><td><code>linktime</code><br><a href="https://docs.rs/linktime"><img src="https://docs.rs/linktime/badge.svg" alt="docs.rs" /></a> <a href="https://crates.io/crates/linktime"><img src="https://img.shields.io/crates/v/linktime.svg" alt="crates.io" /></a></td><td>Convenience crate for <code>ctor</code>, <code>dtor</code> and <code>link-section</code></td></tr>
+<tr><td><code>ctor</code><br><a href="https://docs.rs/ctor"><img src="https://docs.rs/ctor/badge.svg" alt="docs.rs" /></a> <a href="https://crates.io/crates/ctor"><img src="https://img.shields.io/crates/v/ctor.svg" alt="crates.io" /></a></td><td>Module initialization functions before main</td></tr>
+<tr><td><code>dtor</code><br><a href="https://docs.rs/dtor"><img src="https://docs.rs/dtor/badge.svg" alt="docs.rs" /></a> <a href="https://crates.io/crates/dtor"><img src="https://img.shields.io/crates/v/dtor.svg" alt="crates.io" /></a></td><td>Module shutdown functions before main</td></tr>
+<tr><td><code>link-section</code><br><a href="https://docs.rs/link-section"><img src="https://docs.rs/link-section/badge.svg" alt="docs.rs" /></a> <a href="https://crates.io/crates/link-section"><img src="https://img.shields.io/crates/v/link-section.svg" alt="crates.io" /></a></td><td>Linker-managed typed (slices) and untyped sections</td></tr>
+<tr><td><code>scattered-collect</code><br><a href="https://docs.rs/scattered-collect"><img src="https://docs.rs/scattered-collect/badge.svg" alt="docs.rs" /></a> <a href="https://crates.io/crates/scattered-collect"><img src="https://img.shields.io/crates/v/scattered-collect.svg" alt="crates.io" /></a></td><td>Linker-managed collections: slices, sorted slices, maps</td></tr>
+</tbody></table>
+</div><h3 id="crates"><a class="doc-anchor" href="#crates">§</a>Crates</h3>
+<p>The <code>linktime</code> project comprises three crates, and the top-level <code>linktime</code>
+crate aggregates them all.</p>
+<p>Pick-and-choose, or import the top-level crate to get all three.</p>
+<h3 id="ctor"><a class="doc-anchor" href="#ctor">§</a><a href="ctor/"><code>ctor</code></a></h3>
+<p>Module initialization functions for Rust (like <code>__attribute__((constructor))</code> in
+C/C++).</p>
+<p>Run code before <code>main</code> to initialize data, external resources, or other state.</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+linktime = { version = &quot;...&quot;, features = [&quot;ctor&quot;] }  # note: already enabled by default
+# or
+ctor = &quot;...&quot;</code></pre></div>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>linktime::ctor; <span class="comment">// or ctor::ctor
+</span><span class="kw">use </span>libc_print::<span class="kw-2">*</span>;
+
+<span class="attr">#[ctor(<span class="kw">unsafe</span>)]
+</span><span class="kw">fn </span>foo() {
+    <span class="macro">libc_println!</span>(<span class="string">"Life before main!"</span>);
+}</code></pre></div><h3 id="dtor"><a class="doc-anchor" href="#dtor">§</a><a href="dtor/"><code>dtor</code></a></h3>
+<p>Module shutdown functions for Rust (like <code>__attribute__((destructor))</code>).</p>
+<p>Run code after <code>main</code> to clean up resources, or perform other final operations.</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+linktime = { version = &quot;...&quot;, features = [&quot;dtor&quot;] }  # note: already enabled by default
+# or
+dtor = &quot;...&quot;</code></pre></div>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>linktime::dtor; <span class="comment">// or dtor::dtor
+</span><span class="kw">use </span>libc_print::<span class="kw-2">*</span>;
+
+<span class="attr">#[dtor(<span class="kw">unsafe</span>)]
+</span><span class="kw">fn </span>foo() {
+    <span class="macro">libc_println!</span>(<span class="string">"Life after main!"</span>);
+}</code></pre></div><h3 id="link-section"><a class="doc-anchor" href="#link-section">§</a><a href="link-section/"><code>link-section</code></a></h3>
+<p>Typed and untyped link section support for Rust.</p>
+<p>Collect related items from an entire linked binary into a single link section.</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+linktime = { version = &quot;...&quot;, features = [&quot;link-section&quot;] }  # note: already enabled by default
+# or
+link-section = &quot;...&quot;</code></pre></div>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>linktime::link_section::{section, in_section, TypedSection};
+<span class="kw">use </span>linktime::ctor;
+<span class="kw">use </span>libc_print::<span class="kw-2">*</span>;
+
+<span class="attr">#[section(typed)]
+</span><span class="kw">static </span>FOO: TypedSection&lt;<span class="kw">fn</span>()&gt;;
+
+<span class="attr">#[in_section(FOO)]
+</span><span class="kw">fn </span>foo() {
+    <span class="macro">libc_println!</span>(<span class="string">"Hello, world!"</span>);
+}
+
+<span class="attr">#[ctor(<span class="kw">unsafe</span>)]
+</span><span class="kw">fn </span>print_numbers() {
+    <span class="kw">for </span>f <span class="kw">in </span>FOO {
+        f();
+    }
+}</code></pre></div><h3 id="scattered-collect"><a class="doc-anchor" href="#scattered-collect">§</a><a href="scattered-collect/"><code>scattered-collect</code></a></h3>
+<p>A crate for defining zero-allocation,linker-managed scattered collections in
+Rust.</p>
+<ul>
+<li><code>ScatteredIterable</code>: A collection of items that are available only via</li>
+<li><code>ScatteredSlice</code>: A collection of sized items that collected into a slice in
+an arbitrary order.</li>
+<li><code>ScatteredSortedSlice</code>: A collection of items that are available via slice,
+in sorted order.</li>
+<li><code>ScatteredReferencedSlice</code>: A collection of items collected into a slice
+(link order).</li>
+<li><code>ScatteredSortedReferencedSlice</code>: A collection of sized items that are
+available both via sorted slice and via reference at the declaration site.</li>
+<li><code>ScatteredMap</code>: A collection of key-value pairs that are available via
+slice, as well as indexed by key.</li>
+</ul>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">use </span>scattered_collect::{gather, scatter, slice::ScatteredSlice};
+
+<span class="attr">#[gather]
+</span><span class="kw">static </span>SLICE_PLUGINS: ScatteredSlice&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;;
+
+<span class="attr">#[scatter(SLICE_PLUGINS)]
+</span><span class="kw">const _</span>: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = <span class="string">"json"</span>;
+
+<span class="attr">#[scatter(SLICE_PLUGINS)]
+</span><span class="kw">const _</span>: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = <span class="string">"yaml"</span>;
+
+<span class="kw">fn </span>main() {
+    <span class="macro">assert_eq!</span>(SLICE_PLUGINS.len(), <span class="number">2</span>);
+    <span class="macro">assert!</span>(SLICE_PLUGINS.contains(<span class="kw-2">&amp;</span><span class="string">"json"</span>));
+}</code></pre></div><h3 id="contributing"><a class="doc-anchor" href="#contributing">§</a>Contributing</h3>
+<p>Contributions are welcome!</p>
+<h3 id="license"><a class="doc-anchor" href="#license">§</a>License</h3>
+<p>These projects are dual-licensed under the Apache License, Version 2.0 and the
+MIT License.</p>
+</div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="declarative/index.html" title="mod linktime::declarative">declarative</a></dt><dd>Declarative forms of <code>linktime</code> macros.</dd></dl><h2 id="attributes" class="section-header">Attribute Macros<a href="#attributes" class="anchor">§</a></h2><dl class="item-table"><dt><a class="attr" href="attr.ctor.html" title="attr linktime::ctor">ctor</a></dt><dd>Define an initializer function that runs before <code>main</code>. See <a href="crate::ctor::ctor">ctor</a>.</dd><dt><a class="attr" href="attr.dtor.html" title="attr linktime::dtor">dtor</a></dt></dl></section></div></main></body></html>

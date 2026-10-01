@@ -1,0 +1,103 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="`crc-fast`"><title>crc_fast - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-1ed95124.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="crc_fast" data-themes="" data-resource-suffix="" data-rustdoc-version="1.98.1 (48a229cea 2026-09-01)" data-channel="1.98.1" data-search-js="search-9944d736.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../static.files/storage-41dd4d93.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Crate crc_fast</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../crc_fast/index.html">crc_<wbr>fast</a><span class="version">1.10.0</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#crc-fast" title="`crc-fast`"><code>crc-fast</code></a></li><li><a href="#other-languages" title="Other languages">Other languages</a></li><li><a href="#background" title="Background">Background</a></li><li><a href="#usage" title="Usage">Usage</a><ul><li><a href="#digest" title="Digest">Digest</a></li><li><a href="#digest-write" title="Digest Write">Digest Write</a></li><li><a href="#checksum" title="checksum">checksum</a></li><li><a href="#checksum_combine" title="checksum_combine">checksum_combine</a></li><li><a href="#checksum_file" title="checksum_file">checksum_file</a></li><li><a href="#custom-crc-parameters" title="Custom CRC Parameters">Custom CRC Parameters</a></li><li><a href="#checksum_with_params" title="checksum_with_params">checksum_with_params</a></li></ul></li><li><a href="#no_std-support" title="no_std Support">no_std Support</a></li></ul><h3><a href="#modules">Crate Items</a></h3><ul class="block"><li><a href="#modules" title="Modules">Modules</a></li><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#enums" title="Enums">Enums</a></li><li><a href="#functions" title="Functions">Functions</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1>Crate <span>crc_<wbr>fast</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/crc_fast/lib.rs.html#3-2072">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="crc-fast"><a class="doc-anchor" href="#crc-fast">§</a><code>crc-fast</code></h2>
+<p>Hardware-accelerated CRC calculation for
+<a href="https://reveng.sourceforge.io/crc-catalogue/all.htm">all known CRC-32 and CRC-64 variants</a>
+using SIMD intrinsics which can exceed 100GiB/s for CRC-32 and 50GiB/s for CRC-64 on modern
+systems.</p>
+<h2 id="other-languages"><a class="doc-anchor" href="#other-languages">§</a>Other languages</h2>
+<p>Supplies a C-compatible shared library for use with other non-Rust languages. See
+<a href="https://github.com/awesomized/crc-fast-php-ext">PHP extension</a> example.</p>
+<h2 id="background"><a class="doc-anchor" href="#background">§</a>Background</h2>
+<p>The implementation is based on Intel’s
+<a href="https://web.archive.org/web/20131224125630/https://www.intel.com/content/dam/www/public/us/en/documents/white-papers/fast-crc-computation-generic-polynomials-pclmulqdq-paper.pdf">Fast CRC Computation for Generic Polynomials Using PCLMULQDQ Instruction</a>,
+white paper though it folds 8-at-a-time, like other modern implementations, rather than the
+4-at-a-time as in Intel’s paper.</p>
+<p>Works on <code>aarch64</code>, <code>x86_64</code>, and <code>x86</code> architectures, and is hardware-accelerated and optimized
+for each architecture.</p>
+<p>Inspired by <a href="https://crates.io/crates/crc32fast"><code>crc32fast</code></a>,
+<a href="https://crates.io/crates/crc64fast"><code>crc64fast</code></a>,
+and <a href="https://crates.io/crates/crc64fast-nvme"><code>crc64fast-nvme</code></a>, each of which only accelerates
+a single, different CRC variant, and all of them were “reflected” variants.</p>
+<p>In contrast, this library accelerates <em>every known variant</em> (and should accelerate any future
+variants without changes), including all the “non-reflected” variants.</p>
+<h2 id="usage"><a class="doc-anchor" href="#usage">§</a>Usage</h2><h3 id="digest"><a class="doc-anchor" href="#digest">§</a>Digest</h3>
+<p>Implements the <a href="https://docs.rs/digest/latest/digest/trait.DynDigest.html">digest::DynDigest</a>
+trait for easier integration with existing code.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>crc_fast::{Digest, CrcAlgorithm::Crc32IsoHdlc};
+
+<span class="kw">let </span><span class="kw-2">mut </span>digest = Digest::new(Crc32IsoHdlc);
+digest.update(<span class="string">b"1234"</span>);
+digest.update(<span class="string">b"56789"</span>);
+<span class="kw">let </span>checksum = digest.finalize();
+
+<span class="macro">assert_eq!</span>(checksum, <span class="number">0xcbf43926</span>);</code></pre></div><h3 id="digest-write"><a class="doc-anchor" href="#digest-write">§</a>Digest Write</h3>
+<p>Implements the <a href="https://doc.rust-lang.org/std/io/trait.Write.html">std::io::Write</a> trait for
+easier integration with existing code.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::env;
+<span class="kw">use </span>std::fs::File;
+<span class="kw">use </span>crc_fast::{Digest, CrcAlgorithm::Crc32IsoHdlc};
+
+<span class="comment">// for example/test purposes only, use your own file path
+</span><span class="kw">let </span>file_path = env::current_dir().expect(<span class="string">"missing working dir"</span>).join(<span class="string">"crc-check.txt"</span>);
+<span class="kw">let </span>file_on_disk = file_path.to_str().unwrap();
+
+<span class="comment">// actual usage
+</span><span class="kw">let </span><span class="kw-2">mut </span>digest = Digest::new(Crc32IsoHdlc);
+<span class="kw">let </span><span class="kw-2">mut </span>file = File::open(file_on_disk).unwrap();
+std::io::copy(<span class="kw-2">&amp;mut </span>file, <span class="kw-2">&amp;mut </span>digest).unwrap();
+<span class="kw">let </span>checksum = digest.finalize();
+
+<span class="macro">assert_eq!</span>(checksum, <span class="number">0xcbf43926</span>);</code></pre></div><h3 id="checksum"><a class="doc-anchor" href="#checksum">§</a>checksum</h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code> <span class="kw">use </span>crc_fast::{checksum, CrcAlgorithm::Crc32IsoHdlc};
+
+ <span class="kw">let </span>checksum = checksum(Crc32IsoHdlc, <span class="string">b"123456789"</span>);
+
+ <span class="macro">assert_eq!</span>(checksum, <span class="number">0xcbf43926</span>);</code></pre></div><h3 id="checksum_combine"><a class="doc-anchor" href="#checksum_combine">§</a>checksum_combine</h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code> <span class="kw">use </span>crc_fast::{checksum, checksum_combine, CrcAlgorithm::Crc32IsoHdlc};
+
+ <span class="kw">let </span>checksum_1 = checksum(Crc32IsoHdlc, <span class="string">b"1234"</span>);
+ <span class="kw">let </span>checksum_2 = checksum(Crc32IsoHdlc, <span class="string">b"56789"</span>);
+ <span class="kw">let </span>checksum = checksum_combine(Crc32IsoHdlc, checksum_1, checksum_2, <span class="number">5</span>);
+
+ <span class="macro">assert_eq!</span>(checksum, <span class="number">0xcbf43926</span>);</code></pre></div><h3 id="checksum_file"><a class="doc-anchor" href="#checksum_file">§</a>checksum_file</h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code> <span class="kw">use </span>std::env;
+ <span class="kw">use </span>crc_fast::{checksum_file, CrcAlgorithm::Crc32IsoHdlc};
+
+ <span class="comment">// for example/test purposes only, use your own file path
+ </span><span class="kw">let </span>file_path = env::current_dir().expect(<span class="string">"missing working dir"</span>).join(<span class="string">"crc-check.txt"</span>);
+ <span class="kw">let </span>file_on_disk = file_path.to_str().unwrap();
+
+ <span class="kw">let </span>checksum = checksum_file(Crc32IsoHdlc, file_on_disk, <span class="prelude-val">None</span>);
+
+ <span class="macro">assert_eq!</span>(checksum.unwrap(), <span class="number">0xcbf43926</span>);</code></pre></div><h3 id="custom-crc-parameters"><a class="doc-anchor" href="#custom-crc-parameters">§</a>Custom CRC Parameters</h3>
+<p>For cases where you need to use CRC variants not included in the predefined algorithms,
+you can define custom CRC parameters using <code>CrcParams::new()</code> and use the <code>*_with_params</code> functions.</p>
+<h3 id="checksum_with_params"><a class="doc-anchor" href="#checksum_with_params">§</a>checksum_with_params</h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code> <span class="kw">use </span>crc_fast::{checksum_with_params, CrcParams};
+
+ <span class="comment">// Define custom CRC-32 parameters (equivalent to CRC-32/ISO-HDLC)
+ </span><span class="kw">let </span>custom_params = CrcParams::new(
+     <span class="string">"CRC-32/CUSTOM"</span>,
+     <span class="number">32</span>,
+     <span class="number">0x04c11db7</span>,
+     <span class="number">0xffffffff</span>,
+     <span class="bool-val">true</span>,
+     <span class="number">0xffffffff</span>,
+     <span class="number">0xcbf43926</span>,
+ );
+
+ <span class="kw">let </span>checksum = checksum_with_params(custom_params, <span class="string">b"123456789"</span>);
+
+ <span class="macro">assert_eq!</span>(checksum, <span class="number">0xcbf43926</span>);</code></pre></div><h2 id="no_std-support"><a class="doc-anchor" href="#no_std-support">§</a>no_std Support</h2>
+<p>Supports <code>no_std</code> environments. Use <code>default-features = false</code> in Cargo.toml.</p>
+<p>Note: When using this library in a <code>no_std</code> environment, the final binary must provide:</p>
+<ul>
+<li>A <code>#[panic_handler]</code> (e.g., via the <code>panic-halt</code> crate)</li>
+<li>A <code>#[global_allocator]</code> if using the <code>alloc</code> feature</li>
+</ul>
+</div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="arch/index.html" title="mod crc_fast::arch">arch</a></dt><dd>This module provides the main entry point for the SIMD CRC calculation.</dd></dl><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.CrcParams.html" title="struct crc_fast::CrcParams">CrcParams</a></dt><dd>Parameters for CRC computation, including polynomial, initial value, and other settings.</dd><dt><a class="struct" href="struct.Digest.html" title="struct crc_fast::Digest">Digest</a></dt><dd>Represents a CRC Digest, which is used to compute CRC checksums.</dd></dl><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><dl class="item-table"><dt><a class="enum" href="enum.CrcAlgorithm.html" title="enum crc_fast::CrcAlgorithm">CrcAlgorithm</a></dt><dd>Supported CRC-16, CRC-32, and CRC-64 variants</dd><dt><a class="enum" href="enum.CrcKeysStorage.html" title="enum crc_fast::CrcKeysStorage">CrcKeys<wbr>Storage</a></dt><dd>Internal storage for CRC folding keys that can accommodate different array sizes.
+This enum allows future expansion to support larger folding distances while maintaining
+backwards compatibility with existing const definitions.</dd></dl><h2 id="functions" class="section-header">Functions<a href="#functions" class="anchor">§</a></h2><dl class="item-table"><dt><a class="fn" href="fn.checksum.html" title="fn crc_fast::checksum">checksum</a></dt><dd>Computes the CRC checksum for the given data using the specified algorithm.</dd><dt><a class="fn" href="fn.checksum_combine.html" title="fn crc_fast::checksum_combine">checksum_<wbr>combine</a></dt><dd>Combines two CRC checksums using the specified algorithm.</dd><dt><a class="fn" href="fn.checksum_combine_with_params.html" title="fn crc_fast::checksum_combine_with_params">checksum_<wbr>combine_<wbr>with_<wbr>params</a></dt><dd>Combines two CRC checksums using custom CRC parameters.</dd><dt><a class="fn" href="fn.checksum_file.html" title="fn crc_fast::checksum_file">checksum_<wbr>file</a></dt><dd>Computes the CRC checksum for the given file using the specified algorithm.</dd><dt><a class="fn" href="fn.checksum_file_with_params.html" title="fn crc_fast::checksum_file_with_params">checksum_<wbr>file_<wbr>with_<wbr>params</a></dt><dd>Computes the CRC checksum for the given file using custom CRC parameters.</dd><dt><a class="fn" href="fn.checksum_with_params.html" title="fn crc_fast::checksum_with_params">checksum_<wbr>with_<wbr>params</a></dt><dd>Computes the CRC checksum for the given data using custom CRC parameters.</dd><dt><a class="fn" href="fn.crc32_iscsi.html" title="fn crc_fast::crc32_iscsi">crc32_<wbr>iscsi</a></dt><dd>Calculates the CRC-32/ISCSI checksum (commonly called “crc32c” in many, but not all,
+implementations).</dd><dt><a class="fn" href="fn.crc32_iso_hdlc.html" title="fn crc_fast::crc32_iso_hdlc">crc32_<wbr>iso_<wbr>hdlc</a></dt><dd>Calculates the CRC-32/ISO-HDLC checksum (commonly called “crc32” in many, but not all,
+implementations).</dd><dt><a class="fn" href="fn.crc64_nvme.html" title="fn crc_fast::crc64_nvme">crc64_<wbr>nvme</a></dt><dd>Calculates the CRC-64/NVME checksum.</dd><dt><a class="fn" href="fn.get_calculator_target.html" title="fn crc_fast::get_calculator_target">get_<wbr>calculator_<wbr>target</a></dt><dd>Returns the target used to calculate the CRC checksum for the specified algorithm.</dd></dl></section></div></main></body></html>

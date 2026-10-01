@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"macro":[["ctor",1],["dtor",1]]};

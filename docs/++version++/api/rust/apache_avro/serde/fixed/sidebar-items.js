@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["deserialize","get_record_fields_in_ctxt","get_schema_in_ctxt","serialize"]};

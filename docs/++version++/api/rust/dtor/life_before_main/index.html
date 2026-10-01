@@ -1,0 +1,80 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Life-Before-Main and Other Link-Time Hazards"><title>dtor::life_before_main - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-1ed95124.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="dtor" data-themes="" data-resource-suffix="" data-rustdoc-version="1.98.1 (48a229cea 2026-09-01)" data-channel="1.98.1" data-search-js="search-9944d736.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Module life_before_main</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../dtor/index.html">dtor</a><span class="version">1.0.6</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module life_<wbr>before_<wbr>main</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#life-before-main-and-other-link-time-hazards" title="Life-Before-Main and Other Link-Time Hazards">Life-Before-Main and Other Link-Time Hazards</a><ul><li><a href="#rusts-model-vs-ctordtor" title="Rust’s model vs `ctor`/`dtor`">Rust’s model vs <code>ctor</code>/<code>dtor</code></a></li><li><a href="#aggressive-linker-garbage-collection" title="Aggressive Linker Garbage Collection">Aggressive Linker Garbage Collection</a></li><li><a href="#cdylib-lifecycle" title="`cdylib` lifecycle"><code>cdylib</code> lifecycle</a></li></ul></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="../index.html">In crate dtor</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../index.html">dtor</a></div><h1>Module <span>life_<wbr>before_<wbr>main</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../src/dtor/lib.rs.html#17">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="life-before-main-and-other-link-time-hazards"><a class="doc-anchor" href="#life-before-main-and-other-link-time-hazards">§</a>Life-Before-Main and Other Link-Time Hazards</h2>
+<p>The linker is a powerful tool that can be used to perform a number of tricks,
+but you, the developer, should be aware of the hazards that come with this
+low-level control.</p>
+<p>Rust is a systems programming language that is designed to be safe, and
+link-time tools may bend or break some safety guarantees.</p>
+<ul>
+<li><a href="#rusts-model-vs-ctordtor">Rust’s model vs <code>ctor</code>/<code>dtor</code></a>
+<ul>
+<li><a href="#panic-handling">Panic handling</a></li>
+<li><a href="#io-and-the-standard-library">I/O and the Standard Library</a></li>
+<li><a href="#aggressive-linker-garbage-collection">Aggressive Linker Garbage Collection</a></li>
+</ul>
+</li>
+<li><a href="#cdylib-lifecycle">cdylib lifecycle</a></li>
+</ul>
+<h3 id="rusts-model-vs-ctordtor"><a class="doc-anchor" href="#rusts-model-vs-ctordtor">§</a>Rust’s model vs <code>ctor</code>/<code>dtor</code></h3>
+<p>Rust’s usual model is that nothing runs before or after <code>main</code>. The <code>ctor</code> and
+<code>dtor</code> crates deliberately subvert that
+(<a href="https://github.com/rust-lang/unsafe-code-guidelines/issues/598"><em>UCG</em> #598</a>).</p>
+<p>Code inside <code>#[ctor]</code> and <code>#[dtor]</code> should favor <strong><code>libc</code>-level APIs</strong> and logic
+that does <strong>not depend on the Rust standard library</strong> having finished
+initializing (constructors) or still being valid (destructors).</p>
+<p><a href="https://github.com/rust-lang/unsafe-code-guidelines/issues/598"><em>UCG</em> #598</a> — Rust <code>unsafe-code-guidelines</code>; discussion thread on lifecycle and unsafe-code implications around execution outside <code>main</code>.</p>
+<h4 id="panic-handling"><a class="doc-anchor" href="#panic-handling">§</a>Panic handling</h4>
+<p>Panic handlers may not be set up in early code, so a <code>panic!()</code> may not be
+catchable, or may even result in undefined behavior. Generally, code that runs
+before main must take great pains not to panic (<a href="https://github.com/rust-lang/rust/issues/97049">🦀
+#97049</a>, <a href="https://github.com/rust-lang/rust/issues/107381">🦀
+#107381</a>, <a href="https://github.com/rust-lang/rust/issues/86030">🦀
+#86030</a>).</p>
+<p><em>References</em></p>
+<p><a href="https://github.com/rust-lang/rust/issues/97049">🦀 #97049</a> — <code>rust-lang/rust</code>; Miri and discussion of panicking inside <code>#[start]</code> before the runtime can catch unwinding.</p>
+<p><a href="https://github.com/rust-lang/rust/issues/107381">🦀 #107381</a> — <code>rust-lang/rust</code>; unwinding and whether escaping <code>lang_start</code> is undefined behavior.</p>
+<p><a href="https://github.com/rust-lang/rust/issues/86030">🦀 #86030</a> — <code>rust-lang/rust</code>; <code>lang_start</code> soundness when panic payloads panic during drop (<code>failed to initiate panic</code>).</p>
+<h4 id="io-and-the-standard-library"><a class="doc-anchor" href="#io-and-the-standard-library">§</a>I/O and the Standard Library</h4>
+<p><code>std::io</code> is known to be problematic after main
+(<a href="https://github.com/rust-lang/rust/issues/29488">🦀 #29488</a>,
+<a href="https://stackoverflow.com/questions/35980148/why-does-an-atexit-handler-panic-when-it-accesses-stdout">SO #35980148</a>).
+<code>println!</code> uses thread-local stdout machinery which may not be initialized yet, or may be
+closed/broken after <code>main</code> exits. The
+<a href="https://crates.io/crates/libc-print"><code>libc_print</code></a> crate provides a safe
+alternative for this that uses <code>libc</code> functions directly and will not panic if
+used before or after <code>main</code>.</p>
+<p>The standard library does not make any particular guarantees about the state of
+the system after <code>main</code> exits or before it starts and code that works in one
+version of Rust may or may not work in another.</p>
+<p><em>References</em></p>
+<p><a href="https://github.com/rust-lang/rust/issues/29488">🦀 #29488</a> — <code>rust-lang/rust</code>; <code>println!</code> panics from <code>Drop</code> / TLS (<code>cannot access stdout during shutdown</code>).</p>
+<p><a href="https://stackoverflow.com/questions/35980148/why-does-an-atexit-handler-panic-when-it-accesses-stdout">SO #35980148</a> — <code>println!</code> / stdout access from a libc <code>atexit</code> handler vs Rust runtime teardown order.</p>
+<h3 id="aggressive-linker-garbage-collection"><a class="doc-anchor" href="#aggressive-linker-garbage-collection">§</a>Aggressive Linker Garbage Collection</h3>
+<p>Some linker configurations can <strong>strip</strong> the underlying registration data for
+<code>#[ctor]</code>, <code>#[dtor]</code> and <code>#[in_section]</code> registrations from the final binary,
+resulting in them not being called
+(<a href="https://github.com/mmastrac/linktime/issues/280">rust-ctor #280</a>,
+<a href="https://github.com/rust-lang/rust/issues/99721">🦀 #99721</a>).</p>
+<p>Building with <code>--cfg linktime_used_linker</code> for the <code>ctor</code> and <code>dtor</code> crates
+<em>may</em> help — it applies <code>used(linker)</code> to the linker-generated items, but it
+requires nightly Rust and <code>#![feature(used_with_arg)]</code> on the crate root.</p>
+<p>Often a <strong><code>use</code> of the module</strong> that contains the missing registration is enough
+for the linker to retain the code.</p>
+<p><em>References</em></p>
+<p><a href="https://github.com/mmastrac/linktime/issues/280">rust-ctor #280</a> — <code>mmastrac/linktime</code>; linker / LTO stripping ctor registrations.</p>
+<p><a href="https://github.com/rust-lang/rust/issues/99721">🦀 #99721</a> — <code>rust-lang/rust</code>; rustc / linkage behavior relevant to similar stripping (<code>used</code>, linker GC).</p>
+<h3 id="cdylib-lifecycle"><a class="doc-anchor" href="#cdylib-lifecycle">§</a><code>cdylib</code> lifecycle</h3>
+<p>A <code>cdylib</code> is a dynamic library that is loaded (and potentially unloaded) at
+runtime, independent of the main executable.</p>
+<p>On some platforms, <strong>unloading a shared library may not occur when you expect</strong>;
+behavior can be deferred until <strong>process exit</strong>. The rules are described as
+arcane. <strong>Thread-local storage on macOS</strong> is called out as influencing this; see
+<a href="https://github.com/rust-lang/rust/issues/28794#issuecomment-368693049">this comment on 🦀 #28794</a>.</p>
+<p>Care should be taken to ensure that the <code>#[dtor]</code> functions are called before
+the library is unloaded. While the <code>#[dtor]</code> macro supports registering
+“termination” functions - which are called when the main binary process
+terminates - inside of <code>cdylib</code>s, it is not recommended to use them as the code
+that will perform the cleanup may have been unloaded and unmapped from memory,
+causing random crashes.</p>
+<p><em>References</em></p>
+<p><a href="https://github.com/rust-lang/rust/issues/28794#issuecomment-368693049">🦀 #28794 (comment)</a> — <code>rust-lang/rust</code>; thread-local storage and dynamic-library unload behavior on macOS.</p>
+</div></details></section></div></main></body></html>

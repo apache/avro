@@ -1,0 +1,451 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta content="Apache Forrest" name="Generator">
+<meta name="Forrest-version" content="0.9">
+<meta name="Forrest-skin-name" content="pelt">
+<title>Apache Avro&#153; 1.11.0 Getting Started (Python)</title>
+<link type="text/css" href="skin/basic.css" rel="stylesheet">
+<link media="screen" type="text/css" href="skin/screen.css" rel="stylesheet">
+<link media="print" type="text/css" href="skin/print.css" rel="stylesheet">
+<link type="text/css" href="skin/profile.css" rel="stylesheet">
+<script src="skin/getBlank.js" language="javascript" type="text/javascript"></script><script src="skin/getMenu.js" language="javascript" type="text/javascript"></script><script src="skin/fontsize.js" language="javascript" type="text/javascript"></script>
+<link rel="shortcut icon" href="images/favicon.ico">
+</head>
+<body onload="init()">
+<script type="text/javascript">ndeSetTextSize();</script>
+<div id="top">
+<!--+
+    |breadtrail
+    +-->
+<div class="breadtrail">
+<a href="https://www.apache.org/">Apache</a> &gt; <a href="https://avro.apache.org/">Avro</a> &gt; <a href="https://avro.apache.org/">Avro</a><script src="skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script>
+</div>
+<!--+
+    |header
+    +-->
+<div class="header">
+<!--+
+    |start group logo
+    +-->
+<div class="grouplogo">
+<a href="https://www.apache.org/"><img class="logoImage" alt="Apache" src="images/apache_feather.gif" title="The Apache Software Foundation"></a>
+</div>
+<!--+
+    |end group logo
+    +-->
+<!--+
+    |start Project Logo
+    +-->
+<div class="projectlogo">
+<a href="https://avro.apache.org/"><img class="logoImage" alt="Avro" src="images/avro-logo.png" title="Serialization System"></a>
+</div>
+<!--+
+    |end Project Logo
+    +-->
+<!--+
+    |start Search
+    +-->
+<div class="searchbox">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+<input value="avro.apache.org" name="sitesearch" type="hidden"><input onFocus="getBlank (this, 'Search the site with google');" size="25" name="q" id="query" type="text" value="Search the site with google">&nbsp; 
+                    <input name="Search" value="Search" type="submit">
+</form>
+</div>
+<!--+
+    |end search
+    +-->
+<!--+
+    |start Tabs
+    +-->
+<ul id="tabs">
+<li>
+<a class="unselected" href="https://avro.apache.org/">Project</a>
+</li>
+<li>
+<a class="unselected" href="https://cwiki.apache.org/confluence/display/AVRO/Index">Wiki</a>
+</li>
+<li class="current">
+<a class="selected" href="index.html">Avro 1.11.0 Documentation</a>
+</li>
+</ul>
+<!--+
+    |end Tabs
+    +-->
+</div>
+</div>
+<div id="main">
+<div id="publishedStrip">
+<!--+
+    |start Subtabs
+    +-->
+<div id="level2tabs"></div>
+<!--+
+    |end Endtabs
+    +-->
+<script type="text/javascript"><!--
+document.write("Last Published: " + document.lastModified);
+//  --></script>
+</div>
+<!--+
+    |breadtrail
+    +-->
+<div class="breadtrail">
+
+             &nbsp;
+           </div>
+<!--+
+    |start Menu, mainarea
+    +-->
+<!--+
+    |start Menu
+    +-->
+<div id="menu">
+<div onclick="SwitchMenu('menu_selected_1.1', 'skin/')" id="menu_selected_1.1Title" class="menutitle" style="background-image: url('skin/images/chapter_open.gif');">Documentation</div>
+<div id="menu_selected_1.1" class="selectedmenuitemgroup" style="display: block;">
+<div class="menuitem">
+<a href="index.html">Overview</a>
+</div>
+<div class="menuitem">
+<a href="gettingstartedjava.html">Getting started (Java)</a>
+</div>
+<div class="menupage">
+<div class="menupagetitle">Getting started (Python)</div>
+</div>
+<div class="menuitem">
+<a href="spec.html">Specification</a>
+</div>
+<div class="menuitem">
+<a href="trevni/spec.html">Trevni</a>
+</div>
+<div class="menuitem">
+<a href="api/java/index.html">Java API</a>
+</div>
+<div class="menuitem">
+<a href="api/c/index.html">C API</a>
+</div>
+<div class="menuitem">
+<a href="api/cpp/html/index.html">C++ API</a>
+</div>
+<div class="menuitem">
+<a href="api/csharp/html/index.html">C# API</a>
+</div>
+<div class="menuitem">
+<a href="mr.html">MapReduce guide</a>
+</div>
+<div class="menuitem">
+<a href="idl.html">IDL language</a>
+</div>
+<div class="menuitem">
+<a href="sasl.html">SASL profile</a>
+</div>
+<div class="menuitem">
+<a href="https://cwiki.apache.org/confluence/display/AVRO/Index">Wiki</a>
+</div>
+<div class="menuitem">
+<a href="https://cwiki.apache.org/confluence/display/AVRO/FAQ">FAQ</a>
+</div>
+</div>
+<div id="credit"></div>
+<div id="roundbottom">
+<img style="display: none" class="corner" height="15" width="15" alt="" src="skin/images/rc-b-l-15-1body-2menu-3menu.png"></div>
+<!--+
+  |alternative credits
+  +-->
+<div id="credit2"></div>
+</div>
+<!--+
+    |end Menu
+    +-->
+<!--+
+    |start content
+    +-->
+<div id="content">
+<div title="Portable Document Format" class="pdflink">
+<a class="dida" href="gettingstartedpython.pdf"><img alt="PDF -icon" src="skin/images/pdfdoc.gif" class="skin"><br>
+        PDF</a>
+</div>
+<h1>Apache Avro&#153; 1.11.0 Getting Started (Python)</h1>
+<div id="front-matter">
+<div id="minitoc-area">
+<ul class="minitoc">
+<li>
+<a href="#notice_python3">Notice for Python 3 users</a>
+</li>
+<li>
+<a href="#download_install">Download and Install</a>
+</li>
+<li>
+<a href="#Defining+a+schema">Defining a schema</a>
+</li>
+<li>
+<a href="#Serializing+and+deserializing+without+code+generation">Serializing and deserializing without code generation</a>
+</li>
+</ul>
+</div>
+</div>
+    
+<p>
+      This is a short guide for getting started with Apache Avro&#153; using
+      Python.  This guide only covers using Avro for data serialization; see
+      Patrick Hunt's <a href="https://github.com/phunt/avro-rpc-quickstart">Avro
+      RPC Quick Start</a> for a good introduction to using Avro for RPC.
+    </p>
+
+    
+<a name="notice_python3"></a>
+<h2 class="h3">Notice for Python 3 users</h2>
+<div class="section">
+<p>
+        A package called "avro-python3" had been provided to support
+        Python 3 previously, but the codebase was consolidated into
+        the "avro" package that supports Python 3 now.
+
+        The avro-python3 package will be removed in the near future,
+        so users should use the "avro" package instead.
+        They are mostly API compatible, but there's a few minor difference
+        (e.g., function name capitalization,
+        such as avro.schema.Parse vs avro.schema.parse).
+      </p>
+</div>
+
+    
+<a name="download_install"></a>
+<h2 class="h3">Download and Install</h2>
+<div class="section">
+<p>
+        The easiest way to get started in Python is to install <a href="https://pypi.org/project/avro/">avro from PyPI</a>
+        using <a href="https://pip.pypa.io/en/stable/">pip</a>, the Python Package Installer.
+      </p>
+<pre class="code">
+$ python3 -m pip install avro
+      </pre>
+<p>Consider doing a local install or using a virtualenv to avoid permissions problems and interfering with system packages:</p>
+<pre class="code">
+$ python3 -m pip install --user install avro
+      </pre>
+<p>or</p>
+<pre class="code">
+        $ python3 -m venv avro-venv
+        $ avro-venv/bin/pip install avro
+      </pre>
+<p>
+        The official releases of the Avro implementations for C, C++, C#, Java,
+        PHP, Python, and Ruby can be downloaded from the <a href="https://avro.apache.org/releases.html">Apache Avro&#153;
+        Releases</a> page. This guide uses Avro 1.11.0, the latest
+        version at the time of writing. Download and install
+        <em>avro-1.11.0-py2.py3-none-any.whl</em> or
+        <em>avro-1.11.0.tar.gz</em> via
+        <span class="codefrag">python -m pip avro-1.11.0-py2.py3-none-any.whl</span>
+        or
+        <span class="codefrag">python -m pip avro-1.11.0.tar.gz</span>.
+        (As above, consider using a virtualenv or user-local install.)
+      </p>
+<p>Check that you can import avro from a Python prompt.</p>
+<pre class="code">
+$ python3 -c 'import avro; print(avro.__version__)'
+      </pre>
+<p>The above should print 1.11.0. It should not raise an <span class="codefrag">ImportError</span>.</p>
+<p>
+        Alternatively, you may build the Avro Python library from source. From
+        your the root Avro directory, run the commands
+      </p>
+<pre class="code">
+$ cd lang/py/
+$ python3 -m pip install -e .
+$ python3
+      </pre>
+</div>
+
+    
+<a name="Defining+a+schema"></a>
+<h2 class="h3">Defining a schema</h2>
+<div class="section">
+<p>
+        Avro schemas are defined using JSON.  Schemas are composed of <a href="spec.html#schema_primitive">primitive types</a>
+        (<span class="codefrag">null</span>, <span class="codefrag">boolean</span>, <span class="codefrag">int</span>,
+        <span class="codefrag">long</span>, <span class="codefrag">float</span>, <span class="codefrag">double</span>,
+        <span class="codefrag">bytes</span>, and <span class="codefrag">string</span>) and <a href="spec.html#schema_complex">complex types</a> (<span class="codefrag">record</span>,
+        <span class="codefrag">enum</span>, <span class="codefrag">array</span>, <span class="codefrag">map</span>,
+        <span class="codefrag">union</span>, and <span class="codefrag">fixed</span>).  You can learn more about
+        Avro schemas and types from the specification, but for now let's start
+        with a simple schema example, <em>user.avsc</em>:
+      </p>
+<pre class="code">
+{"namespace": "example.avro",
+ "type": "record",
+ "name": "User",
+ "fields": [
+     {"name": "name", "type": "string"},
+     {"name": "favorite_number",  "type": ["int", "null"]},
+     {"name": "favorite_color", "type": ["string", "null"]}
+ ]
+}
+      </pre>
+<p>
+        This schema defines a record representing a hypothetical user.  (Note
+        that a schema file can only contain a single schema definition.)  At
+        minimum, a record definition must include its type (<span class="codefrag">"type":
+        "record"</span>), a name (<span class="codefrag">"name": "User"</span>), and fields, in
+        this case <span class="codefrag">name</span>, <span class="codefrag">favorite_number</span>, and
+        <span class="codefrag">favorite_color</span>.  We also define a namespace
+        (<span class="codefrag">"namespace": "example.avro"</span>), which together with the name
+        attribute defines the "full name" of the schema
+        (<span class="codefrag">example.avro.User</span> in this case).
+
+      </p>
+<p>
+        Fields are defined via an array of objects, each of which defines a name
+        and type (other attributes are optional, see the <a href="spec.html#schema_record">record specification</a> for more
+        details).  The type attribute of a field is another schema object, which
+        can be either a primitive or complex type.  For example, the
+        <span class="codefrag">name</span> field of our User schema is the primitive type
+        <span class="codefrag">string</span>, whereas the <span class="codefrag">favorite_number</span> and
+        <span class="codefrag">favorite_color</span> fields are both <span class="codefrag">union</span>s,
+        represented by JSON arrays.  <span class="codefrag">union</span>s are a complex type that
+        can be any of the types listed in the array; e.g.,
+        <span class="codefrag">favorite_number</span> can either be an <span class="codefrag">int</span> or
+        <span class="codefrag">null</span>, essentially making it an optional field.
+      </p>
+</div>
+
+    
+<a name="Serializing+and+deserializing+without+code+generation"></a>
+<h2 class="h3">Serializing and deserializing without code generation</h2>
+<div class="section">
+<p>
+        Data in Avro is always stored with its corresponding schema, meaning we
+        can always read a serialized item, regardless of whether we know the
+        schema ahead of time.  This allows us to perform serialization and
+        deserialization without code generation.  Note that the Avro Python
+        library does not support code generation.
+      </p>
+<p>
+        Try running the following code snippet, which serializes two users to a
+        data file on disk, and then reads back and deserializes the data file:
+      </p>
+<pre class="code">
+import avro.schema
+from avro.datafile import DataFileReader, DataFileWriter
+from avro.io import DatumReader, DatumWriter
+
+schema = avro.schema.parse(open("user.avsc", "rb").read())
+
+writer = DataFileWriter(open("users.avro", "wb"), DatumWriter(), schema)
+writer.append({"name": "Alyssa", "favorite_number": 256})
+writer.append({"name": "Ben", "favorite_number": 7, "favorite_color": "red"})
+writer.close()
+
+reader = DataFileReader(open("users.avro", "rb"), DatumReader())
+for user in reader:
+    print user
+reader.close()
+      </pre>
+<p>This outputs:</p>
+<pre class="code">
+{u'favorite_color': None, u'favorite_number': 256, u'name': u'Alyssa'}
+{u'favorite_color': u'red', u'favorite_number': 7, u'name': u'Ben'}
+      </pre>
+<p>
+        Do make sure that you open your files in binary mode (i.e. using the modes
+        <span class="codefrag">wb</span> or <span class="codefrag">rb</span> respectively). Otherwise you might
+        generate corrupt files due to
+        <a href="https://docs.python.org/library/functions.html#open">
+        automatic replacement</a> of newline characters with the
+        platform-specific representations.
+      </p>
+<p>
+        Let's take a closer look at what's going on here.
+      </p>
+<pre class="code">
+schema = avro.schema.parse(open("user.avsc", "rb").read())
+      </pre>
+<p>
+        
+<span class="codefrag">avro.schema.parse</span> takes a string containing a JSON schema
+        definition as input and outputs a <span class="codefrag">avro.schema.Schema</span> object
+        (specifically a subclass of <span class="codefrag">Schema</span>, in this case
+        <span class="codefrag">RecordSchema</span>).  We're passing in the contents of our
+        user.avsc schema file here.
+      </p>
+<pre class="code">
+writer = DataFileWriter(open("users.avro", "wb"), DatumWriter(), schema)
+      </pre>
+<p>
+        We create a <span class="codefrag">DataFileWriter</span>, which we'll use to write
+        serialized items to a data file on disk.  The
+        <span class="codefrag">DataFileWriter</span> constructor takes three arguments:
+      </p>
+<ul>
+          
+<li>The file we'll serialize to</li>
+          
+<li>A <span class="codefrag">DatumWriter</span>, which is responsible for actually
+          serializing the items to Avro's binary format
+          (<span class="codefrag">DatumWriter</span>s can be used separately from
+          <span class="codefrag">DataFileWriter</span>s, e.g., to perform IPC with Avro).</li>
+          
+<li>The schema we're using.  The <span class="codefrag">DataFileWriter</span> needs the
+          schema both to write the schema to the data file, and to verify that
+          the items we write are valid items and write the appropriate
+          fields.</li>
+        
+</ul>
+<pre class="code">
+writer.append({"name": "Alyssa", "favorite_number": 256})
+writer.append({"name": "Ben", "favorite_number": 7, "favorite_color": "red"})
+        </pre>
+<p>
+          We use <span class="codefrag">DataFileWriter.append</span> to add items to our data
+          file.  Avro records are represented as Python <span class="codefrag">dict</span>s.
+          Since the field <span class="codefrag">favorite_color</span> has type <span class="codefrag">["int",
+          "null"]</span>, we are not required to specify this field, as shown in
+          the first append.  Were we to omit the required <span class="codefrag">name</span>
+          field, an exception would be raised.  Any extra entries not
+          corresponding to a field are present in the <span class="codefrag">dict</span> are
+          ignored.
+        </p>
+<pre class="code">
+reader = DataFileReader(open("users.avro", "rb"), DatumReader())
+        </pre>
+<p>
+          We open the file again, this time for reading back from disk.  We use
+          a <span class="codefrag">DataFileReader</span> and <span class="codefrag">DatumReader</span> analagous
+          to the <span class="codefrag">DataFileWriter</span> and <span class="codefrag">DatumWriter</span> above.
+        </p>
+<pre class="code">
+for user in reader:
+    print user
+        </pre>
+<p>
+          The <span class="codefrag">DataFileReader</span> is an iterator that returns
+          <span class="codefrag">dict</span>s corresponding to the serialized items.
+        </p>
+</div>
+  
+</div>
+<!--+
+    |end content
+    +-->
+<div class="clearboth">&nbsp;</div>
+</div>
+<div id="footer">
+<!--+
+    |start bottomstrip
+    +-->
+<div class="lastmodified">
+<script type="text/javascript"><!--
+document.write("Last Published: " + document.lastModified);
+//  --></script>
+</div>
+<div class="copyright">
+        Copyright &copy;
+         2012 <a href="https://www.apache.org/licenses/">The Apache Software Foundation.</a>
+</div>
+<!--+
+    |end bottomstrip
+    +-->
+</div>
+</body>
+</html>

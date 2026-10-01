@@ -1,0 +1,30 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Computes the CRC checksum for the given file using custom CRC parameters."><title>checksum_file_with_params in crc_fast - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-1ed95124.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="crc_fast" data-themes="" data-resource-suffix="" data-rustdoc-version="1.98.1 (48a229cea 2026-09-01)" data-channel="1.98.1" data-search-js="search-9944d736.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../static.files/storage-41dd4d93.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc fn"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">checksum_file_with_params</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../crc_fast/index.html">crc_<wbr>fast</a><span class="version">1.10.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">checksum_<wbr>file_<wbr>with_<wbr>params</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#errors" title="Errors">Errors</a></li><li><a href="#examples" title="Examples">Examples</a></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="index.html">In crate crc_<wbr>fast</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="index.html">crc_fast</a></div><h1>Function <span class="fn">checksum_<wbr>file_<wbr>with_<wbr>params</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/crc_fast/lib.rs.html#1001-1007">Source</a> </span></div><pre class="rust item-decl"><code>pub fn checksum_file_with_params(
+    params: <a class="struct" href="struct.CrcParams.html" title="struct crc_fast::CrcParams">CrcParams</a>,
+    path: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.98.1/std/primitive.str.html">str</a>,
+    chunk_size: <a class="enum" href="https://doc.rust-lang.org/1.98.1/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.98.1/std/primitive.usize.html">usize</a>&gt;,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.98.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.98.1/std/primitive.u64.html">u64</a>, <a class="struct" href="https://doc.rust-lang.org/1.98.1/core/io/error/struct.Error.html" title="struct core::io::error::Error">Error</a>&gt;</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Computes the CRC checksum for the given file using custom CRC parameters.</p>
+<p>Appears to be much faster (~2X) than using Writer and io::*, at least on Apple M2 Ultra</p>
+<h2 id="errors"><a class="doc-anchor" href="#errors">§</a>Errors</h2>
+<p>This function will return an error if the file cannot be read.</p>
+<h2 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::env;
+<span class="kw">use </span>crc_fast::{checksum_file_with_params, CrcParams};
+
+<span class="comment">// for example/test purposes only, use your own file path
+</span><span class="kw">let </span>file_path = env::current_dir().expect(<span class="string">"missing working dir"</span>).join(<span class="string">"crc-check.txt"</span>);
+<span class="kw">let </span>file_on_disk = file_path.to_str().unwrap();
+
+<span class="comment">// Define custom CRC-32 parameters (equivalent to CRC-32/ISO-HDLC)
+</span><span class="kw">let </span>custom_params = CrcParams::new(
+    <span class="string">"CRC-32/CUSTOM"</span>,
+    <span class="number">32</span>,
+    <span class="number">0x04c11db7</span>,
+    <span class="number">0xffffffff</span>,
+    <span class="bool-val">true</span>,
+    <span class="number">0xffffffff</span>,
+    <span class="number">0xcbf43926</span>,
+);
+
+<span class="kw">let </span>checksum = checksum_file_with_params(custom_params, file_on_disk, <span class="prelude-val">None</span>);
+
+<span class="macro">assert_eq!</span>(checksum.unwrap(), <span class="number">0xcbf43926</span>);</code></pre></div></div></details></section></div></main></body></html>
