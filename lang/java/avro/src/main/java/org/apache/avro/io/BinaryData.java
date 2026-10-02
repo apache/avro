@@ -23,6 +23,7 @@ import java.util.Arrays;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.util.internal.ThreadLocalWithInitial;
 
@@ -70,11 +71,15 @@ public class BinaryData {
   public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2, Schema schema) {
     Decoders decoders = DECODERS.get();
     decoders.set(b1, s1, l1, b2, s2, l2);
+    // Delimit a decode scope so the recursion-depth counter starts (and is reset)
+    // at this top-level comparison, mirroring GenericDatumReader.
+    SystemLimitException.beginCollectionAllocationScope();
     try {
       return compare(decoders, schema);
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     } finally {
+      SystemLimitException.endCollectionAllocationScope();
       decoders.clear();
     }
   }
@@ -84,6 +89,25 @@ public class BinaryData {
    * less than, return LT.
    */
   private static int compare(Decoders d, Schema schema) throws IOException {
+    switch (schema.getType()) {
+    case RECORD:
+    case ARRAY:
+    case UNION:
+      // These descend recursively into nested values, so bound the nesting depth
+      // to prevent a recursive schema comparing deeply nested data from
+      // overflowing the stack (mirrors GenericDatumReader's decode-depth guard).
+      SystemLimitException.incrementDecodeDepth();
+      try {
+        return compareStructural(d, schema);
+      } finally {
+        SystemLimitException.decrementDecodeDepth();
+      }
+    default:
+      return compareScalar(d, schema);
+    }
+  }
+
+  private static int compareStructural(Decoders d, Schema schema) throws IOException {
     Decoder d1 = d.d1;
     Decoder d2 = d.d2;
     switch (schema.getType()) {
@@ -101,17 +125,6 @@ public class BinaryData {
       }
       return 0;
     }
-    case ENUM:
-    case INT:
-      return Integer.compare(d1.readInt(), d2.readInt());
-    case LONG:
-      return Long.compare(d1.readLong(), d2.readLong());
-    case FLOAT:
-      return Float.compare(d1.readFloat(), d2.readFloat());
-    case DOUBLE:
-      return Double.compare(d1.readDouble(), d2.readDouble());
-    case BOOLEAN:
-      return Boolean.compare(d1.readBoolean(), d2.readBoolean());
     case ARRAY: {
       long i = 0; // position in array
       long r1 = 0, r2 = 0; // remaining in current block
@@ -146,14 +159,34 @@ public class BinaryData {
         }
       }
     }
-    case MAP:
-      throw new AvroRuntimeException("Can't compare maps!");
     case UNION: {
       int i1 = d1.readInt();
       int i2 = d2.readInt();
       int c = Integer.compare(i1, i2);
       return c == 0 ? compare(d, schema.getTypes().get(i1)) : c;
     }
+    default:
+      throw new AvroRuntimeException("Not a structural type to compare: " + schema);
+    }
+  }
+
+  private static int compareScalar(Decoders d, Schema schema) throws IOException {
+    Decoder d1 = d.d1;
+    Decoder d2 = d.d2;
+    switch (schema.getType()) {
+    case ENUM:
+    case INT:
+      return Integer.compare(d1.readInt(), d2.readInt());
+    case LONG:
+      return Long.compare(d1.readLong(), d2.readLong());
+    case FLOAT:
+      return Float.compare(d1.readFloat(), d2.readFloat());
+    case DOUBLE:
+      return Double.compare(d1.readDouble(), d2.readDouble());
+    case BOOLEAN:
+      return Boolean.compare(d1.readBoolean(), d2.readBoolean());
+    case MAP:
+      throw new AvroRuntimeException("Can't compare maps!");
     case FIXED: {
       int size = schema.getFixedSize();
       int c = compareBytes(d.d1.getBuf(), d.d1.getPos(), size, d.d2.getBuf(), d.d2.getPos(), size);
