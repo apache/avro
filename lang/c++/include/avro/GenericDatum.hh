@@ -244,6 +244,9 @@ public:
      * \param branch The index for the selected branch.
      */
     void selectBranch(size_t branch) {
+        if (branch >= schema()->leaves()) {
+            throw Exception("Union branch index out of range: must be less than " + std::to_string(schema()->leaves()) + ", but is " + std::to_string(branch));
+        }
         if (curBranch_ != branch) {
             datum_ = GenericDatum(schema()->leafAt(branch));
             curBranch_ = branch;

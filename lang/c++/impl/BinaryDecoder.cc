@@ -19,11 +19,39 @@
 #include "Decoder.hh"
 #include "Exception.hh"
 #include "Zigzag.hh"
+#include <cstdint>
+#include <cstdlib>
+#include <cerrno>
+#include <limits>
 #include <memory>
 
 namespace avro {
 
 using std::make_shared;
+
+// Structural cap on the number of elements to skip in an array or map (an
+// overflow / defense-in-depth guard). Mirrors the read-path limit in Generic.cc
+// and matches the value used by the other Avro SDKs (Integer.MAX_VALUE - 8).
+static constexpr int64_t kDefaultMaxCollectionStructural = 2147483639;
+
+// Returns the structural collection cap. It can be overridden by the
+// AVRO_MAX_COLLECTION_ITEMS environment variable (a non-negative integer),
+// matching the read path and the other SDKs so a single knob configures all of
+// them; an invalid or unset value uses the default.
+static int64_t maxCollectionStructural() {
+    const char *env = std::getenv("AVRO_MAX_COLLECTION_ITEMS");
+    if (env != nullptr && *env != '\0') {
+        char *end = nullptr;
+        errno = 0;
+        long long value = std::strtoll(env, &end, 10);
+        // Ignore an overflowing value (errno == ERANGE) rather than accepting a
+        // saturated LLONG_MAX, which would effectively remove the structural cap.
+        if (errno == 0 && *end == '\0' && value >= 0) {
+            return static_cast<int64_t>(value);
+        }
+    }
+    return kDefaultMaxCollectionStructural;
+}
 
 class BinaryDecoder : public Decoder {
     StreamReader in_;
@@ -51,9 +79,15 @@ class BinaryDecoder : public Decoder {
     size_t decodeUnionIndex() final;
 
     int64_t doDecodeLong();
+    size_t decodeIndex();
     size_t doDecodeItemCount();
     size_t doDecodeLength();
+    void checkAvailableBytes(size_t len);
     void drain() final;
+
+    int64_t bytesRemaining() const final {
+        return in_.remainingBytes();
+    }
 };
 
 DecoderPtr binaryDecoder() {
@@ -109,12 +143,25 @@ size_t BinaryDecoder::doDecodeLength() {
     return len;
 }
 
+void BinaryDecoder::checkAvailableBytes(size_t len) {
+    // Reject a declared length that exceeds the data actually available before
+    // allocating for it, to guard against an out-of-memory attack from a
+    // malicious or truncated input. Only enforced when the stream can report
+    // how many bytes remain.
+    int64_t remaining = in_.remainingBytes();
+    if (remaining >= 0 && static_cast<uint64_t>(len) > static_cast<uint64_t>(remaining)) {
+        throw Exception(
+            "Length {} exceeds the {} bytes available in the stream", len, remaining);
+    }
+}
+
 void BinaryDecoder::drain() {
     in_.drain(false);
 }
 
 void BinaryDecoder::decodeString(std::string &value) {
     size_t len = doDecodeLength();
+    checkAvailableBytes(len);
     value.resize(len);
     if (len > 0) {
         in_.readBytes(const_cast<uint8_t *>(
@@ -125,11 +172,13 @@ void BinaryDecoder::decodeString(std::string &value) {
 
 void BinaryDecoder::skipString() {
     size_t len = doDecodeLength();
+    checkAvailableBytes(len);
     in_.skipBytes(len);
 }
 
 void BinaryDecoder::decodeBytes(std::vector<uint8_t> &value) {
     size_t len = doDecodeLength();
+    checkAvailableBytes(len);
     value.resize(len);
     if (len > 0) {
         in_.readBytes(value.data(), len);
@@ -138,6 +187,7 @@ void BinaryDecoder::decodeBytes(std::vector<uint8_t> &value) {
 
 void BinaryDecoder::skipBytes() {
     size_t len = doDecodeLength();
+    checkAvailableBytes(len);
     in_.skipBytes(len);
 }
 
@@ -153,7 +203,7 @@ void BinaryDecoder::skipFixed(size_t n) {
 }
 
 size_t BinaryDecoder::decodeEnum() {
-    return static_cast<size_t>(doDecodeLong());
+    return decodeIndex();
 }
 
 size_t BinaryDecoder::arrayStart() {
@@ -163,8 +213,28 @@ size_t BinaryDecoder::arrayStart() {
 size_t BinaryDecoder::doDecodeItemCount() {
     auto result = doDecodeLong();
     if (result < 0) {
-        doDecodeLong();
-        return static_cast<size_t>(-(result + 1)) + 1;
+        // INT64_MIN cannot be negated in int64_t (it would overflow); reject it
+        // rather than propagating 2^63 as an item count that inevitably fails a
+        // huge allocation downstream.
+        if (result == INT64_MIN) {
+            throw Exception("Invalid negative block count: {}", result);
+        }
+        int64_t blockSize = doDecodeLong();
+        if (blockSize < 0) {
+            // The byte-size that follows a negative block count is a byte count
+            // and must be non-negative; reject malformed input here too (as
+            // skipArray already does) so arrayStart()/mapStart() fail fast.
+            throw Exception("Invalid negative block byte-size: {}", blockSize);
+        }
+        result = -result;
+    }
+    // On builds where size_t is narrower than int64_t (e.g. 32-bit), reject a
+    // count that would truncate on the cast -- otherwise a huge block could wrap
+    // to a small one and bypass the downstream structural caps.
+    if constexpr (sizeof(size_t) < sizeof(int64_t)) {
+        if (static_cast<uint64_t>(result) > std::numeric_limits<size_t>::max()) {
+            throw Exception("Block count {} exceeds the maximum supported size", result);
+        }
     }
     return static_cast<size_t>(result);
 }
@@ -177,9 +247,44 @@ size_t BinaryDecoder::skipArray() {
     for (;;) {
         auto r = doDecodeLong();
         if (r < 0) {
-            auto n = static_cast<size_t>(doDecodeLong());
-            in_.skipBytes(n);
+            auto byteSize = doDecodeLong();
+            if (byteSize < 0) {
+                // A negative block byte-size would convert to a huge size_t and
+                // drive an unbounded skip; reject it.
+                throw Exception("Invalid negative block size: {}", byteSize);
+            }
+            // Reject a byte-size that would truncate on the cast (32-bit builds)
+            // and one that exceeds the bytes remaining, so a truncated block is
+            // not silently skipped past EOF by the memory-backed skip().
+            if constexpr (sizeof(size_t) < sizeof(int64_t)) {
+                if (static_cast<uint64_t>(byteSize) > std::numeric_limits<size_t>::max()) {
+                    throw Exception("Block size {} exceeds the maximum supported size", byteSize);
+                }
+            }
+            checkAvailableBytes(static_cast<size_t>(byteSize));
+            in_.skipBytes(static_cast<size_t>(byteSize));
         } else {
+            // Bound the block count: skipping a huge block of zero-byte elements
+            // would otherwise loop unboundedly (a CPU exhaustion) even though it
+            // reads/allocates nothing. The decoder has no element schema here, so
+            // apply the structural cap (AVRO_MAX_COLLECTION_ITEMS, default
+            // Integer.MAX_VALUE - 8). Read the limit each call so a runtime
+            // change to the environment variable is honoured, matching Generic.cc.
+            const int64_t structural = maxCollectionStructural();
+            if (r > structural) {
+                throw Exception(
+                    "Cannot skip a collection of more than {} elements; "
+                    "set AVRO_MAX_COLLECTION_ITEMS if this is legitimate",
+                    structural);
+            }
+            // On builds where size_t is narrower than int64_t (e.g. 32-bit),
+            // reject a count that would truncate on the cast, matching
+            // doDecodeItemCount so a huge block can't wrap to a small one.
+            if constexpr (sizeof(size_t) < sizeof(int64_t)) {
+                if (static_cast<uint64_t>(r) > std::numeric_limits<size_t>::max()) {
+                    throw Exception("Block count {} exceeds the maximum supported size", r);
+                }
+            }
             return static_cast<size_t>(r);
         }
     }
@@ -198,7 +303,7 @@ size_t BinaryDecoder::skipMap() {
 }
 
 size_t BinaryDecoder::decodeUnionIndex() {
-    return static_cast<size_t>(doDecodeLong());
+    return decodeIndex();
 }
 
 int64_t BinaryDecoder::doDecodeLong() {
@@ -215,6 +320,23 @@ int64_t BinaryDecoder::doDecodeLong() {
     } while (u & 0x80);
 
     return decodeZigzag64(encoded);
+}
+
+// Decode an enum ordinal or union branch index. Both are wire longs that the
+// callers cast to size_t; validate the decoded value here so a negative index
+// cannot wrap to a huge size_t and a value beyond size_t (possible where size_t
+// is narrower than int64_t, e.g. 32-bit builds) cannot truncate into a
+// spuriously in-range branch. The concrete bound (against the enum/union size)
+// is still enforced by the caller.
+size_t BinaryDecoder::decodeIndex() {
+    int64_t index = doDecodeLong();
+    if (index < 0) {
+        throw Exception("Invalid negative index: {}", index);
+    }
+    if (static_cast<uint64_t>(index) > std::numeric_limits<size_t>::max()) {
+        throw Exception("Index {} is out of range", index);
+    }
+    return static_cast<size_t>(index);
 }
 
 } // namespace avro
