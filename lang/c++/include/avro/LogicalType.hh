@@ -41,6 +41,7 @@ public:
         DATE,
         TIME_MILLIS,
         TIME_MICROS,
+        TIME_NANOS,
         TIMESTAMP_MILLIS,
         TIMESTAMP_MICROS,
         TIMESTAMP_NANOS,
