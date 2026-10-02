@@ -917,7 +917,7 @@ namespace Avro
         /// </returns>
         bool IConvertible.ToBoolean(IFormatProvider provider)
         {
-            return Convert.ToBoolean(this, provider);
+            return (bool)((IConvertible)this).ToType(typeof(bool), provider);
         }
 
         /// <summary>
@@ -929,7 +929,7 @@ namespace Avro
         /// </returns>
         byte IConvertible.ToByte(IFormatProvider provider)
         {
-            return Convert.ToByte(this, provider);
+            return (byte)((IConvertible)this).ToType(typeof(byte), provider);
         }
 
         /// <summary>
@@ -967,7 +967,7 @@ namespace Avro
         /// </returns>
         decimal IConvertible.ToDecimal(IFormatProvider provider)
         {
-            return Convert.ToDecimal(this, provider);
+            return (decimal)((IConvertible)this).ToType(typeof(decimal), provider);
         }
 
         /// <summary>
@@ -979,7 +979,7 @@ namespace Avro
         /// </returns>
         double IConvertible.ToDouble(IFormatProvider provider)
         {
-            return Convert.ToDouble(this, provider);
+            return (double)((IConvertible)this).ToType(typeof(double), provider);
         }
 
         /// <summary>
@@ -991,7 +991,7 @@ namespace Avro
         /// </returns>
         short IConvertible.ToInt16(IFormatProvider provider)
         {
-            return Convert.ToInt16(this, provider);
+            return (short)((IConvertible)this).ToType(typeof(short), provider);
         }
 
         /// <summary>
@@ -1003,7 +1003,7 @@ namespace Avro
         /// </returns>
         int IConvertible.ToInt32(IFormatProvider provider)
         {
-            return Convert.ToInt32(this, provider);
+            return (int)((IConvertible)this).ToType(typeof(int), provider);
         }
 
         /// <summary>
@@ -1015,7 +1015,7 @@ namespace Avro
         /// </returns>
         long IConvertible.ToInt64(IFormatProvider provider)
         {
-            return Convert.ToInt64(this, provider);
+            return (long)((IConvertible)this).ToType(typeof(long), provider);
         }
 
         /// <summary>
@@ -1027,7 +1027,7 @@ namespace Avro
         /// </returns>
         sbyte IConvertible.ToSByte(IFormatProvider provider)
         {
-            return Convert.ToSByte(this, provider);
+            return (sbyte)((IConvertible)this).ToType(typeof(sbyte), provider);
         }
 
         /// <summary>
@@ -1039,7 +1039,7 @@ namespace Avro
         /// </returns>
         float IConvertible.ToSingle(IFormatProvider provider)
         {
-            return Convert.ToSingle(this, provider);
+            return (float)((IConvertible)this).ToType(typeof(float), provider);
         }
 
         /// <summary>
@@ -1051,7 +1051,7 @@ namespace Avro
         /// </returns>
         string IConvertible.ToString(IFormatProvider provider)
         {
-            return Convert.ToString(this, provider);
+            return ToString();
         }
 
         /// <summary>
@@ -1063,7 +1063,7 @@ namespace Avro
         /// </returns>
         ushort IConvertible.ToUInt16(IFormatProvider provider)
         {
-            return Convert.ToUInt16(this, provider);
+            return (ushort)((IConvertible)this).ToType(typeof(ushort), provider);
         }
 
         /// <summary>
@@ -1075,7 +1075,7 @@ namespace Avro
         /// </returns>
         uint IConvertible.ToUInt32(IFormatProvider provider)
         {
-            return Convert.ToUInt32(this, provider);
+            return (uint)((IConvertible)this).ToType(typeof(uint), provider);
         }
 
         /// <summary>
@@ -1087,7 +1087,7 @@ namespace Avro
         /// </returns>
         ulong IConvertible.ToUInt64(IFormatProvider provider)
         {
-            return Convert.ToUInt64(this, provider);
+            return (ulong)((IConvertible)this).ToType(typeof(ulong), provider);
         }
 
         /// <summary>
