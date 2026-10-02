@@ -198,6 +198,17 @@ namespace Avro.Test
             Assert.Throws<ProtocolParseException>(() => Protocol.Parse(str));
         }
 
+        [TestCase(@"{ ""protocol"": ""9bad"", ""types"": [], ""messages"": {} }",
+            TestName = "ProtocolNameLeadingDigit")]
+        [TestCase(@"{ ""protocol"": ""bad name"", ""types"": [], ""messages"": {} }",
+            TestName = "ProtocolNameWithSpace")]
+        [TestCase(@"{ ""protocol"": ""x; class Evil"", ""types"": [], ""messages"": {} }",
+            TestName = "ProtocolNameInjection")]
+        public static void TestInvalidProtocolName(string str)
+        {
+            Assert.Throws<ProtocolParseException>(() => Protocol.Parse(str));
+        }
+
         // Protocols match
         [TestCase(
 @"{

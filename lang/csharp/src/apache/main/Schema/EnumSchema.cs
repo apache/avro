@@ -102,6 +102,15 @@ namespace Avro
                 if (symbolMap.ContainsKey(s))
                     throw new SchemaParseException($"Duplicate symbol: {s} at '{jtok.Path}'");
 
+                try
+                {
+                    ValidateSymbolName(s);
+                }
+                catch (AvroException e)
+                {
+                    throw new SchemaParseException($"{e.Message} at '{jtok.Path}'", e);
+                }
+
                 symbolMap[s] = i++;
                 symbols.Add(s);
             }

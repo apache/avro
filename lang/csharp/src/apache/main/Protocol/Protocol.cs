@@ -126,6 +126,14 @@ namespace Avro
         private static Protocol Parse(JToken jtok)
         {
             string name = JsonHelper.GetRequiredString(jtok, "protocol");
+            try
+            {
+                SchemaName.ValidateName(name, "protocol");
+            }
+            catch (SchemaParseException e)
+            {
+                throw new ProtocolParseException($"Invalid protocol name: {name}", e);
+            }
             string space = JsonHelper.GetOptionalString(jtok, "namespace");
             string doc = JsonHelper.GetOptionalString(jtok, "doc");
 
