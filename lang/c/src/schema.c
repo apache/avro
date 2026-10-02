@@ -538,7 +538,14 @@ const char *avro_schema_enum_get(const avro_schema_t enump,
 		st_data_t data;
 		char *sym;
 	} val;
-	st_lookup(avro_schema_to_enum(enump)->symbols, index, &val.data);
+	/*
+	 * Return NULL for an unknown index rather than an uninitialized
+	 * pointer: st_lookup() leaves val.data untouched when the key is
+	 * not found.
+	 */
+	if (!st_lookup(avro_schema_to_enum(enump)->symbols, index, &val.data)) {
+		return NULL;
+	}
 	return val.sym;
 }
 
