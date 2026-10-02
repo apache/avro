@@ -101,19 +101,31 @@ bool Name::operator<(const Name &n) const {
     return (ns_ < n.ns_) || (!(n.ns_ < ns_) && (simpleName_ < n.simpleName_));
 }
 
+// Locale-independent ASCII alphanumeric test. Using std::isalnum here would make
+// the accepted name grammar depend on the current locale.
+static bool isAsciiAlnum(char c) {
+    return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
+static bool isAsciiLetter(char c) {
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
 static bool invalidChar1(char c) {
-    return !isalnum(c) && c != '_' && c != '.' && c != '$';
+    return !isAsciiAlnum(c) && c != '_' && c != '.' && c != '$';
 }
 
 static bool invalidChar2(char c) {
-    return !isalnum(c) && c != '_';
+    return !isAsciiAlnum(c) && c != '_';
 }
 
 void Name::check() const {
     if (!ns_.empty() && (ns_[0] == '.' || ns_[ns_.size() - 1] == '.' || std::find_if(ns_.begin(), ns_.end(), invalidChar1) != ns_.end())) {
         throw Exception("Invalid namespace: " + ns_);
     }
-    if (simpleName_.empty()
+    // A simple name must be non-empty, start with [A-Za-z_], and otherwise
+    // contain only [A-Za-z0-9_].
+    if (simpleName_.empty() || !(isAsciiLetter(simpleName_[0]) || simpleName_[0] == '_')
         || std::find_if(simpleName_.begin(), simpleName_.end(), invalidChar2) != simpleName_.end()) {
         throw Exception("Invalid name: " + simpleName_);
     }

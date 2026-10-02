@@ -230,7 +230,27 @@ const char *basicSchemaErrors[] = {
     // default double - null
     R"({ "name":"test", "type": "record", "fields": [ {"name": "double","type": "double","default" : null }]})",
     // default double - string
-    R"({ "name":"test", "type": "record", "fields": [ {"name": "double","type": "double","default" : "string" }]})"
+    R"({ "name":"test", "type": "record", "fields": [ {"name": "double","type": "double","default" : "string" }]})",
+
+    // Names outside the Avro name grammar
+    // Enum symbol containing a space
+    R"({"type": "enum", "name": "Status", "symbols" : ["Ok", "Not Ok"]})",
+    // Enum symbol attempting identifier injection
+    R"({"type": "enum", "name": "Status", "symbols" : ["Ok", "A, B_c = 5"]})",
+    // Empty enum symbol
+    R"({"type": "enum", "name": "Status", "symbols" : ["Ok", ""]})",
+    // Field name containing a space
+    R"({"type":"record","name":"R","fields":[{"name":"in valid","type":"long"}]})",
+    // Field name attempting identifier/code injection
+    R"({"type":"record","name":"R","fields":[{"name":"x; int y","type":"long"}]})",
+    // Empty field name
+    R"({"type":"record","name":"R","fields":[{"name":"","type":"long"}]})",
+    // Field name starting with a digit
+    R"({"type":"record","name":"R","fields":[{"name":"1abc","type":"long"}]})",
+    // Enum symbol starting with a digit
+    R"({"type": "enum", "name": "Status", "symbols" : ["Ok", "1abc"]})",
+    // Type name starting with a digit
+    R"({"type":"record","name":"1Bad","fields":[]})"
 
 };
 
