@@ -100,6 +100,12 @@ namespace Avro
         {
             get
             {
+                if (index < 0 || index >= Schemas.Count)
+                {
+                    throw new AvroException(
+                        "Union branch index out of range. Must be in [0, " + Schemas.Count + "), but is " + index);
+                }
+
                 return Schemas[index];
             }
         }
