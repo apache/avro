@@ -53,12 +53,16 @@ read_array(avro_reader_t reader, const avro_encoding_t * enc,
 
 	check_prefix(rval, enc->read_long(reader, &block_count),
 		     "Cannot read array block count: ");
+	if (block_count == INT64_MIN) {
+		avro_set_error("Invalid array block count");
+		return EINVAL;
+	}
 	check(rval, avro_consumer_call(consumer, array_start_block,
 				       1, block_count, ud));
 
 	while (block_count != 0) {
 		if (block_count < 0) {
-			block_count = block_count * -1;
+			block_count = -block_count;
 			check_prefix(rval, enc->read_long(reader, &block_size),
 				     "Cannot read array block size: ");
 		}
@@ -77,6 +81,10 @@ read_array(avro_reader_t reader, const avro_encoding_t * enc,
 
 		check_prefix(rval, enc->read_long(reader, &block_count),
 			     "Cannot read array block count: ");
+		if (block_count == INT64_MIN) {
+			avro_set_error("Invalid array block count");
+			return EINVAL;
+		}
 		check(rval, avro_consumer_call(consumer, array_start_block,
 					       0, block_count, ud));
 	}
@@ -96,12 +104,16 @@ read_map(avro_reader_t reader, const avro_encoding_t * enc,
 
 	check_prefix(rval, enc->read_long(reader, &block_count),
 		     "Cannot read map block count: ");
+	if (block_count == INT64_MIN) {
+		avro_set_error("Invalid map block count");
+		return EINVAL;
+	}
 	check(rval, avro_consumer_call(consumer, map_start_block,
 				       1, block_count, ud));
 
 	while (block_count != 0) {
 		if (block_count < 0) {
-			block_count = block_count * -1;
+			block_count = -block_count;
 			check_prefix(rval, enc->read_long(reader, &block_size),
 				     "Cannot read map block size: ");
 		}
@@ -135,6 +147,10 @@ read_map(avro_reader_t reader, const avro_encoding_t * enc,
 
 		check_prefix(rval, enc->read_long(reader, &block_count),
 			     "Cannot read map block count: ");
+		if (block_count == INT64_MIN) {
+			avro_set_error("Invalid map block count");
+			return EINVAL;
+		}
 		check(rval, avro_consumer_call(consumer, map_start_block,
 					       0, block_count, ud));
 	}
