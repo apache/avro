@@ -155,8 +155,21 @@ class DirectBinaryDecoder extends BinaryDecoder {
 
   @Override
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
-    long length = readLong();
-    return byteReader.read(old, SystemLimitException.checkMaxBytesLength(length));
+    int length = SystemLimitException.checkMaxBytesLength(readLong());
+    // A DirectBinaryDecoder reads straight from a (typically non-seekable) stream,
+    // so the number of bytes remaining is unknown. For a large declared length
+    // that cannot be satisfied from a reusable buffer, read via a bounded growing
+    // buffer so a truncated/hostile stream fails after a bounded allocation rather
+    // than allocating the full declared length up front. The in-memory
+    // ByteBufferInputStream path (ReuseByteReader) is left untouched: it slices
+    // from buffers already held, so it does not over-allocate from the length.
+    if (length > MAX_UNVERIFIED_ALLOCATION && (old == null || old.capacity() < length)
+        && !(byteReader instanceof ReuseByteReader)) {
+      ByteBuffer result = ByteBuffer.wrap(readBoundedByteArray(length));
+      result.limit(length);
+      return result;
+    }
+    return byteReader.read(old, length);
   }
 
   @Override
