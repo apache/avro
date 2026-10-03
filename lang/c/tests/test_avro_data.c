@@ -40,18 +40,20 @@ test_allocator(void *ud, void *ptr, size_t osize, size_t nsize)
 	AVRO_UNUSED(osize);
 
 	if (nsize == 0) {
-		size_t  *size = ((size_t *) ptr) - 1;
-		if (osize != *size) {
-			fprintf(stderr,
-				"Error freeing %p:\n"
-				"Size passed to avro_free (%" PRIsz ") "
-				"doesn't match size passed to "
-				"avro_malloc (%" PRIsz ")\n",
-				ptr, osize, *size);
-			abort();
-			//exit(EXIT_FAILURE);
+		if (ptr) {
+			size_t  *size = ((size_t *) ptr) - 1;
+			if (osize != *size) {
+				fprintf(stderr,
+					"Error freeing %p:\n"
+					"Size passed to avro_free (%" PRIsz ") "
+					"doesn't match size passed to "
+					"avro_malloc (%" PRIsz ")\n",
+					ptr, osize, *size);
+				abort();
+				//exit(EXIT_FAILURE);
+			}
+			free(size);
 		}
-		free(size);
 		return NULL;
 	} else {
 		size_t  real_size = nsize + sizeof(size_t);
@@ -209,6 +211,34 @@ static int test_bytes(void)
 	datum = avro_bytes("original", 8);
 	avro_bytes_set(datum, "alsothis", 8);
 	avro_datum_decref(datum);
+
+	avro_schema_decref(writer_schema);
+	return 0;
+}
+
+static int test_empty_bytes(void)
+{
+	char bytes[] = { };
+	avro_schema_t writer_schema = avro_schema_bytes();
+	avro_datum_t datum;
+	avro_datum_t expected_datum;
+
+	datum = avro_givebytes(bytes, sizeof(bytes), NULL);
+	write_read_check(writer_schema, datum, NULL, NULL, "bytes");
+	test_json(datum, "\"\"");
+	avro_datum_decref(datum);
+	avro_schema_decref(writer_schema);
+
+	datum = avro_givebytes(NULL, 0, NULL);
+	avro_givebytes_set(datum, bytes, sizeof(bytes), NULL);
+	expected_datum = avro_givebytes(bytes, sizeof(bytes), NULL);
+	if (!avro_datum_equal(datum, expected_datum)) {
+		fprintf(stderr,
+		        "Expected equal bytes instances.\n");
+		exit(EXIT_FAILURE);
+	}
+	avro_datum_decref(datum);
+	avro_datum_decref(expected_datum);
 
 	avro_schema_decref(writer_schema);
 	return 0;
@@ -657,6 +687,7 @@ int main(void)
 		{
 		"string", test_string}, {
 		"bytes", test_bytes}, {
+		"empty_bytes", test_empty_bytes}, {
 		"int", test_int32}, {
 		"long", test_int64}, {
 		"float", test_float}, {
