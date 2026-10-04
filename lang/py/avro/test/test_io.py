@@ -756,6 +756,37 @@ class TestDatumReaderCollectionAvailableBytes(unittest.TestCase):
 
 
 class TestMisc(unittest.TestCase):
+    def test_decimal_encoding_preserves_value_at_schema_scale(self) -> None:
+        cases = (
+            ("3.1", 2, 310),
+            ("-3.1", 2, -310),
+            ("3", 2, 300),
+            ("-3", 2, -300),
+            ("3E+1", 2, 3000),
+            ("-3E+1", 2, -3000),
+            ("3E+1", 0, 30),
+            ("3.1", 4, 31000),
+            ("3.14", 2, 314),
+            ("0", 2, 0),
+            ("12345.6", 2, 1234560),
+        )
+        for storage_type, (value, scale, expected_unscaled) in itertools.product(("bytes", "fixed"), cases):
+            with self.subTest(storage_type=storage_type, value=value, scale=scale):
+                schema = avro.schema.parse(
+                    json.dumps({"type": storage_type, "logicalType": "decimal", "precision": 8, "scale": scale, "name": "Test", "size": 4})
+                )
+                datum = decimal.Decimal(value)
+                # Scaling must not round according to the caller's decimal context.
+                with decimal.localcontext() as context:
+                    context.prec = 2
+                    writer, _, _ = write_datum(datum, schema)
+                encoded = writer.getvalue()
+                decoder = avro.io.BinaryDecoder(io.BytesIO(encoded))
+                payload = decoder.read_bytes() if storage_type == "bytes" else decoder.read(4)
+                self.assertEqual(int.from_bytes(payload, byteorder="big", signed=True), expected_unscaled)
+                decoded = avro.io.DatumReader(schema).read(avro.io.BinaryDecoder(io.BytesIO(encoded)))
+                self.assertEqual(decoded, datum)
+
     def test_decimal_bytes_small_scale(self) -> None:
         """Avro should raise an AvroTypeException when attempting to write a decimal with a larger exponent than the schema's scale."""
         datum = decimal.Decimal("3.1415")
