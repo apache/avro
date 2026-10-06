@@ -81,16 +81,16 @@ namespace Avro.Specific
         /// </exception>
         private Type FindType(string name)
         {
-            return typeCacheByName.GetOrAdd(name, (_) =>
+            return typeCacheByName.GetOrAdd(name, (typeName) =>
             {
                 Type type = null;
 
-                if (TryGetIListItemTypeName(name, out var itemTypeName))
+                if (TryGetIListItemTypeName(typeName, out var itemTypeName))
                 {
                     return GenericIListType.MakeGenericType(FindType(itemTypeName));
                 }
 
-                if (TryGetNullableItemTypeName(name, out itemTypeName))
+                if (TryGetNullableItemTypeName(typeName, out itemTypeName))
                 {
                     return GenericNullableType.MakeGenericType(FindType(itemTypeName));
                 }
@@ -98,13 +98,13 @@ namespace Avro.Specific
                 // if entry assembly different from current assembly, try entry assembly first
                 if (diffAssembly)
                 {
-                    type = entryAssembly.GetType(name);
+                    type = entryAssembly.GetType(typeName);
                 }
 
                 // try current assembly and mscorlib
                 if (type == null)
                 {
-                    type = Type.GetType(name);
+                    type = Type.GetType(typeName);
                 }
 
                 // type is still not found, need to loop through all loaded assemblies
@@ -119,7 +119,7 @@ namespace Avro.Specific
                             // Change the search to look for Types by both NAME and FULLNAME
                             foreach (Type t in assembly.GetTypes())
                             {
-                                if (name == t.Name || name == t.FullName || CodeGenUtil.Instance.UnMangle(name) == t.FullName)
+                                if (typeName == t.Name || typeName == t.FullName || CodeGenUtil.Instance.UnMangle(typeName) == t.FullName)
                                 {
                                     type = t;
                                     break;
@@ -134,7 +134,7 @@ namespace Avro.Specific
                 }
 
                 return type
-                    ?? throw new AvroException($"Unable to find type '{name}' in all loaded " +
+                    ?? throw new AvroException($"Unable to find type '{typeName}' in all loaded " +
                     $"assemblies");
             });
         }
