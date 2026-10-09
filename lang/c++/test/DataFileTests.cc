@@ -24,6 +24,7 @@
 
 #include <chrono>
 #include <filesystem>
+#include <fstream>
 #include <thread>
 
 #include <sstream>
@@ -1469,6 +1470,58 @@ void testZstdCompressionRoundTrip() {
 }
 #endif
 
+void testCorruptDeflateBlock() {
+    BOOST_TEST_CHECKPOINT(__func__);
+
+    avro::ValidSchema schema = avro::compileJsonSchemaFromString(sch);
+    const char *filename = "test_corrupt_deflate.df";
+
+    {
+        avro::DataFileWriter<ComplexInteger> writer(
+            filename, schema, 16 * 1024, avro::DEFLATE_CODEC);
+        for (int i = 0; i < 100; ++i) {
+            writer.write(ComplexInteger(i, 2 * i));
+        }
+        writer.close();
+    }
+
+    string bytes;
+    {
+        std::ifstream in(filename, std::ios::binary);
+        bytes.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+    }
+    BOOST_REQUIRE_GT(bytes.size(), 16u);
+
+    // The 16-byte sync marker ends both the header and every block, so its
+    // first occurrence is followed by the first block: the object count and
+    // the block size, both varints, and then the deflate payload.
+    const size_t header = bytes.find(bytes.substr(bytes.size() - 16));
+    BOOST_REQUIRE(header != string::npos);
+    size_t payload = header + 16;
+    for (int varint = 0; varint < 2; ++varint) {
+        while (payload < bytes.size() && (static_cast<unsigned char>(bytes[payload]) & 0x80) != 0) {
+            ++payload;
+        }
+        ++payload;
+    }
+    BOOST_REQUIRE_LT(payload, bytes.size());
+    // BTYPE 3 is reserved in RFC 1951, so inflate() rejects the block outright.
+    bytes[payload] = '\xff';
+    {
+        std::ofstream out(filename, std::ios::binary | std::ios::trunc);
+        out.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const auto readCorrupted = [&] {
+        avro::DataFileReader<ComplexInteger> reader(filename, schema);
+        ComplexInteger record;
+        reader.read(record);
+    };
+    BOOST_CHECK_THROW(readCorrupted(), avro::Exception);
+
+    std::filesystem::remove(filename);
+}
+
 void testCodecEnumValues() {
     BOOST_TEST_CHECKPOINT(__func__);
 
@@ -1699,6 +1752,8 @@ init_unit_test_suite(int, char *[]) {
 #ifdef ZSTD_CODEC_AVAILABLE
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testMetadataWithZstdCodec));
 #endif
+
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testCorruptDeflateBlock));
 
     // Codec enum and isCodecAvailable tests
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testCodecEnumValues));
