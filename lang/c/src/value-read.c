@@ -53,7 +53,11 @@ read_array_value(avro_reader_t reader, avro_value_t *dest)
 
 	while (block_count != 0) {
 		if (block_count < 0) {
-			block_count = block_count * -1;
+			if (block_count == INT64_MIN) {
+				avro_set_error("Invalid array block count");
+				return EINVAL;
+			}
+			block_count = -block_count;
 			check_prefix(rval, avro_binary_encoding.
 				     read_long(reader, &block_size),
 				     "Cannot read array block size: ");
@@ -89,7 +93,11 @@ read_map_value(avro_reader_t reader, avro_value_t *dest)
 
 	while (block_count != 0) {
 		if (block_count < 0) {
-			block_count = block_count * -1;
+			if (block_count == INT64_MIN) {
+				avro_set_error("Invalid map block count");
+				return EINVAL;
+			}
+			block_count = -block_count;
 			check_prefix(rval, avro_binary_encoding.
 				     read_long(reader, &block_size),
 				     "Cannot read map block size: ");
