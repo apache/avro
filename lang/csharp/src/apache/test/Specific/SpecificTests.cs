@@ -272,6 +272,58 @@ namespace Avro.Test
             Assert.AreEqual(EnumType.DEFAULT, rec2.enumType);
         }
 
+        [Test]
+        public void TestDefaultForMissingField()
+        {
+            var testRecord = new EmptyEnumRecord();
+            var stream = serialize(testRecord.Schema, testRecord);
+            var deserializedRecord = deserialize<EnumRecord>(stream, testRecord.Schema, (new EnumRecord()).Schema);
+            Assert.AreEqual(EnumType.DEFAULT, deserializedRecord.enumType);
+        }
+
+        [Test]
+        public void TestFieldAlias()
+        {
+            var writerSchema = Schema.Parse(@"{
+               ""type"":""record"",
+               ""name"":""EnumRecord"",
+               ""namespace"":""Avro.Test"",
+               ""fields"":[
+                  {
+                     ""name"":""oldEnumType"",
+                     ""type"":{
+                        ""type"":""enum"",
+                        ""name"":""EnumType"",
+                        ""symbols"":[""DEFAULT"", ""FIRST"", ""SECOND"", ""THIRD""]
+                     }
+                  }
+               ]
+            }");
+            var readerSchema = Schema.Parse(@"{
+               ""type"":""record"",
+               ""name"":""EnumRecord"",
+               ""namespace"":""Avro.Test"",
+               ""fields"":[
+                  {
+                     ""name"":""enumType"",
+                     ""type"":{
+                        ""type"":""enum"",
+                        ""name"":""EnumType"",
+                        ""symbols"":[""DEFAULT"", ""FIRST"", ""SECOND"", ""THIRD""]
+                     },
+                     ""aliases"": [""oldEnumType""]
+                  }
+               ]
+            }");
+
+            var testRecord = new EnumRecord {enumType = EnumType.SECOND};
+
+            var stream = serialize(writerSchema, testRecord);
+
+            var deserializedRecord = deserialize<EnumRecord>(stream, writerSchema, readerSchema);
+            Assert.AreEqual(EnumType.SECOND, deserializedRecord.enumType);
+        }
+
         [TestCase(0L)]
         [TestCase(100L)]
         [TestCase(-100L)]
@@ -699,5 +751,19 @@ namespace Avro.Test
         {
             enumType = (EnumType)fieldValue;
         }
+    }
+
+    class EmptyEnumRecord : ISpecificRecord
+    {
+        public Schema Schema { get; } = Schema.Parse(@"{
+            ""type"":""record"",
+            ""name"":""EnumRecord"",
+            ""namespace"":""Avro.Test"",
+            ""fields"":[]
+        }");
+
+        public object Get(int fieldPos) => throw new ArgumentOutOfRangeException();
+
+        public void Put(int fieldPos, object fieldValue) => throw new ArgumentOutOfRangeException();
     }
 }
