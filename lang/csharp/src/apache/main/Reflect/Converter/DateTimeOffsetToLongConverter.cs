@@ -18,7 +18,7 @@
 
 using System;
 
-namespace Avro.Reflect
+namespace Avro.Reflect.Converter
 {
     /// <summary>
     /// Convert C# DateTimeOffset properties to long unix time
