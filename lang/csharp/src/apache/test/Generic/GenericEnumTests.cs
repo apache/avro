@@ -62,11 +62,35 @@ namespace Avro.test.Generic
             Assert.IsFalse(genericEnum.Equals(null));
         }
 
+        [Test]
+        public void TestInheritanceEquals()
+        {
+            GenericEnum genericEnum = GetBaseGenericEnum();
+            TestGenericEnum testGenericEnum = new TestGenericEnum(Schema.Parse(baseSchema) as EnumSchema, "A");
+
+            Assert.False(genericEnum.Equals(testGenericEnum));
+            Assert.False(testGenericEnum.Equals(genericEnum));
+        }
+
         private GenericEnum GetBaseGenericEnum()
         {
             GenericEnum genericEnum = new GenericEnum(Schema.Parse(baseSchema) as EnumSchema, "A");
 
             return genericEnum;
+        }
+
+        public class TestGenericEnum : GenericEnum
+        {
+            public TestGenericEnum(EnumSchema schema, string value) : base(schema, value)
+            {
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj.GetType() == typeof(TestGenericEnum);
+            }
+
+            public override int GetHashCode() => base.GetHashCode();
         }
     }
 }
