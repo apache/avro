@@ -18,6 +18,7 @@
 
 using Avro.IO;
 using Avro.Generic;
+using Avro.Reflect.Interfaces.Services;
 
 namespace Avro.Reflect
 {
@@ -41,6 +42,17 @@ namespace Avro.Reflect
         /// <param name="cache"></param>
         public ReflectWriter(Schema schema, ClassCache cache = null)
             : this(new ReflectDefaultWriter(typeof(T), schema, cache))
+        {
+        }
+
+        /// <summary>
+        /// Constructs a generic writer for the given schemas using the DefaultWriter. 
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <param name="cacheService"></param>
+        /// <param name="arrayService"></param>
+        public ReflectWriter(Schema schema, ICacheService cacheService, IArrayService arrayService)
+            : this(new ReflectDefaultWriter(typeof(T), schema, cacheService, arrayService))
         {
         }
 
