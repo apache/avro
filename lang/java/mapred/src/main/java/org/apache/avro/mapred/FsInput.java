@@ -22,11 +22,16 @@ import java.io.Closeable;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FutureDataInputStreamBuilder;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataInputStream;
 
 import org.apache.avro.file.SeekableInput;
+
+import static org.apache.hadoop.fs.Options.OpenFileOptions.FS_OPTION_OPENFILE_READ_POLICY;
+import static org.apache.hadoop.util.functional.FutureIO.awaitFuture;
 
 /** Adapt an {@link FSDataInputStream} to {@link SeekableInput}. */
 public class FsInput implements Closeable, SeekableInput {
@@ -40,8 +45,19 @@ public class FsInput implements Closeable, SeekableInput {
 
   /** Construct given a path and a {@code FileSystem}. */
   public FsInput(Path path, FileSystem fileSystem) throws IOException {
-    this.len = fileSystem.getFileStatus(path).getLen();
-    this.stream = fileSystem.open(path);
+    final FileStatus st = fileSystem.getFileStatus(path);
+    this.len = st.getLen();
+    // use the hadoop 3.3+ openFile API, passing in status
+    // and read policy. object stores can use these to
+    // optimize read performance and save on a HEAD request when opening
+    // a file.
+    final FutureDataInputStreamBuilder builder = fileSystem.openFile(path).opt(FS_OPTION_OPENFILE_READ_POLICY,
+        "avro, sequential, adaptive");
+    if (path.equals(st.getPath())) {
+      // set the file status if this isn't any wrapped filesystem.
+      builder.withFileStatus(st);
+    }
+    this.stream = awaitFuture(builder.build());
   }
 
   @Override
