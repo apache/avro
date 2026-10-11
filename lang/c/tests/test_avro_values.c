@@ -186,10 +186,12 @@ _check_invalid_methods(const char *name, avro_value_t *val)
 	if (type != AVRO_STRING) {
 		const char  *cstr = NULL;
 		char  *str = NULL;
+		char  *str2 = "length without null terminator";
 		size_t  size = 0;
 		check_bad(get_string, val, &cstr, &size);
 		check_bad(set_string, val, str);
 		check_bad(set_string_len, val, str, size);
+		check_bad(set_string_len, val, str2, strlen(str2));
 	}
 
 	if (type != AVRO_ENUM) {
@@ -749,7 +751,7 @@ test_string(void)
 			     AVRO_STRING, avro_schema_string()));
 		try(avro_value_reset(&val),
 		    "Cannot reset string");
-		try(avro_value_set_string_len(&val, "", 0),
+		try(avro_value_set_string_len(&val, "", 1),
 		    "Cannot set_len dummy string");
 
 		/* First try a round-trip using set_string */
