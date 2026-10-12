@@ -55,4 +55,6 @@ jobs:
           maven-version: 3.9.11
 
       - name: Run Rat
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         run: mvn test -Dmaven.main.skip=true -Dmaven.test.skip=true -DskipTests=true -Dinvoker.skip=true -P rat -pl :avro-toplevel
