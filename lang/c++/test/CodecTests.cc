@@ -25,6 +25,8 @@
 #include "Specific.hh"
 #include "ValidSchema.hh"
 
+#include <array>
+#include <bit>
 #include <boost/bind/bind.hpp>
 #include <cstdint>
 #include <functional>
@@ -1982,6 +1984,73 @@ static void testStreamLifetimes() {
     }
 }
 
+template<typename T, typename Bits>
+static void checkFloatingPointBinaryCodec(Bits bits, const std::array<uint8_t, sizeof(Bits)> &expected) {
+    for (size_t chunkSize : {1, 3, 16}) {
+        BOOST_TEST_CONTEXT("bits=" << bits << ", chunkSize=" << chunkSize) {
+            auto output = memoryOutputStream(chunkSize);
+            auto encoder = binaryEncoder();
+            encoder->init(*output);
+            avro::encode(*encoder, std::bit_cast<T>(bits));
+            encoder->flush();
+
+            const auto actual = snapshot(*output);
+            BOOST_CHECK_EQUAL_COLLECTIONS(actual->begin(), actual->end(), expected.begin(), expected.end());
+
+            // Decode independent wire bytes, so matching encoder/decoder bugs cannot cancel out.
+            auto wire = memoryOutputStream(chunkSize);
+            StreamWriter writer;
+            writer.reset(*wire);
+            writer.writeBytes(expected.data(), expected.size());
+            writer.flush();
+            auto input = memoryInputStream(*wire);
+            auto decoder = binaryDecoder();
+            decoder->init(*input);
+            T value;
+            avro::decode(*decoder, value);
+            BOOST_CHECK_EQUAL(std::bit_cast<Bits>(value), bits);
+        }
+    }
+}
+
+static void testFloatBinaryByteOrder() {
+    const std::pair<uint32_t, std::array<uint8_t, 4>> cases[] = {
+        {0x00000000, {0x00, 0x00, 0x00, 0x00}}, // +0
+        {0x80000000, {0x00, 0x00, 0x00, 0x80}}, // -0
+        {0x3f800000, {0x00, 0x00, 0x80, 0x3f}}, // 1
+        {0xc0200000, {0x00, 0x00, 0x20, 0xc0}}, // -2.5
+        {0x00000001, {0x01, 0x00, 0x00, 0x00}}, // Smallest subnormal
+        {0x00800000, {0x00, 0x00, 0x80, 0x00}}, // Smallest positive normal
+        {0x7f7fffff, {0xff, 0xff, 0x7f, 0x7f}}, // Largest finite value
+        {0x7f800000, {0x00, 0x00, 0x80, 0x7f}}, // +infinity
+        {0xff800000, {0x00, 0x00, 0x80, 0xff}}, // -infinity
+        {0x7fc12345, {0x45, 0x23, 0xc1, 0x7f}}, // Quiet NaN with payload
+        {0xffc54321, {0x21, 0x43, 0xc5, 0xff}}, // Negative quiet NaN with payload
+    };
+    for (const auto &[bits, bytes] : cases) {
+        checkFloatingPointBinaryCodec<float>(bits, bytes);
+    }
+}
+
+static void testDoubleBinaryByteOrder() {
+    const std::pair<uint64_t, std::array<uint8_t, 8>> cases[] = {
+        {0x0000000000000000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}, // +0
+        {0x8000000000000000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80}}, // -0
+        {0x3ff0000000000000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x3f}}, // 1
+        {0xc004000000000000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0xc0}}, // -2.5
+        {0x0000000000000001, {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}, // Smallest subnormal
+        {0x0010000000000000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00}}, // Smallest positive normal
+        {0x7fefffffffffffff, {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0x7f}}, // Largest finite value
+        {0x7ff0000000000000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x7f}}, // +infinity
+        {0xfff0000000000000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0xff}}, // -infinity
+        {0x7ff8123456789abc, {0xbc, 0x9a, 0x78, 0x56, 0x34, 0x12, 0xf8, 0x7f}}, // Quiet NaN with payload
+        {0xfff8abcdef123456, {0x56, 0x34, 0x12, 0xef, 0xcd, 0xab, 0xf8, 0xff}}, // Negative quiet NaN with payload
+    };
+    for (const auto &[bits, bytes] : cases) {
+        checkFloatingPointBinaryCodec<double>(bits, bytes);
+    }
+}
+
 static void testLimits(const EncoderPtr &e, const DecoderPtr &d) {
     std::unique_ptr<OutputStream> s1 = memoryOutputStream();
     {
@@ -2154,6 +2223,8 @@ init_unit_test_suite(int, char *[]) {
     auto *ts = BOOST_TEST_SUITE("Avro C++ unit tests for codecs");
     avro::parsing::add_tests(*ts);
     ts->add(BOOST_TEST_CASE(avro::testStreamLifetimes));
+    ts->add(BOOST_TEST_CASE(avro::testFloatBinaryByteOrder));
+    ts->add(BOOST_TEST_CASE(avro::testDoubleBinaryByteOrder));
     ts->add(BOOST_TEST_CASE(avro::testLimitsBinaryCodec));
     ts->add(BOOST_TEST_CASE(avro::testLimitsJsonCodec));
     ts->add(BOOST_PARAM_TEST_CASE(&avro::testJson, avro::jsonData,
