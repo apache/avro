@@ -625,7 +625,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
 #foreach ($field in $schema.getFields())
 #if (!${this.ignoredField($field)})
 #set ($n = ${this.mangle($field.name(), $schema.isError())})
-    result = 31 * result + ${this.hashCodeFor($field.schema(), "this." + $n)};
+    result = 31 * result + ${this.hashCodeFor($field, "this." + $n)};
 #end
 #end
     return result;
@@ -648,6 +648,8 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
     if (this.$n != other.$n) {
 #elseif (${this.javaType($field.schema()).equals("java.lang.CharSequence")})
     if (Utf8.compareSequences(this.$n, other.$n) != 0) {
+#elseif (${this.requiresModelComparison($s)})
+    if (MODEL$.compare(this.$n, other.$n, SCHEMA$.getFields().get(${field.pos()}).schema(), true) != 0) {
 #else
     if (!java.util.Objects.equals(this.$n, other.$n)) {
 #end

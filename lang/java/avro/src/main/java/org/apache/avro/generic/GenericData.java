@@ -1173,6 +1173,17 @@ public class GenericData {
           currentHashCode = this.hashCodeAdd(e, elementType);
         }
         return currentHashCode;
+      case MAP:
+        // Consistent with compareMaps(): independent of the entry order and of
+        // the String or Utf8 implementation of the keys and values.
+        int mapHashCode = 0;
+        Schema valueType = s.getValueType();
+        for (Map.Entry<?, ?> entry : ((Map<?, ?>) o).entrySet()) {
+          Object key = entry.getKey();
+          int keyHashCode = Utf8.hashCodeFor(key instanceof CharSequence ? (CharSequence) key : key.toString());
+          mapHashCode += keyHashCode ^ new HashCodeCalculator().hashCode(entry.getValue(), valueType);
+        }
+        return mapHashCode;
       case UNION:
         return hashCode(o, s.getTypes().get(GenericData.this.resolveUnion(s, o)));
       case ENUM:
@@ -1180,7 +1191,7 @@ public class GenericData {
       case NULL:
         return 0;
       case STRING:
-        return (o instanceof Utf8 ? o : new Utf8(o.toString())).hashCode();
+        return Utf8.hashCodeFor(o instanceof CharSequence ? (CharSequence) o : o.toString());
       default:
         return o.hashCode();
       }
@@ -1275,7 +1286,7 @@ public class GenericData {
    * for order.
    */
   @SuppressWarnings(value = "unchecked")
-  protected int compare(Object o1, Object o2, Schema s, boolean equals) {
+  public int compare(Object o1, Object o2, Schema s, boolean equals) {
     if (o1 == o2)
       return 0;
     switch (s.getType()) {
