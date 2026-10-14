@@ -22,7 +22,9 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.generic.GenericArray;
@@ -61,6 +63,33 @@ public class TestCompare {
     check("\"bytes\"", ByteBuffer.wrap(new byte[] {}), ByteBuffer.wrap(new byte[] { 1 }));
     check("\"bytes\"", ByteBuffer.wrap(new byte[] { 1 }), ByteBuffer.wrap(new byte[] { 2 }));
     check("\"bytes\"", ByteBuffer.wrap(new byte[] { 1, 2 }), ByteBuffer.wrap(new byte[] { 2 }));
+  }
+
+  @Test
+  void bytesAreOrderedAsUnsignedValues() throws Exception {
+    checkBytesOrder(ByteBuffer.wrap(new byte[] { 0x7F }), ByteBuffer.wrap(new byte[] { (byte) 0xFF }));
+    checkBytesOrder(ByteBuffer.wrap(new byte[] { 1, 0x7F }), ByteBuffer.wrap(new byte[] { 1, (byte) 0x80 }));
+    checkBytesOrder(ByteBuffer.wrap(new byte[] { (byte) 0xFF }), ByteBuffer.wrap(new byte[] { (byte) 0xFF, 0 }));
+  }
+
+  @Test
+  void bytesOrderDependsOnlyOnTheRemainingRange() throws Exception {
+    byte[] backing1 = { (byte) 0xFF, 0x7F, (byte) 0xFF };
+    byte[] backing2 = { 0x00, (byte) 0xFF, 0x00 };
+    checkBytesOrder(ByteBuffer.wrap(backing1, 1, 1), ByteBuffer.wrap(backing2, 1, 1));
+    checkBytesOrder(ByteBuffer.wrap(backing1, 1, 1).slice(), ByteBuffer.wrap(backing2, 1, 1).slice());
+    checkBytesOrder(direct((byte) 0x7F), direct((byte) 0xFF));
+    checkBytesOrder(ByteBuffer.wrap(new byte[] { 0x7F }).asReadOnlyBuffer(),
+        ByteBuffer.wrap(new byte[] { (byte) 0xFF }).asReadOnlyBuffer());
+  }
+
+  @Test
+  void bytesLogicalTypesKeepTheirComparableOrder() {
+    Schema schema = LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES));
+    GenericData comparator = GenericData.get();
+    assertTrue(comparator.compare(new BigDecimal("1.00"), new BigDecimal("2.00"), schema) < 0);
+    assertTrue(comparator.compare(new BigDecimal("2.00"), new BigDecimal("1.00"), schema) > 0);
+    assertEquals(0, comparator.compare(new BigDecimal("1.00"), new BigDecimal("1.00"), schema));
   }
 
   @Test
@@ -199,6 +228,33 @@ public class TestCompare {
   @SuppressWarnings(value = "unchecked")
   private static int compare(Object o1, Object o2, Schema schema, boolean comparable, GenericData comparator) {
     return comparable ? ((Comparable<Object>) o1).compareTo(o2) : comparator.compare(o1, o2, schema);
+  }
+
+  private static void checkBytesOrder(ByteBuffer smaller, ByteBuffer larger) throws Exception {
+    Schema schema = SchemaParser.parseSingle("\"bytes\"");
+    byte[] b1 = render(smaller.duplicate(), schema, new GenericDatumWriter<>());
+    byte[] b2 = render(larger.duplicate(), schema, new GenericDatumWriter<>());
+    assertTrue(BinaryData.compare(b1, 0, b2, 0, schema) < 0);
+    assertTrue(BinaryData.compare(b2, 0, b1, 0, schema) > 0);
+
+    int smallerPosition = smaller.position();
+    int largerPosition = larger.position();
+    GenericData comparator = GenericData.get();
+
+    assertTrue(comparator.compare(smaller, larger, schema) < 0);
+    assertTrue(comparator.compare(larger, smaller, schema) > 0);
+    assertEquals(0, comparator.compare(smaller, smaller.duplicate(), schema));
+    assertEquals(0, comparator.compare(larger, larger.duplicate(), schema));
+
+    assertEquals(smallerPosition, smaller.position());
+    assertEquals(largerPosition, larger.position());
+  }
+
+  private static ByteBuffer direct(byte... bytes) {
+    ByteBuffer buffer = ByteBuffer.allocateDirect(bytes.length);
+    buffer.put(bytes);
+    buffer.flip();
+    return buffer;
   }
 
   private static <T> byte[] render(T datum, Schema schema, DatumWriter<T> writer) throws IOException {
