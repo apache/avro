@@ -1051,10 +1051,28 @@ public class SpecificCompiler {
     return new String[0];
   }
 
+  // --- Grammar used to validate a user-supplied "javaAnnotation" -------------
+  // Avro copies the javaAnnotation schema property straight into the generated
+  // Java source (for example @Deprecated or @SuppressWarnings("unchecked")).
+  // Because it is emitted verbatim, we first check that the value really looks
+  // like a Java annotation and nothing more. If this check is too loose, a
+  // crafted value could smuggle extra Java code into the output (AVRO-4313).
+  // The patterns below build up that check: an identifier, an optional
+  // parameter list, and the literal values allowed inside it.
   private static final String PATTERN_IDENTIFIER_PART = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
   private static final String PATTERN_IDENTIFIER = String.format("(?:%s(?:\\.%s)*)", PATTERN_IDENTIFIER_PART,
       PATTERN_IDENTIFIER_PART);
-  private static final String PATTERN_STRING = "\"(?:\\\\[\\\\\"ntfb]|(?<!\\\\).)*\"";
+  // Matches a Java string literal such as "unchecked", used when validating a
+  // user-supplied javaAnnotation before it is copied verbatim into generated
+  // source. A literal is an opening quote, a body, and a closing quote. The body
+  // may only contain:
+  // - a known escape sequence: \\ \" \n \t \f \b
+  // - any other character that is NOT a quote, backslash, or line break
+  // Forbidding an unescaped quote in the body is the key point: otherwise a
+  // single "literal" could run past its closing quote and swallow the code that
+  // follows it (see AVRO-4313). Line breaks (CR, LF, NEL, LS, PS) are forbidden
+  // too, so a value cannot spread onto extra lines in the generated file.
+  private static final String PATTERN_STRING = "\"(?:\\\\[\\\\\"ntfb]|[^\"\\\\\\r\\n\\x85\\x{2028}\\x{2029}])*\"";
   private static final String PATTERN_NUMBER = "(?:\\((?:byte|char|short|int|long|float|double)\\))?[x0-9_.]*[fl]?";
   private static final String PATTERN_LITERAL_VALUE = String.format("(?:%s|%s|true|false)", PATTERN_STRING,
       PATTERN_NUMBER);
@@ -1109,10 +1127,20 @@ public class SpecificCompiler {
   }
 
   /**
-   * Utility for template use. Escapes comment end with HTML entities.
+   * Utility for template use. Escapes content emitted into a Javadoc comment.
+   *
+   * <p>
+   * As well as escaping the comment terminator ({@code *}{@code /}) and HTML
+   * metacharacters, this neutralizes backslashes. This is required because the
+   * Java compiler translates Unicode escapes (of the form {@code \}{@code uXXXX})
+   * across the whole source file, including inside comments, as its first lexical
+   * step (JLS &sect;3.3). Without this, a schema doc value such as
+   * {@code \}{@code u002a\}{@code u002f} would be decoded by the compiler to
+   * {@code *}{@code /}, prematurely closing the comment and allowing arbitrary
+   * code to be injected into the generated source.
    */
   public static String escapeForJavadoc(String s) {
-    return s.replace("*/", "*&#47;").replace("<", "&lt;").replace(">", "&gt;");
+    return s.replace("\\", "&#92;").replace("*/", "*&#47;").replace("<", "&lt;").replace(">", "&gt;");
   }
 
   /**

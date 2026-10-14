@@ -56,6 +56,9 @@ zstandard = ["zstandard"]
 [tool.ruff]
 line-length = 150
 
+[tool.setuptools.packages.find]
+include = ["avro*"]
+
 [tool.setuptools.package-data]
 "avro" = [
   "HandshakeRequest.avsc", "HandshakeResponse.avsc", "LICENSE.txt",
@@ -77,7 +80,7 @@ warn_unused_ignores = true
 [dependency-groups]
 dev = [
     "coverage>=7.13.4",
-    "mypy<2.2.0",
+    "mypy<2.4.0",
     "python-snappy>=0.7.3",
     "ruff>=0.15.1",
     "setuptools>=82.0.0",

@@ -17,8 +17,8 @@
  */
 package org.apache.avro.file;
 
-import java.io.IOException;
 import java.io.Closeable;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -27,12 +27,11 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.avro.InvalidAvroMagicException;
-import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Schema;
 import org.apache.avro.UnknownAvroCodecException;
+import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.BinaryDecoder;
 
 /** Read files written by Avro version 1.2. */
 public class DataFileReader12<D> implements FileReader<D>, Closeable {
@@ -89,7 +88,7 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
     if (codec != null && !codec.equals(NULL_CODEC)) {
       throw new UnknownAvroCodecException("Unknown codec: " + codec);
     }
-    this.schema = JsonSchemaParser.parseInternal(getMetaString(SCHEMA));
+    this.schema = parseSchema();
     this.reader = reader;
 
     reader.setSchema(schema);
@@ -114,6 +113,10 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
   /** Return the value of a metadata property. */
   public synchronized long getMetaLong(String key) {
     return Long.parseLong(getMetaString(key));
+  }
+
+  private Schema parseSchema() throws IOException {
+    return DataFileStream.parseSchemaFromMetadata(getMetaString(SCHEMA), SCHEMA);
   }
 
   /** Return the schema used in this file. */

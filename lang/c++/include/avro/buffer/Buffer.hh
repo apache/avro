@@ -22,6 +22,7 @@
 #ifndef _WIN32
 #include <sys/uio.h>
 #endif
+#include <type_traits>
 #include <utility>
 #include <vector>
 

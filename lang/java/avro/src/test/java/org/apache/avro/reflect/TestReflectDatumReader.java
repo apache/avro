@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
@@ -100,6 +102,73 @@ public class TestReflectDatumReader {
     reflectDatumReader.read(deserialized, decoder);
 
     assertEquals(pojoWithArray, deserialized);
+  }
+
+  /**
+   * A malformed or truncated record can declare an array block count far larger
+   * than the data that follows. The reader must reject it before eagerly
+   * allocating the backing Java array, the same way GenericDatumReader does.
+   */
+  @Test
+  void read_PojoWithArray_rejectsOversizedArrayCount() throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    Encoder encoder = EncoderFactory.get().binaryEncoder(out, null);
+    encoder.writeInt(42); // record field "id"
+    encoder.writeLong(2_000_000_000L); // array block count for "relatedIds", with no items following
+    encoder.flush();
+
+    byte[] malformed = out.toByteArray();
+
+    Decoder decoder = DecoderFactory.get().binaryDecoder(malformed, null);
+    ReflectDatumReader<PojoWithArray> reflectDatumReader = new ReflectDatumReader<>(PojoWithArray.class);
+
+    assertThrows(EOFException.class, () -> reflectDatumReader.read(new PojoWithArray(), decoder));
+  }
+
+  /**
+   * Elements whose minimum encoded size is zero (here an empty record) consume no
+   * input, so a large logical array can be split across blocks that each pass the
+   * first-block guard. The cumulative allocation must still be bounded across
+   * blocks, mirroring GenericDatumReader.
+   */
+  @Test
+  void read_PojoWithZeroByteList_rejectsCumulativeCountAcrossBlocks() throws IOException {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      // Two blocks of 600 zero-byte records each (1200 > 1000): the first block
+      // passes, the cumulative count must be rejected on the second block.
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      Encoder encoder = EncoderFactory.get().binaryEncoder(out, null);
+      encoder.writeLong(600L);
+      encoder.writeLong(600L);
+      encoder.writeLong(0L); // array terminator (not reached)
+      encoder.flush();
+
+      byte[] malformed = out.toByteArray();
+      Decoder decoder = DecoderFactory.get().binaryDecoder(malformed, null);
+      ReflectDatumReader<PojoWithZeroByteList> reader = new ReflectDatumReader<>(PojoWithZeroByteList.class);
+
+      assertThrows(SystemLimitException.class, () -> reader.read(new PojoWithZeroByteList(), decoder));
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  /**
+   * An empty record encodes to zero bytes, making it a zero-byte element type.
+   */
+  public static class EmptyRecord {
+    public EmptyRecord() {
+    }
+  }
+
+  public static class PojoWithZeroByteList {
+    public List<EmptyRecord> items;
+
+    public PojoWithZeroByteList() {
+    }
   }
 
   @Test

@@ -100,7 +100,11 @@ public class ColumnFileReader implements Closeable {
     InputBuffer in = new InputBuffer(file, 0);
     readMagic(in);
     this.rowCount = in.readFixed64();
-    this.columnCount = in.readFixed32();
+    // Each column contributes at least one byte of metadata and column-start
+    // data that follows, so a column count larger than the bytes remaining
+    // cannot be satisfied. Validate before allocating to avoid an oversized
+    // allocation from a malformed, corrupted, or truncated file.
+    this.columnCount = in.checkLength(in.readFixed32(), 1);
     this.metaData = ColumnFileMetaData.read(in);
     this.columnsByName = new HashMap<>(columnCount);
 

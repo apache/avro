@@ -890,6 +890,30 @@ static void testCustomAttributesJson2Schema2Json() {
     BOOST_CHECK_EQUAL(removeWhitespaceFromSchema(json), removeWhitespaceFromSchema(schema));
 }
 
+static void testPrimitiveCustomAttributesJsonRoundTrip() {
+    const std::vector<std::string> schemas = {
+        R"({
+            "type": "long",
+            "logicalType": "timestamp-micros",
+            "adjust-to-utc": true
+        })",
+        R"({
+            "type": "long",
+            "custom-property": "value"
+        })",
+    };
+
+    // Iceberg relies on adjust-to-utc to distinguish timestamp from timestamptz.
+    // Primitive schema properties must also round-trip without a logical type.
+    for (const auto &schema : schemas) {
+        ValidSchema compiledSchema = compileJsonSchemaFromString(schema);
+        BOOST_REQUIRE_EQUAL(compiledSchema.root()->customAttributes(), 1);
+
+        std::string json = compiledSchema.toJson();
+        BOOST_CHECK_EQUAL(removeWhitespaceFromSchema(json), removeWhitespaceFromSchema(schema));
+    }
+}
+
 static void testCustomAttributesSchema2Json2Schema() {
     const std::string expected = R"({
         "type": "record",
@@ -951,6 +975,7 @@ init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     ts->add(BOOST_TEST_CASE(&avro::schema::testParseCustomAttributes));
     ts->add(BOOST_TEST_CASE(&avro::schema::testAddCustomAttributes));
     ts->add(BOOST_TEST_CASE(&avro::schema::testCustomAttributesJson2Schema2Json));
+    ts->add(BOOST_TEST_CASE(&avro::schema::testPrimitiveCustomAttributesJsonRoundTrip));
     ts->add(BOOST_TEST_CASE(&avro::schema::testCustomAttributesSchema2Json2Schema));
     return ts;
 }

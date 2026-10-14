@@ -39,9 +39,16 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestReflectData {
+  @Test
+  void getConversionByClassWithNullLogicalTypeReturnsNull() {
+    // BigDecimal has a conversion registered by default but a null logicalType
+    assertNull(ReflectData.get().getConversionByClass(java.math.BigDecimal.class, null));
+  }
+
   @Test
   @SuppressWarnings("unchecked")
   void weakSchemaCaching() throws Exception {

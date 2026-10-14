@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstring>
 #ifndef _WIN32
 #include <ctime>
 #endif

@@ -1,0 +1,10 @@
+@namespace("naming")
+protocol EnumDefaults {
+    enum Status {
+        ACTIVE, INACTIVE
+    } = ACTIVE;
+
+    enum Color {
+        RED, GREEN
+    }
+}

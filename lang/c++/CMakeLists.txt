@@ -83,19 +83,6 @@ if (AVRO_BUILD_TESTS OR AVRO_USE_BOOST)
     find_package (Boost 1.70 REQUIRED CONFIG)
 endif ()
 
-find_package(fmt QUIET)
-if (NOT fmt_FOUND)
-    include(FetchContent)
-    FetchContent_Declare(
-            fmt
-            GIT_REPOSITORY  https://github.com/fmtlib/fmt.git
-            GIT_TAG         10.2.1
-            GIT_PROGRESS    TRUE
-            USES_TERMINAL_DOWNLOAD TRUE
-    )
-    FetchContent_MakeAvailable(fmt)
-endif ()
-
 find_package(Snappy CONFIG)
 if (Snappy_FOUND)
     # Use CONFIG mode to guarantee that Snappy::snappy target exists if found.
@@ -149,7 +136,6 @@ function (setup_avro_lib target lib_type)
     endif ()
     set_target_properties (${target} PROPERTIES VERSION ${AVRO_VERSION})
     target_link_libraries (${target} PUBLIC
-      $<BUILD_INTERFACE:fmt::fmt-header-only>
       $<BUILD_INTERFACE:ZLIB::ZLIB>
       $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:Snappy::snappy>>
       $<$<BOOL:${zstd_FOUND}>:$<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:${ZSTD_TARGET}>>>

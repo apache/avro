@@ -235,7 +235,7 @@ public class TimeConversions {
 
       if (seconds < 0 && nanos > 0) {
         long micros = Math.multiplyExact(seconds + 1, 1_000_000_000L);
-        long adjustment = nanos - 1_000_000;
+        long adjustment = nanos - 1_000_000_000L;
 
         return Math.addExact(micros, adjustment);
       } else {

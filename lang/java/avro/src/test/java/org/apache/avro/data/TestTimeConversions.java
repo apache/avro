@@ -33,6 +33,7 @@ import org.apache.avro.data.TimeConversions.TimeMicrosConversion;
 import org.apache.avro.data.TimeConversions.TimeMillisConversion;
 import org.apache.avro.data.TimeConversions.TimestampMicrosConversion;
 import org.apache.avro.data.TimeConversions.TimestampMillisConversion;
+import org.apache.avro.data.TimeConversions.TimestampNanosConversion;
 import org.apache.avro.reflect.ReflectData;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,7 @@ public class TestTimeConversions {
   public static Schema TIME_MICROS_SCHEMA;
   public static Schema TIMESTAMP_MILLIS_SCHEMA;
   public static Schema TIMESTAMP_MICROS_SCHEMA;
+  public static Schema TIMESTAMP_NANOS_SCHEMA;
 
   @BeforeAll
   public static void createSchemas() {
@@ -53,6 +55,8 @@ public class TestTimeConversions {
     TestTimeConversions.TIMESTAMP_MILLIS_SCHEMA = LogicalTypes.timestampMillis()
         .addToSchema(Schema.create(Schema.Type.LONG));
     TestTimeConversions.TIMESTAMP_MICROS_SCHEMA = LogicalTypes.timestampMicros()
+        .addToSchema(Schema.create(Schema.Type.LONG));
+    TestTimeConversions.TIMESTAMP_NANOS_SCHEMA = LogicalTypes.timestampNanos()
         .addToSchema(Schema.create(Schema.Type.LONG));
   }
 
@@ -189,6 +193,21 @@ public class TestTimeConversions {
     assertEquals(Jul_01_1969_12_00_00_000_123_instant,
         (long) conversion.toLong(Jul_01_1969_12_00_00_000_123, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()),
         "Pre 1970 date should be correct");
+  }
+
+  @Test
+  void timestampNanosConversionBeforeEpochWithPositiveNanos() {
+    TimestampNanosConversion conversion = new TimestampNanosConversion();
+
+    // < Epoch
+    long Dec_31_1969_23_59_59_999_999_999_instant = -1L;
+    Instant Dec_31_1969_23_59_59_999_999_999 = ZonedDateTime.of(1969, 12, 31, 23, 59, 59, 999_999_999, ZoneOffset.UTC)
+        .toInstant();
+
+    assertEquals(Dec_31_1969_23_59_59_999_999_999, conversion.fromLong(Dec_31_1969_23_59_59_999_999_999_instant,
+        TIMESTAMP_NANOS_SCHEMA, LogicalTypes.timestampNanos()), "Pre 1970 nanos date should be correct");
+    assertEquals(Dec_31_1969_23_59_59_999_999_999_instant, (long) conversion.toLong(Dec_31_1969_23_59_59_999_999_999,
+        TIMESTAMP_NANOS_SCHEMA, LogicalTypes.timestampNanos()), "Pre 1970 nanos date should be correct");
   }
 
   @Test
