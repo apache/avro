@@ -255,4 +255,100 @@ EOP
     is $dec->{one}[0], 1.0, "kind of dumb test";
 }
 
+## AVRO-4343: schema-resolution skip path (skip fields present in the writer but
+## absent from the reader). Regression tests for the broken skip implementation.
+{
+    my $enc_with = sub {
+        my ($schema, $data) = @_;
+        my $out = '';
+        Avro::BinaryEncoder->encode(
+            schema => $schema, data => $data,
+            emit_cb => sub { $out .= ${ $_[0] } },
+        );
+        return $out;
+    };
+
+    ## skip a NON-trailing bytes field, then decode the field after it
+    {
+        my $w = Avro::Schema->parse(q(
+            { "type":"record","name":"S","fields":[
+                {"name":"b","type":"bytes"},
+                {"name":"a","type":"long"} ]}));
+        my $r = Avro::Schema->parse(q(
+            { "type":"record","name":"S","fields":[
+                {"name":"a","type":"long"} ]}));
+        my $enc = $enc_with->($w, { b => "xx", a => 777 });
+        open my $reader, '<', \$enc or die $!;
+        my $dec = Avro::BinaryDecoder->decode(
+            writer_schema => $w, reader_schema => $r, reader => $reader);
+        is $dec->{a}, 777, "skip non-trailing bytes field, next field intact";
+    }
+
+    ## skip an array field (previously crashed)
+    {
+        my $w = Avro::Schema->parse(q(
+            { "type":"record","name":"A","fields":[
+                {"name":"a","type":"long"},
+                {"name":"arr","type":{"type":"array","items":"long"}} ]}));
+        my $r = Avro::Schema->parse(q(
+            { "type":"record","name":"A","fields":[
+                {"name":"a","type":"long"} ]}));
+        my $enc = $enc_with->($w, { a => 1, arr => [ 1, 2, 3 ] });
+        open my $reader, '<', \$enc or die $!;
+        my $dec = Avro::BinaryDecoder->decode(
+            writer_schema => $w, reader_schema => $r, reader => $reader);
+        is $dec->{a}, 1, "skip array field during resolution";
+    }
+
+    ## skip a map field (previously crashed)
+    {
+        my $w = Avro::Schema->parse(q(
+            { "type":"record","name":"M","fields":[
+                {"name":"a","type":"long"},
+                {"name":"m","type":{"type":"map","values":"long"}} ]}));
+        my $r = Avro::Schema->parse(q(
+            { "type":"record","name":"M","fields":[
+                {"name":"a","type":"long"} ]}));
+        my $enc = $enc_with->($w, { a => 2, m => { x => 1, y => 2 } });
+        open my $reader, '<', \$enc or die $!;
+        my $dec = Avro::BinaryDecoder->decode(
+            writer_schema => $w, reader_schema => $r, reader => $reader);
+        is $dec->{a}, 2, "skip map field during resolution";
+    }
+
+    ## skip an array encoded with a NEGATIVE block count (+ block size)
+    {
+        my $w = Avro::Schema->parse(q(
+            { "type":"record","name":"A","fields":[
+                {"name":"a","type":"long"},
+                {"name":"arr","type":{"type":"array","items":"long"}} ]}));
+        my $r = Avro::Schema->parse(q(
+            { "type":"record","name":"A","fields":[
+                {"name":"a","type":"long"} ]}));
+        # a=1; arr: count=-3, size=3, items 1,2,3, end=0
+        my $enc = "\x02" . "\x05\x06" . "\x02\x04\x06" . "\x00";
+        open my $reader, '<', \$enc or die $!;
+        my $dec = Avro::BinaryDecoder->decode(
+            writer_schema => $w, reader_schema => $r, reader => $reader);
+        is $dec->{a}, 1, "skip array with negative block count";
+    }
+
+    ## a negative bytes length in a skipped field must be rejected, not mis-seek
+    {
+        my $w = Avro::Schema->parse(q(
+            { "type":"record","name":"S","fields":[
+                {"name":"b","type":"bytes"},
+                {"name":"a","type":"long"} ]}));
+        my $r = Avro::Schema->parse(q(
+            { "type":"record","name":"S","fields":[
+                {"name":"a","type":"long"} ]}));
+        my $enc = "\x01" . "\x0a";    # b: bytes length -1 (malformed); a=5
+        open my $reader, '<', \$enc or die $!;
+        throws_ok {
+            Avro::BinaryDecoder->decode(
+                writer_schema => $w, reader_schema => $r, reader => $reader);
+        } qr/negative/, "negative bytes length in skipped field is rejected";
+    }
+}
+
 done_testing;
