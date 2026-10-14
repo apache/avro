@@ -231,8 +231,8 @@ namespace Avro
         {
             get
             {
-                if (index < Symbols.Count) return Symbols[index];
-                throw new AvroException("Enumeration out of range. Must be less than " + Symbols.Count + ", but is " + index);
+                if (index >= 0 && index < Symbols.Count) return Symbols[index];
+                throw new AvroException("Enumeration out of range. Must be in [0, " + Symbols.Count + "), but is " + index);
             }
         }
 

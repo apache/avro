@@ -511,6 +511,31 @@ namespace Avro.Test
 
         }
         
+        // A malicious array block declaring far more elements than the stream
+        // could hold must be rejected before allocating, matching the Generic
+        // reader. Exercises SpecificDefaultReader.ReadArray (via SpecificReader)
+        // and SpecificDatumReader (via PreresolvingDatumReader).
+        [TestCase]
+        public void TestSpecificReaderRejectsArrayCountBeyondStream()
+        {
+            var schema = EmbeddedGenericsRecord._SCHEMA;
+
+            byte[] Malicious()
+            {
+                var ms = new MemoryStream();
+                var enc = new BinaryEncoder(ms);
+                enc.WriteUnionIndex(0);  // OptionalInt: union branch 0 (null)
+                enc.WriteLong(1000000);  // OptionalIntList: 1,000,000 items, no data
+                return ms.ToArray();
+            }
+
+            var r1 = new SpecificReader<EmbeddedGenericsRecord>(schema, schema);
+            Assert.Throws<AvroException>(() => r1.Read(null, new BinaryDecoder(new MemoryStream(Malicious()))));
+
+            var r2 = new SpecificDatumReader<EmbeddedGenericsRecord>(schema, schema);
+            Assert.Throws<AvroException>(() => r2.Read(null, new BinaryDecoder(new MemoryStream(Malicious()))));
+        }
+
         private static S deserialize<S>(Stream ms, Schema ws, Schema rs) where S : class, ISpecificRecord
         {
             long initialPos = ms.Position;
