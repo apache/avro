@@ -1,0 +1,115 @@
+\hypertarget{group___primitives}{
+\section{AVRO Primitive Type Serialization}
+\label{group___primitives}\index{AVRO Primitive Type Serialization@{AVRO Primitive Type Serialization}}
+}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___primitives_gad3a89fbddd4853036ed861dba1ee2c1}{avro\_\-null} (void)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___primitives_gef604d6a5f83d9769b4c5d47e8b505f2}{avro\_\-int64} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, int64\_\-t $\ast$lp)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___primitives_g4d568c22cdd854ea5a9c85ed622f7d91}{avro\_\-string} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, char $\ast$$\ast$str, int64\_\-t maxlen)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___primitives_g883aa71b77043b51296ab278c2a84a23}{avro\_\-bytes} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, char $\ast$$\ast$bytes, int64\_\-t $\ast$len, int64\_\-t maxlen)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___primitives_ga230ba9c2028579916da8e3ef7abbb07}{avro\_\-bool} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, bool\_\-t $\ast$bp)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___primitives_ge1346e273aa3d82cc324992f081c6a49}{avro\_\-float} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, float $\ast$fp)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___primitives_g16c546852402edffa666a3cd214d4f7c}{avro\_\-double} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, double $\ast$dp)
+\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{group___primitives_ga230ba9c2028579916da8e3ef7abbb07}{
+\index{Primitives@{Primitives}!avro\_\-bool@{avro\_\-bool}}
+\index{avro\_\-bool@{avro\_\-bool}!Primitives@{Primitives}}
+\subsubsection[{avro\_\-bool}]{\setlength{\rightskip}{0pt plus 5cm}{\bf avro\_\-status\_\-t} avro\_\-bool ({\bf AVRO} $\ast$ {\em avro}, \/  bool\_\-t $\ast$ {\em bp})}}
+\label{group___primitives_ga230ba9c2028579916da8e3ef7abbb07}
+
+
+\hyperlink{group___primitives_ga230ba9c2028579916da8e3ef7abbb07}{avro\_\-bool()} is called to read/write a boolean value \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em avro}]The Avro handle \item[{\em bp}]Pointer to the boolean pointer \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]The Avro status \end{Desc}
+\hypertarget{group___primitives_g883aa71b77043b51296ab278c2a84a23}{
+\index{Primitives@{Primitives}!avro\_\-bytes@{avro\_\-bytes}}
+\index{avro\_\-bytes@{avro\_\-bytes}!Primitives@{Primitives}}
+\subsubsection[{avro\_\-bytes}]{\setlength{\rightskip}{0pt plus 5cm}{\bf avro\_\-status\_\-t} avro\_\-bytes ({\bf AVRO} $\ast$ {\em avro}, \/  char $\ast$$\ast$ {\em bytes}, \/  int64\_\-t $\ast$ {\em len}, \/  int64\_\-t {\em maxlen})}}
+\label{group___primitives_g883aa71b77043b51296ab278c2a84a23}
+
+
+\hyperlink{group___primitives_g883aa71b77043b51296ab278c2a84a23}{avro\_\-bytes()} is called to read/write opaque bytes \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em avro}]The Avro handle \item[{\em bytes}]The pointer to the bytes to read/write \item[{\em len}]Pointer to an integer which either (1) expresses the number of bytes you wish to encode or (2) is set on return to give the number of bytes decoded \item[{\em maxlen}]The maximum number of bytes to read/write \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]The Avro status \end{Desc}
+\hypertarget{group___primitives_g16c546852402edffa666a3cd214d4f7c}{
+\index{Primitives@{Primitives}!avro\_\-double@{avro\_\-double}}
+\index{avro\_\-double@{avro\_\-double}!Primitives@{Primitives}}
+\subsubsection[{avro\_\-double}]{\setlength{\rightskip}{0pt plus 5cm}{\bf avro\_\-status\_\-t} avro\_\-double ({\bf AVRO} $\ast$ {\em avro}, \/  double $\ast$ {\em dp})}}
+\label{group___primitives_g16c546852402edffa666a3cd214d4f7c}
+
+
+\hyperlink{group___primitives_g16c546852402edffa666a3cd214d4f7c}{avro\_\-double()} is called to read/write a double \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em avro}]The Avro handle \item[{\em dp}]Pointer to the double \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]The Avro status \end{Desc}
+\hypertarget{group___primitives_ge1346e273aa3d82cc324992f081c6a49}{
+\index{Primitives@{Primitives}!avro\_\-float@{avro\_\-float}}
+\index{avro\_\-float@{avro\_\-float}!Primitives@{Primitives}}
+\subsubsection[{avro\_\-float}]{\setlength{\rightskip}{0pt plus 5cm}{\bf avro\_\-status\_\-t} avro\_\-float ({\bf AVRO} $\ast$ {\em avro}, \/  float $\ast$ {\em fp})}}
+\label{group___primitives_ge1346e273aa3d82cc324992f081c6a49}
+
+
+\hyperlink{group___primitives_ge1346e273aa3d82cc324992f081c6a49}{avro\_\-float()} is called to read/write a float \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em avro}]The Avro handle \item[{\em fp}]Pointer to the float \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]The Avro status \end{Desc}
+\hypertarget{group___primitives_gef604d6a5f83d9769b4c5d47e8b505f2}{
+\index{Primitives@{Primitives}!avro\_\-int64@{avro\_\-int64}}
+\index{avro\_\-int64@{avro\_\-int64}!Primitives@{Primitives}}
+\subsubsection[{avro\_\-int64}]{\setlength{\rightskip}{0pt plus 5cm}{\bf avro\_\-status\_\-t} avro\_\-int64 ({\bf AVRO} $\ast$ {\em avro}, \/  int64\_\-t $\ast$ {\em lp})}}
+\label{group___primitives_gef604d6a5f83d9769b4c5d47e8b505f2}
+
+
+\hyperlink{group___primitives_gef604d6a5f83d9769b4c5d47e8b505f2}{avro\_\-int64()} is called to read/write a 64-bit signed integer \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em avro}]The Avro handle \item[{\em lp}]Pointer to the 64-bit integer \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]The Avro status \end{Desc}
+\hypertarget{group___primitives_gad3a89fbddd4853036ed861dba1ee2c1}{
+\index{Primitives@{Primitives}!avro\_\-null@{avro\_\-null}}
+\index{avro\_\-null@{avro\_\-null}!Primitives@{Primitives}}
+\subsubsection[{avro\_\-null}]{\setlength{\rightskip}{0pt plus 5cm}{\bf avro\_\-status\_\-t} avro\_\-null (void)}}
+\label{group___primitives_gad3a89fbddd4853036ed861dba1ee2c1}
+
+
+\hyperlink{group___primitives_gad3a89fbddd4853036ed861dba1ee2c1}{avro\_\-null()} will not read or write any data \hypertarget{group___primitives_g4d568c22cdd854ea5a9c85ed622f7d91}{
+\index{Primitives@{Primitives}!avro\_\-string@{avro\_\-string}}
+\index{avro\_\-string@{avro\_\-string}!Primitives@{Primitives}}
+\subsubsection[{avro\_\-string}]{\setlength{\rightskip}{0pt plus 5cm}{\bf avro\_\-status\_\-t} avro\_\-string ({\bf AVRO} $\ast$ {\em avro}, \/  char $\ast$$\ast$ {\em str}, \/  int64\_\-t {\em maxlen})}}
+\label{group___primitives_g4d568c22cdd854ea5a9c85ed622f7d91}
+
+
+\hyperlink{group___primitives_g4d568c22cdd854ea5a9c85ed622f7d91}{avro\_\-string()} is called to read/write a string \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em avro}]The Avro handle \item[{\em str}]Pointer to the string \item[{\em maxlen}]The maximum length of the string to read/write \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]The Avro status \end{Desc}

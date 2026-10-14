@@ -1,0 +1,168 @@
+\hypertarget{group___handle___routines}{
+\section{AVRO Handles}
+\label{group___handle___routines}\index{AVRO Handles@{AVRO Handles}}
+}
+\subsection*{Data Structures}
+\begin{CompactItemize}
+\item 
+struct \hyperlink{struct_a_v_r_o}{AVRO}
+\end{CompactItemize}
+\subsection*{Defines}
+\begin{CompactItemize}
+\item 
+\hypertarget{group___handle___routines_gec7f77fb08d34504a65e49f23673e2f2}{
+\#define \textbf{CHECK\_\-ERROR}(\_\-\_\-status)~if(\_\-\_\-status != AVRO\_\-OK)\{ return \_\-\_\-status; \}}
+\label{group___handle___routines_gec7f77fb08d34504a65e49f23673e2f2}
+
+\item 
+\hypertarget{group___handle___routines_ga11bb99285d5512c5739aacb0b9352ca}{
+\#define \textbf{AVRO\_\-GETBYTES}(avro, addr, len)~($\ast$(avro) $\rightarrow$ a\_\-ops $\rightarrow$ a\_\-getbytes)(avro, addr, len)}
+\label{group___handle___routines_ga11bb99285d5512c5739aacb0b9352ca}
+
+\item 
+\hypertarget{group___handle___routines_gec949ab6bc010632000ad15f9adad118}{
+\#define \textbf{AVRO\_\-PUTBYTES}(avro, addr, len)~($\ast$(avro) $\rightarrow$ a\_\-ops $\rightarrow$ a\_\-putbytes)(avro, addr, len)}
+\label{group___handle___routines_gec949ab6bc010632000ad15f9adad118}
+
+\end{CompactItemize}
+\subsection*{Typedefs}
+\begin{CompactItemize}
+\item 
+\hypertarget{group___handle___routines_g845b3c301ea3d376db7167e40b8cc77e}{
+typedef enum \hyperlink{group___handle___routines_gcd8ee9ad4a4882eef8e3d9a0d5faec68}{avro\_\-op} \textbf{avro\_\-op}}
+\label{group___handle___routines_g845b3c301ea3d376db7167e40b8cc77e}
+
+\item 
+\hypertarget{group___handle___routines_g0c34cda845744621fb4e6bb24b82c416}{
+typedef enum \hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \textbf{avro\_\-status\_\-t}}
+\label{group___handle___routines_g0c34cda845744621fb4e6bb24b82c416}
+
+\item 
+\hypertarget{group___handle___routines_g6e3ec80aeb6c2317c76d6fb2a919b665}{
+typedef struct \hyperlink{struct_a_v_r_o}{AVRO} \textbf{AVRO}}
+\label{group___handle___routines_g6e3ec80aeb6c2317c76d6fb2a919b665}
+
+\end{CompactItemize}
+\subsection*{Enumerations}
+\begin{CompactItemize}
+\item 
+enum \hyperlink{group___handle___routines_gcd8ee9ad4a4882eef8e3d9a0d5faec68}{avro\_\-op} \{ \hyperlink{group___handle___routines_ggcd8ee9ad4a4882eef8e3d9a0d5faec68037c26ec9dd8b98243aa9aed3f80160b}{AVRO\_\-ENCODE} =  0, 
+\hyperlink{group___handle___routines_ggcd8ee9ad4a4882eef8e3d9a0d5faec682802292d4fd32b8eb68872bcc03bd1dd}{AVRO\_\-DECODE} =  1
+ \}
+\item 
+enum \hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \{ \hyperlink{group___handle___routines_gg4271ca78aabaaad628d7b632aa5a1499c6fd26496969f7d61ece32e42612675f}{AVRO\_\-OK} =  0, 
+\hyperlink{group___handle___routines_gg4271ca78aabaaad628d7b632aa5a1499c0a18cacdcccfd794fc1c49b3e98c5bb}{AVRO\_\-FAILURE} =  1
+ \}
+\end{CompactItemize}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___handle___routines_gabfc5b0acfbb6439e7d3d7511035f11b}{avro\_\-initialize} (void)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___handle___routines_ga8d57587e61e593b8878b80163977430}{avro\_\-create\_\-memory} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, apr\_\-pool\_\-t $\ast$pool, caddr\_\-t addr, int64\_\-t len, \hyperlink{group___handle___routines_gcd8ee9ad4a4882eef8e3d9a0d5faec68}{avro\_\-op} op)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___handle___routines_g072028012d958aec05067e1c1e04ee0e}{avro\_\-create\_\-file} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, apr\_\-pool\_\-t $\ast$pool, apr\_\-file\_\-t $\ast$file, \hyperlink{group___handle___routines_gcd8ee9ad4a4882eef8e3d9a0d5faec68}{avro\_\-op} op)
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___handle___routines_g2fb229d05fdcaad3da0f6a9899bd09be}{avro\_\-create\_\-socket} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, apr\_\-pool\_\-t $\ast$pool, apr\_\-socket\_\-t $\ast$socket, \hyperlink{group___handle___routines_gcd8ee9ad4a4882eef8e3d9a0d5faec68}{avro\_\-op} op)
+\end{CompactItemize}
+
+
+\subsection{Enumeration Type Documentation}
+\hypertarget{group___handle___routines_gcd8ee9ad4a4882eef8e3d9a0d5faec68}{
+\index{Handle\_\-Routines@{Handle\_\-Routines}!avro\_\-op@{avro\_\-op}}
+\index{avro\_\-op@{avro\_\-op}!Handle_Routines@{Handle\_\-Routines}}
+\subsubsection[{avro\_\-op}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf avro\_\-op}}}
+\label{group___handle___routines_gcd8ee9ad4a4882eef8e3d9a0d5faec68}
+
+
+Avro operation enum. Enum for discriminating whether an Avro handle is for encoding or decoding data. \begin{Desc}
+\item[Enumerator: ]\par
+\begin{description}
+\index{AVRO\_\-ENCODE@{AVRO\_\-ENCODE}!Handle\_\-Routines@{Handle\_\-Routines}}\index{Handle\_\-Routines@{Handle\_\-Routines}!AVRO\_\-ENCODE@{AVRO\_\-ENCODE}}\item[{\em 
+\hypertarget{group___handle___routines_ggcd8ee9ad4a4882eef8e3d9a0d5faec68037c26ec9dd8b98243aa9aed3f80160b}{
+AVRO\_\-ENCODE}
+\label{group___handle___routines_ggcd8ee9ad4a4882eef8e3d9a0d5faec68037c26ec9dd8b98243aa9aed3f80160b}
+}]Marks a handle as encoding Avro data \index{AVRO\_\-DECODE@{AVRO\_\-DECODE}!Handle\_\-Routines@{Handle\_\-Routines}}\index{Handle\_\-Routines@{Handle\_\-Routines}!AVRO\_\-DECODE@{AVRO\_\-DECODE}}\item[{\em 
+\hypertarget{group___handle___routines_ggcd8ee9ad4a4882eef8e3d9a0d5faec682802292d4fd32b8eb68872bcc03bd1dd}{
+AVRO\_\-DECODE}
+\label{group___handle___routines_ggcd8ee9ad4a4882eef8e3d9a0d5faec682802292d4fd32b8eb68872bcc03bd1dd}
+}]Marks a handle as decoding Avro data \end{description}
+\end{Desc}
+
+\hypertarget{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{
+\index{Handle\_\-Routines@{Handle\_\-Routines}!avro\_\-status\_\-t@{avro\_\-status\_\-t}}
+\index{avro\_\-status\_\-t@{avro\_\-status\_\-t}!Handle_Routines@{Handle\_\-Routines}}
+\subsubsection[{avro\_\-status\_\-t}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf avro\_\-status\_\-t}}}
+\label{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}
+
+
+Avro status enum. Enum used by Avro functions to return state. \begin{Desc}
+\item[\hyperlink{todo__todo000001}{Todo}]expand the number of states \end{Desc}
+\begin{Desc}
+\item[Enumerator: ]\par
+\begin{description}
+\index{AVRO\_\-OK@{AVRO\_\-OK}!Handle\_\-Routines@{Handle\_\-Routines}}\index{Handle\_\-Routines@{Handle\_\-Routines}!AVRO\_\-OK@{AVRO\_\-OK}}\item[{\em 
+\hypertarget{group___handle___routines_gg4271ca78aabaaad628d7b632aa5a1499c6fd26496969f7d61ece32e42612675f}{
+AVRO\_\-OK}
+\label{group___handle___routines_gg4271ca78aabaaad628d7b632aa5a1499c6fd26496969f7d61ece32e42612675f}
+}]Function success \index{AVRO\_\-FAILURE@{AVRO\_\-FAILURE}!Handle\_\-Routines@{Handle\_\-Routines}}\index{Handle\_\-Routines@{Handle\_\-Routines}!AVRO\_\-FAILURE@{AVRO\_\-FAILURE}}\item[{\em 
+\hypertarget{group___handle___routines_gg4271ca78aabaaad628d7b632aa5a1499c0a18cacdcccfd794fc1c49b3e98c5bb}{
+AVRO\_\-FAILURE}
+\label{group___handle___routines_gg4271ca78aabaaad628d7b632aa5a1499c0a18cacdcccfd794fc1c49b3e98c5bb}
+}]Function failure \end{description}
+\end{Desc}
+
+
+
+\subsection{Function Documentation}
+\hypertarget{group___handle___routines_g072028012d958aec05067e1c1e04ee0e}{
+\index{Handle\_\-Routines@{Handle\_\-Routines}!avro\_\-create\_\-file@{avro\_\-create\_\-file}}
+\index{avro\_\-create\_\-file@{avro\_\-create\_\-file}!Handle_Routines@{Handle\_\-Routines}}
+\subsubsection[{avro\_\-create\_\-file}]{\setlength{\rightskip}{0pt plus 5cm}{\bf avro\_\-status\_\-t} avro\_\-create\_\-file ({\bf AVRO} $\ast$ {\em avro}, \/  apr\_\-pool\_\-t $\ast$ {\em pool}, \/  apr\_\-file\_\-t $\ast$ {\em file}, \/  {\bf avro\_\-op} {\em op})}}
+\label{group___handle___routines_g072028012d958aec05067e1c1e04ee0e}
+
+
+Create a file-backed Avro handle \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em avro}]Pointer to the handle that will be initialized \item[{\em pool}]Pool used for allocating dynamic data structures \item[{\em file}]The file to read(decode) or write(encode) from \item[{\em op}]Expresses the operation the handle should perform (e.g. encode, decode) \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]The Avro status \end{Desc}
+\hypertarget{group___handle___routines_ga8d57587e61e593b8878b80163977430}{
+\index{Handle\_\-Routines@{Handle\_\-Routines}!avro\_\-create\_\-memory@{avro\_\-create\_\-memory}}
+\index{avro\_\-create\_\-memory@{avro\_\-create\_\-memory}!Handle_Routines@{Handle\_\-Routines}}
+\subsubsection[{avro\_\-create\_\-memory}]{\setlength{\rightskip}{0pt plus 5cm}{\bf avro\_\-status\_\-t} avro\_\-create\_\-memory ({\bf AVRO} $\ast$ {\em avro}, \/  apr\_\-pool\_\-t $\ast$ {\em pool}, \/  caddr\_\-t {\em addr}, \/  int64\_\-t {\em len}, \/  {\bf avro\_\-op} {\em op})}}
+\label{group___handle___routines_ga8d57587e61e593b8878b80163977430}
+
+
+Create a memory-backed Avro handle \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em avro}]Pointer to handle that will be initialized \item[{\em pool}]Pool used for allocating dynamic data structures. \item[{\em addr}]Address of the memory location for manipulating data \item[{\em len}]Size of the memory to use \item[{\em op}]Expressing the operation the handle should perform (e.g. encode, decode) \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]The Avro status \end{Desc}
+\hypertarget{group___handle___routines_g2fb229d05fdcaad3da0f6a9899bd09be}{
+\index{Handle\_\-Routines@{Handle\_\-Routines}!avro\_\-create\_\-socket@{avro\_\-create\_\-socket}}
+\index{avro\_\-create\_\-socket@{avro\_\-create\_\-socket}!Handle_Routines@{Handle\_\-Routines}}
+\subsubsection[{avro\_\-create\_\-socket}]{\setlength{\rightskip}{0pt plus 5cm}{\bf avro\_\-status\_\-t} avro\_\-create\_\-socket ({\bf AVRO} $\ast$ {\em avro}, \/  apr\_\-pool\_\-t $\ast$ {\em pool}, \/  apr\_\-socket\_\-t $\ast$ {\em socket}, \/  {\bf avro\_\-op} {\em op})}}
+\label{group___handle___routines_g2fb229d05fdcaad3da0f6a9899bd09be}
+
+
+Create a socket-backed Avro handle \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em avro}]Pointer to the handle that will be initialized \item[{\em pool}]Pool used for allocating dynamic data structures \item[{\em socket}]The socket to read(decode) or write(encode) from \item[{\em op}]Expresses the operation the handle should perform (e.g. encode, decode) \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]The Avro status \end{Desc}
+\hypertarget{group___handle___routines_gabfc5b0acfbb6439e7d3d7511035f11b}{
+\index{Handle\_\-Routines@{Handle\_\-Routines}!avro\_\-initialize@{avro\_\-initialize}}
+\index{avro\_\-initialize@{avro\_\-initialize}!Handle_Routines@{Handle\_\-Routines}}
+\subsubsection[{avro\_\-initialize}]{\setlength{\rightskip}{0pt plus 5cm}{\bf avro\_\-status\_\-t} avro\_\-initialize (void)}}
+\label{group___handle___routines_gabfc5b0acfbb6439e7d3d7511035f11b}
+
+
+Initialize the \hyperlink{struct_a_v_r_o}{AVRO} library \begin{Desc}
+\item[Returns:]The Avro status \end{Desc}

@@ -1,0 +1,786 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta content="Apache Forrest" name="Generator">
+<meta name="Forrest-version" content="0.9">
+<meta name="Forrest-skin-name" content="pelt">
+<title>Apache Avro&#153; 1.10.0 Hadoop MapReduce guide</title>
+<link type="text/css" href="skin/basic.css" rel="stylesheet">
+<link media="screen" type="text/css" href="skin/screen.css" rel="stylesheet">
+<link media="print" type="text/css" href="skin/print.css" rel="stylesheet">
+<link type="text/css" href="skin/profile.css" rel="stylesheet">
+<script src="skin/getBlank.js" language="javascript" type="text/javascript"></script><script src="skin/getMenu.js" language="javascript" type="text/javascript"></script><script src="skin/fontsize.js" language="javascript" type="text/javascript"></script>
+<link rel="shortcut icon" href="images/favicon.ico">
+</head>
+<body onload="init()">
+<script type="text/javascript">ndeSetTextSize();</script>
+<div id="top">
+<!--+
+    |breadtrail
+    +-->
+<div class="breadtrail">
+<a href="https://www.apache.org/">Apache</a> &gt; <a href="https://avro.apache.org/">Avro</a> &gt; <a href="https://avro.apache.org/">Avro</a><script src="skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script>
+</div>
+<!--+
+    |header
+    +-->
+<div class="header">
+<!--+
+    |start group logo
+    +-->
+<div class="grouplogo">
+<a href="https://www.apache.org/"><img class="logoImage" alt="Apache" src="images/apache_feather.gif" title="The Apache Software Foundation"></a>
+</div>
+<!--+
+    |end group logo
+    +-->
+<!--+
+    |start Project Logo
+    +-->
+<div class="projectlogo">
+<a href="https://avro.apache.org/"><img class="logoImage" alt="Avro" src="images/avro-logo.png" title="Serialization System"></a>
+</div>
+<!--+
+    |end Project Logo
+    +-->
+<!--+
+    |start Search
+    +-->
+<div class="searchbox">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+<input value="avro.apache.org" name="sitesearch" type="hidden"><input onFocus="getBlank (this, 'Search the site with google');" size="25" name="q" id="query" type="text" value="Search the site with google">&nbsp; 
+                    <input name="Search" value="Search" type="submit">
+</form>
+</div>
+<!--+
+    |end search
+    +-->
+<!--+
+    |start Tabs
+    +-->
+<ul id="tabs">
+<li>
+<a class="unselected" href="https://avro.apache.org/">Project</a>
+</li>
+<li>
+<a class="unselected" href="https://cwiki.apache.org/confluence/display/AVRO/Index">Wiki</a>
+</li>
+<li class="current">
+<a class="selected" href="index.html">Avro 1.10.0 Documentation</a>
+</li>
+</ul>
+<!--+
+    |end Tabs
+    +-->
+</div>
+</div>
+<div id="main">
+<div id="publishedStrip">
+<!--+
+    |start Subtabs
+    +-->
+<div id="level2tabs"></div>
+<!--+
+    |end Endtabs
+    +-->
+<script type="text/javascript"><!--
+document.write("Last Published: " + document.lastModified);
+//  --></script>
+</div>
+<!--+
+    |breadtrail
+    +-->
+<div class="breadtrail">
+
+             &nbsp;
+           </div>
+<!--+
+    |start Menu, mainarea
+    +-->
+<!--+
+    |start Menu
+    +-->
+<div id="menu">
+<div onclick="SwitchMenu('menu_selected_1.1', 'skin/')" id="menu_selected_1.1Title" class="menutitle" style="background-image: url('skin/images/chapter_open.gif');">Documentation</div>
+<div id="menu_selected_1.1" class="selectedmenuitemgroup" style="display: block;">
+<div class="menuitem">
+<a href="index.html">Overview</a>
+</div>
+<div class="menuitem">
+<a href="gettingstartedjava.html">Getting started (Java)</a>
+</div>
+<div class="menuitem">
+<a href="gettingstartedpython.html">Getting started (Python)</a>
+</div>
+<div class="menuitem">
+<a href="spec.html">Specification</a>
+</div>
+<div class="menuitem">
+<a href="trevni/spec.html">Trevni</a>
+</div>
+<div class="menuitem">
+<a href="api/java/index.html">Java API</a>
+</div>
+<div class="menuitem">
+<a href="api/c/index.html">C API</a>
+</div>
+<div class="menuitem">
+<a href="api/cpp/html/index.html">C++ API</a>
+</div>
+<div class="menuitem">
+<a href="api/csharp/html/index.html">C# API</a>
+</div>
+<div class="menupage">
+<div class="menupagetitle">MapReduce guide</div>
+</div>
+<div class="menuitem">
+<a href="idl.html">IDL language</a>
+</div>
+<div class="menuitem">
+<a href="sasl.html">SASL profile</a>
+</div>
+<div class="menuitem">
+<a href="https://cwiki.apache.org/confluence/display/AVRO/Index">Wiki</a>
+</div>
+<div class="menuitem">
+<a href="https://cwiki.apache.org/confluence/display/AVRO/FAQ">FAQ</a>
+</div>
+</div>
+<div id="credit"></div>
+<div id="roundbottom">
+<img style="display: none" class="corner" height="15" width="15" alt="" src="skin/images/rc-b-l-15-1body-2menu-3menu.png"></div>
+<!--+
+  |alternative credits
+  +-->
+<div id="credit2"></div>
+</div>
+<!--+
+    |end Menu
+    +-->
+<!--+
+    |start content
+    +-->
+<div id="content">
+<div title="Portable Document Format" class="pdflink">
+<a class="dida" href="mr.pdf"><img alt="PDF -icon" src="skin/images/pdfdoc.gif" class="skin"><br>
+        PDF</a>
+</div>
+<h1>Apache Avro&#153; 1.10.0 Hadoop MapReduce guide</h1>
+<div id="front-matter">
+<div id="minitoc-area">
+<ul class="minitoc">
+<li>
+<a href="#Setup">Setup</a>
+</li>
+<li>
+<a href="#Example%3A+ColorCount">Example: ColorCount</a>
+<ul class="minitoc">
+<li>
+<a href="#Running+ColorCount">Running ColorCount</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#Mapper+-+org.apache.hadoop.mapred+API">Mapper - org.apache.hadoop.mapred API</a>
+</li>
+<li>
+<a href="#Mapper+-+org.apache.hadoop.mapreduce+API">Mapper - org.apache.hadoop.mapreduce API</a>
+</li>
+<li>
+<a href="#Reducer+-+org.apache.hadoop.mapred+API">Reducer - org.apache.hadoop.mapred API</a>
+</li>
+<li>
+<a href="#Reduce+-+org.apache.hadoop.mapreduce+API">Reduce - org.apache.hadoop.mapreduce API</a>
+</li>
+<li>
+<a href="#Learning+more">Learning more</a>
+</li>
+</ul>
+</div>
+</div>
+    
+<p>
+      Avro provides a convenient way to represent complex data structures within
+      a Hadoop MapReduce job.  Avro data can be used as both input to and output
+      from a MapReduce job, as well as the intermediate format.  The example in
+      this guide uses Avro data for all three, but it's possible to mix and
+      match; for instance, MapReduce can be used to aggregate a particular field
+      in an Avro record.
+    </p>
+    
+<p>
+      This guide assumes basic familiarity with both Hadoop MapReduce and Avro.
+      See the <a href="https://hadoop.apache.org/docs/current/">Hadoop
+      documentation</a> and the <a href="gettingstartedjava.html">Avro getting
+      started guide</a> for introductions to these projects.  This guide uses
+      the old MapReduce API (<span class="codefrag">org.apache.hadoop.mapred</span>) and the new
+      MapReduce API (<span class="codefrag">org.apache.hadoop.mapreduce</span>).
+    </p>
+    
+<a name="Setup"></a>
+<h2 class="h3">Setup</h2>
+<div class="section">
+<p>
+        The code from this guide is included in the Avro docs under
+        <em>examples/mr-example</em>.  The example is set up as a Maven project
+        that includes the necessary Avro and MapReduce dependencies and the Avro
+        Maven plugin for code generation, so no external jars are needed to run
+        the example.  In particular, the POM includes the following dependencies:
+      </p>
+<pre class="code">
+&lt;dependency&gt;
+  &lt;groupId&gt;org.apache.avro&lt;/groupId&gt;
+  &lt;artifactId&gt;avro&lt;/artifactId&gt;
+  &lt;version&gt;1.10.0&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+  &lt;groupId&gt;org.apache.avro&lt;/groupId&gt;
+  &lt;artifactId&gt;avro-mapred&lt;/artifactId&gt;
+  &lt;version&gt;1.10.0&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+  &lt;groupId&gt;org.apache.hadoop&lt;/groupId&gt;
+  &lt;artifactId&gt;hadoop-client&lt;/artifactId&gt;
+  &lt;version&gt;3.1.2&lt;/version&gt;
+&lt;/dependency&gt;
+      </pre>
+<p>
+        And the following plugin:
+      </p>
+<pre class="code">
+&lt;plugin&gt;
+  &lt;groupId&gt;org.apache.avro&lt;/groupId&gt;
+  &lt;artifactId&gt;avro-maven-plugin&lt;/artifactId&gt;
+  &lt;version&gt;1.10.0&lt;/version&gt;
+  &lt;executions&gt;
+    &lt;execution&gt;
+      &lt;phase&gt;generate-sources&lt;/phase&gt;
+      &lt;goals&gt;
+        &lt;goal&gt;schema&lt;/goal&gt;
+      &lt;/goals&gt;
+      &lt;configuration&gt;
+        &lt;sourceDirectory&gt;${project.basedir}/../&lt;/sourceDirectory&gt;
+        &lt;outputDirectory&gt;${project.basedir}/target/generated-sources/&lt;/outputDirectory&gt;
+      &lt;/configuration&gt;
+    &lt;/execution&gt;
+  &lt;/executions&gt;
+&lt;/plugin&gt;
+      </pre>
+<p>
+        If you do not configure the <em>sourceDirectory</em> and <em>outputDirectory</em>
+        properties, the defaults will be used. The <em>sourceDirectory</em> property
+        defaults to <em>src/main/avro</em>. The <em>outputDirectory</em> property
+        defaults to <em>target/generated-sources</em>. You can change the paths to
+        match your project layout.
+      </p>
+<p>
+        Alternatively, Avro jars can be downloaded directly from the <a href="https://avro.apache.org/releases.html">Apache Avro&#153;
+        Releases</a> page.  The relevant Avro jars for this guide are
+        <em>avro-1.10.0.jar</em> and
+        <em>avro-mapred-1.10.0.jar</em>, as well as
+        <em>avro-tools-1.10.0.jar</em> for code generation and viewing
+        Avro data files as JSON.  In addition, you will need to install Hadoop
+        in order to use MapReduce.
+      </p>
+</div>
+
+    
+<a name="Example%3A+ColorCount"></a>
+<h2 class="h3">Example: ColorCount</h2>
+<div class="section">
+<p>
+        Below is a simple example of a MapReduce that uses Avro. There is an example
+        for both the old (<em>org.apache.hadoop.mapred</em>) and new
+        (<em>org.apache.hadoop.mapreduce</em>) APIs under
+        <em>examples/mr-example/src/main/java/example/</em>. <em>MapredColorCount</em>
+        is the example for the older mapred API while <em>MapReduceColorCount</em> is
+        the example for the newer mapreduce API. Both examples are below, but
+        we will detail the mapred API in our subsequent examples.
+      </p>
+<p>MapredColorCount:</p>
+<pre class="code">
+package example;
+
+import java.io.IOException;
+
+import org.apache.avro.*;
+import org.apache.avro.Schema.Type;
+import org.apache.avro.mapred.*;
+import org.apache.hadoop.conf.*;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.util.*;
+
+import example.avro.User;
+
+public class MapredColorCount extends Configured implements Tool {
+
+  public static class ColorCountMapper extends AvroMapper&lt;User, Pair&lt;CharSequence, Integer&gt;&gt; {
+    @Override
+    public void map(User user, AvroCollector&lt;Pair&lt;CharSequence, Integer&gt;&gt; collector, Reporter reporter)
+        throws IOException {
+      CharSequence color = user.getFavoriteColor();
+      // We need this check because the User.favorite_color field has type ["string", "null"]
+      if (color == null) {
+        color = "none";
+      }
+      collector.collect(new Pair&lt;CharSequence, Integer&gt;(color, 1));
+    }
+  }
+
+  public static class ColorCountReducer extends AvroReducer&lt;CharSequence, Integer,
+                                                            Pair&lt;CharSequence, Integer&gt;&gt; {
+    @Override
+    public void reduce(CharSequence key, Iterable&lt;Integer&gt; values,
+                       AvroCollector&lt;Pair&lt;CharSequence, Integer&gt;&gt; collector,
+                       Reporter reporter)
+        throws IOException {
+      int sum = 0;
+      for (Integer value : values) {
+        sum += value;
+      }
+      collector.collect(new Pair&lt;CharSequence, Integer&gt;(key, sum));
+    }
+  }
+
+  public int run(String[] args) throws Exception {
+    if (args.length != 2) {
+      System.err.println("Usage: MapredColorCount &lt;input path&gt; &lt;output path&gt;");
+      return -1;
+    }
+
+    JobConf conf = new JobConf(getConf(), MapredColorCount.class);
+    conf.setJobName("colorcount");
+
+    FileInputFormat.setInputPaths(conf, new Path(args[0]));
+    FileOutputFormat.setOutputPath(conf, new Path(args[1]));
+
+    AvroJob.setMapperClass(conf, ColorCountMapper.class);
+    AvroJob.setReducerClass(conf, ColorCountReducer.class);
+
+    // Note that AvroJob.setInputSchema and AvroJob.setOutputSchema set
+    // relevant config options such as input/output format, map output
+    // classes, and output key class.
+    AvroJob.setInputSchema(conf, User.getClassSchema());
+    AvroJob.setOutputSchema(conf, Pair.getPairSchema(Schema.create(Type.STRING),
+        Schema.create(Type.INT)));
+
+    JobClient.runJob(conf);
+    return 0;
+  }
+
+  public static void main(String[] args) throws Exception {
+    int res = ToolRunner.run(new Configuration(), new MapredColorCount(), args);
+    System.exit(res);
+  }
+}
+      </pre>
+<p>MapReduceColorCount:</p>
+<pre class="code">
+package example;
+
+import java.io.IOException;
+
+import org.apache.avro.Schema;
+import org.apache.avro.mapred.AvroKey;
+import org.apache.avro.mapred.AvroValue;
+import org.apache.avro.mapreduce.AvroJob;
+import org.apache.avro.mapreduce.AvroKeyInputFormat;
+import org.apache.avro.mapreduce.AvroKeyValueOutputFormat;
+import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
+
+import example.avro.User;
+
+public class MapReduceColorCount extends Configured implements Tool {
+
+  public static class ColorCountMapper extends
+      Mapper&lt;AvroKey&lt;User&gt;, NullWritable, Text, IntWritable&gt; {
+
+    @Override
+    public void map(AvroKey&lt;User&gt; key, NullWritable value, Context context)
+        throws IOException, InterruptedException {
+
+      CharSequence color = key.datum().getFavoriteColor();
+      if (color == null) {
+        color = "none";
+      }
+      context.write(new Text(color.toString()), new IntWritable(1));
+    }
+  }
+
+  public static class ColorCountReducer extends
+      Reducer&lt;Text, IntWritable, AvroKey&lt;CharSequence&gt;, AvroValue&lt;Integer&gt;&gt; {
+
+    @Override
+    public void reduce(Text key, Iterable&lt;IntWritable&gt; values,
+        Context context) throws IOException, InterruptedException {
+
+      int sum = 0;
+      for (IntWritable value : values) {
+        sum += value.get();
+      }
+      context.write(new AvroKey&lt;CharSequence&gt;(key.toString()), new AvroValue&lt;Integer&gt;(sum));
+    }
+  }
+
+  public int run(String[] args) throws Exception {
+    if (args.length != 2) {
+      System.err.println("Usage: MapReduceColorCount &lt;input path&gt; &lt;output path&gt;");
+      return -1;
+    }
+
+    Job job = new Job(getConf());
+    job.setJarByClass(MapReduceColorCount.class);
+    job.setJobName("Color Count");
+
+    FileInputFormat.setInputPaths(job, new Path(args[0]));
+    FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+    job.setInputFormatClass(AvroKeyInputFormat.class);
+    job.setMapperClass(ColorCountMapper.class);
+    AvroJob.setInputKeySchema(job, User.getClassSchema());
+    job.setMapOutputKeyClass(Text.class);
+    job.setMapOutputValueClass(IntWritable.class);
+
+    job.setOutputFormatClass(AvroKeyValueOutputFormat.class);
+    job.setReducerClass(ColorCountReducer.class);
+    AvroJob.setOutputKeySchema(job, Schema.create(Schema.Type.STRING));
+    AvroJob.setOutputValueSchema(job, Schema.create(Schema.Type.INT));
+
+    return (job.waitForCompletion(true) ? 0 : 1);
+  }
+
+  public static void main(String[] args) throws Exception {
+    int res = ToolRunner.run(new MapReduceColorCount(), args);
+    System.exit(res);
+  }
+}
+      </pre>
+<p>
+        ColorCount reads in data files containing <span class="codefrag">User</span> records,
+        defined in <em>examples/user.avsc</em>, and counts the number of
+        instances of each favorite color.  (This example draws inspiration from
+        the canonical WordCount MapReduce application.)  This example uses the
+        old MapReduce API.  See MapReduceAvroWordCount, found under
+        <em>doc/examples/mr-example/src/main/java/example/</em> to see the new MapReduce
+        API example.  The <span class="codefrag">User</span>
+        schema is defined as follows:
+      </p>
+<pre class="code">
+{"namespace": "example.avro",
+ "type": "record",
+ "name": "User",
+ "fields": [
+     {"name": "name", "type": "string"},
+     {"name": "favorite_number",  "type": ["int", "null"]},
+     {"name": "favorite_color", "type": ["string", "null"]}
+ ]
+}
+      </pre>
+<p>
+        This schema is compiled into the <span class="codefrag">User</span> class used by
+        ColorCount via the Avro Maven plugin (see
+        <em>examples/mr-example/pom.xml</em> for how this is set up).
+      </p>
+<p>
+        ColorCountMapper essentially takes a <span class="codefrag">User</span> as input and
+        extracts the <span class="codefrag">User</span>'s favorite color, emitting the key-value
+        pair <span class="codefrag">&lt;</span><em>favoriteColor</em><span class="codefrag">, 1&gt;</span>.
+        ColorCountReducer then adds up how many occurrences of a particular
+        favorite color were emitted, and outputs the result as a
+        <span class="codefrag">Pair</span> record.  These <span class="codefrag">Pair</span>s are serialized to an
+        Avro data file.
+      </p>
+<a name="Running+ColorCount"></a>
+<h3 class="h4">Running ColorCount</h3>
+<p>
+          The ColorCount application is provided as a Maven project in the Avro
+          docs under <em>examples/mr-example</em>.  To build the project,
+          including the code generation of the User schema, run:
+        </p>
+<pre class="code">
+mvn compile
+        </pre>
+<p>
+          Next, run GenerateData from examples/mr-examples to create an Avro data
+          file, <em>input/users.avro</em>, containing 20 <span class="codefrag">User</span>s with
+          favorite colors chosen randomly from a list:
+        </p>
+<pre class="code">
+mvn exec:java -q -Dexec.mainClass=example.GenerateData
+        </pre>
+<p>
+          Besides creating the data file, GenerateData prints the JSON
+          representations of the Users generated to stdout, for example:
+        </p>
+<pre class="code">
+{"name": "user", "favorite_number": null, "favorite_color": "red"}
+{"name": "user", "favorite_number": null, "favorite_color": "green"}
+{"name": "user", "favorite_number": null, "favorite_color": "purple"}
+{"name": "user", "favorite_number": null, "favorite_color": null}
+...
+        </pre>
+<p>
+          Now we're ready to run ColorCount.  We specify our freshly-generated
+          <em>input</em> folder as the input path and <em>output</em> as our
+          output folder (note that MapReduce will not start a job if the output
+          folder already exists):
+        </p>
+<pre class="code">
+mvn exec:java -q -Dexec.mainClass=example.MapredColorCount -Dexec.args="input output"
+        </pre>
+<p>
+          Once ColorCount completes, checking the contents of the new
+          <em>output</em> directory should yield the following:
+        </p>
+<pre class="code">
+$ ls output/
+part-00000.avro  _SUCCESS
+        </pre>
+<p>
+          You can check the contents of the generated Avro file using the avro-tools jar:
+        </p>
+<pre class="code">
+$ java -jar /path/to/avro-tools-1.10.0.jar tojson output/part-00000.avro
+{"value": 3, "key": "blue"}
+{"value": 7, "key": "green"}
+{"value": 1, "key": "none"}
+{"value": 2, "key": "orange"}
+{"value": 3, "key": "purple"}
+{"value": 2, "key": "red"}
+{"value": 2, "key": "yellow"}
+        </pre>
+</div>
+    
+<p>Now let's go over the ColorCount example in detail.</p>
+    
+<a name="Mapper+-+org.apache.hadoop.mapred+API"></a>
+<h2 class="h3">Mapper - org.apache.hadoop.mapred API</h2>
+<div class="section">
+<p>
+        The easiest way to use Avro data files as input to a MapReduce job is to
+        subclass <span class="codefrag">AvroMapper</span>.  An <span class="codefrag">AvroMapper</span> defines a
+        map function that takes an Avro datum as input and outputs a key/value
+        pair represented as a <span class="codefrag">Pair</span> record.  In the ColorCount
+        example, <span class="codefrag">ColorCountMapper</span> is an <span class="codefrag">AvroMapper</span>
+        that takes a <span class="codefrag">User</span> as input and outputs a
+        <span class="codefrag">Pair&lt;CharSequence, Integer&gt;&gt;</span>, where the
+        <span class="codefrag">CharSequence</span> key is the user's favorite color and the
+        <span class="codefrag">Integer</span> value is 1.
+      </p>
+<pre class="code">
+public static class ColorCountMapper extends AvroMapper&lt;User, Pair&lt;CharSequence, Integer&gt;&gt; {
+  @Override
+  public void map(User user, AvroCollector&lt;Pair&lt;CharSequence, Integer&gt;&gt; collector, Reporter reporter)
+      throws IOException {
+    CharSequence color = user.getFavoriteColor();
+    // We need this check because the User.favorite_color field has type ["string", "null"]
+    if (color == null) {
+      color = "none";
+    }
+    collector.collect(new Pair&lt;CharSequence, Integer&gt;(color, 1));
+  }
+}
+      </pre>
+<p>
+        In order to use our <span class="codefrag">AvroMapper</span>, we must call
+        <span class="codefrag">AvroJob.setMapperClass</span> and
+        <span class="codefrag">AvroJob.setInputSchema</span>.
+      </p>
+<pre class="code">
+AvroJob.setMapperClass(conf, ColorCountMapper.class);
+AvroJob.setInputSchema(conf, User.getClassSchema());
+      </pre>
+<p>
+        Note that <span class="codefrag">AvroMapper</span> does not implement the
+        <span class="codefrag">Mapper</span> interface.  Under the hood, the specified Avro data
+        files are deserialized into <span class="codefrag">AvroWrapper</span>s containing the
+        actual data, which are processed by a <span class="codefrag">Mapper</span> that calls the
+        configured <span class="codefrag">AvroMapper</span>'s map function.
+        <span class="codefrag">AvroJob.setInputSchema</span> sets up the relevant configuration
+        parameters needed to make this happen, thus you should not need to call
+        <span class="codefrag">JobConf.setMapperClass</span>,
+        <span class="codefrag">JobConf.setInputFormat</span>,
+        <span class="codefrag">JobConf.setMapOutputKeyClass</span>,
+        <span class="codefrag">JobConf.setMapOutputValueClass</span>, or
+        <span class="codefrag">JobConf.setOutputKeyComparatorClass</span>.
+      </p>
+</div>
+    
+<a name="Mapper+-+org.apache.hadoop.mapreduce+API"></a>
+<h2 class="h3">Mapper - org.apache.hadoop.mapreduce API</h2>
+<div class="section">
+<p>
+        This document will not go into all the differences between the mapred and mapreduce APIs,
+        however will describe the main differences. As you can see, ColorCountMapper is now a
+        subclass of the Hadoop Mapper class and is passed an AvroKey as it's key.
+
+        Additionally, the AvroJob method calls were slightly changed.
+      </p>
+<pre class="code">
+  public static class ColorCountMapper extends
+      Mapper&lt;AvroKey&lt;User&gt;, NullWritable, Text, IntWritable&gt; {
+
+    @Override
+    public void map(AvroKey&lt;User&gt; key, NullWritable value, Context context)
+        throws IOException, InterruptedException {
+
+      CharSequence color = key.datum().getFavoriteColor();
+      if (color == null) {
+        color = "none";
+      }
+      context.write(new Text(color.toString()), new IntWritable(1));
+    }
+  }
+      </pre>
+</div>
+    
+<a name="Reducer+-+org.apache.hadoop.mapred+API"></a>
+<h2 class="h3">Reducer - org.apache.hadoop.mapred API</h2>
+<div class="section">
+<p>
+        Analogously to <span class="codefrag">AvroMapper</span>, an <span class="codefrag">AvroReducer</span>
+        defines a reducer function that takes the key/value types output by an
+        <span class="codefrag">AvroMapper</span> (or any mapper that outputs <span class="codefrag">Pair</span>s)
+        and outputs a key/value pair represented a <span class="codefrag">Pair</span> record.  In
+        the ColorCount example, <span class="codefrag">ColorCountReducer</span> is an
+        <span class="codefrag">AvroReducer</span> that takes the <span class="codefrag">CharSequence</span> key
+        representing a favorite color and the <span class="codefrag">Iterable&lt;Integer&gt;</span>
+        representing the counts for that color (they should all be 1 in this
+        example) and adds up the counts.
+      </p>
+<pre class="code">
+public static class ColorCountReducer extends AvroReducer&lt;CharSequence, Integer,
+                                                          Pair&lt;CharSequence, Integer&gt;&gt; {
+  @Override
+  public void reduce(CharSequence key, Iterable&lt;Integer&gt; values,
+                     AvroCollector&lt;Pair&lt;CharSequence, Integer&gt;&gt; collector,
+                     Reporter reporter)
+      throws IOException {
+    int sum = 0;
+    for (Integer value : values) {
+      sum += value;
+    }
+    collector.collect(new Pair&lt;CharSequence, Integer&gt;(key, sum));
+  }
+}
+      </pre>
+<p>
+        In order to use our <span class="codefrag">AvroReducer</span>, we must call
+        <span class="codefrag">AvroJob.setReducerClass</span> and
+        <span class="codefrag">AvroJob.setOutputSchema</span>.
+      </p>
+<pre class="code">
+AvroJob.setReducerClass(conf, ColorCountReducer.class);
+AvroJob.setOutputSchema(conf, Pair.getPairSchema(Schema.create(Type.STRING),
+                                                 Schema.create(Type.INT)));
+      </pre>
+<p>
+        Note that <span class="codefrag">AvroReducer</span> does not implement the
+        <span class="codefrag">Reducer</span> interface.  The intermediate <span class="codefrag">Pair</span>s
+        output by the mapper are split into <span class="codefrag">AvroKey</span>s and
+        <span class="codefrag">AvroValue</span>s, which are processed by a <span class="codefrag">Reducer</span>
+        that calls the configured <span class="codefrag">AvroReducer</span>'s reduce function.
+        <span class="codefrag">AvroJob.setOutputSchema</span> sets up the relevant configuration
+        parameters needed to make this happen, thus you should not need to call
+        <span class="codefrag">JobConf.setReducerClass</span>,
+        <span class="codefrag">JobConf.setOutputFormat</span>,
+        <span class="codefrag">JobConf.setOutputKeyClass</span>,
+        <span class="codefrag">JobConf.setMapOutputKeyClass</span>,
+        <span class="codefrag">JobConf.setMapOutputValueClass</span>, or
+        <span class="codefrag">JobConf.setOutputKeyComparatorClass</span>.
+      </p>
+</div>
+    
+<a name="Reduce+-+org.apache.hadoop.mapreduce+API"></a>
+<h2 class="h3">Reduce - org.apache.hadoop.mapreduce API</h2>
+<div class="section">
+<p>
+        As before we not detail every difference between the APIs. As with the Mapper
+        change ColorCountReducer is now a subclass of Reducer and AvroKey and AvroValue
+        are emitted.
+
+        Additionally, the AvroJob method calls were slightly changed.
+      </p>
+<pre class="code">
+  public static class ColorCountReducer extends
+      Reducer&lt;Text, IntWritable, AvroKey&lt;CharSequence&gt;, AvroValue&lt;Integer&gt;&gt; {
+
+    @Override
+    public void reduce(Text key, Iterable&lt;IntWritable&gt; values,
+        Context context) throws IOException, InterruptedException {
+
+      int sum = 0;
+      for (IntWritable value : values) {
+        sum += value.get();
+      }
+      context.write(new AvroKey&lt;CharSequence&gt;(key.toString()), new AvroValue&lt;Integer&gt;(sum));
+    }
+  }
+      </pre>
+</div>
+    
+<a name="Learning+more"></a>
+<h2 class="h3">Learning more</h2>
+<div class="section">
+<p>
+        The mapred API allows users to mix Avro <span class="codefrag">AvroMapper</span>s and
+        <span class="codefrag">AvroReducer</span>s with non-Avro <span class="codefrag">Mapper</span>s and
+        <span class="codefrag">Reducer</span>s and the mapreduce API allows users input Avro
+        and output non-Avro or vice versa.
+      </p>
+<p>
+        The mapred package has API <a href="https://avro.apache.org/docs/current/api/java/org/apache/avro/mapred/package-summary.html">
+        <span class="codefrag">org.apache.avro.mapred</span> documentation</a> as does the <a href="https://avro.apache.org/docs/current/api/java/org/apache/avro/mapreduce/package-summary.html">
+        <span class="codefrag">org.apache.avro.mapreduce</span> package</a>.
+        MapReduce API (<span class="codefrag">org.apache.hadoop.mapreduce</span>). Similarily to the mapreduce package,
+        it's possible with the mapred API to implement your own <span class="codefrag">Mapper</span>s and
+        <span class="codefrag">Reducer</span>s directly using the public classes provided in
+        these libraries.  See the AvroWordCount application, found under
+        <em>examples/mr-example/src/main/java/example/AvroWordCount.java</em> in
+        the Avro documentation, for an example of implementing a
+        <span class="codefrag">Reducer</span> that outputs Avro data using the old MapReduce API.
+        See the MapReduceAvroWordCount application, found under
+        <em>examples/mr-example/src/main/java/example/MapReduceAvroWordCount.java</em> in
+        the Avro documentation, for an example of implementing a
+        <span class="codefrag">Reducer</span> that outputs Avro data using the new MapReduce API.
+      </p>
+</div>
+  
+</div>
+<!--+
+    |end content
+    +-->
+<div class="clearboth">&nbsp;</div>
+</div>
+<div id="footer">
+<!--+
+    |start bottomstrip
+    +-->
+<div class="lastmodified">
+<script type="text/javascript"><!--
+document.write("Last Published: " + document.lastModified);
+//  --></script>
+</div>
+<div class="copyright">
+        Copyright &copy;
+         2012 <a href="https://www.apache.org/licenses/">The Apache Software Foundation.</a>
+</div>
+<!--+
+    |end bottomstrip
+    +-->
+</div>
+</body>
+</html>

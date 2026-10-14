@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['data',['Data',['../classAvro_1_1File_1_1DataBlock.html#a40fb25f1201c9965e814748b7639cb26',1,'Avro::File::DataBlock']]],
+  ['datablock',['DataBlock',['../classAvro_1_1File_1_1DataBlock.html',1,'Avro.File.DataBlock'],['../classAvro_1_1File_1_1DataBlock.html#abe86cc5f061c14cdb4f608e385f7b503',1,'Avro.File.DataBlock.DataBlock()']]],
+  ['datafileconstants',['DataFileConstants',['../classAvro_1_1File_1_1DataFileConstants.html',1,'Avro::File']]],
+  ['datafilereader',['DataFileReader',['../classAvro_1_1File_1_1DataFileReader.html',1,'Avro::File']]],
+  ['datafilewriter',['DataFileWriter',['../classAvro_1_1File_1_1DataFileWriter.html',1,'Avro::File']]],
+  ['date',['Date',['../classAvro_1_1Util_1_1Date.html',1,'Avro.Util.Date'],['../classAvro_1_1Util_1_1Date.html#a03e107a01d57a3e745b8756e2a8aca22',1,'Avro.Util.Date.Date()']]],
+  ['datumreader',['DatumReader',['../interfaceAvro_1_1Generic_1_1DatumReader.html',1,'Avro::Generic']]],
+  ['datumwriter',['DatumWriter',['../interfaceAvro_1_1Generic_1_1DatumWriter.html',1,'Avro::Generic']]],
+  ['decimal',['Decimal',['../classAvro_1_1Util_1_1Decimal.html',1,'Avro.Util.Decimal'],['../classAvro_1_1Util_1_1Decimal.html#a1fef38ace52972d74f766dc40c3e01b9',1,'Avro.Util.Decimal.Decimal()']]],
+  ['decoder',['Decoder',['../interfaceAvro_1_1IO_1_1Decoder.html',1,'Avro::IO']]],
+  ['decompress',['Decompress',['../classAvro_1_1File_1_1Codec.html#abe3796351219d07732cffc5d37780e28',1,'Avro.File.Codec.Decompress()'],['../classAvro_1_1File_1_1DeflateCodec.html#a1ed4811af02d0a52fb96fecb85120744',1,'Avro.File.DeflateCodec.Decompress()'],['../classAvro_1_1File_1_1NullCodec.html#ab03ca896c3beb7b877b8cd18093a716c',1,'Avro.File.NullCodec.Decompress()']]],
+  ['defaultreader',['DefaultReader',['../classAvro_1_1Generic_1_1DefaultReader.html',1,'Avro.Generic.DefaultReader'],['../classAvro_1_1Generic_1_1DefaultReader.html#ab5a01ca3a4edc8867ee9b2d9c42d6238',1,'Avro.Generic.DefaultReader.DefaultReader()']]],
+  ['defaultsyncinterval',['DefaultSyncInterval',['../classAvro_1_1File_1_1DataFileConstants.html#ace10276fa1d287b486d3c0d3d1e6445c',1,'Avro::File::DataFileConstants']]],
+  ['defaultvalue',['DefaultValue',['../classAvro_1_1Field.html#a397546df4ab9a65b4edaa94fa20408b0',1,'Avro::Field']]],
+  ['defaultwriter',['DefaultWriter',['../classAvro_1_1Generic_1_1DefaultWriter.html',1,'Avro.Generic.DefaultWriter'],['../classAvro_1_1Generic_1_1DefaultWriter.html#ac96c3ecdadda29bf66cfd576dd12b228',1,'Avro.Generic.DefaultWriter.DefaultWriter()']]],
+  ['deflate',['Deflate',['../classAvro_1_1File_1_1Codec.html#a3c3f6dd0a5f41fdee68ece67cdc545baae2430ff724c45c3d68893fb1a3584426',1,'Avro::File::Codec']]],
+  ['deflatecodec',['DeflateCodec',['../classAvro_1_1File_1_1DeflateCodec.html',1,'Avro.File.DeflateCodec'],['../classAvro_1_1File_1_1DataFileConstants.html#a02ad3f77cbb32595e8ed9b3f997ad260',1,'Avro.File.DataFileConstants.DeflateCodec()']]],
+  ['deflatecodechash',['DeflateCodecHash',['../classAvro_1_1File_1_1DataFileConstants.html#ae37c768f4afb443a9f035f2a1fa59fc0',1,'Avro::File::DataFileConstants']]],
+  ['descending',['descending',['../classAvro_1_1Field.html#a3d960651dda819abb29db0b94b9384d4ab19e9805fd7727c52ca04dfa3d24a2e5',1,'Avro::Field']]],
+  ['dictionarymapaccess',['DictionaryMapAccess',['../classAvro_1_1Generic_1_1PreresolvingDatumWriter_1_1DictionaryMapAccess.html',1,'Avro::Generic::PreresolvingDatumWriter']]],
+  ['dispose',['Dispose',['../classAvro_1_1File_1_1DataFileReader.html#a4515cb0520e19420962dd401278335be',1,'Avro.File.DataFileReader.Dispose()'],['../classAvro_1_1File_1_1DataFileReader.html#a3ed8ec0efbf573098af3358a57072e05',1,'Avro.File.DataFileReader.Dispose(bool disposing)'],['../classAvro_1_1File_1_1DataFileWriter.html#a12603baa0fffaee89e06584953591474',1,'Avro.File.DataFileWriter.Dispose()'],['../classAvro_1_1File_1_1DataFileWriter.html#a6ae321b183082f64e1a1a5013be72a37',1,'Avro.File.DataFileWriter.Dispose(bool disposing)']]],
+  ['doc',['Doc',['../classAvro_1_1Message.html#ae4e212fbcb06ba15ec08c91f7a8f0557',1,'Avro.Message.Doc()'],['../classAvro_1_1Protocol.html#aa336a322185ee2e9294cc859bc8412f0',1,'Avro.Protocol.Doc()']]],
+  ['documentation',['Documentation',['../classAvro_1_1Field.html#aec4b108a18de740fce920715b9a283e9',1,'Avro.Field.Documentation()'],['../classAvro_1_1NamedSchema.html#a8bb88f12d85c9696e2844d7f6b632760',1,'Avro.NamedSchema.Documentation()']]],
+  ['double',['Double',['../classAvro_1_1Schema.html#a8ed00d717151392cd91465cd1a562354ad909d38d705ce75386dd86e611a82f5b',1,'Avro::Schema']]]
+];

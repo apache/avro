@@ -1,0 +1,26 @@
+\hypertarget{group___compound}{
+\section{AVRO Compound Type Serialization}
+\label{group___compound}\index{AVRO Compound Type Serialization@{AVRO Compound Type Serialization}}
+}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+\hyperlink{group___handle___routines_g4271ca78aabaaad628d7b632aa5a1499}{avro\_\-status\_\-t} \hyperlink{group___compound_g52f0a4383812a3d19a00f461ddb1a27c}{avro\_\-array} (\hyperlink{struct_a_v_r_o}{AVRO} $\ast$avro, caddr\_\-t $\ast$addrp, uint32\_\-t $\ast$sizep, uint32\_\-t maxsize, uint32\_\-t elsize, avroproc\_\-t elproc)
+\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{group___compound_g52f0a4383812a3d19a00f461ddb1a27c}{
+\index{Compound@{Compound}!avro\_\-array@{avro\_\-array}}
+\index{avro\_\-array@{avro\_\-array}!Compound@{Compound}}
+\subsubsection[{avro\_\-array}]{\setlength{\rightskip}{0pt plus 5cm}{\bf avro\_\-status\_\-t} avro\_\-array ({\bf AVRO} $\ast$ {\em avro}, \/  caddr\_\-t $\ast$ {\em addrp}, \/  uint32\_\-t $\ast$ {\em sizep}, \/  uint32\_\-t {\em maxsize}, \/  uint32\_\-t {\em elsize}, \/  avroproc\_\-t {\em elproc})}}
+\label{group___compound_g52f0a4383812a3d19a00f461ddb1a27c}
+
+
+\hyperlink{group___compound_g52f0a4383812a3d19a00f461ddb1a27c}{avro\_\-array()} encodes/decodes an array of avro elements \begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em avro}]The Avro handle \item[{\em addrp}]Pointer to the array \item[{\em sizep}]Pointer to the number of elements \item[{\em maxsize}]The maximum number of Avro elements \item[{\em elsize}]The size in bytes of each element \item[{\em elproc}]The Avro routine to handle each element \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]The Avro status \end{Desc}
