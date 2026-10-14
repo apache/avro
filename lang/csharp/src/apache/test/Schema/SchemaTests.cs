@@ -85,6 +85,12 @@ namespace Avro.Test
             typeof(SchemaParseException), Description = "No name")]
         [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\" : [\"AA\", \"AA\"]}",
             typeof(SchemaParseException), Description = "Duplicate symbol")]
+        [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\" : [\"1A\"]}",
+            typeof(SchemaParseException), Description = "Symbol with leading digit")]
+        [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\" : [\"A B\"]}",
+            typeof(SchemaParseException), Description = "Symbol with space")]
+        [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\" : [\"A-B\"]}",
+            typeof(SchemaParseException), Description = "Symbol with hyphen")]
 
         // Array
         [TestCase("{\"type\": \"array\", \"items\": \"long\"}")]
