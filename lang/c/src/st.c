@@ -249,15 +249,12 @@ int st_lookup(st_table *table, register st_data_t key, st_data_t *value)
 	}
 }
 
-#define ADD_DIRECT(table, key, value, hash_val, bin_pos)\
+#define ADD_DIRECT(table, key, value, hash_val, bin_pos, entry)\
 do {\
-    st_table_entry *entry;\
     if (table->num_entries/(table->num_bins) > ST_DEFAULT_MAX_DENSITY) {\
 	rehash(table);\
         bin_pos = hash_val % table->num_bins;\
     }\
-    \
-    entry = (st_table_entry *) avro_new(st_table_entry);\
     \
     entry->hash = hash_val;\
     entry->key = key;\
@@ -276,7 +273,13 @@ int st_insert(register st_table *table, register st_data_t key, st_data_t value)
 	FIND_ENTRY(table, ptr, hash_val, bin_pos);
 
 	if (ptr == 0) {
-		ADD_DIRECT(table, key, value, hash_val, bin_pos);
+		st_table_entry *entry = (st_table_entry *) avro_new(st_table_entry);
+		if (entry == NULL) {
+			/* Out of memory: leave the table unchanged rather than
+			 * dereferencing a NULL entry. */
+			return -1;
+		}
+		ADD_DIRECT(table, key, value, hash_val, bin_pos, entry);
 		return 0;
 	} else {
 		ptr->record = value;
@@ -287,10 +290,16 @@ int st_insert(register st_table *table, register st_data_t key, st_data_t value)
 void st_add_direct(st_table *table,st_data_t key,st_data_t value)
 {
 	unsigned int hash_val, bin_pos;
+	st_table_entry *entry;
 
 	hash_val = do_hash((void*) key, table);
 	bin_pos = hash_val % table->num_bins;
-	ADD_DIRECT(table, key, value, hash_val, bin_pos);
+	entry = (st_table_entry *) avro_new(st_table_entry);
+	if (entry == NULL) {
+		/* Out of memory: leave the table unchanged. */
+		return;
+	}
+	ADD_DIRECT(table, key, value, hash_val, bin_pos, entry);
 }
 
 static void rehash(register st_table *table)
@@ -302,6 +311,11 @@ static void rehash(register st_table *table)
 	new_num_bins = new_size(old_num_bins + 1);
 	new_bins =
 	    (st_table_entry **) Calloc(new_num_bins, sizeof(st_table_entry *));
+	if (new_bins == NULL) {
+		/* Out of memory: skip the rehash and keep the existing bins.
+		 * The table stays correct, only denser. */
+		return;
+	}
 
 	for (i = 0; i < old_num_bins; i++) {
 		ptr = table->bins[i];
