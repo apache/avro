@@ -37,3 +37,4 @@ composer.lock
 .copilot/
 .cursor/
 .opencode/
+.mvn/.develocity/

@@ -62,6 +62,7 @@ jobs:
         env:
           ASF_USERNAME: ${{ secrets.NEXUS_USER }}
           ASF_PASSWORD: ${{ secrets.NEXUS_PW }}
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         run: |
           echo "<settings><servers><server><id>apache.snapshots.https</id><username>$ASF_USERNAME</username><password>$ASF_PASSWORD</password></server></servers></settings>" > ${{runner.temp}}/settings.xml
           mvn --settings ${{runner.temp}}/settings.xml -U -B -e -fae -ntp -PskipQuality deploy
