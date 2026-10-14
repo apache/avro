@@ -98,7 +98,7 @@ class AvroUnionSchema extends AvroSchema
      */
     public function schemaByIndex($index): AvroSchema
     {
-        if (count($this->schemas) > $index) {
+        if ($index >= 0 && count($this->schemas) > $index) {
             return $this->schemas[$index];
         }
 

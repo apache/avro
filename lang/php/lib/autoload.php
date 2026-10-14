@@ -33,6 +33,7 @@ include __DIR__.'/DataFile/AvroDataIOWriter.php';
 
 include __DIR__.'/Datum/AvroIOBinaryDecoder.php';
 include __DIR__.'/Datum/AvroIOBinaryEncoder.php';
+include __DIR__.'/Datum/AvroIOCollectionSizeException.php';
 include __DIR__.'/Datum/AvroIODatumReader.php';
 include __DIR__.'/Datum/AvroIODatumWriter.php';
 include __DIR__.'/Datum/AvroIOSchemaMatchException.php';
