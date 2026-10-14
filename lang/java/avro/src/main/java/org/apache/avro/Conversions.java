@@ -190,8 +190,7 @@ public class Conversions {
 
       try {
         BigInteger bg = null;
-        ByteBuffer buffer = decoder.readBytes(null);
-        byte[] array = buffer.array();
+        byte[] array = decoder.readBytes();
         if (array.length > 0) {
           bg = new BigInteger(array);
         }

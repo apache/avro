@@ -202,7 +202,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
   public Utf8 readString(Utf8 old) throws IOException {
     Symbol actual = parser.advance(Symbol.STRING);
     if (actual == Symbol.BYTES) {
-      return new Utf8(in.readBytes(null).array());
+      return old == null ? new Utf8(in.readBytes()) : old.set(in.readBytes());
     } else {
       assert actual == Symbol.STRING;
       return in.readString(old);
@@ -213,7 +213,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
   public String readString() throws IOException {
     Symbol actual = parser.advance(Symbol.STRING);
     if (actual == Symbol.BYTES) {
-      return new String(in.readBytes(null).array(), StandardCharsets.UTF_8);
+      return new String(in.readBytes(), StandardCharsets.UTF_8);
     } else {
       assert actual == Symbol.STRING;
       return in.readString();
@@ -240,6 +240,18 @@ public class ResolvingDecoder extends ValidatingDecoder {
     } else {
       assert actual == Symbol.BYTES;
       return in.readBytes(old);
+    }
+  }
+
+  @Override
+  public byte[] readBytes() throws IOException {
+    Symbol actual = parser.advance(Symbol.BYTES);
+    if (actual == Symbol.STRING) {
+      Utf8 s = in.readString(null);
+      return s.getBytes(); // readString(null) allocated an exactly fitting byte[]
+    } else {
+      assert actual == Symbol.BYTES;
+      return in.readBytes();
     }
   }
 
