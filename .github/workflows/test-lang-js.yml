@@ -45,13 +45,13 @@ jobs:
           - 22
           - 24
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -76,13 +76,13 @@ jobs:
           - 22
           - 24
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -90,7 +90,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Setup Python for Generating Input Data
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
 
       - name: Apt Install Compression Libs Required by Python
         run: |
@@ -101,7 +101,7 @@ jobs:
                                                             libzstd-dev
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # 8.1.0
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # 9.0.0
 
       - name: Install Dependencies
         working-directory: lang/py

@@ -68,6 +68,12 @@ public class TestSpecificDatumReader {
 
   public static class MyReader extends SpecificDatumReader<MyData> {
 
+    MyReader() {
+      // Use a new data model instead of the singleton in order to avoid modifying the
+      // setFastReaderEnabled state for other tests.
+      super(null, null, new SpecificData());
+    }
+
     @Override
     protected Class findStringClass(Schema schema) {
       return MyData.class;

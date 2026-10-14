@@ -18,6 +18,7 @@
 
 #include "DataFile.hh"
 #include "Compiler.hh"
+#include <cstring>
 #include "Exception.hh"
 
 #include <random>

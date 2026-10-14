@@ -716,6 +716,15 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
         raise Exception
 
     @property
+    def default(self) -> Union[str, None]:
+        symbol = self.get_prop("default")
+        if isinstance(symbol, str):
+            return symbol
+        if symbol is None:
+            return None
+        raise avro.errors.InvalidDefault(f"Enum default '{symbol}' is not a valid member of symbols '{self.symbols}'")
+
+    @property
     def doc(self):
         return self.get_prop("doc")
 

@@ -31,6 +31,7 @@ import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.ResolvingDecoder;
@@ -142,6 +143,17 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     if (l <= 0) {
       return newArray(old, 0, expected);
     }
+    // Match GenericDatumReader.readArray: before eagerly allocating the backing
+    // array for the declared block count, verify the input could plausibly hold
+    // that many elements (guarding against a malformed or truncated payload),
+    // and separately cap element types whose minimum encoded size is zero, which
+    // the bytes-remaining check cannot bound. Without this a small malformed
+    // record mapped to a Java array field (e.g. long[]) could drive a very large
+    // eager allocation before any element is read.
+    ensureAvailableCollectionBytes(in, l, expectedType);
+    if (isZeroByteSchema(expectedType)) {
+      SystemLimitException.checkMaxCollectionAllocation(l);
+    }
     Object array = newArray(old, (int) l, expected);
     if (array instanceof Collection) {
       @SuppressWarnings("unchecked")
@@ -186,6 +198,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   private Object readObjectArray(Object[] array, Schema expectedType, long l, ResolvingDecoder in) throws IOException {
     LogicalType logicalType = expectedType.getLogicalType();
     Conversion<?> conversion = getData().getConversionFor(logicalType);
+    boolean zeroByte = isZeroByteSchema(expectedType);
     int index = 0;
     if (logicalType != null && conversion != null) {
       do {
@@ -195,7 +208,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
           array[index] = element;
           index++;
         }
-      } while ((l = in.arrayNext()) > 0);
+      } while ((l = nextArrayBlock(in, expectedType, zeroByte)) > 0);
     } else {
       do {
         int limit = index + (int) l;
@@ -204,7 +217,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
           array[index] = element;
           index++;
         }
-      } while ((l = in.arrayNext()) > 0);
+      } while ((l = nextArrayBlock(in, expectedType, zeroByte)) > 0);
     }
     return array;
   }
@@ -213,22 +226,48 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       throws IOException {
     LogicalType logicalType = expectedType.getLogicalType();
     Conversion<?> conversion = getData().getConversionFor(logicalType);
+    boolean zeroByte = isZeroByteSchema(expectedType);
     if (logicalType != null && conversion != null) {
       do {
         for (int i = 0; i < l; i++) {
           Object element = readWithConversion(null, expectedType, logicalType, conversion, in);
           c.add(element);
         }
-      } while ((l = in.arrayNext()) > 0);
+      } while ((l = nextArrayBlock(in, expectedType, zeroByte)) > 0);
     } else {
       do {
         for (int i = 0; i < l; i++) {
           Object element = readWithoutConversion(null, expectedType, in);
           c.add(element);
         }
-      } while ((l = in.arrayNext()) > 0);
+      } while ((l = nextArrayBlock(in, expectedType, zeroByte)) > 0);
     }
     return c;
+  }
+
+  /**
+   * Read and validate the next array block count, mirroring
+   * {@link org.apache.avro.generic.GenericDatumReader#readArray}: bound the
+   * declared count against the bytes remaining, and for element types whose
+   * minimum encoded size is zero bound the cumulative allocation (which the
+   * bytes-remaining check cannot). The zero-byte allocation cap is cumulative
+   * across the enclosing datum scope (see
+   * {@link org.apache.avro.SystemLimitException}), closing the gap where a large
+   * logical array split across multiple blocks would otherwise pass only the
+   * first block's guard.
+   *
+   * @param in           the decoder
+   * @param expectedType the array element schema
+   * @param zeroByte     whether the element type's minimum encoded size is zero
+   * @return the validated next block count
+   */
+  private long nextArrayBlock(ResolvingDecoder in, Schema expectedType, boolean zeroByte) throws IOException {
+    long l = in.arrayNext();
+    ensureAvailableCollectionBytes(in, l, expectedType);
+    if (zeroByte && l > 0) {
+      SystemLimitException.checkMaxCollectionAllocation(l);
+    }
+    return l;
   }
 
   @Override

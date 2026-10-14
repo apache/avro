@@ -58,11 +58,11 @@ interop-data-test() {
 }
 
 lint() {
-  uvx ruff check .
+  uv run ruff check .
 }
 
 format() {
-  uvx ruff format --diff .
+  uv run ruff format --diff .
 }
 
 test_() {

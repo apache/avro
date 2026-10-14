@@ -84,7 +84,7 @@ public final class IdlUtils {
     module.addSerializer(new StdSerializer<byte[]>(byte[].class) {
       @Override
       public void serialize(byte[] value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-        MAPPER.writeValueAsString(new String(value, StandardCharsets.ISO_8859_1));
+        gen.writeString(new String(value, StandardCharsets.ISO_8859_1));
       }
     });
 
@@ -285,7 +285,12 @@ public final class IdlUtils {
       } else {
         throw new AvroRuntimeException("Enum schema must have at least a symbol " + schema);
       }
-      writer.append(NEWLINE).append(indent).append("}").append(NEWLINE);
+      writer.append(NEWLINE).append(indent).append("}");
+      String enumDefault = schema.getEnumDefault();
+      if (enumDefault != null) {
+        writer.append(" = ").append(enumDefault).append(";");
+      }
+      writer.append(NEWLINE);
     } else /* (type == Schema.Type.FIXED) */ {
       writer.append(indent).append("fixed ").append(schemaName).append('(')
           .append(Integer.toString(schema.getFixedSize())).append(");").append(NEWLINE);

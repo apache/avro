@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 
 /**
@@ -457,6 +458,10 @@ public abstract class Symbol {
     }
 
     public Symbol getSymbol(int index) {
+      if (index < 0 || index >= symbols.length) {
+        throw new AvroTypeException(
+            "Union branch index out of range: must be in [0, " + symbols.length + "), but received " + index);
+      }
       return symbols[index];
     }
 

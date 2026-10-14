@@ -220,8 +220,10 @@ NodeSymbolic::resolve(const Node &reader) const {
 
 void NodePrimitive::printJson(std::ostream &os, size_t depth) const {
     bool hasLogicalType = logicalType().type() != LogicalType::NONE;
+    bool hasCustomAttributes = customAttributes_.size() != 0;
+    bool printAsObject = hasLogicalType || hasCustomAttributes;
 
-    if (hasLogicalType) {
+    if (printAsObject) {
         os << "{\n"
            << indent(depth) << "\"type\": ";
     }
@@ -232,6 +234,11 @@ void NodePrimitive::printJson(std::ostream &os, size_t depth) const {
         os << ",\n"
            << indent(depth);
         logicalType().printJson(os);
+    }
+    for (size_t i = 0; i != customAttributes_.size(); ++i) {
+        printCustomAttributes(customAttributes_.get(i), depth, os);
+    }
+    if (printAsObject) {
         os << "\n}";
     }
     if (!getDoc().empty()) {

@@ -36,6 +36,15 @@ class InvalidAvroBinaryEncoding(AvroException):
     """For invalid numbers of bytes read."""
 
 
+class AvroCollectionSizeException(AvroException):
+    """Raised when a decoded array or map would exceed a collection size limit.
+
+    This covers both the zero-byte-element cap (the cumulative number of
+    zero-byte elements such as ``null``) and the structural cap on the total
+    number of elements in any collection.
+    """
+
+
 class SchemaParseException(AvroException):
     """Raised when a schema failed to parse."""
 
@@ -81,6 +90,14 @@ class AvroOutOfScaleException(AvroTypeException):
         except (IndexError, ValueError):
             return super().__init__(*args)
         return super().__init__(f"The exponent of {datum}, {exponent}, is too large for the schema scale of {scale}")
+
+
+class AvroDecompressionSizeException(AvroException):
+    """Raised when a data-file block decompresses to more than the configured maximum.
+
+    This guards against unbounded memory allocation when a highly compressible
+    (or malformed) block would expand to far more than its compressed size.
+    """
 
 
 class SchemaResolutionException(AvroException):

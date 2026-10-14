@@ -80,6 +80,37 @@ class InputBuffer {
     return inLength;
   }
 
+  /** The number of bytes remaining to be read from the underlying input. */
+  public long remaining() {
+    return inLength - tell();
+  }
+
+  /**
+   * Validate a length or item count read from the input before it is used to size
+   * an allocation. Rejects a negative value, and - when the number of bytes
+   * remaining in the input is known - a value that could not possibly be backed
+   * by the data that follows, assuming each counted element occupies at least
+   * {@code minBytesPerElement} bytes on the wire. This guards against a
+   * malformed, corrupted, or truncated file driving an oversized (or negative)
+   * allocation.
+   *
+   * @param count              the length or item count read from the input
+   * @param minBytesPerElement the minimum number of input bytes each counted
+   *                           element occupies (use 1 for a raw byte length)
+   * @return {@code count}, if it is valid
+   * @throws IOException if {@code count} is negative or larger than the input can
+   *                     support
+   */
+  public int checkLength(int count, long minBytesPerElement) throws IOException {
+    if (count < 0)
+      throw new IOException("Invalid negative length: " + count);
+    long remaining = remaining();
+    if (remaining >= 0 && minBytesPerElement > 0 && count > remaining / minBytesPerElement)
+      throw new IOException("Length " + count + " exceeds the " + remaining
+          + " bytes remaining in the input. The file is likely corrupted or truncated.");
+    return count;
+  }
+
   public <T extends Comparable> T readValue(ValueType type) throws IOException {
     switch (type) {
     case NULL:
@@ -306,7 +337,7 @@ class InputBuffer {
   }
 
   public String readString() throws IOException {
-    int length = readInt();
+    int length = checkLength(readInt(), 1);
     if (length <= (limit - pos)) { // in buffer
       String result = utf8.decode(ByteBuffer.wrap(buf, pos, length)).toString();
       pos += length;
@@ -318,13 +349,13 @@ class InputBuffer {
   }
 
   public byte[] readBytes() throws IOException {
-    byte[] result = new byte[readInt()];
+    byte[] result = new byte[checkLength(readInt(), 1)];
     readFully(result);
     return result;
   }
 
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
-    int length = readInt();
+    int length = checkLength(readInt(), 1);
     ByteBuffer result;
     if (old != null && length <= old.capacity()) {
       result = old;

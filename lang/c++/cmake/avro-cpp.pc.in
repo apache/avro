@@ -29,4 +29,3 @@ Version: @AVRO_VERSION@
 
 Cflags: -I${includedir}
 Libs: -L${libdir} -lavrocpp
-Requires: fmt

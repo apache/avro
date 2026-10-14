@@ -1031,6 +1031,108 @@ public class TestSpecificCompiler {
     }
   }
 
+  @Test
+  void annotationCannotBreakOutViaStringLiteral() {
+    // Security regression test for AVRO-4313.
+    //
+    // The first javaAnnotation below is an attack. It uses an unescaped quote to
+    // "close" the annotation early, then sneaks in real Java code
+    // ... static { System.exit(1); } ...
+    // before reopening another annotation. If validation is too loose this code
+    // gets written straight into the generated .java file and runs when the
+    // class is loaded. The compiler must reject it instead of copying it out.
+    String jsonSchema = "{\n" + "  \"type\": \"record\",\n" + "  \"name\": \"Injected\",\n"
+        + "  \"javaAnnotation\": [\n"
+        + "    \"java.lang.SuppressWarnings(\\\"x\\\") static { System.exit(1); } @java.lang.SuppressWarnings(\\\"y\\\")\",\n"
+        + "    \"SuppressWarnings(\\\"unchecked\\\")\"\n" + "  ],\n" + "  \"fields\": [\n"
+        + "    {\"name\": \"value\", \"type\": \"string\"}\n" + "  ]\n" + "}";
+    Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(SchemaParser.parseSingle(jsonSchema))
+        .compile();
+    boolean validAnnotationEmitted = false;
+    for (SpecificCompiler.OutputFile outputFile : outputs) {
+      // The schema is also written into the generated file, inside the SCHEMA$
+      // string constant, so the attack text does appear there - but safely
+      // escaped (every " becomes \"). We only fail if it shows up as real code,
+      // i.e. with the original unescaped quotes.
+      assertFalse(outputFile.contents.contains("SuppressWarnings(\"x\") static { System.exit(1); }"),
+          "Code injection present? " + outputFile.contents);
+      validAnnotationEmitted |= outputFile.contents.contains("@SuppressWarnings(\"unchecked\")");
+    }
+    // A normal annotation sitting next to the attack must still come through, so
+    // we know the fix rejects only the bad value, not every annotation.
+    assertTrue(validAnnotationEmitted, "Valid annotation missing from generated output");
+  }
+
+  @Test
+  void unicodeEscapesInDocsAreNeutralized() {
+    // The Java compiler decodes Unicode escapes (\ uXXXX) across the whole source
+    // file, including inside comments, before comments are recognized (JLS 3.3).
+    // A doc value carrying the literal text "\ u002a\ u002f" therefore decodes to
+    // "*/" at compile time and could close the generated Javadoc comment early,
+    // enabling arbitrary code injection. Since a Unicode escape always requires a
+    // literal backslash, escapeForJavadoc neutralizes every backslash, which
+    // covers all escape variants at once.
+    String[] maliciousDocs = { //
+        "\\u002a\\u002f static { System.exit(1); } \\u002f\\u002a", // basic form
+        "\\uuuu002a\\uuuu002f System.exit(1);", // multiple 'u's are legal (JLS 3.3)
+        "\\u005cu002a\\u005cu002f System.exit(1);", // escape that would decode to a backslash
+        "\\U002A\\u002F", // uppercase hex / uppercase-U decoy
+        "prefix\\\\u002a\\\\u002f even-backslash-run", // even run of backslashes
+        "literal */ static { System.exit(1); } /* comment close", // no escape at all
+        "first line\\u002a\\u002f\nsecond line \\u002f\\u002a end" // spans multiple physical lines
+    };
+
+    for (String maliciousDoc : maliciousDocs) {
+      // Unit-level check on the escaping utility itself.
+      String escaped = SpecificCompiler.escapeForJavadoc(maliciousDoc);
+      assertFalse(escaped.contains("\\"), "Backslashes must be neutralized: " + escaped);
+      assertFalse(escaped.contains("*/"), "Comment terminator must be neutralized: " + escaped);
+
+      // End-to-end check: no raw backslash may reach the generated source outside of
+      // string literals. A Java Unicode escape always requires a literal backslash,
+      // so the absence of backslashes everywhere except string literals proves no
+      // \ uXXXX sequence can be reconstituted by the compiler to close a comment.
+      Schema schema = SchemaBuilder.record("EvilRecord").namespace("org.apache.avro.codegentest.testdata")
+          .doc(maliciousDoc).fields().name("field").doc(maliciousDoc).type().stringType().noDefault().endRecord();
+      Collection<SpecificCompiler.OutputFile> outputs = new SpecificCompiler(schema).compile();
+      assertEquals(1, outputs.size());
+      for (SpecificCompiler.OutputFile outputFile : outputs) {
+        // Remove Java string literals (the schema is embedded via escapeForJavaString,
+        // which doubles backslashes and is therefore immune) so that the remaining
+        // text is code and comments only. This checks every line of every Javadoc
+        // block, including the middle lines of a multi-line doc comment.
+        String withoutStringLiterals = removeJavaStringLiterals(outputFile.contents);
+        assertFalse(withoutStringLiterals.contains("\\"),
+            "Raw backslash reached generated code/comments: " + outputFile.path);
+      }
+    }
+  }
+
+  /**
+   * Returns the given Java source with the content of all double-quoted string
+   * literals removed, so tests can assert on code and comments without matching
+   * the (legitimately backslash-containing) embedded schema string literal.
+   */
+  private String removeJavaStringLiterals(String source) {
+    StringBuilder out = new StringBuilder(source.length());
+    boolean inString = false;
+    for (int i = 0; i < source.length(); i++) {
+      char c = source.charAt(i);
+      if (inString) {
+        if (c == '\\') {
+          i++; // skip the escaped character (e.g. \" or \\)
+        } else if (c == '"') {
+          inString = false;
+        }
+      } else if (c == '"') {
+        inString = true;
+      } else {
+        out.append(c);
+      }
+    }
+    return out.toString();
+  }
+
   private int countOccurrences(Pattern pattern, String textToSearch) {
     int count = 0;
     for (Matcher matcher = pattern.matcher(textToSearch); matcher.find();) {

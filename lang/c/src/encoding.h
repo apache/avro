@@ -96,6 +96,8 @@ typedef struct avro_encoding_t avro_encoding_t;
 { int rval = avro_write( writer, buf, len ); if(rval) return rval; }
 #define AVRO_READ(reader, buf, len)  \
 { int rval = avro_read( reader, buf, len ); if(rval) return rval; }
+#define AVRO_READ_OR_FREE(reader, buf, len)  \
+{ int rval = avro_read( reader, buf, len ); if(rval) { avro_free(buf, 0); buf = NULL; return rval; } }
 #define AVRO_SKIP(reader, len) \
 { int rval = avro_skip( reader, len); if (rval) return rval; }
 

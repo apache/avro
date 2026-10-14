@@ -46,6 +46,7 @@ public class TestSystemLimitException {
     System.clearProperty(MAX_BYTES_LENGTH_PROPERTY);
     System.clearProperty(MAX_COLLECTION_LENGTH_PROPERTY);
     System.clearProperty(MAX_STRING_LENGTH_PROPERTY);
+    System.clearProperty(MAX_COLLECTION_ALLOCATION_PROPERTY);
     resetLimits();
   }
 
@@ -108,6 +109,49 @@ public class TestSystemLimitException {
   void testCheckMaxStringLength() {
     helpCheckSystemLimits(SystemLimitException::checkMaxStringLength, MAX_STRING_LENGTH_PROPERTY, ERROR_VM_LIMIT_STRING,
         "String length 1024 exceeds maximum allowed");
+  }
+
+  @Test
+  void testCheckMaxCollectionAllocation() {
+    // With a small custom limit, cumulative allocations beyond it are rejected.
+    System.setProperty(MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    resetLimits();
+
+    // Values within the limit pass through and return the running total.
+    assertEquals(0L, checkMaxCollectionAllocation(0L, 0L));
+    assertEquals(1000L, checkMaxCollectionAllocation(0L, 1000L));
+    assertEquals(1000L, checkMaxCollectionAllocation(400L, 600L));
+
+    // A single block over the limit is rejected.
+    SystemLimitException ex = assertThrows(SystemLimitException.class, () -> checkMaxCollectionAllocation(0L, 1001L));
+    assertTrue(ex.getMessage().contains("exceeds the maximum allowed of 1000"), ex.getMessage());
+
+    // Cumulative blocks that cross the limit are rejected.
+    ex = assertThrows(SystemLimitException.class, () -> checkMaxCollectionAllocation(600L, 401L));
+    assertTrue(ex.getMessage().contains("exceeds the maximum allowed of 1000"), ex.getMessage());
+
+    // Negative arguments are rejected as malformed.
+    Exception nex = assertThrows(AvroRuntimeException.class, () -> checkMaxCollectionAllocation(-1L, 10L));
+    assertEquals(ERROR_NEGATIVE, nex.getMessage());
+    nex = assertThrows(AvroRuntimeException.class, () -> checkMaxCollectionAllocation(10L, -1L));
+    assertEquals(ERROR_NEGATIVE, nex.getMessage());
+
+    // Additive overflow is rejected rather than wrapping to a small value.
+    assertThrows(SystemLimitException.class, () -> checkMaxCollectionAllocation(Long.MAX_VALUE, 10L));
+  }
+
+  @Test
+  void testCheckMaxCollectionAllocationDefaultsToHeapFraction() {
+    // With no property set, the default is derived from the heap and is well
+    // below Integer.MAX_VALUE on a normally sized JVM, yet generous enough for
+    // legitimate small collections.
+    resetLimits();
+    assertEquals(1024L, checkMaxCollectionAllocation(0L, 1024L));
+    // A pathologically large zero-byte collection is rejected without allocating.
+    // Use MAX_ARRAY_VM_LIMIT + 1 so it exceeds the cap regardless of heap size
+    // (the default is derived from the heap and then clamped to MAX_ARRAY_VM_LIMIT,
+    // so Integer.MAX_VALUE - 8 alone would not exceed it on a very large heap).
+    assertThrows(SystemLimitException.class, () -> checkMaxCollectionAllocation(0L, (long) MAX_ARRAY_VM_LIMIT + 1L));
   }
 
   @Test

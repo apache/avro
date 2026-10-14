@@ -153,6 +153,16 @@ namespace Avro
                 throw new ArgumentNullException(nameof(name), "name cannot be null.");
             }
 
+            SchemaName.ValidateName(name, "field");
+
+            if (aliases != null)
+            {
+                foreach (string alias in aliases)
+                {
+                    SchemaName.ValidateName(alias, "field alias");
+                }
+            }
+
             Schema = schema ?? throw new ArgumentNullException("type", "type cannot be null.");
             Name = name;
             Aliases = aliases;

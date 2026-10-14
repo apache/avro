@@ -139,7 +139,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
     // finalize the header
     header.metaKeyList = Collections.unmodifiableList(header.metaKeyList);
-    header.schema = JsonSchemaParser.parseInternal(getMetaString(DataFileConstants.SCHEMA));
+    header.schema = parseHeaderSchema();
     this.codec = resolveCodec();
     reader.setSchema(header.schema);
   }
@@ -194,6 +194,21 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   /** Return the value of a metadata property. */
   public long getMetaLong(String key) {
     return Long.parseLong(getMetaString(key));
+  }
+
+  static Schema parseSchemaFromMetadata(String schemaJson, String schemaMetadataKey) throws IOException {
+    if (schemaJson == null) {
+      throw new IOException("Missing required metadata: " + schemaMetadataKey);
+    }
+    try {
+      return JsonSchemaParser.parseInternal(schemaJson);
+    } catch (AvroRuntimeException e) {
+      throw new IOException("Invalid schema in metadata: " + schemaMetadataKey, e);
+    }
+  }
+
+  private Schema parseHeaderSchema() throws IOException {
+    return parseSchemaFromMetadata(getMetaString(DataFileConstants.SCHEMA), DataFileConstants.SCHEMA);
   }
 
   /**
@@ -302,6 +317,20 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
       blockSize = vin.readLong(); // read block size
       if (blockSize > Integer.MAX_VALUE || blockSize < 0) {
         throw new IOException("Block size invalid or too large for this implementation: " + blockSize);
+      }
+      // When the number of bytes remaining in the input is known (e.g. a
+      // byte-array- or known-length-stream-backed decoder), reject a declared
+      // block size that could not possibly be satisfied by the data available.
+      // Reading a block consumes the block bytes plus the trailing sync marker,
+      // so both must fit in the remaining input. This avoids eagerly allocating
+      // a large block buffer (see the DataBlock constructor) for a malformed,
+      // corrupted, or truncated file before any block byte has been read. A
+      // value of -1 means the remaining count is unknown, in which case the
+      // check is skipped.
+      int remaining = vin.remainingBytes();
+      if (remaining >= 0 && blockSize > (long) remaining - DataFileConstants.SYNC_SIZE) {
+        throw new IOException("Block size " + blockSize + " plus sync marker exceeds the number of bytes remaining in "
+            + "the input (" + remaining + "). The file is likely corrupted or truncated.");
       }
       blockCount = blockRemaining;
       availableBlock = true;
