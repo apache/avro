@@ -341,6 +341,9 @@ public:
     }
 
     const GenericDatum &defaultValueAt(size_t index) override {
+        if (index >= fieldsDefaultValues_.size()) {
+            throw Exception("No default value at: {}", index);
+        }
         return fieldsDefaultValues_[index];
     }
 
