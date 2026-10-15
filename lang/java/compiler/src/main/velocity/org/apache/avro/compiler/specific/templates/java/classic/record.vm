@@ -649,7 +649,8 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
 #elseif (${this.javaType($field.schema()).equals("java.lang.CharSequence")})
     if (Utf8.compareSequences(this.$n, other.$n) != 0) {
 #elseif (${this.requiresModelComparison($s)})
-    if (MODEL$.compare(this.$n, other.$n, SCHEMA$.getFields().get(${field.pos()}).schema(), true) != 0) {
+    if (this.$n == null ? other.$n != null : other.$n == null
+        || MODEL$.compare(this.$n, other.$n, SCHEMA$.getFields().get(${field.pos()}).schema(), true) != 0) {
 #else
     if (!java.util.Objects.equals(this.$n, other.$n)) {
 #end

@@ -595,9 +595,9 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   public int hashCode() {
     int result = 1;
     result = 31 * result + Integer.hashCode(this.number);
-    result = 31 * result + (this.first_name == null ? 0 : this.first_name.hashCode());
-    result = 31 * result + (this.last_name == null ? 0 : this.last_name.hashCode());
-    result = 31 * result + (this.position == null ? 0 : this.position.hashCode());
+    result = 31 * result + (this.first_name == null ? 0 : Utf8.hashCodeFor(this.first_name));
+    result = 31 * result + (this.last_name == null ? 0 : Utf8.hashCodeFor(this.last_name));
+    result = 31 * result + MODEL$.hashCode(this.position, SCHEMA$.getFields().get(3).schema());
     return result;
   }
 
@@ -619,7 +619,8 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     if (Utf8.compareSequences(this.last_name, other.last_name) != 0) {
       return false;
     }
-    if (!java.util.Objects.equals(this.position, other.position)) {
+    if (this.position == null ? other.position != null : other.position == null
+        || MODEL$.compare(this.position, other.position, SCHEMA$.getFields().get(3).schema(), true) != 0) {
       return false;
     }
     return true;

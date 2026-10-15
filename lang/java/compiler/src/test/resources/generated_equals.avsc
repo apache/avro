@@ -38,6 +38,26 @@
         "name": "optionalLabels",
         "type": ["null", { "type": "array", "items": "string" }],
         "default": null
+      },
+      {
+        "name": "idsByKey",
+        "type": { "type": "map", "values": { "type": "array", "items": ["null", { "type": "string", "logicalType": "uuid" }] } },
+        "default": {}
+      },
+      {
+        "name": "tagsByKey",
+        "type": { "type": "map", "values": { "type": "array", "items": "string" } },
+        "default": {}
+      },
+      {
+        "name": "nestedAttributes",
+        "type": { "type": "map", "values": { "type": "map", "values": "string" } },
+        "default": {}
+      },
+      {
+        "name": "choice",
+        "type": ["null", "string", "int"],
+        "default": null
       }
     ]
   },

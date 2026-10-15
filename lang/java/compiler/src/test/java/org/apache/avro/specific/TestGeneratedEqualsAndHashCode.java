@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +100,54 @@ public class TestGeneratedEqualsAndHashCode {
 
     assertEqualBothWays(before, after);
     assertNotEquals(before, EqualsOrder.newBuilder().setAttributes(Map.of("k", "w")).build());
+  }
+
+  @Test
+  void mapOfArraysOfNullableLogicalType() throws IOException {
+    EqualsOrder before = EqualsOrder.newBuilder().setIdsByKey(Map.of("k", Arrays.asList(ID, null))).build();
+    EqualsOrder after = roundTrip(before);
+
+    assertEqualBothWays(before, after);
+    assertEqualBothWays(after, roundTrip(before));
+  }
+
+  @Test
+  void mapOfArraysOfStrings() throws IOException {
+    EqualsOrder before = EqualsOrder.newBuilder().setTagsByKey(Map.of("k", List.of("a", "b"))).build();
+    EqualsOrder after = roundTrip(before);
+
+    assertEqualBothWays(before, after);
+    assertNotEquals(before, EqualsOrder.newBuilder().setTagsByKey(Map.of("k", List.of("a"))).build());
+  }
+
+  @Test
+  void mapOfMapsOfStrings() throws IOException {
+    EqualsOrder before = EqualsOrder.newBuilder().setNestedAttributes(Map.of("k", Map.of("x", "y"))).build();
+    EqualsOrder after = roundTrip(before);
+
+    assertEqualBothWays(before, after);
+    assertNotEquals(before, EqualsOrder.newBuilder().setNestedAttributes(Map.of("k", Map.of("x", "z"))).build());
+  }
+
+  @Test
+  void unionOfStringAndInt() throws IOException {
+    EqualsOrder before = EqualsOrder.newBuilder().setChoice("a").build();
+    EqualsOrder after = roundTrip(before);
+
+    assertEqualBothWays(before, after);
+    assertNotEquals(before, EqualsOrder.newBuilder().setChoice(1).build());
+  }
+
+  @Test
+  void nullCollectionFieldsDoNotThrow() {
+    // The constructor, unlike the builder, leaves array and map fields null.
+    EqualsOrder unset = new EqualsOrder();
+    EqualsOrder defaults = EqualsOrder.newBuilder().build();
+
+    assertNotEquals(unset, defaults);
+    assertNotEquals(defaults, unset);
+    assertEquals(unset, new EqualsOrder());
+    assertEquals(unset.hashCode(), new EqualsOrder().hashCode());
   }
 
   @Test

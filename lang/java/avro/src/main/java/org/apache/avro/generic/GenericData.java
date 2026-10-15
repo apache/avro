@@ -1217,6 +1217,24 @@ public class GenericData {
   }
 
   protected int compareMaps(final Map<?, ?> m1, final Map<?, ?> m2) {
+    return compareMaps(m1, m2, null);
+  }
+
+  /**
+   * Compares two maps for equality. With a value schema, the values are compared
+   * with {@link #compare(Object, Object, Schema, boolean)}, so that the
+   * conversions of this model and the equality of Avro, such as a {@link Utf8}
+   * equal to a {@link String} with the same content, also apply to values that
+   * are arrays or maps. Without one, the values are compared with
+   * {@link Object#equals(Object)}, treating a {@link Utf8} and a {@link String}
+   * with the same content as equal.
+   *
+   * @param m1          the first map
+   * @param m2          the second map
+   * @param valueSchema the schema of the values, or {@code null}
+   * @return 0 if the maps are equal, 1 otherwise
+   */
+  protected int compareMaps(final Map<?, ?> m1, final Map<?, ?> m2, final Schema valueSchema) {
     if (m1 == m2) {
       return 0;
     }
@@ -1259,7 +1277,11 @@ public class GenericData {
           }
         } else {
           final Object value2 = m2.get(lookupKey);
-          if (value instanceof Utf8 && value2 instanceof String) {
+          if (valueSchema != null) {
+            if (value2 == null || compare(value, value2, valueSchema, true) != 0) {
+              return 1;
+            }
+          } else if (value instanceof Utf8 && value2 instanceof String) {
             if (!value.toString().equals(value2)) {
               return 1;
             }
@@ -1317,7 +1339,7 @@ public class GenericData {
       return e1.hasNext() ? 1 : (e2.hasNext() ? -1 : 0);
     case MAP:
       if (equals)
-        return compareMaps((Map) o1, (Map) o2);
+        return compareMaps((Map) o1, (Map) o2, s.getValueType());
       throw new AvroRuntimeException("Can't compare maps!");
     case UNION:
       int i1 = resolveUnion(s, o1);
