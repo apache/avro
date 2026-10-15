@@ -136,6 +136,25 @@ public class TestGenericData {
     GenericData.get().hashCode(r, schema);
   }
 
+  /** AVRO-4354: the hash code of a map must be consistent with compareMaps(). */
+  @Test
+  void testMapHashCodeIsConsistentWithEquals() {
+    Schema s = Schema.createMap(Schema.create(Type.STRING));
+    Map<CharSequence, CharSequence> strings = new HashMap<>();
+    strings.put("a", "x");
+    strings.put("b", "y");
+    Map<CharSequence, CharSequence> utf8s = new HashMap<>();
+    utf8s.put(new Utf8("b"), new Utf8("y"));
+    utf8s.put(new Utf8("a"), new Utf8("x"));
+    Map<CharSequence, CharSequence> other = new HashMap<>();
+    other.put(new Utf8("a"), new Utf8("z"));
+
+    assertEquals(0, GenericData.get().compare(strings, utf8s, s, true));
+    assertEquals(GenericData.get().hashCode(utf8s, s), GenericData.get().hashCode(strings, s));
+    assertEquals(utf8s.hashCode(), GenericData.get().hashCode(utf8s, s));
+    assertNotEquals(GenericData.get().hashCode(other, s), GenericData.get().hashCode(strings, s));
+  }
+
   @Test
   void testEquals() {
     Schema s = recordSchema();

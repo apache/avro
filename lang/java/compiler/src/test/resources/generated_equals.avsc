@@ -1,0 +1,73 @@
+[
+  {
+    "type": "record",
+    "name": "EqualsOrder",
+    "namespace": "org.apache.avro.specific.test",
+    "doc": "AVRO-4354: fields whose generated equals() and hashCode() must follow Avro semantics",
+    "fields": [
+      {
+        "name": "lines",
+        "type": {
+          "type": "array",
+          "items": {
+            "type": "record",
+            "name": "EqualsLine",
+            "fields": [
+              { "name": "line_id", "type": ["null", { "type": "string", "logicalType": "uuid" }], "default": null }
+            ]
+          }
+        },
+        "default": []
+      },
+      {
+        "name": "dates",
+        "type": { "type": "array", "items": ["null", { "type": "int", "logicalType": "date" }] },
+        "default": []
+      },
+      {
+        "name": "labels",
+        "type": { "type": "array", "items": "string" },
+        "default": []
+      },
+      {
+        "name": "attributes",
+        "type": { "type": "map", "values": "string" },
+        "default": {}
+      },
+      {
+        "name": "optionalLabels",
+        "type": ["null", { "type": "array", "items": "string" }],
+        "default": null
+      },
+      {
+        "name": "idsByKey",
+        "type": { "type": "map", "values": { "type": "array", "items": ["null", { "type": "string", "logicalType": "uuid" }] } },
+        "default": {}
+      },
+      {
+        "name": "tagsByKey",
+        "type": { "type": "map", "values": { "type": "array", "items": "string" } },
+        "default": {}
+      },
+      {
+        "name": "nestedAttributes",
+        "type": { "type": "map", "values": { "type": "map", "values": "string" } },
+        "default": {}
+      },
+      {
+        "name": "choice",
+        "type": ["null", "string", "int"],
+        "default": null
+      }
+    ]
+  },
+  {
+    "type": "record",
+    "name": "EqualsNamed",
+    "namespace": "org.apache.avro.specific.test",
+    "fields": [
+      { "name": "name", "type": "string" },
+      { "name": "nickname", "type": ["null", "string"], "default": null }
+    ]
+  }
+]
