@@ -13,12 +13,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var _ = require("underscore"),
-    util = require('util');
+var util = require('util');
 
 var WARNING = 'Validator API is deprecated. Please use the type API instead.';
 Validator = util.deprecate(Validator, WARNING);
 ProtocolValidator = util.deprecate(ProtocolValidator, WARNING);
+
+var objectToString = Object.prototype.toString;
+
+
+function isObject(obj) {
+  var type = typeof obj;
+  return type === 'function' || (type === 'object' && !!obj);
+}
+
+function isString(obj) {
+  return objectToString.call(obj) === '[object String]';
+}
+
+function isNumber(obj) {
+  return objectToString.call(obj) === '[object Number]';
+}
+
+function isBoolean(obj) {
+  return obj === true ||
+    obj === false ||
+    objectToString.call(obj) === '[object Boolean]';
+}
 
 var AvroSpec = {
   PrimitiveTypes: ['null', 'boolean', 'int', 'long', 'float', 'double', 'bytes', 'string'],
@@ -34,15 +55,15 @@ var ProtocolValidationError = function(msg) { return new Error('ProtocolValidati
 
 function Record(name, namespace, fields) {
   function validateArgs(name, namespace, fields) {
-    if (!_.isString(name)) {
+    if (!isString(name)) {
       throw new InvalidSchemaError('Record name must be string');
     }
 
-    if (!_.isNull(namespace) && !_.isUndefined(namespace) && !_.isString(namespace)) {
+    if (namespace != null && !isString(namespace)) {
       throw new InvalidSchemaError('Record namespace must be string or null');
     }
 
-    if (!_.isArray(fields)) {
+    if (!Array.isArray(fields)) {
       throw new InvalidSchemaError('Record name must be string');
     }
   }
@@ -56,30 +77,30 @@ function Record(name, namespace, fields) {
 
 function makeFullyQualifiedTypeName(schema, namespace) {
   var typeName = null;
-  if (_.isString(schema)) {
+  if (isString(schema)) {
     typeName = schema;
-  } else if (_.isObject(schema)) {
-    if (_.isString(schema.namespace)) {
+  } else if (isObject(schema)) {
+    if (isString(schema.namespace)) {
       namespace = schema.namespace;
     }
-    if (_.isString(schema.name)) {
+    if (isString(schema.name)) {
       typeName = schema.name;
-    } else if (_.isString(schema.type)) {
+    } else if (isString(schema.type)) {
       typeName = schema.type;
     }
   } else {
     throw new InvalidSchemaError('unable to determine fully qualified type name from schema ' + JSON.stringify(schema) + ' in namespace ' + namespace);
   }
 
-  if (!_.isString(typeName)) {
+  if (!isString(typeName)) {
     throw new InvalidSchemaError('unable to determine type name from schema ' + JSON.stringify(schema) + ' in namespace ' + namespace);
   }
 
   if (typeName.indexOf('.') !== -1) {
     return typeName;
-  } else if (_.contains(AvroSpec.PrimitiveTypes, typeName)) {
+  } else if (AvroSpec.PrimitiveTypes.includes(typeName)) {
     return typeName;
-  } else if (_.isString(namespace)) {
+  } else if (isString(namespace)) {
     return namespace + '.' + typeName;
   } else {
     return typeName;
@@ -88,11 +109,11 @@ function makeFullyQualifiedTypeName(schema, namespace) {
 
 function Union(typeSchemas, namespace) {
   this.branchNames = function() {
-    return _.map(typeSchemas, function(typeSchema) { return makeFullyQualifiedTypeName(typeSchema, namespace); });
+    return typeSchemas.map(function(typeSchema) { return makeFullyQualifiedTypeName(typeSchema, namespace); });
   };
 
   function validateArgs(typeSchemas) {
-    if (!_.isArray(typeSchemas) || _.isEmpty(typeSchemas)) {
+    if (!Array.isArray(typeSchemas) || typeSchemas.length === 0) {
       throw new InvalidSchemaError('Union must have at least 1 branch');
     }
   }
@@ -106,10 +127,10 @@ function Union(typeSchemas, namespace) {
 function Enum(symbols) {
 
   function validateArgs(symbols) {
-    if (!_.isArray(symbols)) {
+    if (!Array.isArray(symbols)) {
       throw new InvalidSchemaError('Enum must have array of symbols, got ' + JSON.stringify(symbols));
     }
-    if (!_.all(symbols, function(symbol) { return _.isString(symbol); })) {
+    if (!symbols.every(function(symbol) { return isString(symbol); })) {
       throw new InvalidSchemaError('Enum symbols must be strings, got ' + JSON.stringify(symbols));
     }
   }
@@ -122,7 +143,7 @@ function Enum(symbols) {
 function AvroArray(itemSchema) {
 
   function validateArgs(itemSchema) {
-    if (_.isNull(itemSchema) || _.isUndefined(itemSchema)) {
+    if (itemSchema == null) {
       throw new InvalidSchemaError('Array "items" schema should not be null or undefined');
     }
   }
@@ -135,7 +156,7 @@ function AvroArray(itemSchema) {
 function Map(valueSchema) {
 
   function validateArgs(valueSchema) {
-    if (_.isNull(valueSchema) || _.isUndefined(valueSchema)) {
+    if (valueSchema == null) {
       throw new InvalidSchemaError('Map "values" schema should not be null or undefined');
     }
   }
@@ -147,7 +168,7 @@ function Map(valueSchema) {
 
 function Field(name, schema) {
   function validateArgs(name, schema) {
-    if (!_.isString(name)) {
+    if (!isString(name)) {
       throw new InvalidSchemaError('Field name must be string');
     }
   }
@@ -158,11 +179,11 @@ function Field(name, schema) {
 
 function Primitive(type) {
   function validateArgs(type) {
-    if (!_.isString(type)) {
+    if (!isString(type)) {
       throw new InvalidSchemaError('Primitive type name must be a string');
     }
 
-    if (!_.contains(AvroSpec.PrimitiveTypes, type)) {
+    if (!AvroSpec.PrimitiveTypes.includes(type)) {
       throw new InvalidSchemaError('Primitive type must be one of: ' + JSON.stringify(AvroSpec.PrimitiveTypes) + '; got ' + type);
     }
   }
@@ -196,40 +217,40 @@ function Validator(schema, namespace, namedTypes) {
   };
 
   var _validateRecord = function(schema, obj) {
-    if (!_.isObject(obj) || _.isArray(obj)) {
+    if (!isObject(obj) || Array.isArray(obj)) {
       throw new ValidationError('Expected record Javascript type to be non-array object, got ' + JSON.stringify(obj));
     }
 
-    var schemaFieldNames = _.pluck(schema.fields, 'name').sort();
-    var objFieldNames = _.keys(obj).sort();
-    if (!_.isEqual(schemaFieldNames, objFieldNames)) {
+    var schemaFieldNames = schema.fields.map(function(field) { return field.name; }).sort();
+    var objFieldNames = Object.keys(obj).sort();
+    if (!util.isDeepStrictEqual(schemaFieldNames, objFieldNames)) {
       throw new ValidationError('Expected record fields ' + JSON.stringify(schemaFieldNames) + '; got ' + JSON.stringify(objFieldNames));
     }
 
-    return _.all(schema.fields, function(field) {
+    return schema.fields.every(function(field) {
       return _validate(field.schema, obj[field.name]);
     });
   };
 
   var _validateUnion = function(schema, obj) {
-    if (_.isObject(obj)) {
-      if (_.isArray(obj)) {
+    if (isObject(obj)) {
+      if (Array.isArray(obj)) {
         throw new ValidationError('Expected union Javascript type to be non-array object (or null), got ' + JSON.stringify(obj));
-      } else if (_.size(obj) !== 1) {
+      } else if (Object.keys(obj).length !== 1) {
         throw new ValidationError('Expected union Javascript object to be object with exactly 1 key (or null), got ' + JSON.stringify(obj));
       } else {
-        var unionBranch = _.keys(obj)[0];
+        var unionBranch = Object.keys(obj)[0];
         if (unionBranch === "") {
           throw new ValidationError('Expected union Javascript object to contain non-empty string branch, got ' + JSON.stringify(obj));
         }
-        if (_.contains(schema.branchNames(), unionBranch)) {
+        if (schema.branchNames().includes(unionBranch)) {
           return true;
         } else {
           throw new ValidationError('Expected union branch to be one of ' + JSON.stringify(schema.branchNames()) + '; got ' + JSON.stringify(unionBranch));
         }
       }
-    } else if (_.isNull(obj)) {
-      if (_.contains(schema.branchNames(), 'null')) {
+    } else if (obj === null) {
+      if (schema.branchNames().includes('null')) {
         return true;
       } else {
         throw new ValidationError('Expected union branch to be one of ' + JSON.stringify(schema.branchNames()) + '; got ' + JSON.stringify(obj));
@@ -240,8 +261,8 @@ function Validator(schema, namespace, namedTypes) {
   };
 
   var _validateEnum = function(schema, obj) {
-    if (_.isString(obj)) {
-      if (_.contains(schema.symbols, obj)) {
+    if (isString(obj)) {
+      if (schema.symbols.includes(obj)) {
         return true;
       } else {
         throw new ValidationError('Expected enum value to be one of ' + JSON.stringify(schema.symbols) + '; got ' + JSON.stringify(obj));
@@ -252,17 +273,19 @@ function Validator(schema, namespace, namedTypes) {
   };
 
   var _validateArray = function(schema, obj) {
-    if (_.isArray(obj)) {
-      return _.all(obj, function(member) { return _validate(schema.itemSchema, member); });
+    if (Array.isArray(obj)) {
+      return obj.every(function(member) { return _validate(schema.itemSchema, member); });
     } else {
       throw new ValidationError('Expected array Javascript object to be array, got ' + JSON.stringify(obj));
     }
   };
 
   var _validateMap = function(schema, obj) {
-    if (_.isObject(obj) && !_.isArray(obj)) {
-      return _.all(obj, function(value) { return _validate(schema.valueSchema, value); });
-    } else if (_.isArray(obj)) {
+    if (isObject(obj) && !Array.isArray(obj)) {
+      return Object.keys(obj).every(function(key) {
+        return _validate(schema.valueSchema, obj[key]);
+      });
+    } else if (Array.isArray(obj)) {
       throw new ValidationError('Expected map Javascript object to be non-array object, got array ' + JSON.stringify(obj));
     } else {
       throw new ValidationError('Expected map Javascript object to be non-array object, got ' + JSON.stringify(obj));
@@ -272,42 +295,42 @@ function Validator(schema, namespace, namedTypes) {
   var _validatePrimitive = function(schema, obj) {
     switch (schema.type) {
       case 'null':
-        if (_.isNull(obj) || _.isUndefined(obj)) {
+        if (obj == null) {
           return true;
         } else {
           throw new ValidationError('Expected Javascript null or undefined for Avro null, got ' + JSON.stringify(obj));
         }
         break;
       case 'boolean':
-        if (_.isBoolean(obj)) {
+        if (isBoolean(obj)) {
           return true;
         } else {
           throw new ValidationError('Expected Javascript boolean for Avro boolean, got ' + JSON.stringify(obj));
         }
         break;
       case 'int':
-        if (_.isNumber(obj) && Math.floor(obj) === obj && Math.abs(obj) <= Math.pow(2, 31)) {
+        if (isNumber(obj) && Math.floor(obj) === obj && Math.abs(obj) <= Math.pow(2, 31)) {
           return true;
         } else {
           throw new ValidationError('Expected Javascript int32 number for Avro int, got ' + JSON.stringify(obj));
         }
         break;
       case 'long':
-        if (_.isNumber(obj) && Math.floor(obj) === obj && Math.abs(obj) <= Math.pow(2, 63)) {
+        if (isNumber(obj) && Math.floor(obj) === obj && Math.abs(obj) <= Math.pow(2, 63)) {
           return true;
         } else {
           throw new ValidationError('Expected Javascript int64 number for Avro long, got ' + JSON.stringify(obj));
         }
         break;
       case 'float':
-        if (_.isNumber(obj)) { // TODO: handle NaN?
+        if (isNumber(obj)) { // TODO: handle NaN?
           return true;
         } else {
           throw new ValidationError('Expected Javascript float number for Avro float, got ' + JSON.stringify(obj));
         }
         break;
       case 'double':
-        if (_.isNumber(obj)) { // TODO: handle NaN?
+        if (isNumber(obj)) { // TODO: handle NaN?
           return true;
         } else {
           throw new ValidationError('Expected Javascript double number for Avro double, got ' + JSON.stringify(obj));
@@ -316,7 +339,7 @@ function Validator(schema, namespace, namedTypes) {
       case 'bytes':
         throw new InvalidSchemaError('not yet implemented: ' + schema.type);
       case 'string':
-        if (_.isString(obj)) { // TODO: handle NaN?
+        if (isString(obj)) { // TODO: handle NaN?
           return true;
         } else {
           throw new ValidationError('Expected Javascript string for Avro string, got ' + JSON.stringify(obj));
@@ -331,8 +354,8 @@ function Validator(schema, namespace, namedTypes) {
   // are probably buggy.
   var _namedTypes = namedTypes || {};
   var _saveNamedType = function(fullyQualifiedTypeName, schema) {
-    if (_.has(_namedTypes, fullyQualifiedTypeName)) {
-      if (!_.isEqual(_namedTypes[fullyQualifiedTypeName], schema)) {
+    if (Object.hasOwn(_namedTypes, fullyQualifiedTypeName)) {
+      if (!util.isDeepStrictEqual(_namedTypes[fullyQualifiedTypeName], schema)) {
         throw new InvalidSchemaError('conflicting definitions for type ' + fullyQualifiedTypeName + ': ' + JSON.stringify(_namedTypes[fullyQualifiedTypeName]) + ' and ' + JSON.stringify(schema));
       }
     } else {
@@ -341,7 +364,7 @@ function Validator(schema, namespace, namedTypes) {
   };
 
   var _lookupTypeByFullyQualifiedName = function(fullyQualifiedTypeName) {
-    if (_.has(_namedTypes, fullyQualifiedTypeName)) {
+    if (Object.hasOwn(_namedTypes, fullyQualifiedTypeName)) {
       return _namedTypes[fullyQualifiedTypeName];
     } else {
       return null;
@@ -349,29 +372,29 @@ function Validator(schema, namespace, namedTypes) {
   };
 
   var _parseNamedType = function(schema, namespace) {
-    if (_.contains(AvroSpec.PrimitiveTypes, schema)) {
+    if (AvroSpec.PrimitiveTypes.includes(schema)) {
       return new Primitive(schema);
-    } else if (!_.isNull(_lookupTypeByFullyQualifiedName(makeFullyQualifiedTypeName(schema, namespace)))) {
+    } else if (_lookupTypeByFullyQualifiedName(makeFullyQualifiedTypeName(schema, namespace)) !== null) {
       return _lookupTypeByFullyQualifiedName(makeFullyQualifiedTypeName(schema, namespace));
     } else {
-      throw new InvalidSchemaError('unknown type name: ' + JSON.stringify(schema) + '; known type names are ' + JSON.stringify(_.keys(_namedTypes)));
+      throw new InvalidSchemaError('unknown type name: ' + JSON.stringify(schema) + '; known type names are ' + JSON.stringify(Object.keys(_namedTypes)));
     }
   };
 
   var _parseSchema = function(schema, parentSchema, namespace) {
-    if (_.isNull(schema) || _.isUndefined(schema)) {
+    if (schema == null) {
       throw new InvalidSchemaError('schema is null, in parentSchema: ' + JSON.stringify(parentSchema));
-    } else if (_.isString(schema)) {
+    } else if (isString(schema)) {
       return _parseNamedType(schema, namespace);
-    } else if (_.isObject(schema) && !_.isArray(schema)) {
+    } else if (isObject(schema) && !Array.isArray(schema)) {
       if (schema.type === 'record') {
-        var newRecord = new Record(schema.name, schema.namespace, _.map(schema.fields, function(field) {
+        var newRecord = new Record(schema.name, schema.namespace, schema.fields.map(function(field) {
           return new Field(field.name, _parseSchema(field.type, schema, schema.namespace || namespace));
         }));
         _saveNamedType(makeFullyQualifiedTypeName(schema, namespace), newRecord);
         return newRecord;
       } else if (schema.type === 'enum') {
-        if (_.has(schema, 'symbols')) {
+        if (Object.hasOwn(schema, 'symbols')) {
           var newEnum = new Enum(schema.symbols);
           _saveNamedType(makeFullyQualifiedTypeName(schema, namespace), newEnum);
           return newEnum;
@@ -379,27 +402,27 @@ function Validator(schema, namespace, namedTypes) {
           throw new InvalidSchemaError('enum must specify symbols, got ' + JSON.stringify(schema));
         }
       } else if (schema.type === 'array') {
-        if (_.has(schema, 'items')) {
+        if (Object.hasOwn(schema, 'items')) {
           return new AvroArray(_parseSchema(schema.items, schema, namespace));
         } else {
           throw new InvalidSchemaError('array must specify "items" schema, got ' + JSON.stringify(schema));
         }
       } else if (schema.type === 'map') {
-        if (_.has(schema, 'values')) {
+        if (Object.hasOwn(schema, 'values')) {
           return new Map(_parseSchema(schema.values, schema, namespace));
         } else {
           throw new InvalidSchemaError('map must specify "values" schema, got ' + JSON.stringify(schema));
         }
-      } else if (_.has(schema, 'type') && _.contains(AvroSpec.PrimitiveTypes, schema.type)) {
+      } else if (Object.hasOwn(schema, 'type') && AvroSpec.PrimitiveTypes.includes(schema.type)) {
         return _parseNamedType(schema.type, namespace);
       } else {
         throw new InvalidSchemaError('not yet implemented: ' + schema.type);
       }
-    } else if (_.isArray(schema)) {
-      if (_.isEmpty(schema)) {
+    } else if (Array.isArray(schema)) {
+      if (schema.length === 0) {
         throw new InvalidSchemaError('unions must have at least 1 branch');
       }
-      var branchTypes = _.map(schema, function(branchType) { return _parseSchema(branchType, schema, namespace); });
+      var branchTypes = schema.map(function(branchType) { return _parseSchema(branchType, schema, namespace); });
       return new Union(branchTypes, namespace);
     } else {
       throw new InvalidSchemaError('unexpected Javascript type for schema: ' + (typeof schema));
@@ -417,8 +440,8 @@ Validator.validate = function(schema, obj) {
 function ProtocolValidator(protocol) {
   this.validate = function(typeName, obj) {
     var fullyQualifiedTypeName = makeFullyQualifiedTypeName(typeName, protocol.namespace);
-    if (!_.has(_typeSchemaValidators, fullyQualifiedTypeName)) {
-      throw new ProtocolValidationError('Protocol does not contain definition for type ' + JSON.stringify(fullyQualifiedTypeName) + ' (fully qualified from input "' + typeName + '"); known types are ' + JSON.stringify(_.keys(_typeSchemaValidators)));
+    if (!Object.hasOwn(_typeSchemaValidators, fullyQualifiedTypeName)) {
+      throw new ProtocolValidationError('Protocol does not contain definition for type ' + JSON.stringify(fullyQualifiedTypeName) + ' (fully qualified from input "' + typeName + '"); known types are ' + JSON.stringify(Object.keys(_typeSchemaValidators)));
     }
     return _typeSchemaValidators[fullyQualifiedTypeName].validate(obj);
   };
@@ -426,11 +449,11 @@ function ProtocolValidator(protocol) {
   var _typeSchemaValidators = {};
   var _initSchemaValidators = function(protocol) {
     var namedTypes = {};
-    if (!_.has(protocol, 'protocol') || !_.isString(protocol.protocol)) {
+    if (protocol == null || !Object.hasOwn(protocol, 'protocol') || !isString(protocol.protocol)) {
       throw new InvalidProtocolError('Protocol must contain a "protocol" attribute with a string value');
     }
-    if (_.isArray(protocol.types)) {
-      _.each(protocol.types, function(typeSchema) {
+    if (Array.isArray(protocol.types)) {
+      protocol.types.forEach(function(typeSchema) {
         var schemaValidator = new Validator(typeSchema, protocol.namespace, namedTypes);
         var fullyQualifiedTypeName = makeFullyQualifiedTypeName(typeSchema, protocol.namespace);
         _typeSchemaValidators[fullyQualifiedTypeName] = schemaValidator;
