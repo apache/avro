@@ -126,6 +126,21 @@ EOS
     check_default(enum_schema, '"B"', "B")
   end
 
+  def test_enum_index_out_of_range
+    enum_schema = Avro::Schema.parse('{"type": "enum", "name": "Test", "symbols": ["A", "B"]}')
+    # 0x01 zigzag-decodes to -1, which would wrap to the last symbol.
+    assert_raise(Avro::AvroError) { read_raw([0x01], enum_schema) }
+    # 0x06 zigzag-decodes to 3, past the two symbols.
+    assert_raise(Avro::AvroError) { read_raw([0x06], enum_schema) }
+  end
+
+  def test_union_index_out_of_range
+    union_schema = Avro::Schema.parse('["null", "string"]')
+    # 0x01 (-1) would wrap to the "string" branch; 0x0a (5) selects a nil branch.
+    assert_raise(Avro::AvroError) { read_raw([0x01, 0x04, 0x41, 0x42], union_schema) }
+    assert_raise(Avro::AvroError) { read_raw([0x0a], union_schema) }
+  end
+
   def test_recursive
     recursive_schema = <<EOS
       {"type": "record",
@@ -642,6 +657,13 @@ EOS
 
   def read_datum(buffer, writers_schema, readers_schema=nil)
     reader = StringIO.new(buffer.string)
+    decoder = Avro::IO::BinaryDecoder.new(reader)
+    datum_reader = Avro::IO::DatumReader.new(writers_schema, readers_schema)
+    datum_reader.read(decoder)
+  end
+
+  def read_raw(bytes, writers_schema, readers_schema=nil)
+    reader = StringIO.new(bytes.pack('C*'))
     decoder = Avro::IO::BinaryDecoder.new(reader)
     datum_reader = Avro::IO::DatumReader.new(writers_schema, readers_schema)
     datum_reader.read(decoder)
