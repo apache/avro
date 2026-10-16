@@ -41,8 +41,10 @@ import org.apache.avro.Schema;
 import org.apache.avro.SystemLimitException;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.FastReaderBuilder;
 import org.junit.jupiter.api.Test;
 
 public class TestGenericDatumReader {
@@ -491,6 +493,57 @@ public class TestGenericDatumReader {
           assertEquals(400, ((Collection<?>) result.get("a")).size(), "fastReader=" + fast);
           assertEquals(400, ((Collection<?>) result.get("b")).size(), "fastReader=" + fast);
         }
+      }
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  /**
+   * The cumulative zero-byte allocation cap must also hold when the fast reader
+   * is used standalone via {@link FastReaderBuilder#createDatumReader(Schema)},
+   * not only when reached through {@code GenericDatumReader.read}. A record with
+   * two {@code array<null>} fields of 600 nulls each (1200 > 1000) must be
+   * rejected on the second field; previously only the array reader opened an
+   * allocation scope, so each field reset the running total and slipped through.
+   */
+  @Test
+  void standaloneFastReaderRecordRejectedCumulativelyAcrossDatum() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      Schema schema = new Schema.Parser().parse(TWO_NULL_ARRAY_FIELDS_SCHEMA);
+      // field a: {600 nulls, end}, field b: {600 nulls, end}
+      byte[] data = encodeVarints(600L, 0L, 600L, 0L);
+      DatumReader<Object> reader = FastReaderBuilder.get().createDatumReader(schema);
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+      assertThrows(SystemLimitException.class, () -> reader.read(null, decoder));
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
+      org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  /**
+   * Complement of the standalone amplification test: two {@code array<null>}
+   * fields whose combined count stays under the cap decode normally through the
+   * standalone fast reader, and the per-datum budget resets between reads.
+   */
+  @Test
+  void standaloneFastReaderRecordWithinCumulativeLimitStillDecodes() throws Exception {
+    System.setProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY, "1000");
+    org.apache.avro.TestSystemLimitException.resetLimits();
+    try {
+      Schema schema = new Schema.Parser().parse(TWO_NULL_ARRAY_FIELDS_SCHEMA);
+      // field a: {400 nulls, end}, field b: {400 nulls, end}; 800 < 1000
+      byte[] data = encodeVarints(400L, 0L, 400L, 0L);
+      DatumReader<Object> reader = FastReaderBuilder.get().createDatumReader(schema);
+      for (int i = 0; i < 2; i++) {
+        BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+        GenericRecord result = (GenericRecord) reader.read(null, decoder);
+        assertEquals(400, ((Collection<?>) result.get("a")).size());
+        assertEquals(400, ((Collection<?>) result.get("b")).size());
       }
     } finally {
       System.clearProperty(SystemLimitException.MAX_COLLECTION_ALLOCATION_PROPERTY);
