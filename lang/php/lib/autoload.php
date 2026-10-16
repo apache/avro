@@ -28,6 +28,7 @@ include __DIR__.'/AvroUtil.php';
 
 include __DIR__.'/DataFile/AvroDataIO.php';
 include __DIR__.'/DataFile/AvroDataIOException.php';
+include __DIR__.'/DataFile/AvroDataIODecompressionSizeException.php';
 include __DIR__.'/DataFile/AvroDataIOReader.php';
 include __DIR__.'/DataFile/AvroDataIOWriter.php';
 

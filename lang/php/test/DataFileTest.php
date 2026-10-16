@@ -23,6 +23,8 @@ declare(strict_types=1);
 namespace Apache\Avro\Tests;
 
 use Apache\Avro\DataFile\AvroDataIO;
+use Apache\Avro\DataFile\AvroDataIODecompressionSizeException;
+use Apache\Avro\DataFile\AvroDataIOReader;
 use PHPUnit\Framework\TestCase;
 
 class DataFileTest extends TestCase
@@ -386,6 +388,94 @@ class DataFileTest extends TestCase
         }
     }
 
+    /**
+     * A block with a very high compression ratio can expand to far more memory
+     * than its compressed size; reading such a block must be rejected once its
+     * decompressed size would exceed the configured maximum.
+     */
+    public function test_deflate_block_decompression_limit(): void
+    {
+        $data_file = $this->add_data_file('data-decompress-limit-deflate.avr');
+        $dw = AvroDataIO::openFile($data_file, 'w', '"string"', AvroDataIO::DEFLATE_CODEC);
+        $dw->append(str_repeat('a', 64 * 1024)); // 64 KiB, compresses tiny
+        $dw->close();
+
+        $previous = getenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
+        putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV.'=1024');
+
+        try {
+            $dr = AvroDataIO::openFile($data_file);
+
+            try {
+                $dr->data();
+                $this->fail('expected a decompression size exception');
+            } catch (AvroDataIODecompressionSizeException $e) {
+                // expected
+            } finally {
+                $dr->close();
+            }
+        } finally {
+            if (false === $previous) {
+                putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
+            } else {
+                putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV.'='.$previous);
+            }
+        }
+    }
+
+    public function test_deflate_block_within_decompression_limit(): void
+    {
+        $data_file = $this->add_data_file('data-decompress-within-limit.avr');
+        $payload = 'hello world';
+        $dw = AvroDataIO::openFile($data_file, 'w', '"string"', AvroDataIO::DEFLATE_CODEC);
+        $dw->append($payload);
+        $dw->close();
+
+        $previous = getenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
+        putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV.'=1048576');
+
+        try {
+            $dr = AvroDataIO::openFile($data_file);
+
+            try {
+                $data = $dr->data();
+                $this->assertSame([$payload], $data);
+            } finally {
+                $dr->close();
+            }
+        } finally {
+            if (false === $previous) {
+                putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
+            } else {
+                putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV.'='.$previous);
+            }
+        }
+    }
+
+    public function test_snappy_block_decompression_limit(): void
+    {
+        if (!extension_loaded('snappy')) {
+            $this->markTestSkipped('snappy extension not available');
+        }
+        $this->assertCodecRejectsOversizedBlock(AvroDataIO::SNAPPY_CODEC);
+    }
+
+    public function test_zstandard_block_decompression_limit(): void
+    {
+        if (!extension_loaded('zstd')) {
+            $this->markTestSkipped('zstd extension not available');
+        }
+        $this->assertCodecRejectsOversizedBlock(AvroDataIO::ZSTANDARD_CODEC);
+    }
+
+    public function test_bzip2_block_decompression_limit(): void
+    {
+        if (!extension_loaded('bz2')) {
+            $this->markTestSkipped('bz2 extension not available');
+        }
+        $this->assertCodecRejectsOversizedBlock(AvroDataIO::BZIP2_CODEC);
+    }
+
     protected function add_data_file(string $data_file): string
     {
         $data_file = "$data_file.".self::current_timestamp();
@@ -409,6 +499,40 @@ class DataFileTest extends TestCase
     {
         if (file_exists($data_file)) {
             unlink($data_file);
+        }
+    }
+
+    /**
+     * Write a single, highly compressible block with the given codec, then read
+     * it back with a small decompression limit and assert it is rejected.
+     */
+    private function assertCodecRejectsOversizedBlock(string $codec): void
+    {
+        $data_file = $this->add_data_file(sprintf('data-decompress-limit-%s.avr', $codec));
+        $dw = AvroDataIO::openFile($data_file, 'w', '"string"', $codec);
+        $dw->append(str_repeat('a', 64 * 1024)); // 64 KiB, compresses tiny
+        $dw->close();
+
+        $previous = getenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
+        putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV.'=1024');
+
+        try {
+            $dr = AvroDataIO::openFile($data_file);
+
+            try {
+                $dr->data();
+                $this->fail(sprintf('expected a decompression size exception for %s', $codec));
+            } catch (AvroDataIODecompressionSizeException $e) {
+                // expected
+            } finally {
+                $dr->close();
+            }
+        } finally {
+            if (false === $previous) {
+                putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV);
+            } else {
+                putenv(AvroDataIOReader::MAX_DECOMPRESS_LENGTH_ENV.'='.$previous);
+            }
         }
     }
 }
