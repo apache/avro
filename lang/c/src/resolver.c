@@ -1116,6 +1116,13 @@ avro_resolver_union_branch(avro_consumer_t *consumer,
 
 	debug("Retrieving resolver for writer branch %u", discriminant);
 
+	if (discriminant >= resolver->num_children) {
+		avro_set_error("Writer union branch %u out of range "
+			       "(writer union has %zu branches)",
+			       discriminant, resolver->num_children);
+		return EILSEQ;
+	}
+
 	if (!resolver->child_resolvers[discriminant]) {
 		avro_set_error("Writer union branch %u is incompatible "
 			       "with reader schema \"%s\"",
