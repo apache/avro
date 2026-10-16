@@ -22,6 +22,7 @@
 #include "array"
 #include <algorithm>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -29,6 +30,7 @@
 #include "Config.hh"
 #include "Decoder.hh"
 #include "Encoder.hh"
+#include "Exception.hh"
 
 /**
  * A bunch of templates and specializations for encoding and decoding
@@ -162,6 +164,43 @@ struct codec_traits<double> {
      */
     static void decode(Decoder &d, double &dbl) {
         dbl = d.decodeDouble();
+    }
+};
+
+/**
+* codec_traits for Avro optional assumming that the schema is ["null", T].
+*/
+template<typename T>
+struct codec_traits<std::optional<T>> {
+    /**
+	* Encodes a given value.
+	*/
+    static void encode(Encoder &e, const std::optional<T> &b) {
+        if (b) {
+            e.encodeUnionIndex(1);
+            avro::encode(e, b.value());
+        } else {
+            e.encodeUnionIndex(0);
+            e.encodeNull();
+        }
+    }
+
+    /**
+	* Decodes into a given value.
+	*/
+    static void decode(Decoder &d, std::optional<T> &s) {
+        size_t n = d.decodeUnionIndex();
+        if (n >= 2) { throw avro::Exception("Union index too big for optional (expected 0 or 1, got " + std::to_string(n) + ")"); }
+        switch (n) {
+            case 0: {
+                d.decodeNull();
+                s.reset();
+            } break;
+            case 1: {
+                s.emplace();
+                avro::decode(d, *s);
+            } break;
+        }
     }
 };
 
