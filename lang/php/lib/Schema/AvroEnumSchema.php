@@ -62,26 +62,25 @@ class AvroEnumSchema extends AvroNamedSchema
     /**
      * @return string[] this enum schema's symbols
      */
-    public function symbols()
+    public function symbols(): array
     {
         return $this->symbols;
     }
 
     /**
-     * @param string $symbol
      * @return bool true if the given symbol exists in this
      *          enum schema and false otherwise
      */
-    public function hasSymbol($symbol)
+    public function hasSymbol(string $symbol): bool
     {
-        return in_array($symbol, $this->symbols);
+        return in_array($symbol, $this->symbols, true);
     }
 
     /**
-     * @param int $index
+     * @throws AvroException
      * @return string enum schema symbol with the given (zero-based) index
      */
-    public function symbolByIndex($index)
+    public function symbolByIndex(int $index): string
     {
         if (array_key_exists($index, $this->symbols)) {
             return $this->symbols[$index];
