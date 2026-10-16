@@ -28,7 +28,28 @@ module Avro
     META_SCHEMA = Schema.parse('{"type": "map", "values": "bytes"}')
     VALID_ENCODINGS = ['binary'].freeze # not used yet
 
+    # Default upper bound, in bytes, on the size a single data-file block may
+    # decompress to. A block with a very high compression ratio (or a malformed
+    # block) can otherwise expand to far more memory than its compressed size.
+    # Mirrors the Java SDK's decompression limit (AVRO-4247). Overridable with
+    # the AVRO_MAX_DECOMPRESS_LENGTH environment variable.
+    DEFAULT_MAX_DECOMPRESS_LENGTH = 200 * 1024 * 1024 # 200 MiB
+    MAX_DECOMPRESS_LENGTH_ENV = 'AVRO_MAX_DECOMPRESS_LENGTH'
+
     class DataFileError < AvroError; end
+
+    # Raised when a data-file block decompresses to more than the configured maximum.
+    class DecompressionSizeError < DataFileError; end
+
+    # The maximum number of bytes a single block is allowed to decompress to.
+    def self.max_decompress_length
+      value = ENV[MAX_DECOMPRESS_LENGTH_ENV]
+      if value && value =~ /\A\d+\z/
+        parsed = value.to_i
+        return parsed if parsed > 0
+      end
+      DEFAULT_MAX_DECOMPRESS_LENGTH
+    end
 
     def self.open(file_path, mode='r', schema=nil, codec=nil)
       schema = Avro::Schema.parse(schema) if schema
@@ -314,15 +335,39 @@ module Avro
 
       def codec_name; 'deflate'; end
 
+      DEFLATE_DECOMPRESS_CHUNK_SIZE = 16 * 1024
+
       def decompress(compressed)
         # Passing a negative number to Inflate puts it into "raw" RFC1951 mode
         # (without the RFC1950 header & checksum). See the docs for
         # inflateInit2 in https://www.zlib.net/manual.html
         zstream = Zlib::Inflate.new(-Zlib::MAX_WBITS)
-        data = zstream.inflate(compressed)
-        data << zstream.finish
+        limit = DataFile.max_decompress_length
+        data = "".b
+        append = lambda do |chunk|
+          if data.bytesize + chunk.bytesize > limit
+            raise DecompressionSizeError, "Decompressed block size exceeds the maximum allowed of #{limit} bytes"
+          end
+          data << chunk
+        end
+        # Feed the compressed input in chunks and check the accumulated output
+        # after each call, so an over-large (or malicious) block is rejected
+        # before its full decompressed form is materialized. (The block form of
+        # Zlib::Inflate#inflate that yields output chunks is Ruby 3.1+, but this
+        # gem supports 2.7, so bound via input chunks instead; a chunk's output
+        # is bounded by chunk_size * the deflate ratio, so the peak overshoot
+        # before the check fires is bounded too.)
+        offset = 0
+        size = compressed.bytesize
+        while offset < size
+          append.call(zstream.inflate(compressed.byteslice(offset, DEFLATE_DECOMPRESS_CHUNK_SIZE)))
+          offset += DEFLATE_DECOMPRESS_CHUNK_SIZE
+        end
+        remaining = zstream.finish
+        append.call(remaining) unless remaining.empty?
+        data
       ensure
-        zstream.close
+        zstream.close if zstream
       end
 
       def compress(data)
@@ -339,22 +384,54 @@ module Avro
 
       def decompress(data)
         load_snappy!
-        crc32 = data.slice(-4..-1).unpack('N').first
-        uncompressed = Snappy.inflate(data.slice(0..-5))
-
-        if crc32 == Zlib.crc32(uncompressed)
-          uncompressed
-        else
-          # older versions of avro-ruby didn't write the checksum, so if it
-          # doesn't match this must assume that it wasn't there and return
-          # the entire payload uncompressed.
-          Snappy.inflate(data)
+        # The Snappy block header declares the uncompressed length as a varint;
+        # reject an over-large block before allocating for it.
+        limit = DataFile.max_decompress_length
+        declared = self.class.snappy_declared_length(data)
+        # Fail closed: a block whose length header cannot be parsed is malformed
+        # and must not be handed to the decompressor with the guard bypassed.
+        if declared.nil?
+          raise DataFileError, "Snappy block has an unparseable length header"
         end
+        if declared > limit
+          raise DecompressionSizeError, "Decompressed block size exceeds the maximum allowed of #{limit} bytes"
+        end
+        # A well-formed block ends with a 4-byte CRC32 trailer, so it needs at
+        # least one body byte plus the 4-byte trailer. Require > 4 bytes and use
+        # byteslice so the body slice is always a string (data.slice(0..-5) is
+        # nil for a 4-byte buffer, which would raise in Snappy.inflate).
+        if data.bytesize > 4
+          crc32 = data.byteslice(-4, 4).unpack('N').first
+          uncompressed = Snappy.inflate(data.byteslice(0, data.bytesize - 4))
+
+          if crc32 == Zlib.crc32(uncompressed)
+            return uncompressed
+          end
+        end
+        # older versions of avro-ruby didn't write the checksum, so if it
+        # doesn't match (or the buffer is too short to hold one) assume it wasn't
+        # there and return the entire payload uncompressed.
+        Snappy.inflate(data)
       rescue Snappy::Error
         # older versions of avro-ruby didn't write the checksum, so removing
         # the last 4 bytes may cause Snappy to fail. recover by assuming the
         # payload is from an older file and uncompress the entire buffer.
         Snappy.inflate(data)
+      end
+
+      # Return the uncompressed length declared in a raw Snappy block header,
+      # which prefixes the data as a little-endian base-128 varint. Returns nil
+      # if the header cannot be parsed.
+      def self.snappy_declared_length(data)
+        result = 0
+        shift = 0
+        data.each_byte do |byte|
+          result |= (byte & 0x7f) << shift
+          return result if (byte & 0x80).zero?
+          shift += 7
+          return nil if shift > 63
+        end
+        nil
       end
 
       def compress(data)
@@ -374,11 +451,30 @@ module Avro
     end
 
     class ZstandardCodec
+      # Size of the compressed input fed to the streaming decompressor per step,
+      # so the decompressed output can be bounded incrementally.
+      ZSTD_DECOMPRESS_CHUNK_SIZE = 16 * 1024
+
       def codec_name; 'zstandard'; end
 
       def decompress(data)
         load_zstandard!
-        Zstd.decompress(data)
+        limit = DataFile.max_decompress_length
+        stream = Zstd::StreamingDecompress.new
+        uncompressed = +''.b
+        offset = 0
+        size = data.bytesize
+        # Decompress the block in chunks so an over-large (or malicious) block is
+        # rejected before its full decompressed form is materialized in memory.
+        while offset < size
+          out = stream.decompress(data.byteslice(offset, ZSTD_DECOMPRESS_CHUNK_SIZE))
+          offset += ZSTD_DECOMPRESS_CHUNK_SIZE
+          if uncompressed.bytesize + out.bytesize > limit
+            raise DecompressionSizeError, "Decompressed block size exceeds the maximum allowed of #{limit} bytes"
+          end
+          uncompressed << out
+        end
+        uncompressed
       end
 
       def compress(data)
