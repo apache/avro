@@ -57,14 +57,14 @@ int main(int argc, char *argv[])
 
 	/* TODO: create a method for generating random data from schema */
 	interop = avro_record(schema);
-	avro_record_set(interop, "intField", avro_int32(42));
-	avro_record_set(interop, "longField", avro_int64(4242));
+	avro_record_set(interop, "intField", avro_int32(avro_schema_int(), 42));
+	avro_record_set(interop, "longField", avro_int64(avro_schema_long(), 4242));
 	avro_record_set(interop, "stringField",
 			avro_givestring("Follow your bliss.", NULL));
 	avro_record_set(interop, "boolField", avro_boolean(1));
 	avro_record_set(interop, "floatField", avro_float(3.14159265));
 	avro_record_set(interop, "doubleField", avro_double(2.71828183));
-	avro_record_set(interop, "bytesField", avro_bytes("abcd", 4));
+	avro_record_set(interop, "bytesField", avro_bytes(avro_schema_bytes(), "abcd", 4));
 	avro_record_set(interop, "nullField", avro_null());
 
 	avro_schema_t  array_schema = avro_schema_get_subschema(schema, "arrayField");

@@ -28,6 +28,7 @@ extern "C" {
 #include <stdlib.h>
 
 #include <avro/basics.h>
+#include <avro/logical.h>
 
 typedef struct avro_obj_t *avro_schema_t;
 
@@ -117,6 +118,9 @@ int avro_schema_decref(avro_schema_t schema);
 
 int avro_schema_match(avro_schema_t writers_schema,
 		      avro_schema_t readers_schema);
+
+/* Returns logical schema or NULL if not defined */
+avro_logical_schema_t *avro_logical_schema(avro_schema_t schema);
 
 CLOSE_EXTERN
 #endif

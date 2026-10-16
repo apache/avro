@@ -451,16 +451,20 @@ test_boolean(void)
 static int
 test_bytes(void)
 {
+  avro_schema_t bytes_schema = avro_schema_bytes();
+	avro_value_iface_t  *bytes_class =
+	    avro_generic_class_from_schema(bytes_schema);
+
 	int  rval;
 
 	char bytes[] = { 0xDE, 0xAD, 0xBE, 0xEF };
 
 	avro_value_t  val;
-	try(avro_generic_bytes_new(&val, bytes, sizeof(bytes)),
+	try(avro_generic_value_new(bytes_class, &val),
 	    "Cannot create bytes");
 	check(rval, check_type_and_schema
 		    ("bytes", &val,
-		     AVRO_BYTES, avro_schema_bytes()));
+		     AVRO_BYTES, avro_schema_incref(bytes_schema)));
 	try(avro_value_reset(&val),
 	    "Cannot reset bytes");
 	try(avro_value_set_bytes(&val, bytes, sizeof(bytes)),
@@ -505,12 +509,18 @@ test_bytes(void)
 	avro_value_t  val1;
 	avro_value_t  val2;
 	avro_value_t  val3;
-	try(avro_generic_bytes_new(&val1, "abcd", 4),
+	try(avro_generic_value_new(bytes_class, &val1),
 	    "Cannot create bytes");
-	try(avro_generic_bytes_new(&val2, "abcde", 5),
+	try(avro_value_set_bytes(&val1, "abcd", 4),
+	    "Cannot set bytes");
+	try(avro_generic_value_new(bytes_class, &val2),
 	    "Cannot create bytes");
-	try(avro_generic_bytes_new(&val3, "abce", 4),
+	try(avro_value_set_bytes(&val2, "abcde", 5),
+	    "Cannot set bytes");
+	try(avro_generic_value_new(bytes_class, &val3),
 	    "Cannot create bytes");
+	try(avro_value_set_bytes(&val3, "abce", 4),
+	    "Cannot set bytes");
 	if (avro_value_cmp_fast(&val1, &val2) >= 0) {
 		fprintf(stderr, "Incorrect sort order\n");
 		return EXIT_FAILURE;
@@ -530,6 +540,8 @@ test_bytes(void)
 	avro_value_decref(&val1);
 	avro_value_decref(&val2);
 	avro_value_decref(&val3);
+	avro_schema_decref(bytes_schema);
+	avro_value_iface_decref(bytes_class);
 
 	return 0;
 }
@@ -609,17 +621,20 @@ test_float(void)
 static int
 test_int(void)
 {
+	avro_schema_t int_schema = avro_schema_int();
+	avro_value_iface_t	*int_class =
+	    avro_generic_class_from_schema(int_schema);
 	int  rval;
 
 	int  i;
 	for (i = 0; i < 100; i++) {
 		int32_t  expected = rand_int32();
 		avro_value_t  val;
-		try(avro_generic_int_new(&val, expected),
+		try(avro_generic_value_new(int_class, &val),
 		    "Cannot create int");
 		check(rval, check_type_and_schema
 			    ("int", &val,
-			     AVRO_INT32, avro_schema_int()));
+			     AVRO_INT32, avro_schema_incref(int_schema)));
 		try(avro_value_reset(&val),
 		    "Cannot reset int");
 		try(avro_value_set_int(&val, expected),
@@ -642,10 +657,14 @@ test_int(void)
 
 	avro_value_t  val1;
 	avro_value_t  val2;
-	try(avro_generic_int_new(&val1, -10),
-	    "Cannot create int");
-	try(avro_generic_int_new(&val2, 42),
-	    "Cannot create int");
+  try(avro_generic_value_new(int_class, &val1),
+      "Cannot create int");
+	try(avro_value_set_int(&val1, -10),
+	    "Cannot set int");
+  try(avro_generic_value_new(int_class, &val2),
+      "Cannot create int");
+	try(avro_value_set_int(&val2, 42),
+	    "Cannot set int");
 	if (avro_value_cmp_fast(&val1, &val2) >= 0) {
 		fprintf(stderr, "Incorrect sort order\n");
 		return EXIT_FAILURE;
@@ -660,6 +679,8 @@ test_int(void)
 	}
 	avro_value_decref(&val1);
 	avro_value_decref(&val2);
+  avro_schema_decref(int_schema);
+	avro_value_iface_decref(int_class);
 
 	return 0;
 }
@@ -667,17 +688,20 @@ test_int(void)
 static int
 test_long(void)
 {
+	avro_schema_t long_schema = avro_schema_long();
+	avro_value_iface_t  *long_class =
+	    avro_generic_class_from_schema(long_schema);
 	int  rval;
 
 	int  i;
 	for (i = 0; i < 100; i++) {
 		int64_t  expected = rand_int64();
 		avro_value_t  val;
-		try(avro_generic_long_new(&val, expected),
+		try(avro_generic_value_new(long_class, &val),
 		    "Cannot create long");
 		check(rval, check_type_and_schema
 			    ("long", &val,
-			     AVRO_INT64, avro_schema_long()));
+			     AVRO_INT64, avro_schema_incref(long_schema)));
 		try(avro_value_reset(&val),
 		    "Cannot reset long");
 		try(avro_value_set_long(&val, expected),
@@ -697,6 +721,8 @@ test_long(void)
 		check_copy(&val);
 		avro_value_decref(&val);
 	}
+  avro_schema_decref(long_schema);
+	avro_value_iface_decref(long_class);
 	return 0;
 }
 
