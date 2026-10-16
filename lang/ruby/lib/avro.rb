@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'multi_json'
+require 'json'
 require 'set'
 require 'digest/md5'
 require 'net/http'
