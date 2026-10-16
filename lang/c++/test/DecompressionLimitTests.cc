@@ -1,0 +1,196 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// AVRO-4285: a data-file block is decompressed according to the file's codec. A
+// block with a very high compression ratio (or a malformed block) can expand to
+// far more memory than its compressed size. Reading such a block must be
+// rejected once its decompressed size would exceed the configured maximum, which
+// these tests set to a small value via AVRO_MAX_DECOMPRESS_LENGTH.
+
+#include <cstdlib>
+#include <filesystem>
+#include <optional>
+#include <sstream>
+#include <string>
+
+#ifdef _WIN32
+#include <process.h>
+#define AVRO_TEST_GETPID _getpid
+#else
+#include <unistd.h>
+#define AVRO_TEST_GETPID getpid
+#endif
+
+#include <boost/test/included/unit_test.hpp>
+
+#include "Compiler.hh"
+#include "DataFile.hh"
+#include "Exception.hh"
+#include "ValidSchema.hh"
+
+namespace avro {
+
+// Return the underlying status (0 on success) rather than asserting inside, so
+// these can be called from DecompressLimitGuard's destructor with a
+// non-throwing check (a throwing BOOST_REQUIRE in a noexcept destructor would
+// terminate the process instead of reporting a clean failure).
+static int setDecompressLimit(const char *value) {
+#ifdef _WIN32
+    return _putenv_s("AVRO_MAX_DECOMPRESS_LENGTH", value);
+#else
+    return setenv("AVRO_MAX_DECOMPRESS_LENGTH", value, 1);
+#endif
+}
+
+static int unsetDecompressLimit() {
+#ifdef _WIN32
+    return _putenv_s("AVRO_MAX_DECOMPRESS_LENGTH", "");
+#else
+    return unsetenv("AVRO_MAX_DECOMPRESS_LENGTH");
+#endif
+}
+
+// Saves AVRO_MAX_DECOMPRESS_LENGTH on construction and restores it on
+// destruction, so a test's override does not leak into other test cases that
+// share the process.
+struct DecompressLimitGuard {
+    std::optional<std::string> previous;
+    DecompressLimitGuard() {
+        const char *env = std::getenv("AVRO_MAX_DECOMPRESS_LENGTH");
+        if (env != nullptr) {
+            previous = std::string(env);
+        }
+    }
+    ~DecompressLimitGuard() {
+        // Use a non-throwing check: this runs in a (noexcept) destructor, where a
+        // throwing BOOST_REQUIRE would terminate the process.
+        if (previous) {
+            BOOST_CHECK_EQUAL(setDecompressLimit(previous->c_str()), 0);
+        } else {
+            BOOST_CHECK_EQUAL(unsetDecompressLimit(), 0);
+        }
+    }
+};
+
+static ValidSchema stringSchema() {
+    std::istringstream iss("\"string\"");
+    ValidSchema vs;
+    compileJsonSchema(iss, vs);
+    return vs;
+}
+
+static std::string tempFile(const char *name) {
+    // Include the process id so concurrent test runs (or a stale file left by a
+    // previously crashed run) do not contend for the same path in the shared
+    // system temp directory.
+    std::ostringstream unique;
+    unique << "avro_" << AVRO_TEST_GETPID() << "_" << name;
+    return (std::filesystem::temp_directory_path() / unique.str()).string();
+}
+
+// Write a single, highly compressible value with the given codec, then read it
+// back with a small decompression limit and confirm the read is rejected.
+static void checkCodecRejectsOversized(Codec codec, const char *name) {
+    DecompressLimitGuard guard;
+    ValidSchema schema = stringSchema();
+    std::string path = tempFile(name);
+    std::string big(4 * 1024 * 1024, 'a'); // 4 MiB, compresses tiny
+
+    // Let any writer exception propagate: a failure here is a real problem
+    // (e.g. permissions or I/O), not a reason to silently skip. Codecs that are
+    // not compiled in are excluded via the #ifdef guards on the callers below.
+    {
+        DataFileWriter<std::string> writer(path.c_str(), schema, 64 * 1024 * 1024, codec);
+        writer.write(big);
+        writer.close();
+    }
+
+    BOOST_REQUIRE_EQUAL(setDecompressLimit("1048576"), 0); // 1 MiB, smaller than the 4 MiB block
+
+    bool rejected = false;
+    try {
+        DataFileReader<std::string> reader(path.c_str(), schema);
+        std::string out;
+        reader.read(out); // triggers block decompression
+    } catch (const Exception &e) {
+        // Assert it failed specifically because of the decompression limit, not
+        // an unrelated I/O or corruption error that would give a false positive.
+        rejected = std::string(e.what()).find("exceeds the maximum allowed") != std::string::npos;
+        BOOST_CHECK_MESSAGE(rejected,
+                            std::string("unexpected exception for ") + name + ": " + e.what());
+    }
+    BOOST_CHECK(std::filesystem::remove(path));
+    BOOST_CHECK_MESSAGE(rejected, std::string("codec not bounded: ") + name);
+}
+
+static void testDeflateDecompressionLimit() {
+    checkCodecRejectsOversized(DEFLATE_CODEC, "avro_decompress_limit_deflate.avro");
+}
+
+static void testSnappyDecompressionLimit() {
+#ifdef SNAPPY_CODEC_AVAILABLE
+    checkCodecRejectsOversized(SNAPPY_CODEC, "avro_decompress_limit_snappy.avro");
+#else
+    BOOST_TEST_MESSAGE("Snappy codec not available; skipping");
+#endif
+}
+
+static void testZstdDecompressionLimit() {
+#ifdef ZSTD_CODEC_AVAILABLE
+    checkCodecRejectsOversized(ZSTD_CODEC, "avro_decompress_limit_zstd.avro");
+#else
+    BOOST_TEST_MESSAGE("Zstandard codec not available; skipping");
+#endif
+}
+
+static void testWithinLimitStillReads() {
+    DecompressLimitGuard guard;
+    ValidSchema schema = stringSchema();
+    std::string path = tempFile("avro_decompress_within_limit.avro");
+    std::string payload = "hello world";
+
+    {
+        DataFileWriter<std::string> writer(path.c_str(), schema, 64 * 1024 * 1024, DEFLATE_CODEC);
+        writer.write(payload);
+        writer.close();
+    }
+
+    BOOST_REQUIRE_EQUAL(setDecompressLimit("1048576"), 0);
+
+    std::string out;
+    {
+        DataFileReader<std::string> reader(path.c_str(), schema);
+        BOOST_CHECK(reader.read(out));
+    }
+    BOOST_CHECK(std::filesystem::remove(path));
+    BOOST_CHECK_EQUAL(out, payload);
+}
+
+} // namespace avro
+
+boost::unit_test::test_suite *
+init_unit_test_suite(int, char *[]) {
+    using namespace boost::unit_test;
+
+    auto *ts = BOOST_TEST_SUITE("Avro C++ decompression limit tests");
+    ts->add(BOOST_TEST_CASE(&avro::testDeflateDecompressionLimit));
+    ts->add(BOOST_TEST_CASE(&avro::testSnappyDecompressionLimit));
+    ts->add(BOOST_TEST_CASE(&avro::testZstdDecompressionLimit));
+    ts->add(BOOST_TEST_CASE(&avro::testWithinLimitStillReads));
+    return ts;
+}
