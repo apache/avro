@@ -185,6 +185,12 @@ void Node::setLogicalType(LogicalType logicalType) {
                                 "LONG type");
             }
             break;
+        case LogicalType::TIME_NANOS:
+            if (type_ != AVRO_LONG) {
+                throw Exception("TIME-NANOS logical type can only annotate "
+                                "LONG type");
+            }
+            break;
         case LogicalType::TIMESTAMP_MILLIS:
             if (type_ != AVRO_LONG) {
                 throw Exception("TIMESTAMP-MILLIS logical type can only annotate "
