@@ -88,7 +88,12 @@ Symbol Symbol::enumAdjustSymbol(const NodePtr &writer, const NodePtr &reader) {
             adj.push_back(static_cast<int>(-pos));
             err.push_back(s);
         } else {
-            adj.push_back(static_cast<int>(it - rs.begin()));
+            auto index = it - rs.begin();
+            if constexpr (std::is_same_v<decltype(index), int>) {
+                adj.push_back(index);  // 32-bit: already int
+            } else {
+                adj.push_back(static_cast<int>(index));  // 64-bit: long to int
+            }
         }
     }
     return Symbol(Kind::EnumAdjust, make_pair(adj, err));
