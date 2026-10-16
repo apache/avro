@@ -25,6 +25,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
@@ -123,6 +125,24 @@ public class TestReflectDatumReader {
     ReflectDatumReader<PojoWithArray> reflectDatumReader = new ReflectDatumReader<>(PojoWithArray.class);
 
     assertThrows(EOFException.class, () -> reflectDatumReader.read(new PojoWithArray(), decoder));
+  }
+
+  /**
+   * An array whose writer's elements ({@code int}) encode smaller than the
+   * reader's ({@code double}) must still decode.
+   */
+  @Test
+  void read_arrayWithPromotedElementType() throws IOException {
+    Schema writer = Schema.createArray(Schema.create(Schema.Type.INT));
+    Schema reader = Schema.createArray(Schema.create(Schema.Type.DOUBLE));
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    Encoder encoder = EncoderFactory.get().binaryEncoder(out, null);
+    new ReflectDatumWriter<List<Integer>>(writer).write(Collections.nCopies(100, 0), encoder);
+    encoder.flush();
+
+    Decoder decoder = DecoderFactory.get().binaryDecoder(out.toByteArray(), null);
+    Object result = new ReflectDatumReader<>(writer, reader).read(null, decoder);
+    assertEquals(100, ((Collection<?>) result).size());
   }
 
   /**

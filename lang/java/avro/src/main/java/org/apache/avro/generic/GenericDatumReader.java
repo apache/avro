@@ -56,6 +56,10 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private ResolvingDecoder creatorResolver = null;
   private final Thread creator;
 
+  // Whether the writer's and reader's schemas differ: -1 until computed, then 0
+  // or 1. Reset whenever either schema changes.
+  private int resolving = -1;
+
   public GenericDatumReader() {
     this(null, null, GenericData.get());
   }
@@ -99,6 +103,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     }
     creatorResolver = null;
     fastDatumReader = null;
+    resolving = -1;
   }
 
   /** Get the reader's schema. */
@@ -110,6 +115,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   public void setExpected(Schema reader) {
     this.expected = reader;
     creatorResolver = null;
+    resolving = -1;
   }
 
   private static final ThreadLocal<Map<Schema, Map<Schema, ResolvingDecoder>>> RESOLVER_CACHE = ThreadLocalWithInitial
@@ -327,7 +333,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     long l = in.readArrayStart();
     long base = 0;
     if (l > 0) {
-      ensureAvailableCollectionBytes(in, l, expectedType);
+      int minBytes = minBytesToRead(expectedType);
+      ensureAvailableCollectionBytes(in, l, minBytes);
       // Elements whose minimum encoded size is zero (null, a zero-length fixed, a
       // record whose fields are all zero-byte, or a recursive schema where the
       // cycle is broken with a 0 minimum) consume no guaranteed input, so
@@ -335,7 +342,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       // remaining. Cap such collections against a heap-aware limit so a tiny
       // payload cannot declare a huge block count and drive an unbounded
       // backing-array allocation.
-      boolean zeroByteElements = isZeroByteSchema(expectedType);
+      boolean zeroByteElements = minBytes == 0;
       if (zeroByteElements) {
         SystemLimitException.checkMaxCollectionAllocation(l);
       }
@@ -354,7 +361,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
           }
         }
         base += l;
-        l = arrayNext(in, expectedType);
+        l = arrayNext(in, minBytes);
         if (zeroByteElements && l > 0) {
           SystemLimitException.checkMaxCollectionAllocation(l);
         }
@@ -369,9 +376,9 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * Reads the next array block count and validates remaining bytes before the
    * caller allocates storage.
    */
-  private long arrayNext(ResolvingDecoder in, Schema elementType) throws IOException {
+  private long arrayNext(ResolvingDecoder in, int minBytes) throws IOException {
     long l = in.arrayNext();
-    ensureAvailableCollectionBytes(in, l, elementType);
+    ensureAvailableCollectionBytes(in, l, minBytes);
     return l;
   }
 
@@ -410,7 +417,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     long l = in.readMapStart();
     LogicalType logicalType = eValue.getLogicalType();
     Conversion<?> conversion = getData().getConversionFor(logicalType);
-    ensureAvailableMapBytes(in, l, eValue);
+    int minValueBytes = minBytesToRead(eValue);
+    ensureAvailableMapBytes(in, l, minValueBytes);
     Object map = newMap(old, initialCollectionCapacity(l));
     if (l > 0) {
       do {
@@ -424,7 +432,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
             addToMap(map, readMapKey(null, expected, in), readWithoutConversion(null, eValue, in));
           }
         }
-      } while ((l = mapNext(in, eValue)) > 0);
+      } while ((l = mapNext(in, minValueBytes)) > 0);
     }
     return map;
   }
@@ -433,23 +441,23 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * Reads the next map block count and validates remaining bytes before the
    * caller allocates storage.
    */
-  private long mapNext(ResolvingDecoder in, Schema valueType) throws IOException {
+  private long mapNext(ResolvingDecoder in, int minValueBytes) throws IOException {
     long l = in.mapNext();
-    ensureAvailableMapBytes(in, l, valueType);
+    ensureAvailableMapBytes(in, l, minValueBytes);
     return l;
   }
 
   /**
    * Validates remaining bytes for a map block. Each map entry has a string key
-   * (at least 1 byte for the length varint) plus a value, so the minimum bytes
-   * per entry is {@code 1 + minBytesPerElement(valueSchema)}.
+   * (at least 1 byte for the length varint) plus a value of at least
+   * {@code minValueBytes}.
    */
-  private static void ensureAvailableMapBytes(Decoder decoder, long count, Schema valueSchema) throws EOFException {
+  private static void ensureAvailableMapBytes(Decoder decoder, long count, int minValueBytes) throws EOFException {
     if (count <= 0) {
       return;
     }
     // Map keys are always strings: at least 1 byte for the length varint
-    long minBytesPerEntry = 1L + minBytesPerElement(valueSchema);
+    long minBytesPerEntry = 1L + minValueBytes;
     int remaining = decoder.remainingBytes();
     if (remaining >= 0 && count * minBytesPerEntry > remaining) {
       throw new EOFException("Map claims " + count + " entries with at least " + minBytesPerEntry
@@ -539,6 +547,86 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   }
 
   /**
+   * Returns the minimum number of bytes required to encode a value of any
+   * writer's schema that resolves to the given reader's schema. Used when the
+   * writer's element schema is not at hand, since a value can encode smaller than
+   * its reader's schema implies: the writer's record may lack a field the reader
+   * fills from its default, and a {@code float} or {@code double} may be promoted
+   * from a 1-byte {@code int} or {@code long}.
+   * <p>
+   * Returns 0 where a resolved value can encode to no bytes, such as
+   * {@code null}, a zero-length {@code fixed}, or a record whose fields without
+   * defaults are all zero-byte.
+   */
+  static int minResolvedBytesPerElement(Schema readerSchema) {
+    return minResolvedBytesPerElement(readerSchema, Collections.newSetFromMap(new IdentityHashMap<>()));
+  }
+
+  private static int minResolvedBytesPerElement(Schema schema, Set<Schema> visited) {
+    switch (schema.getType()) {
+    case NULL:
+      return 0;
+    case FIXED:
+      // A fixed only resolves from a fixed of the same size
+      return schema.getFixedSize();
+    case RECORD:
+      if (!visited.add(schema)) {
+        return 0; // break recursion for self-referencing schemas
+      }
+      long sum = 0;
+      for (Schema.Field f : schema.getFields()) {
+        // The writer's record may lack a field that has a default
+        if (!f.hasDefaultValue()) {
+          sum += minResolvedBytesPerElement(f.schema(), visited);
+          if (sum >= Integer.MAX_VALUE) {
+            sum = Integer.MAX_VALUE;
+            break;
+          }
+        }
+      }
+      visited.remove(schema);
+      return (int) sum;
+    case UNION:
+      // A writer's union has a branch index of at least 1 byte, and any other
+      // writer's schema resolves to one of the branches
+      int min = 1;
+      for (Schema branch : schema.getTypes()) {
+        min = Math.min(min, minResolvedBytesPerElement(branch, visited));
+      }
+      return min;
+    default:
+      // BOOLEAN, INT, LONG, ENUM, STRING, BYTES, ARRAY, MAP are all >= 1 byte, and
+      // FLOAT and DOUBLE may be promoted from a 1-byte INT or LONG
+      return 1;
+    }
+  }
+
+  /**
+   * Returns the minimum number of bytes required to encode a value that this
+   * reader reads as the given reader's schema. When the writer's and reader's
+   * schemas are the same, this is {@link #minBytesPerElement}; otherwise it is
+   * {@link #minResolvedBytesPerElement}, since the value was encoded with the
+   * writer's schema.
+   *
+   * @param readerSchema the element (or map value) schema of the reader
+   * @return the minimum encoded size of a value read as {@code readerSchema}
+   */
+  protected int minBytesToRead(Schema readerSchema) {
+    return isResolving() ? minResolvedBytesPerElement(readerSchema) : minBytesPerElement(readerSchema);
+  }
+
+  private boolean isResolving() {
+    int r = resolving;
+    if (r < 0) {
+      Schema writer = actual;
+      Schema reader = expected;
+      r = writer == reader || (writer != null && writer.equals(reader)) ? 0 : 1;
+      resolving = r;
+    }
+    return r == 1;
+  }
+
+  /**
    * Validates that the decoder has enough remaining bytes to hold {@code count}
    * elements of the given schema, assuming each element requires at least
    * {@link #minBytesPerElement} bytes. Throws {@link EOFException} if the decoder
@@ -547,14 +635,24 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * This check prevents out-of-memory errors from pre-allocating huge backing
    * arrays when the source data is truncated or malicious. It is exposed so the
    * fast reader ({@code FastReaderBuilder}) can apply the same guard as this
-   * classic reader.
+   * classic reader. The elements were encoded with the writer's schema, so
+   * {@code elementSchema} must be the writer's element schema.
    */
   public static void ensureAvailableCollectionBytes(Decoder decoder, long count, Schema elementSchema)
       throws EOFException {
+    ensureAvailableCollectionBytes(decoder, count, minBytesPerElement(elementSchema));
+  }
+
+  /**
+   * Validates that the decoder has enough remaining bytes to hold {@code count}
+   * elements of at least {@code minBytes} bytes each, such as computed by
+   * {@link #minBytesToRead}. Throws {@link EOFException} if the decoder reports
+   * fewer remaining bytes than required.
+   */
+  protected static void ensureAvailableCollectionBytes(Decoder decoder, long count, int minBytes) throws EOFException {
     if (count <= 0) {
       return;
     }
-    int minBytes = minBytesPerElement(elementSchema);
     if (minBytes > 0) {
       int remaining = decoder.remainingBytes();
       if (remaining >= 0 && count * (long) minBytes > remaining) {
