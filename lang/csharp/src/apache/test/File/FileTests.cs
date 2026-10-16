@@ -426,6 +426,112 @@ namespace Avro.Test.File
         }
 
         /// <summary>
+        /// A block with a very high compression ratio can expand to far more memory
+        /// than its compressed size; decompressing such a block must be rejected once
+        /// its decompressed size would exceed the configured maximum.
+        /// </summary>
+        [Test]
+        public void TestDeflateDecompressionLimit()
+        {
+            var codec = new DeflateCodec();
+            byte[] big = new byte[128 * 1024]; // 128 KiB of zeros, compresses tiny
+            byte[] compressed = codec.Compress(big);
+
+            var previous = Environment.GetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar);
+            Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, "65536"); // 64 KiB
+            try
+            {
+                Assert.Throws<AvroRuntimeException>(
+                    () => codec.Decompress(compressed, compressed.Length));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, previous);
+            }
+        }
+
+        [Test]
+        public void TestDeflateWithinDecompressionLimit()
+        {
+            var codec = new DeflateCodec();
+            byte[] payload = System.Text.Encoding.UTF8.GetBytes("hello world");
+            byte[] compressed = codec.Compress(payload);
+
+            var previous = Environment.GetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar);
+            Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, "65536"); // 64 KiB
+            try
+            {
+                byte[] result = codec.Decompress(compressed, compressed.Length);
+                CollectionAssert.AreEqual(payload, result);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, previous);
+            }
+        }
+
+        [Test]
+        public void TestCopyBoundedValidatesArguments()
+        {
+            using (var stream = new MemoryStream())
+            {
+                Assert.Throws<ArgumentNullException>(() => Codec.CopyBounded(null, stream, 10));
+                Assert.Throws<ArgumentNullException>(() => Codec.CopyBounded(stream, null, 10));
+                Assert.Throws<ArgumentOutOfRangeException>(() => Codec.CopyBounded(stream, stream, -1));
+            }
+        }
+
+        /// <summary>
+        /// The DataFileReader itself must reject a block whose decompressed size
+        /// exceeds the configured maximum. This covers the safeguard applied to
+        /// every codec that returns a fully materialized buffer (here the Null
+        /// codec, which performs no internally bounded decompression), not just a
+        /// direct call to a codec's Decompress method.
+        /// </summary>
+        [Test]
+        public void TestReaderRejectsOversizedBlock()
+        {
+            const string schemaStr =
+                "{\"type\":\"record\",\"name\":\"n\",\"fields\":[{\"name\":\"f1\",\"type\":\"string\"}]}";
+            Schema schema = Schema.Parse(schemaStr);
+            var recordSchema = schema as RecordSchema;
+
+            // A single record whose string field is larger than the limit below.
+            string big = new string('a', 128 * 1024); // 128 KiB
+
+            MemoryStream outStream = new MemoryStream();
+            using (var writer = DataFileWriter<GenericRecord>.OpenWriter(
+                new GenericWriter<GenericRecord>(schema), outStream, Codec.CreateCodec(Codec.Type.Null)))
+            {
+                writer.Append(mkRecord(new object[] { "f1", big }, recordSchema));
+            }
+
+            MemoryStream inStream = new MemoryStream(outStream.ToArray());
+
+            var previous = Environment.GetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar);
+            Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, "65536"); // 64 KiB
+            try
+            {
+                Assert.Throws<AvroRuntimeException>(() =>
+                {
+                    using (var reader = DataFileReader<GenericRecord>.OpenReader(inStream, schema))
+                    {
+                        // Enumerating forces the block to be read and
+                        // decompressed, which is where the limit is enforced.
+                        foreach (var rec in reader.NextEntries)
+                        {
+                            Assert.NotNull(rec);
+                        }
+                    }
+                });
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(Codec.MaxDecompressLengthEnvVar, previous);
+            }
+        }
+
+        /// <summary>
         /// This test is a single test case of
         /// <see cref="TestGenericData(string, object[], Codec.Type)"/> but introduces a
         /// DeflateStream as it is a standard non-seekable Stream that has the same behavior as the
