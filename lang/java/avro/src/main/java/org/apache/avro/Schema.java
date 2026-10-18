@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import org.apache.avro.path.TracingAvroTypeException;
+import org.apache.avro.util.SchemaResolver;
 import org.apache.avro.util.internal.Accessor;
 import org.apache.avro.util.internal.Accessor.FieldAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
@@ -1905,7 +1906,9 @@ public abstract class Schema extends JsonProperties implements Serializable {
         && defaultValue.isTextual())
       defaultValue = new DoubleNode(Double.parseDouble(defaultValue.textValue()));
 
-    Field f = new Field(fieldName, fieldSchema, fieldDoc, defaultValue, true, order);
+    boolean validate = VALIDATE_DEFAULTS.get() && defaultValue != null
+        && SchemaResolver.isFullyResolvedSchema(fieldSchema);
+    Field f = new Field(fieldName, fieldSchema, fieldDoc, defaultValue, validate, order);
     parseProperties(field, f, FIELD_RESERVED);
     f.aliases = parseAliases(field);
     return f;

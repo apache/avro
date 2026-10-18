@@ -599,6 +599,89 @@ public class TestSchema {
   }
 
   @Test
+  void forwardEnumDefaultResolvesAfterAllFiles() {
+    String record = "{\"type\":\"record\",\"name\":\"MyRecord\",\"namespace\":\"some\",\"fields\":["
+        + "{\"name\":\"myEnum\",\"type\":\"MyEnum\",\"default\":\"NONE\"}]}";
+    // The reporter's enum omitted only the comma between SOME and NONE.
+    String enumeration = "{\"type\":\"enum\",\"name\":\"MyEnum\",\"namespace\":\"some\","
+        + "\"symbols\":[\"SOME\",\"NONE\"]}";
+    for (boolean reverse : new boolean[] { true, false }) {
+      SchemaParser parser = new SchemaParser();
+      SchemaParser.ParseResult[] results = parseSchemaPair(parser, record, enumeration, reverse);
+      Schema resolvedRecord = results[0].mainSchema();
+      Schema resolvedEnum = results[1].mainSchema();
+      Map<String, Schema> named = parser.getParsedNamedSchemas().stream()
+          .collect(Collectors.toMap(Schema::getFullName, Function.identity()));
+      Field field = resolvedRecord.getField("myEnum");
+      assertEquals(Type.ENUM, field.schema().getType());
+      assertEquals("some.MyEnum", field.schema().getFullName());
+      assertEquals("NONE", field.defaultVal());
+      assertSame(resolvedEnum, field.schema());
+      assertSame(resolvedRecord, results[0].parsedNamedSchemas().get(0));
+      assertSame(resolvedEnum, results[1].parsedNamedSchemas().get(0));
+      assertSame(resolvedRecord, named.get("some.MyRecord"));
+      assertSame(resolvedEnum, named.get("some.MyEnum"));
+      assertEquals(2, named.size());
+    }
+  }
+
+  @Test
+  void forwardEnumDefaultStillRejectsNonTextAfterResolution() {
+    SchemaParser parser = new SchemaParser();
+    SchemaParser.ParseResult record = parser.parse("{\"type\":\"record\",\"name\":\"InvalidEnumDefault\","
+        + "\"fields\":[{\"name\":\"value\",\"type\":\"LaterEnum\",\"default\":42}]}");
+    parser.parse("{\"type\":\"enum\",\"name\":\"LaterEnum\",\"symbols\":[\"SOME\",\"NONE\"]}");
+    assertThrows(AvroTypeException.class, record::mainSchema);
+  }
+
+  @Test
+  void knownPrimitiveDefaultValidationRemainsEagerAndConfigurable() {
+    String invalid = "{\"type\":\"record\",\"name\":\"InvalidPrimitiveDefault\",\"fields\":["
+        + "{\"name\":\"value\",\"type\":\"int\",\"default\":\"bad\"}]}";
+    assertThrows(AvroTypeException.class, () -> new SchemaParser().parse(invalid));
+    Schema relaxed = new Schema.Parser().setValidateDefaults(false).parse(invalid);
+    assertEquals(Type.INT, relaxed.getField("value").schema().getType());
+    assertThrows(AvroTypeException.class, () -> new Schema.Parser().setValidateDefaults(true).parse(invalid));
+  }
+
+  @Test
+  void unknownReferenceFailsAtFinalResolution() {
+    SchemaParser.ParseResult result = new SchemaParser().parse("{\"type\":\"record\",\"name\":\"UnknownReference\","
+        + "\"fields\":[{\"name\":\"value\",\"type\":\"Missing\"}]}");
+    AvroTypeException error = assertThrows(AvroTypeException.class, result::mainSchema);
+    assertTrue(error.getMessage().contains("Missing"));
+  }
+
+  @Test
+  void circularFileNullableDefaultsPreserveIdentityInBothOrders() {
+    String first = "{\"type\":\"record\",\"name\":\"A\",\"fields\":[{\"name\":\"b\","
+        + "\"type\":[\"null\",\"B\"],\"default\":null}]}";
+    String second = "{\"type\":\"record\",\"name\":\"B\",\"fields\":[{\"name\":\"a\","
+        + "\"type\":[\"null\",\"A\"],\"default\":null}]}";
+    for (boolean reverse : new boolean[] { false, true }) {
+      SchemaParser parser = new SchemaParser();
+      SchemaParser.ParseResult[] results = parseSchemaPair(parser, first, second, reverse);
+      Schema a = results[0].mainSchema();
+      Schema b = results[1].mainSchema();
+      assertSame(b, a.getField("b").schema().getTypes().get(1));
+      assertSame(a, b.getField("a").schema().getTypes().get(1));
+      assertTrue(parser.getParsedNamedSchemas().stream().anyMatch(schema -> schema == a));
+      assertTrue(parser.getParsedNamedSchemas().stream().anyMatch(schema -> schema == b));
+    }
+  }
+
+  private SchemaParser.ParseResult[] parseSchemaPair(SchemaParser parser, String first, String second,
+      boolean reverse) {
+    String[] sources = { first, second };
+    SchemaParser.ParseResult[] results = new SchemaParser.ParseResult[2];
+    for (int i = 0; i < 2; i++) {
+      int index = reverse ? 1 - i : i;
+      results[index] = parser.parse(sources[index]);
+    }
+    return results;
+  }
+
+  @Test
   void testParseMultipleFile() throws IOException {
     URL directory = requireNonNull(Thread.currentThread().getContextClassLoader().getResource("multipleFile"));
     File f1 = new File(directory.getPath(), "ApplicationEvent.avsc");
