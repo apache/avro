@@ -40,4 +40,5 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_dependency("multi_json", "~> 1.0")
+  s.add_dependency("uuidtools", "~> 2.2")
 end
