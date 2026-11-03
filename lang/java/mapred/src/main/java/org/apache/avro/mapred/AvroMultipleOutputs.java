@@ -48,7 +48,7 @@ import org.apache.hadoop.io.NullWritable;
  *
  * Each additional output, or named output, may be configured with its own
  * <code>Schema</code> and <code>OutputFormat</code>. A named output can be a
- * single file or a multi file. The later is refered as a multi named output
+ * single file or a multi file. The latter is referred to as a multi named output
  * which is an unbound set of files all sharing the same <code>Schema</code>.
  * </p>
  * <p>
@@ -544,7 +544,7 @@ public class AvroMultipleOutputs {
   /**
    * Closes all the opened named outputs.
    * <p/>
-   * If overriden subclasses must invoke <code>super.close()</code> at the end of
+   * If overridden subclasses must invoke <code>super.close()</code> at the end of
    * their <code>close()</code>
    *
    * @throws java.io.IOException thrown if any of the MultipleOutput files could
