@@ -21,7 +21,9 @@
 
 #include "Config.hh"
 
+#include <memory>
 #include <stddef.h>
+#include <vector>
 
 /// \file Layout.hh
 ///
