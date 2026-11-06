@@ -760,6 +760,16 @@ class TestMisc(unittest.TestCase):
         # If we've made it this far, the subschema was reasonably stringified; it ccould be reparsed.
         self.assertEqual("X", t.fields[0].type.name)
 
+    def test_error_namespace_applies_to_nested_types(self):
+        """A type defined inside an error inherits the error's namespace, as it would inside a record."""
+        s = avro.schema.parse("""{
+            "type": "error",
+            "name": "Outer",
+            "namespace": "org.apache.avro.test",
+            "fields": [{"name": "inner", "type": {"type": "record", "name": "Inner", "fields": []}}]
+        }""")
+        self.assertEqual("org.apache.avro.test.Inner", s.fields[0].type.fullname)
+
     def test_exception_is_not_swallowed_on_parse_error(self):
         """A specific exception message should appear on a json parse error."""
         self.assertRaisesRegex(
