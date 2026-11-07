@@ -118,6 +118,12 @@ public class TestSpecificData {
         .build();
 
     String json = foo.toString();
+    int startIndex = json.indexOf("{"); // Since package names and class names cannot contain '{'
+    if (startIndex != -1) {
+      json = json.substring(startIndex);
+    } else {
+      json = "";
+    }
     JsonFactory factory = new JsonFactory();
     JsonParser parser = factory.createParser(json);
     ObjectMapper mapper = new ObjectMapper();
