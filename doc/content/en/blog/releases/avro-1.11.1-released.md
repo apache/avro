@@ -54,7 +54,7 @@ C#
 - [AVRO-3453](https://issues.apache.org/jira/browse/AVRO-3453) Avrogen Add Generated Code Attribute
 - [AVRO-3432](https://issues.apache.org/jira/browse/AVRO-3432) Add command line option to skip creation of directories
 - [AVRO-3411](https://issues.apache.org/jira/browse/AVRO-3411) Add Visual Studio Code Devcontainer support
-- [AVRO-3388](https://issues.apache.org/jira/browse/AVRO-3388) Implement extra codecs for C# as seperate nuget packages
+- [AVRO-3388](https://issues.apache.org/jira/browse/AVRO-3388) Implement extra codecs for C# as separate nuget packages
 - [AVRO-3265](https://issues.apache.org/jira/browse/AVRO-3265) avrogen generates uncompilable code when namespace ends
 with ".Avro"
 - [AVRO-3219](https://issues.apache.org/jira/browse/AVRO-3219) Support nullable enum type fields
