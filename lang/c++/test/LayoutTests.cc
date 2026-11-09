@@ -21,6 +21,23 @@
 
 #include <boost/test/included/unit_test.hpp>
 
-BOOST_AUTO_TEST_CASE(layoutHeaderIsSelfContained) {
-    BOOST_CHECK(true);
+namespace avro {
+
+void testCompoundLayout() {
+    CompoundLayout compound(8);
+    std::unique_ptr<Layout> child = std::make_unique<PrimitiveLayout>(16);
+    compound.add(child);
+    BOOST_CHECK_EQUAL(compound.offset(), 8U);
+    BOOST_CHECK_EQUAL(compound.at(0).offset(), 16U);
+}
+
+} // namespace avro
+
+boost::unit_test::test_suite *
+init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
+    using namespace boost::unit_test;
+
+    auto *ts = BOOST_TEST_SUITE("Avro C++ unit tests for Layout");
+    ts->add(BOOST_TEST_CASE(&avro::testCompoundLayout));
+    return ts;
 }
