@@ -41,7 +41,7 @@ public class ProtoConversions {
   // timestamp precise of conversion from long
   private enum TimestampPrecise {
     Millis, Micros, Nanos
-  };
+  }
 
   public static class TimestampMillisConversion extends Conversion<Timestamp> {
     @Override

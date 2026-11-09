@@ -34,7 +34,7 @@ import org.apache.hadoop.util.ReflectionUtils;
  * map() call instead of during configure(), as we rely on the split object to
  * provide us that information.
  *
- * @see {@link AvroMultipleInputs#addInputPath(JobConf, Path, Class, Schema)}
+ * @see AvroMultipleInputs#addInputPath(org.apache.hadoop.mapred.JobConf, org.apache.hadoop.fs.Path, Class, org.apache.avro.Schema)
  */
 class DelegatingMapper<IN, OUT, K, V, KO, VO> extends MapReduceBase
     implements Mapper<AvroWrapper<IN>, NullWritable, KO, VO> {

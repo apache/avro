@@ -50,10 +50,10 @@ import org.apache.hadoop.io.NullWritable;
  * <code>Schema</code> and <code>OutputFormat</code>. A named output can be a
  * single file or a multi file. The later is refered as a multi named output
  * which is an unbound set of files all sharing the same <code>Schema</code>.
- * </p>
+ * <p>
  * <p>
  * Case two: to write data to different files provided by user
- * </p>
+ * <p>
  *
  * <p>
  * AvroMultipleOutputs supports counters, by default they are disabled. The
@@ -62,7 +62,7 @@ import org.apache.hadoop.io.NullWritable;
  * records written to each output name. For multi named outputs the name of the
  * counter is the concatenation of the named output, and underscore '_' and the
  * multiname.
- * </p>
+ * <p>
  *
  * Usage pattern for job submission:
  * 
@@ -246,7 +246,7 @@ public class AvroMultipleOutputs {
 
   /**
    * Adds a named output for the job.
-   * <p/>
+   * <p>
    *
    * @param conf              job conf to add the named output
    * @param namedOutput       named output name, it has to be a word, letters and
@@ -262,7 +262,7 @@ public class AvroMultipleOutputs {
 
   /**
    * Adds a multi named output for the job.
-   * <p/>
+   * <p>
    *
    * @param conf              job conf to add the named output
    * @param namedOutput       named output name, it has to be a word, letters and
@@ -278,7 +278,7 @@ public class AvroMultipleOutputs {
 
   /**
    * Adds a named output for the job.
-   * <p/>
+   * <p>
    *
    * @param conf              job conf to add the named output
    * @param namedOutput       named output name, it has to be a word, letters and
@@ -301,12 +301,12 @@ public class AvroMultipleOutputs {
 
   /**
    * Enables or disables counters for the named outputs.
-   * <p/>
+   * <p>
    * By default these counters are disabled.
-   * <p/>
+   * <p>
    * MultipleOutputs supports counters, by default the are disabled. The counters
    * group is the {@link AvroMultipleOutputs} class name.
-   * </p>
+   * <p>
    * The names of the counters are the same as the named outputs. For multi named
    * outputs the name of the counter is the concatenation of the named output, and
    * underscore '_' and the multiname.
@@ -320,12 +320,12 @@ public class AvroMultipleOutputs {
 
   /**
    * Returns if the counters for the named outputs are enabled or not.
-   * <p/>
+   * <p>
    * By default these counters are disabled.
-   * <p/>
+   * <p>
    * MultipleOutputs supports counters, by default the are disabled. The counters
    * group is the {@link AvroMultipleOutputs} class name.
-   * </p>
+   * <p>
    * The names of the counters are the same as the named outputs. For multi named
    * outputs the name of the counter is the concatenation of the named output, and
    * underscore '_' and the multiname.
@@ -422,7 +422,7 @@ public class AvroMultipleOutputs {
 
   /**
    * Output Collector for the default schema.
-   * <p/>
+   * <p>
    *
    * @param namedOutput the named output name
    * @param reporter    the reporter
@@ -435,7 +435,7 @@ public class AvroMultipleOutputs {
 
   /**
    * OutputCollector with custom schema.
-   * <p/>
+   * <p>
    *
    * @param namedOutput the named output name (this will the output file name)
    * @param reporter    the reporter
@@ -449,7 +449,7 @@ public class AvroMultipleOutputs {
 
   /**
    * OutputCollector with custom schema and file name.
-   * <p/>
+   * <p>
    *
    * @param namedOutput    the named output name
    * @param reporter       the reporter
@@ -465,7 +465,7 @@ public class AvroMultipleOutputs {
 
   /**
    * Gets the output collector for a named output.
-   * <p/>
+   * <p>
    *
    * @param namedOutput the named output name
    * @param reporter    the reporter
@@ -485,7 +485,7 @@ public class AvroMultipleOutputs {
 
   /**
    * Gets the output collector for a named output.
-   * <p/>
+   * <p>
    *
    * @param namedOutput the named output name
    * @param reporter    the reporter
@@ -500,7 +500,7 @@ public class AvroMultipleOutputs {
 
   /**
    * Gets the output collector for a multi named output.
-   * <p/>
+   * <p>
    *
    * @param namedOutput the named output name
    * @param multiName   the multi name part
@@ -543,7 +543,7 @@ public class AvroMultipleOutputs {
 
   /**
    * Closes all the opened named outputs.
-   * <p/>
+   * <p>
    * If overriden subclasses must invoke <code>super.close()</code> at the end of
    * their <code>close()</code>
    *

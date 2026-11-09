@@ -30,23 +30,23 @@ import java.net.URI;
  * {@link java.util.ServiceLoader}, as its use is hardcoded as fallback when no
  * service exists. This enables users to reliably override the standard JSON
  * parser as well.
- * </p>
+ * <p>
  */
 public class JsonSchemaParser implements FormattedSchemaParser {
   /**
    * <p>
    * Parse a schema written in the internal (JSON) format without any validations.
-   * </p>
+   * <p>
    *
    * <p>
    * Using this method is only safe if used to parse a write schema (i.e., a
    * schema used to read Avro data). Other usages, for example by generated Avro
    * code, can cause interoperability problems.
-   * </p>
+   * <p>
    *
    * <p>
    * Use with care and sufficient testing!
-   * </p>
+   * <p>
    *
    * @param fragments one or more strings making up the schema (some schemata
    *                  exceed the compiler limits)

@@ -410,7 +410,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     throw new UnsupportedOperationException(
         "Programmer error: AbstractAvroMojo.doCompile(String, java.io.File, java.io.File) called directly");
-  };
+  }
 
   protected void doCompile(File sourceFileForModificationDetection, Collection<Schema> schemas, File outputDirectory)
       throws IOException {

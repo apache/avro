@@ -87,7 +87,7 @@ public class SchemaCompatibility {
    *
    * <p>
    * Matching includes reader name aliases.
-   * </p>
+   * <p>
    *
    * @param reader Named reader schema.
    * @param writer Named writer schema.
@@ -106,7 +106,7 @@ public class SchemaCompatibility {
    *
    * <p>
    * Matching includes reader name aliases.
-   * </p>
+   * <p>
    *
    * @param writerSchema Schema of the record where to look for the writer field.
    * @param readerField  Reader field to identify the corresponding writer field
@@ -188,7 +188,7 @@ public class SchemaCompatibility {
    *
    * <p>
    * Provides memoization to handle recursive schemas.
-   * </p>
+   * <p>
    */
   private static final class ReaderWriterCompatibilityChecker {
     private static final String ROOT_REFERENCE_TOKEN = "";
@@ -199,7 +199,7 @@ public class SchemaCompatibility {
      *
      * <p>
      * Memoizes the compatibility results.
-     * </p>
+     * <p>
      *
      * @param reader Reader schema to test.
      * @param writer Writer schema to test.
@@ -214,7 +214,7 @@ public class SchemaCompatibility {
      * Reports the compatibility of a reader/writer schema pair.
      * <p>
      * Memoizes the compatibility results.
-     * </p>
+     * <p>
      *
      * @param referenceToken The equivalent JSON pointer reference token
      *                       representation of the schema node being visited.
@@ -252,7 +252,7 @@ public class SchemaCompatibility {
      * <p>
      * Relies on external memoization performed by
      * {@link #getCompatibility(Schema, Schema)}.
-     * </p>
+     * <p>
      *
      * @param reader   Reader schema to test.
      * @param writer   Writer schema to test.

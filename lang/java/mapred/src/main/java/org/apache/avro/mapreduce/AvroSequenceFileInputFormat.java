@@ -52,7 +52,7 @@ public class AvroSequenceFileInputFormat<K, V> extends SequenceFileInputFormat<K
    * <p>
    * This class is based on Hadoop's SequenceFileRecordReader, modified to
    * construct an AvroSequenceFile.Reader instead of a SequenceFile.Reader.
-   * </p>
+   * <p>
    */
   protected class AvroSequenceFileRecordReader extends RecordReader<K, V> {
     private SequenceFile.Reader mReader;

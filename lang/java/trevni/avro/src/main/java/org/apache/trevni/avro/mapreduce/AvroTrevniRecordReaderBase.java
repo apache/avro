@@ -85,7 +85,7 @@ public abstract class AvroTrevniRecordReaderBase<K, V, T> extends RecordReader<K
    *
    * <p>
    * Calling <code>nextKeyValue()</code> moves this to the next record.
-   * </p>
+   * <p>
    *
    * @return The current Trevni record (may be null if no record has been read).
    */

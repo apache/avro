@@ -44,12 +44,12 @@ import static java.util.Objects.requireNonNull;
  *
  * <p>
  * This class is NOT thread-safe.
- * </p>
+ * <p>
  *
  * <p>
  * Note: this class has no use for most Avro users, but is a key component when
  * implementing a schema parser.
- * </p>
+ * <p>
  *
  * @see <a href="https://avro.apache.org/docs/current/specification/">JSON based
  *      schema definition</a>
@@ -129,11 +129,11 @@ public class ParseContext {
   /**
    * <p>
    * Find a schema by name and namespace.
-   * </p>
+   * <p>
    *
    * <p>
    * That is:
-   * </p>
+   * <p>
    *
    * <ol>
    * <li>If {@code name} is a primitive name, return a (new) schema for it</li>
@@ -150,7 +150,7 @@ public class ParseContext {
    * directly usable. Please {@link #put(Schema)} the schema using it in the
    * context. The {@link SchemaParser} and protocol parsers will ensure you'll
    * only get a resolved schema that is usable.
-   * </p>
+   * <p>
    *
    * @param name      the schema name to find
    * @param namespace the namespace to find the schema against
@@ -201,7 +201,7 @@ public class ParseContext {
    * Note that although this method works for all types except for arrays, maps
    * and unions, all primitive types have already been defined upon construction.
    * This means you cannot redefine a 'long' with a logical timestamp type.
-   * </p>
+   * <p>
    *
    * @param schema the schema to put into the context
    */

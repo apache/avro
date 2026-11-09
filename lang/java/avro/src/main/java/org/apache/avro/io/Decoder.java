@@ -24,14 +24,14 @@ import org.apache.avro.util.Utf8;
 
 /**
  * Low-level support for de-serializing Avro values.
- * <p/>
+ * <p>
  * This class has two types of methods. One type of methods support the reading
  * of leaf values (for example, {@link #readLong} and {@link #readString}).
- * <p/>
+ * <p>
  * The other type of methods support the reading of maps and arrays. These
  * methods are {@link #readArrayStart}, {@link #arrayNext}, and similar methods
  * for maps. See {@link #readArrayStart} for details on these methods.
- * <p/>
+ * <p>
  * {@link DecoderFactory} contains Decoder construction and configuration
  * facilities.
  *
@@ -243,7 +243,7 @@ public abstract class Decoder {
    * consisting of a Long field and a Boolean field. Your code would look
    * something like this:
    *
-   * <pre>
+   * <pre>{@code
    * Map<String, Record> m = new HashMap<String, Record>();
    * Record reuse = new Record();
    * for (long i = in.readMapStart(); i != 0; i = in.readMapNext()) {
@@ -254,7 +254,7 @@ public abstract class Decoder {
    *     m.put(key, reuse);
    *   }
    * }
-   * </pre>
+   * }</pre>
    *
    * @throws AvroTypeException If this is a stateful reader and map is not the
    *                           type of the next value to be read

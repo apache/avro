@@ -21,9 +21,7 @@ package org.apache.avro;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Map;
-import java.util.ServiceLoader;
 
-import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericEnumSymbol;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
@@ -33,11 +31,11 @@ import org.apache.avro.generic.IndexedRecord;
  * <p>
  * Instances of this class can be added to GenericData to convert a logical type
  * to a particular representation. This can be done manually, using
- * {@link GenericData#addLogicalTypeConversion(Conversion)}, or automatically.
- * This last option uses the Java {@link ServiceLoader}, and requires the
+ * {@link org.apache.avro.generic.GenericData#addLogicalTypeConversion(Conversion)}, or automatically.
+ * This last option uses the Java {@link java.util.ServiceLoader}, and requires the
  * implementation to be a public class with a public no-arg constructor, be
  * named in a file called {@code /META-INF/services/org.apache.avro.Conversion},
- * and both must available in the classpath.</li>
+ * and both must available in the classpath.
  * <p>
  * Implementations must provide:
  * <ul>
@@ -55,7 +53,7 @@ import org.apache.avro.generic.IndexedRecord;
  * {@code ReflectData} or {@code ProtobufData}, for example.
  *
  * @param <T> a Java type that can represent the named logical type
- * @see ServiceLoader
+ * @see java.util.ServiceLoader
  */
 @SuppressWarnings("unused")
 public abstract class Conversion<T> {

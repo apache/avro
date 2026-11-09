@@ -161,7 +161,7 @@ public abstract class AvroRecordReaderBase<K, V, T> extends RecordReader<K, V> {
    *
    * <p>
    * Calling <code>nextKeyValue()</code> moves this to the next record.
-   * </p>
+   * <p>
    *
    * @return The current Avro record (may be null if no record has been read).
    */

@@ -48,7 +48,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
  * is designed to mimic the
  * <a href="https://avro.apache.org/docs/current/spec.html#schemas">Avro Schema
  * Specification</a>
- * </p>
+ * <p>
  * For example, the below JSON schema and the fluent builder code to create it
  * are very similar:
  *
@@ -72,13 +72,13 @@ import com.fasterxml.jackson.databind.node.TextNode;
  *     .name("serverHash").type("MD5").noDefault().name("meta").type().nullable().map().values().bytesType().noDefault()
  *     .endRecord();
  * </pre>
- * <p/>
+ * <p>
  *
  * <h5>Usage Guide</h5> SchemaBuilder chains together many smaller builders and
  * maintains nested context in order to mimic the Avro Schema specification.
  * Every Avro type in JSON has required and optional JSON properties, as well as
  * user-defined properties.
- * <p/>
+ * <p>
  * <h6>Selecting and Building an Avro Type</h6> The API analogy for the right
  * hand side of the Avro Schema JSON
  *
@@ -89,7 +89,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
  * is a {@link TypeBuilder}, {@link FieldTypeBuilder}, or
  * {@link UnionFieldTypeBuilder}, depending on the context. These types all
  * share a similar API for selecting and building types.
- * <p/>
+ * <p>
  * <h5>Primitive Types</h5> All Avro primitive types are trivial to configure. A
  * primitive type in Avro JSON can be declared two ways, one that supports
  * custom properties and one that does not:
@@ -120,7 +120,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
  * <li>{@link NamespacedBuilder#namespace(String)}</li>
  * <li>{@link NamespacedBuilder#aliases(String...)}</li>
  * <li>{@link PropBuilder#prop(String, String)}</li>
- * <p/>
+ * <p>
  * Each named type completes configuration of the optional properties with its
  * own method:
  * <li>{@link FixedBuilder#size(int)}</li>
@@ -161,12 +161,12 @@ import com.fasterxml.jackson.databind.node.TextNode;
  * defining aliases, custom properties, and documentation of the field. After
  * configuring these optional values for a field, the type is selected or built
  * with {@link FieldBuilder#type()}.
- * <p/>
+ * <p>
  * Fields have default values that must be specified to complete the field.
  * {@link FieldDefault#noDefault()} is available for all field types, and a
  * specific method is available for each type to use a default, for example
  * {@link IntDefault#intDefault(int)}
- * <p/>
+ * <p>
  * There are field shortcut methods on {@link FieldAssembler} for primitive
  * types. These shortcuts create required, optional, and nullable fields, but do
  * not support field aliases, doc, or custom properties.
@@ -194,7 +194,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
  *
  * In a field context, the first type of a union defines what default type is
  * allowed.
- * </p>
+ * <p>
  * Unions have two shortcuts for common cases. nullable() creates a union of a
  * type and null. In a field type context, optional() is available and creates a
  * union of null and a type, with a null default. The below two are equivalent:
@@ -225,7 +225,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
  * as a default to child fields, nested types, or later defined types in a
  * union. To specify a name that has no namespace and ignore the inherited
  * namespace, set the namespace to "".
- * <p/>
+ * <p>
  * {@link SchemaBuilder#builder(String)} returns a type builder with a default
  * namespace. {@link SchemaBuilder#builder()} returns a type builder with no
  * default namespace.
@@ -405,7 +405,7 @@ public class SchemaBuilder {
    * An abstract type that provides builder methods for configuring the name, doc,
    * and aliases of all Avro types that have names (fields, Fixed, Record, and
    * Enum).
-   * <p/>
+   * <p>
    * All Avro named types and fields have 'doc', 'aliases', and 'name' components.
    * 'name' is required, and provided to this builder. 'doc' and 'aliases' are
    * optional.
@@ -479,7 +479,7 @@ public class SchemaBuilder {
 
     /**
      * Set the namespace of this type. To clear the namespace, set empty string.
-     * <p/>
+     * <p>
      * When the namespace is null or unset, the namespace of the type defaults to
      * the namespace of the enclosing context.
      **/
@@ -724,11 +724,11 @@ public class SchemaBuilder {
   /**
    * Builds an Avro Fixed type with optional properties, namespace, doc, and
    * aliases.
-   * <p/>
+   * <p>
    * Set properties with {@link #prop(String, String)}, namespace with
    * {@link #namespace(String)}, doc with {@link #doc(String)}, and aliases with
    * {@link #aliases(String[])}.
-   * <p/>
+   * <p>
    * The Fixed schema is finalized when its required size is set via
    * {@link #size(int)}.
    **/
@@ -757,11 +757,11 @@ public class SchemaBuilder {
   /**
    * Builds an Avro Enum type with optional properties, namespace, doc, and
    * aliases.
-   * <p/>
+   * <p>
    * Set properties with {@link #prop(String, String)}, namespace with
    * {@link #namespace(String)}, doc with {@link #doc(String)}, and aliases with
    * {@link #aliases(String[])}.
-   * <p/>
+   * <p>
    * The Enum schema is finalized when its required symbols are set via
    * {@link #symbols(String[])}.
    **/
@@ -800,9 +800,9 @@ public class SchemaBuilder {
 
   /**
    * Builds an Avro Map type with optional properties.
-   * <p/>
+   * <p>
    * Set properties with {@link #prop(String, String)}.
-   * <p/>
+   * <p>
    * The Map schema's properties are finalized when {@link #values()} or
    * {@link #values(Schema)} is called.
    **/
@@ -843,9 +843,9 @@ public class SchemaBuilder {
 
   /**
    * Builds an Avro Array type with optional properties.
-   * <p/>
+   * <p>
    * Set properties with {@link #prop(String, String)}.
-   * <p/>
+   * <p>
    * The Array schema's properties are finalized when {@link #items()} or
    * {@link #items(Schema)} is called.
    **/
@@ -971,7 +971,7 @@ public class SchemaBuilder {
    * A common API for building types within a context. BaseTypeBuilder can build
    * all types other than Unions. {@link TypeBuilder} can additionally build
    * Unions.
-   * <p/>
+   * <p>
    * The builder has two contexts:
    * <li>A naming context provides a default namespace and allows for previously
    * defined named types to be referenced from {@link #type(String)}</li>
@@ -997,7 +997,7 @@ public class SchemaBuilder {
     /**
      * Look up the type by name. This type must be previously defined in the context
      * of this builder.
-     * <p/>
+     * <p>
      * The name may be fully qualified or a short name. If it is a short name, the
      * default namespace of the current context will additionally be searched.
      **/
@@ -1008,7 +1008,7 @@ public class SchemaBuilder {
     /**
      * Look up the type by name and namespace. This type must be previously defined
      * in the context of this builder.
-     * <p/>
+     * <p>
      * The name may be fully qualified or a short name. If it is a fully qualified
      * name, the namespace provided is ignored. If it is a short name, the namespace
      * provided is used if not null, else the default namespace of the current
@@ -1278,7 +1278,7 @@ public class SchemaBuilder {
 
     /**
      * A shortcut for building a union of a type and null.
-     * <p/>
+     * <p>
      * For example, the code snippets below are equivalent:
      *
      * <pre>
@@ -1333,11 +1333,11 @@ public class SchemaBuilder {
    * A special Builder for Record fields. The API is very similar to
    * {@link BaseTypeBuilder}. However, fields have their own names, properties,
    * and default values.
-   * <p/>
+   * <p>
    * The methods on this class create builder instances that return their control
    * to the {@link FieldAssembler} of the enclosing record context after
    * configuring a default for the field.
-   * <p/>
+   * <p>
    * For example, an int field with default value 1:
    *
    * <pre>
@@ -1563,7 +1563,7 @@ public class SchemaBuilder {
     /**
      * A shortcut for building a union of a type and null, with an optional default
      * value of the non-null type.
-     * <p/>
+     * <p>
      * For example, the two code snippets below are equivalent:
      *
      * <pre>
@@ -1580,7 +1580,7 @@ public class SchemaBuilder {
 
     /**
      * A shortcut for building a union of null and a type, with a null default.
-     * <p/>
+     * <p>
      * For example, the two code snippets below are equivalent:
      *
      * <pre>
@@ -1836,7 +1836,7 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a boolean field with the given name and no default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -1850,7 +1850,7 @@ public class SchemaBuilder {
     /**
      * Shortcut for creating an optional boolean field: a union of null and boolean
      * with null default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -1864,7 +1864,7 @@ public class SchemaBuilder {
     /**
      * Shortcut for creating a nullable boolean field: a union of boolean and null
      * with an boolean default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -1877,7 +1877,7 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating an int field with the given name and no default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -1891,7 +1891,7 @@ public class SchemaBuilder {
     /**
      * Shortcut for creating an optional int field: a union of null and int with
      * null default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -1905,7 +1905,7 @@ public class SchemaBuilder {
     /**
      * Shortcut for creating a nullable int field: a union of int and null with an
      * int default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -1918,7 +1918,7 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a long field with the given name and no default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -1932,7 +1932,7 @@ public class SchemaBuilder {
     /**
      * Shortcut for creating an optional long field: a union of null and long with
      * null default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -1946,7 +1946,7 @@ public class SchemaBuilder {
     /**
      * Shortcut for creating a nullable long field: a union of long and null with a
      * long default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -1959,7 +1959,7 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a float field with the given name and no default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -1973,7 +1973,7 @@ public class SchemaBuilder {
     /**
      * Shortcut for creating an optional float field: a union of null and float with
      * null default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -1987,7 +1987,7 @@ public class SchemaBuilder {
     /**
      * Shortcut for creating a nullable float field: a union of float and null with
      * a float default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -2000,7 +2000,7 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a double field with the given name and no default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -2014,7 +2014,7 @@ public class SchemaBuilder {
     /**
      * Shortcut for creating an optional double field: a union of null and double
      * with null default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -2028,7 +2028,7 @@ public class SchemaBuilder {
     /**
      * Shortcut for creating a nullable double field: a union of double and null
      * with a double default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -2041,7 +2041,7 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a string field with the given name and no default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -2055,7 +2055,7 @@ public class SchemaBuilder {
     /**
      * Shortcut for creating an optional string field: a union of null and string
      * with null default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -2069,7 +2069,7 @@ public class SchemaBuilder {
     /**
      * Shortcut for creating a nullable string field: a union of string and null
      * with a string default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -2082,7 +2082,7 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a bytes field with the given name and no default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -2096,7 +2096,7 @@ public class SchemaBuilder {
     /**
      * Shortcut for creating an optional bytes field: a union of null and bytes with
      * null default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -2110,7 +2110,7 @@ public class SchemaBuilder {
     /**
      * Shortcut for creating a nullable bytes field: a union of bytes and null with
      * a bytes default.
-     * <p/>
+     * <p>
      * This is equivalent to:
      *
      * <pre>
@@ -2216,12 +2216,12 @@ public class SchemaBuilder {
     /**
      * Final step in configuring this field, finalizing name, namespace, alias, and
      * order. Sets the field's type to the schema by name reference.
-     * <p/>
+     * <p>
      * The name must correspond with a named schema that has already been created in
      * the context of this builder. The name may be a fully qualified name, or a
      * short name. If it is a short name, the namespace context of this builder will
      * be used.
-     * <p/>
+     * <p>
      * The name and namespace context rules are the same as the Avro schema JSON
      * specification.
      */
@@ -2232,13 +2232,13 @@ public class SchemaBuilder {
     /**
      * Final step in configuring this field, finalizing name, namespace, alias, and
      * order. Sets the field's type to the schema by name reference.
-     * <p/>
+     * <p>
      * The name must correspond with a named schema that has already been created in
      * the context of this builder. The name may be a fully qualified name, or a
      * short name. If it is a full name, the namespace is ignored. If it is a short
      * name, the namespace provided is used. If the namespace provided is null, the
      * namespace context of this builder will be used.
-     * <p/>
+     * <p>
      * The name and namespace context rules are the same as the Avro schema JSON
      * specification.
      */

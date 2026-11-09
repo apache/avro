@@ -50,7 +50,7 @@ import static org.apache.avro.file.CodecFactory.DEFAULT_ZSTANDARD_BUFFERPOOL;
 
 /**
  * An {@link org.apache.hadoop.mapred.OutputFormat} for Avro data files.
- * <p/>
+ * <p>
  * You can specify various options using Job Configuration properties. Look at
  * the fields in {@link AvroJob} as well as this class to get an overview of the
  * supported options.

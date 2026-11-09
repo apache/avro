@@ -42,18 +42,18 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * A temporal amount to model an {@link org.apache.avro.LogicalTypes.Duration
  * Avro duration} (the logical type).
- * </p>
+ * <p>
  *
  * <p>
  * It consists of a number of months, days and milliseconds, all modelled as an
  * unsigned integer.
- * </p>
+ * <p>
  *
  * <p>
  * Compared to {@link Period java.time.Period}, this class has a smaller range
  * ('only' supporting a little less than 358 million years), and cannot support
  * negative periods.
- * </p>
+ * <p>
  *
  * <p>
  * Compared to {@link Duration java.time.Duration}, this class has less
@@ -61,11 +61,11 @@ import static java.util.Objects.requireNonNull;
  * durations, and has a much smaller range. Where {@code java.time.Duration}
  * supports fixed ranges up to about 68 years, {@code TimePeriod} can only
  * handle about 49 days.
- * </p>
+ * <p>
  *
  * <p>
  * Comparison with the regular {@code java.time} classes:
- * </p>
+ * <p>
  *
  * <table>
  * <tr>

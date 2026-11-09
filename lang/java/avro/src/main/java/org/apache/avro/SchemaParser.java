@@ -41,13 +41,13 @@ import java.util.ServiceLoader;
  * first result. This means it can transparently handle any schema format. The
  * Avro project defines a JSON based format and an IDL format (the latter
  * available as a separate dependency), but you can also provide your own.
- * </p>
+ * <p>
  *
  * <p>
  * The parser can handle various text based sources. If the source contains a
  * UTF encoded latin text based format it can even detect which UTF encoding was
  * used (UTF-8, UTF16BE, UTF16LE, UTF-32BE or UTF32LE).
- * </p>
+ * <p>
  *
  * @see FormattedSchemaParser
  * @see UtfTextUtils
@@ -59,7 +59,7 @@ public class SchemaParser {
   /**
    * <p>
    * Use a default SchemaParser to parse a single schema. Equivalent to:
-   * </p>
+   * <p>
    * <code>
    *   new SchemaParser().parse(schema).mainSchema()
    * </code>
@@ -77,7 +77,7 @@ public class SchemaParser {
    * <p>
    * Use a default SchemaParser to parse a single schema from a file. Equivalent
    * to:
-   * </p>
+   * <p>
    * <code>
    *   new SchemaParser().parse(schemaFile).mainSchema()
    * </code>
@@ -104,11 +104,11 @@ public class SchemaParser {
    * Create a schema parser with the specified name validator.
    * <p>
    * Initially, the list of known (named) schemata is empty.
-   * </p>
+   * <p>
    * <p>
    * Note: using {@link NameValidator#STRICT_VALIDATOR} to validate names is
    * advised for maximum interoperability.
-   * </p>
+   * <p>
    *
    * @param nameValidator the name validator to use
    */

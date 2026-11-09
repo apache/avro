@@ -37,13 +37,13 @@ import org.apache.hadoop.io.serializer.Serializer;
  * of the WritableSerialization model, so they are wrapped in
  * {@link org.apache.avro.mapred.AvroWrapper} objects and serialization is
  * handled by this class.
- * </p>
+ * <p>
  *
  * <p>
  * MapReduce jobs that use AvroWrapper objects as keys or values need to be
  * configured with {@link AvroSerialization}. Use
  * {@link org.apache.avro.mapreduce.AvroJob} to help with Job configuration.
- * </p>
+ * <p>
  *
  * @param <T> The Java type of the Avro data.
  */

@@ -22,12 +22,12 @@ package org.apache.avro;
  * <p>
  * A {@link SchemaValidator} for validating the provided schema against all
  * schemas in the Iterable in {@link #validate(Schema, Iterable)}.
- * </p>
+ * <p>
  * <p>
  * Uses the {@link SchemaValidationStrategy} provided in the constructor to
  * validate the {@link Schema} against each Schema in the Iterable, in Iterator
  * order, via {@link SchemaValidationStrategy#validate(Schema, Schema)}.
- * </p>
+ * <p>
  */
 public final class ValidateAll implements SchemaValidator {
   private final SchemaValidationStrategy strategy;

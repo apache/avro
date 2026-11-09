@@ -35,7 +35,7 @@ import org.apache.hadoop.mapreduce.Job;
  * When using Avro data as MapReduce keys and values, data must be wrapped in a
  * suitable AvroWrapper implementation. MapReduce keys must be wrapped in an
  * AvroKey object, and MapReduce values must be wrapped in an AvroValue object.
- * </p>
+ * <p>
  *
  * <p>
  * Suppose you would like to write a line count mapper that reads from a text
@@ -46,7 +46,7 @@ import org.apache.hadoop.mapreduce.Job;
  * the <code>setMapOutputKeySchema()</code> and
  * <code>setMapOutputValueSchema()</code> methods to set writer schemas for the
  * records you will generate.
- * </p>
+ * <p>
  */
 public final class AvroJob {
   /** Disable the constructor for this utility class. */

@@ -41,7 +41,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
  * objects like Text or IntWritable, or they may be AvroWrapper subclasses
  * (AvroKey or AvroValue). Writable objects will be converted to their
  * corresponding Avro types when written to the generic record key/value pair.
- * </p>
+ * <p>
  *
  * @param <K> The type of key to write.
  * @param <V> The type of value to write.

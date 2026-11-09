@@ -26,19 +26,19 @@ import java.util.ArrayList;
 
 /**
  * An {@link Encoder} for Avro's binary encoding that does not buffer output.
- * <p/>
+ * <p>
  * This encoder does not buffer writes in contrast to
  * {@link BufferedBinaryEncoder}. However, it is lighter-weight and useful when:
  * The buffering in BufferedBinaryEncoder is not desired because you buffer a
  * different level or the Encoder is very short-lived.
- * </p>
+ * <p>
  * The BlockingDirectBinaryEncoder will encode the number of bytes of the Map
  * and Array blocks. This will allow to postpone the decoding, or skip over it
  * at all.
- * <p/>
+ * <p>
  * To construct, use
  * {@link EncoderFactory#blockingDirectBinaryEncoder(OutputStream, BinaryEncoder)}
- * <p/>
+ * <p>
  * {@link BlockingDirectBinaryEncoder} instances returned by this method are not
  * thread-safe
  *

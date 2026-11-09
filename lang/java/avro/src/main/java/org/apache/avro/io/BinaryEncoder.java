@@ -25,7 +25,7 @@ import org.apache.avro.util.Utf8;
 
 /**
  * An abstract {@link Encoder} for Avro's binary encoding.
- * <p/>
+ * <p>
  * To construct and configure instances, use {@link EncoderFactory}
  *
  * @see EncoderFactory
@@ -167,7 +167,7 @@ public abstract class BinaryEncoder extends Encoder {
   /**
    * Returns the number of bytes currently buffered by this encoder. If this
    * Encoder does not buffer, this will always return zero.
-   * <p/>
+   * <p>
    * Call {@link #flush()} to empty the buffer to the underlying output.
    */
   public abstract int bytesBuffered();
