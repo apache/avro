@@ -216,6 +216,7 @@ if (AVRO_BUILD_TESTS)
     endmacro (unittest)
 
     unittest (buffertest)
+    unittest (LayoutTests)
     unittest (unittest)
     unittest (SchemaTests)
     unittest (LargeSchemaTests)
