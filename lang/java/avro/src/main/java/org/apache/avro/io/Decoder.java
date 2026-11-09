@@ -243,18 +243,22 @@ public abstract class Decoder {
    * consisting of a Long field and a Boolean field. Your code would look
    * something like this:
    *
-   * <pre>{@code
-   * Map<String, Record> m = new HashMap<String, Record>();
-   * Record reuse = new Record();
-   * for (long i = in.readMapStart(); i != 0; i = in.readMapNext()) {
-   *   for (long j = 0; j < i; j++) {
-   *     String key = in.readString();
-   *     reuse.intField = in.readInt();
-   *     reuse.boolField = in.readBoolean();
-   *     m.put(key, reuse);
+   * <!-- spotless:off -->
+   * <pre>
+   * {@code
+   *   Map<String, Record> m = new HashMap<String, Record>();
+   *   Record reuse = new Record();
+   *   for (long i = in.readMapStart(); i != 0; i = in.readMapNext()) {
+   *     for (long j = 0; j < i; j++) {
+   *       String key = in.readString();
+   *       reuse.intField = in.readInt();
+   *       reuse.boolField = in.readBoolean();
+   *       m.put(key, reuse);
+   *     }
    *   }
    * }
-   * }</pre>
+   * </pre>
+   * <!-- spotless:on -->
    *
    * @throws AvroTypeException If this is a stateful reader and map is not the
    *                           type of the next value to be read

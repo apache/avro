@@ -246,8 +246,8 @@ public class SpecificData extends GenericData {
    * Retrieve the current value of the custom-coders feature flag. Defaults to
    * <code>false</code>, but this default can be overridden using the system
    * property <code>org.apache.avro.specific.use_custom_coders</code>, and can be
-   * set dynamically by {@link SpecificData#useCustomCoders()}. See <a
-   * href="https://avro.apache.org/docs/current/gettingstartedjava.html#Beta+feature:+Generating+faster+code">Getting
+   * set dynamically by {@link SpecificData#useCustomCoders()}. See <a href=
+   * "https://avro.apache.org/docs/current/gettingstartedjava.html#Beta+feature:+Generating+faster+code">Getting
    * started with Java</a> for more about this feature flag.
    */
   public boolean useCustomCoders() {

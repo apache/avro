@@ -271,7 +271,8 @@ public abstract class Encoder implements Flushable {
    * record consisting of a Long field and a Boolean field. Your code would look
    * something like this:
    *
-   * <pre>{@code
+   * <pre>
+   * {@code
    * out.writeMapStart();
    * out.setItemCount(list.size());
    * for (Map.Entry<String, Record> entry : map.entrySet()) {
@@ -281,7 +282,8 @@ public abstract class Encoder implements Flushable {
    *   out.writeBoolean(entry.getValue().boolField);
    * }
    * out.writeMapEnd();
-   * }</pre>
+   * }
+   * </pre>
    *
    * @throws AvroTypeException If this is a stateful writer and a map is not
    *                           expected

@@ -31,11 +31,12 @@ import org.apache.avro.generic.IndexedRecord;
  * <p>
  * Instances of this class can be added to GenericData to convert a logical type
  * to a particular representation. This can be done manually, using
- * {@link org.apache.avro.generic.GenericData#addLogicalTypeConversion(Conversion)}, or automatically.
- * This last option uses the Java {@link java.util.ServiceLoader}, and requires the
- * implementation to be a public class with a public no-arg constructor, be
- * named in a file called {@code /META-INF/services/org.apache.avro.Conversion},
- * and both must available in the classpath.
+ * {@link org.apache.avro.generic.GenericData#addLogicalTypeConversion(Conversion)},
+ * or automatically. This last option uses the Java
+ * {@link java.util.ServiceLoader}, and requires the implementation to be a
+ * public class with a public no-arg constructor, be named in a file called
+ * {@code /META-INF/services/org.apache.avro.Conversion}, and both must
+ * available in the classpath.
  * <p>
  * Implementations must provide:
  * <ul>
