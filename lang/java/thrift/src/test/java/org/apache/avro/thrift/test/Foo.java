@@ -268,10 +268,12 @@ public class Foo {
         return new ping_args();
       }
 
+      @Override
       public ping_result getEmptyResultInstance() {
         return new ping_result();
       }
 
+      @Override
       public boolean isOneway() {
         return false;
       }
@@ -297,10 +299,12 @@ public class Foo {
         return new add_args();
       }
 
+      @Override
       public add_result getEmptyResultInstance() {
         return new add_result();
       }
 
+      @Override
       public boolean isOneway() {
         return false;
       }
@@ -328,10 +332,12 @@ public class Foo {
         return new zip_args();
       }
 
+      @Override
       public org.apache.thrift.TBase getEmptyResultInstance() {
         return null;
       }
 
+      @Override
       public boolean isOneway() {
         return true;
       }
@@ -380,6 +386,7 @@ public class Foo {
         return new ping_args();
       }
 
+      @Override
       public ping_result getEmptyResultInstance() {
         return new ping_result();
       }
@@ -429,6 +436,7 @@ public class Foo {
         };
       }
 
+      @Override
       public boolean isOneway() {
         return false;
       }
@@ -449,6 +457,7 @@ public class Foo {
         return new add_args();
       }
 
+      @Override
       public add_result getEmptyResultInstance() {
         return new add_result();
       }
@@ -500,6 +509,7 @@ public class Foo {
         };
       }
 
+      @Override
       public boolean isOneway() {
         return false;
       }
@@ -521,6 +531,7 @@ public class Foo {
         return new zip_args();
       }
 
+      @Override
       public org.apache.thrift.TBase getEmptyResultInstance() {
         return null;
       }
@@ -543,6 +554,7 @@ public class Foo {
         };
       }
 
+      @Override
       public boolean isOneway() {
         return true;
       }
