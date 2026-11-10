@@ -55,10 +55,18 @@ public class TestSpecificRecordWithUnion {
     byte[] recordBytes = serializeRecord(
         "{ \"org.apache.avro.specific.TestUnionRecord\": { \"amount\": { \"bytes\": \"\\u0000\" } } }", schema);
 
+    // Use a fresh SpecificData so class resolution is not served from
+    // SpecificData.get()'s cache (other tests in this class may have resolved
+    // TestUnionRecord already, and surefire 3.6.x JUnit Platform ordering can
+    // run them first). The test must exercise the security validator on lookup.
+    SpecificDatumReader<SpecificRecord> reader = new SpecificDatumReader<>(schema, schema, new SpecificData());
+
     ClassSecurityPredicate originalValidator = ClassSecurityValidator.getGlobal();
     try {
       ClassSecurityValidator.setGlobal(ClassSecurityValidator.builder().build());
-      assertThrows(SecurityException.class, () -> deserializeRecord(schema, recordBytes));
+      ByteArrayInputStream in = new ByteArrayInputStream(recordBytes);
+      Decoder decoder = DecoderFactory.get().binaryDecoder(in, null);
+      assertThrows(SecurityException.class, () -> reader.read(null, decoder));
     } finally {
       ClassSecurityValidator.setGlobal(originalValidator);
     }

@@ -26,7 +26,7 @@ import java.util.ServiceLoader;
  * <p>
  * Schema formats have a name, and optionally a variant (all lowercase). The
  * Avro library supports a few formats out of the box:
- * </p>
+ * <p>
  *
  * <dl>
  *
@@ -59,7 +59,7 @@ import java.util.ServiceLoader;
  * {@link java.util.ServiceLoader}, which loads them using the context
  * ClassLoader when available, or the application ClassLoader when not. See the
  * {@code ServiceLoader} class for more detailsπ.
- * </p>
+ * <p>
  *
  * @see <a href=
  *      "https://avro.apache.org/docs/current/specification/#schema-declaration">Specification:

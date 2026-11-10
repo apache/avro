@@ -27,7 +27,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 /**
  * A factory for creating and configuring {@link Encoder} instances.
- * <p/>
+ * <p>
  * Factory methods that create Encoder instances are thread-safe. Multiple
  * instances with different configurations can be cached by an application.
  *
@@ -131,7 +131,7 @@ public class EncoderFactory {
    * {@link BinaryEncoder} instances created with
    * #blockingBinaryEncoder(OutputStream, BinaryEncoder) will have block buffers
    * of this size.
-   * <p/>
+   * <p>
    *
    * @see #configureBlockSize(int)
    * @see #blockingBinaryEncoder(OutputStream, BinaryEncoder)
@@ -146,15 +146,15 @@ public class EncoderFactory {
    * provided as the destination for written data. If <i>reuse</i> is provided, an
    * attempt will be made to reconfigure <i>reuse</i> rather than construct a new
    * instance, but this is not guaranteed, a new instance may be returned.
-   * <p/>
+   * <p>
    * The {@link BinaryEncoder} implementation returned may buffer its output. Data
    * may not appear on the underlying OutputStream until {@link Encoder#flush()}
    * is called. The buffer size is configured with
    * {@link #configureBufferSize(int)}.
-   * </p>
+   * <p>
    * If buffering is not desired, and lower performance is acceptable, use
    * {@link #directBinaryEncoder(OutputStream, BinaryEncoder)}
-   * <p/>
+   * <p>
    * {@link BinaryEncoder} instances returned by this method are not thread-safe
    *
    * @param out   The OutputStream to write to. Cannot be null.
@@ -182,18 +182,18 @@ public class EncoderFactory {
    * provided as the destination for written data. If <i>reuse</i> is provided, an
    * attempt will be made to reconfigure <i>reuse</i> rather than construct a new
    * instance, but this is not guaranteed, a new instance may be returned.
-   * <p/>
+   * <p>
    * The {@link BinaryEncoder} implementation returned does not buffer its output,
    * calling {@link Encoder#flush()} will simply cause the wrapped OutputStream to
    * be flushed.
-   * <p/>
+   * <p>
    * Performance of unbuffered writes can be significantly slower than buffered
    * writes. {@link #binaryEncoder(OutputStream, BinaryEncoder)} returns
    * BinaryEncoder instances that are tuned for performance but may buffer output.
    * The unbuffered, 'direct' encoder may be desired when buffering semantics are
    * problematic, or if the lifetime of the encoder is so short that the buffer
    * would not be useful.
-   * <p/>
+   * <p>
    * {@link BinaryEncoder} instances returned by this method are not thread-safe.
    *
    * @param out   The OutputStream to initialize to. Cannot be null.
@@ -222,21 +222,21 @@ public class EncoderFactory {
    * provided, an attempt will be made to reconfigure <i>reuse</i> rather than
    * construct a new instance, but this is not guaranteed, a new instance may be
    * returned.
-   * <p/>
+   * <p>
    * The {@link BinaryEncoder} implementation returned does not buffer its output,
    * calling {@link Encoder#flush()} will simply cause the wrapped OutputStream to
    * be flushed.
-   * <p/>
+   * <p>
    * The {@link BlockingDirectBinaryEncoder} will write the block sizes for the
    * arrays and maps so efficient skipping can be done.
-   * <p/>
+   * <p>
    * Performance of unbuffered writes can be significantly slower than buffered
    * writes. {@link #binaryEncoder(OutputStream, BinaryEncoder)} returns
    * BinaryEncoder instances that are tuned for performance but may buffer output.
    * The unbuffered, 'direct' encoder may be desired when buffering semantics are
    * problematic, or if the lifetime of the encoder is so short that the buffer
    * would not be useful.
-   * <p/>
+   * <p>
    * {@link BinaryEncoder} instances returned by this method are not thread-safe.
    *
    * @param out   The OutputStream to initialize to. Cannot be null.
@@ -264,17 +264,17 @@ public class EncoderFactory {
    * provided as the destination for written data. If <i>reuse</i> is provided, an
    * attempt will be made to reconfigure <i>reuse</i> rather than construct a new
    * instance, but this is not guaranteed, a new instance may be returned.
-   * <p/>
+   * <p>
    * The {@link BinaryEncoder} implementation returned buffers its output, calling
    * {@link Encoder#flush()} is required for output to appear on the underlying
    * OutputStream.
-   * <p/>
+   * <p>
    * The returned BinaryEncoder implements the Avro binary encoding using blocks
    * delimited with byte sizes for Arrays and Maps. This allows for some decoders
    * to skip over large Arrays or Maps without decoding the contents, but adds
    * some overhead. The default block size is configured with
    * {@link #configureBlockSize(int)}
-   * <p/>
+   * <p>
    * {@link BinaryEncoder} instances returned by this method are not thread-safe.
    *
    * @param out   The OutputStream to initialize to. Cannot be null.
@@ -302,10 +302,10 @@ public class EncoderFactory {
   /**
    * Creates a {@link JsonEncoder} using the OutputStream provided for writing
    * data conforming to the Schema provided.
-   * <p/>
+   * <p>
    * {@link JsonEncoder} buffers its output. Data may not appear on the underlying
    * OutputStream until {@link Encoder#flush()} is called.
-   * <p/>
+   * <p>
    * {@link JsonEncoder} is not thread-safe.
    *
    * @param schema The Schema for data written to this JsonEncoder. Cannot be
@@ -321,10 +321,10 @@ public class EncoderFactory {
   /**
    * Creates a {@link JsonEncoder} using the OutputStream provided for writing
    * data conforming to the Schema provided with optional pretty printing.
-   * <p/>
+   * <p>
    * {@link JsonEncoder} buffers its output. Data may not appear on the underlying
    * OutputStream until {@link Encoder#flush()} is called.
-   * <p/>
+   * <p>
    * {@link JsonEncoder} is not thread-safe.
    *
    * @param schema The Schema for data written to this JsonEncoder. Cannot be
@@ -342,10 +342,10 @@ public class EncoderFactory {
   /**
    * Creates a {@link JsonEncoder} using the OutputStream provided for writing
    * data conforming to the Schema provided with optional pretty printing.
-   * <p/>
+   * <p>
    * {@link JsonEncoder} buffers its output. Data may not appear on the underlying
    * OutputStream until {@link Encoder#flush()} is called.
-   * <p/>
+   * <p>
    * {@link JsonEncoder} is not thread-safe.
    *
    * @param schema    The Schema for data written to this JsonEncoder. Cannot be
@@ -374,10 +374,10 @@ public class EncoderFactory {
   /**
    * Creates a {@link JsonEncoder} using the {@link JsonGenerator} provided for
    * output of data conforming to the Schema provided.
-   * <p/>
+   * <p>
    * {@link JsonEncoder} buffers its output. Data may not appear on the underlying
    * output until {@link Encoder#flush()} is called.
-   * <p/>
+   * <p>
    * {@link JsonEncoder} is not thread-safe.
    *
    * @param schema The Schema for data written to this JsonEncoder. Cannot be
@@ -394,10 +394,10 @@ public class EncoderFactory {
    * Creates a {@link ValidatingEncoder} that wraps the Encoder provided. This
    * ValidatingEncoder will ensure that operations against it conform to the
    * schema provided.
-   * <p/>
+   * <p>
    * Many {@link Encoder}s buffer their output. Data may not appear on the
    * underlying output until {@link Encoder#flush()} is called.
-   * <p/>
+   * <p>
    * {@link ValidatingEncoder} is not thread-safe.
    *
    * @param schema  The Schema to validate operations against. Cannot be null.

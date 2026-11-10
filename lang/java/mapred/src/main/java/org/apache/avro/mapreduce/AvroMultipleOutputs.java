@@ -49,17 +49,17 @@ import org.apache.hadoop.util.ReflectionUtils;
  *
  * Each additional output, or named output, may be configured with its own
  * <code>Schema</code> and <code>OutputFormat</code>.
- * </p>
+ * <p>
  * <p>
  * Case two: to write data to different files provided by user
- * </p>
+ * <p>
  *
  * <p>
  * AvroMultipleOutputs supports counters, by default they are disabled. The
  * counters group is the {@link AvroMultipleOutputs} class name. The names of
  * the counters are the same as the output name. These count the number of
  * records written to each output name.
- * </p>
+ * <p>
  *
  * Usage pattern for job submission:
  * 
@@ -216,7 +216,7 @@ public class AvroMultipleOutputs {
 
   /**
    * Adds a named output for the job.
-   * <p/>
+   * <p>
    *
    * @param job               job to add the named output
    * @param namedOutput       named output name, it has to be a word, letters and
@@ -233,7 +233,7 @@ public class AvroMultipleOutputs {
 
   /**
    * Adds a named output for the job.
-   * <p/>
+   * <p>
    *
    * @param job               job to add the named output
    * @param namedOutput       named output name, it has to be a word, letters and

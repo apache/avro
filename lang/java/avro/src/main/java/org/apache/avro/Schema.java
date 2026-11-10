@@ -400,12 +400,12 @@ public abstract class Schema extends JsonProperties implements Serializable {
   /**
    * <p>
    * Render this as <a href="https://json.org/">JSON</a>.
-   * </p>
+   * <p>
    *
    * <p>
    * This method is equivalent to:
    * {@code SchemaFormatter.getInstance("json").format(this)}
-   * </p>
+   * <p>
    */
   @Override
   public String toString() {

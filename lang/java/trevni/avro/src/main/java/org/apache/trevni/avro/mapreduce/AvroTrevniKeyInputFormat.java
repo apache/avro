@@ -40,7 +40,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
  * Keys are AvroKey wrapper objects that contain the Trevni data. Since Trevni
  * container files store only records (not key/value pairs), the value from this
  * InputFormat is a NullWritable.
- * </p>
+ * <p>
  *
  * <p>
  * A subset schema to be read may be specified with

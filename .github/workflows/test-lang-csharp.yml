@@ -51,9 +51,9 @@ jobs:
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
-            6.0.x
-            7.0.x
             8.0.x
+            9.0.x
+            10.0.x
 
       - uses: actions/cache@v6
         with:
@@ -86,9 +86,9 @@ jobs:
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
-            6.0.x
-            7.0.x
             8.0.x
+            9.0.x
+            10.0.x
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v6
@@ -99,7 +99,7 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: 'Setup Temurin JDK 8, 11, 17 & 21'
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: |

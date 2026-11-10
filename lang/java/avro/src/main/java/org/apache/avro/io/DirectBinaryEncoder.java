@@ -23,15 +23,15 @@ import java.util.Objects;
 
 /**
  * An {@link Encoder} for Avro's binary encoding that does not buffer output.
- * <p/>
+ * <p>
  * This encoder does not buffer writes, and as a result is slower than
  * {@link BufferedBinaryEncoder}. However, it is lighter-weight and useful when
  * the buffering in BufferedBinaryEncoder is not desired and/or the Encoder is
  * very short-lived.
- * <p/>
+ * <p>
  * To construct, use
  * {@link EncoderFactory#directBinaryEncoder(OutputStream, BinaryEncoder)}
- * <p/>
+ * <p>
  * DirectBinaryEncoder is not thread-safe
  *
  * @see BinaryEncoder

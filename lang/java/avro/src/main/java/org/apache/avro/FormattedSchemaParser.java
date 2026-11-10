@@ -26,13 +26,13 @@ import java.net.URI;
  * <p>
  * The {@link SchemaParser} class uses this interface, supporting text based
  * schema sources.
- * </p>
+ * <p>
  *
  * <p>
  * Implementations are located using a {@link java.util.ServiceLoader} and must
  * therefore be threadsafe. See the {@code ServiceLoader} class for details on
  * loading your implementation.
- * </p>
+ * <p>
  *
  * @see java.util.ServiceLoader
  */
@@ -40,7 +40,7 @@ public interface FormattedSchemaParser {
   /**
    * <p>
    * Parse schema definitions from a text based source.
-   * </p>
+   * <p>
    *
    * <h2>Notes for implementers:</h2>
    *

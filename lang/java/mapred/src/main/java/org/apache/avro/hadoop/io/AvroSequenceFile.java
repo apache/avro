@@ -47,7 +47,7 @@ import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_
  * The vanilla Hadoop <code>SequenceFile</code> contains a <i>header</i>
  * followed by a sequence of <i>records</i>. A <i>record</i> consists of a
  * <i>key</i> and a <i>value</i>. The <i>key</i> and <i>value</i> must either:
- * </p>
+ * <p>
  *
  * <ul>
  * <li>implement the <code>Writable</code> interface, or</li>
@@ -62,11 +62,11 @@ import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_
  * implementation cannot determine whether an object instance of type
  * <code>CharSequence</code> that also implements <code>Writable</code> should
  * be serialized using Avro or WritableSerialization.
- * </p>
+ * <p>
  *
  * <p>
  * The solution implemented in <code>AvroSequenceFile</code> is to:
- * </p>
+ * <p>
  *
  * <ul>
  * <li>wrap Avro key data in an <code>AvroKey</code> object,</li>
@@ -98,7 +98,7 @@ public class AvroSequenceFile {
    * Since there are different implementations of <code>Writer</code> depending on
    * the compression type, this method constructs the appropriate subclass
    * depending on the compression type given in the <code>options</code>.
-   * </p>
+   * <p>
    *
    * @param options The options for the writer.
    * @return A new writer instance.
@@ -202,7 +202,7 @@ public class AvroSequenceFile {
        * {@link #withKeySchema(org.apache.avro.Schema)} to specify the writer schema.
        * The key class will be automatically set to
        * {@link org.apache.avro.mapred.AvroKey}.
-       * </p>
+       * <p>
        *
        * @param keyClass The key class.
        * @return This options instance.
@@ -222,7 +222,7 @@ public class AvroSequenceFile {
        * The key class will automatically be set to
        * {@link org.apache.avro.mapred.AvroKey}, so there is no need to call
        * {@link #withKeyClass(Class)} when using this method.
-       * </p>
+       * <p>
        *
        * @param keyWriterSchema The writer schema for the keys.
        * @return This options instance.
@@ -244,7 +244,7 @@ public class AvroSequenceFile {
        * {@link #withValueSchema(org.apache.avro.Schema)} to specify the writer
        * schema. The value class will be automatically set to
        * {@link org.apache.avro.mapred.AvroValue}.
-       * </p>
+       * <p>
        *
        * @param valueClass The value class.
        * @return This options instance.
@@ -264,7 +264,7 @@ public class AvroSequenceFile {
        * The value class will automatically be set to
        * {@link org.apache.avro.mapred.AvroValue}, so there is no need to call
        * {@link #withValueClass(Class)} when using this method.
-       * </p>
+       * <p>
        *
        * @param valueWriterSchema The writer schema for the values.
        * @return This options instance.
@@ -614,7 +614,7 @@ public class AvroSequenceFile {
        *
        * <p>
        * If not set, the writer schema will be used as the reader schema.
-       * </p>
+       * <p>
        *
        * @param keyReaderSchema The reader schema for the keys.
        * @return This options instance.
@@ -629,7 +629,7 @@ public class AvroSequenceFile {
        *
        * <p>
        * If not set, the writer schema will be used as the reader schema.
-       * </p>
+       * <p>
        *
        * @param valueReaderSchema The reader schema for the values.
        * @return This options instance.

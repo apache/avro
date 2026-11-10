@@ -32,7 +32,7 @@ import org.apache.avro.mapred.AvroValue;
  * <p>
  * The contents of the 'key' field will be parsed into an AvroKey object. The
  * contents of the 'value' field will be parsed into an AvroValue object.
- * </p>
+ * <p>
  *
  * @param <K> The type of the Avro key to read.
  * @param <V> The type of the Avro value to read.

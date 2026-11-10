@@ -24,6 +24,7 @@
 #include <deque>
 #include <exception>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <utility>
 

@@ -249,8 +249,8 @@ public class SpecificCompiler {
    * Set to true to add @Nullable and @NotNull annotations. By default, JetBrains
    * annotations are used (org.jetbrains.annotations.Nullable and
    * org.jetbrains.annotations.NotNull) but this can be overridden using
-   * {@link #setNullSafeAnnotationNullable)} and
-   * {@link #setNullSafeAnnotationNotNull)}.
+   * {@link #setNullSafeAnnotationNullable} and
+   * {@link #setNullSafeAnnotationNotNull}.
    */
   public void setCreateNullSafeAnnotations(boolean createNullSafeAnnotations) {
     this.createNullSafeAnnotations = createNullSafeAnnotations;

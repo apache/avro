@@ -552,6 +552,13 @@ static NodePtr makeNode(const Entity &e, const Object &m,
         result = makeMapNode(e, m, st, ns);
     } else {
         result = makePrimitive(type);
+        if (result) {
+            CustomAttributes customAttributes;
+            getCustomAttributes(m, customAttributes);
+            if (!customAttributes.attributes().empty()) {
+                result->addCustomAttributesForField(customAttributes);
+            }
+        }
     }
 
     if (result) {

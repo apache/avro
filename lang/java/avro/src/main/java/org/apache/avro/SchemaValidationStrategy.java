@@ -23,7 +23,7 @@ package org.apache.avro;
  * another.
  * <p>
  * What makes one schema compatible with another is not defined by the contract.
- * <p/>
+ * <p>
  */
 public interface SchemaValidationStrategy {
 

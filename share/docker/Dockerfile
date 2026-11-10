@@ -211,9 +211,9 @@ ENV PATH=$PATH:/root/.cargo/bin/:/root/.local/bin
 # Install .NET SDK
 RUN cd /opt ; \
     wget https://dot.net/v1/dotnet-install.sh ; \
-    bash ./dotnet-install.sh --channel "6.0" --install-dir "/opt/dotnet" ; \
-    bash ./dotnet-install.sh --channel "7.0" --install-dir "/opt/dotnet" ; \
-    bash ./dotnet-install.sh --channel "8.0" --install-dir "/opt/dotnet" ;
+    bash ./dotnet-install.sh --channel "8.0" --install-dir "/opt/dotnet" ; \
+    bash ./dotnet-install.sh --channel "9.0" --install-dir "/opt/dotnet" ; \
+    bash ./dotnet-install.sh --channel "10.0" --install-dir "/opt/dotnet" ;
 
 ENV PATH=$PATH:/opt/dotnet
 

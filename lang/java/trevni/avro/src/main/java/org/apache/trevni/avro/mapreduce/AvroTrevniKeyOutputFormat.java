@@ -39,7 +39,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
  * <p>
  * Since Trevni container files only contain records (not key/value pairs), this
  * output format ignores the value.
- * </p>
+ * <p>
  *
  * @param <T> The (java) type of the Trevni data to write.
  *

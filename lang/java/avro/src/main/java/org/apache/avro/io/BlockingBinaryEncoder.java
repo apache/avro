@@ -31,13 +31,13 @@ import org.apache.avro.Schema;
  * arbitrarily long arrays and maps may be written and subsequently read without
  * exhausting memory. Values are buffered until the specified block size would
  * be exceeded, minimizing block overhead.
- * <p/>
+ * <p>
  * Use {@link EncoderFactory#blockingBinaryEncoder(OutputStream, BinaryEncoder)}
  * to construct and configure.
- * <p/>
+ * <p>
  * BlockingBinaryEncoder buffers writes, data may not appear on the output until
  * {@link #flush()} is called.
- * <p/>
+ * <p>
  * BlockingBinaryEncoder is not thread-safe
  *
  * @see BinaryEncoder

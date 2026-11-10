@@ -12,12 +12,12 @@ Install-Package Apache.Avro
 
 ## Build & Test
 
-1. Install [.NET SDK 8.0+](https://dotnet.microsoft.com/download/dotnet-core)
+1. Install [.NET SDK 10.0+](https://dotnet.microsoft.com/download/dotnet-core)
 2. `dotnet test`
 
 ## Project Target Frameworks
 
-| Project             | Published to nuget.org     | Type       | .NET Standard 2.0  | .NET Standard 2.1 | .NET 6.0  | .NET 7.0  | .NET 8.0  |
+| Project             | Published to nuget.org     | Type       | .NET Standard 2.0  | .NET Standard 2.1 | .NET 8.0  | .NET 9.0  | .NET 10.0 |
 |:-------------------:|:--------------------------:|:----------:|:------------------:|:-----------------:|:---------:|:---------:|:---------:|
 | Avro.main           | Apache.Avro                | Library    | ✔️                 | ✔️               |           |           |           |
 | Avro.File.Snappy    | Apache.Avro.File.Snappy    | Library    | ✔️                 | ✔️               |           |           |           |

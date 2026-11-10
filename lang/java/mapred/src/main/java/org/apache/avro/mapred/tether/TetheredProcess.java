@@ -68,7 +68,7 @@ class TetheredProcess {
    */
   public enum Protocol {
     HTTP, SASL, NONE
-  };
+  }
 
   // which protocol we are using
   Protocol proto;
