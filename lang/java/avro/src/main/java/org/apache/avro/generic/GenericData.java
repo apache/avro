@@ -88,7 +88,7 @@ public class GenericData {
   /** Used to specify the Java type for a string schema. */
   public enum StringType {
     CharSequence, String, Utf8
-  };
+  }
 
   public static final String STRING_PROP = "avro.java.string";
   protected static final String STRING_TYPE_STRING = "String";

@@ -40,14 +40,14 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
  * Since Trevni container files can only contain records (not key/value pairs),
  * this output format puts the key and value into an Avro generic record with
  * two fields, named 'key' and 'value'.
- * </p>
+ * <p>
  *
  * <p>
  * The keys and values given to this output format may be Avro objects wrapped
  * in <code>AvroKey</code> or <code>AvroValue</code> objects. The basic Writable
  * types are also supported (e.g., IntWritable, Text); they will be converted to
  * their corresponding Avro types.
- * </p>
+ * <p>
  *
  * @param <K> The type of key. If an Avro type, it must be wrapped in an
  *            <code>AvroKey</code>.

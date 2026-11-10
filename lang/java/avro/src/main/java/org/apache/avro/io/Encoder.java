@@ -25,18 +25,18 @@ import org.apache.avro.util.Utf8;
 
 /**
  * Low-level support for serializing Avro values.
- * <p/>
+ * <p>
  * This class has two types of methods. One type of methods support the writing
  * of leaf values (for example, {@link #writeLong} and {@link #writeString}).
  * These methods have analogs in {@link Decoder}.
- * <p/>
+ * <p>
  * The other type of methods support the writing of maps and arrays. These
  * methods are {@link #writeArrayStart}, {@link #startItem}, and
  * {@link #writeArrayEnd} (and similar methods for maps). Some implementations
  * of {@link Encoder} handle the buffering required to break large maps and
  * arrays into blocks, which is necessary for applications that want to do
  * streaming. (See {@link #writeArrayStart} for details on these methods.)
- * <p/>
+ * <p>
  * {@link EncoderFactory} contains Encoder construction and configuration
  * facilities.
  *
@@ -272,6 +272,7 @@ public abstract class Encoder implements Flushable {
    * something like this:
    *
    * <pre>
+   * {@code
    * out.writeMapStart();
    * out.setItemCount(list.size());
    * for (Map.Entry<String, Record> entry : map.entrySet()) {
@@ -281,6 +282,7 @@ public abstract class Encoder implements Flushable {
    *   out.writeBoolean(entry.getValue().boolField);
    * }
    * out.writeMapEnd();
+   * }
    * </pre>
    *
    * @throws AvroTypeException If this is a stateful writer and a map is not

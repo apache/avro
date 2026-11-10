@@ -56,11 +56,11 @@ import org.slf4j.LoggerFactory;
  * keys in the 'data' file to their byte positions. The index file is intended
  * to fit in memory, so it should remain small. There is one entry in the index
  * file for each data block in the Avro container file.
- * </p>
+ * <p>
  *
  * <p>
  * SortedKeyValueFile is to Avro container file as MapFile is to SequenceFile.
- * </p>
+ * <p>
  */
 public class SortedKeyValueFile {
   private static final Logger LOG = LoggerFactory.getLogger(SortedKeyValueFile.class);
@@ -79,7 +79,7 @@ public class SortedKeyValueFile {
    * using the key index. It performs a single disk seek to the block and loads
    * the entire block into memory. The block is scanned until the key is found or
    * is determined not to exist.
-   * </p>
+   * <p>
    *
    * @param <K> The key type.
    * @param <V> The value type.
@@ -237,7 +237,7 @@ public class SortedKeyValueFile {
      * <p>
      * This method will move the current position in the file to the record
      * immediately following the requested key.
-     * </p>
+     * <p>
      *
      * @param key The key to look up.
      * @return The value associated with the key, or null if not found.
@@ -281,12 +281,12 @@ public class SortedKeyValueFile {
      *
      * <p>
      * Use the get() method to move the current position.
-     * </p>
+     * <p>
      *
      * <p>
      * Note that this iterator is shared with other clients of the file; it does not
      * contain a separate pointer into the file.
-     * </p>
+     * <p>
      *
      * @return An iterator.
      */
@@ -488,7 +488,7 @@ public class SortedKeyValueFile {
        * <p>
        * If the index inverval is N, then every N records will be indexed into the
        * index file.
-       * </p>
+       * <p>
        *
        * @param indexInterval The index interval.
        * @return This options instance.

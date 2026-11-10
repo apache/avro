@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  *
  * <p>
  * Notes to implementers:
- * </p>
+ * <p>
  *
  * <ul>
  *
@@ -57,7 +57,7 @@ public interface SchemaFormatterFactory {
    * class if it is named {@code <format>SchemaFormatterFactory}. That is, if the
    * implementing class is named {@code some.package.JsonSchemaFormatterFactory},
    * it returns: {@literal "json"}
-   * </p>
+   * <p>
    *
    * @return the name of the format
    */
@@ -80,7 +80,7 @@ public interface SchemaFormatterFactory {
    * Implementations should either return the only formatter for this format, or
    * call {@link #getFormatterForVariant(String)} with the default variant and
    * implement that method as well.
-   * </p>
+   * <p>
    *
    * @return the default formatter for this schema format
    */

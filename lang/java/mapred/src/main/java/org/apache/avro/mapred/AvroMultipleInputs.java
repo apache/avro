@@ -38,10 +38,10 @@ import org.slf4j.LoggerFactory;
  *
  * <p>
  * Usage:
- * </p>
+ * <p>
  * <p>
  * <strong>Case 1: (ReflectData based inputs)</strong>
- * </p>
+ * <p>
  *
  * <pre>
  * // Enable ReflectData usage across job.
@@ -70,7 +70,7 @@ import org.slf4j.LoggerFactory;
  *
  * <p>
  * <strong>Case 2: (SpecificData based inputs)</strong>
- * </p>
+ * <p>
  *
  * <pre>
  * Schema type1Schema = Type1Record.SCHEMA$;
@@ -97,14 +97,14 @@ import org.slf4j.LoggerFactory;
  * <p>
  * <strong>Note on InputFormat:</strong> The InputFormat used will always be
  * {@link AvroInputFormat} when using this class.
- * </p>
+ * <p>
  * <p>
  * <strong>Note on collector outputs:</strong> When using this class, you will
  * need to ensure that the mapper implementations involved must all emit the
  * same Key type and Value record types, as set by
  * {@link AvroJob#setOutputSchema(JobConf, Schema)} or
  * {@link AvroJob#setMapOutputSchema(JobConf, Schema)}.
- * </p>
+ * <p>
  */
 public class AvroMultipleInputs {
 

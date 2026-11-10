@@ -28,12 +28,12 @@ import java.util.Comparator;
  * order is when the schema is <i>"string"</i>. The Avro string schema maps to
  * the Java <code>CharSequence</code> interface, which does not define
  * <code>equals</code>, <code>hashCode</code>, or <code>compareTo</code>.
- * </p>
+ * <p>
  *
  * <p>
  * Using this comparator enables comparisons between <code>String</code> and
  * <code>Utf8</code> objects that are both valid when working with Avro strings.
- * </p>
+ * <p>
  *
  * @param <T> The type of object to compare.
  */

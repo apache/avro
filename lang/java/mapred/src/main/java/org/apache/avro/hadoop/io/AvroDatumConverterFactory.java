@@ -59,7 +59,7 @@ import org.apache.hadoop.mapred.JobConf;
  * <li>NullWritable</li>
  * <li>Text</li>
  * </ul>
- * </p>
+ * <p>
  */
 public class AvroDatumConverterFactory extends Configured {
   /**

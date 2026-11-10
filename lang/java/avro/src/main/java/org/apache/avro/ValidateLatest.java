@@ -24,12 +24,12 @@ import java.util.Iterator;
  * <p>
  * A {@link SchemaValidator} for validating the provided schema against the
  * first {@link Schema} in the iterable in {@link #validate(Schema, Iterable)}.
- * </p>
+ * <p>
  * <p>
  * Uses the {@link SchemaValidationStrategy} provided in the constructor to
  * validate the schema against the first Schema in the iterable, if it exists,
  * via {@link SchemaValidationStrategy#validate(Schema, Schema)}.
- * </p>
+ * <p>
  */
 public final class ValidateLatest implements SchemaValidator {
   private final SchemaValidationStrategy strategy;

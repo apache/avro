@@ -37,7 +37,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
  * <p>
  * Since Avro container files only contain records (not key/value pairs), this
  * output format ignores the value.
- * </p>
+ * <p>
  *
  * @param <T> The (java) type of the Avro data to write.
  */

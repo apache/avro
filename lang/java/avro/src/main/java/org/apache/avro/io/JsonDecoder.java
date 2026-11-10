@@ -40,9 +40,9 @@ import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 /**
  * A {@link Decoder} for Avro's JSON data encoding.
- * </p>
+ * <p>
  * Construct using {@link DecoderFactory}.
- * </p>
+ * <p>
  * JsonDecoder is not thread-safe.
  */
 public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler {
@@ -81,9 +81,9 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
 
   /**
    * Reconfigures this JsonDecoder to use the InputStream provided.
-   * <p/>
+   * <p>
    * If the InputStream provided is null, a NullPointerException is thrown.
-   * <p/>
+   * <p>
    * Otherwise, this JsonDecoder will reset its state and then reconfigure its
    * input.
    *
@@ -104,9 +104,9 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
 
   /**
    * Reconfigures this JsonDecoder to use the String provided for input.
-   * <p/>
+   * <p>
    * If the String provided is null, a NullPointerException is thrown.
-   * <p/>
+   * <p>
    * Otherwise, this JsonDecoder will reset its state and then reconfigure its
    * input.
    *

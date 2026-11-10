@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Thrown to prevent making large allocations when reading potentially
  * pathological input data from an untrusted source.
- * <p/>
+ * <p>
  * The following system properties can be set to limit the size of bytes,
  * strings and collection types to be allocated:
  * <ul>

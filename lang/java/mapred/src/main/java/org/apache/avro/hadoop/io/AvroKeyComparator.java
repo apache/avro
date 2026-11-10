@@ -33,7 +33,7 @@ import org.apache.hadoop.io.RawComparator;
  *
  * <p>
  * Compares AvroKeys output from the map phase for sorting.
- * </p>
+ * <p>
  */
 public class AvroKeyComparator<T> extends Configured implements RawComparator<AvroKey<T>> {
   /** The schema of the Avro data in the key to compare. */

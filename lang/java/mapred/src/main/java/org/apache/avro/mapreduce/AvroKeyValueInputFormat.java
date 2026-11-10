@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * and 'value' are expected. The contents of the 'key' field will be used as the
  * job input key, and the contents of the 'value' field will be used as the job
  * output value.
- * </p>
+ * <p>
  *
  * @param <K> The type of the Avro key to read.
  * @param <V> The type of the Avro value to read.

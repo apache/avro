@@ -35,7 +35,7 @@ import java.nio.charset.StandardCharsets;
  * is in the range U+0000-U+00FF. This heuristic works for all latin text based
  * formats, which includes Avro IDL, JSON, XML, etc. If the heuristic fails,
  * UTF-8 is assumed.
- * </p>
+ * <p>
  *
  * @see <a href="https://www.w3.org/TR/xml/#sec-guessing">XML specification,
  *      appendix F: Autodetection of Character Encodings (Non-Normative)</a>
@@ -141,14 +141,14 @@ public class UtfTextUtils {
    * To ensure the most accurate detection, the algorithm requires at least 4
    * bytes. One should only provide less than 4 bytes of data if that is all there
    * is.
-   * </p>
+   * <p>
    *
    * <p>
    * Detection is certain when a byte order mark (BOM) is used. Otherwise a
    * heuristic is used, which works when the first character is from the first 256
    * characters from the BMP (U+0000-U+00FF). This works for all latin-based
    * textual formats, like Avro IDL, JSON, YAML, XML, etc.
-   * </p>
+   * <p>
    *
    * @param firstFewBytes the first few bytes of the text to detect the character
    *                      set of

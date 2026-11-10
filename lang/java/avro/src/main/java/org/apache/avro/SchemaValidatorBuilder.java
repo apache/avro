@@ -21,7 +21,7 @@ package org.apache.avro;
 /**
  * <p>
  * A Builder for creating SchemaValidators.
- * </p>
+ * <p>
  */
 public final class SchemaValidatorBuilder {
   private SchemaValidationStrategy strategy;

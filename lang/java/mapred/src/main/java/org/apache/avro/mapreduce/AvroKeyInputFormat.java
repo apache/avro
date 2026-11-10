@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * Keys are AvroKey wrapper objects that contain the Avro data. Since Avro
  * container files store only records (not key/value pairs), the value from this
  * InputFormat is a NullWritable.
- * </p>
+ * <p>
  */
 public class AvroKeyInputFormat<T> extends FileInputFormat<AvroKey<T>, NullWritable> {
   private static final Logger LOG = LoggerFactory.getLogger(AvroKeyInputFormat.class);
