@@ -243,23 +243,23 @@ public class Foo {
 
     public Processor(I iface) {
       super(iface, getProcessMap(
-          new java.util.HashMap<java.lang.String, org.apache.thrift.ProcessFunction<I, ? extends org.apache.thrift.TBase>>()));
+          new java.util.HashMap<java.lang.String, org.apache.thrift.ProcessFunction<I, ? extends org.apache.thrift.TBase, ? extends org.apache.thrift.TBase>>()));
     }
 
     protected Processor(I iface,
-        java.util.Map<java.lang.String, org.apache.thrift.ProcessFunction<I, ? extends org.apache.thrift.TBase>> processMap) {
+        java.util.Map<java.lang.String, org.apache.thrift.ProcessFunction<I, ? extends org.apache.thrift.TBase, ? extends org.apache.thrift.TBase>> processMap) {
       super(iface, getProcessMap(processMap));
     }
 
-    private static <I extends Iface> java.util.Map<java.lang.String, org.apache.thrift.ProcessFunction<I, ? extends org.apache.thrift.TBase>> getProcessMap(
-        java.util.Map<java.lang.String, org.apache.thrift.ProcessFunction<I, ? extends org.apache.thrift.TBase>> processMap) {
+    private static <I extends Iface> java.util.Map<java.lang.String, org.apache.thrift.ProcessFunction<I, ? extends org.apache.thrift.TBase, ? extends org.apache.thrift.TBase>> getProcessMap(
+        java.util.Map<java.lang.String, org.apache.thrift.ProcessFunction<I, ? extends org.apache.thrift.TBase, ? extends org.apache.thrift.TBase>> processMap) {
       processMap.put("ping", new ping());
       processMap.put("add", new add());
       processMap.put("zip", new zip());
       return processMap;
     }
 
-    public static class ping<I extends Iface> extends org.apache.thrift.ProcessFunction<I, ping_args> {
+    public static class ping<I extends Iface> extends org.apache.thrift.ProcessFunction<I, ping_args, ping_result> {
       public ping() {
         super("ping");
       }
@@ -268,7 +268,13 @@ public class Foo {
         return new ping_args();
       }
 
-      protected boolean isOneway() {
+      @Override
+      public ping_result getEmptyResultInstance() {
+        return new ping_result();
+      }
+
+      @Override
+      public boolean isOneway() {
         return false;
       }
 
@@ -284,7 +290,7 @@ public class Foo {
       }
     }
 
-    public static class add<I extends Iface> extends org.apache.thrift.ProcessFunction<I, add_args> {
+    public static class add<I extends Iface> extends org.apache.thrift.ProcessFunction<I, add_args, add_result> {
       public add() {
         super("add");
       }
@@ -293,7 +299,13 @@ public class Foo {
         return new add_args();
       }
 
-      protected boolean isOneway() {
+      @Override
+      public add_result getEmptyResultInstance() {
+        return new add_result();
+      }
+
+      @Override
+      public boolean isOneway() {
         return false;
       }
 
@@ -310,7 +322,8 @@ public class Foo {
       }
     }
 
-    public static class zip<I extends Iface> extends org.apache.thrift.ProcessFunction<I, zip_args> {
+    public static class zip<I extends Iface>
+        extends org.apache.thrift.ProcessFunction<I, zip_args, org.apache.thrift.TBase> {
       public zip() {
         super("zip");
       }
@@ -319,7 +332,13 @@ public class Foo {
         return new zip_args();
       }
 
-      protected boolean isOneway() {
+      @Override
+      public org.apache.thrift.TBase getEmptyResultInstance() {
+        return null;
+      }
+
+      @Override
+      public boolean isOneway() {
         return true;
       }
 
@@ -341,29 +360,35 @@ public class Foo {
 
     public AsyncProcessor(I iface) {
       super(iface, getProcessMap(
-          new java.util.HashMap<java.lang.String, org.apache.thrift.AsyncProcessFunction<I, ? extends org.apache.thrift.TBase, ?>>()));
+          new java.util.HashMap<java.lang.String, org.apache.thrift.AsyncProcessFunction<I, ? extends org.apache.thrift.TBase, ?, ? extends org.apache.thrift.TBase>>()));
     }
 
     protected AsyncProcessor(I iface,
-        java.util.Map<java.lang.String, org.apache.thrift.AsyncProcessFunction<I, ? extends org.apache.thrift.TBase, ?>> processMap) {
+        java.util.Map<java.lang.String, org.apache.thrift.AsyncProcessFunction<I, ? extends org.apache.thrift.TBase, ?, ? extends org.apache.thrift.TBase>> processMap) {
       super(iface, getProcessMap(processMap));
     }
 
-    private static <I extends AsyncIface> java.util.Map<java.lang.String, org.apache.thrift.AsyncProcessFunction<I, ? extends org.apache.thrift.TBase, ?>> getProcessMap(
-        java.util.Map<java.lang.String, org.apache.thrift.AsyncProcessFunction<I, ? extends org.apache.thrift.TBase, ?>> processMap) {
+    private static <I extends AsyncIface> java.util.Map<java.lang.String, org.apache.thrift.AsyncProcessFunction<I, ? extends org.apache.thrift.TBase, ?, ? extends org.apache.thrift.TBase>> getProcessMap(
+        java.util.Map<java.lang.String, org.apache.thrift.AsyncProcessFunction<I, ? extends org.apache.thrift.TBase, ?, ? extends org.apache.thrift.TBase>> processMap) {
       processMap.put("ping", new ping());
       processMap.put("add", new add());
       processMap.put("zip", new zip());
       return processMap;
     }
 
-    public static class ping<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, ping_args, Void> {
+    public static class ping<I extends AsyncIface>
+        extends org.apache.thrift.AsyncProcessFunction<I, ping_args, Void, ping_result> {
       public ping() {
         super("ping");
       }
 
       public ping_args getEmptyArgsInstance() {
         return new ping_args();
+      }
+
+      @Override
+      public ping_result getEmptyResultInstance() {
+        return new ping_result();
       }
 
       public org.apache.thrift.async.AsyncMethodCallback<Void> getResultHandler(
@@ -411,7 +436,8 @@ public class Foo {
         };
       }
 
-      protected boolean isOneway() {
+      @Override
+      public boolean isOneway() {
         return false;
       }
 
@@ -422,13 +448,18 @@ public class Foo {
     }
 
     public static class add<I extends AsyncIface>
-        extends org.apache.thrift.AsyncProcessFunction<I, add_args, java.lang.Integer> {
+        extends org.apache.thrift.AsyncProcessFunction<I, add_args, java.lang.Integer, add_result> {
       public add() {
         super("add");
       }
 
       public add_args getEmptyArgsInstance() {
         return new add_args();
+      }
+
+      @Override
+      public add_result getEmptyResultInstance() {
+        return new add_result();
       }
 
       public org.apache.thrift.async.AsyncMethodCallback<java.lang.Integer> getResultHandler(
@@ -478,7 +509,8 @@ public class Foo {
         };
       }
 
-      protected boolean isOneway() {
+      @Override
+      public boolean isOneway() {
         return false;
       }
 
@@ -489,13 +521,19 @@ public class Foo {
       }
     }
 
-    public static class zip<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, zip_args, Void> {
+    public static class zip<I extends AsyncIface>
+        extends org.apache.thrift.AsyncProcessFunction<I, zip_args, Void, org.apache.thrift.TBase> {
       public zip() {
         super("zip");
       }
 
       public zip_args getEmptyArgsInstance() {
         return new zip_args();
+      }
+
+      @Override
+      public org.apache.thrift.TBase getEmptyResultInstance() {
+        return null;
       }
 
       public org.apache.thrift.async.AsyncMethodCallback<Void> getResultHandler(
@@ -516,7 +554,8 @@ public class Foo {
         };
       }
 
-      protected boolean isOneway() {
+      @Override
+      public boolean isOneway() {
         return true;
       }
 
