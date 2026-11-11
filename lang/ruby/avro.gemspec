@@ -39,5 +39,6 @@ Gem::Specification.new do |s|
   s.test_files = files.select { |f| f.start_with?("test/") }
   s.require_paths = ["lib"]
 
-  s.add_dependency("multi_json", "~> 1.0")
+  s.add_dependency("json", ">= 2.0")
+  s.add_dependency("bigdecimal") # not part of default gems since Ruby 3.4.0
 end
