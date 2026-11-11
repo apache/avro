@@ -209,7 +209,7 @@ namespace Avro.Specific
                     return obj is ISpecificRecord &&
                            ((obj as ISpecificRecord).Schema as RecordSchema).SchemaName.Equals((sc as RecordSchema).SchemaName);
                 case Schema.Type.Enumeration:
-                    return obj.GetType().IsEnum && (sc as EnumSchema).Symbols.Contains(obj.ToString());
+                    return obj.GetType().IsEnum && (sc as EnumSchema).Symbols.Contains(obj.ToString()) && sc.Name.Equals(obj.GetType().Name);
                 case Schema.Type.Array:
                     return obj is System.Collections.IList;
                 case Schema.Type.Map:
