@@ -298,12 +298,10 @@ avro_resolved_reader_get_schema(const avro_value_iface_t *viface, const void *vs
 }
 
 
-static avro_resolved_reader_t *
-avro_resolved_reader_create(avro_schema_t wschema, avro_schema_t rschema)
+static void
+avro_resolved_reader_init_iface(avro_resolved_reader_t *self,
+				avro_schema_t wschema, avro_schema_t rschema)
 {
-	avro_resolved_reader_t  *self = (avro_resolved_reader_t  *) avro_new(avro_resolved_reader_t);
-	memset(self, 0, sizeof(avro_resolved_reader_t));
-
 	self->parent.incref_iface = avro_resolved_reader_incref_iface;
 	self->parent.decref_iface = avro_resolved_reader_decref_iface;
 	self->parent.incref = avro_resolved_reader_incref;
@@ -318,6 +316,14 @@ avro_resolved_reader_create(avro_schema_t wschema, avro_schema_t rschema)
 	self->calculate_size = avro_resolved_reader_calculate_size_;
 	self->free_iface = avro_resolved_reader_free_iface;
 	self->reset_wrappers = NULL;
+}
+
+static avro_resolved_reader_t *
+avro_resolved_reader_create(avro_schema_t wschema, avro_schema_t rschema)
+{
+	avro_resolved_reader_t  *self = (avro_resolved_reader_t  *) avro_new(avro_resolved_reader_t);
+	memset(self, 0, sizeof(avro_resolved_reader_t));
+	avro_resolved_reader_init_iface(self, wschema, rschema);
 	return self;
 }
 
@@ -1625,14 +1631,58 @@ try_array(memoize_state_t *state,
  * enum
  */
 
+typedef struct avro_resolved_enum_reader {
+	avro_resolved_reader_t  parent;
+	int  symbol_count;
+	/* Map writer index to reader index with -1 when no mapping */
+	int  *index_mapping;
+} avro_resolved_enum_reader_t;
+
+static void
+avro_resolved_enum_reader_free_iface(avro_resolved_reader_t *iface,
+				     st_table *freeing)
+{
+	AVRO_UNUSED(freeing);
+	avro_resolved_enum_reader_t  *eiface =
+	    container_of(iface, avro_resolved_enum_reader_t, parent);
+	if (eiface->index_mapping != NULL) {
+		avro_free(eiface->index_mapping,
+			  eiface->symbol_count * sizeof(int));
+	}
+	avro_schema_decref(iface->wschema);
+	avro_schema_decref(iface->rschema);
+	avro_freet(avro_resolved_enum_reader_t, eiface);
+}
+
 static int
 avro_resolved_reader_get_enum(const avro_value_iface_t *viface,
 			      const void *vself, int *val)
 {
-	AVRO_UNUSED(viface);
+	int  rval;
+	const avro_resolved_reader_t  *iface =
+	    container_of(viface, avro_resolved_reader_t, parent);
+	const avro_resolved_enum_reader_t  *eiface =
+	    container_of(iface, avro_resolved_enum_reader_t, parent);
 	const avro_value_t  *src = (const avro_value_t *) vself;
+	int  writer_val;
+
 	DEBUG("Getting enum from %p", src->self);
-	return avro_value_get_enum(src, val);
+	check(rval, avro_value_get_enum(src, &writer_val));
+
+	if (writer_val < 0 || writer_val >= eiface->symbol_count) {
+		avro_set_error("Invalid enum value %d for %s", writer_val,
+			       avro_schema_name(iface->wschema));
+		return EINVAL;
+	}
+	if (eiface->index_mapping[writer_val] < 0) {
+		avro_set_error("Symbol %s isn't in the reader's %s enum",
+			       avro_schema_enum_get(iface->wschema, writer_val),
+			       avro_schema_name(iface->wschema));
+		return EINVAL;
+	}
+
+	*val = eiface->index_mapping[writer_val];
+	return 0;
 }
 
 static avro_resolved_reader_t *
@@ -1649,11 +1699,35 @@ try_enum(memoize_state_t *state,
 		const char  *rname = avro_schema_name(rschema);
 
 		if (strcmp(wname, rname) == 0) {
-			avro_resolved_reader_t  *self =
-			    avro_resolved_reader_create(wschema, rschema);
-			avro_memoize_set(&state->mem, wschema, rschema, self);
-			self->parent.get_enum = avro_resolved_reader_get_enum;
-			return self;
+			int  symbol_count =
+			    avro_schema_enum_number_of_symbols(wschema);
+			int  *index_mapping =
+			    (int *) avro_calloc(symbol_count, sizeof(int));
+			int  wi;
+
+			for (wi = 0; wi < symbol_count; wi++) {
+				const char  *symbol =
+				    avro_schema_enum_get(wschema, wi);
+				index_mapping[wi] = avro_schema_enum_get_by_name
+				    (rschema, symbol);
+			}
+
+			avro_resolved_enum_reader_t  *eself =
+			    (avro_resolved_enum_reader_t *)
+			    avro_new(avro_resolved_enum_reader_t);
+			memset(eself, 0, sizeof(avro_resolved_enum_reader_t));
+			avro_resolved_reader_init_iface(&eself->parent,
+							wschema, rschema);
+			eself->parent.free_iface =
+			    avro_resolved_enum_reader_free_iface;
+			eself->parent.parent.get_enum =
+			    avro_resolved_reader_get_enum;
+			eself->symbol_count = symbol_count;
+			eself->index_mapping = index_mapping;
+
+			avro_memoize_set(&state->mem, wschema, rschema,
+					 &eself->parent);
+			return &eself->parent;
 		}
 	}
 	avro_set_error("Writer %s not compatible with reader %s",
