@@ -1,0 +1,25 @@
+var classAvro_1_1File_1_1DataFileReader_1_g =
+[
+    [ "CreateDatumReader", "classAvro_1_1File_1_1DataFileReader-1-g.html#ae1d26244d255a33ad6bc551e56c5de16", null ],
+    [ "DataBlock", "classAvro_1_1File_1_1DataFileReader-1-g.html#a416dcb78f9fbf22460f2f299477fe330", null ],
+    [ "Dispose", "classAvro_1_1File_1_1DataFileReader-1-g.html#a4515cb0520e19420962dd401278335be", null ],
+    [ "Dispose", "classAvro_1_1File_1_1DataFileReader-1-g.html#a3ed8ec0efbf573098af3358a57072e05", null ],
+    [ "GetHeader", "classAvro_1_1File_1_1DataFileReader-1-g.html#a13fc13b0a0b8e2e7982b69cae1f2b35d", null ],
+    [ "GetMeta", "classAvro_1_1File_1_1DataFileReader-1-g.html#a1389f8e837f3735f9e1e1a602c04ddd6", null ],
+    [ "GetMetaKeys", "classAvro_1_1File_1_1DataFileReader-1-g.html#a0028c544e21675a36590e3b17445a4a8", null ],
+    [ "GetMetaLong", "classAvro_1_1File_1_1DataFileReader-1-g.html#a688ea06971a49564dbbc7a55c8e2eff6", null ],
+    [ "GetMetaString", "classAvro_1_1File_1_1DataFileReader-1-g.html#af9d1d499753f48d86aeb312f02e1a631", null ],
+    [ "GetSchema", "classAvro_1_1File_1_1DataFileReader-1-g.html#a6cb85ebf12a27d68e8aa1ebdce122fcf", null ],
+    [ "HasNext", "classAvro_1_1File_1_1DataFileReader-1-g.html#a7e02e1f3d07a9d787895185362a58015", null ],
+    [ "Next", "classAvro_1_1File_1_1DataFileReader-1-g.html#add76327bde0e232a059c06e6d9fd51eb", null ],
+    [ "PastSync", "classAvro_1_1File_1_1DataFileReader-1-g.html#abe5e3cdb6b7d6596285e6d36b04449b8", null ],
+    [ "PreviousSync", "classAvro_1_1File_1_1DataFileReader-1-g.html#ac9976282e787f140723dbfb82e2708d5", null ],
+    [ "Reset", "classAvro_1_1File_1_1DataFileReader-1-g.html#a002a677d46bf3e585e82c03034b188bd", null ],
+    [ "Seek", "classAvro_1_1File_1_1DataFileReader-1-g.html#a5848c71e40e52d5673ba00a740d0098a", null ],
+    [ "Sync", "classAvro_1_1File_1_1DataFileReader-1-g.html#acfcb2b5bcdfc8050ade55b4a4207df59", null ],
+    [ "Tell", "classAvro_1_1File_1_1DataFileReader-1-g.html#ab5e68d58df281e6ffbf0e2c128ca0f79", null ],
+    [ "BlockSize", "classAvro_1_1File_1_1DataFileReader-1-g.html#aec07b03ea4b3101096ba3ff269592321", null ],
+    [ "Data", "classAvro_1_1File_1_1DataFileReader-1-g.html#afee1f8f57bac09b02352385d52558a17", null ],
+    [ "NextEntries", "classAvro_1_1File_1_1DataFileReader-1-g.html#a0372aa7d3b5bc8fbb8ac716b709f915c", null ],
+    [ "NumberOfEntries", "classAvro_1_1File_1_1DataFileReader-1-g.html#a1da5339d9f76e6fb97685c183c9a9c34", null ]
+];

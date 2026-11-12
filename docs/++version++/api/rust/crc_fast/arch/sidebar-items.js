@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["software","x86","x86_64"]};

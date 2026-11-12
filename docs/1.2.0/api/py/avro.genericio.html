@@ -1,0 +1,169 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module avro.genericio</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="avro.html"><font color="#ffffff">avro</font></a>.genericio</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/cutting/src/avro/test/src/py/avro/genericio.py">/home/cutting/src/avro/test/src/py/avro/genericio.py</a></font></td></tr></table>
+    <p><tt>Generic&nbsp;representation&nbsp;for&nbsp;data.&nbsp;<br>
+Represent&nbsp;Schema&nbsp;data&nbsp;with&nbsp;generic&nbsp;python&nbsp;types.<br>
+&nbsp;<br>
+Uses&nbsp;the&nbsp;following&nbsp;mapping:<br>
+&nbsp;&nbsp;*&nbsp;Schema&nbsp;records&nbsp;are&nbsp;implemented&nbsp;as&nbsp;dict.<br>
+&nbsp;&nbsp;*&nbsp;Schema&nbsp;arrays&nbsp;are&nbsp;implemented&nbsp;as&nbsp;list.<br>
+&nbsp;&nbsp;*&nbsp;Schema&nbsp;maps&nbsp;are&nbsp;implemented&nbsp;as&nbsp;dict.<br>
+&nbsp;&nbsp;*&nbsp;Schema&nbsp;strings&nbsp;are&nbsp;implemented&nbsp;as&nbsp;unicode.<br>
+&nbsp;&nbsp;*&nbsp;Schema&nbsp;bytes&nbsp;are&nbsp;implemented&nbsp;as&nbsp;str.<br>
+&nbsp;&nbsp;*&nbsp;Schema&nbsp;ints&nbsp;are&nbsp;implemented&nbsp;as&nbsp;int.<br>
+&nbsp;&nbsp;*&nbsp;Schema&nbsp;longs&nbsp;are&nbsp;implemented&nbsp;as&nbsp;long.<br>
+&nbsp;&nbsp;*&nbsp;Schema&nbsp;floats&nbsp;are&nbsp;implemented&nbsp;as&nbsp;float.<br>
+&nbsp;&nbsp;*&nbsp;Schema&nbsp;doubles&nbsp;are&nbsp;implemented&nbsp;as&nbsp;float.<br>
+&nbsp;&nbsp;*&nbsp;Schema&nbsp;booleans&nbsp;are&nbsp;implemented&nbsp;as&nbsp;bool.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="avro.io.html">avro.io</a><br>
+</td><td width="25%" valign=top><a href="avro.schema.html">avro.schema</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="avro.io.html#DatumReaderBase">avro.io.DatumReaderBase</a>(<a href="__builtin__.html#object">__builtin__.object</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="avro.genericio.html#DatumReader">DatumReader</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="avro.io.html#DatumWriterBase">avro.io.DatumWriterBase</a>(<a href="__builtin__.html#object">__builtin__.object</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="avro.genericio.html#DatumWriter">DatumWriter</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DatumReader">class <strong>DatumReader</strong></a>(<a href="avro.io.html#DatumReaderBase">avro.io.DatumReaderBase</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#DatumReader">DatumReader</a>&nbsp;for&nbsp;generic&nbsp;python&nbsp;objects.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="avro.genericio.html#DatumReader">DatumReader</a></dd>
+<dd><a href="avro.io.html#DatumReaderBase">avro.io.DatumReaderBase</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="DatumReader-__init__"><strong>__init__</strong></a>(self, actual<font color="#909090">=None</font>, expected<font color="#909090">=None</font>)</dt></dl>
+
+<dl><dt><a name="DatumReader-addfield"><strong>addfield</strong></a>(self, record, name, value)</dt></dl>
+
+<dl><dt><a name="DatumReader-createrecord"><strong>createrecord</strong></a>(self, schm)</dt></dl>
+
+<dl><dt><a name="DatumReader-read"><strong>read</strong></a>(self, decoder)</dt></dl>
+
+<dl><dt><a name="DatumReader-readarray"><strong>readarray</strong></a>(self, actual, expected, decoder)</dt></dl>
+
+<dl><dt><a name="DatumReader-readdata"><strong>readdata</strong></a>(self, actual, expected, decoder)</dt></dl>
+
+<dl><dt><a name="DatumReader-readenum"><strong>readenum</strong></a>(self, actual, expected, decoder)</dt></dl>
+
+<dl><dt><a name="DatumReader-readfixed"><strong>readfixed</strong></a>(self, actual, expected, decoder)</dt></dl>
+
+<dl><dt><a name="DatumReader-readmap"><strong>readmap</strong></a>(self, actual, expected, decoder)</dt></dl>
+
+<dl><dt><a name="DatumReader-readrecord"><strong>readrecord</strong></a>(self, actual, expected, decoder)</dt></dl>
+
+<dl><dt><a name="DatumReader-setschema"><strong>setschema</strong></a>(self, schm)</dt></dl>
+
+<dl><dt><a name="DatumReader-skiparray"><strong>skiparray</strong></a>(self, schm, decoder)</dt></dl>
+
+<dl><dt><a name="DatumReader-skipdata"><strong>skipdata</strong></a>(self, schm, decoder)</dt></dl>
+
+<dl><dt><a name="DatumReader-skipenum"><strong>skipenum</strong></a>(self, schm, decoder)</dt></dl>
+
+<dl><dt><a name="DatumReader-skipfixed"><strong>skipfixed</strong></a>(self, schm)</dt></dl>
+
+<dl><dt><a name="DatumReader-skipmap"><strong>skipmap</strong></a>(self, schm, decoder)</dt></dl>
+
+<dl><dt><a name="DatumReader-skiprecord"><strong>skiprecord</strong></a>(self, schm, decoder)</dt></dl>
+
+<dl><dt><a name="DatumReader-skipunion"><strong>skipunion</strong></a>(self, schm, decoder)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="avro.io.html#DatumReaderBase">avro.io.DatumReaderBase</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DatumWriter">class <strong>DatumWriter</strong></a>(<a href="avro.io.html#DatumWriterBase">avro.io.DatumWriterBase</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#DatumWriter">DatumWriter</a>&nbsp;for&nbsp;generic&nbsp;python&nbsp;objects.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="avro.genericio.html#DatumWriter">DatumWriter</a></dd>
+<dd><a href="avro.io.html#DatumWriterBase">avro.io.DatumWriterBase</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="DatumWriter-__init__"><strong>__init__</strong></a>(self, schm<font color="#909090">=None</font>)</dt></dl>
+
+<dl><dt><a name="DatumWriter-resolveunion"><strong>resolveunion</strong></a>(self, schm, datum)</dt></dl>
+
+<dl><dt><a name="DatumWriter-setschema"><strong>setschema</strong></a>(self, schm)</dt></dl>
+
+<dl><dt><a name="DatumWriter-write"><strong>write</strong></a>(self, datum, encoder)</dt></dl>
+
+<dl><dt><a name="DatumWriter-writearray"><strong>writearray</strong></a>(self, schm, datum, encoder)</dt></dl>
+
+<dl><dt><a name="DatumWriter-writedata"><strong>writedata</strong></a>(self, schm, datum, encoder)</dt></dl>
+
+<dl><dt><a name="DatumWriter-writeenum"><strong>writeenum</strong></a>(self, schm, datum, encoder)</dt></dl>
+
+<dl><dt><a name="DatumWriter-writemap"><strong>writemap</strong></a>(self, schm, datum, encoder)</dt></dl>
+
+<dl><dt><a name="DatumWriter-writerecord"><strong>writerecord</strong></a>(self, schm, datum, encoder)</dt></dl>
+
+<dl><dt><a name="DatumWriter-writeunion"><strong>writeunion</strong></a>(self, schm, datum, encoder)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="avro.io.html#DatumWriterBase">avro.io.DatumWriterBase</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-validate"><strong>validate</strong></a>(schm, object)</dt><dd><tt>Returns&nbsp;True&nbsp;if&nbsp;a&nbsp;python&nbsp;datum&nbsp;matches&nbsp;a&nbsp;schema.</tt></dd></dl>
+</td></tr></table>
+</body></html>

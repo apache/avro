@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["set_enum_symbol_name_validator","set_record_field_name_validator","set_schema_name_validator","set_schema_namespace_validator"],"trait":["EnumSymbolNameValidator","RecordFieldNameValidator","SchemaNameValidator","SchemaNamespaceValidator"]};

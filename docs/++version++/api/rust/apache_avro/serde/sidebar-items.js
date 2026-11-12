@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["from_value","to_value"],"mod":["array","array_opt","bigdecimal","bigdecimal_opt","bytes","bytes_opt","fixed","fixed_opt","slice","slice_opt"],"trait":["AvroSchema","AvroSchemaComponent"]};
