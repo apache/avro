@@ -55,6 +55,24 @@ const size_t maxSyncInterval = 1u << 30;
 // Recommended by https://www.zlib.net/zlib_how.html
 const size_t zlibBufGrowSize = 128 * 1024;
 
+// Releases a zlib stream when leaving the enclosing scope, so the state
+// allocated by deflateInit2()/inflateInit2() is freed on the paths that throw
+// as well as on the one that runs to completion.
+template<typename EndFunction>
+class ZlibStreamGuard {
+public:
+    ZlibStreamGuard(z_stream &zs, EndFunction end) : zs_(zs), end_(end) {}
+    ~ZlibStreamGuard() {
+        (void) end_(&zs_);
+    }
+    ZlibStreamGuard(const ZlibStreamGuard &) = delete;
+    ZlibStreamGuard &operator=(const ZlibStreamGuard &) = delete;
+
+private:
+    z_stream &zs_;
+    EndFunction end_;
+};
+
 template<Codec codec>
 struct codec_trait {
     static std::string name() {
@@ -284,6 +302,7 @@ void DataFileWriterBase::sync() {
             if (ret != Z_OK) {
                 throw Exception("Failed to initialize deflate, error: {}", ret);
             }
+            ZlibStreamGuard guard(zs, deflateEnd);
 
             std::unique_ptr<InputStream> input = memoryInputStream(*buffer_);
             const uint8_t *data;
@@ -309,7 +328,6 @@ void DataFileWriterBase::sync() {
             }
 
             buf.resize(zs.total_out);
-            (void) deflateEnd(&zs);
         } // make sure all is flushed
         std::unique_ptr<InputStream> in = memoryInputStream(buf.data(), buf.size());
         int64_t byteCount = buf.size();
@@ -624,6 +642,7 @@ void DataFileReaderBase::readDataBlock() {
             if (ret != Z_OK) {
                 throw Exception("Failed to initialize inflate, error: {}", ret);
             }
+            ZlibStreamGuard guard(zs, inflateEnd);
 
             const uint8_t *data;
             size_t len;
@@ -647,7 +666,6 @@ void DataFileReaderBase::readDataBlock() {
             }
 
             uncompressed.resize(zs.total_out);
-            (void) inflateEnd(&zs);
         }
 
         std::unique_ptr<InputStream> in = memoryInputStream(
