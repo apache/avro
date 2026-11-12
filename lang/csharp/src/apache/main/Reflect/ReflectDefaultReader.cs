@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using Avro.Generic;
 using Avro.IO;
 using Avro.Specific;
 using Newtonsoft.Json.Linq;
@@ -496,8 +497,16 @@ namespace Avro.Reflect
             }
 
             int i = 0;
-            for (int n = (int)dec.ReadArrayStart(); n != 0; n = (int)dec.ReadArrayNext())
+            long minBytes = CollectionBounds.MinBytesPerElement(writerSchema.ItemSchema);
+            long total = 0;
+            for (long nl = dec.ReadArrayStart(); nl != 0; nl = dec.ReadArrayNext())
             {
+                // Reject a block whose element count could not be backed by the
+                // bytes remaining (or, for zero-byte elements, that exceeds the
+                // cumulative item cap) before allocating for it. Checked on the
+                // raw long, which also avoids the int cast below overflowing.
+                total = CollectionBounds.EnsureCollectionAvailable(dec, total, nl, minBytes);
+                int n = (int)nl;
                 for (int j = 0; j < n; j++, i++)
                 {
                     arrayHelper.Add(Read(null, writerSchema.ItemSchema, rs.ItemSchema, dec));
@@ -532,8 +541,12 @@ namespace Avro.Reflect
                 map = (System.Collections.IDictionary)Activator.CreateInstance(GetTypeFromSchema(rs, false));
             }
 
-            for (int n = (int)d.ReadMapStart(); n != 0; n = (int)d.ReadMapNext())
+            long minBytes = 1L + CollectionBounds.MinBytesPerElement(writerSchema.ValueSchema);
+            long total = 0;
+            for (long nl = d.ReadMapStart(); nl != 0; nl = d.ReadMapNext())
             {
+                total = CollectionBounds.EnsureCollectionAvailable(d, total, nl, minBytes);
+                int n = (int)nl;
                 for (int j = 0; j < n; j++)
                 {
                     string k = d.ReadString();
