@@ -151,8 +151,9 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     // the bytes-remaining check cannot bound. Without this a small malformed
     // record mapped to a Java array field (e.g. long[]) could drive a very large
     // eager allocation before any element is read.
-    ensureAvailableCollectionBytes(in, l, expectedType);
-    if (isZeroByteSchema(expectedType)) {
+    int minBytes = minBytesToRead(expectedType);
+    ensureAvailableCollectionBytes(in, l, minBytes);
+    if (minBytes == 0) {
       SystemLimitException.checkMaxCollectionAllocation(l);
     }
     Object array = newArray(old, (int) l, expected);
@@ -199,7 +200,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   private Object readObjectArray(Object[] array, Schema expectedType, long l, ResolvingDecoder in) throws IOException {
     LogicalType logicalType = expectedType.getLogicalType();
     Conversion<?> conversion = getData().getConversionFor(logicalType);
-    boolean zeroByte = isZeroByteSchema(expectedType);
+    int minBytes = minBytesToRead(expectedType);
     int index = 0;
     if (logicalType != null && conversion != null) {
       do {
@@ -209,7 +210,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
           array[index] = element;
           index++;
         }
-      } while ((l = nextArrayBlock(in, expectedType, zeroByte)) > 0);
+      } while ((l = nextArrayBlock(in, minBytes)) > 0);
     } else {
       do {
         int limit = index + (int) l;
@@ -218,7 +219,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
           array[index] = element;
           index++;
         }
-      } while ((l = nextArrayBlock(in, expectedType, zeroByte)) > 0);
+      } while ((l = nextArrayBlock(in, minBytes)) > 0);
     }
     return array;
   }
@@ -227,21 +228,21 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       throws IOException {
     LogicalType logicalType = expectedType.getLogicalType();
     Conversion<?> conversion = getData().getConversionFor(logicalType);
-    boolean zeroByte = isZeroByteSchema(expectedType);
+    int minBytes = minBytesToRead(expectedType);
     if (logicalType != null && conversion != null) {
       do {
         for (int i = 0; i < l; i++) {
           Object element = readWithConversion(null, expectedType, logicalType, conversion, in);
           c.add(element);
         }
-      } while ((l = nextArrayBlock(in, expectedType, zeroByte)) > 0);
+      } while ((l = nextArrayBlock(in, minBytes)) > 0);
     } else {
       do {
         for (int i = 0; i < l; i++) {
           Object element = readWithoutConversion(null, expectedType, in);
           c.add(element);
         }
-      } while ((l = nextArrayBlock(in, expectedType, zeroByte)) > 0);
+      } while ((l = nextArrayBlock(in, minBytes)) > 0);
     }
     return c;
   }
@@ -257,15 +258,15 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
    * logical array split across multiple blocks would otherwise pass only the
    * first block's guard.
    *
-   * @param in           the decoder
-   * @param expectedType the array element schema
-   * @param zeroByte     whether the element type's minimum encoded size is zero
+   * @param in       the decoder
+   * @param minBytes the minimum encoded size of an element, from
+   *                 {@link #minBytesToRead}
    * @return the validated next block count
    */
-  private long nextArrayBlock(ResolvingDecoder in, Schema expectedType, boolean zeroByte) throws IOException {
+  private long nextArrayBlock(ResolvingDecoder in, int minBytes) throws IOException {
     long l = in.arrayNext();
-    ensureAvailableCollectionBytes(in, l, expectedType);
-    if (zeroByte && l > 0) {
+    ensureAvailableCollectionBytes(in, l, minBytes);
+    if (minBytes == 0 && l > 0) {
       SystemLimitException.checkMaxCollectionAllocation(l);
     }
     return l;

@@ -31,7 +31,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -183,6 +185,29 @@ public class TestGenericDatumReader {
     recWithMultipleFields.setFields(Arrays.asList(new Schema.Field("f", Schema.create(Schema.Type.FLOAT)),
         new Schema.Field("d", Schema.create(Schema.Type.DOUBLE))));
     assertEquals(12, GenericDatumReader.minBytesPerElement(recWithMultipleFields));
+  }
+
+  @Test
+  void testMinResolvedBytesPerElement() {
+    Schema nullType = Schema.create(Schema.Type.NULL);
+    Schema intType = Schema.create(Schema.Type.INT);
+    // FLOAT and DOUBLE may be promoted from a 1-byte INT or LONG
+    assertEquals(1, GenericDatumReader.minResolvedBytesPerElement(Schema.create(Schema.Type.FLOAT)));
+    assertEquals(1, GenericDatumReader.minResolvedBytesPerElement(Schema.create(Schema.Type.DOUBLE)));
+    assertEquals(0, GenericDatumReader.minResolvedBytesPerElement(nullType));
+    assertEquals(16, GenericDatumReader.minResolvedBytesPerElement(Schema.createFixed("F16", null, "test", 16)));
+    // A non-union writer's schema may resolve to the null branch
+    assertEquals(0, GenericDatumReader.minResolvedBytesPerElement(Schema.createUnion(nullType, intType)));
+    assertEquals(1,
+        GenericDatumReader.minResolvedBytesPerElement(Schema.createUnion(intType, Schema.create(Schema.Type.DOUBLE))));
+
+    // A field with a default may be missing from the writer's record
+    Schema rec = Schema.createRecord("WithDefault", null, "test", false);
+    rec.setFields(Arrays.asList(new Schema.Field("x", intType),
+        new Schema.Field("y", Schema.create(Schema.Type.DOUBLE), null, 0.0),
+        new Schema.Field("z", Schema.createFixed("F8", null, "test", 8))));
+    assertEquals(9, GenericDatumReader.minResolvedBytesPerElement(rec));
+    assertEquals(17, GenericDatumReader.minBytesPerElement(rec));
   }
 
   @Test
@@ -749,6 +774,129 @@ public class TestGenericDatumReader {
     } finally {
       System.clearProperty(SystemLimitException.MAX_COLLECTION_LENGTH_PROPERTY);
       org.apache.avro.TestSystemLimitException.resetLimits();
+    }
+  }
+
+  private static final String ITEM_V1 = "{\"type\":\"record\",\"name\":\"Item\",\"fields\":["
+      + "{\"name\":\"id\",\"type\":\"int\"}]}";
+  private static final String ITEM_V2 = "{\"type\":\"record\",\"name\":\"Item\",\"fields\":["
+      + "{\"name\":\"id\",\"type\":\"int\"},{\"name\":\"qty\",\"type\":\"int\",\"default\":0}]}";
+
+  private static byte[] encode(Schema schema, Object datum) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    BinaryEncoder enc = EncoderFactory.get().binaryEncoder(out, null);
+    new GenericDatumWriter<>(schema).write(datum, enc);
+    enc.flush();
+    return out.toByteArray();
+  }
+
+  private static Object readWith(Schema writer, Schema reader, boolean fastReader, byte[] bytes) throws IOException {
+    GenericData data = new GenericData();
+    data.setFastReaderEnabled(fastReader);
+    GenericDatumReader<Object> datumReader = new GenericDatumReader<>(writer, reader, data);
+    return datumReader.read(null, DecoderFactory.get().binaryDecoder(bytes, null));
+  }
+
+  /**
+   * The elements of a collection are encoded with the writer's schema, which can
+   * be smaller than the reader's: here the reader's element record adds a field
+   * with a default, so each 1-byte element is read as a 2-field record.
+   */
+  @Test
+  void arrayOfRecordsWithAddedDefaultFieldDecodes() throws Exception {
+    Schema writer = Schema.createArray(new Schema.Parser().parse(ITEM_V1));
+    Schema reader = Schema.createArray(new Schema.Parser().parse(ITEM_V2));
+    List<GenericRecord> items = new ArrayList<>();
+    for (int i = 0; i < 100; i++) {
+      GenericRecord item = new GenericData.Record(writer.getElementType());
+      item.put("id", 0);
+      items.add(item);
+    }
+    byte[] bytes = encode(writer, items);
+    for (boolean fast : new boolean[] { true, false }) {
+      Collection<?> result = (Collection<?>) readWith(writer, reader, fast, bytes);
+      assertEquals(100, result.size(), "fastReader=" + fast);
+      assertEquals(0, ((GenericRecord) result.iterator().next()).get("qty"), "fastReader=" + fast);
+    }
+  }
+
+  /**
+   * A promoted element type ({@code int} or {@code float} read as {@code double})
+   * is encoded smaller than the reader's type.
+   */
+  @Test
+  void arrayWithPromotedElementTypeDecodes() throws Exception {
+    Schema doubleArray = Schema.createArray(Schema.create(Schema.Type.DOUBLE));
+    Object[][] cases = { { Schema.create(Schema.Type.INT), 0 }, { Schema.create(Schema.Type.LONG), 0L },
+        { Schema.create(Schema.Type.FLOAT), 0f } };
+    for (Object[] c : cases) {
+      Schema writer = Schema.createArray((Schema) c[0]);
+      byte[] bytes = encode(writer, Collections.nCopies(100, c[1]));
+      for (boolean fast : new boolean[] { true, false }) {
+        Collection<?> result = (Collection<?>) readWith(writer, doubleArray, fast, bytes);
+        assertEquals(100, result.size(), () -> writer + " fastReader=" + fast);
+      }
+    }
+  }
+
+  @Test
+  void mapWithPromotedValueTypeDecodes() throws Exception {
+    Schema writer = Schema.createMap(Schema.create(Schema.Type.INT));
+    Schema reader = Schema.createMap(Schema.create(Schema.Type.DOUBLE));
+    Map<String, Integer> map = new HashMap<>();
+    for (int i = 0; i < 100; i++) {
+      map.put(Integer.toString(i), 0);
+    }
+    byte[] bytes = encode(writer, map);
+    for (boolean fast : new boolean[] { true, false }) {
+      Map<?, ?> result = (Map<?, ?>) readWith(writer, reader, fast, bytes);
+      assertEquals(100, result.size(), "fastReader=" + fast);
+    }
+  }
+
+  /**
+   * Resolving against a reader's schema still bounds a huge declared count by the
+   * bytes remaining.
+   */
+  @Test
+  void resolvedArrayRejectsHugeCount() throws Exception {
+    Schema writer = Schema.createArray(Schema.create(Schema.Type.INT));
+    Schema reader = Schema.createArray(Schema.create(Schema.Type.DOUBLE));
+    byte[] data = encodeVarints(10_000_000L, 0L);
+    for (boolean fast : new boolean[] { true, false }) {
+      assertThrows(EOFException.class, () -> readWith(writer, reader, fast, data), "fastReader=" + fast);
+    }
+  }
+
+  /**
+   * Equal writer's and reader's schemas, even as separate instances, keep the
+   * exact bound of the element type.
+   */
+  @Test
+  void equalSchemasKeepExactBound() throws Exception {
+    String json = "{\"type\":\"array\",\"items\":\"double\"}";
+    Schema writer = new Schema.Parser().parse(json);
+    Schema reader = new Schema.Parser().parse(json);
+    byte[] data = encodeVarints(100L, 0L);
+    for (boolean fast : new boolean[] { true, false }) {
+      EOFException e = assertThrows(EOFException.class, () -> readWith(writer, reader, fast, data));
+      assertTrue(e.getMessage().contains("at least 8 bytes"), () -> "fastReader=" + fast + ": " + e.getMessage());
+    }
+  }
+
+  /**
+   * A non-union writer's element ({@code null}) resolves to a branch of the
+   * reader's union, so it is encoded without the union's branch index.
+   */
+  @Test
+  void arrayOfNullsReadAsNullableUnionDecodes() throws Exception {
+    Schema nullType = Schema.create(Schema.Type.NULL);
+    Schema writer = Schema.createArray(nullType);
+    Schema reader = Schema.createArray(Schema.createUnion(nullType, Schema.create(Schema.Type.INT)));
+    byte[] bytes = encode(writer, Collections.nCopies(100, null));
+    for (boolean fast : new boolean[] { true, false }) {
+      Collection<?> result = (Collection<?>) readWith(writer, reader, fast, bytes);
+      assertEquals(100, result.size(), "fastReader=" + fast);
     }
   }
 }

@@ -473,7 +473,9 @@ public class FastReaderBuilder {
   @SuppressWarnings("unchecked")
   private FieldReader createArrayReader(Schema readerSchema, Container action) throws IOException {
     FieldReader elementReader = getReaderFor(action.elementAction, null);
-    Schema elementType = readerSchema.getElementType();
+    // The elements were encoded with the writer's schema, which may encode them
+    // smaller than the reader's (e.g. a field the reader fills from its default)
+    Schema elementType = action.writer.getElementType();
 
     boolean zeroByteElements = GenericDatumReader.isZeroByteSchema(elementType);
 
