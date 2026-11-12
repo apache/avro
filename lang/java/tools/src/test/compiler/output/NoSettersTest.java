@@ -393,7 +393,7 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
   @Override
   public int hashCode() {
     int result = 1;
-    result = 31 * result + (this.name == null ? 0 : this.name.hashCode());
+    result = 31 * result + (this.name == null ? 0 : Utf8.hashCodeFor(this.name));
     result = 31 * result + (this.favorite_number == null ? 0 : this.favorite_number.hashCode());
     return result;
   }

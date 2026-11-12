@@ -1202,6 +1202,41 @@ public class SpecificCompiler {
     return !isUnboxedJavaTypeNullable(schema) && getConvertedLogicalType(schema) == null;
   }
 
+  /**
+   * Utility for template use. Returns whether the values of a field with the
+   * given schema must be compared and hashed through the {@code SpecificData}
+   * model of the generated class, instead of {@code Object.equals()} and
+   * {@code Object.hashCode()}. That is the case for arrays and maps, whose
+   * runtime types differ between built and decoded records (for example
+   * {@code java.util.List} and {@code GenericData.Array}, or {@code String} and
+   * {@code Utf8} elements) and whose elements may need the logical type
+   * conversions of the model, and for unions that are not a nullable type.
+   */
+  public boolean requiresModelComparison(Schema schema) {
+    switch (schema.getType()) {
+    case ARRAY:
+    case MAP:
+      return true;
+    case UNION:
+      List<Schema> types = schema.getTypes();
+      boolean nullable = types.size() == 2 && types.contains(NULL_SCHEMA);
+      return !nullable || types.stream().anyMatch(this::requiresModelComparison);
+    default:
+      return false;
+    }
+  }
+
+  /**
+   * Utility for template use. Returns the expression computing the hash code of
+   * the given field, consistent with the generated {@code equals()}.
+   */
+  public String hashCodeFor(Field field, String name) {
+    if (requiresModelComparison(field.schema())) {
+      return "MODEL$.hashCode(" + name + ", SCHEMA$.getFields().get(" + field.pos() + ").schema())";
+    }
+    return hashCodeFor(field.schema(), name);
+  }
+
   public String hashCodeFor(Schema schema, String name) {
     switch (javaUnbox(schema, false)) {
     case "int":
@@ -1225,6 +1260,10 @@ public class SpecificCompiler {
           return "(" + name + " == null ? 0 : " + name + " instanceof java.lang.Enum ? ((java.lang.Enum) " + name
               + ").ordinal() : " + name + ".hashCode())";
         }
+      }
+      if ("java.lang.CharSequence".equals(javaType(schema))) {
+        // Consistent with Utf8.compareSequences(), used by the generated equals().
+        return "(" + name + " == null ? 0 : Utf8.hashCodeFor(" + name + "))";
       }
       return "(" + name + " == null ? 0 : " + name + ".hashCode())";
     }

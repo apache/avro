@@ -980,7 +980,7 @@ public class ReflectData extends SpecificData {
   }
 
   @Override
-  protected int compare(Object o1, Object o2, Schema s, boolean equals) {
+  public int compare(Object o1, Object o2, Schema s, boolean equals) {
     switch (s.getType()) {
     case ARRAY:
       if (!o1.getClass().isArray())
