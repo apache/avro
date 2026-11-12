@@ -280,9 +280,11 @@ class Responder:
         buffer_encoder = avro.io.BinaryEncoder(buffer_writer)
         error = None
         response_metadata = {}
+        handshake_end = 0
 
         try:
             remote_protocol = self.process_handshake(buffer_decoder, buffer_encoder)
+            handshake_end = buffer_writer.tell()
             # handshake failure
             if remote_protocol is None:
                 return buffer_writer.getvalue()
@@ -324,7 +326,9 @@ class Responder:
                 self.write_error(writers_schema, error, buffer_encoder)
         except avro.errors.AvroException as e:
             error = avro.errors.AvroRemoteException(str(e))
-            buffer_encoder = avro.io.BinaryEncoder(io.BytesIO())
+            # Keep the handshake response and replace anything written after it.
+            buffer_writer.seek(handshake_end)
+            buffer_writer.truncate()
             META_WRITER.write(response_metadata, buffer_encoder)
             buffer_encoder.write_boolean(True)
             self.write_error(SYSTEM_ERROR_SCHEMA, error, buffer_encoder)
