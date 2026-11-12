@@ -42,6 +42,13 @@ import org.slf4j.LoggerFactory;
  * 0 minimum) that may be allocated at once. Unlike other element types, these
  * cannot be bounded by the number of bytes remaining in the stream, so the
  * limit defaults to a fraction of the maximum heap.</li>
+ * <li><tt>org.apache.avro.limits.decode.maxDepth</tt> limits how deeply nested
+ * a value may be while decoding. A recursive schema (e.g. a linked list or a
+ * tree) lets a small, hostile payload drive arbitrarily deep nesting,
+ * exhausting the call stack ({@link StackOverflowError}) before any allocation
+ * limit is reached. The limit is enforced by counting structural descents (into
+ * a record, array, map or union) and rejecting input that nests deeper than the
+ * configured maximum.</li>
  * </ul>
  *
  * The default is to permit sizes up to {@link #MAX_ARRAY_VM_LIMIT}.
@@ -62,9 +69,24 @@ public class SystemLimitException extends AvroRuntimeException {
   public static final String MAX_COLLECTION_LENGTH_PROPERTY = "org.apache.avro.limits.collectionItems.maxLength";
   public static final String MAX_STRING_LENGTH_PROPERTY = "org.apache.avro.limits.string.maxLength";
 
+  /**
+   * System property bounding how deeply nested a value may be while decoding:
+   * {@value}. See {@link #incrementDecodeDepth()}.
+   */
+  public static final String MAX_DECODE_DEPTH_PROPERTY = "org.apache.avro.limits.decode.maxDepth";
+
+  /**
+   * Default maximum decode nesting depth. Comfortably exceeds any realistic
+   * schema nesting while remaining far below where a recursive decode would
+   * exhaust the call stack. Aligns with the well-known default used by Protocol
+   * Buffers.
+   */
+  static final int DEFAULT_MAX_DECODE_DEPTH = 100;
+
   private static int maxBytesLength = MAX_ARRAY_VM_LIMIT;
   private static int maxCollectionLength = MAX_ARRAY_VM_LIMIT;
   private static int maxStringLength = MAX_ARRAY_VM_LIMIT;
+  private static int maxDecodeDepth = DEFAULT_MAX_DECODE_DEPTH;
 
   private static final Logger LOG = LoggerFactory.getLogger(SystemLimitException.class);
 
@@ -132,6 +154,14 @@ public class SystemLimitException extends AvroRuntimeException {
   private static final class CollectionAllocationScope {
     private int depth;
     private long allocated;
+    /**
+     * Current decode nesting depth (structural descents into records, arrays, maps
+     * and unions). Tracked per thread rather than per reader instance so a reader
+     * reused concurrently cannot corrupt another thread's counter, and so the depth
+     * is threaded implicitly through the recursive decode without changing the
+     * reader method signatures. See {@link #incrementDecodeDepth()}.
+     */
+    private int decodeDepth;
   }
 
   private static final ThreadLocal<CollectionAllocationScope> COLLECTION_ALLOCATION_SCOPE = ThreadLocal
@@ -364,6 +394,11 @@ public class SystemLimitException extends AvroRuntimeException {
     CollectionAllocationScope scope = COLLECTION_ALLOCATION_SCOPE.get();
     if (scope.depth == 0) {
       scope.allocated = 0;
+      // Defensively clear the decode depth at the outermost datum boundary. The
+      // counter is already kept balanced by the try/finally around every
+      // increment, but resetting here guarantees a stale value from an abnormally
+      // terminated earlier decode on this thread cannot leak into this one.
+      scope.decodeDepth = 0;
     }
     scope.depth++;
   }
@@ -412,6 +447,47 @@ public class SystemLimitException extends AvroRuntimeException {
     long total = checkMaxCollectionAllocation(scope.allocated, items);
     scope.allocated = total;
     return total;
+  }
+
+  /**
+   * Record a structural descent (into a record, array, map or union) while
+   * decoding and verify the nesting has not grown past
+   * {@link #MAX_DECODE_DEPTH_PROPERTY the configured maximum}.
+   * <p>
+   * Avro's binary decoders decode nested values with a recursive call chain, so
+   * the call stack grows in lockstep with the nesting of the data. A recursive
+   * schema (e.g. a linked list or tree) lets a tiny, hostile payload declare
+   * arbitrarily deep nesting, overflowing the stack ({@link StackOverflowError})
+   * long before any allocation limit is reached. Bounding the depth turns such
+   * input into a clean, catchable failure instead of a crash.
+   * <p>
+   * Every call that succeeds must be paired with a matching
+   * {@link #decrementDecodeDepth()} in a {@code finally} block. When the limit
+   * would be exceeded this method throws <em>without</em> incrementing, so the
+   * counter stays balanced as the exception unwinds the enclosing
+   * (already-incremented) frames.
+   *
+   * @throws SystemLimitException if the decode nesting would exceed the maximum.
+   */
+  public static void incrementDecodeDepth() {
+    CollectionAllocationScope scope = COLLECTION_ALLOCATION_SCOPE.get();
+    if (scope.decodeDepth >= maxDecodeDepth) {
+      throw new SystemLimitException("Decode nesting depth exceeds the maximum allowed of " + maxDecodeDepth
+          + " (configure with the system property " + MAX_DECODE_DEPTH_PROPERTY + ")");
+    }
+    scope.decodeDepth++;
+  }
+
+  /**
+   * Record leaving a structural value opened by {@link #incrementDecodeDepth()}.
+   * Must be called from a {@code finally} block so the depth is restored even
+   * when decoding the nested value fails.
+   */
+  public static void decrementDecodeDepth() {
+    CollectionAllocationScope scope = COLLECTION_ALLOCATION_SCOPE.get();
+    if (scope.decodeDepth > 0) {
+      scope.decodeDepth--;
+    }
   }
 
   /**
@@ -468,5 +544,6 @@ public class SystemLimitException extends AvroRuntimeException {
     // zero-byte allocation cap consistent with the other collection limits even
     // when it is configured (or derived from a very large heap) above that.
     maxCollectionAllocation = Math.min(maxCollectionAllocation, MAX_ARRAY_VM_LIMIT);
+    maxDecodeDepth = getLimitFromProperty(MAX_DECODE_DEPTH_PROPERTY, DEFAULT_MAX_DECODE_DEPTH);
   }
 }
