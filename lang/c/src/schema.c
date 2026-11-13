@@ -92,6 +92,9 @@ static int record_free_foreach(int i, struct avro_record_field_t *field,
 
 	avro_str_free(field->name);
 	avro_schema_decref(field->type);
+	if (field->default_value) {
+		json_decref(field->default_value);
+	}
 	avro_freet(struct avro_record_field_t, field);
 	return ST_DELETE;
 }
@@ -527,6 +530,7 @@ avro_schema_t avro_schema_enum_ns(const char *name, const char *space)
 		avro_freet(struct avro_enum_schema_t, enump);
 		return NULL;
 	}
+	enump->default_index = -1;
 	avro_schema_init(&enump->obj, AVRO_ENUM);
 	return &enump->obj;
 }
@@ -620,6 +624,7 @@ avro_schema_record_field_append(const avro_schema_t record_schema,
 	new_field->index = record->fields->num_entries;
 	new_field->name = avro_strdup(field_name);
 	new_field->type = avro_schema_incref(field_schema);
+	new_field->default_value = NULL;
 	st_insert(record->fields, record->fields->num_entries,
 		  (st_data_t) new_field);
 	st_insert(record->fields_byname, (st_data_t) new_field->name,
@@ -730,6 +735,17 @@ avro_schema_t avro_schema_record_field_get_by_index
 	} val;
 	st_lookup(avro_schema_to_record(record)->fields, index, &val.data);
 	return val.field->type;
+}
+
+static struct avro_record_field_t *
+record_field_at(const avro_schema_t record, int index)
+{
+	union {
+		st_data_t data;
+		struct avro_record_field_t *field;
+	} val;
+	st_lookup(avro_schema_to_record(record)->fields, index, &val.data);
+	return val.field;
 }
 
 avro_schema_t avro_schema_link(avro_schema_t to)
@@ -1013,6 +1029,15 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 					avro_schema_decref(*schema);
 					return field_rval;
 				}
+
+				json_t *json_field_default =
+				    json_object_get(json_field, "default");
+				if (json_field_default) {
+					struct avro_record_field_t *field =
+					    record_field_at(*schema, i);
+					field->default_value =
+					    json_incref(json_field_default);
+				}
 			}
 		}
 		break;
@@ -1085,6 +1110,25 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 					avro_schema_decref(*schema);
 					return enum_rval;
 				}
+			}
+
+			json_t *json_default = json_object_get(json, "default");
+			if (json_default) {
+				const char *symbol =
+				    json_string_value(json_default);
+				int index = -1;
+				if (symbol) {
+					index = avro_schema_enum_get_by_name
+					    (*schema, symbol);
+				}
+				if (index < 0) {
+					avro_set_error("Enum default must be "
+						       "one of its symbols");
+					avro_schema_decref(*schema);
+					return EINVAL;
+				}
+				avro_schema_to_enum(*schema)->default_index =
+				    index;
 			}
 		}
 		break;
@@ -1330,6 +1374,12 @@ avro_schema_t avro_schema_copy_root(avro_schema_t schema, st_table *named_schema
 								val.field->name,
 								type_copy);
 				avro_schema_decref(type_copy);
+				if (val.field->default_value) {
+					struct avro_record_field_t *copy =
+					    record_field_at(new_schema, i);
+					copy->default_value = json_incref
+					    (val.field->default_value);
+				}
 			}
 		}
 		break;
@@ -1353,6 +1403,8 @@ avro_schema_t avro_schema_copy_root(avro_schema_t schema, st_table *named_schema
 				avro_schema_enum_symbol_append(new_schema,
 							       val.sym);
 			}
+			avro_schema_to_enum(new_schema)->default_index =
+			    enum_schema->default_index;
 		}
 		break;
 
@@ -1685,6 +1737,24 @@ static int write_field(avro_writer_t out, const struct avro_record_field_t *fiel
 	check(rval, avro_write_str(out, field->name));
 	check(rval, avro_write_str(out, "\",\"type\":"));
 	check(rval, avro_schema_to_json2(field->type, out, parent_namespace));
+	if (field->default_value) {
+		char *default_json =
+		    json_dumps(field->default_value,
+			       JSON_ENCODE_ANY | JSON_COMPACT |
+			       JSON_PRESERVE_ORDER);
+		if (!default_json) {
+			avro_set_error("Cannot encode default value as JSON");
+			return ENOMEM;
+		}
+		rval = avro_write_str(out, ",\"default\":");
+		if (rval == 0) {
+			rval = avro_write_str(out, default_json);
+		}
+		free(default_json);
+		if (rval) {
+			return rval;
+		}
+	}
 	return avro_write_str(out, "}");
 }
 
@@ -1749,7 +1819,15 @@ static int write_enum(avro_writer_t out, const struct avro_enum_schema_t *enump,
 		check(rval, avro_write_str(out, val.sym));
 		check(rval, avro_write_str(out, "\""));
 	}
-	return avro_write_str(out, "]}");
+	check(rval, avro_write_str(out, "]"));
+	if (enump->default_index >= 0) {
+		check(rval, avro_write_str(out, ",\"default\":\""));
+		check(rval, avro_write_str(out,
+			avro_schema_enum_get((avro_schema_t) &enump->obj,
+					     enump->default_index)));
+		check(rval, avro_write_str(out, "\""));
+	}
+	return avro_write_str(out, "}");
 }
 
 static int write_fixed(avro_writer_t out, const struct avro_fixed_schema_t *fixed,
