@@ -1,0 +1,8 @@
+{
+    "type": "record",
+    "name": "Car",
+    "fields": [
+        {"name": "model", "type": "string"},
+        {"name": "kw", "type": "int"}
+    ]
+}

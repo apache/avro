@@ -109,6 +109,11 @@ class AvroName implements \Stringable
         return [$this->name, $this->namespace];
     }
 
+    public function name(): string
+    {
+        return $this->name;
+    }
+
     public function fullname(): string
     {
         return $this->fullname;

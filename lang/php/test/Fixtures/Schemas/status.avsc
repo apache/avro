@@ -1,0 +1,5 @@
+{
+    "type": "enum",
+    "name": "Status",
+    "symbols": ["active", "inactive", "pending"]
+}
