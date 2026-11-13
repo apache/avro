@@ -24,6 +24,7 @@
 #include "Compiler.hh"
 #include "Decoder.hh"
 #include "Encoder.hh"
+#include "GenericDatum.hh"
 #include "Node.hh"
 #include "Parser.hh"
 #include "Schema.hh"
@@ -1066,6 +1067,25 @@ void testNestedMapSchema() {
     BOOST_CHECK_EQUAL(expected, actual.str());
 }
 
+// Regression test for AVRO-3194: GenericDatum::value<T>() with a mismatched
+// C++ type used to dereference the null pointer returned by std::any_cast,
+// causing a segmentation fault. It must now throw an avro::Exception instead.
+static void testGenericDatumValueTypeMismatch() {
+    GenericDatum datum(std::string("hello"));
+    BOOST_CHECK_EQUAL(datum.type(), AVRO_STRING);
+
+    // Correct type still works.
+    BOOST_CHECK_EQUAL(datum.value<std::string>(), std::string("hello"));
+
+    // Mismatched type must throw, not segfault.
+    BOOST_CHECK_THROW(datum.value<int32_t>(), avro::Exception);
+    BOOST_CHECK_THROW(datum.value<std::vector<uint8_t>>(), avro::Exception);
+
+    // Same guarantee through the const overload.
+    const GenericDatum &constDatum = datum;
+    BOOST_CHECK_THROW(constDatum.value<int32_t>(), avro::Exception);
+}
+
 boost::unit_test::test_suite *
 init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     using namespace boost::unit_test;
@@ -1086,6 +1106,7 @@ init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
                                     boost::make_shared<TestResolution>()));
     test->add(BOOST_TEST_CASE(&testNestedArraySchema));
     test->add(BOOST_TEST_CASE(&testNestedMapSchema));
+    test->add(BOOST_TEST_CASE(&testGenericDatumValueTypeMismatch));
 
     return test;
 }
