@@ -58,6 +58,10 @@ namespace Avro.Specific
         private readonly Assembly entryAssembly;
         private readonly bool diffAssembly;
 
+        // Cached value factory for typeCacheByName.GetOrAdd. Stored once so that
+        // FindType does not allocate a new closure on every call (AVRO-3893).
+        private readonly Func<string, Type> findTypeFactory;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ObjectCreator"/> class.
         /// </summary>
@@ -69,6 +73,8 @@ namespace Avro.Specific
 
             // entryAssembly returns null when running from NUnit
             diffAssembly = entryAssembly != null && execAssembly != entryAssembly;
+
+            findTypeFactory = FindTypeUncached;
         }
 
         /// <summary>
@@ -81,62 +87,70 @@ namespace Avro.Specific
         /// </exception>
         private Type FindType(string name)
         {
-            return typeCacheByName.GetOrAdd(name, (_) =>
+            return typeCacheByName.GetOrAdd(name, findTypeFactory);
+        }
+
+        /// <summary>
+        /// Value factory used by <see cref="FindType"/>. Kept as a separate method (referenced
+        /// through the cached <c>findTypeFactory</c> delegate) so the lookup does not capture a
+        /// per-call closure. The <paramref name="name"/> argument is the cache key supplied by
+        /// <see cref="ConcurrentDictionary{TKey,TValue}.GetOrAdd(TKey, Func{TKey, TValue})"/>.
+        /// </summary>
+        private Type FindTypeUncached(string name)
+        {
+            Type type = null;
+
+            if (TryGetIListItemTypeName(name, out var itemTypeName))
             {
-                Type type = null;
+                return GenericIListType.MakeGenericType(FindType(itemTypeName));
+            }
 
-                if (TryGetIListItemTypeName(name, out var itemTypeName))
-                {
-                    return GenericIListType.MakeGenericType(FindType(itemTypeName));
-                }
+            if (TryGetNullableItemTypeName(name, out itemTypeName))
+            {
+                return GenericNullableType.MakeGenericType(FindType(itemTypeName));
+            }
 
-                if (TryGetNullableItemTypeName(name, out itemTypeName))
-                {
-                    return GenericNullableType.MakeGenericType(FindType(itemTypeName));
-                }
+            // if entry assembly different from current assembly, try entry assembly first
+            if (diffAssembly)
+            {
+                type = entryAssembly.GetType(name);
+            }
 
-                // if entry assembly different from current assembly, try entry assembly first
-                if (diffAssembly)
-                {
-                    type = entryAssembly.GetType(name);
-                }
+            // try current assembly and mscorlib
+            if (type == null)
+            {
+                type = Type.GetType(name);
+            }
 
-                // try current assembly and mscorlib
-                if (type == null)
+            // type is still not found, need to loop through all loaded assemblies
+            if (type == null)
+            {
+                foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
                 {
-                    type = Type.GetType(name);
-                }
-
-                // type is still not found, need to loop through all loaded assemblies
-                if (type == null)
-                {
-                    foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+                    // Loading all types from all assemblies could fail for a variety of
+                    // non -fatal reasons. If we fail to load types from an assembly, continue.
+                    try
                     {
-                        // Loading all types from all assemblies could fail for a variety of
-                        // non -fatal reasons. If we fail to load types from an assembly, continue.
-                        try
+                        // Change the search to look for Types by both NAME and FULLNAME
+                        foreach (Type t in assembly.GetTypes())
                         {
-                            // Change the search to look for Types by both NAME and FULLNAME
-                            foreach (Type t in assembly.GetTypes())
+                            if (name == t.Name || name == t.FullName || CodeGenUtil.Instance.UnMangle(name) == t.FullName)
                             {
-                                if (name == t.Name || name == t.FullName || CodeGenUtil.Instance.UnMangle(name) == t.FullName)
-                                {
-                                    type = t;
-                                    break;
-                                }
+                                type = t;
+                                break;
                             }
                         }
-                        catch
-                        {
-                            continue;
-                        }
+                    }
+                    catch
+                    {
+                        continue;
                     }
                 }
+            }
 
-                return type
-                    ?? throw new AvroException($"Unable to find type '{name}' in all loaded " +
-                    $"assemblies");
-            });
+            return type
+                ?? throw new AvroException($"Unable to find type '{name}' in all loaded " +
+                $"assemblies");
         }
 
         private bool TryGetIListItemTypeName(string name, out string itemTypeName)
