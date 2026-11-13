@@ -107,30 +107,10 @@ namespace Avro.Specific
                     type = Type.GetType(name);
                 }
 
-                // type is still not found, need to loop through all loaded assemblies
+                // type is still not found, need to look through all loaded assemblies
                 if (type == null)
                 {
-                    foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-                    {
-                        // Loading all types from all assemblies could fail for a variety of
-                        // non -fatal reasons. If we fail to load types from an assembly, continue.
-                        try
-                        {
-                            // Change the search to look for Types by both NAME and FULLNAME
-                            foreach (Type t in assembly.GetTypes())
-                            {
-                                if (name == t.Name || name == t.FullName || CodeGenUtil.Instance.UnMangle(name) == t.FullName)
-                                {
-                                    type = t;
-                                    break;
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            continue;
-                        }
-                    }
+                    type = FindTypeInLoadedAssemblies(name);
                 }
 
                 return type
@@ -286,6 +266,79 @@ namespace Avro.Specific
 
             // Fallback
             return FindType(schema.Name);
+        }
+
+        /// <summary>
+        /// Finds the type with the given name in all loaded assemblies. If several assemblies contain
+        /// a matching type, the one found last in the loaded assemblies wins.
+        /// </summary>
+        /// <param name="name">the object type to locate</param>
+        /// <returns>the object type, or <c>null</c> if not found</returns>
+        private static Type FindTypeInLoadedAssemblies(string name)
+        {
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            string unmangledName = CodeGenUtil.Instance.UnMangle(name);
+
+            // A name with a namespace can only match the full name of a type. Looking it up directly
+            // in each assembly finds the same type as enumerating all types of all assemblies, without
+            // loading all of them.
+            if (name.IndexOf('.') >= 0)
+            {
+                Type type = null;
+                foreach (Assembly assembly in assemblies)
+                {
+                    try
+                    {
+                        type = assembly.GetType(name, false) ?? assembly.GetType(unmangledName, false) ?? type;
+                    }
+                    catch
+                    {
+                        // Looking up a type could fail for a variety of non-fatal reasons, continue.
+                    }
+                }
+
+                if (type != null)
+                {
+                    return type;
+                }
+            }
+
+            return FindTypeByEnumeratingLoadedAssemblies(assemblies, name, unmangledName);
+        }
+
+        /// <summary>
+        /// Finds the type with the given name or full name by enumerating all types of all loaded assemblies.
+        /// </summary>
+        /// <param name="assemblies">the loaded assemblies</param>
+        /// <param name="name">the object type to locate</param>
+        /// <param name="unmangledName">the object type to locate, without escaped reserved words</param>
+        /// <returns>the object type, or <c>null</c> if not found</returns>
+        private static Type FindTypeByEnumeratingLoadedAssemblies(Assembly[] assemblies, string name, string unmangledName)
+        {
+            Type type = null;
+            foreach (Assembly assembly in assemblies)
+            {
+                // Loading all types from all assemblies could fail for a variety of
+                // non -fatal reasons. If we fail to load types from an assembly, continue.
+                try
+                {
+                    // Change the search to look for Types by both NAME and FULLNAME
+                    foreach (Type t in assembly.GetTypes())
+                    {
+                        if (name == t.Name || name == t.FullName || unmangledName == t.FullName)
+                        {
+                            type = t;
+                            break;
+                        }
+                    }
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+
+            return type;
         }
 
         /// <summary>
