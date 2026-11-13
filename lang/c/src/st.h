@@ -61,6 +61,8 @@ st_table *st_init_strtable _((void));
 st_table *st_init_strtable_with_size _((int));
 int st_delete _((st_table *, st_data_t *, st_data_t *));
 int st_delete_safe _((st_table *, st_data_t *, st_data_t *, st_data_t));
+/* Returns 0 if a new entry was added, 1 if an existing key was updated, or -1
+ * if a new entry could not be allocated (the table is left unchanged). */
 int st_insert _((st_table *, st_data_t, st_data_t));
 int st_lookup _((st_table *, st_data_t, st_data_t *));
 int st_foreach _((st_table *, hash_function_foreach, st_data_t));
