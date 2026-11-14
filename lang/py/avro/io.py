@@ -1281,9 +1281,23 @@ class DatumReader:
                 return None
             raise avro.errors.InvalidDefaultException(field_schema, default_value)
         if field_schema.type == "boolean":
-            return bool(default_value)
-        if field_schema.type in ("int", "long"):
-            if isinstance(default_value, int):
+            if isinstance(default_value, bool):
+                return default_value
+            raise avro.errors.InvalidDefaultException(field_schema, default_value)
+        if field_schema.type == "int":
+            if (
+                isinstance(default_value, int)
+                and not isinstance(default_value, bool)
+                and avro.schema.INT_MIN_VALUE <= default_value <= avro.schema.INT_MAX_VALUE
+            ):
+                return default_value
+            raise avro.errors.InvalidDefaultException(field_schema, default_value)
+        if field_schema.type == "long":
+            if (
+                isinstance(default_value, int)
+                and not isinstance(default_value, bool)
+                and avro.schema.LONG_MIN_VALUE <= default_value <= avro.schema.LONG_MAX_VALUE
+            ):
                 return default_value
             raise avro.errors.InvalidDefaultException(field_schema, default_value)
         if field_schema.type in ("float", "double"):
@@ -1296,12 +1310,16 @@ class DatumReader:
             if isinstance(default_value, str):
                 return default_value.encode()
             raise avro.errors.InvalidDefaultException(field_schema, default_value)
-        if field_schema.type in ("enum", "string"):
+        if isinstance(field_schema, avro.schema.EnumSchema):
+            if isinstance(default_value, str) and default_value in field_schema.symbols:
+                return default_value
+            raise avro.errors.InvalidDefaultException(field_schema, default_value)
+        if field_schema.type == "string":
             if isinstance(default_value, str):
                 return default_value
             raise avro.errors.InvalidDefaultException(field_schema, default_value)
         if isinstance(field_schema, avro.schema.ArraySchema):
-            if isinstance(default_value, Iterable):
+            if isinstance(default_value, Iterable) and not isinstance(default_value, (str, bytes, Mapping)):
                 return [self._read_default_value(field_schema.items, json_val) for json_val in default_value]
             raise avro.errors.InvalidDefaultException(field_schema, default_value)
         if isinstance(field_schema, avro.schema.MapSchema):
@@ -1309,15 +1327,23 @@ class DatumReader:
                 return {key: self._read_default_value(field_schema.values, json_val) for key, json_val in default_value.items()}
             raise avro.errors.InvalidDefaultException(field_schema, default_value)
         if isinstance(field_schema, avro.schema.UnionSchema):
-            return self._read_default_value(field_schema.schemas[0], default_value)
+            for branch_schema in field_schema.schemas:
+                try:
+                    return self._read_default_value(branch_schema, default_value)
+                except avro.errors.InvalidDefaultException:
+                    continue
+            raise avro.errors.InvalidDefaultException(field_schema, default_value)
         if isinstance(field_schema, avro.schema.RecordSchema):
             if not isinstance(default_value, Mapping):
                 raise avro.errors.InvalidDefaultException(field_schema, default_value)
             read_record = {}
             for field in field_schema.fields:
-                json_val = default_value.get(field.name)
-                if json_val is None:
+                if field.name in default_value:
+                    json_val = default_value[field.name]
+                elif field.has_default:
                     json_val = field.default
+                else:
+                    raise avro.errors.InvalidDefaultException(field_schema, default_value)
                 field_val = self._read_default_value(field.type, json_val)
                 read_record[field.name] = field_val
             return read_record
