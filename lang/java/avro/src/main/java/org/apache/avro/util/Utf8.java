@@ -232,6 +232,50 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
     in.readFully(bytes);
   }
 
+  /**
+   * Returns the hash code of the UTF-8 encoding of the given character sequence,
+   * that is the hash code of a {@link Utf8} with the same content, without
+   * encoding the sequence. A {@link String} and a {@link Utf8} with the same
+   * content, which are equal according to
+   * {@link #compareSequences(CharSequence, CharSequence)}, therefore have the
+   * same hash code.
+   *
+   * @param cs the character sequence to hash
+   * @return the hash code of the UTF-8 encoding of the character sequence
+   */
+  public static int hashCodeFor(CharSequence cs) {
+    if (cs instanceof Utf8) {
+      return cs.hashCode();
+    }
+    int h = 1;
+    int length = cs.length();
+    for (int i = 0; i < length; i++) {
+      char c = cs.charAt(i);
+      if (c < 0x80) {
+        h = 31 * h + c;
+      } else if (c < 0x800) {
+        h = 31 * h + (byte) (0xC0 | (c >> 6));
+        h = 31 * h + (byte) (0x80 | (c & 0x3F));
+      } else if (Character.isSurrogate(c)) {
+        if (Character.isHighSurrogate(c) && i + 1 < length && Character.isLowSurrogate(cs.charAt(i + 1))) {
+          int codePoint = Character.toCodePoint(c, cs.charAt(++i));
+          h = 31 * h + (byte) (0xF0 | (codePoint >> 18));
+          h = 31 * h + (byte) (0x80 | ((codePoint >> 12) & 0x3F));
+          h = 31 * h + (byte) (0x80 | ((codePoint >> 6) & 0x3F));
+          h = 31 * h + (byte) (0x80 | (codePoint & 0x3F));
+        } else {
+          // An unpaired surrogate is encoded as the replacement character.
+          h = 31 * h + '?';
+        }
+      } else {
+        h = 31 * h + (byte) (0xE0 | (c >> 12));
+        h = 31 * h + (byte) (0x80 | ((c >> 6) & 0x3F));
+        h = 31 * h + (byte) (0x80 | (c & 0x3F));
+      }
+    }
+    return h;
+  }
+
   public static int compareSequences(CharSequence cs1, CharSequence cs2) {
     if (cs1 == cs2) {
       return 0;

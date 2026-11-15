@@ -585,7 +585,7 @@ public class SpecificData extends GenericData {
   }
 
   @Override
-  protected int compare(Object o1, Object o2, Schema s, boolean eq) {
+  public int compare(Object o1, Object o2, Schema s, boolean eq) {
     switch (s.getType()) {
     case ENUM:
       if (o1 instanceof Enum)

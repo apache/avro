@@ -498,9 +498,9 @@ public class OptionalGettersAllFieldsTest extends org.apache.avro.specific.Speci
   @Override
   public int hashCode() {
     int result = 1;
-    result = 31 * result + (this.name == null ? 0 : this.name.hashCode());
-    result = 31 * result + (this.nullable_name == null ? 0 : this.nullable_name.hashCode());
-    result = 31 * result + (this.favorite_number == null ? 0 : this.favorite_number.hashCode());
+    result = 31 * result + (this.name == null ? 0 : Utf8.hashCodeFor(this.name));
+    result = 31 * result + (this.nullable_name == null ? 0 : Utf8.hashCodeFor(this.nullable_name));
+    result = 31 * result + MODEL$.hashCode(this.favorite_number, SCHEMA$.getFields().get(2).schema());
     result = 31 * result + (this.nullable_favorite_number == null ? 0 : this.nullable_favorite_number.hashCode());
     return result;
   }
@@ -520,7 +520,8 @@ public class OptionalGettersAllFieldsTest extends org.apache.avro.specific.Speci
     if (Utf8.compareSequences(this.nullable_name, other.nullable_name) != 0) {
       return false;
     }
-    if (!java.util.Objects.equals(this.favorite_number, other.favorite_number)) {
+    if (this.favorite_number == null ? other.favorite_number != null : other.favorite_number == null
+        || MODEL$.compare(this.favorite_number, other.favorite_number, SCHEMA$.getFields().get(2).schema(), true) != 0) {
       return false;
     }
     if (!java.util.Objects.equals(this.nullable_favorite_number, other.nullable_favorite_number)) {
