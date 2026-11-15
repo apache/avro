@@ -124,6 +124,14 @@ public class FastReaderBuilder {
   }
 
   private FieldReader getReaderFor(Action action, Conversion<?> explicitConversion) throws IOException {
+    // A writer union must not be wrapped in a conversion here: the value is
+    // produced by
+    // the branch reader selected at read time, so the conversion has to be applied
+    // by that
+    // branch reader, using the branch's own reader schema, exactly once.
+    if (action instanceof WriterUnion) {
+      return createUnionReader((WriterUnion) action, explicitConversion);
+    }
     final FieldReader baseReader = getNonConvertedReader(action);
     return applyConversions(action.reader, baseReader, explicitConversion);
   }
@@ -294,8 +302,6 @@ public class FastReaderBuilder {
       return createEnumReader((EnumAdjust) action);
     case PROMOTE:
       return createPromotingReader((Promote) action);
-    case WRITER_UNION:
-      return createUnionReader((WriterUnion) action);
     case READER_UNION:
       return getReaderFor(((ReaderUnion) action).actualAction, null);
     case ERROR:
@@ -409,10 +415,13 @@ public class FastReaderBuilder {
     return (old instanceof Utf8) ? ((Utf8) old).set(new Utf8(buffer.array())) : new Utf8(buffer.array());
   }
 
-  private FieldReader createUnionReader(WriterUnion action) throws IOException {
+  private FieldReader createUnionReader(WriterUnion action, Conversion<?> explicitConversion) throws IOException {
     FieldReader[] unionReaders = new FieldReader[action.actions.length];
     for (int i = 0; i < action.actions.length; i++) {
-      unionReaders[i] = getReaderFor(action.actions[i], null);
+      // the conversion is owned by the branch: the branch's reader schema decides
+      // whether
+      // (and which of) the logical type conversions apply
+      unionReaders[i] = getReaderFor(action.actions[i], explicitConversion);
     }
     return createUnionReader(unionReaders);
   }
