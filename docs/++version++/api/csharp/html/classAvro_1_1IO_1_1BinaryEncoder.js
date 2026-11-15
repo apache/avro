@@ -1,0 +1,25 @@
+var classAvro_1_1IO_1_1BinaryEncoder =
+[
+    [ "BinaryEncoder", "classAvro_1_1IO_1_1BinaryEncoder.html#a2a46fc57f307684db719bf5e0bb32c6c", null ],
+    [ "BinaryEncoder", "classAvro_1_1IO_1_1BinaryEncoder.html#a73eb30fdfc633ae2f1b204c7035ed4e7", null ],
+    [ "Flush", "classAvro_1_1IO_1_1BinaryEncoder.html#a271459d1cc547f1edb64ed246e419b76", null ],
+    [ "SetItemCount", "classAvro_1_1IO_1_1BinaryEncoder.html#a393a6fc2cd22bc4d4c357986ea8e9456", null ],
+    [ "StartItem", "classAvro_1_1IO_1_1BinaryEncoder.html#aaccbfb4c92a0811a73a122120742858a", null ],
+    [ "WriteArrayEnd", "classAvro_1_1IO_1_1BinaryEncoder.html#a5b52ccd406056dd1a0b4eacae1f37107", null ],
+    [ "WriteArrayStart", "classAvro_1_1IO_1_1BinaryEncoder.html#a3622a115ffb17c88802b846c3847eee4", null ],
+    [ "WriteBoolean", "classAvro_1_1IO_1_1BinaryEncoder.html#a5de0e5c2e0619cb2415435a5948ae52a", null ],
+    [ "WriteBytes", "classAvro_1_1IO_1_1BinaryEncoder.html#aa17979f0443867ffe452f9ef66344937", null ],
+    [ "WriteBytes", "classAvro_1_1IO_1_1BinaryEncoder.html#a4760434fce3ba2cf1fcae38079c122e3", null ],
+    [ "WriteDouble", "classAvro_1_1IO_1_1BinaryEncoder.html#a2e2b99499445aea432469345cdaca69e", null ],
+    [ "WriteEnum", "classAvro_1_1IO_1_1BinaryEncoder.html#ab5d7f1eaf3a116e917f9d6dd85652d1f", null ],
+    [ "WriteFixed", "classAvro_1_1IO_1_1BinaryEncoder.html#ae2dd6e1e35f463734aa3b29958a163ab", null ],
+    [ "WriteFixed", "classAvro_1_1IO_1_1BinaryEncoder.html#aee8bb0abeca7561ba98a8cdd0e5036d6", null ],
+    [ "WriteFloat", "classAvro_1_1IO_1_1BinaryEncoder.html#a3d74cc22986b66720faffcde035b9a73", null ],
+    [ "WriteInt", "classAvro_1_1IO_1_1BinaryEncoder.html#afdadf915ca6d577c1ce214ce57ae8dd8", null ],
+    [ "WriteLong", "classAvro_1_1IO_1_1BinaryEncoder.html#a0cad9fa112cb5ab0d3020ba974f5e60b", null ],
+    [ "WriteMapEnd", "classAvro_1_1IO_1_1BinaryEncoder.html#af9aee4c21d7dfb091491d4ace32e171e", null ],
+    [ "WriteMapStart", "classAvro_1_1IO_1_1BinaryEncoder.html#af092b25ac07051dbe745f856ffd51400", null ],
+    [ "WriteNull", "classAvro_1_1IO_1_1BinaryEncoder.html#a64f4e2ea7476fe74eb6136ea39126860", null ],
+    [ "WriteString", "classAvro_1_1IO_1_1BinaryEncoder.html#aaf92e3448bf12b5823a433da08f60b3c", null ],
+    [ "WriteUnionIndex", "classAvro_1_1IO_1_1BinaryEncoder.html#a7d5fd3bdc52bc30072034333b65f8c39", null ]
+];

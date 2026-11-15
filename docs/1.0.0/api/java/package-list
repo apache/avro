@@ -1,0 +1,8 @@
+org.apache.avro
+org.apache.avro.file
+org.apache.avro.generic
+org.apache.avro.io
+org.apache.avro.ipc
+org.apache.avro.reflect
+org.apache.avro.specific
+org.apache.avro.util

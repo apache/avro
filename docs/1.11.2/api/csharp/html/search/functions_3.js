@@ -1,0 +1,14 @@
+var searchData=
+[
+  ['datablock_758',['DataBlock',['../classAvro_1_1File_1_1DataBlock.html#abe86cc5f061c14cdb4f608e385f7b503',1,'Avro::File::DataBlock']]],
+  ['date_759',['Date',['../classAvro_1_1Util_1_1Date.html#a03e107a01d57a3e745b8756e2a8aca22',1,'Avro::Util::Date']]],
+  ['decimal_760',['Decimal',['../classAvro_1_1Util_1_1Decimal.html#a1fef38ace52972d74f766dc40c3e01b9',1,'Avro::Util::Decimal']]],
+  ['decompress_761',['Decompress',['../classAvro_1_1File_1_1Codec.html#a6d58427d0022e4dd74adb22e42e952ae',1,'Avro.File.Codec.Decompress(byte[] compressedData)'],['../classAvro_1_1File_1_1Codec.html#a77dc2915a2c19bf1df64063a3bca0ccc',1,'Avro.File.Codec.Decompress(byte[] compressedData, int length)'],['../classAvro_1_1File_1_1DeflateCodec.html#a694e920e481316f06996fa987ca1d47d',1,'Avro.File.DeflateCodec.Decompress()'],['../classAvro_1_1File_1_1NullCodec.html#a398ed9b6d6067388cd7940c0d6a7de8f',1,'Avro.File.NullCodec.Decompress()']]],
+  ['defaultreader_762',['DefaultReader',['../classAvro_1_1Generic_1_1DefaultReader.html#ab5a01ca3a4edc8867ee9b2d9c42d6238',1,'Avro::Generic::DefaultReader']]],
+  ['defaultstartaction_763',['DefaultStartAction',['../classAvro_1_1IO_1_1Parsing_1_1Symbol_1_1DefaultStartAction.html#a12cc20f60efcdc4e8ec9eeb447573dad',1,'Avro::IO::Parsing::Symbol::DefaultStartAction']]],
+  ['defaultwriter_764',['DefaultWriter',['../classAvro_1_1Generic_1_1DefaultWriter.html#ac96c3ecdadda29bf66cfd576dd12b228',1,'Avro::Generic::DefaultWriter']]],
+  ['depth_765',['Depth',['../classAvro_1_1IO_1_1Parsing_1_1Parser.html#a52cf48cac12aac5757305374efb2626b',1,'Avro.IO.Parsing.Parser.Depth()'],['../classAvro_1_1IO_1_1ParsingEncoder.html#a4bafec2a3fdc34884248317de2cfae1f',1,'Avro.IO.ParsingEncoder.Depth()']]],
+  ['dispose_766',['Dispose',['../classAvro_1_1File_1_1DataFileReader.html#a4515cb0520e19420962dd401278335be',1,'Avro.File.DataFileReader.Dispose()'],['../classAvro_1_1File_1_1DataFileReader.html#a3ed8ec0efbf573098af3358a57072e05',1,'Avro.File.DataFileReader.Dispose(bool disposing)'],['../classAvro_1_1File_1_1DataFileWriter.html#a12603baa0fffaee89e06584953591474',1,'Avro.File.DataFileWriter.Dispose()'],['../classAvro_1_1File_1_1DataFileWriter.html#a6ae321b183082f64e1a1a5013be72a37',1,'Avro.File.DataFileWriter.Dispose(bool disposing)']]],
+  ['doaction_767',['DoAction',['../classAvro_1_1IO_1_1JsonDecoder.html#aa3dfa0ec14ecaa689ec9d685e4f15301',1,'Avro.IO.JsonDecoder.DoAction()'],['../classAvro_1_1IO_1_1JsonEncoder.html#a687d7d21e7da416643f22b2f714e730e',1,'Avro.IO.JsonEncoder.DoAction()'],['../interfaceAvro_1_1IO_1_1Parsing_1_1Parser_1_1IActionHandler.html#a2a275574ef2e6daa451a27b61c5af221',1,'Avro.IO.Parsing.Parser.IActionHandler.DoAction()'],['../classAvro_1_1IO_1_1ParsingDecoder.html#a3db9e41ffdea5c5aa1402b27ab36efef',1,'Avro.IO.ParsingDecoder.DoAction()']]],
+  ['dotnetclass_768',['DotnetClass',['../classAvro_1_1Reflect_1_1DotnetClass.html#a207086437b42a6285af396bfe4b807a3',1,'Avro::Reflect::DotnetClass']]]
+];
