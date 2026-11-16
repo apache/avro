@@ -342,7 +342,13 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 		// The buffer was not big enough. resize it.
 		if (err == Z_BUF_ERROR)
 		{
-			c->block_data = avro_realloc(c->block_data, c->block_size, c->block_size * 2);
+			void *new_data = avro_realloc(c->block_data, c->block_size, c->block_size * 2);
+			if (!new_data) {
+				inflateReset(s);
+				avro_set_error("Cannot allocate memory for deflate");
+				return 1;
+			}
+			c->block_data = new_data;
 			s->next_out = c->block_data + s->total_out;
 			s->avail_out += c->block_size;
 			c->block_size = c->block_size * 2;
@@ -486,7 +492,12 @@ static int decode_lzma(avro_codec_t codec, void * data, int64_t len)
 		// If it ran out of space to decode, give it more!!
 		// It will continue where it left off because of read_pos and write_pos.
 		if (ret == LZMA_BUF_ERROR) {
-			codec->block_data = avro_realloc(codec->block_data, codec->block_size, codec->block_size * 2);
+			void *new_data = avro_realloc(codec->block_data, codec->block_size, codec->block_size * 2);
+			if (!new_data) {
+				avro_set_error("Cannot allocate memory for lzma decoder");
+				return 1;
+			}
+			codec->block_data = new_data;
 			codec->block_size = codec->block_size * 2;
 		}
 
