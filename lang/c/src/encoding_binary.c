@@ -21,6 +21,7 @@
 #include "encoding.h"
 #include <stdlib.h>
 #include <limits.h>
+#include <stdint.h>
 #include <errno.h>
 #include <string.h>
 
@@ -125,13 +126,37 @@ static int64_t size_int(avro_writer_t writer, const int32_t i)
 static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 {
 	int rval;
+	int64_t available;
 	check_prefix(rval, read_long(reader, len),
 		     "Cannot read bytes length: ");
 	if (*len < 0) {
 		avro_set_error("Invalid bytes length: %" PRId64, *len);
 		return EINVAL;
 	}
-	*bytes = (char *) avro_malloc(*len + 1);
+	/* Reject a declared length that exceeds the data actually available
+	 * before allocating for it, to guard against an out-of-memory attack
+	 * from a malicious or truncated input. Only enforced when the reader
+	 * can report the amount remaining. */
+	available = avro_reader_bytes_available(reader);
+	if (available >= 0 && *len > available) {
+		avro_set_error("Bytes length %" PRId64
+			       " exceeds %" PRId64 " bytes available",
+			       *len, available);
+		return EINVAL;
+	}
+	/* Bound the length so the +1 (NUL terminator) cannot overflow either
+	 * the size_t allocation size here or the int64_t len + 1 computed by the
+	 * AVRO_BYTES caller in value-read.c. On 64-bit platforms SIZE_MAX >
+	 * INT64_MAX, so the size_t check alone would let len == INT64_MAX through
+	 * and make len + 1 overflow (undefined behavior); the INT64_MAX - 1 bound
+	 * rejects it. */
+	if ((uint64_t) *len > (uint64_t) (SIZE_MAX - 1)
+	    || *len > INT64_MAX - 1) {
+		avro_set_error("Bytes length %" PRId64
+			       " exceeds the maximum allocatable size", *len);
+		return EINVAL;
+	}
+	*bytes = (char *) avro_malloc((size_t) *len + 1);
 	if (!*bytes) {
 		avro_set_error("Cannot allocate buffer for bytes value");
 		return ENOMEM;
@@ -180,6 +205,7 @@ size_bytes(avro_writer_t writer, const char *bytes, const int64_t len)
 static int read_string(avro_reader_t reader, char **s, int64_t *len)
 {
 	int64_t  str_len = 0;
+	int64_t  available;
 	int rval;
 	check_prefix(rval, read_long(reader, &str_len),
 		     "Cannot read string length: ");
@@ -187,8 +213,31 @@ static int read_string(avro_reader_t reader, char **s, int64_t *len)
 		avro_set_error("Invalid string length: %" PRId64, str_len);
 		return EINVAL;
 	}
+	/* Reject a declared length that exceeds the data actually available
+	 * before allocating for it, to guard against an out-of-memory attack
+	 * from a malicious or truncated input. Only enforced when the reader
+	 * can report the amount remaining. */
+	available = avro_reader_bytes_available(reader);
+	if (available >= 0 && str_len > available) {
+		avro_set_error("String length %" PRId64
+			       " exceeds %" PRId64 " bytes available",
+			       str_len, available);
+		return EINVAL;
+	}
+	/* Bound the length so the +1 (NUL terminator) cannot overflow either
+	 * the size_t allocation size (undersizing the buffer, leading to an
+	 * out-of-bounds read/write) or the int64_t returned in *len. On 64-bit
+	 * platforms SIZE_MAX > INT64_MAX, so the size_t check alone would let
+	 * str_len == INT64_MAX through and make str_len + 1 overflow (undefined
+	 * behavior); the INT64_MAX - 1 bound rejects it. */
+	if ((uint64_t) str_len > (uint64_t) (SIZE_MAX - 1)
+	    || str_len > INT64_MAX - 1) {
+		avro_set_error("String length %" PRId64
+			       " exceeds the maximum allocatable size", str_len);
+		return EINVAL;
+	}
 	*len = str_len + 1;
-	*s = (char *) avro_malloc(*len);
+	*s = (char *) avro_malloc((size_t) str_len + 1);
 	if (!*s) {
 		avro_set_error("Cannot allocate buffer for string value");
 		return ENOMEM;
