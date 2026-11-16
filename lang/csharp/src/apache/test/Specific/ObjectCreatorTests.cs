@@ -20,6 +20,9 @@ using Avro.Test.File;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 
 namespace Avro.Test.Specific
 {
@@ -101,6 +104,48 @@ namespace Avro.Test.Specific
             var objectCreator = new ObjectCreator();
 
             Assert.AreEqual(expecteType, objectCreator.GetType(name, Schema.Type.Record));
+        }
+
+        [Test]
+        public void TestGetTypeByFullNameFromLoadedAssembly()
+        {
+            var name = $"Avro.Test.Dynamic{Guid.NewGuid():N}.Contracts.MyRecord";
+            var expected = DefineAssemblyWithType(name).GetType(name);
+            var objectCreator = new ObjectCreator();
+
+            Assert.AreEqual(expected, objectCreator.GetType(name, Schema.Type.Record));
+        }
+
+        [TestCase("Avro.Test.Specific.return.Record", TestName = "TestGetTypeReservedWordInNamespace_Unmangled")]
+        [TestCase("Avro.Test.Specific.@return.Record", TestName = "TestGetTypeReservedWordInNamespace_Mangled")]
+        public void TestGetTypeReservedWordInNamespace(string name)
+        {
+            var objectCreator = new ObjectCreator();
+
+            Assert.AreEqual(typeof(Avro.Test.Specific.@return.Record), objectCreator.GetType(name, Schema.Type.Record));
+        }
+
+        [Test]
+        public void TestGetTypeFullNameInSeveralAssembliesResolvesToLastLoadedAssembly()
+        {
+            var name = $"Avro.Test.Dynamic{Guid.NewGuid():N}.Contracts.MyRecord";
+            var first = DefineAssemblyWithType(name);
+            var second = DefineAssemblyWithType(name);
+            var lastInLoadOrder = AppDomain.CurrentDomain.GetAssemblies()
+                .Last(assembly => assembly.FullName == first.FullName || assembly.FullName == second.FullName);
+            var objectCreator = new ObjectCreator();
+
+            Assert.AreEqual(lastInLoadOrder.GetType(name), objectCreator.GetType(name, Schema.Type.Record));
+            Assert.AreNotEqual(first.GetType(name), second.GetType(name));
+        }
+
+        private static Assembly DefineAssemblyWithType(string typeFullName)
+        {
+            var assemblyName = $"Avro.Test.Dynamic{Guid.NewGuid():N}";
+            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(assemblyName), AssemblyBuilderAccess.Run);
+            var moduleBuilder = assemblyBuilder.DefineDynamicModule(assemblyName);
+            moduleBuilder.DefineType(typeFullName, TypeAttributes.Public | TypeAttributes.Class).CreateType();
+            return assemblyBuilder;
         }
 
         private class MyNullableFoo
