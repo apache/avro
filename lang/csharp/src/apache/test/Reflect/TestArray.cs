@@ -82,6 +82,20 @@ namespace Avro.Test
             }
         }
 
+        // A malicious array block declaring far more elements than the stream
+        // could hold must be rejected before allocating, matching the Generic and
+        // Specific readers. Exercises ReflectDefaultReader.ReadArray.
+        [TestCase]
+        public void ListRejectsCountBeyondStream()
+        {
+            var schema = Schema.Parse(_simpleList); // array<string>
+            var ms = new MemoryStream();
+            new BinaryEncoder(ms).WriteLong(1000000); // 1,000,000 strings, no data
+            ms.Seek(0, SeekOrigin.Begin);
+            var reader = new ReflectReader<List<string>>(schema, schema);
+            Assert.Throws<AvroException>(() => reader.Read(new BinaryDecoder(ms)));
+        }
+
         [TestCase]
         public void ListRecTest()
         {
