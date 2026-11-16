@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -55,7 +56,6 @@ import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.avro.util.ClassUtils;
 import org.apache.avro.util.Utf8;
-import org.apache.avro.util.WeakIdentityHashMap;
 import org.apache.avro.util.internal.Accessor;
 
 public class FastReaderBuilder {
@@ -66,9 +66,26 @@ public class FastReaderBuilder {
    */
   private final GenericData data;
 
-  /** first schema is reader schema, second is writer schema */
-  private final Map<Schema, Map<Schema, RecordReader>> readerCache = Collections
-      .synchronizedMap(new WeakIdentityHashMap<>());
+  /**
+   * System property to configure the maximum number of cached {@link RecordReader}
+   * instances. See {@link #DEFAULT_RECORD_READER_CACHE_SIZE}.
+   */
+  public static final String RECORD_READER_CACHE_SIZE_PROPERTY = "org.apache.avro.fastreader.recordReaderCacheSize";
+
+  /**
+   * Default maximum number of cached {@link RecordReader} instances. The cache is
+   * bounded (least-recently-used eviction) to prevent unbounded memory growth
+   * (AVRO-4253) when many distinct {@link Schema} instances are used, for example
+   * when a schema is re-parsed for every file or message. Override with the
+   * {@link #RECORD_READER_CACHE_SIZE_PROPERTY} system property.
+   */
+  public static final int DEFAULT_RECORD_READER_CACHE_SIZE = 2048;
+
+  private static final int RECORD_READER_CACHE_SIZE = getConfiguredCacheSize();
+
+  /** Key is a (reader schema, writer schema) pair, compared by object identity. */
+  private final Map<SchemaPair, RecordReader> readerCache = Collections
+      .synchronizedMap(new BoundedRecordReaderCache(RECORD_READER_CACHE_SIZE));
 
   private boolean keyClassEnabled = true;
 
@@ -253,8 +270,7 @@ public class FastReaderBuilder {
   }
 
   private RecordReader getRecordReaderFromCache(Schema readerSchema, Schema writerSchema) {
-    return readerCache.computeIfAbsent(readerSchema, k -> new WeakIdentityHashMap<>()).computeIfAbsent(writerSchema,
-        k -> new RecordReader());
+    return readerCache.computeIfAbsent(new SchemaPair(readerSchema, writerSchema), k -> new RecordReader());
   }
 
   private FieldReader applyConversions(Schema readerSchema, FieldReader reader, Conversion<?> explicitConversion) {
@@ -609,7 +625,7 @@ public class FastReaderBuilder {
     private ExecutionStep[] readSteps;
     private InstanceSupplier supplier;
     private Schema schema;
-    private Stage stage = Stage.NEW;
+    private volatile Stage stage = Stage.NEW;
 
     public Stage getInitializationStage() {
       return this.stage;
@@ -642,6 +658,79 @@ public class FastReaderBuilder {
         thisStep.execute(object, decoder);
       }
       return object;
+    }
+  }
+
+  private static int getConfiguredCacheSize() {
+    String value = System.getProperty(RECORD_READER_CACHE_SIZE_PROPERTY);
+    if (value != null) {
+      try {
+        int parsed = Integer.parseInt(value.trim());
+        if (parsed > 0) {
+          return parsed;
+        }
+      } catch (NumberFormatException nfe) {
+        // fall through to the default value
+      }
+    }
+    return DEFAULT_RECORD_READER_CACHE_SIZE;
+  }
+
+  /**
+   * Cache key identifying a (reader schema, writer schema) pair by object
+   * identity. Identity comparison preserves the original cache semantics and
+   * avoids the cost of {@link Schema#equals(Object)} on large schemas.
+   */
+  private static final class SchemaPair {
+    private final Schema readerSchema;
+    private final Schema writerSchema;
+    private final int hash;
+
+    SchemaPair(Schema readerSchema, Schema writerSchema) {
+      this.readerSchema = readerSchema;
+      this.writerSchema = writerSchema;
+      this.hash = 31 * System.identityHashCode(readerSchema) + System.identityHashCode(writerSchema);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof SchemaPair)) {
+        return false;
+      }
+      SchemaPair other = (SchemaPair) o;
+      return this.readerSchema == other.readerSchema && this.writerSchema == other.writerSchema;
+    }
+
+    @Override
+    public int hashCode() {
+      return hash;
+    }
+  }
+
+  /**
+   * Bounded, least-recently-used cache of {@link RecordReader} instances. Bounds
+   * memory usage (AVRO-4253); entries that are still being initialized are never
+   * evicted so that recursive schema resolution terminates correctly.
+   */
+  private static final class BoundedRecordReaderCache extends LinkedHashMap<SchemaPair, RecordReader> {
+    private static final long serialVersionUID = 1L;
+
+    private final int maxSize;
+
+    BoundedRecordReaderCache(int maxSize) {
+      super(16, 0.75f, true);
+      this.maxSize = maxSize;
+    }
+
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<SchemaPair, RecordReader> eldest) {
+      // Only evict readers that are fully initialized. An in-flight reader must
+      // remain findable so that recursive types resolve to the same instance
+      // instead of being rebuilt endlessly.
+      return size() > maxSize && eldest.getValue().getInitializationStage() == RecordReader.Stage.INITIALIZED;
     }
   }
 
