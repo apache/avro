@@ -92,7 +92,7 @@ print_bytes_value(const char *buf, size_t size)
 			printf("\\r");
 		} else if (buf[i] == '\t') {
 			printf("\\t");
-		} else if (isprint(buf[i])) {
+		} else if (isprint((unsigned char) buf[i])) {
 			printf("%c", (int) buf[i]);
 		} else {
 			printf("\\u00%02x", (unsigned int) (unsigned char) buf[i]);
