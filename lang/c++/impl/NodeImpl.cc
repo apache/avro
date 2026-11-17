@@ -47,7 +47,8 @@ string escape(const string &unescaped) {
                 s += 'b';
                 break;
             case '\f':
-                s += '\f';
+                s += '\\';
+                s += 'f';
                 break;
             case '\n':
                 s += '\\';
