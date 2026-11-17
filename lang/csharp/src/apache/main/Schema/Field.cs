@@ -289,7 +289,7 @@ namespace Avro
 #pragma warning disable CA1307 // Specify StringComparison
             return 17 * Name.GetHashCode() + Pos + 19 * getHashCode(Documentation) +
 #pragma warning restore CA1307 // Specify StringComparison
-                   23 * getHashCode(Ordering) + 29 * getHashCode(DefaultValue) + 31 * Schema.GetHashCode() +
+                   23 * Ordering.GetHashCode() + 29 * getHashCode(DefaultValue) + 31 * Schema.GetHashCode() +
                    37 * getHashCode(Props);
         }
 
