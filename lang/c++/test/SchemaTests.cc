@@ -406,7 +406,7 @@ const char *schemasToCompact[] = {
 
     // Schema with whitespaces both inside and outside of field names/values.
     "{\"type\":   \"record\",  \"name\":               \"ComplexInteger\"\n, "
-    "\"doc\": \"record_doc °C \u00f8 \x1f \\n \n \t\", "
+    "\"doc\": \"record_doc °C \u00f8 \x1f \\f \f \\n \n \t\", "
     "\"fields\": ["
     "{\"name\":   \"re1\", \"type\":               \"long\", "
     "\"doc\":   \"A \\\"quoted doc\\\"\"      },                 "
@@ -418,7 +418,7 @@ const char *compactSchemas[] = {
     R"({"type":"record","name":"Test","fields":[]})",
     R"({"type":"record","name":"Test","fields":[]})",
     "{\"type\":\"record\",\"name\":\"ComplexInteger\","
-    "\"doc\":\"record_doc °C \u00f8 \\u001f \\n \\n \\t\","
+    "\"doc\":\"record_doc °C \u00f8 \\u001f \\f \\f \\n \\n \\t\","
     "\"fields\":["
     "{\"name\":\"re1\",\"type\":\"long\",\"doc\":\"A \\\"quoted doc\\\"\"},"
     "{\"name\":\"re2\",\"type\":\"long\",\"doc\":\"extra slashes\\\\\\\\\"}"
