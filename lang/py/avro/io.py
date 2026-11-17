@@ -558,6 +558,7 @@ class BinaryEncoder:
         for digit in digits:
             unscaled_datum = (unscaled_datum * 10) + digit
 
+        unscaled_datum *= 10 ** (scale + int(exp))
         bits_req = unscaled_datum.bit_length() + 1
         if sign:
             unscaled_datum = (1 << bits_req) - unscaled_datum
@@ -584,6 +585,7 @@ class BinaryEncoder:
         for digit in digits:
             unscaled_datum = (unscaled_datum * 10) + digit
 
+        unscaled_datum *= 10 ** (scale + int(exp))
         bits_req = unscaled_datum.bit_length() + 1
         size_in_bits = size * 8
         offset_bits = size_in_bits - bits_req
