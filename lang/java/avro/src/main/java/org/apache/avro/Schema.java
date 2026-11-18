@@ -1563,9 +1563,16 @@ public abstract class Schema extends JsonProperties implements Serializable {
       } catch (JsonParseException e) {
         throw new SchemaParseException(e);
       } finally {
-        parser.close();
-        VALIDATE_NAMES.set(saved);
-        VALIDATE_DEFAULTS.set(savedValidateDefaults);
+        try {
+          parser.close();
+        } finally {
+          if (saved == null) {
+            VALIDATE_NAMES.remove();
+          } else {
+            VALIDATE_NAMES.set(saved);
+          }
+          VALIDATE_DEFAULTS.set(savedValidateDefaults);
+        }
       }
     }
   }
@@ -1688,11 +1695,15 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
   }
 
-  private static final ThreadLocal<NameValidator> VALIDATE_NAMES = ThreadLocalWithInitial
-      .of(() -> NameValidator.UTF_VALIDATOR);
+  private static final ThreadLocal<NameValidator> VALIDATE_NAMES = new ThreadLocal<>();
+
+  private static NameValidator effectiveNameValidator() {
+    NameValidator validator = VALIDATE_NAMES.get();
+    return validator != null ? validator : NameValidator.UTF_VALIDATOR;
+  }
 
   private static String validateName(String name) {
-    NameValidator.Result result = VALIDATE_NAMES.get().validate(name);
+    NameValidator.Result result = effectiveNameValidator().validate(name);
     if (!result.isOK()) {
       throw new SchemaParseException(result.getErrors());
     }
@@ -1712,7 +1723,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
    */
   @Deprecated
   public static NameValidator getNameValidator() {
-    return Schema.VALIDATE_NAMES.get();
+    return effectiveNameValidator();
   }
 
   private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS = ThreadLocalWithInitial.of(() -> true);
