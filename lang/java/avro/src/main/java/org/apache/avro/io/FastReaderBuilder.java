@@ -115,7 +115,39 @@ public class FastReaderBuilder {
   @SuppressWarnings("unchecked")
   public <D> DatumReader<D> createDatumReader(Schema writerSchema, Schema readerSchema) throws IOException {
     Schema resolvedWriterSchema = Schema.applyAliases(writerSchema, readerSchema);
-    return (DatumReader<D>) getReaderFor(readerSchema, resolvedWriterSchema);
+    return (DatumReader<D>) datumScoped(getReaderFor(readerSchema, resolvedWriterSchema));
+  }
+
+  /**
+   * Wrap a top-level datum reader so the whole decode runs inside one
+   * collection-allocation scope, matching {@link GenericDatumReader#read}. The
+   * cumulative zero-byte element allocation cap (see
+   * {@link SystemLimitException}) only holds across a datum while a scope is
+   * open; a record with many {@code array<null>}-style fields, each under the
+   * per-collection limit, would otherwise reset the running total per field and
+   * over-allocate in aggregate when the fast reader is used standalone via
+   * {@code createDatumReader}. Only the array reader opened a scope before, so
+   * multi-field records slipped through. Scopes nest, so this is a no-op when
+   * {@code GenericDatumReader.read} has already opened the outer scope for the
+   * delegated path.
+   */
+  private static FieldReader datumScoped(FieldReader delegate) {
+    return new FieldReader() {
+      @Override
+      public Object read(Object reuse, Decoder decoder) throws IOException {
+        SystemLimitException.beginCollectionAllocationScope();
+        try {
+          return delegate.read(reuse, decoder);
+        } finally {
+          SystemLimitException.endCollectionAllocationScope();
+        }
+      }
+
+      @Override
+      public boolean canReuse() {
+        return delegate.canReuse();
+      }
+    };
   }
 
   private FieldReader getReaderFor(Schema readerSchema, Schema writerSchema) throws IOException {
