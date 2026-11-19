@@ -27,14 +27,33 @@ namespace Avro.Reflect
     /// </summary>
     public class ClassCache
     {
-        private static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
+        /// <summary>
+        /// Default converters cache
+        /// </summary>
+        protected readonly static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
 
-        private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
+        /// <summary>
+        /// Schema type cache
+        /// </summary>
+        protected readonly ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
 
-        private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
-        private ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
+        /// <summary>
+        /// Array cache
+        /// </summary>
+        protected readonly ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
 
-        private void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
+        /// <summary>
+        /// Previous fields cache
+        /// </summary>
+        protected readonly ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
+
+        /// <summary>
+        /// Create Dotnet class object for schema
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <param name="dotnetClass"></param>
+        /// <exception cref="AvroException"></exception>
+        protected virtual void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
         {
             if (schema != null && GetClass(schema) != null)
             {
@@ -140,7 +159,7 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="name">Name of the helper. Corresponds to metadata "helper" field in the schema.</param>
         /// <param name="helperType">Type of helper. Inherited from ArrayHelper</param>
-        public void AddArrayHelper(string name, Type helperType)
+        public virtual void AddArrayHelper(string name, Type helperType)
         {
             if (!typeof(ArrayHelper).IsAssignableFrom(helperType))
             {
@@ -156,7 +175,7 @@ namespace Avro.Reflect
         /// <param name="schema">Schema</param>
         /// <param name="enumerable">The array object. If it is null then Add(), Count() and Clear methods will throw exceptions.</param>
         /// <returns></returns>
-        public ArrayHelper GetArrayHelper(ArraySchema schema, IEnumerable enumerable)
+        public virtual ArrayHelper GetArrayHelper(ArraySchema schema, IEnumerable enumerable)
         {
             Type h;
             // note ArraySchema is unnamed and doesn't have a FulllName, use "helper" metadata
@@ -177,7 +196,7 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="schema"></param>
         /// <returns></returns>
-        public DotnetClass GetClass(RecordSchema schema)
+        public virtual DotnetClass GetClass(RecordSchema schema)
         {
             DotnetClass c;
             if (!_nameClassMap.TryGetValue(schema.Fullname, out c))
@@ -193,7 +212,7 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="objType">Type of the C# class</param>
         /// <param name="s">Schema</param>
-        public void LoadClassCache(Type objType, Schema s)
+        public virtual void LoadClassCache(Type objType, Schema s)
         {
             switch (s)
             {
