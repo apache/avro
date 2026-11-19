@@ -45,8 +45,9 @@ namespace Avro.Test
             public EnumResolutionEnum? enumType { get; set; }
         }
 
-        [TestCase]
-        public void TestEnumResolution()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void TestEnumResolution(bool useInterfaces)
         {
             Schema writerSchema = Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," +
                                                "\"fields\":[{\"name\":\"enumType\",\"type\": { \"type\": \"enum\", \"name\": \"EnumType\", \"symbols\": [\"FIRST\", \"SECOND\"]} }]}");
@@ -59,15 +60,16 @@ namespace Avro.Test
             testRecord.enumType = EnumResolutionEnum.SECOND;
 
             // serialize
-            var stream = serialize(writerSchema, testRecord);
+            var stream = serialize(writerSchema, testRecord, useInterfaces);
 
             // deserialize
-            var rec2 = deserialize<EnumResolutionRecord>(stream, writerSchema, readerSchema);
+            var rec2 = deserialize<EnumResolutionRecord>(stream, writerSchema, readerSchema, useInterfaces);
             Assert.AreEqual( EnumResolutionEnum.SECOND, rec2.enumType );
         }
 
-        [TestCase]
-        public void TestNullableEnumResolution()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void TestNullableEnumResolution(bool useInterfaces)
         {
             Schema writerSchema = Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," +
                                         "\"fields\":[{\"name\":\"enumType\",\"type\":[\"null\", { \"type\": \"enum\", \"name\": " +
@@ -81,17 +83,27 @@ namespace Avro.Test
             testRecord.enumType = EnumResolutionEnum.SECOND;
 
             // serialize
-            var stream = serialize(writerSchema, testRecord);
+            var stream = serialize(writerSchema, testRecord, useInterfaces);
 
             // deserialize
-            var rec2 = deserialize<NullableEnumResolutionRecord>(stream, writerSchema, readerSchema);
+            var rec2 = deserialize<NullableEnumResolutionRecord>(stream, writerSchema, readerSchema, useInterfaces);
             Assert.AreEqual( EnumResolutionEnum.SECOND, rec2.enumType );
         }
 
-        private static S deserialize<S>(Stream ms, Schema ws, Schema rs) where S : class
+        private static S deserialize<S>(Stream ms, Schema ws, Schema rs, bool useInterfaces) where S : class
         {
             long initialPos = ms.Position;
-            var r = new ReflectReader<S>(ws, rs);
+            ReflectReader<S> r;
+            if (useInterfaces)
+            {
+                var classCache = new ClassCache();
+                classCache.LoadClassCache(typeof(S), rs);
+                r = new ReflectReader<S>(ws, rs, classCache, classCache);
+            }
+            else
+            {
+                r = new ReflectReader<S>(ws, rs);
+            }
             Decoder d = new BinaryDecoder(ms);
             S output = r.Read(null, d);
             Assert.AreEqual(ms.Length, ms.Position); // Ensure we have read everything.
@@ -102,18 +114,30 @@ namespace Avro.Test
         private static void checkAlternateDeserializers<S>(S expected, Stream input, long startPos, Schema ws, Schema rs) where S : class
         {
             input.Position = startPos;
-            var reader = new ReflectReader<S>(ws, rs);
+            var classCache = new ClassCache();
+            classCache.LoadClassCache(typeof(S), rs);
+            var reader = new ReflectReader<S>(ws, rs, classCache);
             Decoder d = new BinaryDecoder(input);
             S output = reader.Read(null, d);
             Assert.AreEqual(input.Length, input.Position); // Ensure we have read everything.
-            AssertReflectRecordEqual(rs, expected, ws, output, reader.Reader.ClassCache);
+            AssertReflectRecordEqual(rs, expected, ws, output, classCache);
         }
 
-        private static Stream serialize<T>(Schema ws, T actual)
+        private static Stream serialize<T>(Schema ws, T actual, bool useInterfaces)
         {
             var ms = new MemoryStream();
             Encoder e = new BinaryEncoder(ms);
-            var w = new ReflectWriter<T>(ws);
+            ReflectWriter<T> w;
+            if (useInterfaces)
+            {
+                var classCache = new ClassCache();
+                classCache.LoadClassCache(typeof(T), ws);
+                w = new ReflectWriter<T>(ws,classCache, classCache);
+            }
+            else
+            {
+                w = new ReflectWriter<T>(ws);
+            }
             w.Write(actual, e);
             ms.Flush();
             ms.Position = 0;

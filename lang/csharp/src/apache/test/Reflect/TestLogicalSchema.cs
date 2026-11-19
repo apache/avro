@@ -49,8 +49,10 @@ namespace Avro.test.Reflect
             };
 
             var schema = Schema.Parse(SchemaJson);
-            var writer = new ReflectWriter<TestObject>(schema);
-            var reader = new ReflectReader<TestObject>(schema, schema);
+            var classCache = new ClassCache();
+            classCache.LoadClassCache(typeof(TestObject), schema);
+            var writer = new ReflectWriter<TestObject>(schema, classCache, classCache);
+            var reader = new ReflectReader<TestObject>(schema, schema, classCache, classCache);
             var writeStream = new MemoryStream();
             var writeBinaryEncoder = new BinaryEncoder(writeStream);
 
@@ -109,8 +111,10 @@ namespace Avro.test.Reflect
             };
 
             var schema = Schema.Parse(SchemaJson);
-            var writer = new ReflectWriter<TestObject>(schema);
-            var reader = new ReflectReader<TestObject>(schema, schema);
+            var classCache = new ClassCache();
+            classCache.LoadClassCache(typeof(TestObject), schema);
+            var writer = new ReflectWriter<TestObject>(schema, classCache, classCache);
+            var reader = new ReflectReader<TestObject>(schema, schema, classCache, classCache);
             var writeStream = new MemoryStream();
             var writeBinaryEncoder = new BinaryEncoder(writeStream);
 
