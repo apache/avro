@@ -24,6 +24,7 @@
 
 using std::array;
 using std::map;
+using std::optional;
 using std::string;
 using std::unique_ptr;
 using std::vector;
@@ -127,6 +128,18 @@ void testDouble() {
     BOOST_CHECK_CLOSE(b, n, 0.00000001);
 }
 
+void testNonEmptyOptional() {
+    optional<int64_t> n = -109;
+    optional<int64_t> b = encodeAndDecode(n);
+    BOOST_CHECK_EQUAL(b.value(), n.value());
+}
+
+void testEmptyOptional() {
+    optional<int64_t> n;
+    optional<int64_t> b = encodeAndDecode(n);
+    BOOST_CHECK(!b.has_value());
+}
+
 void testString() {
     string n = "abc";
     string b = encodeAndDecode(n);
@@ -191,6 +204,8 @@ init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     ts->add(BOOST_TEST_CASE(avro::specific::testLong));
     ts->add(BOOST_TEST_CASE(avro::specific::testFloat));
     ts->add(BOOST_TEST_CASE(avro::specific::testDouble));
+    ts->add(BOOST_TEST_CASE(avro::specific::testNonEmptyOptional));
+    ts->add(BOOST_TEST_CASE(avro::specific::testEmptyOptional));
     ts->add(BOOST_TEST_CASE(avro::specific::testString));
     ts->add(BOOST_TEST_CASE(avro::specific::testBytes));
     ts->add(BOOST_TEST_CASE(avro::specific::testFixed));
