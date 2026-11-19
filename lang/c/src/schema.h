@@ -22,14 +22,15 @@
 #include "avro/schema.h"
 #include "avro_private.h"
 #include "st.h"
+#include "jansson.h"
 
 struct avro_record_field_t {
 	int index;
 	char *name;
 	avro_schema_t type;
-	/*
-	 * TODO: default values 
-	 */
+	/* Raw JSON "default", or NULL.
+	 * Currently only propagated but unused. */
+	json_t *default_value;
 };
 
 struct avro_record_schema_t {
@@ -46,6 +47,8 @@ struct avro_enum_schema_t {
 	char *space;
 	st_table *symbols;
 	st_table *symbols_byname;
+	/* Index of the "default" symbol, or -1 */
+	int default_index;
 };
 
 struct avro_array_schema_t {
