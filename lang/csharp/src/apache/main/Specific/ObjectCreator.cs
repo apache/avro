@@ -34,9 +34,14 @@ namespace Avro.Specific
         public static ObjectCreator Instance { get; } = new ObjectCreator();
 
         /// <summary>
-        /// Static generic dictionary type used for creating new dictionary instances
+        /// Static generic dictionary type used for creating new Dictionary instances
         /// </summary>
         private readonly Type GenericMapType = typeof(Dictionary<,>);
+
+        /// <summary>
+        /// Static generic dictionary type used for creating new IDictionary instances
+        /// </summary>
+        private readonly Type GenericIMapType = typeof(IDictionary<,>);
 
         /// <summary>
         /// Static generic list type used for creating new array instances
@@ -88,6 +93,14 @@ namespace Avro.Specific
                 if (TryGetIListItemTypeName(name, out var itemTypeName))
                 {
                     return GenericIListType.MakeGenericType(FindType(itemTypeName));
+                }
+
+                if (TryGetIDictionaryItemTypeName(name, out var itemTypesName))
+                {
+                    var key = itemTypesName[0].GetType().Name;
+                    var value = itemTypesName[1];
+
+                    return GenericIMapType.MakeGenericType(FindType(key), FindType(value));
                 }
 
                 if (TryGetNullableItemTypeName(name, out itemTypeName))
@@ -165,6 +178,40 @@ namespace Avro.Specific
             }
 
             itemTypeName = null;
+            return false;
+        }
+
+        private bool TryGetIDictionaryItemTypeName(string name, out string[] itemTypesName)
+        {
+            const string dictionaryPrefix = "IDictionary<";
+            const string fullDictionaryPrefix = "System.Collections.Generic.IDictionary<";
+            string[] separators = { ", ", "," };
+
+            if (!name.EndsWith(">", StringComparison.Ordinal))
+            {
+                itemTypesName = null;
+                return false;
+            }
+
+            if (name.StartsWith(fullDictionaryPrefix, StringComparison.Ordinal))
+            {
+                itemTypesName = name
+                    .Substring(dictionaryPrefix.Length, name.Length - dictionaryPrefix.Length - 1)
+                    .Split(separators, 2, StringSplitOptions.None);
+
+                return true;
+            }
+
+            if (name.StartsWith(dictionaryPrefix, StringComparison.Ordinal))
+            {
+                itemTypesName = name
+                    .Substring(dictionaryPrefix.Length, name.Length - dictionaryPrefix.Length - 1)
+                    .Split(separators, 2, StringSplitOptions.None);
+
+                return true;
+            }
+
+            itemTypesName = null;
             return false;
         }
 
