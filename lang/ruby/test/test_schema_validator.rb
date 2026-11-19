@@ -331,7 +331,12 @@ class TestSchemaValidator < Test::Unit::TestCase
     assert_nothing_raised { validate_simple!(schema, 'person' => { houses: [] }) }
     assert_nothing_raised { validate_simple!(schema, 'person' => { 'houses' => [{ 'number_of_rooms' => 1 }] }) }
 
-    message = 'at .person.houses[1].number_of_rooms expected type long, got string with value "not valid at all"'
+    message = <<~EXPECTED_ERROR.chomp
+      at .person.houses expected union of ['null', 'array'], got Array with value [{"number_of_rooms"=>2}, {"number_of_rooms"=>"not valid at all"}]
+      Union type specific errors:
+      at .person.houses[1].number_of_rooms expected type long, got string with value "not valid at all"
+    EXPECTED_ERROR
+
     datum = {
       'person' => {
         'houses' => [
@@ -556,8 +561,50 @@ class TestSchemaValidator < Test::Unit::TestCase
       validate!(schema, { 'name' => 'apple', 'color' => 'green' }, fail_on_extra_fields: true)
     end
     assert_equal(1, exception.result.errors.size)
-    assert_equal("at . extra field 'color' - not in schema", exception.to_s)
+    expected_error = <<~EXPECTED_ERROR.chomp
+      at . expected union of ['null', fruit ('record')], got record with value {"name"=>"apple", "color"=>"green"}
+      Union type specific errors:
+      fruit: at . extra field 'color' - not in schema
+    EXPECTED_ERROR
+    assert_equal(expected_error, exception.to_s)
   end
+
+  def test_validate_union_complex_and_simple_types
+    schema = hash_to_schema([
+                              'null',
+                              {
+                                type: 'record',
+                                name: 'fruit',
+                                fields: [{ name: 'name', type: 'string' }]
+                              },
+                              {
+                                type: 'record',
+                                name: 'animal',
+                                fields: [
+                                  { name: 'name', type: 'string' },
+                                  { name: 'species', type: 'string' }
+                                ]
+                              },
+                              {
+                                type: 'enum',
+                                name: 'person',
+                                symbols: %w(one two three)
+                              }
+                            ])
+    exception = assert_raise(Avro::SchemaValidator::ValidationError) do
+      validate!(schema, { 'namo' => 'apple', 'color' => 'green' }, fail_on_extra_fields: true)
+    end
+
+    assert_equal(1, exception.result.errors.size)
+    expected_error = <<~EXPECTED_ERROR.chomp
+      at . expected union of ['null', fruit ('record'), animal ('record'), person ('enum')], got record with value {"namo"=>"apple", "color"=>"green"}
+      Union type specific errors:
+      fruit: at .name expected type string, got null; at . extra field 'namo' - not in schema; at . extra field 'color' - not in schema
+      animal: at .name expected type string, got null; at .species expected type string, got null; at . extra field 'namo' - not in schema; at . extra field 'color' - not in schema
+    EXPECTED_ERROR
+    assert_equal(expected_error, exception.to_s)
+  end
+
 
   def test_validate_bytes_decimal
     schema = hash_to_schema(type: 'bytes', logicalType: 'decimal', precision: 4, scale: 2)
