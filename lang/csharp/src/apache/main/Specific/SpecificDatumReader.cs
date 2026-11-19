@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections;
 using Avro.Generic;
 using Avro.IO;
@@ -64,7 +65,7 @@ namespace Avro.Specific
         /// <inheritdoc/>
         protected override EnumAccess GetEnumAccess(EnumSchema readerSchema)
         {
-            return new SpecificEnumAccess();
+            return new SpecificEnumAccess(readerSchema);
         }
 
         /// <inheritdoc/>
@@ -92,9 +93,16 @@ namespace Avro.Specific
 
         private class SpecificEnumAccess : EnumAccess
         {
+            private readonly Type enumType;
+
+            public SpecificEnumAccess(EnumSchema readerSchema)
+            {
+                enumType = ObjectCreator.Instance.GetType(readerSchema);
+            }
+
             public object CreateEnum(object reuse, int ordinal)
             {
-                return ordinal;
+                return Enum.ToObject(enumType, ordinal);
             }
         }
 
