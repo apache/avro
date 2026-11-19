@@ -815,6 +815,32 @@ avro_generic_boolean_new(avro_value_t *value, int val)
  * bytes
  */
 
+typedef struct avro_generic_bytes_value_iface {
+	avro_generic_value_iface_t  parent;
+	volatile int  refcount;
+	avro_schema_t  schema;
+} avro_generic_bytes_value_iface_t;
+
+static avro_value_iface_t *
+avro_generic_bytes_incref_iface(avro_value_iface_t *viface)
+{
+	avro_generic_bytes_value_iface_t  *iface =
+	    container_of(viface, avro_generic_bytes_value_iface_t, parent);
+	avro_refcount_inc(&iface->refcount);
+	return viface;
+}
+
+static void
+avro_generic_bytes_decref_iface(avro_value_iface_t *viface)
+{
+	avro_generic_bytes_value_iface_t  *iface =
+	    container_of(viface, avro_generic_bytes_value_iface_t, parent);
+	if (avro_refcount_dec(&iface->refcount)) {
+		avro_schema_decref(iface->schema);
+		avro_freet(avro_generic_bytes_value_iface_t, iface);
+	}
+}
+
 static int
 avro_generic_bytes_reset(const avro_value_iface_t *iface, void *vself)
 {
@@ -833,11 +859,12 @@ avro_generic_bytes_get_type(const avro_value_iface_t *iface, const void *vself)
 }
 
 static avro_schema_t
-avro_generic_bytes_get_schema(const avro_value_iface_t *iface, const void *vself)
+avro_generic_bytes_get_schema(const avro_value_iface_t *viface, const void *vself)
 {
-	AVRO_UNUSED(iface);
+	const avro_generic_bytes_value_iface_t  *iface =
+	    container_of(viface, avro_generic_bytes_value_iface_t, parent);
 	AVRO_UNUSED(vself);
-	return avro_schema_bytes();
+	return iface->schema;
 }
 
 static int
@@ -913,8 +940,8 @@ static avro_generic_value_iface_t  AVRO_GENERIC_BYTES_CLASS =
 {
 	{
 		/* "class" methods */
-		NULL, /* incref_iface */
-		NULL, /* decref_iface */
+		avro_generic_bytes_incref_iface, /* incref_iface */
+		avro_generic_bytes_decref_iface, /* decref_iface */
 		/* general "instance" methods */
 		avro_generic_value_incref,
 		avro_generic_value_decref,
@@ -966,18 +993,19 @@ static avro_generic_value_iface_t  AVRO_GENERIC_BYTES_CLASS =
 	avro_generic_bytes_done
 };
 
-avro_value_iface_t *
-avro_generic_bytes_class(void)
+static avro_generic_value_iface_t *
+avro_generic_bytes_class(avro_schema_t schema)
 {
-	return &AVRO_GENERIC_BYTES_CLASS.parent;
-}
+	avro_generic_bytes_value_iface_t  *iface =
+		(avro_generic_bytes_value_iface_t *) avro_new(avro_generic_bytes_value_iface_t);
+	if (iface == NULL) {
+		return NULL;
+	}
 
-int
-avro_generic_bytes_new(avro_value_t *value, void *buf, size_t size)
-{
-	int  rval;
-	check(rval, avro_generic_value_new(&AVRO_GENERIC_BYTES_CLASS.parent, value));
-	return avro_generic_bytes_set(value->iface, value->self, buf, size);
+	iface->parent = AVRO_GENERIC_BYTES_CLASS;
+	iface->refcount = 1;
+	iface->schema = avro_schema_incref(schema);
+	return &iface->parent;
 }
 
 /*-----------------------------------------------------------------------
@@ -1270,6 +1298,32 @@ avro_generic_float_new(avro_value_t *value, float val)
  * int
  */
 
+typedef struct avro_generic_int_value_iface {
+	avro_generic_value_iface_t  parent;
+	volatile int  refcount;
+	avro_schema_t  schema;
+} avro_generic_int_value_iface_t;
+
+static avro_value_iface_t *
+avro_generic_int_incref_iface(avro_value_iface_t *viface)
+{
+	avro_generic_int_value_iface_t  *iface =
+	    container_of(viface, avro_generic_int_value_iface_t, parent);
+	avro_refcount_inc(&iface->refcount);
+	return viface;
+}
+
+static void
+avro_generic_int_decref_iface(avro_value_iface_t *viface)
+{
+	avro_generic_int_value_iface_t  *iface =
+	    container_of(viface, avro_generic_int_value_iface_t, parent);
+	if (avro_refcount_dec(&iface->refcount)) {
+		avro_schema_decref(iface->schema);
+		avro_freet(avro_generic_int_value_iface_t, iface);
+	}
+}
+
 static int
 avro_generic_int_reset(const avro_value_iface_t *iface, void *vself)
 {
@@ -1288,11 +1342,12 @@ avro_generic_int_get_type(const avro_value_iface_t *iface, const void *vself)
 }
 
 static avro_schema_t
-avro_generic_int_get_schema(const avro_value_iface_t *iface, const void *vself)
+avro_generic_int_get_schema(const avro_value_iface_t *viface, const void *vself)
 {
-	AVRO_UNUSED(iface);
+	const avro_generic_int_value_iface_t  *iface =
+	    container_of(viface, avro_generic_int_value_iface_t, parent);
 	AVRO_UNUSED(vself);
-	return avro_schema_int();
+	return iface->schema;
 }
 
 static int
@@ -1342,8 +1397,8 @@ static avro_generic_value_iface_t  AVRO_GENERIC_INT_CLASS =
 {
 	{
 		/* "class" methods */
-		NULL, /* incref_iface */
-		NULL, /* decref_iface */
+		avro_generic_int_incref_iface, /* incref_iface */
+		avro_generic_int_decref_iface, /* decref_iface */
 		/* general "instance" methods */
 		avro_generic_value_incref,
 		avro_generic_value_decref,
@@ -1395,23 +1450,50 @@ static avro_generic_value_iface_t  AVRO_GENERIC_INT_CLASS =
 	avro_generic_int_done
 };
 
-avro_value_iface_t *
-avro_generic_int_class(void)
+static avro_generic_value_iface_t *
+avro_generic_int_class(avro_schema_t schema)
 {
-	return &AVRO_GENERIC_INT_CLASS.parent;
-}
+	avro_generic_int_value_iface_t  *iface =
+		(avro_generic_int_value_iface_t *) avro_new(avro_generic_int_value_iface_t);
+	if (iface == NULL) {
+		return NULL;
+	}
 
-int
-avro_generic_int_new(avro_value_t *value, int32_t val)
-{
-	int  rval;
-	check(rval, avro_generic_value_new(&AVRO_GENERIC_INT_CLASS.parent, value));
-	return avro_generic_int_set(value->iface, value->self, val);
+	iface->parent = AVRO_GENERIC_INT_CLASS;
+	iface->refcount = 1;
+	iface->schema = avro_schema_incref(schema);
+	return &iface->parent;
 }
 
 /*-----------------------------------------------------------------------
  * long
  */
+
+typedef struct avro_generic_long_value_iface {
+	avro_generic_value_iface_t  parent;
+	volatile int  refcount;
+	avro_schema_t  schema;
+} avro_generic_long_value_iface_t;
+
+static avro_value_iface_t *
+avro_generic_long_incref_iface(avro_value_iface_t *viface)
+{
+	avro_generic_long_value_iface_t  *iface =
+	    container_of(viface, avro_generic_long_value_iface_t, parent);
+	avro_refcount_inc(&iface->refcount);
+	return viface;
+}
+
+static void
+avro_generic_long_decref_iface(avro_value_iface_t *viface)
+{
+	avro_generic_long_value_iface_t  *iface =
+	    container_of(viface, avro_generic_long_value_iface_t, parent);
+	if (avro_refcount_dec(&iface->refcount)) {
+		avro_schema_decref(iface->schema);
+		avro_freet(avro_generic_long_value_iface_t, iface);
+	}
+}
 
 static int
 avro_generic_long_reset(const avro_value_iface_t *iface, void *vself)
@@ -1431,11 +1513,12 @@ avro_generic_long_get_type(const avro_value_iface_t *iface, const void *vself)
 }
 
 static avro_schema_t
-avro_generic_long_get_schema(const avro_value_iface_t *iface, const void *vself)
+avro_generic_long_get_schema(const avro_value_iface_t *viface, const void *vself)
 {
-	AVRO_UNUSED(iface);
+	const avro_generic_long_value_iface_t  *iface =
+	    container_of(viface, avro_generic_long_value_iface_t, parent);
 	AVRO_UNUSED(vself);
-	return avro_schema_long();
+	return iface->schema;
 }
 
 static int
@@ -1485,8 +1568,8 @@ static avro_generic_value_iface_t  AVRO_GENERIC_LONG_CLASS =
 {
 	{
 		/* "class" methods */
-		NULL, /* incref_iface */
-		NULL, /* decref_iface */
+		avro_generic_long_incref_iface, /* incref_iface */
+		avro_generic_long_decref_iface, /* decref_iface */
 		/* general "instance" methods */
 		avro_generic_value_incref,
 		avro_generic_value_decref,
@@ -1538,18 +1621,19 @@ static avro_generic_value_iface_t  AVRO_GENERIC_LONG_CLASS =
 	avro_generic_long_done
 };
 
-avro_value_iface_t *
-avro_generic_long_class(void)
+static avro_generic_value_iface_t *
+avro_generic_long_class(avro_schema_t schema)
 {
-	return &AVRO_GENERIC_LONG_CLASS.parent;
-}
+	avro_generic_long_value_iface_t  *iface =
+		(avro_generic_long_value_iface_t *) avro_new(avro_generic_long_value_iface_t);
+	if (iface == NULL) {
+		return NULL;
+	}
 
-int
-avro_generic_long_new(avro_value_t *value, int64_t val)
-{
-	int  rval;
-	check(rval, avro_generic_value_new(&AVRO_GENERIC_LONG_CLASS.parent, value));
-	return avro_generic_long_set(value->iface, value->self, val);
+	iface->parent = AVRO_GENERIC_LONG_CLASS;
+	iface->refcount = 1;
+	iface->schema = avro_schema_incref(schema);
+	return &iface->parent;
 }
 
 /*-----------------------------------------------------------------------
@@ -3584,20 +3668,11 @@ avro_generic_class_from_schema_memoized(avro_schema_t schema,
 	case AVRO_BOOLEAN:
 		result = &AVRO_GENERIC_BOOLEAN_CLASS;
 		break;
-	case AVRO_BYTES:
-		result = &AVRO_GENERIC_BYTES_CLASS;
-		break;
 	case AVRO_DOUBLE:
 		result = &AVRO_GENERIC_DOUBLE_CLASS;
 		break;
 	case AVRO_FLOAT:
 		result = &AVRO_GENERIC_FLOAT_CLASS;
-		break;
-	case AVRO_INT32:
-		result = &AVRO_GENERIC_INT_CLASS;
-		break;
-	case AVRO_INT64:
-		result = &AVRO_GENERIC_LONG_CLASS;
 		break;
 	case AVRO_NULL:
 		result = &AVRO_GENERIC_NULL_CLASS;
@@ -3606,6 +3681,15 @@ avro_generic_class_from_schema_memoized(avro_schema_t schema,
 		result = &AVRO_GENERIC_STRING_CLASS;
 		break;
 
+	case AVRO_BYTES:
+		result = avro_generic_bytes_class(schema);
+		break;
+	case AVRO_INT32:
+		result = avro_generic_int_class(schema);
+		break;
+	case AVRO_INT64:
+		result = avro_generic_long_class(schema);
+		break;
 	case AVRO_ARRAY:
 		result = avro_generic_array_class(schema, state);
 		break;

@@ -65,6 +65,7 @@
 int main(void)
 {
 	avro_schema_t  schema;
+	avro_schema_t  int_schema;
 	avro_file_reader_t  reader;
 	avro_value_iface_t  *iface;
 	avro_value_t  actual;
@@ -72,8 +73,9 @@ int main(void)
 	avro_value_t  branch;
 
 	schema = avro_schema_union();
+	int_schema = avro_schema_int();
 	avro_schema_union_append(schema, avro_schema_null());
-	avro_schema_union_append(schema, avro_schema_int());
+	avro_schema_union_append(schema, int_schema);
 
 	iface = avro_generic_class_from_schema(schema);
 	avro_generic_value_new(iface, &actual);
@@ -120,6 +122,7 @@ int main(void)
 	avro_value_decref(&actual);
 	avro_value_decref(&expected);
 	avro_value_iface_decref(iface);
+	avro_schema_decref(int_schema);
 	avro_schema_decref(schema);
 	exit(EXIT_SUCCESS);
 }
