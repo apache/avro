@@ -21,7 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 
-namespace Avro.Reflect
+namespace Avro.Reflect.Array
 {
     /// <summary>
     /// Class to help serialize and deserialize arrays. Arrays need the following methods Count(), Add(), Clear().true

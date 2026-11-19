@@ -19,12 +19,13 @@
 using System;
 using System.Reflection;
 using System.Collections;
+using Avro.Reflect.Converter;
 
-namespace Avro.Reflect
+namespace Avro.Reflect.Model
 {
     internal class DotnetProperty
     {
-        private PropertyInfo _property;
+        private readonly PropertyInfo _property;
 
         public IAvroFieldConverter Converter { get; set; }
 
