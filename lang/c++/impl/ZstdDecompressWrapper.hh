@@ -33,7 +33,9 @@ public:
     ZstdDecompressWrapper();
     ~ZstdDecompressWrapper();
 
-    std::string decompress(const std::vector<char> &compressed);
+    // Decompress `compressed`, rejecting a frame that would decompress to more
+    // than `maxLength` bytes (guards against a high-ratio decompression bomb).
+    std::string decompress(const std::vector<char> &compressed, size_t maxLength);
 
 private:
     ZSTD_DCtx *dctx_ = nullptr;
