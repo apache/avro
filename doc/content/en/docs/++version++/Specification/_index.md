@@ -862,18 +862,16 @@ The following schema represents a date:
 }
 ```
 
-### Time (millisecond precision) {#time_ms}
-The `time-millis` logical type represents a time of day, with no reference to a particular calendar, time zone or date, with a precision of one millisecond.
+### Times {#times}
+The `time-{millis,micros,nanos}` logical type represents a time of day, with no reference to a particular calendar, time zone or date. 
 
 A `time-millis` logical type annotates an Avro `int`, where the int stores the number of milliseconds after midnight, 00:00:00.000.
 
-### Time (microsecond precision)
-The `time-micros` logical type represents a time of day, with no reference to a particular calendar, time zone or date, with a precision of one microsecond.
-
 A `time-micros` logical type annotates an Avro `long`, where the long stores the number of microseconds after midnight, 00:00:00.000000.
 
-### Timestamps {#timestamps}
+A `time-nanos` logical type annotates an Avro `long`, where the long stores the number of nanoseconds after midnight, 00:00:00.000000.
 
+### Timestamps {#timestamps}
 The `timestamp-{millis,micros,nanos}` logical type represents an instant on the global timeline, independent of a particular time zone or calendar. Upon reading a value back, we can only reconstruct the instant, but not the original representation. In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
 
 - `timestamp-millis`: logical type annotates an Avro `long`, where the long stores the number of milliseconds from the unix epoch, 1 January 1970 00:00:00.000.
@@ -882,13 +880,28 @@ The `timestamp-{millis,micros,nanos}` logical type represents an instant on the 
 
 Example: Given an event at noon local time (12:00) on January 1, 2000, in Helsinki where the local time was two hours east of UTC (UTC+2). The timestamp is first shifted to UTC 2000-01-01T10:00:00 and that is then converted to Avro long 946720800000 (milliseconds) and written.
 
-### Local Timestamps {#local_timestamp}
+According to maximum Avro `long` value, the timestamp limit foreach time unit will be:
 
+| **logical type**    | **limit acceptable timestamp**        |
+|---------------------|---------------------------------------|
+| `timestamp-millis`  | 8 June 292 279 235 07:12:55.807       |
+| `timestamp-micros`  | 8 April 294 247    04:00:54.775807    |
+| `timestamp-nanos`   | 11 April 2262      23:47:16.854775807 |
+
+### Local Timestamps {#local_timestamp}
 The `local-timestamp-{millis,micros,nanos}` logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local.
 
 - `local-timestamp-millis`: logical type annotates an Avro `long`, where the long stores the number of milliseconds, from 1 January 1970 00:00:00.000.
 - `local-timestamp-micros`: logical type annotates an Avro `long`, where the long stores the number of microseconds, from 1 January 1970 00:00:00.000000.
 - `local-timestamp-nanos`: logical type annotates an Avro `long`, where the long stores the number of nanoseconds, from 1 January 1970 00:00:00.000000000.
+
+According to maximum Avro `long` value, the timestamp limit foreach time unit will be:
+
+| **logical type**         | **limit acceptable timestamp**        |
+|--------------------------|---------------------------------------|
+| `local-timestamp-millis` | 8 June 292 279 235 07:12:55.807       |
+| `local-timestamp-micros` | 8 April 294 247    04:00:54.775807    |
+| `local-timestamp-nanos`  | 11 April 2262      23:47:16.854775807 |
 
 Example: Given an event at noon local time (12:00) on January 1, 2000, in Helsinki where the local time was two hours east of UTC (UTC+2). The timestamp is converted to Avro long 946728000000 (milliseconds) and then written.
 
