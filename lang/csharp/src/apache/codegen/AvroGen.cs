@@ -155,6 +155,7 @@ namespace Avro
                 "  --namespace      Map an Avro schema/protocol namespace to a C# namespace.\n" +
                 "                   The format is \"my.avro.namespace:my.csharp.namespace\".\n" +
                 "                   May be specified multiple times to map multiple namespaces.\n"  +
+                "                   Be aware that the mapping changes the SCHEMA, affecting the avro contract.\n" +
                 "  --skip-directories Skip creation of namespace directories. It will generate classes right inside output directory\n",
                 AppDomain.CurrentDomain.FriendlyName);
         }
