@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -163,8 +164,13 @@ namespace Avro.Generic
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (this == obj) return true;
-            return obj is GenericRecord
+            if (this == obj)
+            {
+                return true;
+            }
+
+            return obj != null
+                && obj.GetType() == typeof(GenericRecord)
                 && Equals((GenericRecord)obj);
         }
 
