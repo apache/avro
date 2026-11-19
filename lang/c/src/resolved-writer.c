@@ -307,12 +307,10 @@ avro_resolved_writer_get_schema(const avro_value_iface_t *viface, const void *vs
 }
 
 
-static avro_resolved_writer_t *
-avro_resolved_writer_create(avro_schema_t wschema, avro_schema_t rschema)
+static void
+avro_resolved_writer_init_iface(avro_resolved_writer_t *self,
+				avro_schema_t wschema, avro_schema_t rschema)
 {
-	avro_resolved_writer_t  *self = (avro_resolved_writer_t *) avro_new(avro_resolved_writer_t);
-	memset(self, 0, sizeof(avro_resolved_writer_t));
-
 	self->parent.incref_iface = avro_resolved_writer_incref_iface;
 	self->parent.decref_iface = avro_resolved_writer_decref_iface;
 	self->parent.incref = avro_resolved_writer_incref;
@@ -328,6 +326,14 @@ avro_resolved_writer_create(avro_schema_t wschema, avro_schema_t rschema)
 	self->calculate_size = avro_resolved_writer_calculate_size_;
 	self->free_iface = avro_resolved_writer_free_iface;
 	self->reset_wrappers = NULL;
+}
+
+static avro_resolved_writer_t *
+avro_resolved_writer_create(avro_schema_t wschema, avro_schema_t rschema)
+{
+	avro_resolved_writer_t  *self = (avro_resolved_writer_t *) avro_new(avro_resolved_writer_t);
+	memset(self, 0, sizeof(avro_resolved_writer_t));
+	avro_resolved_writer_init_iface(self, wschema, rschema);
 	return self;
 }
 
@@ -1735,6 +1741,29 @@ try_array(memoize_state_t *state, avro_resolved_writer_t **self,
  * enum
  */
 
+typedef struct avro_resolved_enum_writer {
+	avro_resolved_writer_t  parent;
+	int  symbol_count;
+	/* Map writer index to reader index with -1 when no mapping */
+	int  *index_mapping;
+} avro_resolved_enum_writer_t;
+
+static void
+avro_resolved_enum_writer_free_iface(avro_resolved_writer_t *iface,
+				     st_table *freeing)
+{
+	AVRO_UNUSED(freeing);
+	avro_resolved_enum_writer_t  *eiface =
+	    container_of(iface, avro_resolved_enum_writer_t, parent);
+	if (eiface->index_mapping != NULL) {
+		avro_free(eiface->index_mapping,
+			  eiface->symbol_count * sizeof(int));
+	}
+	avro_schema_decref(iface->wschema);
+	avro_schema_decref(iface->rschema);
+	avro_freet(avro_resolved_enum_writer_t, eiface);
+}
+
 static int
 avro_resolved_writer_set_enum(const avro_value_iface_t *viface,
 			      void *vself, int val)
@@ -1742,11 +1771,27 @@ avro_resolved_writer_set_enum(const avro_value_iface_t *viface,
 	int  rval;
 	const avro_resolved_writer_t  *iface =
 	    container_of(viface, avro_resolved_writer_t, parent);
+	const avro_resolved_enum_writer_t  *eiface =
+	    container_of(iface, avro_resolved_enum_writer_t, parent);
 	avro_value_t  *self = (avro_value_t *) vself;
 	avro_value_t  dest;
+
+	if (val < 0 || val >= eiface->symbol_count) {
+		avro_set_error("Invalid enum value %d for %s", val,
+			       avro_schema_name(iface->wschema));
+		return EINVAL;
+	}
+	int  reader_val = eiface->index_mapping[val];
+	if (reader_val < 0) {
+		avro_set_error("Symbol %s isn't in the reader's %s enum",
+			       avro_schema_enum_get(iface->wschema, val),
+			       avro_schema_name(iface->wschema));
+		return EINVAL;
+	}
+
 	check(rval, avro_resolved_writer_get_real_dest(iface, self, &dest));
-	DEBUG("Storing %d into %p", val, dest.self);
-	return avro_value_set_enum(&dest, val);
+	DEBUG("Storing %d (writer %d) into %p", reader_val, val, dest.self);
+	return avro_value_set_enum(&dest, reader_val);
 }
 
 static int
@@ -1764,9 +1809,35 @@ try_enum(memoize_state_t *state, avro_resolved_writer_t **self,
 		const char  *rname = avro_schema_name(rschema);
 
 		if (strcmp(wname, rname) == 0) {
-			*self = avro_resolved_writer_create(wschema, root_rschema);
+			int  symbol_count =
+			    avro_schema_enum_number_of_symbols(wschema);
+			int  *index_mapping =
+			    (int *) avro_calloc(symbol_count, sizeof(int));
+			int  wi;
+
+			for (wi = 0; wi < symbol_count; wi++) {
+				const char  *symbol =
+				    avro_schema_enum_get(wschema, wi);
+				index_mapping[wi] = avro_schema_enum_get_by_name
+				    (rschema, symbol);
+			}
+
+			avro_resolved_enum_writer_t  *eself =
+			    (avro_resolved_enum_writer_t *)
+			    avro_new(avro_resolved_enum_writer_t);
+			memset(eself, 0, sizeof(avro_resolved_enum_writer_t));
+			avro_resolved_writer_init_iface(&eself->parent, wschema,
+							root_rschema);
+
+			eself->parent.free_iface =
+			    avro_resolved_enum_writer_free_iface;
+			eself->parent.parent.set_enum =
+			    avro_resolved_writer_set_enum;
+			eself->symbol_count = symbol_count;
+			eself->index_mapping = index_mapping;
+
+			*self = &eself->parent;
 			avro_memoize_set(&state->mem, wschema, root_rschema, *self);
-			(*self)->parent.set_enum = avro_resolved_writer_set_enum;
 		}
 	}
 	return 0;
