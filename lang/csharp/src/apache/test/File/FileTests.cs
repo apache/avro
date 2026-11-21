@@ -408,9 +408,7 @@ namespace Avro.Test.File
             // it should also works with any standard non-seekable stream (ie: NetworkStreams)
             DeflateStream dataFileInputStream = new DeflateStream(compressedStream, CompressionMode.Compress);
 
-            var action =  new TestDelegate(() => DataFileWriter<Foo>.OpenAppendWriter(null, dataFileInputStream, null));
-
-            var ex = Assert.Throws(typeof(AvroRuntimeException), action);
+            var ex = Assert.Throws(typeof(AvroRuntimeException), () => DataFileWriter<Foo>.OpenAppendWriter(null, dataFileInputStream, null));
         }
 
         [Test]
@@ -420,9 +418,7 @@ namespace Avro.Test.File
             MemoryStream outStream = new MemoryStream();
             outStream.Close();
 
-            var action = new TestDelegate(() => DataFileWriter<Foo>.OpenAppendWriter(null, inStream, outStream));
-
-            Assert.Throws(typeof(AvroRuntimeException), action);
+            Assert.Throws(typeof(AvroRuntimeException), () => DataFileWriter<Foo>.OpenAppendWriter(null, inStream, outStream));
         }
 
         /// <summary>
