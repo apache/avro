@@ -27,7 +27,7 @@
   -->
   <PropertyGroup Label="Latest Package Versions">
     <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
-    <SystemCodeDomVersion>10.0.14</SystemCodeDomVersion>
+    <SystemCodeDomVersion>11.0.0</SystemCodeDomVersion>
     <SystemReflectionVersion>4.3.0</SystemReflectionVersion>
     <SystemReflectionEmitILGenerationVersion>4.7.0</SystemReflectionEmitILGenerationVersion>
     <SystemReflectionEmitLightweightVersion>4.7.0</SystemReflectionEmitLightweightVersion>
@@ -61,13 +61,13 @@
     <BenchmarkDotNetVersion>0.15.8</BenchmarkDotNetVersion>
     <CoverletCollectorVersion>10.1.0</CoverletCollectorVersion>
     <CoverletMSBuildVersion>10.1.0</CoverletMSBuildVersion>
-    <MicrosoftBuildFrameworkVersion>18.11.0</MicrosoftBuildFrameworkVersion>
-    <MicrosoftBuildUtilitiesCoreVersion>18.11.0</MicrosoftBuildUtilitiesCoreVersion>
+    <MicrosoftBuildFrameworkVersion>18.12.2</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>18.12.2</MicrosoftBuildUtilitiesCoreVersion>
     <MicrosoftCodeAnalysisVersion>5.12.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisCSharpVersion>5.12.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftCodeAnalysisCSharpCodeStyleVersion>5.12.0</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
     <MicrosoftCodeAnalysisNetAnalyzersVersion>10.0.101</MicrosoftCodeAnalysisNetAnalyzersVersion>
-    <MicrosoftNETTestSdkVersion>18.11.0</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>18.12.0</MicrosoftNETTestSdkVersion>
     <NUnitVersion>3.14.0</NUnitVersion>
     <NUnitConsoleRunnerVersion>3.22.0</NUnitConsoleRunnerVersion>
     <NUnit3TestAdapterVersion>6.3.1</NUnit3TestAdapterVersion>
