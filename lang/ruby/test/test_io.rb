@@ -561,8 +561,7 @@ EOS
 
      # test that the round-trip didn't mess up anything
     # NB: I don't think we should do this. Why enforce ordering?
-    assert_equal(MultiJson.load(str),
-                  MultiJson.load(parsed_string))
+    assert_equal(JSON.parse(str), JSON.parse(parsed_string))
 
     # test __eq__
     assert_equal(schema, Avro::Schema.parse(str))
