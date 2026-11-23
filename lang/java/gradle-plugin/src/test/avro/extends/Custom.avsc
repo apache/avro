@@ -1,0 +1,18 @@
+{
+    "type": "record", 
+    "namespace": "test",
+    "name": "SchemaCustom",
+    "doc": "Custom Test Bean",
+    "fields": [
+        {
+            "name": "id", 
+            "type": ["null", "string"],
+            "default": null
+        },
+        {
+            "name": "createdOn", 
+            "type": ["null", "long"],
+            "default": null
+        }
+    ]
+}
