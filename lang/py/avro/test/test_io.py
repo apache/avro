@@ -1353,6 +1353,83 @@ class TestDatumReaderCollectionSizeLimit(unittest.TestCase):
             self.assertRaises(avro.errors.AvroCollectionSizeException, reader.read, decoder)
 
 
+class TestDefaultValueResolution(unittest.TestCase):
+    """Tests for record and union default value resolution in DatumReader."""
+
+    @staticmethod
+    def _read_evolved_default(field_schema: object, default_value: object) -> object:
+        writers_schema = avro.schema.parse(json.dumps({"type": "record", "name": "Test", "fields": []}))
+        readers_schema = avro.schema.parse(
+            json.dumps(
+                {
+                    "type": "record",
+                    "name": "Test",
+                    "fields": [{"name": "f", "type": field_schema, "default": default_value}],
+                }
+            )
+        )
+        datum = cast(Dict[str, object], read_datum(io.BytesIO(b""), writers_schema, readers_schema))
+        return datum["f"]
+
+    def test_nested_record_explicit_null_default_not_overwritten(self) -> None:
+        inner_schema = {
+            "type": "record",
+            "name": "Inner",
+            "fields": [{"name": "x", "type": ["int", "null"], "default": 99}],
+        }
+        self.assertEqual(self._read_evolved_default(inner_schema, {"x": None}), {"x": None})
+        # Omitting the inner key still falls back to the inner field's default.
+        self.assertEqual(self._read_evolved_default(inner_schema, {}), {"x": 99})
+
+    def test_nested_record_omitted_field_with_null_default(self) -> None:
+        inner_schema = {
+            "type": "record",
+            "name": "InnerNull",
+            "fields": [{"name": "x", "type": ["int", "null"], "default": None}],
+        }
+        self.assertEqual(self._read_evolved_default(inner_schema, {}), {"x": None})
+
+    def test_nested_record_omitted_required_field_rejected(self) -> None:
+        inner_schema = {
+            "type": "record",
+            "name": "InnerRequired",
+            "fields": [{"name": "x", "type": ["null", "int"]}],
+        }
+        self.assertRaises(avro.errors.InvalidDefaultException, self._read_evolved_default, inner_schema, {})
+
+    def test_union_default_matches_non_first_branch(self) -> None:
+        self.assertEqual(self._read_evolved_default(["null", "string"], "hello"), "hello")
+        self.assertIsNone(self._read_evolved_default(["int", "null"], None))
+        self.assertEqual(self._read_evolved_default(["int", "long"], 1 << 40), 1 << 40)
+        self.assertIs(self._read_evolved_default(["int", "boolean"], True), True)
+        self.assertEqual(self._read_evolved_default(["boolean", "string"], "abc"), "abc")
+        self.assertEqual(self._read_evolved_default([{"type": "array", "items": "string"}, "string"], "abc"), "abc")
+        self.assertEqual(
+            self._read_evolved_default(
+                [
+                    {"type": "enum", "name": "E1", "symbols": ["A"]},
+                    {"type": "enum", "name": "E2", "symbols": ["B"]},
+                ],
+                "B",
+            ),
+            "B",
+        )
+        self.assertEqual(
+            self._read_evolved_default(
+                [
+                    {"type": "record", "name": "R1", "fields": [{"name": "a", "type": "int"}]},
+                    {"type": "record", "name": "R2", "fields": [{"name": "b", "type": "string"}]},
+                ],
+                {"b": "val"},
+            ),
+            {"b": "val"},
+        )
+
+    def test_union_default_rejects_unmatched_type(self) -> None:
+        self.assertRaises(avro.errors.InvalidDefaultException, self._read_evolved_default, ["int", "string"], None)
+        self.assertRaises(avro.errors.InvalidDefaultException, self._read_evolved_default, ["int", "string"], True)
+
+
 def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) -> unittest.TestSuite:
     """Generate test cases across many test schema."""
     suite = unittest.TestSuite()
@@ -1370,6 +1447,7 @@ def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) 
     suite.addTests(loader.loadTestsFromTestCase(TestBinaryDecoderAvailableBytes))
     suite.addTests(loader.loadTestsFromTestCase(TestDatumReaderCollectionAvailableBytes))
     suite.addTests(loader.loadTestsFromTestCase(TestDatumReaderCollectionSizeLimit))
+    suite.addTests(loader.loadTestsFromTestCase(TestDefaultValueResolution))
     return suite
 
 
