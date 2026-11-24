@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CrcAlgorithm","CrcKeysStorage"],"fn":["checksum","checksum_combine","checksum_combine_with_params","checksum_file","checksum_file_with_params","checksum_with_params","crc32_iscsi","crc32_iso_hdlc","crc64_nvme","get_calculator_target"],"mod":["arch"],"struct":["CrcParams","Digest"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_MAX_ALLOCATION_BYTES","DEFAULT_MAX_DECODE_RECURSION_DEPTH","DEFAULT_SERDE_HUMAN_READABLE"],"fn":["max_allocation_bytes","max_decode_recursion_depth","set_serde_human_readable"]};

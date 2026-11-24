@@ -1,0 +1,275 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta content="Apache Forrest" name="Generator">
+<meta name="Forrest-version" content="0.8">
+<meta name="Forrest-skin-name" content="pelt">
+<title>Welcome to Avro!</title>
+<link type="text/css" href="skin/basic.css" rel="stylesheet">
+<link media="screen" type="text/css" href="skin/screen.css" rel="stylesheet">
+<link media="print" type="text/css" href="skin/print.css" rel="stylesheet">
+<link type="text/css" href="skin/profile.css" rel="stylesheet">
+<script src="skin/getBlank.js" language="javascript" type="text/javascript"></script><script src="skin/getMenu.js" language="javascript" type="text/javascript"></script><script src="skin/fontsize.js" language="javascript" type="text/javascript"></script>
+<link rel="shortcut icon" href="images/favicon.ico">
+</head>
+<body onload="init()">
+<script type="text/javascript">ndeSetTextSize();</script>
+<div id="top">
+<!--+
+    |breadtrail
+    +-->
+<div class="breadtrail">
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://hadoop.apache.org/">Hadoop</a> &gt; <a href="http://hadoop.apache.org/avro/">Avro</a><script src="skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script>
+</div>
+<!--+
+    |header
+    +-->
+<div class="header">
+<!--+
+    |start group logo
+    +-->
+<div class="grouplogo">
+<a href="http://hadoop.apache.org/"><img class="logoImage" alt="Hadoop" src="images/hadoop-logo.jpg" title="Apache Hadoop"></a>
+</div>
+<!--+
+    |end group logo
+    +-->
+<!--+
+    |start Project Logo
+    +-->
+<div class="projectlogo">
+<a href="http://hadoop.apache.org/avro/"><img class="logoImage" alt="Avro" src="images/avro-logo.png" title="Serialization System"></a>
+</div>
+<!--+
+    |end Project Logo
+    +-->
+<!--+
+    |start Search
+    +-->
+<div class="searchbox">
+<form action="http://www.google.com/search" method="get" class="roundtopsmall">
+<input value="hadoop.apache.org" name="sitesearch" type="hidden"><input onFocus="getBlank (this, 'Search the site with google');" size="25" name="q" id="query" type="text" value="Search the site with google">&nbsp; 
+                    <input name="Search" value="Search" type="submit">
+</form>
+</div>
+<!--+
+    |end search
+    +-->
+<!--+
+    |start Tabs
+    +-->
+<ul id="tabs">
+<li>
+<a class="unselected" href="http://hadoop.apache.org/avro/">Project</a>
+</li>
+<li>
+<a class="unselected" href="http://wiki.apache.org/hadoop/Avro/">Wiki</a>
+</li>
+<li class="current">
+<a class="selected" href="index.html">Avro 1.4.0 Documentation</a>
+</li>
+</ul>
+<!--+
+    |end Tabs
+    +-->
+</div>
+</div>
+<div id="main">
+<div id="publishedStrip">
+<!--+
+    |start Subtabs
+    +-->
+<div id="level2tabs"></div>
+<!--+
+    |end Endtabs
+    +-->
+<script type="text/javascript"><!--
+document.write("Last Published: " + document.lastModified);
+//  --></script>
+</div>
+<!--+
+    |breadtrail
+    +-->
+<div class="breadtrail">
+
+             &nbsp;
+           </div>
+<!--+
+    |start Menu, mainarea
+    +-->
+<!--+
+    |start Menu
+    +-->
+<div id="menu">
+<div onclick="SwitchMenu('menu_selected_1.1', 'skin/')" id="menu_selected_1.1Title" class="menutitle" style="background-image: url('skin/images/chapter_open.gif');">Documentation</div>
+<div id="menu_selected_1.1" class="selectedmenuitemgroup" style="display: block;">
+<div class="menupage">
+<div class="menupagetitle">Overview</div>
+</div>
+<div class="menuitem">
+<a href="spec.html">Specification</a>
+</div>
+<div class="menuitem">
+<a href="api/java/index.html">Java API</a>
+</div>
+<div class="menuitem">
+<a href="api/c/index.html">C API</a>
+</div>
+<div class="menuitem">
+<a href="api/cpp/html/index.html">C++ API</a>
+</div>
+<div class="menuitem">
+<a href="idl.html">IDL language</a>
+</div>
+<div class="menuitem">
+<a href="http://wiki.apache.org/hadoop/Avro/">Wiki</a>
+</div>
+<div class="menuitem">
+<a href="http://wiki.apache.org/hadoop/Avro/FAQ">FAQ</a>
+</div>
+</div>
+<div id="credit">
+<hr>
+<a href="http://forrest.apache.org/"><img border="0" title="Built with Apache Forrest" alt="Built with Apache Forrest - logo" src="images/built-with-forrest-button.png" style="width: 88px;height: 31px;"></a>
+</div>
+<div id="roundbottom">
+<img style="display: none" class="corner" height="15" width="15" alt="" src="skin/images/rc-b-l-15-1body-2menu-3menu.png"></div>
+<!--+
+  |alternative credits
+  +-->
+<div id="credit2"></div>
+</div>
+<!--+
+    |end Menu
+    +-->
+<!--+
+    |start content
+    +-->
+<div id="content">
+<div title="Portable Document Format" class="pdflink">
+<a class="dida" href="index.pdf"><img alt="PDF -icon" src="skin/images/pdfdoc.gif" class="skin"><br>
+        PDF</a>
+</div>
+<h1>Welcome to Avro!</h1>
+<div id="minitoc-area">
+<ul class="minitoc">
+<li>
+<a href="#intro">Introduction</a>
+</li>
+<li>
+<a href="#schemas">Schemas</a>
+</li>
+<li>
+<a href="#compare">Comparison with other systems</a>
+</li>
+</ul>
+</div>
+    
+<a name="N1000D"></a><a name="intro"></a>
+<h2 class="h3">Introduction</h2>
+<div class="section">
+<p>Avro is a data serialization system.</p>
+<p>Avro provides:</p>
+<ul>
+	  
+<li>Rich data structures.</li>
+	  
+<li>A compact, fast, binary data format.</li>
+	  
+<li>A container file, to store persistent data.</li>
+	  
+<li>Remote procedure call (RPC).</li>
+	  
+<li>Simple integration with dynamic languages.  Code
+	    generation is not required to read or write data files nor
+	    to use or implement RPC protocols.  Code generation as an
+	    optional optimization, only worth implementing for
+	    statically typed languages.</li>
+	
+</ul>
+</div>
+    
+<a name="N1002C"></a><a name="schemas"></a>
+<h2 class="h3">Schemas</h2>
+<div class="section">
+<p>Avro relies on <em>schemas</em>.  When Avro data is read, the
+	schema used when writing it is always present.  This permits
+	each datum to be written with no per-value overheads, making
+	serialization both fast and small.  This also facilitates use
+	with dynamic, scripting languages, since data, together with
+	its schema, is fully self-describing.</p>
+<p>When Avro data is stored in a file, its schema is stored with
+	it, so that files may be processed later by any program.  If
+	the program reading the data expects a different schema this
+	can be easily resolved, since both schemas are present.</p>
+<p>When Avro is used in RPC, the client and server exchange
+	schemas in the connection handshake.  (This can be optimized
+	so that, for most calls, no schemas are actually transmitted.)
+	Since both client and server both have the other's full
+	schema, correspondence between same named fields, missing
+	fields, extra fields, etc. can all be easily resolved.</p>
+<p>Avro schemas are defined with
+	<a href="http://www.json.org/">JSON</a> .  This
+	facilitates implementation in languages that already have
+	JSON libraries.</p>
+</div>
+    
+<a name="N10046"></a><a name="compare"></a>
+<h2 class="h3">Comparison with other systems</h2>
+<div class="section">
+<p>Avro provides functionality similar to systems such
+	as <a href="http://incubator.apache.org/thrift/">Thrift</a>,
+	<a href="http://code.google.com/protobuf/">Protocol
+	  Buffers</a>, etc.  Avro differs from these systems in the
+	  following fundamental aspects.</p>
+<ul>
+	
+<li>
+<em>Dynamic typing</em>: Avro does not require that code
+	  be generated.  Data is always accompanied by a schema that
+	  permits full processing of that data without code
+	  generation, static datatypes, etc.  This facilitates
+	  construction of generic data-processing systems and
+	  languages.</li>
+	
+<li>
+<em>Untagged data</em>: Since the schema is present when
+	  data is read, considerably less type information need be
+	  encoded with data, resulting in smaller serialization size.</li>
+	
+<li>
+<em>No manually-assigned field IDs</em>: When a schema
+	  changes, both the old and new schema are always present when
+	  processing data, so differences may be resolved
+	  symbolically, using field names.</li>
+      
+</ul>
+</div>
+  
+</div>
+<!--+
+    |end content
+    +-->
+<div class="clearboth">&nbsp;</div>
+</div>
+<div id="footer">
+<!--+
+    |start bottomstrip
+    +-->
+<div class="lastmodified">
+<script type="text/javascript"><!--
+document.write("Last Published: " + document.lastModified);
+//  --></script>
+</div>
+<div class="copyright">
+        Copyright &copy;
+         2009 <a href="http://www.apache.org/licenses/">The Apache Software Foundation.</a>
+</div>
+<div id="logos"></div>
+<!--+
+    |end bottomstrip
+    +-->
+</div>
+</body>
+</html>

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["write_avro_datum_ref"],"struct":["GenericDatumWriter","GenericDatumWriterBuilder"]};
