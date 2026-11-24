@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Random;
 
 import org.apache.avro.SystemLimitException;
 import org.apache.avro.TestSystemLimitException;
@@ -159,6 +160,34 @@ public class TestUtf8 {
         assertThat(ois.readObject(), is(originalBytes));
         assertThat(ois.readObject(), is(originalString));
       }
+    }
+  }
+
+  @Test
+  void hashCodeForMatchesUtf8HashCode() {
+    String[] samples = { "", "a", "abc", "0123456789", "caf\u00e9", "\u20ac uro", "\u4e2d\u6587\u5b57\u7b26",
+        "smile \ud83d\ude00", "\ud83d\ude00\ud83d\ude00\ud83d\ude00", "lone high \ud83d", "lone low \ude00 x", "\ud83d",
+        "\ude00", "high then ascii \ud83da", "\ud83d\ud83d\ude00" };
+    for (String sample : samples) {
+      int expected = new Utf8(sample).hashCode();
+      assertEquals(expected, Utf8.hashCodeFor(sample), sample);
+      assertEquals(expected, Utf8.hashCodeFor(new StringBuilder(sample)), sample);
+      assertEquals(expected, Utf8.hashCodeFor(new Utf8(sample)), sample);
+    }
+  }
+
+  @Test
+  void hashCodeForMatchesUtf8HashCodeForRandomStrings() {
+    Random random = new Random(4354);
+    for (int i = 0; i < 1000; i++) {
+      StringBuilder sb = new StringBuilder();
+      int length = random.nextInt(40);
+      for (int j = 0; j < length; j++) {
+        // Includes unpaired surrogates.
+        sb.appendCodePoint(random.nextInt(Character.MAX_CODE_POINT + 1));
+      }
+      String sample = sb.toString();
+      assertEquals(new Utf8(sample).hashCode(), Utf8.hashCodeFor(sample), sample);
     }
   }
 
