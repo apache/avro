@@ -870,28 +870,22 @@ public class BinaryDecoder extends Decoder {
 
     @Override
     protected void skipSourceBytes(long length) throws IOException {
-      boolean readZero = false;
       while (length > 0) {
         long n = in.skip(length);
         if (n > 0) {
           length -= n;
           continue;
         }
-        // The inputStream contract is evil.
-        // zero "might" mean EOF. So check for 2 in a row, we will
-        // infinite loop waiting for -1 with some classes others
-        // spuriously will return 0 on occasion without EOF
-        if (n == 0) {
-          if (readZero) {
-            isEof = true;
-            throw new EOFException();
-          }
-          readZero = true;
-          continue;
+        // InputStream.skip() may return 0 without being at end of stream (its
+        // contract explicitly permits it), and is not specified to return a
+        // negative value. Rather than looping forever or treating a spurious 0
+        // as EOF, probe with a single read() to tell a real EOF apart from a
+        // transient inability to skip.
+        if (in.read() < 0) {
+          isEof = true;
+          throw new EOFException();
         }
-        // read negative
-        isEof = true;
-        throw new EOFException();
+        length--;
       }
     }
 
@@ -899,29 +893,19 @@ public class BinaryDecoder extends Decoder {
     protected long trySkipBytes(long length) throws IOException {
       long leftToSkip = length;
       try {
-        boolean readZero = false;
         while (leftToSkip > 0) {
-          long n = in.skip(length);
+          long n = in.skip(leftToSkip);
           if (n > 0) {
             leftToSkip -= n;
             continue;
           }
-          // The inputStream contract is evil.
-          // zero "might" mean EOF. So check for 2 in a row, we will
-          // infinite loop waiting for -1 with some classes others
-          // spuriously will return 0 on occasion without EOF
-          if (n == 0) {
-            if (readZero) {
-              isEof = true;
-              break;
-            }
-            readZero = true;
-            continue;
+          // See skipSourceBytes: distinguish a real EOF from a transient skip()
+          // returning 0 by probing with a single read().
+          if (in.read() < 0) {
+            isEof = true;
+            break;
           }
-          // read negative
-          isEof = true;
-          break;
-
+          leftToSkip--;
         }
       } catch (EOFException eof) {
         isEof = true;
