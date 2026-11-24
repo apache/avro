@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Globalization;
 using NUnit.Framework;
 
@@ -90,6 +91,29 @@ namespace Avro.test
             var rightAvroDecimal = new AvroDecimal(rightDecimal);
 
             return leftAvroDecimal.CompareTo(rightAvroDecimal);
+        }
+
+        // AVRO-3569: the IConvertible conversions previously called
+        // Convert.ToXxx(this, provider), which recurses back into the same
+        // IConvertible method and overflows the stack. Verify they now return
+        // the converted value instead of crashing.
+        [Test]
+        public void TestAvroDecimalIConvertibleDoesNotRecurse()
+        {
+            var d = new AvroDecimal(42);
+            Assert.AreEqual((byte)42, Convert.ToByte(d));
+            Assert.AreEqual((sbyte)42, Convert.ToSByte(d));
+            Assert.AreEqual((short)42, Convert.ToInt16(d));
+            Assert.AreEqual(42, Convert.ToInt32(d));
+            Assert.AreEqual(42L, Convert.ToInt64(d));
+            Assert.AreEqual((ushort)42, Convert.ToUInt16(d));
+            Assert.AreEqual(42u, Convert.ToUInt32(d));
+            Assert.AreEqual(42ul, Convert.ToUInt64(d));
+            Assert.AreEqual(42d, Convert.ToDouble(d));
+            Assert.AreEqual(42f, Convert.ToSingle(d));
+            Assert.AreEqual(42m, Convert.ToDecimal(d));
+            Assert.AreEqual(true, Convert.ToBoolean(d));
+            Assert.AreEqual("42", Convert.ToString(d, CultureInfo.InvariantCulture));
         }
     }
 }
