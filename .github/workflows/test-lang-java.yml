@@ -82,6 +82,10 @@ jobs:
         working-directory: .
         run: mvn -B clean install -PskipQuality -DskipTests
 
+      - name: "Check Java API Backward Compatibility"
+        if: matrix.os == 'ubuntu-latest'
+        run: mvn -B -PskipQuality -DskipTests com.github.siom79.japicmp:japicmp-maven-plugin:cmp
+
       - name: "Test Reproducible Build"
         working-directory: .
         run: mvn clean verify -PskipQuality artifact:compare
