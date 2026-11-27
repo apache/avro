@@ -184,6 +184,14 @@ static void testLoneLowSurrogate() {
     BOOST_CHECK_THROW(loadEntity(R"("\udfff")").stringValue(), Exception);
 }
 
+// A string whose bytes encode a UTF-16 surrogate code point (U+D800..U+DFFF)
+// is ill-formed UTF-8 and cannot be represented in JSON. Encoding it must be
+// rejected rather than emitting a lone \u surrogate.
+static void testEncodeSurrogate() {
+    BOOST_CHECK_THROW(loadEntity("\"\xed\xa0\x80\"").toString(), Exception);
+    BOOST_CHECK_THROW(loadEntity("\"\xed\xbf\xbf\"").toString(), Exception);
+}
+
 } // namespace json
 } // namespace avro
 
@@ -218,6 +226,7 @@ init_unit_test_suite(int /* argc */, char * /* argv */[]) {
     ts->add(BOOST_TEST_CASE(&avro::json::testObject2));
 
     ts->add(BOOST_TEST_CASE(&avro::json::testLoneLowSurrogate));
+    ts->add(BOOST_TEST_CASE(&avro::json::testEncodeSurrogate));
 
     return ts;
 }
