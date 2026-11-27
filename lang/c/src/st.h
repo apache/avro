@@ -18,7 +18,9 @@ extern "C" {
 
 #include <avro/platform.h>		/* for uintptr_t */
 
+#ifdef __GNUC__
 #pragma GCC visibility push(hidden)
+#endif
 
 #ifdef _WIN32
   typedef int (__cdecl *hash_function_compare)(void*, void*);
@@ -77,7 +79,9 @@ st_table *st_copy _((st_table *));
 
 int st_strhash();
 
+#ifdef __GNUC__
 #pragma GCC visibility pop
+#endif
 
 CLOSE_EXTERN
 #endif				/* ST_INCLUDED */
