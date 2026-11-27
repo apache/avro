@@ -52,7 +52,7 @@ struct avro_resolved_reader {
 	avro_value_iface_t  parent;
 
 	/** The reference count for this interface. */
-	volatile int  refcount;
+	volatile long  refcount;
 
 	/** The writer schema. */
 	avro_schema_t  wschema;
@@ -136,20 +136,20 @@ avro_resolved_reader_new_value(avro_value_iface_t *viface,
 	int  rval;
 	avro_resolved_reader_t  *iface =
 	    container_of(viface, avro_resolved_reader_t, parent);
-	void  *self = avro_malloc(iface->instance_size + sizeof(volatile int));
+	void  *self = avro_malloc(iface->instance_size + sizeof(volatile long));
 	if (self == NULL) {
 		value->iface = NULL;
 		value->self = NULL;
 		return ENOMEM;
 	}
 
-	memset(self, 0, iface->instance_size + sizeof(volatile int));
-	volatile int  *refcount = (volatile int *) self;
-	self = (char *) self + sizeof(volatile int);
+	memset(self, 0, iface->instance_size + sizeof(volatile long));
+	volatile long  *refcount = (volatile long *) self;
+	self = (char *) self + sizeof(volatile long);
 
 	rval = avro_resolved_reader_init(iface, self);
 	if (rval != 0) {
-		avro_free(self, iface->instance_size + sizeof(volatile int));
+		avro_free(self, iface->instance_size + sizeof(volatile long));
 		value->iface = NULL;
 		value->self = NULL;
 		return rval;
@@ -173,8 +173,8 @@ avro_resolved_reader_free_value(const avro_value_iface_t *viface, void *vself)
 		avro_value_decref(self);
 	}
 
-	vself = (char *) vself - sizeof(volatile int);
-	avro_free(vself, iface->instance_size + sizeof(volatile int));
+	vself = (char *) vself - sizeof(volatile long);
+	avro_free(vself, iface->instance_size + sizeof(volatile long));
 }
 
 static void
@@ -184,7 +184,7 @@ avro_resolved_reader_incref(avro_value_t *value)
 	 * This only works if you pass in the top-level value.
 	 */
 
-	volatile int  *refcount = (volatile int *) ((char *) value->self - sizeof(volatile int));
+	volatile long  *refcount = (volatile long *) ((char *) value->self - sizeof(volatile long));
 	avro_refcount_inc(refcount);
 }
 
@@ -195,7 +195,7 @@ avro_resolved_reader_decref(avro_value_t *value)
 	 * This only works if you pass in the top-level value.
 	 */
 
-	volatile int  *refcount = (volatile int *) ((char *) value->self - sizeof(volatile int));
+	volatile long  *refcount = (volatile long *) ((char *) value->self - sizeof(volatile long));
 	if (avro_refcount_dec(refcount)) {
 		avro_resolved_reader_free_value(value->iface, value->self);
 	}
